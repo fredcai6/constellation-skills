@@ -12,5 +12,5 @@ Explore non-canonical behavior without committing architecture. Promotion requir
 ## Cautious / Framing
 Deliberately change or define durable behavior, contracts, ownership, or architecture.
 
-## Custodian-needed
+## Baseline-needed
 Current truth is unclear. Run Cartographer or proceed only under explicit human assumption.
