@@ -14,7 +14,7 @@
 
 **Relevant architecture packet:** `<path or "none">`  
 **Baseline confidence:** `high | medium | low | unknown`  
-**Known drift:** `<none / summary / link>`
+**Known baseline caveats:** `<none / summary / link>`
 
 ## Intended change
 `<What should be different after this work?>`
