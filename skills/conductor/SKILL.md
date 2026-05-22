@@ -37,6 +37,21 @@ These are skills/modes inside Conductor, not separate subagents by default.
 
 Read `docs/agents/ORCHESTRATOR_CONTEXT.md`, `docs/agents/GLOSSARY.md` if present, relevant architecture packets if identifiable, and relevant `.agent-work/<work-id>/` artifacts if continuing work.
 
+Also read the Constellation skill context when available:
+
+```text
+README.md
+SKILL_INDEX.md
+docs/CONSTELLATION_OVERVIEW.md
+docs/OPERATING_PRINCIPLES.md
+skills/workbench/SKILL.md
+skills/cartographer/SKILL.md
+skills/crew/SKILL.md
+skills/triage/SKILL.md
+```
+
+Use the Constellation skill context to understand delegation boundaries: Workbench owns workflow state mechanics, Cartographer owns current architecture truth, Crew owns bounded implementation/review, and Triage owns future-work packaging. Do not re-decide those boundaries during normal orchestration.
+
 ## Routes
 
 - Patch: correct known behavior inside known architecture.
