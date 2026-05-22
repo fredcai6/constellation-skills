@@ -30,6 +30,8 @@ Do not use to map the codebase, plan a specific feature, review a diff, update a
 
 Before asking questions, look for existing artifacts under `docs/agents/`, `AGENTS.md`, project philosophy docs, architecture docs, and any constitution/process docs. Assume existing artifacts are true unless the user says they are stale, incomplete, experimental, or should be replaced.
 
+When refreshing existing agent context docs, preserve prior decisions unless the user explicitly changes them. Do not replace existing context wholesale without showing what is changing.
+
 ## Operating principles
 
 - Guided elicitation, not a fixed questionnaire.
