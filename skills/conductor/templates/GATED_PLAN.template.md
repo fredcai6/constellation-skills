@@ -3,8 +3,9 @@
 ## Source framing
 
 **Framing note:** `<path/title>`  
-**Route:** `patch | quick | research/prototype | cautious/framing | custodian-needed`  
+**Route:** `patch | quick | research/prototype | cautious/framing | baseline-needed`  
 **Architecture region:** `<region or unknown>`  
+**Durable artifact impact:** `none expected | glossary | architecture packet | tests/contracts | issue recommendation | mixed`  
 **Reconciliation required:** `yes/no, because <reason>`
 
 ## Gates
@@ -38,5 +39,6 @@
 
 - [ ] all gates closed or remaining blockers listed
 - [ ] required review complete
+- [ ] durable artifact impact handled or confirmed as none expected
 - [ ] required reconciliation complete or explicitly skipped
 - [ ] unresolved follow-up work captured as issue-ready recommendations
