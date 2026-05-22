@@ -15,6 +15,19 @@ Standalone context for high-level agents: Conductor, Cartographer, and planning 
 **Failure costs:** `<what happens if wrong, stale, unavailable, slow, or misleading>`  
 **Project maturity/risk posture:** `<prototype | research | internal tool | production | safety/security/privacy-sensitive | mixed>`
 
+## Constellation delegation model
+
+This project uses the Constellation skill delegation model unless explicitly customized:
+
+- Workbench owns workflow state mechanics, local todos, evidence folders, closeout, and archive.
+- Cartographer owns current architecture truth and architecture packets.
+- Conductor owns problem interrogation, framing, route choice, gated planning, handoffs, evidence integration, and gate closure.
+- Crew owns bounded implementation and independent review.
+- Triage owns issue-ready future-work recommendations.
+- Charter owns project ground-rule elicitation and agent context generation.
+
+Do not re-decide these role boundaries during normal orchestration. Ask only about project-specific behavior inside those boundaries: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and defaults.
+
 ## Truth and evidence model
 
 **Dense executable truth:** `<code, tests, configs, generated behavior, runtime outputs>`  
@@ -35,7 +48,7 @@ If a decision affects intent, architecture, ownership, failure behavior, canonic
 - `quick`: bounded addition inside known architecture
 - `research/prototype`: non-canonical exploration isolated from durable architecture
 - `cautious/framing`: deliberate change to durable behavior, contracts, ownership, or architecture
-- `custodian-needed`: current truth is unclear; establish baseline before choosing route
+- `baseline-needed`: current truth is unclear; run Cartographer or get explicit human assumption before choosing route
 
 ## Grilling posture
 
