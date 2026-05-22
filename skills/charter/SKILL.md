@@ -26,6 +26,26 @@ Use when starting a new project, preparing an unmanaged project before Cartograp
 
 Do not use to map the codebase, plan a specific feature, review a diff, update architecture after implementation, or write code.
 
+## Constellation context rule
+
+Before asking project-specific ground-rule questions, read the surrounding Constellation skill context:
+
+```text
+README.md
+SKILL_INDEX.md
+docs/CONSTELLATION_OVERVIEW.md
+docs/OPERATING_PRINCIPLES.md
+skills/workbench/SKILL.md
+skills/cartographer/SKILL.md
+skills/conductor/SKILL.md
+skills/crew/SKILL.md
+skills/triage/SKILL.md
+```
+
+Use this context as the fixed delegation model for Constellation itself. Do not re-ask whether Conductor, Cartographer, Crew, Workbench, or Triage should exist or what their basic responsibilities are unless the user explicitly wants to customize Constellation.
+
+Charter should instead ask project-specific questions about how those skills should behave in this repo: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and project-specific defaults.
+
 ## Existing artifacts rule
 
 Before asking questions, look for existing artifacts under `docs/agents/`, `AGENTS.md`, project philosophy docs, architecture docs, and any constitution/process docs. Assume existing artifacts are true unless the user says they are stale, incomplete, experimental, or should be replaced.
