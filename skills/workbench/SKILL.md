@@ -34,6 +34,22 @@ Rules:
 - Agents do not read archived artifacts unless the user explicitly points to them.
 - Anything future workflows should rely on must be promoted to durable artifacts.
 
+## Work ID convention
+
+Use stable, lowercase, hyphen-separated work IDs.
+
+Recommended formats:
+
+```text
+issue-123-short-slug
+pr-45-short-slug
+YYYYMMDD-short-slug
+```
+
+Use issue/PR IDs when the workflow is tied to an existing issue or pull request. Use the date form for non-issue work.
+
+Do not rename a work ID after handoffs or evidence exist unless the current name is actively misleading.
+
 ## Local todo rule
 
 Every non-trivial agent task starts with `LOCAL_TODO.md`.
