@@ -43,7 +43,7 @@ Read `docs/agents/ORCHESTRATOR_CONTEXT.md`, `docs/agents/GLOSSARY.md` if present
 - Quick: add bounded behavior inside known architecture.
 - Research / Prototype: explore non-canonical behavior without committing architecture.
 - Cautious / Framing: deliberately change or define durable behavior, contracts, ownership, or architecture.
-- Custodian-needed: current truth is unclear; establish baseline before choosing route.
+- Baseline-needed: current truth is unclear; run Cartographer or get explicit human assumption before choosing route.
 
 ## Problem interrogation
 
