@@ -60,9 +60,9 @@
 
 - `<diagram or graph source>`
 
-## Known drift affecting trust
+## Trust limitations
 
-`<Only drift affecting whether this packet can be trusted. Future work belongs in issue-ready recommendations.>`
+`<Only current caveats affecting whether this packet can be trusted. Do not list future work here. If action is needed, create a Triage recommendation.>`
 
 ## Notes
 
