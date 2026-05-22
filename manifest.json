@@ -1,0 +1,18 @@
+{
+  "name": "Constellation Skills",
+  "version": "0.1-draft",
+  "description": "Markdown skill set for agent-orchestrated repo development with explicit human decision ownership.",
+  "skills": [
+    "constellation-charter",
+    "constellation-workbench",
+    "constellation-cartographer",
+    "constellation-conductor",
+    "constellation-crew",
+    "constellation-triage"
+  ],
+  "artifact_roots": {
+    "durable_agent_context": "docs/agents/",
+    "durable_architecture_context": "docs/architecture/",
+    "workflow_state": ".agent-work/"
+  }
+}
