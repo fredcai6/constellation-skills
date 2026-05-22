@@ -33,7 +33,7 @@ docs/architecture/
   EXPLORER_BUILD.md
 ```
 
-No durable `drift.md`. Drift is fixed, raised to the user, converted to issue-ready recommendations, or ignored because it does not matter.
+There is no durable `drift.md`. Mismatches are fixed, raised to the user, converted to issue-ready recommendations, or ignored because they do not matter.
 
 ## Current-only rule
 
