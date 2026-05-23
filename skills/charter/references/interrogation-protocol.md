@@ -17,6 +17,8 @@ A usable answer includes:
 
 If any of these are missing, continue drilling.
 
+Ask one question at a time. If a question can be answered from repo artifacts, inspect the repo instead of asking.
+
 ## Session model
 
 A complete Charter usually takes multiple sessions.
@@ -124,6 +126,8 @@ How autonomous should the orchestrator be?
 ```
 
 If a broad question is unavoidable, immediately follow with a concrete scenario.
+
+Do not soften the posture with reassurance or permission-seeking. Give the recommended answer when it is useful, then ask the next unresolved question.
 
 ## Resistance handling
 

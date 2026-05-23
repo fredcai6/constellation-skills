@@ -1,13 +1,13 @@
 ---
 name: constellation-workbench
-description: Maintain live recoverable workflow state through local todos, workflow artifacts, closeout, and archive.
+description: Maintain recoverable workflow state. Use when non-trivial work needs local todos, evidence, closeout, or archive.
 ---
 
 # Constellation Workbench
 
 ## Purpose
 
-Manage temporary workflow state. The workbench is not durable project truth.
+Manage temporary, recoverable workflow state. `.agent-work/` is not durable project truth.
 
 ## Layout
 
@@ -28,47 +28,18 @@ Manage temporary workflow state. The workbench is not durable project truth.
 
 Rules:
 
-- Conductor or Cartographer creates and manages work IDs.
-- Archive when the workflow closes.
-- Do not edit archived workflow artifacts.
-- Agents do not read archived artifacts unless the user explicitly points to them.
-- Anything future workflows should rely on must be promoted to durable artifacts.
-
-## Work ID convention
-
-Use stable, lowercase, hyphen-separated work IDs.
-
-Recommended formats:
-
-```text
-issue-123-short-slug
-pr-45-short-slug
-YYYYMMDD-short-slug
-```
-
-Use issue/PR IDs when the workflow is tied to an existing issue or pull request. Use the date form for non-issue work.
-
-Do not rename a work ID after handoffs or evidence exist unless the current name is actively misleading.
-
-## Local todo rule
-
-Every non-trivial agent task starts with `LOCAL_TODO.md`.
-
-The todo must answer:
-
-- What was the task?
-- Why is it being done?
-- What is done?
-- What remains?
-- What is blocking?
-- What should the next agent do first if interrupted?
-
-## Update cadence
-
-Update before starting real work, after each completed step/gate, when blocked, when scope changes, before stopping/handoff, and before final report.
-
-Do not update for every tiny action. Keep it operational, not diaristic.
+- Conductor or Cartographer creates work IDs: `issue-123-slug`, `pr-45-slug`, or `YYYYMMDD-slug`.
+- Keep work IDs lowercase, stable, and hyphen-separated; do not rename after handoffs/evidence unless actively misleading.
+- Start every non-trivial task with `LOCAL_TODO.md` using `templates/LOCAL_TODO.template.md`.
+- The todo answers: task, why, done, remaining, blockers, and next step if interrupted.
+- Update before real work, after completed steps/gates, when blocked or scope changes, and before handoff/final report.
+- Keep todo updates operational, not diaristic.
+- Archive closed workflows; do not edit archived artifacts.
+- Do not read archives unless the user points to them.
+- Promote anything future workflows rely on to durable docs or the issue tracker.
 
 ## Closeout
 
-A workflow is closed when local todo is current, evidence is captured, durable truths are promoted, issue-ready recommendations are written if needed, reconciliation is complete or skipped with reason, and the work folder is archived.
+A workflow is closed when the todo is current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, and the work folder archived.
+
+Closeout compression: before archiving, delete or condense redundant workflow prose when the durable truth or issue-ready recommendation now exists elsewhere.

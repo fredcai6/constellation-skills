@@ -1,34 +1,25 @@
 ---
 name: constellation-charter
-description: Elicit project ground rules through adaptive scenario-based interrogation and compile standalone agent context documents.
+description: Elicit project ground rules through relentless scenario-based interrogation and compile standalone agent context documents. Use when starting or refreshing repo agent rules, philosophy, standards, or docs/agents context.
 ---
 
 # Constellation Charter
 
 ## Purpose
 
-Initialize or refresh the project-level rules that align high-level and low-level agents with the user.
+Initialize or refresh project ground rules that align Constellation agents with the user.
 
-Outputs:
+Outputs: `docs/agents/ORCHESTRATOR_CONTEXT.md`, `IMPLEMENTER_REVIEWER_CONTEXT.md`, `OPEN_QUESTIONS.md`, and `GLOSSARY.md`.
 
-```text
-docs/agents/
-  GROUND_RULE_DECISIONS.md
-  ORCHESTRATOR_CONTEXT.md
-  IMPLEMENTER_REVIEWER_CONTEXT.md
-  OPEN_QUESTIONS.md
-  GLOSSARY.md
-```
+## Use
 
-## When to use
+Use when starting a project, preparing an unmanaged repo before Cartographer work, or defining ground rules, agent context, project philosophy, or coding/review standards.
 
-Use when starting a new project, preparing an unmanaged project before Cartographer work, or defining project ground rules, agent context, project philosophy, or coding/review standards.
+Do not use to map code, plan a feature, review a diff, update architecture after implementation, or write code.
 
-Do not use to map the codebase, plan a specific feature, review a diff, update architecture after implementation, or write code.
+## Required Context
 
-## Constellation context rule
-
-Before asking project-specific ground-rule questions, read the surrounding Constellation skill context:
+Before asking project-specific questions, read:
 
 ```text
 README.md
@@ -42,44 +33,48 @@ skills/crew/SKILL.md
 skills/triage/SKILL.md
 ```
 
-Use this context as the fixed delegation model for Constellation itself. Do not re-ask whether Conductor, Cartographer, Crew, Workbench, or Triage should exist or what their basic responsibilities are unless the user explicitly wants to customize Constellation.
+Treat that as the fixed delegation model. Do not re-ask whether Conductor, Cartographer, Crew, Workbench, or Triage should exist unless the user explicitly wants to customize Constellation.
 
-Charter should instead ask project-specific questions about how those skills should behave in this repo: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and project-specific defaults.
+Ask how those skills should behave in this repo: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and project-specific defaults.
 
-## Existing artifacts rule
+Also inspect `docs/agents/`, `AGENTS.md`, philosophy docs, architecture docs, and process docs. Assume existing artifacts are true unless the user says they are stale, incomplete, experimental, or should be replaced. When refreshing context, preserve prior decisions unless changed; do not replace context wholesale without showing what changed.
 
-Before asking questions, look for existing artifacts under `docs/agents/`, `AGENTS.md`, project philosophy docs, architecture docs, and any constitution/process docs. Assume existing artifacts are true unless the user says they are stale, incomplete, experimental, or should be replaced.
+## Interrogation Contract
 
-When refreshing existing agent context docs, preserve prior decisions unless the user explicitly changes them. Do not replace existing context wholesale without showing what is changing.
+Charter is a relentless interrogation pass, not a setup wizard.
 
-## Interrogation posture
+Ask one question at a time. Each question must pursue a decision, not complete a questionnaire.
 
-Charter is not a setup wizard. Charter is an interrogation pass.
+Assume the first answer to an important question is too shallow. Continue drilling until the answer names:
 
-Assume the first answer to an important question is probably too shallow. Drill until the answer names concrete use cases, actors, outputs, source-of-truth paths, failure consequences, and evidence expectations.
+- concrete use case
+- actor or subsystem
+- output or behavior
+- input/source of truth
+- failure consequence
+- evidence expectation
+- agent action implication
 
-Do not optimize for finishing in one session. A complete Charter usually requires multiple passes. If the session ends early, produce a partial checkpoint and open questions, not final context docs, unless the user explicitly says to compile provisional defaults.
+Do not accept slogans such as "move fast", "be careful", "use tests", "ask when unsure", "agents can decide", or "reasonable defaults". Convert them into project-specific behavior with a scenario.
 
-Do not ask broad agent-relationship questions before understanding the project. The Constellation delegation model is already defined. First understand the project, then ask how Constellation should behave inside that project.
+If the user gives a vague answer, ask a narrower follow-up. If the user says "I don't care", select a visible default and test it with a scenario. If the user says to stop, stop and produce a checkpoint.
 
-## Required starting sequence
+## Opening Sequence
 
-Start every new Charter by drilling these areas before asking detailed agent autonomy questions:
+Drill project reality before agent autonomy:
 
 1. What the project does.
 2. Who or what uses the outputs.
 3. What actions or decisions the outputs influence.
 4. What the canonical inputs/data/source-of-truth are.
-5. What failure looks like: wrong, stale, missing, slow, misleading, non-reproducible, or overconfident output.
+5. What failure looks like: wrong, stale, missing, slow, misleading, unreproducible, or overconfident.
 6. What evidence would prove the project is working.
 7. What parts are research/prototype versus durable system behavior.
 8. What existing docs, tests, and commands agents should treat as current authority.
 
 Only after this baseline should Charter ask about Conductor, Cartographer, Crew, Workbench, and Triage behavior.
 
-## Answer quality bar
-
-An answer is not good enough if it only gives slogans such as "move fast", "be careful", "use tests", "ask when unsure", or "agents can decide".
+## Scenario Pattern
 
 For each important area, force at least one concrete scenario:
 
@@ -90,9 +85,9 @@ What evidence would prove the agent handled it correctly?
 Who owns the decision if the tradeoff is real?
 ```
 
-If the user gives a vague answer, ask a narrower follow-up. If the user says "I don't care", choose a visible default and test it with a scenario.
+Use `references/interrogation-protocol.md` for the follow-up ladder, shallow-answer triggers, resistance handling, and completion test. Use `references/scenario-bank.md` for seed scenarios; adapt them to the user's project instead of reading them verbatim.
 
-## Session checkpoint rule
+## Checkpoints And Compile
 
 Periodically summarize:
 
@@ -103,54 +98,15 @@ Periodically summarize:
 - open questions
 - areas not yet interrogated
 
-Use these summaries to continue drilling, not to prematurely finish.
+Use summaries to continue drilling, not to finish early. Do not optimize for one-session completion.
 
-## Operating principles
+Compile final docs only when the user asks to compile, says to use defaults for the rest, or the completion test passes. Before compiling, run a contradiction pass.
 
-- Guided elicitation, not a fixed questionnaire.
-- Relentless follow-up on shallow answers.
-- Project/use-case understanding before agent autonomy details.
-- Do not rush to compile.
-- Ask concrete scenario questions grounded in standard engineering tensions.
-- Generate or adapt scenarios based on user statements.
-- Keep asking while the user is responsive.
-- Do not impose an artificial question cap.
-- Do not accept vague slogans without testing at least one practical consequence.
-- Treat "I don't care" as a valid decision.
-- When the user says "I don't care", select and record an explicit default.
-- Make defaults visible.
-- Periodically summarize decisions, contradictions, and open questions.
-- Run a contradiction pass before compiling.
-- Compile final docs only when the user asks to compile or says to use defaults for the rest.
+## Context Curation
 
-## Decision schema
-
-```markdown
-## Decision: <short name>
-
-**Decision area:** <scope / architecture / testing / etc.>  
-**Scenario:** <concrete conflict used to elicit the decision>  
-**Selected policy:** <what the user chose>  
-**Strength:** strong | default | case-by-case | don't-care-selected-default | unresolved  
-**Applies to:** <where this policy applies>  
-**Exceptions:** <explicit exceptions, or "None stated">  
-**Default source:** user preference | conservative default | project risk posture | existing artifact  
-**High-level implication:** <what Conductor/Cartographer should do>  
-**Low-level implication:** <what Crew should do>  
-**Open questions:** <remaining ambiguity, or "None">
-```
-
-## Preference strength
-
-- `strong`: hard rule unless task-specific instructions override it.
-- `default`: use unless local context gives a clear reason to ask or deviate.
-- `case-by-case`: high-level agents should reason explicitly or ask.
-- `don't-care-selected-default`: user did not care; a named default was selected.
-- `unresolved`: do not invent a rule; record the open question and interim default.
+Charter curation keeps `docs/agents/` lean after rule elicitation. Edit generated context directly for clarity; ask before deleting unique policy, changing authority/evidence/failure meaning, or resolving an open question.
 
 ## Default policy library
-
-Conservative defaults:
 
 - Behavior changes need tests.
 - Prefer clear failure over valid-looking wrong output.
@@ -169,12 +125,12 @@ Conservative defaults:
 
 Tune defaults by project posture: prototype, research, internal tool, production, or safety/security/privacy-sensitive.
 
-## Required elicitation areas
+## Required Areas
 
-Cover project purpose/users, output authority/failure cost, repo/tooling baseline, requirements ambiguity, scope/refactoring, architecture/ownership, contracts, compatibility, errors/fail-safe/degraded modes, event reporting/audit, validation, state/side effects, testing/evidence, data truth, docs/reconciliation, dependencies, security/privacy, performance, generated artifacts, and agent autonomy.
+Cover project purpose/users, output authority/failure cost, repo/tooling, ambiguity, scope/refactoring, architecture/ownership, contracts, compatibility, errors/degraded modes, reporting/audit, validation, side effects, testing/evidence, data truth, docs, dependencies, security/privacy, performance, generated artifacts, and autonomy.
 
 Do not mark an area complete until it has project-specific examples and at least one agent-action implication.
 
-## Templates
+## Resources
 
 Use `templates/`, `references/scenario-bank.md`, and `references/interrogation-protocol.md`.

@@ -1,26 +1,15 @@
 # Review Result
 
+Omit optional sections when empty.
+
 ## Result
 `APPROVE | BLOCK | COMMENT`
 
-## Reviewed against
-- `<task intent>`
-- `<handoff>`
-- `<rules/context>`
-- `<tests/evidence>`
-- `<architecture packet>`
+## Handoff compliance
+`<Does the change satisfy the assigned intent, scope, evidence, and stop conditions?>`
 
-## Intent match
-`<summary>`
-
-## Scope check
-`<summary>`
-
-## Evidence check
-`<summary>`
-
-## Rule violations
-- `<violation or none>`
+## Code quality
+`<Is the implementation maintainable, minimal, tested, and consistent with project rules? If TDD required, did evidence show red-green-refactor and behavior-focused tests?>`
 
 ## Docs/reconciliation check
 `<summary>`

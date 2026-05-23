@@ -20,6 +20,46 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-crew` | Execute bounded implementation and independent review. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
 
+## Install
+
+Preview first:
+
+```powershell
+python scripts/install_constellation.py --scope user --dry-run
+```
+
+Install for the current user:
+
+```powershell
+python scripts/install_constellation.py --scope user
+```
+
+Install into a project:
+
+```powershell
+python scripts/install_constellation.py --scope project --project C:\path\to\repo
+```
+
+Install selected skills:
+
+```powershell
+python scripts/install_constellation.py --scope project --project C:\path\to\repo --skills charter conductor
+```
+
+Refresh an existing install:
+
+```powershell
+python scripts/install_constellation.py --scope user --force
+```
+
+Rules:
+
+- User scope installs to `$CODEX_HOME/skills`, or `~/.codex/skills` when `CODEX_HOME` is unset.
+- Project scope installs to `<project>/.codex/skills`; `--dest` can point at a skills directory directly.
+- Installed folder names use each skill's frontmatter name, such as `constellation-charter`.
+- Existing skill folders fail fast unless `--force` is set.
+- Restart Codex after installing or refreshing skills.
+
 ## Baseline assumptions
 
 Constellation assumes a Git repo, Markdown documentation, and file-based workflow artifacts. Issue tracker, docs explorer, diagramming, CI, and runtime commands are project-specific and should be clarified by Charter.
@@ -29,7 +69,6 @@ Constellation assumes a Git repo, Markdown documentation, and file-based workflo
 ```text
 docs/
   agents/
-    GROUND_RULE_DECISIONS.md
     ORCHESTRATOR_CONTEXT.md
     IMPLEMENTER_REVIEWER_CONTEXT.md
     OPEN_QUESTIONS.md

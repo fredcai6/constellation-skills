@@ -3,6 +3,15 @@
 ## Role
 `<implementer | reviewer | cartographer | triage | etc.>`
 
+## Mandate
+`<bounded execution | bounded review | broad review | architecture/context task>`
+
+## Suggested model tier
+`<simple bounded | stronger broad/ambiguous, because <reason>>`
+
+## Test mode
+`<TDD required | test-after allowed | no test required, because <reason>>`
+
 ## Task
 `<one bounded task>`
 

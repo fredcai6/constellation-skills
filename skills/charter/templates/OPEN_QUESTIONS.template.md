@@ -1,5 +1,7 @@
 # Open Ground Rule Questions
 
+Only include unresolved questions that affect future agent behavior. Delete resolved questions immediately. Future work goes to Triage, not this file.
+
 Each item must include why it matters, the current default, who should care, and when to revisit.
 
 | ID | Question | Affected agents | Default until resolved | Revisit trigger |

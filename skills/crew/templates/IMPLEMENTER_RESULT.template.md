@@ -12,6 +12,11 @@
 ## Tests added/updated
 - `<path or none with reason>`
 
+## TDD evidence
+- Failing test observed: `<command/output>`
+- Passing test observed: `<command/output>`
+- Refactor while green: `<yes/no>`
+
 ## Verification run
 
 ```bash

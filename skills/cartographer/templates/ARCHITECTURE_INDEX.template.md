@@ -2,6 +2,12 @@
 
 This index points to current-state architecture packets and curated diagrams.
 
+## Architecture hierarchy
+
+- `<system-context packet>`
+  - `<container packet>`
+    - `<component packet>`
+
 | Region | Packet | Status | Confidence | Last reconciled |
 |---|---|---|---|---|
 | `<region>` | `packets/<region>.md` | `<status>` | `<confidence>` | `<YYYY-MM-DD>` |

@@ -1,50 +1,32 @@
 ---
 name: constellation-crew
-description: Execute bounded implementation and independent review from conductor handoffs.
+description: Execute bounded implementation and review. Use when a handoff defines task, authority, scope, evidence, and stop conditions.
 ---
 
 # Constellation Crew
 
 ## Mission
 
-Crew is the implementer/reviewer pair.
+Crew is the implementer/reviewer pair. Conductor owns intent and closes gates. Implementer owns scoped change. Reviewer owns independent verification.
 
-```text
-Conductor owns intent and boundaries.
-Implementer owns scoped change.
-Reviewer owns independent verification.
-Conductor closes the gate.
-```
+## Inputs
+
+Use handoff, architecture packet, low-level context, scope, evidence, and stop conditions.
 
 ## Implementer
 
-Receives the subagent handoff, relevant architecture packet, `docs/agents/IMPLEMENTER_REVIEWER_CONTEXT.md`, allowed scope, required evidence, and stop conditions.
+Update todo; restate slice; inspect relevant files; make the minimal change; add/update required tests; run verification; update required docs/contracts; return evidence; stop if authority/scope is exceeded.
 
-Responsibilities:
+Do not infer hidden intent or decide new intent.
 
-1. Create/update local todo.
-2. Restate task slice.
-3. Inspect only relevant code/tests/docs.
-4. Implement minimal change.
-5. Add/update required tests.
-6. Run required verification.
-7. Return evidence.
-8. Stop if authority/scope is exceeded.
+## TDD Mode
 
-The implementer does not decide new intent.
+When required, use vertical TDD: one public-interface behavior test, red -> green -> refactor, repeat. Do not write all tests first or test implementation shape unless authorized.
 
 ## Reviewer
 
-Receives the original handoff, relevant framing excerpt, gated plan gate, diff/changed files, implementer evidence, low-level context, and relevant architecture packet.
+Use handoff, gate context, diff, implementer evidence, low-level context, and architecture packet.
 
-Responsibilities:
+Check intent, scope, rules, evidence, and docs/reconciliation. Return `APPROVE`, `BLOCK`, or `COMMENT`; separate blockers from follow-ups.
 
-1. Create/update local todo.
-2. Check task intent match.
-3. Check scope discipline.
-4. Check rule compliance.
-5. Check evidence sufficiency.
-6. Check docs/reconciliation need.
-7. Return `APPROVE`, `BLOCK`, or `COMMENT`.
-
-Reviewer approval does not automatically close the gate. Conductor performs a light gate-closure check.
+Reviewer approval does not close the gate. Conductor closes it.

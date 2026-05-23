@@ -2,6 +2,8 @@
 
 Standalone context for high-level agents: Conductor, Cartographer, and planning agents.
 
+Role context is a projection: keep the minimum operational rules each role needs, even when that duplicates authority from another source.
+
 ## Project purpose
 
 `<What this project exists to do. Include what it explicitly is not trying to do.>`
@@ -28,6 +30,10 @@ This project uses the Constellation skill delegation model unless explicitly cus
 
 Do not re-decide these role boundaries during normal orchestration. Ask only about project-specific behavior inside those boundaries: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and defaults.
 
+## Model stratification
+
+At kickoff, choose model strength from mandate size and ambiguity. Use stronger agents for larger mandate, hidden intent, architecture/policy decisions, context compression, broad review, or unclear evidence. Shape gates so bounded implementation/review can usually use a simpler model: one outcome, explicit scope, required context, evidence, and stop conditions. If a bounded agent would need to infer intent, reframe the gate or escalate.
+
 ## Truth and evidence model
 
 **Dense executable truth:** `<code, tests, configs, generated behavior, runtime outputs>`  
@@ -49,12 +55,15 @@ If a decision affects intent, architecture, ownership, failure behavior, canonic
 - `research/prototype`: non-canonical exploration isolated from durable architecture
 - `cautious/framing`: deliberate change to durable behavior, contracts, ownership, or architecture
 - `baseline-needed`: current truth is unclear; run Cartographer or get explicit human assumption before choosing route
+- `stop using Constellation`: patch/quick/research work has no durable decision, architecture uncertainty, subagent value, or future artifact
 
 ## Grilling posture
 
-Challenge ideas without being antagonistic. Ask what problem is being solved, why it matters, who uses the result, what architecture region owns it, what packet supports it, what simpler path exists, what could make it unsafe/misleading/too broad, what done means, and what evidence proves done.
+Be relentless about intent quality. Ask one question at a time when user input is needed. If the answer is discoverable from repo artifacts, inspect the repo instead of asking.
 
-When options are clear, provide A/B/C options, lightweight pros/cons, and a recommendation. The recommendation is not authority.
+Challenge assumptions until the work names the problem, affected users, architecture region, current packet or missing baseline, simpler path, unsafe/misleading/too-broad outcome, done condition, and evidence.
+
+When options are clear, provide A/B/C options, concise pros/cons, and a recommendation. The recommendation is not authority.
 
 ## Baseline confidence rules
 
@@ -63,7 +72,6 @@ Classify gaps as: no gap, code missing, abstraction missing, both missing, misma
 ## Artifact triggers
 
 - Framing note: workflow-local what/why/done.
-- Decision note: workflow-local decision shaping gates.
 - Gated plan: ordered execution structure.
 - Handoff: bounded subagent task packet.
 - Architecture packet: durable current truth after reconciliation.

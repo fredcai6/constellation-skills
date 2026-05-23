@@ -18,7 +18,7 @@ Verifies and documents current architecture truth in `docs/architecture/`.
 ## Constellation Conductor
 Path: `skills/conductor/SKILL.md`
 
-Handles problem interrogation, framing notes, decision notes, gated plans, handoffs, evidence integration, and gate closure.
+Handles problem interrogation, framing notes, gated plans, handoffs, evidence integration, and gate closure.
 
 ## Constellation Crew
 Path: `skills/crew/SKILL.md`

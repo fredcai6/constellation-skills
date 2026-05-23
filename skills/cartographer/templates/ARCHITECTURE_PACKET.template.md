@@ -2,6 +2,8 @@
 
 ## Status
 
+**Level:** `system-context | container | component | code-path`  
+**Parent:** `<higher-level packet or none>`  
 **Status:** `current | partial | stale | disputed`  
 **Confidence:** `high | medium | low | unknown`  
 **Last reconciled:** `<YYYY-MM-DD>`

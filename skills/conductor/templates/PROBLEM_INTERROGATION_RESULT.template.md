@@ -38,11 +38,10 @@
 - `<decision>`
 
 ## Recommended route
-`patch | quick | research/prototype | cautious/framing | custodian-needed`
+`patch | quick | research/prototype | cautious/framing | baseline-needed | stop using Constellation`
 
 ## Likely artifacts
 - Framing note: `yes/no`
-- Decision note: `yes/no`
 - Glossary update: `yes/no`
 - Architecture reconciliation: `yes/no`
 - Issue-ready recommendation: `yes/no`
