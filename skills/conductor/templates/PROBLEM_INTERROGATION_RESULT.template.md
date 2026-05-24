@@ -1,50 +1,51 @@
 # Problem Interrogation Result
 
-## Restated problem
-`<what I think you are asking for>`
+## User Request
+`<what the user asked for>`
 
-## Purpose / why
-`<why this work appears to matter>`
+## Interpreted Intent
+`<what this work is meant to accomplish>`
 
-## Affected users or system paths
-`<who/what depends on this>`
+## Intent Protected
+`<outcome that must not be lost during execution>`
 
-## Likely architecture region
-`<packet/path/unknown>`
+## Resolved Ambiguities
+- `<decision + authority>`
 
-## Baseline confidence
-`high | medium | low | unknown`
+## Remaining Ambiguity
+`<none | question + why it blocks>`
 
-## Challenge points
-- `<assumption/risk/ambiguity>`
-- `<simpler alternative>`
-- `<boundary concern>`
-- `<evidence concern>`
+## Scope
+`<current work boundary>`
 
-## Options considered
+## Not Scope
+`<deferred/outside work>`
 
-### Option A: `<name>`
-**Pros:** `<pros>`  
-**Cons:** `<cons>`
+## Specific Exclusions
+`<in-scope-looking areas protected from this work>`
 
-### Option B: `<name>`
-**Pros:** `<pros>`  
-**Cons:** `<cons>`
+## Success Evidence
+`<observable proof expected if this succeeds>`
 
-## Recommendation
-`<recommended option and why>`
+## Assumptions
 
-## Human decisions needed
-- `<decision>`
+| Assumption | Authority | Risk |
+|---|---|---|
+| `<assumption>` | `<user/project context/repo artifact/Conductor default>` | `<low reversible | blocking>` |
 
-## Recommended route
-`patch | quick | research/prototype | cautious/framing | baseline-needed | stop using Constellation`
+## Structural Baseline Need
+`yes | no | unclear`
 
-## Likely artifacts
-- Framing note: `yes/no`
-- Glossary update: `yes/no`
-- Architecture reconciliation: `yes/no`
-- Issue-ready recommendation: `yes/no`
+## Constellation Value Decision
+`use Constellation | do not use Constellation | ask user`
 
-## Stop conditions before planning
+**Reason:** `<Crew handoff need + added value threshold, or why absent>`
+
+## Recommended Next Action
+`direct work | request Cartographer baseline | request Triage recommendation | create gated plan | ask user`
+
+## Rejected Alternatives
+`<only when needed to clarify boundaries or avoid likely mistakes>`
+
+## Stop Conditions Before Planning
 `<anything unresolved enough to block planning>`

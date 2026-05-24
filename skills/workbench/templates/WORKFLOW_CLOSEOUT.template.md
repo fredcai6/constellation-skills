@@ -17,7 +17,7 @@
 
 - `<artifact path and summary>`
 
-## Issue-ready recommendations
+## Triage candidates / recommendations
 
 - `<path/title or none>`
 
@@ -29,5 +29,6 @@
 
 ## Archive action
 
-**Archived to:** `.agent-work/archive/<date>-<work-id>/`  
+**Status:** `complete | pending because <reason> | skipped because <reason>`  
+**Archived to:** `.agent-work/archive/<date>-<work-id>/ or none`  
 **Archive is authoritative:** `no`

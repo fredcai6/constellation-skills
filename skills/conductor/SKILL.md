@@ -1,50 +1,40 @@
 ---
 name: constellation-conductor
-description: Orchestrate intent, routes, gates, handoffs, evidence, and closeout. Use when work needs framing, delegation, or coordination.
+description: Use when work merits Constellation coordination: interrogate intent, bound scope, build gated plans, dispatch Crew, integrate evidence, reconcile architecture, collect Triage candidates, and close out.
 ---
 
 # Constellation Conductor
 
 ## Mission
 
-Conductor is the high-context orchestrator: clarify intent, pick route, frame work, build gates, hand off bounded tasks, integrate evidence, trigger reconciliation.
+Conductor is a checklist-driven workflow controller for work that merits Constellation. It interrogates intent, bounds scope, decides whether Constellation adds value, establishes baseline, creates a gated plan, dispatches Crew, integrates evidence, checks architecture reconciliation, collects Triage candidates, and closes out.
 
-Conductor does not implement by default, review diffs deeply, or verify current architecture. Cartographer verifies architecture. Triage packages future work.
+If no Crew handoff is needed, Constellation is not needed. No fake lightweight Constellation path: no `.agent-work/`, no gated plan, no Crew handoff. Exit Conductor and continue only under normal direct-work rules.
 
-## Context
+Conductor does not implement gated code/product work. It may perform closeout integration edits backed by accepted evidence, including in-scope architecture packet updates. Cartographer verifies architecture when structural truth may have changed.
 
-Read runtime context, relevant architecture packets, and current `.agent-work/<work-id>/` artifacts. Use README, overview, principles, Workbench, Cartographer, Crew, and Triage as fixed role boundaries.
+## Checklist
 
-## Routes
+0. Load project context.
+1. Interrogate request.
+2. Bound problem.
+3. Decide whether Constellation adds value.
+4. Establish structural baseline.
+5. Build gated plan.
+6. Dispatch Crew.
+7. Integrate evidence.
+8. Check architecture reconciliation.
+9. Collect Triage candidates.
+10. Semantic closeout.
 
-- Patch: correct known behavior inside known architecture.
-- Quick: add bounded behavior inside known architecture.
-- Research/prototype: explore non-canonical behavior without committing architecture.
-- Cautious/framing: change durable behavior, contracts, ownership, or architecture.
-- Baseline-needed: current truth is unclear; run Cartographer or get explicit human assumption.
-- Stop using Constellation when patch/quick/research has no durable decision, architecture uncertainty, subagent value, or future artifact: no `.agent-work/`, no gated plan, no handoff, no durable docs.
+Outcomes: `continue | ask user | split work | stop using Constellation | request Cartographer baseline | create gated plan | dispatch Crew | collect Triage candidate | close out`.
 
-## Problem Interrogation
+## Rules
 
-Use relentless GrillMe behavior: ask sharp questions, challenge assumptions, give options/pros/cons when useful, recommend a path, and distinguish recommendation from authority. Ask one question at a time; inspect code/docs instead when they answer it.
+Interrogate intent relentlessly, one question at a time; inspect repo/docs instead when they answer. Pre-decision inspection is artifact-free unless recovery state is needed, which starts Constellation and requires coherent closeout.
 
-## Delegation
+The gate is the central unit: smallest chunk that can be assigned, reviewed, proven with evidence, and stopped independently. Pick agent strength from gate complexity, scope size, ambiguity, risk, and review complexity. Default Crew dispatch is sequential; parallel dispatch needs explicit authorization and independent gates.
 
-At kickoff, pick agent strength from mandate size and ambiguity. Larger mandate, architecture/policy judgment, broad review, or context compression needs a stronger agent. Chunk gates so simpler models can execute/review bounded tasks with explicit scope, context, evidence, and stop conditions.
+Conductor starts workflow execution through Workbench: use `CONDUCTOR_CHECKLIST`, `GATED_PLAN`, `CREW_HANDOFF`, and `EVIDENCE_INTEGRATION` as the execution surface. Workbench owns artifact hygiene; Conductor owns intent, scope, gates, evidence requirements, Crew handoffs, architecture reconciliation decisions, Triage candidates, semantic closeout, and closeout-only context curation.
 
-## Gate Discipline
-
-The gate is the central unit. Each gate is the smallest chunk that can be assigned, reviewed, proven with evidence, and stopped without corrupting the rest of the plan.
-
-## Context Curation
-
-Conductor curation keeps workflow and `docs/agents/` context lean. Edit direct wording/duplication; ask before deleting unique policy, changing authority/evidence/failure meaning, or resolving open questions.
-
-## Workflow Artifacts
-
-- Local todo: recoverable state.
-- Framing note: what/why/done when intent could be lost.
-- Gated plan: gates, model tiers, evidence, stop conditions.
-- Handoff: mandate, task, authority, scope, context, evidence, stop conditions.
-- Evidence integration: check completion, scope, evidence, new decisions, escalation.
-- Closeout: close gates, promote durable truth, package future work via Triage, compress redundant workflow text, archive.
+Issue/repo mechanics follow project Orchestrator context; ask if silent. Do not eagerly create issues. Create/link an issue only when the current gate cannot proceed without it and authority exists.

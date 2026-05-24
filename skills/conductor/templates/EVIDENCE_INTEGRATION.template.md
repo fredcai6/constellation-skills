@@ -3,28 +3,43 @@
 ## Gate
 `<gate name>`
 
-## Subagent result
+## Crew Result
 
-**Role:** `<implementer | reviewer | cartographer | triage>`  
+**Role:** `<implementer | reviewer>`  
 **Status:** `complete | partial | blocked | out-of-scope | failed`
 
-## Evidence received
-- `<evidence>`
+## Implementation Evidence
+- `<tests, commands, diff inspection, generated output, or none because reviewer-only gate>`
 
-## Scope check
-`<in scope | scope concern | scope exceeded>`
+## Review Evidence
+- `<handoff compliance, code/doc quality, blocker status, or none because implementer-only gate was explicitly approved>`
 
-## Completion check
-`<does evidence satisfy gate criteria?>`
+## Required Evidence Check
+`<satisfied | missing | contradicted>`
 
-## New information
-- `<new ambiguity / decision / drift / glossary term / none>`
+## Original Intent Check
+`<evidence still satisfies Intent Protected | concern>`
 
-## Conductor decision
-`advance | send back to implementer | send to reviewer | route to cartographer | ask user | revise plan | stop`
+## Scope Drift Check
+`<in allowed scope | scope concern | scope exceeded | specific exclusion touched>`
+
+## Assumption Check
+`<still holds | changed | now blocking | none>`
+
+## Reviewer Approval Check
+Reviewer approval alone is insufficient. Record whether reviewer checked handoff compliance, quality, blockers, and evidence.
+
+## New Information
+- `<new ambiguity / decision / structural change / Triage candidate / none>`
+
+## Architecture Reconciliation Implication
+`<no action | Conductor packet edit | request Cartographer verification | collect Triage candidate>`
+
+## Conductor Decision
+`continue | ask user | send back to Crew | request Cartographer verification | revise gated plan | collect Triage candidate | close out`
 
 ## Reason
 `<why>`
 
-## Plan/todo updates required
+## Plan / Checklist Updates Required
 - `<update>`

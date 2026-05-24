@@ -1,6 +1,6 @@
 # Cartographer Map Model
 
-Cartographer maintains a current-only structural map with sparse purpose and constraint overlays. Architecture and code are one hierarchy, not separate dimensions.
+Cartographer maintains a current-only structural map with sparse purpose, constraint, and rationale overlays. Architecture and code are one hierarchy, not separate dimensions.
 
 ## Doctrine
 
@@ -9,6 +9,7 @@ Cartographer maintains a current-only structural map with sparse purpose and con
 - Purpose usually stays as local packet prose.
 - Promote purpose only when shared or cross-cutting.
 - Constraints are sparse and used only when they materially govern structure.
+- Rationale is sparse and kept only when it helps agents advance current or future work.
 - Everything is current-only; future work routes to Triage.
 
 ## Structural Levels
@@ -86,6 +87,13 @@ constraints:
     parent: purpose:<id> | constraint:<id> | null
     label: <short label>
 
+rationales:
+  - id: rationale:<stable-id>
+    kind: rationale
+    parent: rationale:<parent-id> | null
+    label: <short label>
+    summary: <why this matters now>
+
 relationships:
   - source: struct:<id>
     type: serves | constrained-by
@@ -95,7 +103,7 @@ relationships:
       - <path>
 ```
 
-Do not add other overlay kinds. Status is metadata only. Tests/checks are evidence inputs and packet context only; they are not durable map nodes.
+Rationale overlays explain why current structure matters or why a decision helps agents move forward. They are not a transcript, full ADR log, or record of every rejected thought. Do not add other overlay kinds. Status is metadata only. Tests/checks are evidence inputs and packet context only; they are not durable map nodes.
 
 ## Packet Role
 
@@ -108,6 +116,12 @@ Spec replacement is conditional. Packets can replace specs only when duplicate m
 Packets may cover system-context, container, component, code-path, or significant module nodes. Most module/file leaves can remain generated source-scan nodes until they need curated responsibility, constraints, or trust limits.
 
 Work packet-first: when mapping a scope, reconcile packets for touched structural nodes before expanding index and overlay ceremony. Index and overlays support navigation, shared anchors, and map consistency; they should not become a second packet registry or narrative work log.
+
+## Decision Anchors
+
+Decision anchors live in `docs/architecture/decisions/*.md`. They are not a history log, ADR archive, migration diary, or backlog. Use them only for key rationale that materially governs current structure and would be costly to rediscover from code, packets, and overlays.
+
+Decision anchors are sparse durable context. Link them from packets and checklists. Short rationale should usually be captured as rationale overlays; use a decision file only when the rationale needs authority, consequence, and review-trigger fields. Each decision must name structural anchors, current structural consequence, authority, and a review trigger.
 
 ## Generated Map Contract
 

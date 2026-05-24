@@ -155,16 +155,49 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("one canonical path", default)
         self.assertIn("test-led", default)
 
-    def test_conductor_uses_consistent_route_names_and_grillme_posture(self):
+    def test_conductor_is_checklist_driven_and_exits_without_crew(self):
         conductor = read("skills/conductor/SKILL.md").lower()
         interrogation_result = read(
             "skills/conductor/templates/PROBLEM_INTERROGATION_RESULT.template.md"
         ).lower()
+        checklist = read("skills/conductor/templates/CONDUCTOR_CHECKLIST.template.md").lower()
 
-        self.assertNotIn("lightweight grillme", conductor)
+        self.assertIn("checklist-driven workflow controller", conductor)
+        self.assertIn("if no crew handoff is needed", conductor)
+        self.assertIn("no fake lightweight constellation path", conductor)
+        self.assertIn("0. load project context", checklist)
+        self.assertIn("10. semantic closeout", checklist)
+        self.assertIn("constellation value decision", interrogation_result)
+        self.assertIn("use constellation | do not use constellation | ask user", interrogation_result)
+        self.assertIn("recommended next action", interrogation_result)
         self.assertIn("relentless", conductor)
-        self.assertIn("baseline-needed", interrogation_result)
+        self.assertNotIn("recommended route", interrogation_result)
         self.assertNotIn("custodian-needed", interrogation_result)
+
+    def test_conductor_removes_route_first_doctrine(self):
+        conductor_files = [
+            path
+            for path in (ROOT / "skills" / "conductor").rglob("*.md")
+            if path.is_file()
+        ]
+        combined = "\n".join(path.read_text(encoding="utf-8").lower() for path in conductor_files)
+
+        for phrase in [
+            "research/prototype",
+            "patch | quick",
+            "cautious/framing",
+            "baseline-needed",
+            "recommended route",
+            "**route:**",
+            "route-first",
+            "mode-first",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, combined)
+
+        self.assertIn("request cartographer baseline", combined)
+        self.assertIn("collect triage candidate", combined)
+        self.assertIn("create gated plan", combined)
 
     def test_model_stratification_and_gate_chunking_are_explicit(self):
         context = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
@@ -172,24 +205,24 @@ class ConstellationContentTests(unittest.TestCase):
         gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
 
         self.assertNotIn("model stratification", context)
-        self.assertIn("larger mandate", conductor)
-        self.assertIn("simpler model", conductor)
-        self.assertIn("chunk gates", conductor)
-        self.assertIn("simpler models", conductor)
+        self.assertIn("agent strength", conductor)
+        self.assertIn("gate complexity", conductor)
+        self.assertIn("scope size", conductor)
         self.assertIn("suggested model tier", gated_plan)
 
     def test_bounded_crew_stops_instead_of_inferring_hidden_intent(self):
         crew = read("skills/crew/SKILL.md").lower()
-        handoff = read("skills/conductor/templates/SUBAGENT_HANDOFF.template.md").lower()
+        handoff = read("skills/conductor/templates/CREW_HANDOFF.template.md").lower()
 
         self.assertIn("do not infer hidden intent", crew)
-        self.assertIn("mandate", handoff)
+        self.assertIn("assigned gate", handoff)
         self.assertIn("model tier", handoff)
         self.assertIn("specific exclusions", handoff)
-        self.assertIn("success criteria", handoff)
+        self.assertIn("intent protected", handoff)
         self.assertIn("required verification commands", handoff)
         self.assertIn("no-test-surface rationale", handoff)
         self.assertNotIn("forbidden scope", handoff)
+        self.assertNotIn("cartographer | triage", handoff)
 
     def test_ground_rule_decision_audit_doc_is_not_part_of_runtime_context(self):
         for rel_path in [
@@ -218,6 +251,10 @@ class ConstellationContentTests(unittest.TestCase):
     def test_decision_note_and_route_table_are_removed(self):
         self.assertFalse((ROOT / "skills/conductor/templates/DECISION_NOTE.template.md").exists())
         self.assertFalse((ROOT / "skills/conductor/references/route-table.md").exists())
+        self.assertFalse((ROOT / "skills/conductor/templates/FRAMING_NOTE.template.md").exists())
+        self.assertFalse((ROOT / "skills/conductor/templates/SUBAGENT_HANDOFF.template.md").exists())
+        self.assertTrue((ROOT / "skills/conductor/templates/CONDUCTOR_CHECKLIST.template.md").exists())
+        self.assertTrue((ROOT / "skills/conductor/templates/CREW_HANDOFF.template.md").exists())
 
         for rel_path in [
             "SKILL_INDEX.md",
@@ -254,7 +291,7 @@ class ConstellationContentTests(unittest.TestCase):
     def test_crew_tdd_mode_is_explicit_and_carried_by_handoffs(self):
         crew = read("skills/crew/SKILL.md").lower()
         gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
-        handoff = read("skills/conductor/templates/SUBAGENT_HANDOFF.template.md").lower()
+        handoff = read("skills/conductor/templates/CREW_HANDOFF.template.md").lower()
         implementer_result = read("skills/crew/templates/IMPLEMENTER_RESULT.template.md").lower()
         review_result = read("skills/crew/templates/REVIEW_RESULT.template.md").lower()
 
@@ -291,13 +328,14 @@ class ConstellationContentTests(unittest.TestCase):
         combined = f"{cartographer}\n{model}\n{packet}\n{index}"
 
         self.assertIn("current-only structural map", combined)
-        self.assertIn("purpose / constraint anchors", packet)
+        self.assertIn("purpose / constraint / rationale anchors", packet)
         self.assertIn("serves", combined)
         self.assertIn("constrained-by", combined)
         self.assertIn("depends-on", combined)
         self.assertIn("consumer -> provider", combined)
         self.assertIn("purpose usually stays", model)
         self.assertIn("constraints are sparse", model)
+        self.assertIn("rationale", model)
         self.assertIn("status is metadata only", model)
 
     def test_cartographer_uses_checkpoint_checklist_not_result_artifact(self):
@@ -345,6 +383,28 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("traceability mode: manual | validated | generated", checklist)
         self.assertIn("drift risk: low | medium | high", checklist)
         self.assertIn("parallel canonical docs: <paths or none>", checklist)
+
+    def test_cartographer_supports_sparse_decision_anchors_without_history_log(self):
+        model = read("skills/cartographer/references/map-model.md").lower()
+        packet = read("skills/cartographer/templates/ARCHITECTURE_PACKET.template.md").lower()
+        checklist = read("skills/cartographer/templates/CARTOGRAPHER_CHECKLIST.template.md").lower()
+        decision = read("skills/cartographer/templates/ARCHITECTURE_DECISION.template.md").lower()
+        readme = read("README.md").lower()
+        combined = f"{model}\n{packet}\n{checklist}\n{decision}"
+
+        self.assertTrue((ROOT / "skills/cartographer/templates/ARCHITECTURE_DECISION.template.md").exists())
+        self.assertIn("decision anchors", combined)
+        self.assertIn("docs/architecture/decisions/", readme)
+        self.assertIn("not a history log", model)
+        self.assertIn("current structural consequence", decision)
+        self.assertIn("structural anchors", decision)
+        self.assertIn("decision anchors", packet)
+        self.assertIn("key decisions/rationale", checklist)
+        self.assertIn("rationale anchors", packet)
+        self.assertIn("rationale:<id>", packet)
+        self.assertIn("captured as rationale overlays", model)
+        self.assertIn("advance current or future work", model)
+        self.assertNotIn("migration diary", decision)
 
     def test_cartographer_map_build_replaces_explorer_build(self):
         cartographer = read("skills/cartographer/SKILL.md").lower()
@@ -437,6 +497,60 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("smallest chunk", gated_plan)
         self.assertIn("closeout compression", workbench)
 
+    def test_conductor_uses_workbench_artifact_hygiene(self):
+        conductor = read("skills/conductor/SKILL.md").lower()
+        checklist = read("skills/conductor/templates/CONDUCTOR_CHECKLIST.template.md").lower()
+        workbench = read("skills/workbench/SKILL.md").lower()
+        readme = read("README.md").lower()
+
+        self.assertIn("workbench owns artifact hygiene", conductor)
+        self.assertIn("local_todo", checklist)
+        self.assertIn("crew-handoffs/", workbench)
+        self.assertIn("triage-candidates/", workbench)
+        self.assertNotIn("framing_note.md", workbench)
+        self.assertNotIn("    handoffs/", workbench)
+        self.assertNotIn("issue-recommendations/", workbench)
+        self.assertIn("crew-handoffs/", readme)
+        self.assertIn("triage-candidates/", readme)
+
+    def test_evidence_integration_requires_original_intent_not_approval_alone(self):
+        evidence = read("skills/conductor/templates/EVIDENCE_INTEGRATION.template.md").lower()
+
+        self.assertIn("original intent check", evidence)
+        self.assertIn("reviewer approval alone is insufficient", evidence)
+        self.assertIn("implementation evidence", evidence)
+        self.assertIn("review evidence", evidence)
+        self.assertIn("assumption check", evidence)
+        self.assertIn("scope drift check", evidence)
+        self.assertIn("request cartographer verification", evidence)
+
+    def test_conductor_collects_triage_candidates_instead_of_eager_issues(self):
+        conductor = read("skills/conductor/SKILL.md").lower()
+        gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
+        checklist = read("skills/conductor/templates/CONDUCTOR_CHECKLIST.template.md").lower()
+
+        self.assertIn("triage candidate log", gated_plan)
+        self.assertIn("dropped because", gated_plan)
+        self.assertIn("current work anchor", checklist)
+        self.assertIn("structural anchor", checklist)
+        self.assertIn("do not eagerly create issues", conductor)
+        self.assertIn("current gate cannot proceed", conductor)
+
+    def test_repo_mechanics_follow_project_orchestrator_context(self):
+        conductor = read("skills/conductor/SKILL.md").lower()
+        gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
+        checklist = read("skills/conductor/templates/CONDUCTOR_CHECKLIST.template.md").lower()
+        handoff = read("skills/conductor/templates/CREW_HANDOFF.template.md").lower()
+
+        combined = f"{conductor}\n{gated_plan}\n{checklist}\n{handoff}"
+        self.assertIn("project orchestrator context", combined)
+        self.assertIn("ask if silent", combined)
+        self.assertIn("project mechanics hooks", gated_plan)
+        self.assertIn("project mechanics status", checklist)
+        self.assertIn("project mechanics for this gate", handoff)
+        self.assertIn("commit sha", checklist)
+        self.assertNotIn("codex/", combined)
+
     def test_role_boundaries_survive_slimming(self):
         expectations = {
             "workbench": [".agent-work/", "not durable project truth"],
@@ -492,7 +606,7 @@ class ConstellationContentTests(unittest.TestCase):
         checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
         orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
         crew = read("skills/charter/templates/CREW_CONTEXT.template.md").lower()
-        handoff = read("skills/conductor/templates/SUBAGENT_HANDOFF.template.md").lower()
+        handoff = read("skills/conductor/templates/CREW_HANDOFF.template.md").lower()
 
         combined = f"{charter}\n{checklist}"
         self.assertIn("context density", combined)

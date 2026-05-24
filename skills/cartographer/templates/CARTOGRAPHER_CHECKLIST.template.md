@@ -62,6 +62,7 @@ Status values: `pending | in-progress | blocked | complete`
 - Packet path: `<docs/architecture/packets/*.md>`
 - Current-only sections reconciled: `<yes | no>`
 - Future/history/backlog removed: `<yes | no | none found>`
+- Key decisions/rationale: `<decision anchors created/updated or none>`
 - Dense agent context pass: `<yes | no>`
 
 ## Map Contract Gate

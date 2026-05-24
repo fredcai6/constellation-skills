@@ -63,7 +63,7 @@ Direction: consumer -> provider. Relationship type: `depends-on`.
 
 - `<path>`
 
-## Purpose / constraint anchors
+## Purpose / constraint / rationale anchors
 
 **Serves:**
 - `purpose:<id>`
@@ -71,10 +71,17 @@ Direction: consumer -> provider. Relationship type: `depends-on`.
 **Constrained by:**
 - `constraint:<id>`
 
+**Rationale anchors:**
+- `rationale:<id>`
+
 ## Generated map links
 
 - `docs/architecture/generated/map.json`
 - `<generated node page, if configured>`
+
+## Decision anchors
+
+- `docs/architecture/decisions/<decision>.md`
 
 ## Trust limitations
 

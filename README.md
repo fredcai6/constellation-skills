@@ -16,7 +16,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. |
 | `constellation-workbench` | Manage local todos, workflow artifacts, evidence, closeout, and archive. |
 | `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
-| `constellation-conductor` | Orchestrate problem interrogation, framing, gated planning, handoffs, and evidence integration. |
+| `constellation-conductor` | Coordinate checklist-driven problem interrogation, gated planning, Crew handoffs, evidence integration, reconciliation, and closeout. |
 | `constellation-crew` | Execute bounded implementation and independent review. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
 
@@ -118,6 +118,8 @@ python scripts/build_architecture_map.py --root . --source-root src --check
 
 ## Recommended durable artifacts
 
+Decision anchors live in `docs/architecture/decisions/` when sparse current-structure rationale is worth preserving.
+
 ```text
 docs/
   agents/
@@ -129,6 +131,8 @@ docs/
     index.md
     packets/
       <structural-node>.md
+    decisions/
+      <decision>.md
     overlays/
       *.yml
     MAP_BUILD.md
@@ -146,11 +150,11 @@ docs/
     CHARTER_CHECKLIST.md
     CARTOGRAPHER_CHECKLIST.md
     LOCAL_TODO.md
-    FRAMING_NOTE.md
+    CONDUCTOR_CHECKLIST.md
     GATED_PLAN.md
-    handoffs/
+    crew-handoffs/
     evidence/
-    issue-recommendations/
+    triage-candidates/
 
   archive/
     <date>-<work-id>/

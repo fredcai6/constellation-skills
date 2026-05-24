@@ -18,7 +18,7 @@ Maintains the current-only structural map in `docs/architecture/` with sparse pu
 ## Constellation Conductor
 Path: `skills/conductor/SKILL.md`
 
-Handles problem interrogation, framing notes, gated plans, handoffs, evidence integration, and gate closure.
+Coordinates checklist-driven interrogation, gated plans, Crew handoffs, evidence integration, architecture reconciliation, Triage candidates, and semantic closeout.
 
 ## Constellation Crew
 Path: `skills/crew/SKILL.md`
