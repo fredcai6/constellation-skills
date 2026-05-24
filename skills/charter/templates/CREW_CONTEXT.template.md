@@ -2,6 +2,8 @@
 
 Project-specific overlay for Crew implementer/reviewer behavior. Generic execution discipline stays in the skill; this file contains only project rules that change implementation or review.
 
+Agent-facing context. Use bullets, tables, and fragments. Omit prose that does not change agent action.
+
 ## Project Purpose
 
 `<What this project exists to do. Include what it explicitly is not trying to do.>`

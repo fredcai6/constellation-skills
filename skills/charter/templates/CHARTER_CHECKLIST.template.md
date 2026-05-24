@@ -35,6 +35,10 @@ All other writes are out of Charter scope.
 
 Material decisions affect future agent behavior, allowed scope, evidence, failure behavior, interfaces/contracts, canonical inputs, documentation duties, dependency policy, security/privacy/publicness, performance/resource posture, generated artifacts, compromise policy, or stop/report conditions.
 
+## Context Density
+
+Generated context is agent-facing. Minimize tokens and maximize information per token. Sacrifice grammar for brevity when meaning stays clear. Prefer bullets, tables, and fragments. Omit prose that does not change agent action.
+
 For each material decision use:
 
 ```text
@@ -145,6 +149,7 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 
 **Completion criteria:**
 - Durable context has decisions only, no debate history.
+- Context density checked: brief, clear, true, no filler.
 - Scope/exceptions appear only if needed.
 - No links to workflow-local files in generated context.
 - Crew context contains every project invariant that can change implementation, verification, review/blocking, or stop/report behavior.

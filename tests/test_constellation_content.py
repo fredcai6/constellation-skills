@@ -358,6 +358,27 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertNotIn("workbench", crew)
         self.assertNotIn("open_questions", crew)
 
+    def test_charter_outputs_prioritize_context_density(self):
+        charter = read("skills/charter/SKILL.md").lower()
+        checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+        orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
+        crew = read("skills/charter/templates/CREW_CONTEXT.template.md").lower()
+        handoff = read("skills/conductor/templates/SUBAGENT_HANDOFF.template.md").lower()
+
+        combined = f"{charter}\n{checklist}"
+        self.assertIn("context density", combined)
+        self.assertIn("sacrifice grammar", combined)
+        self.assertIn("minimize tokens", combined)
+        self.assertIn("information per token", combined)
+
+        for context in [orchestrator, crew]:
+            self.assertIn("agent-facing", context)
+            self.assertIn("bullets, tables, and fragments", context)
+            self.assertIn("omit prose that does not change agent action", context)
+
+        self.assertIn("agent-to-agent context", handoff)
+        self.assertIn("concise fragments", handoff)
+
     def test_charter_compile_checks_projection_correctness(self):
         checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
 

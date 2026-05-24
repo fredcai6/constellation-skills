@@ -1,5 +1,7 @@
 # Subagent Handoff
 
+Agent-to-agent context. Use concise fragments; omit filler.
+
 ## Role
 `<implementer | reviewer | cartographer | triage | etc.>`
 

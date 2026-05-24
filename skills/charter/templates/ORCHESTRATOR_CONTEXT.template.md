@@ -2,6 +2,8 @@
 
 Project-specific overlay for Conductor and Cartographer. Generic role mechanics stay in the skills; this file contains only project rules that affect work shaping, architecture clarification, evidence expectations, and stop/ask behavior.
 
+Agent-facing context. Use bullets, tables, and fragments. Omit prose that does not change agent action.
+
 ## Project Purpose
 
 `<What this project exists to do. Include what it explicitly is not trying to do.>`
