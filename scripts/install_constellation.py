@@ -23,6 +23,51 @@ class Skill:
     source_path: Path
 
 
+@dataclass(frozen=True)
+class AgentTarget:
+    name: str
+    user_env_var: str | None
+    user_config_dir: str
+    project_config_dir: str
+    restart_message: str
+
+
+AGENT_TARGETS: dict[str, AgentTarget] = {
+    "claude": AgentTarget(
+        name="Claude Code",
+        user_env_var=None,
+        user_config_dir=".claude",
+        project_config_dir=".claude",
+        restart_message=(
+            "Installed. Claude Code picks up changes in existing skill directories during the current session; "
+            "restart it if this created a top-level skills directory."
+        ),
+    ),
+    "codex": AgentTarget(
+        name="Codex",
+        user_env_var="CODEX_HOME",
+        user_config_dir=".codex",
+        project_config_dir=".codex",
+        restart_message="Installed. Restart Codex to pick up new or updated skills.",
+    ),
+    "cursor": AgentTarget(
+        name="Cursor",
+        user_env_var=None,
+        user_config_dir=".cursor",
+        project_config_dir=".cursor",
+        restart_message="Installed. Restart Cursor if the new or updated skills are not listed.",
+    ),
+    "gemini": AgentTarget(
+        name="Gemini CLI",
+        user_env_var=None,
+        user_config_dir=".gemini",
+        project_config_dir=".gemini",
+        restart_message="Installed. Restart Gemini CLI if the new or updated skills are not listed.",
+    ),
+}
+AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
+
+
 def parse_frontmatter(skill_md: Path) -> dict[str, str]:
     text = skill_md.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -101,18 +146,32 @@ def select_skills(requested: Sequence[str] | None, available: Iterable[Skill]) -
     return selected
 
 
-def default_user_target(env: Mapping[str, str]) -> Path:
-    codex_home = env.get("CODEX_HOME")
-    if codex_home:
-        return Path(codex_home).expanduser() / "skills"
-    return Path.home() / ".codex" / "skills"
+def home_from_env(env: Mapping[str, str]) -> Path:
+    for key in ("HOME", "USERPROFILE"):
+        value = env.get(key)
+        if value:
+            return Path(value).expanduser()
+    return Path.home()
 
 
-def resolve_target_root(args: argparse.Namespace, env: Mapping[str, str], cwd: Path) -> Path:
+def default_user_target(agent: AgentTarget, env: Mapping[str, str]) -> Path:
+    if agent.user_env_var:
+        configured_home = env.get(agent.user_env_var)
+        if configured_home:
+            return Path(configured_home).expanduser() / "skills"
+    return home_from_env(env) / agent.user_config_dir / "skills"
+
+
+def resolve_target_root(
+    args: argparse.Namespace,
+    agent: AgentTarget,
+    env: Mapping[str, str],
+    cwd: Path,
+) -> Path:
     if args.scope == "user":
         if args.project is not None:
             raise InstallError("--project is only valid with --scope project")
-        return args.dest.expanduser() if args.dest else default_user_target(env)
+        return args.dest.expanduser() if args.dest else default_user_target(agent, env)
 
     if args.dest and args.project:
         raise InstallError("use --dest or --project, not both")
@@ -123,7 +182,24 @@ def resolve_target_root(args: argparse.Namespace, env: Mapping[str, str], cwd: P
     project = args.project.expanduser() if args.project else cwd
     if not project.exists() or not project.is_dir():
         raise InstallError(f"project directory does not exist: {project}")
-    return project / ".codex" / "skills"
+    return project / agent.project_config_dir / "skills"
+
+
+def resolve_target_roots(
+    args: argparse.Namespace,
+    env: Mapping[str, str],
+    cwd: Path,
+) -> list[tuple[AgentTarget, Path]]:
+    if args.agent == "all":
+        if args.dest:
+            raise InstallError("--dest is only valid when installing for one --agent")
+        return [
+            (agent, resolve_target_root(args, agent, env, cwd))
+            for agent in AGENT_TARGETS.values()
+        ]
+
+    agent = AGENT_TARGETS[args.agent]
+    return [(agent, resolve_target_root(args, agent, env, cwd))]
 
 
 def ensure_target_is_inside_root(target_root: Path, target: Path) -> None:
@@ -133,16 +209,36 @@ def ensure_target_is_inside_root(target_root: Path, target: Path) -> None:
         raise InstallError(f"refusing to overwrite path outside target root: {target}")
 
 
+def remove_existing_constellation_set(target_root: Path) -> None:
+    if not target_root.exists():
+        return
+    if not target_root.is_dir():
+        raise InstallError(f"target root is not a directory: {target_root}")
+
+    for target in target_root.iterdir():
+        if not target.name.startswith("constellation-"):
+            continue
+        ensure_target_is_inside_root(target_root, target)
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+
+
 def install_skills(
     skills: Sequence[Skill],
     target_root: Path,
     *,
     dry_run: bool,
     force: bool,
+    restart_message: str,
     out: Callable[[str], object],
 ) -> None:
     action = "DRY RUN: would install" if dry_run else "Installing"
     out(f"{action} {len(skills)} skill(s) into {target_root}")
+
+    if force and not dry_run:
+        remove_existing_constellation_set(target_root)
 
     for skill in skills:
         target = target_root / skill.install_name
@@ -165,13 +261,14 @@ def install_skills(
         shutil.copytree(skill.source_path, target)
 
     if not dry_run:
-        out("Installed. Restart Codex to pick up new or updated skills.")
+        out(restart_message)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Install Constellation skills at user or project scope.",
+        description="Install Constellation skills for supported agents at user or project scope.",
     )
+    parser.add_argument("--agent", choices=AGENT_CHOICES, required=True)
     parser.add_argument("--scope", choices=("user", "project"), required=True)
     parser.add_argument(
         "--project",
@@ -207,8 +304,17 @@ def main(
         runtime_env = os.environ if env is None else env
         runtime_cwd = Path.cwd() if cwd is None else cwd
         skills = select_skills(args.skills, discover_skills())
-        target_root = resolve_target_root(args, runtime_env, runtime_cwd)
-        install_skills(skills, target_root, dry_run=args.dry_run, force=args.force, out=out)
+        target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
+        for agent, target_root in target_roots:
+            out(f"{agent.name}:")
+            install_skills(
+                skills,
+                target_root,
+                dry_run=args.dry_run,
+                force=args.force,
+                restart_message=agent.restart_message,
+                out=out,
+            )
     except InstallError as exc:
         parser.exit(2, f"error: {exc}\n")
 

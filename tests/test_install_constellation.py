@@ -28,7 +28,7 @@ def load_installer():
 
 
 class InstallConstellationTests(unittest.TestCase):
-    def test_project_scope_installs_all_skills_under_project_codex_skills(self):
+    def test_codex_project_scope_installs_all_skills_under_project_codex_skills(self):
         installer = load_installer()
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -36,7 +36,7 @@ class InstallConstellationTests(unittest.TestCase):
             project.mkdir()
 
             exit_code = installer.main(
-                ["--scope", "project", "--project", str(project)],
+                ["--agent", "codex", "--scope", "project", "--project", str(project)],
                 env={},
                 out=lambda _: None,
             )
@@ -49,7 +49,7 @@ class InstallConstellationTests(unittest.TestCase):
             )
             self.assertTrue((target_root / "constellation-charter" / "SKILL.md").exists())
 
-    def test_user_scope_uses_codex_home_and_accepts_short_or_full_skill_names(self):
+    def test_codex_user_scope_uses_codex_home_and_accepts_short_or_full_skill_names(self):
         installer = load_installer()
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -57,6 +57,8 @@ class InstallConstellationTests(unittest.TestCase):
 
             exit_code = installer.main(
                 [
+                    "--agent",
+                    "codex",
                     "--scope",
                     "user",
                     "--skills",
@@ -83,6 +85,8 @@ class InstallConstellationTests(unittest.TestCase):
 
             exit_code = installer.main(
                 [
+                    "--agent",
+                    "codex",
                     "--scope",
                     "user",
                     "--dest",
@@ -109,7 +113,16 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(
                 0,
                 installer.main(
-                    ["--scope", "user", "--dest", str(target_root), "--skills", "charter"],
+                    [
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "user",
+                        "--dest",
+                        str(target_root),
+                        "--skills",
+                        "charter",
+                    ],
                     env={},
                     out=lambda _: None,
                 ),
@@ -121,7 +134,16 @@ class InstallConstellationTests(unittest.TestCase):
             with contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit) as raised:
                     installer.main(
-                        ["--scope", "user", "--dest", str(target_root), "--skills", "charter"],
+                        [
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "user",
+                            "--dest",
+                            str(target_root),
+                            "--skills",
+                            "charter",
+                        ],
                         env={},
                         out=lambda _: None,
                     )
@@ -133,6 +155,8 @@ class InstallConstellationTests(unittest.TestCase):
                 0,
                 installer.main(
                     [
+                        "--agent",
+                        "codex",
                         "--scope",
                         "user",
                         "--dest",
@@ -155,6 +179,8 @@ class InstallConstellationTests(unittest.TestCase):
                 with self.assertRaises(SystemExit) as raised:
                     installer.main(
                         [
+                            "--agent",
+                            "codex",
                             "--scope",
                             "user",
                             "--dest",
@@ -167,6 +193,195 @@ class InstallConstellationTests(unittest.TestCase):
                     )
 
             self.assertNotEqual(0, raised.exception.code)
+
+    def test_claude_project_scope_installs_under_project_claude_skills(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "target-project"
+            project.mkdir()
+
+            exit_code = installer.main(
+                [
+                    "--agent",
+                    "claude",
+                    "--scope",
+                    "project",
+                    "--project",
+                    str(project),
+                    "--skills",
+                    "conductor",
+                ],
+                env={},
+                out=lambda _: None,
+            )
+
+            self.assertEqual(0, exit_code)
+            self.assertTrue(
+                (project / ".claude" / "skills" / "constellation-conductor" / "SKILL.md").exists()
+            )
+            self.assertFalse((project / ".codex").exists())
+
+    def test_claude_user_scope_uses_home_claude_skills(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+
+            exit_code = installer.main(
+                [
+                    "--agent",
+                    "claude",
+                    "--scope",
+                    "user",
+                    "--skills",
+                    "triage",
+                ],
+                env={"HOME": str(home)},
+                out=lambda _: None,
+            )
+
+            self.assertEqual(0, exit_code)
+            self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
+
+    def test_cursor_and_gemini_project_scopes_use_native_skill_roots(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for agent, config_dir in (("cursor", ".cursor"), ("gemini", ".gemini")):
+                with self.subTest(agent=agent):
+                    project = Path(tmp) / f"{agent}-project"
+                    project.mkdir()
+
+                    exit_code = installer.main(
+                        [
+                            "--agent",
+                            agent,
+                            "--scope",
+                            "project",
+                            "--project",
+                            str(project),
+                            "--skills",
+                            "workbench",
+                        ],
+                        env={},
+                        out=lambda _: None,
+                    )
+
+                    self.assertEqual(0, exit_code)
+                    self.assertTrue(
+                        (
+                            project
+                            / config_dir
+                            / "skills"
+                            / "constellation-workbench"
+                            / "SKILL.md"
+                        ).exists()
+                    )
+
+    def test_all_agent_project_scope_installs_each_native_skill_root(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "target-project"
+            project.mkdir()
+
+            exit_code = installer.main(
+                [
+                    "--agent",
+                    "all",
+                    "--scope",
+                    "project",
+                    "--project",
+                    str(project),
+                    "--skills",
+                    "charter",
+                ],
+                env={},
+                out=lambda _: None,
+            )
+
+            self.assertEqual(0, exit_code)
+            for config_dir in (".claude", ".codex", ".cursor", ".gemini"):
+                with self.subTest(config_dir=config_dir):
+                    self.assertTrue(
+                        (
+                            project
+                            / config_dir
+                            / "skills"
+                            / "constellation-charter"
+                            / "SKILL.md"
+                        ).exists()
+                    )
+
+    def test_all_agent_install_rejects_explicit_dest(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        [
+                            "--agent",
+                            "all",
+                            "--scope",
+                            "user",
+                            "--dest",
+                            str(Path(tmp) / "skills"),
+                        ],
+                        env={},
+                        out=lambda _: None,
+                    )
+
+            self.assertNotEqual(0, raised.exception.code)
+
+    def test_force_removes_previous_constellation_set_before_installing_requested_skills(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root)],
+                    env={},
+                    out=lambda _: None,
+                ),
+            )
+            retired = target_root / "constellation-retired"
+            retired.mkdir()
+            (retired / "SKILL.md").write_text("stale", encoding="utf-8")
+
+            self.assertEqual(
+                0,
+                installer.main(
+                    [
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "user",
+                        "--dest",
+                        str(target_root),
+                        "--skills",
+                        "charter",
+                        "--force",
+                    ],
+                    env={},
+                    out=lambda _: None,
+                ),
+            )
+
+            self.assertEqual(["constellation-charter"], sorted(path.name for path in target_root.iterdir()))
+
+    def test_agent_is_required_to_keep_install_target_explicit(self):
+        installer = load_installer()
+
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as raised:
+                installer.main(["--scope", "user"], env={}, out=lambda _: None)
+
+        self.assertNotEqual(0, raised.exception.code)
 
 
 if __name__ == "__main__":

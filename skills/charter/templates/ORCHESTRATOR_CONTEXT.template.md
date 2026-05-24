@@ -23,14 +23,30 @@ Project-specific overlay for Conductor and Cartographer. Generic role mechanics 
 |---|---|---|---|
 | `<subsystem>` | `<profile>` | `<context>` | `<planning/framing/evidence implication>` |
 
+## Handoff Requirements
+
+Every handoff should include assigned task, allowed scope, specific exclusions if any, success criteria, required evidence, required verification commands when relevant, test mode or no-test-surface rationale, stop conditions, and return format.
+
+## Evidence And Verification Map
+
+`<Omit this section when there are no area-specific evidence rules. Area-specific commands belong in handoffs, not Crew context.>`
+
+| Area/subsystem | Required evidence | Handoff implication |
+|---|---|---|
+| `<area>` | `<evidence or command>` | `<what must be copied into handoff>` |
+
 ## Canonical Inputs And Data Sources
 
 - `<input/source>`: `<when it is canonical and what agents must not bypass>`
 
+## Architecture And Scope Constraints
+
+- `<planning/framing rule for ownership, cross-boundary work, canonical paths, or architecture clarification>`
+
 ## Engineering Rules
 
 - `<project-specific correctness/evidence/interface/failure/state rule>`
-- `<project-specific architecture boundary or documentation rule>`
+- `<project-specific documentation rule>`
 - `<project-specific dependency/security/performance/generated artifact rule>`
 
 ## Evidence Expectations

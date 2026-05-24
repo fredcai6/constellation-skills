@@ -13,7 +13,7 @@ A usable material decision names:
 - canonical input/data source if relevant
 - failure consequence
 - evidence expectation
-- generated context target
+- projection and role-specific generated context form
 
 If any are missing, continue drilling.
 
@@ -39,7 +39,10 @@ Evidence:
 Quality:
 Authority:
 Posture:
-Output target:
+Projection:
+Projection reason:
+Orchestrator form:
+Crew form:
 ```
 
 Quality values:
@@ -60,6 +63,20 @@ Posture values:
 rigorous-default | relaxed | strengthened | mixed | not-applicable
 ```
 
+Projection values:
+
+```text
+orchestrator | crew | both | glossary | checklist-only
+```
+
+Projection reason values:
+
+```text
+planning/framing | gating/evidence | authority/scope | implementation | verification | review/blocking | stop/report | terminology | local traceability
+```
+
+Shared project invariants default to `both` unless clearly role-specific. Record role-specific wording for every `both` decision. Architecture and scope policy usually projects to Orchestrator; Crew receives assigned scope, specific exclusions, and required evidence through the handoff.
+
 ## Follow-up ladder
 
 When the user answers broadly, move down the ladder:
@@ -70,7 +87,7 @@ Broad claim
 -> concrete scenario
 -> unacceptable outcome
 -> evidence requirement
--> generated context rule
+-> projection and role-specific generated context rule
 ```
 
 Example:

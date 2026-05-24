@@ -104,7 +104,11 @@ Record material decisions in the checklist with:
 Quality: strong | usable | weak | unresolved | not-material
 Authority: user decision | accepted default | unconfirmed default | repo artifact | assumption
 Posture: rigorous-default | relaxed | strengthened | mixed | not-applicable
+Projection: orchestrator | crew | both | glossary | checklist-only
+Projection reason: planning/framing | gating/evidence | authority/scope | implementation | verification | review/blocking | stop/report | terminology | local traceability
 ```
+
+Every material decision needs role-use projection. Shared project invariants default to `both` unless clearly role-specific. Architecture and scope policy is usually Orchestrator-only; Crew receives its consequences through the handoff.
 
 Weak and unresolved decisions must remain visible in `.agent-work/CHARTER_OPEN_QUESTIONS.md` during provisional compile.
 
@@ -123,6 +127,10 @@ Do not optimize for one-session completion. Optimize for resolved, role-operable
 ## Context Compile
 
 Generated context is the best-understood current project overlay. It should not include Charter process history, compile status, role manuals, route tables, model-selection mechanics, or links to workflow-local files.
+
+Project shared rules may appear in both contexts, but must be role-specific wording. Orchestrator phrasing explains planning, framing, gating, authority, evidence, or stop/ask impact. Crew phrasing explains implementation, verification, review/blocking, or stop/report impact.
+
+Crew context contains only rules consumed within an assigned handoff. Workflow selection and coordination consequences reach Crew through the handoff.
 
 Use scope or exception notes only when needed to prevent misuse. Keep durable context to decisions, not debate history.
 

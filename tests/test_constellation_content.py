@@ -107,6 +107,29 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("contradiction register", checklist)
         self.assertIn("strong | usable | weak | unresolved | not-material", checklist)
         self.assertIn("user decision | accepted default | unconfirmed default | repo artifact | assumption", checklist)
+        self.assertNotIn("output target", checklist)
+
+    def test_charter_forces_role_use_projection(self):
+        charter = read("skills/charter/SKILL.md").lower()
+        checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+        protocol = read("skills/charter/references/interrogation-protocol.md").lower()
+        combined = f"{charter}\n{checklist}\n{protocol}"
+
+        self.assertIn("projection: orchestrator | crew | both | glossary | checklist-only", combined)
+        self.assertIn("projection reason", combined)
+        self.assertIn("planning/framing", combined)
+        self.assertIn("gating/evidence", combined)
+        self.assertIn("authority/scope", combined)
+        self.assertIn("implementation", combined)
+        self.assertIn("verification", combined)
+        self.assertIn("review/blocking", combined)
+        self.assertIn("stop/report", combined)
+        self.assertIn("terminology", combined)
+        self.assertIn("local traceability", combined)
+        self.assertIn("orchestrator form", combined)
+        self.assertIn("crew form", combined)
+        self.assertIn("shared project invariants default to `both`", combined)
+        self.assertIn("role-specific wording", combined)
 
     def test_charter_rubric_is_engineering_operational_not_truth_topology(self):
         rubric = read("skills/charter/references/engineering-rubric.md").lower()
@@ -162,6 +185,11 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("do not infer hidden intent", crew)
         self.assertIn("mandate", handoff)
         self.assertIn("model tier", handoff)
+        self.assertIn("specific exclusions", handoff)
+        self.assertIn("success criteria", handoff)
+        self.assertIn("required verification commands", handoff)
+        self.assertIn("no-test-surface rationale", handoff)
+        self.assertNotIn("forbidden scope", handoff)
 
     def test_ground_rule_decision_audit_doc_is_not_part_of_runtime_context(self):
         for rel_path in [
@@ -303,19 +331,42 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertFalse(old_low_level.exists())
         self.assertIn("conductor and cartographer", orchestrator)
         self.assertIn("project-specific overlay", orchestrator)
+        self.assertIn("handoff requirements", orchestrator)
+        self.assertIn("evidence and verification map", orchestrator)
+        self.assertIn("architecture and scope constraints", orchestrator)
         self.assertNotIn("triage", orchestrator)
         self.assertNotIn("workbench", orchestrator)
         self.assertNotIn("open_questions", orchestrator)
         self.assertNotIn("charter status", orchestrator)
 
         self.assertIn("crew context", crew)
+        self.assertIn("handoff discipline", crew)
+        self.assertIn("required handoff fields", crew)
+        self.assertIn("specific exclusions, if any", crew)
+        self.assertIn("handoff-required", crew)
         self.assertIn("stop and report", crew)
         self.assertIn("review block criteria", crew)
+        self.assertNotIn("forbidden scope", crew)
+        self.assertNotIn("route selection", crew)
+        self.assertNotIn("workflow track", crew)
+        self.assertNotIn("worktree setup", crew)
+        self.assertNotIn("gate sequencing", crew)
+        self.assertNotIn("architecture boundary", crew)
         self.assertNotIn("conductor", crew)
         self.assertNotIn("cartographer", crew)
         self.assertNotIn("triage", crew)
         self.assertNotIn("workbench", crew)
         self.assertNotIn("open_questions", crew)
+
+    def test_charter_compile_checks_projection_correctness(self):
+        checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+
+        self.assertIn("crew context contains every project invariant", checklist)
+        self.assertIn("orchestrator context contains every project invariant", checklist)
+        self.assertIn("shared decisions use role-specific wording", checklist)
+        self.assertIn("crew context contains only universal verification rules", checklist)
+        self.assertIn("area-specific commands are represented as handoff requirements", checklist)
+        self.assertIn("workflow selection and coordination consequences reach crew through the handoff", checklist)
 
     def test_skill_frontmatter_has_only_name_and_description(self):
         for path in (ROOT / "skills").glob("*/SKILL.md"):
@@ -333,6 +384,11 @@ class ConstellationContentTests(unittest.TestCase):
         readme = read("README.md")
 
         self.assertIn("scripts/install_constellation.py", readme)
+        self.assertIn("--agent codex", readme)
+        self.assertIn("--agent claude", readme)
+        self.assertIn("--agent cursor", readme)
+        self.assertIn("--agent gemini", readme)
+        self.assertIn("--agent all", readme)
         self.assertIn("--scope user", readme)
         self.assertIn("--scope project", readme)
         self.assertIn("--dry-run", readme)

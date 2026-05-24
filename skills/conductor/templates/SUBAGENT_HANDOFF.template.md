@@ -18,6 +18,9 @@
 ## Intent
 `<why this task exists / what future state it supports>`
 
+## Success criteria
+`<done condition and acceptance criteria>`
+
 ## Authority
 
 - **Explicit user decision:** `<decision or none>`
@@ -29,8 +32,8 @@
 ## Allowed scope
 `<files, regions, artifacts, or decisions this agent may touch>`
 
-## Forbidden scope
-`<what this agent must not change, decide, or inspect unless blocked>`
+## Specific exclusions
+`<rare explicit files, areas, or decisions that may seem in scope but must not be touched; omit if none>`
 
 ## Required context
 - `<doc/packet/rule/handoff>`
@@ -43,6 +46,12 @@
 
 ## Required evidence
 `<tests, commands, inspection notes, generated artifact status>`
+
+## Required verification commands
+`<commands or none with reason>`
+
+## No-test-surface rationale
+`<only when test mode says no test required>`
 
 ## Stop conditions
 Stop and return if scope is exceeded, new architecture decision is required, evidence cannot be produced, glossary ambiguity appears, or dependency/failure policy decision is needed.

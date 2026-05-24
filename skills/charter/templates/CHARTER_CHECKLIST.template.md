@@ -30,14 +30,18 @@ All other writes are out of Charter scope.
 **Quality:** `strong | usable | weak | unresolved | not-material`  
 **Authority:** `user decision | accepted default | unconfirmed default | repo artifact | assumption`  
 **Posture:** `rigorous-default | relaxed | strengthened | mixed | not-applicable`
+**Projection:** `orchestrator | crew | both | glossary | checklist-only`
+**Projection reason:** `planning/framing | gating/evidence | authority/scope | implementation | verification | review/blocking | stop/report | terminology | local traceability`
 
 Material decisions affect future agent behavior, allowed scope, evidence, failure behavior, interfaces/contracts, canonical inputs, documentation duties, dependency policy, security/privacy/publicness, performance/resource posture, generated artifacts, compromise policy, or stop/report conditions.
 
 For each material decision use:
 
 ```text
-Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
+Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence -> Projection
 ```
+
+Shared project invariants default to `both` unless clearly role-specific. Architecture and scope policy is usually Orchestrator-only; Crew receives its consequences through the handoff.
 
 ## Gate 0: Bootstrap
 
@@ -132,15 +136,22 @@ Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
 **Purpose:** Compile decisions into operational context, not history.
 
 **Required prompts:**
-- What belongs in Orchestrator context?
-- What belongs in Crew context?
+- What belongs in Orchestrator context for planning/framing, gating/evidence, authority/scope, or stop/ask?
+- What belongs in Crew context for implementation, verification, review/blocking, or stop/report?
 - What terms belong in Glossary?
+- Are shared decisions role-phrased instead of mechanically duplicated?
+- Are handoff-only details kept out of durable Crew context?
 - Which weak/unresolved items remain in `.agent-work/CHARTER_OPEN_QUESTIONS.md`?
 
 **Completion criteria:**
 - Durable context has decisions only, no debate history.
 - Scope/exceptions appear only if needed.
 - No links to workflow-local files in generated context.
+- Crew context contains every project invariant that can change implementation, verification, review/blocking, or stop/report behavior.
+- Orchestrator context contains every project invariant that changes framing, gate design, authority/scope decisions, evidence selection, or stop/ask behavior.
+- Shared decisions use role-specific wording.
+- Crew context contains only universal verification rules; area-specific commands are represented as handoff requirements.
+- Workflow selection and coordination consequences reach Crew through the handoff.
 
 ## Gate 6: Closeout
 
@@ -153,14 +164,20 @@ Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
 - [ ] `docs/agents/ORCHESTRATOR_CONTEXT.md` updated.
 - [ ] `docs/agents/CREW_CONTEXT.md` updated.
 - [ ] `docs/agents/GLOSSARY.md` updated.
+- [ ] Shared project invariants default to `both` unless clearly role-specific.
+- [ ] Every `both` decision has non-empty Orchestrator and Crew forms with role-specific wording.
+- [ ] Crew context contains every project invariant that can change implementation, verification, review/blocking, or stop/report behavior.
+- [ ] Orchestrator context contains every project invariant that changes framing, gate design, authority/scope decisions, evidence selection, or stop/ask behavior.
+- [ ] Crew context contains only universal verification rules; area-specific commands are represented as handoff requirements.
+- [ ] Handoff-only details are not placed in durable Crew context.
 - [ ] `.agent-work/CHARTER_OPEN_QUESTIONS.md` deleted or absent.
 - [ ] This checklist retained.
 
 ## Material Decisions
 
-| ID | Gate | Decision | Quality | Authority | Posture | Output target |
-|---|---|---|---|---|---|---|
-| D-001 | `<gate>` | `<decision>` | `<quality>` | `<authority>` | `<posture>` | `<orchestrator | crew | glossary | checklist only>` |
+| ID | Gate | Decision | Quality | Authority | Posture | Projection | Projection reason |
+|---|---|---|---|---|---|---|---|
+| D-001 | `<gate>` | `<decision>` | `<quality>` | `<authority>` | `<posture>` | `<orchestrator | crew | both | glossary | checklist-only>` | `<reason>` |
 
 ### D-001: `<short title>`
 
@@ -170,7 +187,12 @@ Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
 **Scenario:** `<specific conflict>`  
 **Decision:** `<chosen rule>`  
 **Evidence:** `<what proves compliance>`  
-**Role implication:** `<orchestrator/crew/glossary implication>`  
+**Projection:** `orchestrator | crew | both | glossary | checklist-only`  
+**Projection reason:** `<controlled reason plus optional note>`  
+**Orchestrator form:** `<planning/framing/gating/authority/evidence/stop-ask wording or n/a>`  
+**Crew form:** `<implementation/verification/review/blocking/stop-report wording or n/a>`  
+**Glossary form:** `<term/meaning or n/a>`  
+**Projection note:** `<only when the projection could be ambiguous>`  
 **Notes:** `<decision traceability only, not transcript>`
 
 ## Informational Notes

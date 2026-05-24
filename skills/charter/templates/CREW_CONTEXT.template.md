@@ -10,6 +10,24 @@ Project-specific overlay for Crew implementer/reviewer behavior. Generic executi
 
 `<Omit this section when context applies cleanly to the whole repo. Include only partial coverage or material subsystem differences.>`
 
+## Handoff Discipline
+
+Crew works from the assigned handoff. Use the handoff task, allowed scope, specific exclusions, success criteria, required evidence, handoff-required verification commands, test mode or no-test-surface rationale, stop conditions, and return format.
+
+Stop and report if required handoff fields are missing, contradictory, or impossible.
+
+## Required Handoff Fields
+
+- assigned task
+- allowed scope
+- specific exclusions, if any
+- success criteria
+- required evidence
+- required verification commands, if any
+- test mode or no-test-surface rationale
+- stop conditions
+- return format
+
 ## Subsystem Rigor
 
 | Subsystem | Rigor profile | Execution context | Crew implication |
@@ -45,6 +63,7 @@ Project-specific overlay for Crew implementer/reviewer behavior. Generic executi
 **Bug fixes:** `<regression evidence>`  
 **Interface/contract changes:** `<contract/caller evidence>`  
 **Generated artifacts:** `<regenerate/check/review evidence>`  
+**Verification commands:** `<universal commands only; area-specific commands come from the handoff>`  
 **No relevant test surface:** `<artifact categories and required review evidence>`
 
 ## Documentation Rules
@@ -77,4 +96,4 @@ Block when:
 
 ## Stop And Report
 
-Stop and report when task authority is exceeded, required evidence cannot be produced, a material rule is ambiguous, a boundary or contract decision is needed, or project context conflicts with observed behavior.
+Stop and report when task authority is exceeded, required evidence cannot be produced, a material rule is ambiguous, a contract decision is needed, assigned scope is exceeded, or project context conflicts with observed behavior.

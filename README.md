@@ -25,40 +25,83 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 Preview first:
 
 ```powershell
-python scripts/install_constellation.py --scope user --dry-run
+python scripts/install_constellation.py --agent codex --scope user --dry-run
 ```
 
-Install for the current user:
+Install for the current Codex user:
 
 ```powershell
-python scripts/install_constellation.py --scope user
+python scripts/install_constellation.py --agent codex --scope user
 ```
 
-Install into a project:
+Install for the current Claude Code user:
 
 ```powershell
-python scripts/install_constellation.py --scope project --project C:\path\to\repo
+python scripts/install_constellation.py --agent claude --scope user
+```
+
+Install for Cursor or Gemini CLI:
+
+```powershell
+python scripts/install_constellation.py --agent cursor --scope user
+python scripts/install_constellation.py --agent gemini --scope user
+```
+
+Install for every supported agent:
+
+```powershell
+python scripts/install_constellation.py --agent all --scope user
+```
+
+Install into a Codex project:
+
+```powershell
+python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo
+```
+
+Install into a Claude Code project:
+
+```powershell
+python scripts/install_constellation.py --agent claude --scope project --project C:\path\to\repo
+```
+
+Install into every supported project agent root:
+
+```powershell
+python scripts/install_constellation.py --agent all --scope project --project C:\path\to\repo
 ```
 
 Install selected skills:
 
 ```powershell
-python scripts/install_constellation.py --scope project --project C:\path\to\repo --skills charter conductor
+python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo --skills charter conductor
 ```
 
 Refresh an existing install:
 
 ```powershell
-python scripts/install_constellation.py --scope user --force
+python scripts/install_constellation.py --agent codex --scope user --force
 ```
 
 Rules:
 
-- User scope installs to `$CODEX_HOME/skills`, or `~/.codex/skills` when `CODEX_HOME` is unset.
-- Project scope installs to `<project>/.codex/skills`; `--dest` can point at a skills directory directly.
+- `--agent` is required and must be `codex`, `claude`, `cursor`, `gemini`, or `all`.
+- Codex user scope installs to `$CODEX_HOME/skills`, or `~/.codex/skills` when `CODEX_HOME` is unset.
+- Codex project scope installs to `<project>/.codex/skills`.
+- Claude Code user scope installs to `~/.claude/skills`.
+- Claude Code project scope installs to `<project>/.claude/skills`.
+- Cursor user scope installs to `~/.cursor/skills`.
+- Cursor project scope installs to `<project>/.cursor/skills`.
+- Gemini CLI user scope installs to `~/.gemini/skills`.
+- Gemini CLI project scope installs to `<project>/.gemini/skills`.
+- `--dest` can point at a skills directory directly when installing for one agent.
+- `--agent all` installs to each supported agent's native skills directory and rejects `--dest`.
 - Installed folder names use each skill's frontmatter name, such as `constellation-charter`.
 - Existing skill folders fail fast unless `--force` is set.
-- Restart Codex after installing or refreshing skills.
+- `--force` removes all existing `constellation-*` entries in the target skills directory before copying the requested skills.
+- Restart Codex after installing or refreshing Codex skills.
+- Claude Code picks up changes in existing skill directories during the current session; restart it if the install created a top-level skills directory.
+- Restart Cursor or Gemini CLI if new or updated skills are not listed in the current session.
 
 ## Baseline assumptions
 
