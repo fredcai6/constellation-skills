@@ -25,7 +25,7 @@ class ConstellationContentTests(unittest.TestCase):
             "cartographer": 1900,
             "conductor": 2900,
             "crew": 1250,
-            "triage": 1300,
+            "triage": 1500,
         }
 
         for skill, limit in limits.items():
@@ -368,6 +368,22 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("triage", conductor)
         self.assertIn("triage", cartographer)
         self.assertIn("does not implement", triage)
+
+    def test_triage_consumes_cartographer_structural_handoffs(self):
+        triage = read("skills/triage/SKILL.md").lower()
+        recommendation = read("skills/triage/templates/TRIAGE_RECOMMENDATION.template.md").lower()
+        combined = f"{triage}\n{recommendation}"
+
+        self.assertIn(".agent-work/cartographer_checklist.md", combined)
+        self.assertIn("structural anchor", recommendation)
+        self.assertIn("cartographer mismatch class", recommendation)
+        self.assertIn("current truth", recommendation)
+        self.assertIn("desired/future concern", recommendation)
+        self.assertIn("source checklist/artifact", recommendation)
+        self.assertIn("future-work packaging", triage)
+        self.assertIn("missing structural node", triage)
+        self.assertIn("stale generated map", triage)
+        self.assertIn("structure/constraint mismatch", triage)
 
     def test_curation_modes_and_escape_hatches_are_explicit(self):
         charter = read("skills/charter/SKILL.md").lower()
