@@ -15,7 +15,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 |---|---|
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. |
 | `constellation-workbench` | Manage local todos, workflow artifacts, evidence, closeout, and archive. |
-| `constellation-cartographer` | Verify and document current architecture truth. |
+| `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
 | `constellation-conductor` | Orchestrate problem interrogation, framing, gated planning, handoffs, and evidence integration. |
 | `constellation-crew` | Execute bounded implementation and independent review. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
@@ -105,7 +105,7 @@ Rules:
 
 ## Baseline assumptions
 
-Constellation assumes a Git repo, Markdown documentation, and file-based workflow artifacts. Issue tracker, docs explorer, diagramming, CI, and runtime commands are project-specific and should be clarified by Charter.
+Constellation assumes a Git repo, Markdown documentation, and file-based workflow artifacts. Issue tracker, structural map generation, CI, and runtime commands are project-specific and should be clarified by Charter.
 
 ## Recommended durable artifacts
 
@@ -119,10 +119,12 @@ docs/
   architecture/
     index.md
     packets/
-      <region>.md
-    diagrams/
-      *.mmd
-    EXPLORER_BUILD.md
+      <structural-node>.md
+    overlays/
+      *.yml
+    MAP_BUILD.md
+    generated/
+      map.json
 ```
 
 ## Recommended workflow artifacts
@@ -133,6 +135,7 @@ docs/
 
   <work-id>/
     CHARTER_CHECKLIST.md
+    CARTOGRAPHER_CHECKLIST.md
     LOCAL_TODO.md
     FRAMING_NOTE.md
     GATED_PLAN.md

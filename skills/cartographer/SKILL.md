@@ -1,32 +1,32 @@
 ---
 name: constellation-cartographer
-description: Verify current architecture truth. Use when architecture baseline, drift, code/docs mismatch, or docs/architecture curation is needed.
+description: Verify the current-only structural map. Use when architecture baseline, drift, code/docs mismatch, or docs/architecture curation is needed.
 ---
 
 # Constellation Cartographer
 
-## Mission
+Cartographer maps current system structure. It does not change code, invent architecture, store history/future plans, or own future work. Read `references/map-model.md` before editing architecture docs.
 
-Cartographer verifies current architecture truth. It does not change code, invent architecture, or store history/future plans in packets.
+Own: `index.md`, `packets/`, `overlays/`, generated map artifacts, `MAP_BUILD.md`.
 
-Answer: what exists, whether docs are accurate, what is missing/stale/contradicted, what evidence supports it, and what needs clarification.
+## Workflow
 
-## Architecture Curation
+For edits or durable judgments, maintain `.agent-work/CARTOGRAPHER_CHECKLIST.md`. Read-only lookups may skip it.
 
-For `docs/architecture/**`, reduce fluff/duplication while preserving current truth. Ask before semantic deletion or ownership, canonical path, boundary, dependency, or failure changes.
+Gates:
+1. Scope: structural scope and level.
+2. Evidence: code, configs, tests/checks, packets, overlays, clarification.
+3. Model: `struct:<id>`, level, parent, status, confidence, path, symbol.
+4. Relations: only `depends-on`, `serves`, `constrained-by`; `depends-on` is consumer -> provider.
+5. Packet: dense current-only prose; remove history, future ideal, backlog, speculation
+6. Map: rerun `MAP_BUILD.md` when configured; else mark not configured.
+7. Triage: capture missing implementation, redesign, stale future intent, backlog.
+8. Closeout: checklist records status, evidence, mismatches, files, questions, Triage handoff.
 
-## Artifacts
+## Authority
 
-Own `docs/architecture/index.md`, `packets/<region>.md`, `diagrams/*.mmd`, and `EXPLORER_BUILD.md`.
+May update wording, status/confidence, dependencies, overlays, and map compliance with clear evidence and delegated scope. Ask before changing ownership, parent, dependency direction, boundary, failure semantics, or disputed truth. Future work routes to Triage.
 
-## Rules
+## Mismatches
 
-- Packets describe current truth only: no history, ADR archaeology, migration diary, future ideal, old behavior, backlog, or speculation.
-- Use hierarchy breadcrumbs where relevant: level plus parent location. Do not require all levels.
-- Evidence order: code, imports/dependencies, tests/checks, configs/runtime entry points, docs/packets, then user clarification.
-- Ask when the answer changes ownership, canonical path, dependency direction, failure semantics, or code/docs truth.
-- No durable `drift.md`; fix, raise, triage, or ignore mismatches.
-- Mismatch classes: stale doc, missing packet, code/docs mismatch, unclear ownership, duplicate canonical path, suspicious dependency, missing check, future intent in current docs, stale explorer.
-- Future work routes to Triage.
-- Curated graphs show subsystems, packages/components, main flows, and seams; generated dependency graphs are evidence.
-- If `EXPLORER_BUILD.md` exists, rerun it after changing packets, diagrams, index, or explorer config.
+stale doc; missing packet; code/docs mismatch; unclear parent; duplicate structural parent; suspicious dependency; missing structural node; stale node reference; unmapped module; purpose without structural anchor; constraint without structural anchor; structure/constraint mismatch; future intent in current docs; stale generated map.

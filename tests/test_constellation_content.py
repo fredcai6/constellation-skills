@@ -268,15 +268,97 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_architecture_hierarchy_breadcrumbs_are_explicit(self):
         cartographer = read("skills/cartographer/SKILL.md").lower()
+        model = read("skills/cartographer/references/map-model.md").lower()
         packet = read("skills/cartographer/templates/ARCHITECTURE_PACKET.template.md").lower()
         index = read("skills/cartographer/templates/ARCHITECTURE_INDEX.template.md").lower()
 
-        self.assertIn("hierarchy", cartographer)
+        self.assertIn("structural map", cartographer)
+        self.assertIn("architecture and code are one hierarchy", model)
+        self.assertIn("module/file", model)
+        self.assertIn("function-or-method", model)
+        self.assertIn("structural node", packet)
         self.assertIn("level", packet)
         self.assertIn("parent", packet)
-        self.assertIn("system-context | container | component | code-path", packet)
-        self.assertIn("architecture hierarchy", index)
-        self.assertIn("do not require all levels", cartographer)
+        self.assertIn("system-context | container | component | code-path | module", packet)
+        self.assertIn("structural hierarchy", index)
+        self.assertNotIn("do not require all levels", cartographer)
+
+    def test_cartographer_model_is_current_structural_map_with_sparse_overlay(self):
+        cartographer = read("skills/cartographer/SKILL.md").lower()
+        model = read("skills/cartographer/references/map-model.md").lower()
+        packet = read("skills/cartographer/templates/ARCHITECTURE_PACKET.template.md").lower()
+        index = read("skills/cartographer/templates/ARCHITECTURE_INDEX.template.md").lower()
+        combined = f"{cartographer}\n{model}\n{packet}\n{index}"
+
+        self.assertIn("current-only structural map", combined)
+        self.assertIn("purpose / constraint anchors", packet)
+        self.assertIn("serves", combined)
+        self.assertIn("constrained-by", combined)
+        self.assertIn("depends-on", combined)
+        self.assertIn("consumer -> provider", combined)
+        self.assertIn("purpose usually stays", model)
+        self.assertIn("constraints are sparse", model)
+        self.assertIn("status is metadata only", model)
+
+    def test_cartographer_uses_checkpoint_checklist_not_result_artifact(self):
+        cartographer = read("skills/cartographer/SKILL.md").lower()
+        checklist = read("skills/cartographer/templates/CARTOGRAPHER_CHECKLIST.template.md").lower()
+
+        self.assertTrue((ROOT / "skills/cartographer/templates/CARTOGRAPHER_CHECKLIST.template.md").exists())
+        self.assertFalse((ROOT / "skills/cartographer/templates/CARTOGRAPHER_RESULT.template.md").exists())
+        self.assertIn(".agent-work/cartographer_checklist.md", cartographer)
+        self.assertIn("scope gate", checklist)
+        self.assertIn("evidence gate", checklist)
+        self.assertIn("model gate", checklist)
+        self.assertIn("relationship gate", checklist)
+        self.assertIn("packet gate", checklist)
+        self.assertIn("map contract gate", checklist)
+        self.assertIn("triage gate", checklist)
+        self.assertIn("closeout gate", checklist)
+        self.assertIn("triage candidate", checklist)
+
+    def test_cartographer_map_build_replaces_explorer_build(self):
+        cartographer = read("skills/cartographer/SKILL.md").lower()
+        map_build = read("skills/cartographer/templates/MAP_BUILD.template.md").lower()
+
+        self.assertTrue((ROOT / "skills/cartographer/templates/MAP_BUILD.template.md").exists())
+        self.assertFalse((ROOT / "skills/cartographer/templates/EXPLORER_BUILD.template.md").exists())
+        self.assertIn("map_build.md", cartographer)
+        self.assertIn("docs/architecture/generated/map.json", map_build)
+        self.assertIn("docs/architecture/overlays/", map_build)
+        self.assertIn("repo source tree", map_build)
+        self.assertNotIn("human-explorable architecture artifact", map_build)
+
+    def test_cartographer_rejects_out_of_scope_graph_concepts(self):
+        cartographer_files = [
+            path
+            for path in (ROOT / "skills" / "cartographer").rglob("*.md")
+            if path.is_file()
+        ]
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in cartographer_files).lower()
+
+        forbidden = [
+            "test/evidence graph",
+            "requirements matrix",
+            "operational behavior map",
+            "event/status graph",
+            "intent without test",
+            "test not linked to intent",
+            "runtime failure map gap",
+            "contains",
+            "owned-by",
+            "called-by",
+            "implemented-by",
+            "missing check",
+            "curated diagrams",
+            "explorer",
+        ]
+
+        for phrase in forbidden:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, combined)
+
+        self.assertIn("tests/checks are evidence inputs and packet context only", combined)
 
     def test_triage_remains_accessible_to_conductor_and_cartographer(self):
         conductor = read("skills/conductor/SKILL.md").lower()
@@ -311,7 +393,7 @@ class ConstellationContentTests(unittest.TestCase):
     def test_role_boundaries_survive_slimming(self):
         expectations = {
             "workbench": [".agent-work/", "not durable project truth"],
-            "cartographer": ["current architecture truth", "does not change code"],
+            "cartographer": ["current-only structural map", "does not change code"],
             "conductor": ["does not implement", "cartographer verifies architecture"],
             "crew": ["implementer owns scoped change", "reviewer owns independent verification"],
             "triage": ["does not implement", "issue-ready recommendations"],
@@ -414,6 +496,14 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("--scope project", readme)
         self.assertIn("--dry-run", readme)
         self.assertIn("--force", readme)
+
+    def test_public_docs_do_not_keep_old_cartographer_artifact_names(self):
+        for rel_path in ["README.md", "SKILL_INDEX.md"]:
+            text = read(rel_path).lower()
+            self.assertIn("structural map", text)
+            self.assertNotIn("explorer_build", text)
+            self.assertNotIn("cartographer_result", text)
+            self.assertNotIn("diagrams/", text)
 
 
 if __name__ == "__main__":

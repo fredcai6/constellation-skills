@@ -1,23 +1,43 @@
 # Architecture Index
 
-This index points to current-state architecture packets and curated diagrams.
+Dense navigation for the current-only structural map.
 
-## Architecture hierarchy
+## Structural Hierarchy
 
-- `<system-context packet>`
-  - `<container packet>`
-    - `<component packet>`
+- `struct:<system-context>` `<label>`
+  - `struct:<container>` `<label>`
+    - `struct:<component>` `<label>`
+      - `struct:<code-path>` `<label>`
+        - `struct:<module>` `<path>`
 
-| Region | Packet | Status | Confidence | Last reconciled |
-|---|---|---|---|---|
-| `<region>` | `packets/<region>.md` | `<status>` | `<confidence>` | `<YYYY-MM-DD>` |
+## Node Inventory
 
-## Curated diagrams
+| Node | Level | Parent | Packet | Status | Confidence |
+|---|---|---|---|---|---|
+| `struct:<id>` | `<level>` | `struct:<id> | none` | `packets/<name>.md` | `<status>` | `<confidence>` |
 
-| Diagram | Source | Purpose |
-|---|---|---|
-| `<name>` | `diagrams/<name>.mmd` | `<purpose>` |
+## Unmapped / Disputed / Stale
 
-## Architecture source rules
+| Node/path | Class | Current truth | Next route |
+|---|---|---|---|
+| `<struct:<id> or path>` | `<mismatch>` | `<fact>` | `Cartographer | Triage | user question` |
 
-Architecture packets are current-state truth. Diagrams are curated architecture source. Generated explorers are derived artifacts. History, future plans, and backlog items do not belong here.
+## Overlay Anchors
+
+| Anchor | Kind | Parent | Structural links |
+|---|---|---|---|
+| `purpose:<id>` | `purpose` | `<purpose:<id> or none>` | `struct:<id>` |
+| `constraint:<id>` | `constraint` | `<purpose:<id> | constraint:<id> | none>` | `struct:<id>` |
+
+## Generated Map Artifacts
+
+- `MAP_BUILD.md`: `<configured | not configured>`
+- `docs/architecture/generated/map.json`: `<current | stale | absent | not configured>`
+- Generated Markdown views: `<path or not configured>`
+
+## Source Rules
+
+- Packets and overlays are dense current-state agent context.
+- Generated map artifacts are derived from packets, overlays, and repo source tree.
+- Diagrams and rendered pages are derivative views.
+- Future work, backlog, redesign, and missing implementation route to Triage.

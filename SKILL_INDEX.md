@@ -13,7 +13,7 @@ Manages `.agent-work/<work-id>/`, local todos, evidence, closeout, and archive.
 ## Constellation Cartographer
 Path: `skills/cartographer/SKILL.md`
 
-Verifies and documents current architecture truth in `docs/architecture/`.
+Maintains the current-only structural map in `docs/architecture/` with sparse purpose/constraint overlays.
 
 ## Constellation Conductor
 Path: `skills/conductor/SKILL.md`

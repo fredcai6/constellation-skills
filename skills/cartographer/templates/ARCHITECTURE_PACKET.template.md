@@ -1,28 +1,31 @@
-# Architecture Packet: `<subsystem or region>`
+# Architecture Packet: `<structural node label>`
+
+Dense current-only agent context. Omit optional sections when empty.
 
 ## Status
 
-**Level:** `system-context | container | component | code-path`  
-**Parent:** `<higher-level packet or none>`  
+**Structural node:** `struct:<id>`  
+**Level:** `system-context | container | component | code-path | module`  
+**Parent:** `struct:<parent-id> | none | struct:unmapped_modules`  
 **Status:** `current | partial | stale | disputed`  
 **Confidence:** `high | medium | low | unknown`  
 **Last reconciled:** `<YYYY-MM-DD>`
 
 ## Purpose
 
-`<What this subsystem currently exists to provide. Present tense only.>`
+`<short local purpose; present tense>`
 
 ## Current responsibility
 
-`<What this subsystem currently owns.>`
+- `<owned responsibility>`
 
 ## Does not own
 
-`<Responsibilities explicitly outside this subsystem.>`
+- `<explicit non-owner boundary>`
 
 ## Primary users/callers
 
-- `<caller/user/component>`
+- `<struct:<id> or caller label>`
 
 ## Inputs
 
@@ -35,16 +38,18 @@
 ## Canonical data/control path
 
 ```text
-<main flow>
+<dense current flow>
 ```
 
 ## Dependencies
 
-- `<dependency>`
+Direction: consumer -> provider. Relationship type: `depends-on`.
+
+- `struct:<consumer>` -> `struct:<provider>`; provenance `<curated | generated>`; confidence `<level>`; evidence `<path/note>`
 
 ## Forbidden or suspicious dependencies
 
-- `<dependency direction or "None known">`
+- `<dependency direction and why suspicious>`
 
 ## Primary code paths
 
@@ -52,20 +57,29 @@
 
 ## Primary tests/checks
 
-- `<path or command>`
+- `<local checks that help verify this structural node; no durable test nodes>`
 
 ## Primary configs
 
 - `<path>`
 
-## Architecture graph links
+## Purpose / constraint anchors
 
-- `<diagram or graph source>`
+**Serves:**
+- `purpose:<id>`
+
+**Constrained by:**
+- `constraint:<id>`
+
+## Generated map links
+
+- `docs/architecture/generated/map.json`
+- `<generated node page, if configured>`
 
 ## Trust limitations
 
-`<Only current caveats affecting whether this packet can be trusted. Do not list future work here. If action is needed, create a Triage recommendation.>`
+- `<current caveat affecting trust; route action to Triage>`
 
 ## Notes
 
-`<Current-state clarification only. No history. No future intent.>`
+- `<current-state clarification only>`
