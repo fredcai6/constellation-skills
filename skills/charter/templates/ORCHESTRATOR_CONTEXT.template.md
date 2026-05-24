@@ -1,83 +1,57 @@
 # Orchestrator Context
 
-Standalone context for high-level agents: Conductor, Cartographer, and planning agents.
+Project-specific overlay for Conductor and Cartographer. Generic role mechanics stay in the skills; this file contains only project rules that affect work shaping, architecture clarification, evidence expectations, and stop/ask behavior.
 
-Role context is a projection: keep the minimum operational rules each role needs, even when that duplicates authority from another source.
-
-## Project purpose
+## Project Purpose
 
 `<What this project exists to do. Include what it explicitly is not trying to do.>`
 
-## Users and operating context
+## Scope And Exceptions
+
+`<Omit this section when context applies cleanly to the whole repo. Include only partial coverage or material subsystem differences.>`
+
+## Operating Context
 
 **Primary users:** `<who directly uses outputs>`  
-**Secondary users:** `<maintainers, reviewers, auditors, integrators>`  
 **Primary decisions/actions supported:** `<what outputs influence>`  
-**Output authority:** `<suggestion | diagnostic | canonical record | automated action | user-facing claim | other>`  
-**Failure costs:** `<what happens if wrong, stale, unavailable, slow, or misleading>`  
-**Project maturity/risk posture:** `<prototype | research | internal tool | production | safety/security/privacy-sensitive | mixed>`
+**Output authority:** `<advisory | diagnostic | canonical record | user-facing claim | automated action | mixed>`  
+**Failure consequences:** `<wrong | stale | missing | slow | misleading | unreproducible | unsafe | privacy leak | maintenance erosion | mixed>`
 
-## Constellation delegation model
+## Subsystem Rigor
 
-This project uses the Constellation skill delegation model unless explicitly customized:
+| Subsystem | Rigor profile | Execution context | Orchestrator implication |
+|---|---|---|---|
+| `<subsystem>` | `<profile>` | `<context>` | `<planning/framing/evidence implication>` |
 
-- Workbench owns workflow state mechanics, local todos, evidence folders, closeout, and archive.
-- Cartographer owns current architecture truth and architecture packets.
-- Conductor owns problem interrogation, framing, route choice, gated planning, handoffs, evidence integration, and gate closure.
-- Crew owns bounded implementation and independent review.
-- Triage owns issue-ready future-work recommendations.
-- Charter owns project ground-rule elicitation and agent context generation.
+## Canonical Inputs And Data Sources
 
-Do not re-decide these role boundaries during normal orchestration. Ask only about project-specific behavior inside those boundaries: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and defaults.
+- `<input/source>`: `<when it is canonical and what agents must not bypass>`
 
-## Model stratification
+## Engineering Rules
 
-At kickoff, choose model strength from mandate size and ambiguity. Use stronger agents for larger mandate, hidden intent, architecture/policy decisions, context compression, broad review, or unclear evidence. Shape gates so bounded implementation/review can usually use a simpler model: one outcome, explicit scope, required context, evidence, and stop conditions. If a bounded agent would need to infer intent, reframe the gate or escalate.
+- `<project-specific correctness/evidence/interface/failure/state rule>`
+- `<project-specific architecture boundary or documentation rule>`
+- `<project-specific dependency/security/performance/generated artifact rule>`
 
-## Truth and evidence model
+## Evidence Expectations
 
-**Dense executable truth:** `<code, tests, configs, generated behavior, runtime outputs>`  
-**Executable claims:** `<tests, checks, regression artifacts, metrics>`  
-**Compressed truth:** `<docs, architecture packets, glossary>`  
-**Workflow-local truth:** `<framing notes, gated plans, local todos, handoffs>`  
-**Canonical data/input truth:** `<database, source system, config, external API, fixtures, etc.>`
+- `<what evidence is enough for common work types>`
+- `<what evidence is required for high-risk or public outputs>`
 
-## Decision ownership and authority transfer
+## Failure And Degraded Behavior
 
-Agents may act under explicit user decision, existing project ground rule, task-specific delegation, named conservative default, or unresolved assumption.
+- `<fail-visible rule by execution context>`
+- `<fallback/degraded-output rule>`
 
-If a decision affects intent, architecture, ownership, failure behavior, canonical paths, or project values, get a human decision or explicit delegation.
+## Documentation And Generated Artifacts
 
-## Planning routes
+- `<when context/docs/contracts must change>`
+- `<how generated artifacts should be treated>`
 
-- `patch`: correct known behavior inside known architecture
-- `quick`: bounded addition inside known architecture
-- `research/prototype`: non-canonical exploration isolated from durable architecture
-- `cautious/framing`: deliberate change to durable behavior, contracts, ownership, or architecture
-- `baseline-needed`: current truth is unclear; run Cartographer or get explicit human assumption before choosing route
-- `stop using Constellation`: patch/quick/research work has no durable decision, architecture uncertainty, subagent value, or future artifact
+## Compromise Policy
 
-## Grilling posture
+- `<what compromises are allowed, blocked, or require exit conditions>`
 
-Be relentless about intent quality. Ask one question at a time when user input is needed. If the answer is discoverable from repo artifacts, inspect the repo instead of asking.
+## Stop And Ask
 
-Challenge assumptions until the work names the problem, affected users, architecture region, current packet or missing baseline, simpler path, unsafe/misleading/too-broad outcome, done condition, and evidence.
-
-When options are clear, provide A/B/C options, concise pros/cons, and a recommendation. The recommendation is not authority.
-
-## Baseline confidence rules
-
-Classify gaps as: no gap, code missing, abstraction missing, both missing, mismatch, or unknown. If the gap affects the work, ask whether code or abstraction should be treated as truth, or route to Cartographer.
-
-## Artifact triggers
-
-- Framing note: workflow-local what/why/done.
-- Gated plan: ordered execution structure.
-- Handoff: bounded subagent task packet.
-- Architecture packet: durable current truth after reconciliation.
-- Glossary: durable shared meanings.
-- Issue-ready recommendation: future work outside current workflow.
-
-## High-level forbidden failure modes
-
-Do not silently choose project values, treat recommendations as authority, hide contradictions, expand a low-confidence baseline without noting risk, or create ceremony that does not improve future work.
+Stop and ask when project context, user instruction, and observed artifacts conflict in a way that affects the task. Do not resolve conflicts by choosing an authority source by policy.

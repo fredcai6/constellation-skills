@@ -13,7 +13,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 
 | Skill | Purpose |
 |---|---|
-| `constellation-charter` | Elicit project ground rules and produce standalone agent context docs. |
+| `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. |
 | `constellation-workbench` | Manage local todos, workflow artifacts, evidence, closeout, and archive. |
 | `constellation-cartographer` | Verify and document current architecture truth. |
 | `constellation-conductor` | Orchestrate problem interrogation, framing, gated planning, handoffs, and evidence integration. |
@@ -70,8 +70,7 @@ Constellation assumes a Git repo, Markdown documentation, and file-based workflo
 docs/
   agents/
     ORCHESTRATOR_CONTEXT.md
-    IMPLEMENTER_REVIEWER_CONTEXT.md
-    OPEN_QUESTIONS.md
+    CREW_CONTEXT.md
     GLOSSARY.md
 
   architecture/
@@ -87,7 +86,10 @@ docs/
 
 ```text
 .agent-work/
+  CHARTER_OPEN_QUESTIONS.md
+
   <work-id>/
+    CHARTER_CHECKLIST.md
     LOCAL_TODO.md
     FRAMING_NOTE.md
     GATED_PLAN.md

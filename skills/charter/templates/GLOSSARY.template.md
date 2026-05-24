@@ -1,15 +1,13 @@
 # Project Glossary
 
-The glossary is a shared alignment artifact between the user and agents. It defines current project meanings. It is not architecture documentation and not history.
+Shared conceptual baseline for humans and agents. Define current meanings only; do not include debate history or uncertain terms.
 
-| Term | Meaning | Status |
+| Term | Meaning | Usage notes |
 |---|---|---|
-| `<term>` | `<short meaning>` | settled | provisional | needs clarification |
+| `<term>` | `<short current meaning>` | `<optional note>` |
 
-## Term: `<term>`
+## `<term>`
 
 **Meaning:** `<current project meaning>`  
-**Do not confuse with:** `<nearby terms or "None">`  
-**Used by:** `<agents/subsystems/docs where relevant>`  
-**Ambiguity status:** `settled | provisional | needs clarification`  
-**Notes:** `<optional current-use note, not history>`
+**Do not confuse with:** `<nearby terms or omit>`  
+**Usage notes:** `<only if needed for future agent behavior>`

@@ -47,11 +47,90 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("continue drilling", combined)
 
     def test_generated_context_keeps_grilling_posture_sharp(self):
+        charter = read("skills/charter/SKILL.md").lower()
+        protocol = read("skills/charter/references/interrogation-protocol.md").lower()
         context = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
 
-        self.assertIn("relentless", context)
+        self.assertIn("relentless", f"{charter}\n{protocol}")
+        self.assertIn("project-specific overlay", context)
+        self.assertNotIn("planning routes", context)
+        self.assertNotIn("model stratification", context)
+        self.assertNotIn("artifact triggers", context)
         self.assertNotIn("without being antagonistic", context)
         self.assertNotIn("lightweight", context)
+
+    def test_charter_has_required_workflow_and_reference_artifacts(self):
+        expected = [
+            "skills/charter/references/rigorous-default.md",
+            "skills/charter/references/engineering-rubric.md",
+            "skills/charter/templates/CHARTER_CHECKLIST.template.md",
+            "skills/charter/templates/CHARTER_OPEN_QUESTIONS.template.md",
+            "skills/charter/templates/CREW_CONTEXT.template.md",
+        ]
+
+        for rel_path in expected:
+            with self.subTest(path=rel_path):
+                self.assertTrue((ROOT / rel_path).exists())
+
+        removed = [
+            "skills/charter/templates/OPEN_QUESTIONS.template.md",
+            "skills/charter/templates/IMPLEMENTER_REVIEWER_CONTEXT.template.md",
+        ]
+
+        for rel_path in removed:
+            with self.subTest(path=rel_path):
+                self.assertFalse((ROOT / rel_path).exists())
+
+        charter = read("skills/charter/SKILL.md")
+        self.assertIn("ORCHESTRATOR_CONTEXT.md", charter)
+        self.assertIn("CREW_CONTEXT.md", charter)
+        self.assertIn("GLOSSARY.md", charter)
+        self.assertIn("CHARTER_CHECKLIST.md", charter)
+        self.assertIn(".agent-work/CHARTER_OPEN_QUESTIONS.md", charter)
+
+    def test_charter_uses_single_checklist_instead_of_decision_audit(self):
+        charter_files = [
+            path
+            for path in (ROOT / "skills" / "charter").rglob("*.md")
+            if path.is_file()
+        ]
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in charter_files).lower()
+
+        self.assertIn("charter_checklist", combined)
+        self.assertNotIn("charter_decisions", combined)
+        self.assertNotIn("ground_rule_decisions", combined)
+
+        checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+        self.assertIn("allowed writes", checklist)
+        self.assertIn("all other writes are out of charter scope", checklist)
+        self.assertIn("current next question", checklist)
+        self.assertIn("contradiction register", checklist)
+        self.assertIn("strong | usable | weak | unresolved | not-material", checklist)
+        self.assertIn("user decision | accepted default | unconfirmed default | repo artifact | assumption", checklist)
+
+    def test_charter_rubric_is_engineering_operational_not_truth_topology(self):
+        rubric = read("skills/charter/references/engineering-rubric.md").lower()
+        default = read("skills/charter/references/rigorous-default.md").lower()
+
+        self.assertIn("correctness posture", rubric)
+        self.assertIn("canonical inputs and data sources", rubric)
+        self.assertIn("evidence and verification", rubric)
+        self.assertIn("simplicity, abstraction, and unit shape", rubric)
+        self.assertIn("interface and contract strictness", rubric)
+        self.assertIn("architecture boundaries", rubric)
+        self.assertIn("failure behavior", rubric)
+        self.assertIn("state and side effects", rubric)
+        self.assertIn("performance and resource posture", rubric)
+        self.assertIn("documentation posture", rubric)
+        self.assertIn("dependency and tooling posture", rubric)
+        self.assertIn("security, privacy, and publicness", rubric)
+        self.assertIn("generated artifacts and derived outputs", rubric)
+        self.assertIn("compromise and debt policy", rubric)
+        self.assertNotIn("truth hierarchy", rubric)
+
+        self.assertIn("fail visibly", default)
+        self.assertIn("one canonical path", default)
+        self.assertIn("test-led", default)
 
     def test_conductor_uses_consistent_route_names_and_grillme_posture(self):
         conductor = read("skills/conductor/SKILL.md").lower()
@@ -69,9 +148,9 @@ class ConstellationContentTests(unittest.TestCase):
         conductor = read("skills/conductor/SKILL.md").lower()
         gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
 
-        self.assertIn("model stratification", context)
-        self.assertIn("larger mandate", context)
-        self.assertIn("simpler model", context)
+        self.assertNotIn("model stratification", context)
+        self.assertIn("larger mandate", conductor)
+        self.assertIn("simpler model", conductor)
         self.assertIn("chunk gates", conductor)
         self.assertIn("simpler models", conductor)
         self.assertIn("suggested model tier", gated_plan)
@@ -91,6 +170,7 @@ class ConstellationContentTests(unittest.TestCase):
             "skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md",
         ]:
             self.assertNotIn("ground_rule_decisions", read(rel_path).lower())
+            self.assertNotIn("charter_decisions", read(rel_path).lower())
 
         self.assertFalse(
             (ROOT / "skills/charter/templates/GROUND_RULE_DECISIONS.template.md").exists()
@@ -121,11 +201,12 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_templates_omit_empty_sections_and_open_questions_do_not_accumulate(self):
         principles = read("docs/OPERATING_PRINCIPLES.md").lower()
-        open_questions = read("skills/charter/templates/OPEN_QUESTIONS.template.md").lower()
+        open_questions = read("skills/charter/templates/CHARTER_OPEN_QUESTIONS.template.md").lower()
 
         self.assertIn("omit optional sections when empty", principles)
-        self.assertIn("delete resolved questions", open_questions)
-        self.assertIn("future work goes to triage", open_questions)
+        self.assertIn("delete this file", open_questions)
+        self.assertIn("not a backlog", open_questions)
+        self.assertIn(".agent-work/charter_open_questions.md", open_questions)
 
     def test_stop_using_constellation_is_operational_and_context_is_projection(self):
         conductor = read("skills/conductor/SKILL.md").lower()
@@ -133,7 +214,8 @@ class ConstellationContentTests(unittest.TestCase):
 
         self.assertIn("no `.agent-work/`", conductor)
         self.assertIn("no gated plan", conductor)
-        self.assertIn("role context is a projection", orchestrator)
+        self.assertIn("project-specific overlay", orchestrator)
+        self.assertNotIn("stop using constellation", orchestrator)
 
     def test_review_template_has_two_review_stages_without_new_role(self):
         review = read("skills/crew/templates/REVIEW_RESULT.template.md").lower()
@@ -183,11 +265,11 @@ class ConstellationContentTests(unittest.TestCase):
         conductor = read("skills/conductor/SKILL.md").lower()
         orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
 
-        self.assertIn("context curation", charter)
+        self.assertIn("context compile", charter)
         self.assertIn("context curation", conductor)
         self.assertIn("architecture curation", cartographer)
         self.assertIn("stop using constellation", conductor)
-        self.assertIn("stop using constellation", orchestrator)
+        self.assertNotIn("stop using constellation", orchestrator)
 
     def test_gate_is_central_unit_and_closeout_compresses(self):
         conductor = read("skills/conductor/SKILL.md").lower()
@@ -212,6 +294,28 @@ class ConstellationContentTests(unittest.TestCase):
                 body = read(f"skills/{skill}/SKILL.md").lower()
                 for phrase in phrases:
                     self.assertIn(phrase, body)
+
+    def test_generated_context_is_role_overlay_not_role_manual(self):
+        orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
+        crew = read("skills/charter/templates/CREW_CONTEXT.template.md").lower()
+        old_low_level = ROOT / "skills/charter/templates/IMPLEMENTER_REVIEWER_CONTEXT.template.md"
+
+        self.assertFalse(old_low_level.exists())
+        self.assertIn("conductor and cartographer", orchestrator)
+        self.assertIn("project-specific overlay", orchestrator)
+        self.assertNotIn("triage", orchestrator)
+        self.assertNotIn("workbench", orchestrator)
+        self.assertNotIn("open_questions", orchestrator)
+        self.assertNotIn("charter status", orchestrator)
+
+        self.assertIn("crew context", crew)
+        self.assertIn("stop and report", crew)
+        self.assertIn("review block criteria", crew)
+        self.assertNotIn("conductor", crew)
+        self.assertNotIn("cartographer", crew)
+        self.assertNotIn("triage", crew)
+        self.assertNotIn("workbench", crew)
+        self.assertNotIn("open_questions", crew)
 
     def test_skill_frontmatter_has_only_name_and_description(self):
         for path in (ROOT / "skills").glob("*/SKILL.md"):

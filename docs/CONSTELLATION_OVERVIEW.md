@@ -1,17 +1,17 @@
 # Constellation Overview
 
 ```text
-Charter      → establishes project ground rules
-Workbench    → manages recoverable workflow state
-Cartographer → verifies current architecture truth
-Conductor    → shapes work and delegates execution
-Crew         → implements and reviews bounded changes
-Triage       → packages future work as issue-ready recommendations
+Charter      -> interrogates engineering doctrine and compiles agent-operable context
+Workbench    -> manages recoverable workflow state
+Cartographer -> verifies current architecture truth
+Conductor    -> shapes work and delegates execution
+Crew         -> implements and reviews bounded changes
+Triage       -> packages future work as issue-ready recommendations
 ```
 
 ## Context separation
 
-High-level agents use project purpose, user intent, architecture packets, glossary, routing rules, and workflow artifacts.
+High-level agents use project purpose, user intent, architecture packets, glossary, and workflow artifacts.
 
 Low-level agents receive a bounded task, allowed scope, critical rules, relevant architecture packet, required evidence, and stop conditions.
 

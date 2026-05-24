@@ -27,6 +27,10 @@ Bad agent behavior:
 
 Every non-trivial task should maintain a local todo. It is recoverable work state, not durable project truth.
 
+## Rigorous default
+
+Constellation starts from rigorous engineering defaults and requires explicit relaxation when speed, exploration, or subsystem context should win.
+
 ## Template discipline
 
 Omit optional sections when empty. Do not fill templates with `none`, `n/a`, or boilerplate except where the absence is itself evidence or a required stop condition.

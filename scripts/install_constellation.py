@@ -25,16 +25,17 @@ class Skill:
 
 def parse_frontmatter(skill_md: Path) -> dict[str, str]:
     text = skill_md.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
         raise InstallError(f"{skill_md} is missing YAML frontmatter")
 
     try:
-        frontmatter = text.split("---\n", 2)[1]
-    except IndexError as exc:
+        end = lines[1:].index("---") + 1
+    except ValueError as exc:
         raise InstallError(f"{skill_md} has malformed YAML frontmatter") from exc
 
     values: dict[str, str] = {}
-    for line in frontmatter.splitlines():
+    for line in lines[1:end]:
         if not line.strip():
             continue
         if ":" not in line:

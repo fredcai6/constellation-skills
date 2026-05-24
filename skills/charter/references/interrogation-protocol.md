@@ -1,54 +1,64 @@
 # Charter Interrogation Protocol
 
-Charter exists to force usable project ground rules. It should not behave like a friendly setup wizard.
+Charter exists to turn engineering doctrine into usable Orchestrator, Crew, and Glossary context. It is a relentless interrogation pass, not a setup wizard.
 
 ## Core rule
 
-Do not accept a policy until it has been tested against a concrete project scenario.
+Do not accept a material rule until it has been tested against cost and a concrete scenario.
 
-A usable answer includes:
+A usable material decision names:
 
-- actor or subsystem
-- input/source of truth
+- subsystem or artifact type
 - output or behavior
+- canonical input/data source if relevant
 - failure consequence
 - evidence expectation
-- agent action implication
+- generated context target
 
-If any of these are missing, continue drilling.
+If any are missing, continue drilling.
 
-Ask one question at a time. If a question can be answered from repo artifacts, inspect the repo instead of asking.
+Ask one question at a time when pursuing decisions. Gate 0 may request reference and exemplar paths together.
 
-## Session model
+## First action
 
-A complete Charter usually takes multiple sessions.
+Create or resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md` before Gate 0. The checklist is the live todo, gate tracker, and decision record.
 
-Do not assume completion just because the user answered every broad category once. Broad coverage with shallow answers is not completion.
+Use `.agent-work/CHARTER_OPEN_QUESTIONS.md` only when provisional durable context exists and weak or unresolved Charter questions remain. It is not a backlog.
 
-At session end, produce one of:
+## Decision pattern
 
-- continuation checkpoint
-- partial ground-rule draft
-- explicit provisional compile, if the user requests it
-- final compile, only when answers are strong enough or the user explicitly accepts defaults
+For every material decision:
 
-## Opening sequence
+```text
+Default:
+Cost:
+Relaxation:
+Scenario:
+Decision:
+Evidence:
+Quality:
+Authority:
+Posture:
+Output target:
+```
 
-Start with project reality, not agent relationships.
+Quality values:
 
-Ask about:
+```text
+strong | usable | weak | unresolved | not-material
+```
 
-1. Project purpose.
-2. Primary use cases.
-3. Primary users/consumers.
-4. Outputs and decisions affected by those outputs.
-5. Canonical inputs and source-of-truth paths.
-6. Failure modes and their cost.
-7. Evidence that proves the project is working.
-8. Current maturity: research, prototype, internal tool, production, mixed.
-9. Existing authoritative docs, tests, commands, and data stores.
+Authority values:
 
-Only after this should Charter ask detailed questions about Conductor, Cartographer, Crew, Workbench, and Triage behavior.
+```text
+user decision | accepted default | unconfirmed default | repo artifact | assumption
+```
+
+Posture values:
+
+```text
+rigorous-default | relaxed | strengthened | mixed | not-applicable
+```
 
 ## Follow-up ladder
 
@@ -56,19 +66,18 @@ When the user answers broadly, move down the ladder:
 
 ```text
 Broad claim
-→ specific use case
-→ concrete scenario
-→ agent decision
-→ unacceptable outcome
-→ evidence requirement
-→ default policy
+-> subsystem/artifact
+-> concrete scenario
+-> unacceptable outcome
+-> evidence requirement
+-> generated context rule
 ```
 
 Example:
 
 ```text
 User: "Tests should be good enough."
-Charter: "For a model-ranking change that improves one backtest metric but worsens calibration, should Crew block, allow with evidence, or send it back to Conductor for framing? What evidence would make the change acceptable?"
+Charter: "For a behavior change in the promoted library path, the rigorous default is test-led evidence. Cost: slower implementation and more up-front test design. Relaxation: review-only or test-after. Scenario: a small parser change fixes one input but breaks a documented edge case. Should this project accept the default, relax it for this subsystem, or strengthen it with regression fixtures? What evidence would make the change acceptable?"
 ```
 
 ## Shallow answer triggers
@@ -81,75 +90,53 @@ Drill again when the user says:
 - "write tests"
 - "move fast"
 - "don't overcomplicate it"
-- "agents can decide"
 - "depends"
 - "reasonable defaults"
 - "just follow the docs"
+- "do it right"
 
-These can be valid preferences, but only after converting them into project-specific behavior.
+These can be valid preferences only after conversion into a scenario-tested decision.
 
-## Scenario requirements
+## Gate pressure
 
-For each major area, create or adapt at least one scenario.
+Gate 0 focuses on positive references, not bad examples. Ask for best available examples of desired code shape, test style, documentation, workflow, and review evidence. Require `none yet` when missing.
 
-Minimum major areas:
+Operating context must identify output authority, execution context, failure consequence, and subsystem rigor before detailed doctrine.
 
-- project purpose and use cases
-- output authority and failure cost
-- data/source-of-truth
-- testing and evidence
-- architecture ownership and canonical paths
-- scope/refactoring
-- compatibility and migration
-- error handling and degraded behavior
-- docs/reconciliation
-- issue creation and future work
-- agent autonomy/escalation
+Every rubric axis must be touched. Non-material axes need user agreement and a reason.
 
-## Question style
+Implementation conventions are separate from doctrine. Use structured options only for consequential tradeoffs; otherwise record direct rules or `not-material`.
 
-Prefer pointed questions:
+## Compile modes
 
-```text
-When X happens, should the agent do A, B, or C?
-What would make A unacceptable?
-What evidence would justify B?
-Who decides if C conflicts with speed?
-```
+Checkpoint:
 
-Avoid broad questions:
+- only workflow-local Charter files updated
 
-```text
-How should agents behave?
-What is your testing philosophy?
-How autonomous should the orchestrator be?
-```
+Provisional:
 
-If a broad question is unavoidable, immediately follow with a concrete scenario.
+- durable context may be generated
+- weak or unresolved items remain in `.agent-work/CHARTER_OPEN_QUESTIONS.md`
 
-Do not soften the posture with reassurance or permission-seeking. Give the recommended answer when it is useful, then ask the next unresolved question.
+Final:
 
-## Resistance handling
+- no weak or unresolved material decisions
+- contradiction pass complete
+- Orchestrator context, Crew context, and Glossary updated
+- `.agent-work/CHARTER_OPEN_QUESTIONS.md` deleted or absent
 
-If the user is tired or gives short answers:
-
-- accept explicit defaults where they say "I don't care"
-- record weak answers as provisional
-- produce an open-question checkpoint
-- do not silently upgrade weak answers to strong policy
-
-If the user says to stop, stop. Charter is relentless about quality, not hostile to the user.
+Generated context contains decisions only. Do not include Charter process history, compile state, role manuals, or workflow-local links.
 
 ## Completion test
 
-Before final compile, run this test:
+Before final compile, check:
 
 ```text
-Could Conductor route a new task without re-asking basic project questions?
-Could Crew know what evidence is enough?
-Could Cartographer know what architecture truth means here?
-Could Triage know whether to create an issue or only recommend one?
-Could an agent recognize when it must stop and ask the user?
+Could Orchestrator shape work without re-asking basic project doctrine?
+Could Crew know what evidence and review blockers apply?
+Could the glossary prevent key term ambiguity?
+Could agents recognize when to stop and ask?
+Are all weak/unresolved Charter questions gone?
 ```
 
-If any answer is no, continue Charter or mark the gap in OPEN_QUESTIONS.md.
+If any answer is no, continue Charter or keep provisional state.

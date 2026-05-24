@@ -3,7 +3,7 @@
 ## Constellation Charter
 Path: `skills/charter/SKILL.md`
 
-Establishes project ground rules and produces `docs/agents/*`.
+Interrogates engineering doctrine and compiles `ORCHESTRATOR_CONTEXT.md`, `CREW_CONTEXT.md`, and `GLOSSARY.md`.
 
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`

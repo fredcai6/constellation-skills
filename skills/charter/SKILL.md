@@ -1,136 +1,140 @@
 ---
 name: constellation-charter
-description: Elicit project ground rules through relentless scenario-based interrogation and compile standalone agent context documents. Use when starting or refreshing repo agent rules, philosophy, standards, or docs/agents context.
+description: Interrogate engineering doctrine and compile agent-operable Orchestrator, Crew, and Glossary context. Use when starting or refreshing repo agent context, engineering posture, standards, or shared terminology.
 ---
 
 # Constellation Charter
 
 ## Purpose
 
-Initialize or refresh project ground rules that align Constellation agents with the user.
+Charter elicits the project's engineering doctrine and compiles it into role-operable context.
 
-Outputs: `docs/agents/ORCHESTRATOR_CONTEXT.md`, `IMPLEMENTER_REVIEWER_CONTEXT.md`, `OPEN_QUESTIONS.md`, and `GLOSSARY.md`.
+Final durable outputs:
+
+```text
+docs/agents/ORCHESTRATOR_CONTEXT.md
+docs/agents/CREW_CONTEXT.md
+docs/agents/GLOSSARY.md
+```
+
+Workflow-local outputs:
+
+```text
+.agent-work/<work-id>/CHARTER_CHECKLIST.md
+.agent-work/CHARTER_OPEN_QUESTIONS.md
+```
+
+`CHARTER_OPEN_QUESTIONS.md` exists only while weak or unresolved Charter questions remain. Delete it during final compile.
 
 ## Use
 
-Use when starting a project, preparing an unmanaged repo before Cartographer work, or defining ground rules, agent context, project philosophy, or coding/review standards.
+Use when starting a repo, refreshing agent context, defining engineering posture, clarifying standards, or establishing shared human-agent terminology.
 
-Do not use to map code, plan a feature, review a diff, update architecture after implementation, or write code.
+Do not use Charter to map architecture, plan a feature, review a diff, edit code/tests, create issues, or update non-agent project docs.
 
 ## Required Context
 
-Before asking project-specific questions, read:
+Fixed Constellation context:
 
 ```text
-README.md
-SKILL_INDEX.md
 docs/CONSTELLATION_OVERVIEW.md
 docs/OPERATING_PRINCIPLES.md
-skills/workbench/SKILL.md
-skills/cartographer/SKILL.md
 skills/conductor/SKILL.md
+skills/cartographer/SKILL.md
 skills/crew/SKILL.md
-skills/triage/SKILL.md
 ```
 
-Treat that as the fixed delegation model. Do not re-ask whether Conductor, Cartographer, Crew, Workbench, or Triage should exist unless the user explicitly wants to customize Constellation.
-
-Ask how those skills should behave in this repo: autonomy limits, evidence standards, issue creation authority, tooling assumptions, escalation thresholds, and project-specific defaults.
-
-Also inspect `docs/agents/`, `AGENTS.md`, philosophy docs, architecture docs, and process docs. Assume existing artifacts are true unless the user says they are stale, incomplete, experimental, or should be replaced. When refreshing context, preserve prior decisions unless changed; do not replace context wholesale without showing what changed.
-
-## Interrogation Contract
-
-Charter is a relentless interrogation pass, not a setup wizard.
-
-Ask one question at a time. Each question must pursue a decision, not complete a questionnaire.
-
-Assume the first answer to an important question is too shallow. Continue drilling until the answer names:
-
-- concrete use case
-- actor or subsystem
-- output or behavior
-- input/source of truth
-- failure consequence
-- evidence expectation
-- agent action implication
-
-Do not accept slogans such as "move fast", "be careful", "use tests", "ask when unsure", "agents can decide", or "reasonable defaults". Convert them into project-specific behavior with a scenario.
-
-If the user gives a vague answer, ask a narrower follow-up. If the user says "I don't care", select a visible default and test it with a scenario. If the user says to stop, stop and produce a checkpoint.
-
-## Opening Sequence
-
-Drill project reality before agent autonomy:
-
-1. What the project does.
-2. Who or what uses the outputs.
-3. What actions or decisions the outputs influence.
-4. What the canonical inputs/data/source-of-truth are.
-5. What failure looks like: wrong, stale, missing, slow, misleading, unreproducible, or overconfident.
-6. What evidence would prove the project is working.
-7. What parts are research/prototype versus durable system behavior.
-8. What existing docs, tests, and commands agents should treat as current authority.
-
-Only after this baseline should Charter ask about Conductor, Cartographer, Crew, Workbench, and Triage behavior.
-
-## Scenario Pattern
-
-For each important area, force at least one concrete scenario:
+Target project context:
 
 ```text
-When <specific situation> happens, should the agent do A, B, or C?
-What would be unacceptable?
-What evidence would prove the agent handled it correctly?
-Who owns the decision if the tradeoff is real?
+docs/agents/*
+AGENTS.md
+README.md or equivalent project overview
+philosophy/process docs
+user-provided positive exemplars
 ```
 
-Use `references/interrogation-protocol.md` for the follow-up ladder, shallow-answer triggers, resistance handling, and completion test. Use `references/scenario-bank.md` for seed scenarios; adapt them to the user's project instead of reading them verbatim.
+Inspect code, tests, configs, or architecture docs only when a specific context decision needs light verification. Do not map the codebase.
 
-## Checkpoints And Compile
+## Fixed Boundaries
 
-Periodically summarize:
+Charter informs Orchestrator context for Conductor and Cartographer, and Crew context for implementer/reviewer behavior.
 
-- settled decisions
-- weak answers that need another pass
-- contradictions
-- defaults selected because the user did not care
-- open questions
-- areas not yet interrogated
+Do not ask the user to redesign Constellation topology. If the fixed role model is a bad fit, the answer is to stop using these skills, not mutate Charter output.
 
-Use summaries to continue drilling, not to finish early. Do not optimize for one-session completion.
+Allowed writes:
 
-Compile final docs only when the user asks to compile, says to use defaults for the rest, or the completion test passes. Before compiling, run a contradiction pass.
+```text
+.agent-work/<work-id>/CHARTER_CHECKLIST.md
+.agent-work/CHARTER_OPEN_QUESTIONS.md
+docs/agents/ORCHESTRATOR_CONTEXT.md
+docs/agents/CREW_CONTEXT.md
+docs/agents/GLOSSARY.md
+```
 
-## Context Curation
+All other writes are out of Charter scope.
 
-Charter curation keeps `docs/agents/` lean after rule elicitation. Edit generated context directly for clarity; ask before deleting unique policy, changing authority/evidence/failure meaning, or resolving an open question.
+## Workflow Driver
 
-## Default policy library
+Before asking Gate 0 questions, create or resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md` from `templates/CHARTER_CHECKLIST.template.md`. Choose a date-plus-purpose work id unless the user supplied one or an obvious Charter folder exists.
 
-- Behavior changes need tests.
-- Prefer clear failure over valid-looking wrong output.
-- Avoid hidden fallbacks.
-- Allow degraded behavior only when explicit, visible, and tested.
-- Validate public and meaningful internal boundaries.
-- Prefer one canonical path over compatibility shims.
-- Keep compatibility shims temporary, explicit, and tracked.
-- Avoid speculative abstraction.
-- Keep changes scoped to the task.
-- Do not clean unrelated code unless explicitly authorized.
-- Avoid new dependencies unless they provide mature, nontrivial value.
-- Protect secrets and private data by default.
-- Update docs when ownership, contracts, data flow, or agent-relevant abstractions change.
-- Stop and ask when code, docs, and user intent disagree in a way that affects the task.
+The checklist is the only Charter todo and decision record. Do not create a separate decisions file.
 
-Tune defaults by project posture: prototype, research, internal tool, production, or safety/security/privacy-sensitive.
+Ask one decision question at a time. Gate 0 may request a small bundle of reference and exemplar paths because that is input collection, not a doctrine decision.
 
-## Required Areas
+## Interrogation Rules
 
-Cover project purpose/users, output authority/failure cost, repo/tooling, ambiguity, scope/refactoring, architecture/ownership, contracts, compatibility, errors/degraded modes, reporting/audit, validation, side effects, testing/evidence, data truth, docs, dependencies, security/privacy, performance, generated artifacts, and autonomy.
+Start from `references/rigorous-default.md`. The user may accept, relax, or strengthen it by subsystem, but rigor is not opt-in.
 
-Do not mark an area complete until it has project-specific examples and at least one agent-action implication.
+Use `references/engineering-rubric.md` for required doctrine axes. Every axis must be touched. Mark an axis `not-material` only with user agreement.
+
+A material decision affects future agent behavior, allowed scope, evidence requirements, failure behavior, interfaces/contracts, canonical inputs, documentation duties, dependency policy, security/privacy/publicness, performance/resource posture, generated artifacts, compromise policy, or stop/report conditions.
+
+For each material decision, state:
+
+```text
+Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
+```
+
+Do not accept slogans such as "do it right", "be careful", "use judgment", "write tests", "move fast", or "reasonable defaults". Convert them into a decision with cost, scenario, evidence, and role implication.
+
+Record material decisions in the checklist with:
+
+```text
+Quality: strong | usable | weak | unresolved | not-material
+Authority: user decision | accepted default | unconfirmed default | repo artifact | assumption
+Posture: rigorous-default | relaxed | strengthened | mixed | not-applicable
+```
+
+Weak and unresolved decisions must remain visible in `.agent-work/CHARTER_OPEN_QUESTIONS.md` during provisional compile.
+
+## Gate Order
+
+1. Bootstrap references, Charter scope, and positive exemplars.
+2. Classify operating context, execution context, output authority, failure consequence, and subsystem profile.
+3. Interrogate engineering doctrine with the rubric.
+4. Capture implementation conventions.
+5. Resolve contradictions and excessive subsystem divergence.
+6. Compile Orchestrator, Crew, and Glossary context.
+7. Close out the checklist.
+
+Do not optimize for one-session completion. Optimize for resolved, role-operable context. Use checkpoint, provisional, and final compile modes honestly.
+
+## Context Compile
+
+Generated context is the best-understood current project overlay. It should not include Charter process history, compile status, role manuals, route tables, model-selection mechanics, or links to workflow-local files.
+
+Use scope or exception notes only when needed to prevent misuse. Keep durable context to decisions, not debate history.
+
+Final compile requires:
+
+- all gates complete
+- no weak or unresolved Charter questions
+- contradiction pass complete
+- `ORCHESTRATOR_CONTEXT.md`, `CREW_CONTEXT.md`, and `GLOSSARY.md` updated
+- `.agent-work/CHARTER_OPEN_QUESTIONS.md` absent
+- checklist retained for human traceability
 
 ## Resources
 
-Use `templates/`, `references/scenario-bank.md`, and `references/interrogation-protocol.md`.
+Use `templates/CHARTER_CHECKLIST.template.md`, `templates/CHARTER_OPEN_QUESTIONS.template.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, and `references/scenario-bank.md`.
