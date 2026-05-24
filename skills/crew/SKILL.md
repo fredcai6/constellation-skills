@@ -5,28 +5,16 @@ description: Execute bounded implementation and review. Use when a handoff defin
 
 # Constellation Crew
 
-## Mission
+Implementer owns scoped change. Reviewer owns independent verification.
 
-Crew is the implementer/reviewer pair. Conductor owns intent and closes gates. Implementer owns scoped change. Reviewer owns independent verification.
+Use handoff, Crew context, structural baseline / packet if provided.
 
-## Inputs
+Handoff completeness: verify task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, and return format. If missing, contradictory, impossible, or too broad: stop/report. Do not infer hidden intent.
 
-Use handoff, architecture packet, low-level context, scope, evidence, and stop conditions.
+Crew does not route, does not create issues, does not close gates, and does not expand scope. Return out-of-scope observations to Conductor.
 
-## Implementer
+Implementer: minimal change; required tests/docs/contracts; verification; evidence; stop if authority/scope exceeded.
 
-Update todo; restate slice; inspect relevant files; make the minimal change; add/update required tests; run verification; update required docs/contracts; return evidence; stop if authority/scope is exceeded.
+TDD: when required, vertical TDD: public-interface behavior test, red -> green -> refactor.
 
-Do not infer hidden intent or decide new intent.
-
-## TDD Mode
-
-When required, use vertical TDD: one public-interface behavior test, red -> green -> refactor, repeat. Do not write all tests first or test implementation shape unless authorized.
-
-## Reviewer
-
-Use handoff, gate context, diff, implementer evidence, low-level context, and architecture packet.
-
-Check intent, scope, rules, evidence, and docs/reconciliation. Return `APPROVE`, `BLOCK`, or `COMMENT`; separate blockers from follow-ups.
-
-Reviewer approval does not close the gate. Conductor closes it.
+Reviewer: use handoff, diff, evidence, Crew context, structural baseline / packet if provided. Check handoff compliance, scope drift, evidence verdict, code/doc quality, reconciliation concerns. Return `APPROVE`, `BLOCK`, or `COMMENT`; separate blockers from observations. Reviewer approval does not close gate.

@@ -303,6 +303,33 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("failing test observed", implementer_result)
         self.assertIn("red-green-refactor", review_result)
 
+    def test_crew_contract_matches_conductor_handoff_interface(self):
+        crew = read("skills/crew/SKILL.md").lower()
+        implementer_result = read("skills/crew/templates/IMPLEMENTER_RESULT.template.md").lower()
+        review_result = read("skills/crew/templates/REVIEW_RESULT.template.md").lower()
+        combined = f"{crew}\n{implementer_result}\n{review_result}"
+
+        for phrase in [
+            "handoff completeness",
+            "task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, and return format",
+            "do not infer",
+            "does not route",
+            "does not create issues",
+            "does not close gates",
+            "does not expand scope",
+            "structural baseline",
+            "out-of-scope observations",
+        ]:
+            self.assertIn(phrase, combined)
+
+        self.assertIn("specific exclusions touched", implementer_result)
+        self.assertIn("scope drift", review_result)
+        self.assertIn("evidence verdict", review_result)
+        self.assertIn("tdd evidence, if required", implementer_result)
+        self.assertNotIn("architecture packet", combined)
+        self.assertNotIn("follow-up recommendations", combined)
+        self.assertNotIn("non-blocking follow-ups", combined)
+
     def test_architecture_hierarchy_breadcrumbs_are_explicit(self):
         cartographer = read("skills/cartographer/SKILL.md").lower()
         model = read("skills/cartographer/references/map-model.md").lower()

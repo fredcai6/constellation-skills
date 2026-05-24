@@ -1,23 +1,25 @@
 # Implementation Result
 
-## Completed task
-`<task slice>`
+## Assigned gate
+`<gate id/title>`
 
-## Files changed
+## Completed slice
+`<what changed>`
+
+## Scope
+**Files changed:**
 - `<path>`
+
+**Specific exclusions touched:** `<no | yes + explanation>`
 
 ## Behavior changed
 `<yes/no + summary>`
 
-## Tests added/updated
-- `<path or none with reason>`
+## Test mode
+**Required:** `<test-first | test-after | evidence-only | none>`  
+**Satisfied:** `<yes/no + reason>`
 
-## TDD evidence
-- Failing test observed: `<command/output>`
-- Passing test observed: `<command/output>`
-- Refactor while green: `<yes/no>`
-
-## Verification run
+## Evidence
 
 ```bash
 <command>
@@ -25,17 +27,23 @@
 
 **Result:** `<pass/fail/not run + reason>`
 
+## TDD evidence, if required
+
+- Failing test observed: `<command/output>`
+- Passing test observed: `<command/output>`
+- Refactor while green: `<yes/no>`
+
 ## Docs/contracts touched
 - `<path or none with reason>`
 
-## Assumptions used
+## Assumptions
 - `<assumption or none>`
 
 ## Stop conditions hit
 - `<condition or none>`
 
-## Follow-up recommendations
-- `<recommendation or none>`
+## Out-of-scope observations
+- `<finding for Conductor or none>`
 
-## Local todo status
+## Return status
 `complete | partial | blocked`

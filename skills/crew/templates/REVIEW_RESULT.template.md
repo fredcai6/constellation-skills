@@ -6,19 +6,25 @@ Omit optional sections when empty.
 `APPROVE | BLOCK | COMMENT`
 
 ## Handoff compliance
-`<Does the change satisfy the assigned intent, scope, evidence, and stop conditions?>`
+`<assigned intent, scope, required evidence, stop conditions satisfied?>`
 
-## Code quality
-`<Is the implementation maintainable, minimal, tested, and consistent with project rules? If TDD required, did evidence show red-green-refactor and behavior-focused tests?>`
+## Scope drift
+`<Did implementation change only allowed scope? Any specific exclusions touched?>`
 
-## Docs/reconciliation check
-`<summary>`
+## Evidence verdict
+`<Do supplied evidence and test mode satisfy required evidence? If TDD required, did evidence show red-green-refactor and behavior-focused tests?>`
+
+## Code/doc quality
+`<code quality and doc quality: minimal, maintainable, tested, and project-rule compliant?>`
+
+## Reconciliation check
+`<docs/contracts/structural baseline concerns?>`
 
 ## Blockers
 - `<blocker or none>`
 
-## Non-blocking follow-ups
-- `<follow-up or none>`
+## Out-of-scope observations
+- `<finding for Conductor or none>`
 
-## Local todo status
+## Return status
 `complete | partial | blocked`
