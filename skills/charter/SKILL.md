@@ -80,7 +80,7 @@ Before asking Gate 0 questions, create or resume `.agent-work/<work-id>/CHARTER_
 
 The checklist is the only Charter todo and decision record. Do not create a separate decisions file.
 
-Ask one decision question at a time. Gate 0 may request a small bundle of reference and exemplar paths because that is input collection, not a doctrine decision.
+Invoke the `grill-me` skill for Charter interrogation. Ask one decision question at a time. Gate 0 may request a small bundle of reference and exemplar paths because that is input collection, not a doctrine decision.
 
 ## Interrogation Rules
 

@@ -46,7 +46,9 @@ Each gate is the smallest chunk that can be assigned, reviewed, proven with evid
 ### Gate 1: `<name>`
 
 **Purpose:** `<why this gate exists>`  
-**Assigned Crew role:** `<implementer | reviewer>`  
+**Crew cycle:** `implementer Crew -> integrate evidence -> reviewer Crew -> integrate evidence -> gate close`  
+**Implementer handoff:** `<required | not applicable because <reason>>`  
+**Reviewer handoff:** `<required | skipped because <reason>>`  
 **Suggested model tier:** `<simple bounded | stronger broad/ambiguous, because <reason>>`  
 **Test mode:** `<same as plan | override because <reason>>`  
 **Allowed scope:** `<same as plan | narrowed files/regions>`  
@@ -54,7 +56,8 @@ Each gate is the smallest chunk that can be assigned, reviewed, proven with evid
 
 **Close criteria:**  
 - [ ] `<observable condition that must be true>`
-- [ ] `<review condition if implementation gate; skipped because <reason> if not used>`
+- [ ] `<implementation evidence integrated>`
+- [ ] `<review evidence integrated, or skipped because <reason>>`
 
 **Required evidence:**  
 - `<test command | content assertion | diff inspection | render/build output | review result | Cartographer verification | user decision>`
@@ -79,7 +82,7 @@ Each gate is the smallest chunk that can be assigned, reviewed, proven with evid
 ## Final Completion Criteria
 
 - [ ] all gates closed or remaining blockers listed
-- [ ] required review complete or skipped with reason
+- [ ] each implementation gate completed its Crew cycle; do not batch review at final closeout
 - [ ] evidence satisfies close criteria; reviewer approval alone is insufficient
 - [ ] assumptions still hold
 - [ ] architecture reconciliation checked

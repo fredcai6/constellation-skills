@@ -2,6 +2,8 @@
 
 Work file: `.agent-work/<work-id>/CONDUCTOR_CHECKLIST.md`
 
+This is the active workflow controller for Conductor. LOCAL_TODO is recovery metadata, not the execution checklist.
+
 Status values: `pending | in-progress | blocked | complete | skipped`
 
 Skipped steps require `skipped because <reason>`.
@@ -25,13 +27,13 @@ Skipped steps require `skipped because <reason>`.
 | Step | Status | Evidence / note |
 |---|---|---|
 | 0. Load project context | pending | `<Orchestrator/Crew context, Workbench, relevant docs>` |
-| 1. Interrogate request | pending | `<resolved intent + success evidence>` |
+| 1. Interrogate request | pending | `<grill-me invoked; resolved intent + success evidence, or skipped because repo/docs answered>` |
 | 2. Bound problem | pending | `<scope/not-scope/specific exclusions>` |
 | 3. Decide whether Constellation adds value | pending | `<Crew handoff need + value reason>` |
 | 4. Establish structural baseline | pending | `<continue | request Cartographer baseline | skipped because ...>` |
 | 5. Build gated plan | pending | `<GATED_PLAN.md path>` |
-| 6. Dispatch Crew | pending | `<CREW_HANDOFF paths, or cancelled/redirected because ...>` |
-| 7. Integrate evidence | pending | `<EVIDENCE_INTEGRATION notes>` |
+| 6. Dispatch Crew | pending | `<CREW_HANDOFF path + subagent kickoff id/result, or cancelled/redirected because ...>` |
+| 7. Integrate evidence | pending | `<per-gate evidence integration: implementer evidence, reviewer evidence, gate close decision>` |
 | 8. Check architecture reconciliation | pending | `<no action | Conductor packet edit | request Cartographer verification | Triage candidate>` |
 | 9. Collect Triage candidates | pending | `<none | logged | routed | dropped because ...>` |
 | 10. Semantic closeout | pending | `<complete | blocked | skipped because ...>` |

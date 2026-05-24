@@ -43,6 +43,7 @@ class ConstellationContentTests(unittest.TestCase):
         combined = f"{charter}\n{protocol}"
 
         self.assertIn("relentless", combined)
+        self.assertIn("invoke the `grill-me` skill", combined)
         self.assertRegex(combined, r"ask one question at a time|one question at a time")
         self.assertIn("continue drilling", combined)
 
@@ -165,6 +166,8 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("checklist-driven workflow controller", conductor)
         self.assertIn("if no crew handoff is needed", conductor)
         self.assertIn("no fake lightweight constellation path", conductor)
+        self.assertIn("kick off the assigned crew subagent", conductor)
+        self.assertIn("invoke the `grill-me` skill", conductor)
         self.assertIn("0. load project context", checklist)
         self.assertIn("10. semantic closeout", checklist)
         self.assertIn("constellation value decision", interrogation_result)
@@ -532,6 +535,9 @@ class ConstellationContentTests(unittest.TestCase):
 
         self.assertIn("workbench owns artifact hygiene", conductor)
         self.assertIn("local_todo", checklist)
+        self.assertIn("active workflow controller", checklist)
+        self.assertIn("local_todo is recovery metadata", checklist)
+        self.assertIn("subagent kickoff", checklist)
         self.assertIn("crew-handoffs/", workbench)
         self.assertIn("triage-candidates/", workbench)
         self.assertNotIn("framing_note.md", workbench)
@@ -550,6 +556,20 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("assumption check", evidence)
         self.assertIn("scope drift check", evidence)
         self.assertIn("request cartographer verification", evidence)
+
+    def test_implementation_gates_require_per_gate_review_cycle(self):
+        conductor = read("skills/conductor/SKILL.md").lower()
+        gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
+        checklist = read("skills/conductor/templates/CONDUCTOR_CHECKLIST.template.md").lower()
+        evidence = read("skills/conductor/templates/EVIDENCE_INTEGRATION.template.md").lower()
+
+        combined = f"{conductor}\n{gated_plan}\n{checklist}\n{evidence}"
+        self.assertIn("implementer crew -> integrate evidence -> reviewer crew -> integrate evidence -> gate close", combined)
+        self.assertIn("do not batch review at final closeout", combined)
+        self.assertIn("implementer handoff", gated_plan)
+        self.assertIn("reviewer handoff", gated_plan)
+        self.assertIn("per-gate evidence integration", checklist)
+        self.assertIn("both implementation evidence and review evidence", evidence)
 
     def test_conductor_collects_triage_candidates_instead_of_eager_issues(self):
         conductor = read("skills/conductor/SKILL.md").lower()

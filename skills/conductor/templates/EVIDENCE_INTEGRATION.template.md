@@ -17,6 +17,8 @@
 ## Required Evidence Check
 `<satisfied | missing | contradicted>`
 
+Implementation gates require both implementation evidence and review evidence before gate close, unless review was explicitly skipped with reason. Do not batch review at final closeout.
+
 ## Original Intent Check
 `<evidence still satisfies Intent Protected | concern>`
 

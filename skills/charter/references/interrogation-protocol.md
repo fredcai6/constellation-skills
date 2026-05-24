@@ -1,6 +1,6 @@
 # Charter Interrogation Protocol
 
-Charter exists to turn engineering doctrine into usable Orchestrator, Crew, and Glossary context. It is a relentless interrogation pass, not a setup wizard.
+Charter exists to turn engineering doctrine into usable Orchestrator, Crew, and Glossary context. Invoke the `grill-me` skill for this relentless interrogation pass; Charter is not a setup wizard.
 
 ## Core rule
 
