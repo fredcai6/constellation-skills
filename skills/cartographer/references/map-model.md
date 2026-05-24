@@ -99,9 +99,15 @@ Do not add other overlay kinds. Status is metadata only. Tests/checks are eviden
 
 ## Packet Role
 
-Architecture packets are dense agent pages for structural nodes. They are current-only, Markdown-first, and optimized for information density over prose polish.
+Architecture packets are dense agent pages for structural nodes. Packets are the primary durable agent pages. They are current-only, Markdown-first, and optimized for information density over prose polish.
+
+Manual packets are authoritative agent context, but they are not mechanically trusted unless validation/generation is configured and passing. Record manual traceability as drift risk, not as proof that code and map cannot diverge.
+
+Spec replacement is conditional. Packets can replace specs only when duplicate module READMEs/spec docs are retired or explicitly demoted. If another document remains canonical for the same node, record `parallel canonical docs` and hand retirement or merge decisions to Triage unless the user delegated that authority.
 
 Packets may cover system-context, container, component, code-path, or significant module nodes. Most module/file leaves can remain generated source-scan nodes until they need curated responsibility, constraints, or trust limits.
+
+Work packet-first: when mapping a scope, reconcile packets for touched structural nodes before expanding index and overlay ceremony. Index and overlays support navigation, shared anchors, and map consistency; they should not become a second packet registry or narrative work log.
 
 ## Generated Map Contract
 

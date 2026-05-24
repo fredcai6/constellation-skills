@@ -20,7 +20,13 @@ It is not architecture truth.
 ## Build Command
 
 ```bash
-<command>
+python scripts/build_architecture_map.py --root . --source-root src
+```
+
+## Check Command
+
+```bash
+python scripts/build_architecture_map.py --root . --source-root src --check
 ```
 
 ## Required After Changing

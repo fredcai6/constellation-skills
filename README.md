@@ -107,6 +107,15 @@ Rules:
 
 Constellation assumes a Git repo, Markdown documentation, and file-based workflow artifacts. Issue tracker, structural map generation, CI, and runtime commands are project-specific and should be clarified by Charter.
 
+## Structural map validation
+
+Build or check Cartographer map artifacts:
+
+```powershell
+python scripts/build_architecture_map.py --root . --source-root src
+python scripts/build_architecture_map.py --root . --source-root src --check
+```
+
 ## Recommended durable artifacts
 
 ```text

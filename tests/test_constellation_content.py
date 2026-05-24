@@ -317,6 +317,35 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("closeout gate", checklist)
         self.assertIn("triage candidate", checklist)
 
+    def test_cartographer_is_packet_first_and_handles_ambiguity_explicitly(self):
+        cartographer = read("skills/cartographer/SKILL.md").lower()
+        model = read("skills/cartographer/references/map-model.md").lower()
+        checklist = read("skills/cartographer/templates/CARTOGRAPHER_CHECKLIST.template.md").lower()
+        combined = f"{cartographer}\n{model}\n{checklist}"
+
+        self.assertIn("packet-first", combined)
+        self.assertIn("packets are the primary durable agent pages", model)
+        self.assertIn("index and overlays support navigation", model)
+        self.assertIn("user intent ambiguity", checklist)
+        self.assertIn("decision rationale", checklist)
+        self.assertIn("decide and record rationale", cartographer)
+        self.assertIn("ask only when", cartographer)
+
+    def test_cartographer_manual_traceability_and_spec_replacement_are_explicit(self):
+        cartographer = read("skills/cartographer/SKILL.md").lower()
+        model = read("skills/cartographer/references/map-model.md").lower()
+        checklist = read("skills/cartographer/templates/CARTOGRAPHER_CHECKLIST.template.md").lower()
+        combined = f"{cartographer}\n{model}\n{checklist}"
+
+        self.assertIn("manual packets are authoritative agent context", combined)
+        self.assertIn("not mechanically trusted unless validation/generation is configured and passing", combined)
+        self.assertIn("spec replacement is conditional", combined)
+        self.assertIn("retired or explicitly demoted", combined)
+        self.assertIn("parallel canonical docs", combined)
+        self.assertIn("traceability mode: manual | validated | generated", checklist)
+        self.assertIn("drift risk: low | medium | high", checklist)
+        self.assertIn("parallel canonical docs: <paths or none>", checklist)
+
     def test_cartographer_map_build_replaces_explorer_build(self):
         cartographer = read("skills/cartographer/SKILL.md").lower()
         map_build = read("skills/cartographer/templates/MAP_BUILD.template.md").lower()
@@ -327,6 +356,8 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("docs/architecture/generated/map.json", map_build)
         self.assertIn("docs/architecture/overlays/", map_build)
         self.assertIn("repo source tree", map_build)
+        self.assertIn("scripts/build_architecture_map.py", map_build)
+        self.assertIn("--check", map_build)
         self.assertNotIn("human-explorable architecture artifact", map_build)
 
     def test_cartographer_rejects_out_of_scope_graph_concepts(self):
@@ -503,6 +534,7 @@ class ConstellationContentTests(unittest.TestCase):
         readme = read("README.md")
 
         self.assertIn("scripts/install_constellation.py", readme)
+        self.assertIn("scripts/build_architecture_map.py", readme)
         self.assertIn("--agent codex", readme)
         self.assertIn("--agent claude", readme)
         self.assertIn("--agent cursor", readme)

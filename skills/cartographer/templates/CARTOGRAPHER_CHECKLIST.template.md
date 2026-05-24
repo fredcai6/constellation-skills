@@ -8,14 +8,16 @@ Status values: `pending | in-progress | blocked | complete`
 
 **Structural scope:** `struct:<id> | repo region`  
 **Requested outcome:** `<current-only map/packet/index/overlay reconciliation>`  
-**Authority:** `<user request | existing rule | assumption needing confirmation>`
+**Authority:** `<user request | existing rule | assumption needing confirmation>`  
+**User intent ambiguity:** `none | resolved | unresolved`
 
 ## Scope Gate
 
 **Status:** `pending`  
 **Node level:** `system-context | container | component | code-path | module`  
 **Parent candidate:** `struct:<id> | none | unclear`  
-**Stop condition:** `<scope cannot map to structural level>`
+**Decision rationale:** `<why proceeding, asking, or stopping>`  
+**Stop condition:** `<scope cannot map to structural level or user intent ambiguity affects durable docs>`
 
 ## Evidence Gate
 
@@ -41,6 +43,8 @@ Status values: `pending | in-progress | blocked | complete`
 | Status | `current | partial | stale | disputed` |
 | Confidence | `high | medium | low | unknown` |
 
+**Decision rationale:** `<evidence supporting model choice>`
+
 ## Relationship Gate
 
 **Status:** `pending`
@@ -48,6 +52,8 @@ Status values: `pending | in-progress | blocked | complete`
 | Source | Type | Target | Provenance | Confidence | Evidence |
 |---|---|---|---|---|---|
 | `struct:<id>` | `depends-on | serves | constrained-by` | `<id>` | `curated | generated` | `<confidence>` | `<path/note>` |
+
+**Decision rationale:** `<why relation is current truth or why question is needed>`
 
 ## Packet Gate
 
@@ -62,6 +68,9 @@ Status values: `pending | in-progress | blocked | complete`
 
 **Status:** `pending`
 
+- Traceability mode: manual | validated | generated
+- Drift risk: low | medium | high
+- Parallel canonical docs: <paths or none>
 - `MAP_BUILD.md`: `<configured | not configured>`
 - Command: `<command or none>`
 - Result: `<pass | fail | skipped>`
