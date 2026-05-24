@@ -5,21 +5,13 @@ description: Create issue-ready recommendations. Use when Conductor, Cartographe
 
 # Constellation Triage
 
-## Purpose
+Write issue-ready recommendations for follow-up work. Triage does not implement, keep backlog, or pull work into current scope unless asked. Persist future-work packaging in issues or workflow-local text.
 
-Write issue-ready recommendations for follow-up work. Triage does not implement, keep a backlog, or pull work into current scope unless asked. Persist future-work packaging in issues or workflow-local text.
-
-## Use When
-
-- Cartographer finds out-of-scope mismatch.
-- Reviewer finds out-of-scope test/doc/contract gaps.
-- Conductor finds future work during planning.
-- Implementation exposes deferred debt.
-- The user wants issue-ready text.
+Use when Cartographer finds out-of-scope mismatch; Reviewer finds out-of-scope test/doc/contract gaps; Conductor finds future work during planning; implementation exposes deferred debt; user wants issue-ready text.
 
 ## Inputs
 
-Consume `.agent-work/CARTOGRAPHER_CHECKLIST.md` candidates, review findings, plans, user notes, or implementation evidence. Preserve structural anchor, mismatch class, current truth, desired/future concern, evidence, and action.
+Consume `.agent-work/CARTOGRAPHER_CHECKLIST.md` candidates, review findings, plans, user notes, implementation evidence. Preserve structural anchor, mismatch class, current truth, desired/future concern, evidence, action.
 
 ## Classify
 
@@ -32,3 +24,5 @@ Ground rules govern direct issue creation. If unclear, produce recommendations a
 ## Questions
 
 What is this? How important? Who owns it? Why future work? What evidence supports it? What makes it done? What is out of scope?
+
+Templates: `templates/TRIAGE_RECOMMENDATION.template.md`.

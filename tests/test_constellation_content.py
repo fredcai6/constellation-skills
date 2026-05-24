@@ -613,6 +613,46 @@ class ConstellationContentTests(unittest.TestCase):
                 for phrase in phrases:
                     self.assertIn(phrase, body)
 
+    def test_overview_defines_relationship_contracts(self):
+        overview = read("docs/CONSTELLATION_OVERVIEW.md").lower()
+
+        self.assertIn("relationship contract", overview)
+        self.assertIn("producer | artifact/interface | consumer | contract", overview)
+
+        expected_edges = [
+            "charter | `docs/agents/orchestrator_context.md` | conductor, cartographer",
+            "charter | `docs/agents/crew_context.md` | crew",
+            "workbench | `.agent-work/<work-id>/local_todo.md` | all roles",
+            "cartographer | `docs/architecture/packets/` + `index.md` | conductor, crew",
+            "conductor | `crew_handoff` | crew",
+            "crew | `implementer_result` / `review_result` | conductor",
+            "conductor, cartographer, crew | triage candidate | triage",
+        ]
+
+        for edge in expected_edges:
+            with self.subTest(edge=edge):
+                self.assertIn(edge, overview)
+
+        self.assertIn("templates are the interface", overview)
+        self.assertIn("skill.md is trigger, boundary, and resource pointer", overview)
+
+    def test_skill_bodies_point_to_templates_not_inline_manuals(self):
+        expectations = {
+            "charter": ["templates/charter_checklist.template.md", "references/engineering-rubric.md"],
+            "workbench": ["templates/local_todo.template.md", "templates/workflow_closeout.template.md"],
+            "cartographer": ["templates/cartographer_checklist.template.md", "templates/architecture_packet.template.md"],
+            "conductor": ["templates/conductor_checklist.template.md", "templates/crew_handoff.template.md"],
+            "crew": ["templates/implementer_result.template.md", "templates/review_result.template.md"],
+            "triage": ["templates/triage_recommendation.template.md"],
+        }
+
+        for skill, phrases in expectations.items():
+            body = read(f"skills/{skill}/SKILL.md").lower()
+            with self.subTest(skill=skill):
+                self.assertIn("templates", body)
+                for phrase in phrases:
+                    self.assertIn(phrase, body)
+
     def test_generated_context_is_role_overlay_not_role_manual(self):
         orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
         crew = read("skills/charter/templates/CREW_CONTEXT.template.md").lower()
