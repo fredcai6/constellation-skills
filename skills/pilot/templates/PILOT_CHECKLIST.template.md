@@ -27,7 +27,7 @@ Skipped steps require `skipped because <reason>`.
 | Step | Status | Evidence / note |
 |---|---|---|
 | 0. Load project context | pending | `<Orchestrator/Crew context, Workbench, relevant docs>` |
-| 1. Interrogate request | pending | `<grill-me invoked; resolved intent + success evidence, or skipped because repo/docs answered>` |
+| 1. Interrogate request | pending | `<constellation-interrogator invoked; INTERROGATOR_QUESTIONS.md path; resolved intent + success evidence, or skipped because repo/docs answered>` |
 | 2. Bound problem | pending | `<scope/not-scope/specific exclusions>` |
 | 3. Decide whether Constellation adds value | pending | `<Crew handoff need + value reason>` |
 | 4. Establish structural baseline | pending | `<continue | request Cartographer baseline | skipped because ...>` |

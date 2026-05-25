@@ -15,6 +15,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 |---|---|
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. |
 | `constellation-workbench` | Manage local todos, workflow artifacts, evidence, closeout, and archive. |
+| `constellation-interrogator` | Run relentless one-question interrogation with a traceable question queue. |
 | `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
 | `constellation-scout` | Audit map-first architecture pressure and package improvement candidates. |
 | `constellation-pilot` | Coordinate checklist-driven problem interrogation, gated planning, Crew handoffs, evidence integration, reconciliation, and closeout. |
@@ -154,6 +155,7 @@ docs/
   <work-id>/
     CHARTER_CHECKLIST.md
     CARTOGRAPHER_CHECKLIST.md
+    INTERROGATOR_QUESTIONS.md
     SCOUT_REPORT.md
     LOCAL_TODO.md
     PILOT_CHECKLIST.md

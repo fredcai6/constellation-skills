@@ -84,7 +84,7 @@ Charter seeds and updates project templates. If `.agent_work/templates` is missi
 
 The checklist is the only Charter todo and decision record. Do not create a separate decisions file.
 
-Invoke the `grill-me` skill for Charter interrogation. Ask one decision question at a time. Gate 0 may request reference/exemplar paths as input collection, not a doctrine decision.
+Invoke `constellation-interrogator` for Charter interrogation. Ask one decision question at a time. Gate 0 may request reference/exemplar paths as input collection, not doctrine.
 
 ## Interrogation Rules
 

@@ -10,6 +10,11 @@ Path: `skills/workbench/SKILL.md`
 
 Manages `.agent-work/<work-id>/`, local todos, evidence, closeout, and archive.
 
+## Constellation Interrogator
+Path: `skills/interrogator/SKILL.md`
+
+Runs relentless one-question interrogation with a traceable `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md` queue.
+
 ## Constellation Cartographer
 Path: `skills/cartographer/SKILL.md`
 

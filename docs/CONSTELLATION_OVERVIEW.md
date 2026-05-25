@@ -3,6 +3,7 @@
 ```text
 Charter      -> interrogates engineering doctrine and compiles agent-operable context
 Workbench    -> manages recoverable workflow state
+Interrogator -> questions request/design ambiguity with traceable queue
 Cartographer -> maintains current-only structural map
 Scout        -> audits map-first architecture pressure
 Pilot    -> shapes work and delegates execution
@@ -21,6 +22,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
 | Workbench | `.agent-work/<work-id>/LOCAL_TODO.md` | all roles | recoverable state; not durable truth |
 | Workbench | closeout/archive rules | Pilot, Cartographer | artifact hygiene; no semantic workflow decisions |
+| Interrogator | `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md` | Charter, Pilot | live question queue, skipped items, answers, follow-ups |
 | Cartographer | `docs/architecture/packets/` + `index.md` | Scout, Pilot, Crew | current structural truth and sparse purpose/constraint/rationale anchors |
 | Cartographer | mismatch/Triage candidate | Pilot, Triage | current-vs-future separation with structural anchor |
 | Scout | `SCOUT_REPORT` | user, Pilot, Triage | ranked architecture improvement candidates with map/code evidence |

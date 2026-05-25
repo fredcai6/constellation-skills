@@ -12,6 +12,7 @@ INSTALLER = ROOT / "scripts" / "install_constellation.py"
 SKILL_NAMES = [
     "constellation-charter",
     "constellation-workbench",
+    "constellation-interrogator",
     "constellation-cartographer",
     "constellation-scout",
     "constellation-pilot",
