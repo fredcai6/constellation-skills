@@ -20,7 +20,8 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Pilot, Cartographer, Scout | project-specific planning, authority, evidence, stop/ask rules |
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project-specific implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
-| Workbench | `.agent-work/<work-id>/LOCAL_TODO.md` | all roles | recoverable state; not durable truth |
+| Workbench | `.agent-work/<work-id>/LOCAL_TODO.md` | all roles | recoverable state; Local Todo indexes the active role controller; not durable truth |
+| Role skills | role-specific checklist templates | owning role, Workbench | execution controller when present; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Pilot, Cartographer | artifact hygiene; no semantic workflow decisions |
 | Interrogator | `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md` | Charter, Pilot | live question queue, skipped items, answers, follow-ups |
 | Cartographer | `docs/architecture/packets/` + `index.md` | Scout, Pilot, Crew | current structural truth and sparse purpose/constraint/rationale anchors |

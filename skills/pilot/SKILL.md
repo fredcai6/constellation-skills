@@ -19,7 +19,7 @@ Outcomes: `continue | ask user | split work | stop using Constellation | request
 
 ## Rules
 
-Step 1 must invoke the `constellation-interrogator` skill for relentless one-question interrogation. Inspect repo/docs only when they answer. Keep its question list in `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md`.
+Step 1 must invoke the `constellation-interrogator` skill for relentless one-question interrogation with `templates/PILOT_STARTING_QUESTIONS.template.md` as the aggressively updated starting queue. Inspect repo/docs only when they answer. Keep its question list in `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md`.
 
 The gate is the central unit: smallest chunk assigned, reviewed, proven with evidence, and stopped independently. Implementation gates run: implementer Crew -> integrate evidence -> reviewer Crew -> integrate evidence -> gate close. Do not batch review at final closeout.
 

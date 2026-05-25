@@ -12,22 +12,32 @@
 **Handoff/framing source:** `<path/title or summary>`  
 **Authority:** `<user decision | ground rule | delegated | default | assumption>`
 
+## Active controller
+
+**Controller template:** `<role-specific checklist template or LOCAL_TODO only>`  
+**Controller file:** `<.agent-work/<work-id>/<ROLE_CHECKLIST>.md or this file>`  
+**Controller status:** `<current | pending | blocked>`  
+**Controller rule:** `Local Todo indexes the active controller; do not duplicate the role checklist.`
+
 ## Definition of done
 
 - [ ] `<completion criterion>`
 - [ ] `<evidence criterion>`
 - [ ] `<reporting criterion>`
 
-## Todo
+## Todo / Recovery Steps
 
 - [ ] `<step>`
 - [ ] `<step>`
 
-## Work log
+Keep completed items checked (`[x]`). If a role-specific checklist is active, keep detailed execution steps there and use this list only for recovery milestones.
+
+## Execution Notes
 
 ### Step 1: `<short title>`
 
 **Status:** `completed | blocked | skipped | revised`  
+**Status transitions:** `<pending -> in-progress -> completed/blocked/skipped/revised>`  
 **What happened:** `<brief recovery-useful note>`  
 **Evidence:** `<test, file, inspection, command, review result>`  
 **Follow-up:** `<none or next action>`

@@ -78,13 +78,13 @@ All other writes are out of Charter scope.
 
 ## Workflow Driver
 
-Before Gate 0 questions, create/resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md`. Prefer `.agent_work/templates/CHARTER_CHECKLIST.template.md`; fall back to bundled `templates/CHARTER_CHECKLIST.template.md`. Choose a date-purpose work id unless supplied or obvious.
+Before Gate 0, create/resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md`. Prefer `.agent_work/templates/CHARTER_CHECKLIST.template.md`; fall back to bundled `templates/CHARTER_CHECKLIST.template.md`. Choose a date-purpose work id unless supplied.
 
-Charter seeds and updates project templates. If `.agent_work/templates` is missing, copy bundled defaults there. When decisions change workflow interfaces, update matching project templates too.
+Charter seeds/updates project templates. If `.agent_work/templates` is missing, copy bundled defaults there. When decisions change workflow interfaces, update matching project templates too.
 
-The checklist is the only Charter todo and decision record. Do not create a separate decisions file.
+The checklist is the only Charter todo/decision record; no separate decisions file.
 
-Invoke `constellation-interrogator` for Charter interrogation. Ask one decision question at a time. Gate 0 may request reference/exemplar paths as input collection, not doctrine.
+Invoke `constellation-interrogator` for Charter interrogation. Start from `templates/CHARTER_STARTING_QUESTIONS.template.md`; aggressively update it. Ask one decision question at a time. Gate 0 may collect exemplar paths.
 
 ## Interrogation Rules
 

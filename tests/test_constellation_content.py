@@ -60,6 +60,35 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("possible answers", interrogator)
         self.assertIn("recommendation", interrogator)
 
+    def test_interrogator_has_mutable_starting_questions_for_charter_and_pilot(self):
+        charter_template_path = ROOT / "skills/interrogator/templates/CHARTER_STARTING_QUESTIONS.template.md"
+        pilot_template_path = ROOT / "skills/interrogator/templates/PILOT_STARTING_QUESTIONS.template.md"
+        shared_template_path = ROOT / "skills/interrogator/templates/STARTING_QUESTIONS.template.md"
+
+        self.assertTrue(charter_template_path.exists())
+        self.assertTrue(pilot_template_path.exists())
+        self.assertFalse(shared_template_path.exists())
+
+        charter_template = charter_template_path.read_text(encoding="utf-8").lower()
+        pilot_template = pilot_template_path.read_text(encoding="utf-8").lower()
+        charter = read("skills/charter/SKILL.md").lower()
+        pilot = read("skills/pilot/SKILL.md").lower()
+        interrogator = read("skills/interrogator/SKILL.md").lower()
+
+        self.assertIn("charter starting questions", charter_template)
+        self.assertIn("aggressively update", charter_template)
+        self.assertIn("pilot starting questions", pilot_template)
+        self.assertIn("aggressively update", pilot_template)
+        self.assertIn("templates/charter_starting_questions.template.md", charter)
+        self.assertIn("templates/pilot_starting_questions.template.md", pilot)
+        self.assertNotIn("templates/starting_questions.template.md", charter)
+        self.assertNotIn("templates/starting_questions.template.md", pilot)
+        self.assertNotIn("templates/starting_questions.template.md", interrogator)
+        self.assertNotIn("templates/charter_starting_questions.template.md", interrogator)
+        self.assertNotIn("templates/pilot_starting_questions.template.md", interrogator)
+        self.assertIn("aggressively update", charter)
+        self.assertIn("aggressively update", pilot)
+
     def test_generated_context_keeps_grilling_posture_sharp(self):
         charter = read("skills/charter/SKILL.md").lower()
         protocol = read("skills/charter/references/interrogation-protocol.md").lower()
@@ -601,6 +630,38 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertNotIn("issue-recommendations/", workbench)
         self.assertIn("crew-handoffs/", readme)
         self.assertIn("triage-candidates/", readme)
+
+    def test_workbench_merges_local_todo_with_role_checklists(self):
+        workbench = read("skills/workbench/SKILL.md").lower()
+        local_todo = read("skills/workbench/templates/LOCAL_TODO.template.md").lower()
+        overview = read("docs/CONSTELLATION_OVERVIEW.md").lower()
+        combined = f"{workbench}\n{local_todo}\n{overview}"
+
+        self.assertIn("role-specific checklist", combined)
+        self.assertIn("execution controller", combined)
+        self.assertIn("controller template", local_todo)
+        self.assertIn("controller file", local_todo)
+        self.assertIn("checked (`[x]`)", combined)
+        self.assertIn("execution notes", local_todo)
+        self.assertIn("status transitions", local_todo)
+        self.assertIn("local todo indexes the active controller", combined)
+        self.assertIn("do not duplicate the role checklist", combined)
+
+    def test_role_checklists_are_direct_role_interfaces_not_workbench_owned(self):
+        charter = read("skills/charter/SKILL.md").lower()
+        pilot = read("skills/pilot/SKILL.md").lower()
+        cartographer = read("skills/cartographer/SKILL.md").lower()
+        overview = read("docs/CONSTELLATION_OVERVIEW.md").lower()
+
+        self.assertIn(".agent-work/<work-id>/charter_checklist.md", charter)
+        self.assertIn("templates/charter_checklist.template.md", charter)
+        self.assertIn("pilot_checklist", pilot)
+        self.assertIn("templates/pilot_checklist.template.md", pilot)
+        self.assertIn(".agent-work/cartographer_checklist.md", cartographer)
+        self.assertIn("templates/cartographer_checklist.template.md", cartographer)
+        self.assertIn("role skills | role-specific checklist templates", overview)
+        self.assertIn("workbench | `.agent-work/<work-id>/local_todo.md`", overview)
+        self.assertNotIn("workbench | role-specific checklist templates", overview)
 
     def test_evidence_integration_requires_original_intent_not_approval_alone(self):
         evidence = read("skills/pilot/templates/EVIDENCE_INTEGRATION.template.md").lower()

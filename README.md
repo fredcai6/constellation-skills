@@ -174,6 +174,7 @@ Rules:
 - If it is in `docs/`, it is meant to guide future workflows.
 - If it is in `.agent_work/templates/`, it is the project-owned template catalog. Agents prefer `.agent_work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
+- When a role-specific checklist exists, use it as the execution controller. Local Todo should index that controller, track recovery state, and keep completed milestones visibly checked.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
 - Archived workflow artifacts are historical context only.
 - Agents should not read archived workflow artifacts unless the user explicitly points to them.
