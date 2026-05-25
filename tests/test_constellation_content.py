@@ -612,6 +612,36 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertNotIn("delete/condense", workbench)
         self.assertNotIn("repository history captured", closeout)
 
+    def test_pilot_and_charter_archive_complete_work_packages(self):
+        pilot = read("skills/pilot/SKILL.md").lower()
+        checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
+        charter = read("skills/charter/SKILL.md").lower()
+        charter_checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+        workbench = read("skills/workbench/SKILL.md").lower()
+        closeout = read("skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md").lower()
+
+        combined = f"{pilot}\n{checklist}\n{charter}\n{charter_checklist}\n{workbench}\n{closeout}"
+        self.assertIn("move the entire `.agent-work/<work-id>/` package", combined)
+        self.assertIn("including `interrogator_questions.md`", combined)
+        self.assertIn(".agent-work/archive/<date>-<work-id>/", combined)
+        self.assertIn("no loose work-id artifacts remain", combined)
+        self.assertIn("archived package commit decision", charter_checklist)
+
+    def test_charter_captures_repo_action_authority_for_pilot(self):
+        charter_questions = read(
+            "skills/interrogator/templates/CHARTER_STARTING_QUESTIONS.template.md"
+        ).lower()
+        charter_checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+        orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
+        pilot_checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
+
+        combined = f"{charter_questions}\n{charter_checklist}\n{orchestrator}\n{pilot_checklist}"
+        self.assertIn("commit archived work packages", combined)
+        self.assertIn("commit sensitivity", combined)
+        self.assertIn("pilot may open prs directly", combined)
+        self.assertIn("pilot may merge to main", combined)
+        self.assertIn("repo action authority", combined)
+
     def test_pilot_uses_workbench_artifact_hygiene(self):
         pilot = read("skills/pilot/SKILL.md").lower()
         checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()

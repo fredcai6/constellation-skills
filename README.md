@@ -176,6 +176,7 @@ Rules:
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
 - When a role-specific checklist exists, use it as the execution controller. Local Todo should index that controller, track recovery state, and keep completed milestones visibly checked.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
+- Charter and Pilot closeout move the complete `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including interrogation sessions.
 - Archived workflow artifacts are historical context only.
 - Agents should not read archived workflow artifacts unless the user explicitly points to them.
 - Anything future agents should rely on must be promoted to durable artifacts.

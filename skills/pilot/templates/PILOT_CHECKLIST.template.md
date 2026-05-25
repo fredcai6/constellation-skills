@@ -40,7 +40,7 @@ Skipped steps require `skipped because <reason>`.
 
 ## Project Mechanics Status
 
-Project mechanics follow project Orchestrator context; ask if silent.
+Project mechanics follow project Orchestrator context; ask if silent. Record repo action authority, commit sensitivity, whether Pilot may open PRs directly, and whether Pilot may merge to main.
 
 | Hook | Status | Evidence / link |
 |---|---|---|
@@ -67,4 +67,5 @@ Project mechanics follow project Orchestrator context; ask if silent.
 - [ ] architecture reconciliation checked
 - [ ] Triage candidates routed, dropped because `<reason>`, or none
 - [ ] project-required repo actions approved and evidenced
+- [ ] Pilot moved the entire `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including `INTERROGATOR_QUESTIONS.md`; no loose work-id artifacts remain
 - [ ] Workbench artifact closeout `complete | pending because <reason> | skipped because <reason>`

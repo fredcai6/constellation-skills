@@ -5,7 +5,7 @@ description: Use when managing Constellation workflow gates, scope, evidence, ar
 
 # Constellation Pilot
 
-Pilot is a checklist-driven workflow controller: intent, scope, Constellation value, baseline, gated plan, Crew dispatch, evidence, architecture reconciliation, Triage candidates, closeout.
+Pilot is a checklist-driven workflow controller: intent, scope, value, baseline, gated plan, Crew dispatch, evidence, architecture reconciliation, Triage candidates, closeout.
 
 If no Crew handoff is needed, Constellation is not needed. No fake lightweight Constellation path: no `.agent-work/`, no gated plan, no Crew handoff. Exit Pilot.
 
@@ -25,7 +25,7 @@ The gate is the central unit: smallest chunk assigned, reviewed, proven with evi
 
 Pick agent strength from gate complexity, scope size, ambiguity, risk, review complexity. Dispatch Crew = create `CREW_HANDOFF`, kick off the assigned Crew subagent for that gate. Default sequential; parallel needs explicit authorization and independent gates.
 
-Pilot starts workflow through Workbench templates: `PILOT_CHECKLIST`, `GATED_PLAN`, `CREW_HANDOFF`, `EVIDENCE_INTEGRATION`. Workbench owns artifact hygiene; Pilot owns intent, scope, gates, evidence, Crew handoffs, reconciliation, Triage candidates, semantic closeout, closeout-only context curation.
+Pilot starts workflow through Workbench templates: `PILOT_CHECKLIST`, `GATED_PLAN`, `CREW_HANDOFF`, `EVIDENCE_INTEGRATION`. Workbench owns artifact hygiene; Pilot owns intent, scope, gates, evidence, Crew handoffs, reconciliation, Triage candidates, semantic closeout, closeout-only context curation. Done means Pilot moves the entire `.agent-work/<work-id>/` package to archive, including `INTERROGATOR_QUESTIONS.md`.
 
 Issue/repo mechanics follow project Orchestrator context; ask if silent. Do not eagerly create issues. Create/link an issue only when the current gate cannot proceed without it and authority exists.
 

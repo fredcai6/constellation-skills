@@ -7,6 +7,7 @@ This file is the live Charter driver, local todo, and decision record. It is ret
 ```text
 .agent-work/<work-id>/CHARTER_CHECKLIST.md
 .agent-work/CHARTER_OPEN_QUESTIONS.md
+.agent-work/archive/<date>-<work-id>/
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
@@ -35,6 +36,14 @@ Charter seeds and updates project templates.
 **Why this question matters:** `<what future agent behavior it affects>`  
 **Recommendation/default:** `<recommended answer or rigorous default>`  
 **Waiting on user:** `yes | no`
+
+## Repo Action Authority
+
+**Commit sensitivity:** `<ask always | commit local ok | push ok | PR only | direct main allowed | custom>`  
+**Pilot may open PRs directly:** `yes | no | ask first`  
+**Pilot may merge to main:** `yes | no | ask first`  
+**Commit archived work packages:** `yes | no | ask each closeout`  
+**Archived package commit decision:** `<decision source and evidence>`
 
 ## Scales
 
@@ -66,12 +75,14 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 - What is the Charter scope: whole repo, subsystem, or refresh?
 - Provide best available positive exemplars for code shape, test style, documentation, workflow, and review evidence. Use `none yet` explicitly for missing categories.
 - Which existing `docs/agents/*`, `AGENTS.md`, README/equivalent, philosophy/process docs, or user-provided references are authoritative?
+- Should agents commit archived work packages, and what commit sensitivity governs Pilot repo actions?
 
 **Completion criteria:**
 - Scope recorded.
 - Each exemplar category answered or marked `none yet`.
 - Prior context imported as material decisions where relevant.
 - `.agent_work/templates` exists with default templates or an explicit skip reason.
+- Repo action authority recorded for Pilot PR/direct main behavior.
 
 **Stop conditions:**
 - Scope is unclear.
@@ -190,7 +201,8 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 - [ ] Crew context contains only universal verification rules; area-specific commands are represented as handoff requirements.
 - [ ] Handoff-only details are not placed in durable Crew context.
 - [ ] `.agent-work/CHARTER_OPEN_QUESTIONS.md` deleted or absent.
-- [ ] This checklist retained.
+- [ ] Move the entire `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including `INTERROGATOR_QUESTIONS.md`.
+- [ ] No loose work-id artifacts remain.
 
 ## Material Decisions
 

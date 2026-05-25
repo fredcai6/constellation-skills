@@ -29,6 +29,13 @@ Agent-facing context. Use bullets, tables, and fragments. Omit prose that does n
 
 Every handoff should include assigned task, allowed scope, specific exclusions if any, success criteria, required evidence, required verification commands when relevant, test mode or no-test-surface rationale, stop conditions, and return format.
 
+## Repo Action Authority
+
+**Commit sensitivity:** `<ask always | commit local ok | push ok | PR only | direct main allowed | custom>`  
+**Commit archived work packages:** `<yes | no | ask each closeout>`  
+**Pilot may open PRs directly:** `<yes | no | ask first>`  
+**Pilot may merge to main:** `<yes | no | ask first>`
+
 ## Evidence And Verification Map
 
 `<Omit this section when there are no area-specific evidence rules. Area-specific commands belong in handoffs, not Crew context.>`

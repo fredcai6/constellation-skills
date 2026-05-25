@@ -10,4 +10,6 @@ Seed queue. Interrogator may aggressively update, split, delete, add, or reorder
 | IQ-004 | What evidence would prove an agent followed this rule correctly? | Verification | open |  |  |
 | IQ-005 | Which role consumes the decision: Orchestrator, Crew, both, Glossary, or checklist-only? | Projection | open |  |  |
 | IQ-006 | What term or project convention needs canonical wording? | Glossary | open |  |  |
-| IQ-007 | What contradiction with existing docs, code, or workflow should block final compile? | Compile blocker | open |  |  |
+| IQ-007 | Should agents commit archived work packages, and when? | Commit archived work packages | open |  |  |
+| IQ-008 | What is commit sensitivity: may Pilot commit locally, push, open PRs directly, or merge to main? | Repo action authority | open |  |  |
+| IQ-009 | What contradiction with existing docs, code, or workflow should block final compile? | Compile blocker | open |  |  |

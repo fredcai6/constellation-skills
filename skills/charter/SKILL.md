@@ -1,13 +1,13 @@
 ---
 name: constellation-charter
-description: Interrogate engineering doctrine and compile agent-operable Orchestrator, Crew, and Glossary context. Use when starting or refreshing repo agent context, engineering posture, standards, or shared terminology.
+description: Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. Use when starting or refreshing repo agent context, posture, standards, or terminology.
 ---
 
 # Constellation Charter
 
 ## Purpose
 
-Charter elicits engineering doctrine and compiles role-operable context.
+Elicit engineering doctrine and compile role-operable context.
 
 Durable outputs:
 
@@ -23,19 +23,20 @@ Workflow outputs:
 ```text
 .agent-work/<work-id>/CHARTER_CHECKLIST.md
 .agent-work/CHARTER_OPEN_QUESTIONS.md
+.agent-work/archive/<date>-<work-id>/
 ```
 
 `CHARTER_OPEN_QUESTIONS.md` exists only while weak or unresolved Charter questions remain. Delete it during final compile.
 
 ## Use
 
-Use when starting a repo, refreshing agent context, defining posture, clarifying standards, or establishing shared terminology.
+Use when starting a repo, refreshing agent context, defining posture, clarifying standards, or naming terms.
 
-Do not use Charter to map architecture, plan features, review diffs, edit code/tests, create issues, or update non-agent docs.
+Do not use Charter to map architecture, plan features, review diffs, edit code/tests, create issues, or edit non-agent docs.
 
 ## Required Context
 
-Fixed Constellation context:
+Fixed context:
 
 ```text
 docs/CONSTELLATION_OVERVIEW.md
@@ -55,19 +56,20 @@ philosophy/process docs
 user-provided positive exemplars
 ```
 
-Inspect code, tests, configs, or architecture docs only when a specific context decision needs light verification. Do not map the codebase.
+Inspect code/tests/configs only when a context decision needs light verification. Do not map the codebase.
 
 ## Fixed Boundaries
 
 Charter informs Orchestrator context for Pilot/Cartographer and Crew context for implementer/reviewer behavior.
 
-Do not redesign Constellation topology. If the fixed role model is a bad fit, stop using these skills.
+Do not redesign Constellation topology. If roles fit poorly, stop using these skills.
 
 Allowed writes:
 
 ```text
 .agent-work/<work-id>/CHARTER_CHECKLIST.md
 .agent-work/CHARTER_OPEN_QUESTIONS.md
+.agent-work/archive/<date>-<work-id>/
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
@@ -84,13 +86,13 @@ Charter seeds/updates project templates. If `.agent_work/templates` is missing, 
 
 The checklist is the only Charter todo/decision record; no separate decisions file.
 
-Invoke `constellation-interrogator` for Charter interrogation. Start from `templates/CHARTER_STARTING_QUESTIONS.template.md`; aggressively update it. Ask one decision question at a time. Gate 0 may collect exemplar paths.
+Invoke `constellation-interrogator` for Charter interrogation. Start from `templates/CHARTER_STARTING_QUESTIONS.template.md`; aggressively update it. Ask one decision question at a time. Gate 0 may collect exemplars and repo action authority.
 
 ## Interrogation Rules
 
-Start from `references/rigorous-default.md`. The user may accept, relax, or strengthen it by subsystem, but rigor is not opt-in.
+Start from `references/rigorous-default.md`. User may accept, relax, or strengthen it by subsystem; rigor is not opt-in.
 
-Use `references/engineering-rubric.md` for required doctrine axes. Touch every axis. Mark `not-material` only with user agreement.
+Use `references/engineering-rubric.md` for required axes. Touch every axis. Mark `not-material` only with user agreement.
 
 A material decision affects future agent behavior, allowed scope, evidence requirements, failure behavior, interfaces/contracts, canonical inputs, documentation duties, dependency policy, security/privacy/publicness, performance/resource posture, generated artifacts, compromise policy, or stop/report conditions.
 
@@ -100,7 +102,7 @@ For each material decision, state:
 Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
 ```
 
-Do not accept slogans such as "do it right", "be careful", "use judgment", "write tests", "move fast", or "reasonable defaults". Convert them into cost, scenario, evidence, and role implication.
+Do not accept slogans like "do it right", "be careful", "use judgment", "write tests", "move fast", or "reasonable defaults". Convert them into cost, scenario, evidence, and role implication.
 
 Record material decisions in the checklist with:
 
@@ -112,7 +114,7 @@ Projection: orchestrator | crew | both | glossary | checklist-only
 Projection reason: planning/framing | gating/evidence | authority/scope | implementation | verification | review/blocking | stop/report | terminology | local traceability
 ```
 
-Every material decision needs role-use projection. Shared project invariants default to `both` unless clearly role-specific. Architecture and scope policy is usually Orchestrator-only; Crew receives its consequences through the handoff.
+Every material decision needs role-use projection. Shared project invariants default to `both` unless role-specific. Architecture and scope policy is usually Orchestrator-only; Crew receives consequences through the handoff.
 
 Weak/unresolved decisions remain visible in `.agent-work/CHARTER_OPEN_QUESTIONS.md` during provisional compile.
 
@@ -145,7 +147,7 @@ Final compile requires:
 - contradiction pass complete
 - `ORCHESTRATOR_CONTEXT.md`, `CREW_CONTEXT.md`, and `GLOSSARY.md` updated
 - `.agent-work/CHARTER_OPEN_QUESTIONS.md` absent
-- checklist retained for human traceability
+- move the entire `.agent-work/<work-id>/` package to archive, including `INTERROGATOR_QUESTIONS.md`
 
 ## Resources
 
