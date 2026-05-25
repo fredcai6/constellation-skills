@@ -35,6 +35,8 @@ Constellation starts from rigorous engineering defaults and requires explicit re
 
 Omit optional sections when empty. Do not fill templates with `none`, `n/a`, or boilerplate except where the absence is itself evidence or a required stop condition.
 
+Template lookup is project-first: prefer `.agent_work/templates/<template-name>`; fall back to bundled `templates/<template-name>`. Charter seeds and updates project templates so checklist interfaces can reflect project-specific doctrine without mutating installed skill defaults.
+
 ## Model stratification
 
 High-level agents own ambiguity, routing, architecture truth, context compression, and mandate sizing. Bounded implementers/reviewers execute explicit handoffs.

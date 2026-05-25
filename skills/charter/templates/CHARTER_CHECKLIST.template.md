@@ -10,9 +10,20 @@ This file is the live Charter driver, local todo, and decision record. It is ret
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
+.agent_work/templates/*.template.md
 ```
 
 All other writes are out of Charter scope.
+
+## Project Template Catalog
+
+Charter seeds and updates project templates.
+
+**Lookup rule:** prefer `.agent_work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
+
+**Seed status:** `<missing | current | updated this run>`  
+**Template changes needed:** `<none | list>`  
+**Template update evidence:** `<paths and decision IDs>`
 
 ## Run state
 
@@ -60,6 +71,7 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 - Scope recorded.
 - Each exemplar category answered or marked `none yet`.
 - Prior context imported as material decisions where relevant.
+- `.agent_work/templates` exists with default templates or an explicit skip reason.
 
 **Stop conditions:**
 - Scope is unclear.
@@ -150,6 +162,7 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 **Completion criteria:**
 - Durable context has decisions only, no debate history.
 - Context density checked: brief, clear, true, no filler.
+- Project templates updated when Charter decisions change workflow interfaces.
 - Scope/exceptions appear only if needed.
 - No links to workflow-local files in generated context.
 - Crew context contains every project invariant that can change implementation, verification, review/blocking, or stop/report behavior.
@@ -169,6 +182,7 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 - [ ] `docs/agents/ORCHESTRATOR_CONTEXT.md` updated.
 - [ ] `docs/agents/CREW_CONTEXT.md` updated.
 - [ ] `docs/agents/GLOSSARY.md` updated.
+- [ ] `.agent_work/templates` seeded and project-specific template changes applied or explicitly skipped.
 - [ ] Shared project invariants default to `both` unless clearly role-specific.
 - [ ] Every `both` decision has non-empty Orchestrator and Crew forms with role-specific wording.
 - [ ] Crew context contains every project invariant that can change implementation, verification, review/blocking, or stop/report behavior.

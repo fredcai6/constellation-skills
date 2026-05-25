@@ -7,17 +7,18 @@ description: Interrogate engineering doctrine and compile agent-operable Orchest
 
 ## Purpose
 
-Charter elicits the project's engineering doctrine and compiles it into role-operable context.
+Charter elicits engineering doctrine and compiles role-operable context.
 
-Final durable outputs:
+Durable outputs:
 
 ```text
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
+.agent_work/templates/*.template.md
 ```
 
-Workflow-local outputs:
+Workflow outputs:
 
 ```text
 .agent-work/<work-id>/CHARTER_CHECKLIST.md
@@ -28,9 +29,9 @@ Workflow-local outputs:
 
 ## Use
 
-Use when starting a repo, refreshing agent context, defining engineering posture, clarifying standards, or establishing shared human-agent terminology.
+Use when starting a repo, refreshing agent context, defining posture, clarifying standards, or establishing shared terminology.
 
-Do not use Charter to map architecture, plan a feature, review a diff, edit code/tests, create issues, or update non-agent project docs.
+Do not use Charter to map architecture, plan features, review diffs, edit code/tests, create issues, or update non-agent docs.
 
 ## Required Context
 
@@ -58,9 +59,9 @@ Inspect code, tests, configs, or architecture docs only when a specific context 
 
 ## Fixed Boundaries
 
-Charter informs Orchestrator context for Pilot and Cartographer, and Crew context for implementer/reviewer behavior.
+Charter informs Orchestrator context for Pilot/Cartographer and Crew context for implementer/reviewer behavior.
 
-Do not ask the user to redesign Constellation topology. If the fixed role model is a bad fit, the answer is to stop using these skills, not mutate Charter output.
+Do not redesign Constellation topology. If the fixed role model is a bad fit, stop using these skills.
 
 Allowed writes:
 
@@ -70,23 +71,26 @@ Allowed writes:
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
+.agent_work/templates/*.template.md
 ```
 
 All other writes are out of Charter scope.
 
 ## Workflow Driver
 
-Before asking Gate 0 questions, create or resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md` from `templates/CHARTER_CHECKLIST.template.md`. Choose a date-plus-purpose work id unless the user supplied one or an obvious Charter folder exists.
+Before Gate 0 questions, create/resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md`. Prefer `.agent_work/templates/CHARTER_CHECKLIST.template.md`; fall back to bundled `templates/CHARTER_CHECKLIST.template.md`. Choose a date-purpose work id unless supplied or obvious.
+
+Charter seeds and updates project templates. If `.agent_work/templates` is missing, copy bundled defaults there. When decisions change workflow interfaces, update matching project templates too.
 
 The checklist is the only Charter todo and decision record. Do not create a separate decisions file.
 
-Invoke the `grill-me` skill for Charter interrogation. Ask one decision question at a time. Gate 0 may request a small bundle of reference and exemplar paths because that is input collection, not a doctrine decision.
+Invoke the `grill-me` skill for Charter interrogation. Ask one decision question at a time. Gate 0 may request reference/exemplar paths as input collection, not a doctrine decision.
 
 ## Interrogation Rules
 
 Start from `references/rigorous-default.md`. The user may accept, relax, or strengthen it by subsystem, but rigor is not opt-in.
 
-Use `references/engineering-rubric.md` for required doctrine axes. Every axis must be touched. Mark an axis `not-material` only with user agreement.
+Use `references/engineering-rubric.md` for required doctrine axes. Touch every axis. Mark `not-material` only with user agreement.
 
 A material decision affects future agent behavior, allowed scope, evidence requirements, failure behavior, interfaces/contracts, canonical inputs, documentation duties, dependency policy, security/privacy/publicness, performance/resource posture, generated artifacts, compromise policy, or stop/report conditions.
 
@@ -96,7 +100,7 @@ For each material decision, state:
 Default -> Cost -> Relaxation -> Scenario -> Decision -> Evidence
 ```
 
-Do not accept slogans such as "do it right", "be careful", "use judgment", "write tests", "move fast", or "reasonable defaults". Convert them into a decision with cost, scenario, evidence, and role implication.
+Do not accept slogans such as "do it right", "be careful", "use judgment", "write tests", "move fast", or "reasonable defaults". Convert them into cost, scenario, evidence, and role implication.
 
 Record material decisions in the checklist with:
 
@@ -110,7 +114,7 @@ Projection reason: planning/framing | gating/evidence | authority/scope | implem
 
 Every material decision needs role-use projection. Shared project invariants default to `both` unless clearly role-specific. Architecture and scope policy is usually Orchestrator-only; Crew receives its consequences through the handoff.
 
-Weak and unresolved decisions must remain visible in `.agent-work/CHARTER_OPEN_QUESTIONS.md` during provisional compile.
+Weak/unresolved decisions remain visible in `.agent-work/CHARTER_OPEN_QUESTIONS.md` during provisional compile.
 
 ## Gate Order
 
@@ -130,9 +134,9 @@ Generated context is the best-understood current project overlay. It should not 
 
 Project shared rules may appear in both contexts, but must be role-specific wording. Orchestrator phrasing explains planning, framing, gating, authority, evidence, or stop/ask impact. Crew phrasing explains implementation, verification, review/blocking, or stop/report impact.
 
-Crew context contains only rules consumed within an assigned handoff. Workflow selection and coordination consequences reach Crew through the handoff.
+Crew context contains only rules consumed within a handoff. Workflow selection and coordination consequences reach Crew through the handoff.
 
-Use scope or exception notes only when needed to prevent misuse. Keep durable context to decisions, not debate history.
+Use scope/exception notes only when needed to prevent misuse. Keep durable context to decisions, not debate.
 
 Final compile requires:
 

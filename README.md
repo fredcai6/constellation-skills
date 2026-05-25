@@ -144,6 +144,10 @@ docs/
 ## Recommended workflow artifacts
 
 ```text
+.agent_work/
+  templates/
+    *.template.md
+
 .agent-work/
   CHARTER_OPEN_QUESTIONS.md
 
@@ -166,7 +170,9 @@ docs/
 Rules:
 
 - If it is in `docs/`, it is meant to guide future workflows.
+- If it is in `.agent_work/templates/`, it is the project-owned template catalog. Agents prefer `.agent_work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
+- Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
 - Archived workflow artifacts are historical context only.
 - Agents should not read archived workflow artifacts unless the user explicitly points to them.
 - Anything future agents should rely on must be promoted to durable artifacts.

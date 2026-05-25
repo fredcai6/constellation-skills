@@ -22,6 +22,7 @@ class ConstellationContentTests(unittest.TestCase):
     def test_role_skill_bodies_stay_lean(self):
         limits = {
             "workbench": 1700,
+            "interrogator": 1300,
             "cartographer": 1900,
             "scout": 1400,
             "pilot": 2900,
@@ -44,9 +45,20 @@ class ConstellationContentTests(unittest.TestCase):
         combined = f"{charter}\n{protocol}"
 
         self.assertIn("relentless", combined)
-        self.assertIn("invoke the `grill-me` skill", combined)
+        self.assertIn("invoke the `constellation-interrogator` skill", combined)
         self.assertRegex(combined, r"ask one question at a time|one question at a time")
         self.assertIn("continue drilling", combined)
+
+    def test_interrogator_keeps_question_queue_in_agent_work(self):
+        interrogator = read("skills/interrogator/SKILL.md").lower()
+
+        self.assertIn("name: constellation-interrogator", interrogator)
+        self.assertIn("relentlessly", interrogator)
+        self.assertIn("question list", interrogator)
+        self.assertIn(".agent-work/<work-id>/interrogator_questions.md", interrogator)
+        self.assertIn("review the request and relevant code/docs", interrogator)
+        self.assertIn("possible answers", interrogator)
+        self.assertIn("recommendation", interrogator)
 
     def test_generated_context_keeps_grilling_posture_sharp(self):
         charter = read("skills/charter/SKILL.md").lower()
@@ -168,7 +180,7 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("if no crew handoff is needed", pilot)
         self.assertIn("no fake lightweight constellation path", pilot)
         self.assertIn("kick off the assigned crew subagent", pilot)
-        self.assertIn("invoke the `grill-me` skill", pilot)
+        self.assertIn("invoke the `constellation-interrogator` skill", pilot)
         self.assertIn("0. load project context", checklist)
         self.assertIn("10. semantic closeout", checklist)
         self.assertIn("constellation value decision", interrogation_result)
@@ -276,6 +288,22 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("delete this file", open_questions)
         self.assertIn("not a backlog", open_questions)
         self.assertIn(".agent-work/charter_open_questions.md", open_questions)
+
+    def test_agents_prefer_project_template_catalog(self):
+        principles = read("docs/OPERATING_PRINCIPLES.md").lower()
+        readme = read("README.md").lower()
+        charter = read("skills/charter/SKILL.md").lower()
+        checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
+        workbench = read("skills/workbench/SKILL.md").lower()
+
+        combined = f"{principles}\n{readme}\n{charter}\n{checklist}\n{workbench}"
+        self.assertIn(".agent_work/templates", combined)
+        self.assertIn("prefer `.agent_work/templates/<template-name>`", combined)
+        self.assertIn("fall back to bundled `templates/<template-name>`", combined)
+        self.assertIn("charter seeds and updates project templates", combined)
+
+    def test_source_repo_does_not_store_project_template_catalog(self):
+        self.assertFalse((ROOT / ".agent_work").exists())
 
     def test_stop_using_constellation_is_operational_and_context_is_projection(self):
         pilot = read("skills/pilot/SKILL.md").lower()
