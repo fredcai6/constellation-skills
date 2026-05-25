@@ -518,14 +518,19 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("stop using constellation", conductor)
         self.assertNotIn("stop using constellation", orchestrator)
 
-    def test_gate_is_central_unit_and_closeout_compresses(self):
+    def test_gate_is_central_unit_and_workbench_archives_without_compression(self):
         conductor = read("skills/conductor/SKILL.md").lower()
         gated_plan = read("skills/conductor/templates/GATED_PLAN.template.md").lower()
         workbench = read("skills/workbench/SKILL.md").lower()
+        closeout = read("skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md").lower()
 
         self.assertIn("gate is the central unit", conductor)
         self.assertIn("smallest chunk", gated_plan)
-        self.assertIn("closeout compression", workbench)
+        self.assertIn("archive workflow artifacts", gated_plan)
+        self.assertIn("commit archived workflow artifacts", gated_plan)
+        self.assertNotIn("closeout compression", workbench)
+        self.assertNotIn("delete/condense", workbench)
+        self.assertNotIn("repository history captured", closeout)
 
     def test_conductor_uses_workbench_artifact_hygiene(self):
         conductor = read("skills/conductor/SKILL.md").lower()

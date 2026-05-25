@@ -37,7 +37,8 @@ Project mechanics follow project Orchestrator context; ask if silent.
 |---|---|---|---|
 | Before gate | `<issue comment / branch / worktree / none / ask>` | `<Conductor unless assigned>` | `<link/id/branch/approval>` |
 | After gate evidence accepted | `<commit / issue comment / none / ask>` | `<Conductor unless assigned>` | `<commit SHA/link>` |
-| Before closeout | `<push / PR / merge / close / none / ask>` | `<Conductor unless assigned>` | `<URL/approval>` |
+| Before closeout | `<archive workflow artifacts / none / ask>` | `<Conductor unless assigned>` | `<archive path/approval>` |
+| After archive | `<commit archived workflow artifacts / push / PR / merge / close / none / ask>` | `<Conductor unless assigned>` | `<commit SHA/URL/approval>` |
 
 ## Gates
 

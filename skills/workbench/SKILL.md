@@ -32,4 +32,4 @@ Archive only semantically closed workflows; blocked/waiting stays active. Do not
 
 Closed = todo current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, artifact closeout complete or pending/skipped with reason.
 
-Closeout compression: before archive, delete/condense redundant workflow prose when durable truth or routed Triage recommendations exist elsewhere. Templates: `templates/LOCAL_TODO.template.md`, `templates/WORKFLOW_CLOSEOUT.template.md`.
+Templates: `templates/LOCAL_TODO.template.md`, `templates/WORKFLOW_CLOSEOUT.template.md`.
