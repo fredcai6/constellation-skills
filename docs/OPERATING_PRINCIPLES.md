@@ -35,7 +35,9 @@ Constellation starts from rigorous engineering defaults and requires explicit re
 
 Omit optional sections when empty. Do not fill templates with `none`, `n/a`, or boilerplate except where the absence is itself evidence or a required stop condition.
 
-Template lookup is project-first: prefer `.agent_work/templates/<template-name>`; fall back to bundled `templates/<template-name>`. Charter seeds and updates project templates so checklist interfaces can reflect project-specific doctrine without mutating installed skill defaults.
+Template lookup is project-first: prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`. Charter seeds and updates project templates so checklist interfaces can reflect project-specific doctrine without mutating installed skill defaults.
+
+Workflow status values are standardized in `skills/workbench/references/status-model.md`; templates should reference that model instead of redefining local status enums.
 
 ## Model stratification
 

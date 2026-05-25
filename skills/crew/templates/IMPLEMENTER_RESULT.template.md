@@ -1,5 +1,7 @@
 # Implementation Result
 
+Status values follow `skills/workbench/references/status-model.md`.
+
 ## Assigned gate
 `<gate id/title>`
 
@@ -46,4 +48,4 @@
 - `<finding for Pilot or none>`
 
 ## Return status
-`complete | partial | blocked`
+`complete | partial | blocked | out-of-scope | failed`

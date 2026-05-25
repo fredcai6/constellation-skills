@@ -1,11 +1,11 @@
 ---
 name: constellation-interrogator
-description: Grill the user relentlessly about a request, plan, or design while keeping a traceable question queue. Use when Constellation needs problem interrogation, doctrine interrogation, or design stress-testing before decisions.
+description: Question unresolved request/design ambiguity with a traceable queue. Use when Charter or Pilot needs deeper problem interrogation before decisions.
 ---
 
 # Constellation Interrogator
 
-Interview relentlessly until shared understanding. Walk each design branch, resolve dependencies one by one. Ask one question at a time. For each question, give possible answers and recommendation.
+Interrogate relentlessly, but narrowly: one highest-value unresolved decision question at a time. Prefer repo/docs inspection over asking. Stop when the blocking ambiguity is resolved or the user says enough.
 
 If code/docs can answer, inspect them instead of asking.
 

@@ -28,6 +28,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Cartographer | mismatch/Triage candidate | Pilot, Triage | current-vs-future separation with structural anchor |
 | Scout | `SCOUT_REPORT` | user, Pilot, Triage | ranked architecture improvement candidates with map/code evidence |
 | Pilot | `GATED_PLAN` | Pilot, Crew | smallest independently stoppable gates with evidence and scope |
+| Pilot | `PLAN_CONSISTENCY_CHECK` | Pilot | pre-dispatch check that plan, authority, evidence, and Crew conditions agree |
 | Pilot | `CREW_HANDOFF` | Crew | bounded task, authority, scope, exclusions, evidence, stop conditions |
 | Crew | `IMPLEMENTER_RESULT` / `REVIEW_RESULT` | Pilot | evidence, blockers, scope drift, assumptions, out-of-scope observations |
 | Pilot, Cartographer, Scout, Crew | Triage candidate | Triage | future work package, not current-scope expansion |

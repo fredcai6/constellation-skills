@@ -24,7 +24,7 @@ Manage recoverable workflow state. `.agent-work/` is not durable project truth. 
       <complete work-id package>
 ```
 
-Rules: work IDs `issue-123-slug`, `pr-45-slug`, or `YYYYMMDD-slug`; lowercase, stable, hyphen-separated. Start with `LOCAL_TODO.md`. Prefer `.agent_work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
+Rules: work IDs `issue-123-slug`, `pr-45-slug`, or `YYYYMMDD-slug`; lowercase, stable, hyphen-separated. Start with `LOCAL_TODO.md`. Prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
 
 If a role-specific checklist exists, copy it too. It is the execution controller; Local Todo indexes the active controller and recovery state. Do not duplicate the role checklist. Keep controller steps checked (`[x]`) or statused, with notes after steps/gates/blockers and before handoff/final.
 
@@ -34,4 +34,4 @@ Archive only semantically closed workflows; blocked/waiting stays active. Role c
 
 Closed = todo current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, artifact closeout complete or explained.
 
-Templates: `templates/LOCAL_TODO.template.md`, `templates/WORKFLOW_CLOSEOUT.template.md`.
+Templates: `templates/LOCAL_TODO.template.md`, `templates/WORKFLOW_CLOSEOUT.template.md`. Reference: `references/status-model.md`.

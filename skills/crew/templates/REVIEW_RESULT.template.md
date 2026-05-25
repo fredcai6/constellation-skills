@@ -1,5 +1,7 @@
 # Review Result
 
+Status values follow `skills/workbench/references/status-model.md`.
+
 Omit optional sections when empty.
 
 ## Result
@@ -27,4 +29,4 @@ Omit optional sections when empty.
 - `<finding for Pilot or none>`
 
 ## Return status
-`complete | partial | blocked`
+`complete | partial | blocked | out-of-scope | failed`

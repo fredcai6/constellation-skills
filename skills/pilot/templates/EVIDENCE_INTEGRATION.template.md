@@ -1,5 +1,7 @@
 # Evidence Integration
 
+Status values follow `skills/workbench/references/status-model.md`.
+
 ## Gate
 `<gate name>`
 
@@ -16,6 +18,9 @@
 
 ## Required Evidence Check
 `<satisfied | missing | contradicted>`
+
+## Verification Command Check
+`commands run | not run with reason | no command applicable because <reason>`
 
 Implementation gates require both implementation evidence and review evidence before gate close, unless review was explicitly skipped with reason. Do not batch review at final closeout.
 

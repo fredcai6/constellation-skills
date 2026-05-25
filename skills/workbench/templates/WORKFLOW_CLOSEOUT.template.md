@@ -21,6 +21,16 @@
 
 - `<path/title or none>`
 
+## Template Update Candidates
+
+Use this only for workflow friction that should change future templates or checklist interfaces. Do not mutate durable doctrine silently.
+
+| Template | Problem observed | Proposed change | Authority needed | Disposition |
+|---|---|---|---|---|
+| `<template>` | `<what agent had to remember, improvise, or repeat>` | `<specific field/rule/change>` | `none | Charter | user` | `applied | defer to Charter | dropped because <reason>` |
+
+Template update candidates are workflow feedback, not project truth. If a candidate changes role behavior, authority, evidence, or checklist interface, route to Charter unless already explicitly delegated. If a candidate is purely typo/format cleanup, it may be applied directly when within scope.
+
 ## Reconciliation status
 
 **Required:** `yes | no`  

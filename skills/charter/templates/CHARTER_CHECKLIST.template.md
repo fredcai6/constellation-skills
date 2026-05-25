@@ -11,7 +11,7 @@ This file is the live Charter driver, local todo, and decision record. It is ret
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
-.agent_work/templates/*.template.md
+.agent-work/templates/*.template.md
 ```
 
 All other writes are out of Charter scope.
@@ -20,11 +20,12 @@ All other writes are out of Charter scope.
 
 Charter seeds and updates project templates.
 
-**Lookup rule:** prefer `.agent_work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
+**Lookup rule:** prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
 
 **Seed status:** `<missing | current | updated this run>`  
 **Template changes needed:** `<none | list>`  
 **Template update evidence:** `<paths and decision IDs>`
+**Closeout feedback:** `<consume template update candidates from prior WORKFLOW_CLOSEOUT files when explicitly provided>`
 
 ## Run state
 
@@ -52,6 +53,8 @@ Charter seeds and updates project templates.
 **Posture:** `rigorous-default | relaxed | strengthened | mixed | not-applicable`
 **Projection:** `orchestrator | crew | both | glossary | checklist-only`
 **Projection reason:** `planning/framing | gating/evidence | authority/scope | implementation | verification | review/blocking | stop/report | terminology | local traceability`
+
+Projection: orchestrator | crew | both | glossary | checklist-only
 
 Material decisions affect future agent behavior, allowed scope, evidence, failure behavior, interfaces/contracts, canonical inputs, documentation duties, dependency policy, security/privacy/publicness, performance/resource posture, generated artifacts, compromise policy, or stop/report conditions.
 
@@ -81,7 +84,7 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 - Scope recorded.
 - Each exemplar category answered or marked `none yet`.
 - Prior context imported as material decisions where relevant.
-- `.agent_work/templates` exists with default templates or an explicit skip reason.
+- `.agent-work/templates` exists with default templates or an explicit skip reason.
 - Repo action authority recorded for Pilot PR/direct main behavior.
 
 **Stop conditions:**
@@ -193,7 +196,8 @@ Shared project invariants default to `both` unless clearly role-specific. Archit
 - [ ] `docs/agents/ORCHESTRATOR_CONTEXT.md` updated.
 - [ ] `docs/agents/CREW_CONTEXT.md` updated.
 - [ ] `docs/agents/GLOSSARY.md` updated.
-- [ ] `.agent_work/templates` seeded and project-specific template changes applied or explicitly skipped.
+- [ ] `.agent-work/templates` seeded and project-specific template changes applied or explicitly skipped.
+- [ ] Template update candidates consumed, routed to Charter decisions, or dropped because `<reason>`.
 - [ ] Shared project invariants default to `both` unless clearly role-specific.
 - [ ] Every `both` decision has non-empty Orchestrator and Crew forms with role-specific wording.
 - [ ] Crew context contains every project invariant that can change implementation, verification, review/blocking, or stop/report behavior.

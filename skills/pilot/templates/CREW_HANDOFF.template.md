@@ -45,7 +45,12 @@ Agent-to-agent context. Use concise fragments; omit filler.
 `<tests, commands, inspection notes, generated artifact status, review result>`
 
 ## Required Verification Commands
-`<commands or none with reason>`
+
+Use exact commands when verification is required. If no command is applicable, state `none because <reason>`.
+
+```bash
+<command>
+```
 
 ## No-Test-Surface Rationale
 `<only when test mode says inspection-only/no-test>`

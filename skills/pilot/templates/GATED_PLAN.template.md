@@ -1,5 +1,7 @@
 # Gated Plan: `<work item>`
 
+Status values follow `skills/workbench/references/status-model.md`.
+
 ## Problem Statement
 
 `<bounded problem this plan will solve>`
@@ -62,6 +64,9 @@ Each gate is the smallest chunk that can be assigned, reviewed, proven with evid
 
 **Required evidence:**  
 - `<test command | content assertion | diff inspection | render/build output | review result | Cartographer verification | user decision>`
+
+**Required verification commands:**
+- `<exact command or none because <reason>>`
 
 **Stop conditions:** `<when this gate must return to Pilot/user>`  
 **Next gate:** `<gate number/name or closeout>`

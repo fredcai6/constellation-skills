@@ -145,11 +145,10 @@ docs/
 ## Recommended workflow artifacts
 
 ```text
-.agent_work/
+.agent-work/
   templates/
     *.template.md
 
-.agent-work/
   CHARTER_OPEN_QUESTIONS.md
 
   <work-id>/
@@ -160,6 +159,7 @@ docs/
     LOCAL_TODO.md
     PILOT_CHECKLIST.md
     GATED_PLAN.md
+    PLAN_CONSISTENCY_CHECK.md
     crew-handoffs/
     evidence/
     triage-candidates/
@@ -172,8 +172,9 @@ docs/
 Rules:
 
 - If it is in `docs/`, it is meant to guide future workflows.
-- If it is in `.agent_work/templates/`, it is the project-owned template catalog. Agents prefer `.agent_work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
+- If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
+- Workflow status language follows `skills/workbench/references/status-model.md`.
 - When a role-specific checklist exists, use it as the execution controller. Local Todo should index that controller, track recovery state, and keep completed milestones visibly checked.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
 - Charter and Pilot closeout move the complete `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including interrogation sessions.

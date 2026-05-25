@@ -4,7 +4,7 @@ Work file: `.agent-work/<work-id>/PILOT_CHECKLIST.md`
 
 This is the active workflow controller for Pilot. LOCAL_TODO is recovery metadata, not the execution checklist.
 
-Status values: `pending | in-progress | blocked | complete | skipped`
+Status values follow `skills/workbench/references/status-model.md`.
 
 Skipped steps require `skipped because <reason>`.
 
@@ -32,7 +32,8 @@ Skipped steps require `skipped because <reason>`.
 | 3. Decide whether Constellation adds value | pending | `<Crew handoff need + value reason>` |
 | 4. Establish structural baseline | pending | `<continue | request Cartographer baseline | skipped because ...>` |
 | 5. Build gated plan | pending | `<GATED_PLAN.md path>` |
-| 6. Dispatch Crew | pending | `<CREW_HANDOFF path + subagent kickoff id/result, or cancelled/redirected because ...>` |
+| 5a. Plan consistency check | pending | `<PLAN_CONSISTENCY_CHECK.md verdict: ready for Crew, or explicit override reason / revise / ask / request Cartographer / split / stop>` |
+| 6. Dispatch Crew | pending | `<requires consistency verdict ready for Crew or explicit override reason; CREW_HANDOFF path + subagent kickoff id/result, or cancelled/redirected because ...>` |
 | 7. Integrate evidence | pending | `<per-gate evidence integration: implementer evidence, reviewer evidence, gate close decision>` |
 | 8. Check architecture reconciliation | pending | `<no action | Pilot packet edit | request Cartographer verification | Triage candidate>` |
 | 9. Collect Triage candidates | pending | `<none | logged | routed | dropped because ...>` |
@@ -61,11 +62,13 @@ Project mechanics follow project Orchestrator context; ask if silent. Record rep
 ## Semantic Closeout
 
 - [ ] all gates complete, cancelled, or redirected with reason
+- [ ] plan consistency check completed, or skipped because `<reason>` with dispatch override recorded
 - [ ] required evidence recorded
 - [ ] reviewer evidence integrated; reviewer approval alone is insufficient
 - [ ] assumptions still hold or were resolved
 - [ ] architecture reconciliation checked
 - [ ] Triage candidates routed, dropped because `<reason>`, or none
+- [ ] route/apply/drop template update candidates from closeout
 - [ ] project-required repo actions approved and evidenced
 - [ ] Pilot moved the entire `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including `INTERROGATOR_QUESTIONS.md`; no loose work-id artifacts remain
 - [ ] Workbench artifact closeout `complete | pending because <reason> | skipped because <reason>`

@@ -1,5 +1,7 @@
 # Local Work Todo: `<task title>`
 
+Status values follow `skills/workbench/references/status-model.md`.
+
 ## Task summary
 
 `<One-paragraph summary of the assigned task.>`
@@ -36,8 +38,8 @@ Keep completed items checked (`[x]`). If a role-specific checklist is active, ke
 
 ### Step 1: `<short title>`
 
-**Status:** `completed | blocked | skipped | revised`  
-**Status transitions:** `<pending -> in-progress -> completed/blocked/skipped/revised>`  
+**Status:** `complete | blocked | skipped | in-progress`
+**Status transitions:** `<pending -> in-progress -> complete/blocked/skipped>`
 **What happened:** `<brief recovery-useful note>`  
 **Evidence:** `<test, file, inspection, command, review result>`  
 **Follow-up:** `<none or next action>`
