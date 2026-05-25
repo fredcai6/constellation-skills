@@ -39,7 +39,7 @@ Fixed Constellation context:
 ```text
 docs/CONSTELLATION_OVERVIEW.md
 docs/OPERATING_PRINCIPLES.md
-skills/conductor/SKILL.md
+skills/pilot/SKILL.md
 skills/cartographer/SKILL.md
 skills/crew/SKILL.md
 ```
@@ -58,7 +58,7 @@ Inspect code, tests, configs, or architecture docs only when a specific context 
 
 ## Fixed Boundaries
 
-Charter informs Orchestrator context for Conductor and Cartographer, and Crew context for implementer/reviewer behavior.
+Charter informs Orchestrator context for Pilot and Cartographer, and Crew context for implementer/reviewer behavior.
 
 Do not ask the user to redesign Constellation topology. If the fixed role model is a bad fit, the answer is to stop using these skills, not mutate Charter output.
 

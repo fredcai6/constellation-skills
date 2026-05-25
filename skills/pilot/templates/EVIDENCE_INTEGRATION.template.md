@@ -35,9 +35,9 @@ Reviewer approval alone is insufficient. Record whether reviewer checked handoff
 - `<new ambiguity / decision / structural change / Triage candidate / none>`
 
 ## Architecture Reconciliation Implication
-`<no action | Conductor packet edit | request Cartographer verification | collect Triage candidate>`
+`<no action | Pilot packet edit | request Cartographer verification | collect Triage candidate>`
 
-## Conductor Decision
+## Pilot Decision
 `continue | ask user | send back to Crew | request Cartographer verification | revise gated plan | collect Triage candidate | close out`
 
 ## Reason

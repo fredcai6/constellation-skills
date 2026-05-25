@@ -7,7 +7,7 @@
 ## Source context
 
 **Work ID:** `<work-id>`  
-**Role:** `<conductor | cartographer | implementer | reviewer | triage | other>`  
+**Role:** `<pilot | cartographer | implementer | reviewer | triage | other>`  
 **Route/gate:** `<if applicable>`  
 **Handoff/framing source:** `<path/title or summary>`  
 **Authority:** `<user decision | ground rule | delegated | default | assumption>`

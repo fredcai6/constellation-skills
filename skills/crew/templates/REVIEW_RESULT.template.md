@@ -24,7 +24,7 @@ Omit optional sections when empty.
 - `<blocker or none>`
 
 ## Out-of-scope observations
-- `<finding for Conductor or none>`
+- `<finding for Pilot or none>`
 
 ## Return status
 `complete | partial | blocked`

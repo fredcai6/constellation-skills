@@ -14,7 +14,7 @@ SKILL_NAMES = [
     "constellation-workbench",
     "constellation-cartographer",
     "constellation-scout",
-    "constellation-conductor",
+    "constellation-pilot",
     "constellation-crew",
     "constellation-triage",
 ]
@@ -211,7 +211,7 @@ class InstallConstellationTests(unittest.TestCase):
                     "--project",
                     str(project),
                     "--skills",
-                    "conductor",
+                    "pilot",
                 ],
                 env={},
                 out=lambda _: None,
@@ -219,7 +219,7 @@ class InstallConstellationTests(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             self.assertTrue(
-                (project / ".claude" / "skills" / "constellation-conductor" / "SKILL.md").exists()
+                (project / ".claude" / "skills" / "constellation-pilot" / "SKILL.md").exists()
             )
             self.assertFalse((project / ".codex").exists())
 

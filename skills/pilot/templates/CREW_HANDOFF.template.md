@@ -24,7 +24,7 @@ Agent-to-agent context. Use concise fragments; omit filler.
 `<truth required for this gate to close>`
 
 ## Authority
-`<user decision | project rule | Conductor decision | assumption needing confirmation>`
+`<user decision | project rule | Pilot decision | assumption needing confirmation>`
 
 ## Allowed Scope
 `<files, regions, artifacts, or decisions this Crew role may touch>`

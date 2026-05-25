@@ -41,7 +41,7 @@ High-level agents own ambiguity, routing, architecture truth, context compressio
 
 Shape gates so simpler models can usually handle bounded implementation/review. Use stronger models when the mandate is broad, architecture-adjacent, policy-changing, ambiguous, or evidence-heavy.
 
-If a bounded agent must infer hidden intent, ownership, failure behavior, or architecture policy, the handoff failed; return to Conductor or Cartographer.
+If a bounded agent must infer hidden intent, ownership, failure behavior, or architecture policy, the handoff failed; return to Pilot or Cartographer.
 
 ## Current truth discipline
 

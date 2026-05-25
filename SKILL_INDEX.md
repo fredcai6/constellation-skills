@@ -20,8 +20,8 @@ Path: `skills/scout/SKILL.md`
 
 Runs map-first architecture audits for bad patterns, inefficient boundaries, and improvement candidates.
 
-## Constellation Conductor
-Path: `skills/conductor/SKILL.md`
+## Constellation Pilot
+Path: `skills/pilot/SKILL.md`
 
 Coordinates checklist-driven interrogation, gated plans, Crew handoffs, evidence integration, architecture reconciliation, Triage candidates, and semantic closeout.
 

@@ -17,7 +17,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-workbench` | Manage local todos, workflow artifacts, evidence, closeout, and archive. |
 | `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
 | `constellation-scout` | Audit map-first architecture pressure and package improvement candidates. |
-| `constellation-conductor` | Coordinate checklist-driven problem interrogation, gated planning, Crew handoffs, evidence integration, reconciliation, and closeout. |
+| `constellation-pilot` | Coordinate checklist-driven problem interrogation, gated planning, Crew handoffs, evidence integration, reconciliation, and closeout. |
 | `constellation-crew` | Execute bounded implementation and independent review. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
 
@@ -75,7 +75,7 @@ python scripts/install_constellation.py --agent all --scope project --project C:
 Install selected skills:
 
 ```powershell
-python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo --skills charter conductor
+python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo --skills charter pilot
 ```
 
 Refresh an existing install:
@@ -152,7 +152,7 @@ docs/
     CARTOGRAPHER_CHECKLIST.md
     SCOUT_REPORT.md
     LOCAL_TODO.md
-    CONDUCTOR_CHECKLIST.md
+    PILOT_CHECKLIST.md
     GATED_PLAN.md
     crew-handoffs/
     evidence/

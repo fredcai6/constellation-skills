@@ -1,8 +1,8 @@
-# Conductor Checklist: `<work-id>`
+# Pilot Checklist: `<work-id>`
 
-Work file: `.agent-work/<work-id>/CONDUCTOR_CHECKLIST.md`
+Work file: `.agent-work/<work-id>/PILOT_CHECKLIST.md`
 
-This is the active workflow controller for Conductor. LOCAL_TODO is recovery metadata, not the execution checklist.
+This is the active workflow controller for Pilot. LOCAL_TODO is recovery metadata, not the execution checklist.
 
 Status values: `pending | in-progress | blocked | complete | skipped`
 
@@ -34,7 +34,7 @@ Skipped steps require `skipped because <reason>`.
 | 5. Build gated plan | pending | `<GATED_PLAN.md path>` |
 | 6. Dispatch Crew | pending | `<CREW_HANDOFF path + subagent kickoff id/result, or cancelled/redirected because ...>` |
 | 7. Integrate evidence | pending | `<per-gate evidence integration: implementer evidence, reviewer evidence, gate close decision>` |
-| 8. Check architecture reconciliation | pending | `<no action | Conductor packet edit | request Cartographer verification | Triage candidate>` |
+| 8. Check architecture reconciliation | pending | `<no action | Pilot packet edit | request Cartographer verification | Triage candidate>` |
 | 9. Collect Triage candidates | pending | `<none | logged | routed | dropped because ...>` |
 | 10. Semantic closeout | pending | `<complete | blocked | skipped because ...>` |
 

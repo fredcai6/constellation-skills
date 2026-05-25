@@ -9,7 +9,7 @@ Implementer owns scoped change. Reviewer owns independent verification. Use hand
 
 Handoff completeness: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, and return format present/possible. Else stop/report. Do not infer hidden intent.
 
-Crew does not route, does not create issues, does not close gates, does not expand scope. Return out-of-scope observations to Conductor.
+Crew does not route, does not create issues, does not close gates, does not expand scope. Return out-of-scope observations to Pilot.
 
 Implementer: minimal change; tests/docs/contracts; verification; evidence; stop if authority/scope exceeded. TDD: when required, vertical TDD: public-interface behavior test, red -> green -> refactor.
 

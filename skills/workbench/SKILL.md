@@ -13,7 +13,7 @@ Manage temporary, recoverable workflow state. `.agent-work/` is not durable proj
 .agent-work/
   <work-id>/
     LOCAL_TODO.md
-    CONDUCTOR_CHECKLIST.md
+    PILOT_CHECKLIST.md
     GATED_PLAN.md
     crew-handoffs/
     evidence/

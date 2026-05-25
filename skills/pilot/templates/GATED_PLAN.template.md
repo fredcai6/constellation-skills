@@ -35,10 +35,10 @@ Project mechanics follow project Orchestrator context; ask if silent.
 
 | Moment | Hook | Owner | Evidence |
 |---|---|---|---|
-| Before gate | `<issue comment / branch / worktree / none / ask>` | `<Conductor unless assigned>` | `<link/id/branch/approval>` |
-| After gate evidence accepted | `<commit / issue comment / none / ask>` | `<Conductor unless assigned>` | `<commit SHA/link>` |
-| Before closeout | `<archive workflow artifacts / none / ask>` | `<Conductor unless assigned>` | `<archive path/approval>` |
-| After archive | `<commit archived workflow artifacts / push / PR / merge / close / none / ask>` | `<Conductor unless assigned>` | `<commit SHA/URL/approval>` |
+| Before gate | `<issue comment / branch / worktree / none / ask>` | `<Pilot unless assigned>` | `<link/id/branch/approval>` |
+| After gate evidence accepted | `<commit / issue comment / none / ask>` | `<Pilot unless assigned>` | `<commit SHA/link>` |
+| Before closeout | `<archive workflow artifacts / none / ask>` | `<Pilot unless assigned>` | `<archive path/approval>` |
+| After archive | `<commit archived workflow artifacts / push / PR / merge / close / none / ask>` | `<Pilot unless assigned>` | `<commit SHA/URL/approval>` |
 
 ## Gates
 
@@ -63,7 +63,7 @@ Each gate is the smallest chunk that can be assigned, reviewed, proven with evid
 **Required evidence:**  
 - `<test command | content assertion | diff inspection | render/build output | review result | Cartographer verification | user decision>`
 
-**Stop conditions:** `<when this gate must return to Conductor/user>`  
+**Stop conditions:** `<when this gate must return to Pilot/user>`  
 **Next gate:** `<gate number/name or closeout>`
 
 ## Triage Candidate Log

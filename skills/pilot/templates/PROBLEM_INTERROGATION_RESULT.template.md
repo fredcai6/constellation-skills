@@ -31,7 +31,7 @@
 
 | Assumption | Authority | Risk |
 |---|---|---|
-| `<assumption>` | `<user/project context/repo artifact/Conductor default>` | `<low reversible | blocking>` |
+| `<assumption>` | `<user/project context/repo artifact/Pilot default>` | `<low reversible | blocking>` |
 
 ## Structural Baseline Need
 `yes | no | unclear`

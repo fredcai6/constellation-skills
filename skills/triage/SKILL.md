@@ -1,13 +1,13 @@
 ---
 name: constellation-triage
-description: Create issue-ready recommendations. Use when Conductor, Cartographer, Crew, or the user finds future work outside implementation.
+description: Create issue-ready recommendations. Use when Pilot, Cartographer, Crew, or the user finds future work outside implementation.
 ---
 
 # Constellation Triage
 
 Write issue-ready recommendations for follow-up work. Triage does not implement, keep backlog, or pull work into current scope unless asked. Persist future-work packaging in issues or workflow-local text.
 
-Use when Cartographer finds out-of-scope mismatch; Reviewer finds out-of-scope test/doc/contract gaps; Conductor finds future work during planning; implementation exposes deferred debt; user wants issue-ready text.
+Use when Cartographer finds out-of-scope mismatch; Reviewer finds out-of-scope test/doc/contract gaps; Pilot finds future work during planning; implementation exposes deferred debt; user wants issue-ready text.
 
 ## Inputs
 
