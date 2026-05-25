@@ -23,6 +23,7 @@ class ConstellationContentTests(unittest.TestCase):
         limits = {
             "workbench": 1700,
             "cartographer": 1900,
+            "scout": 1400,
             "conductor": 2900,
             "crew": 1250,
             "triage": 1500,
@@ -484,11 +485,33 @@ class ConstellationContentTests(unittest.TestCase):
     def test_triage_remains_accessible_to_conductor_and_cartographer(self):
         conductor = read("skills/conductor/SKILL.md").lower()
         cartographer = read("skills/cartographer/SKILL.md").lower()
+        scout = read("skills/scout/SKILL.md").lower()
         triage = read("skills/triage/SKILL.md").lower()
 
         self.assertIn("triage", conductor)
         self.assertIn("triage", cartographer)
+        self.assertIn("triage", scout)
         self.assertIn("does not implement", triage)
+
+    def test_scout_is_map_first_architecture_audit_not_cartographer(self):
+        scout = read("skills/scout/SKILL.md").lower()
+        heuristics = read("skills/scout/references/scout-heuristics.md").lower()
+        report = read("skills/scout/templates/SCOUT_REPORT.template.md").lower()
+        combined = f"{scout}\n{heuristics}\n{report}"
+
+        self.assertIn("map-first architecture audit", combined)
+        self.assertIn("read cartographer artifacts first", combined)
+        self.assertIn("sample code to challenge the map", combined)
+        self.assertIn("shallow structural node", combined)
+        self.assertIn("deletion test", combined)
+        self.assertIn("locality", combined)
+        self.assertIn("leverage", combined)
+        self.assertIn("structural anchor", report)
+        self.assertIn("triage handoff", report)
+        self.assertIn("does not update architecture truth", scout)
+        self.assertIn("does not implement", scout)
+        self.assertIn("does not redesign", scout)
+        self.assertNotIn("own future work", scout)
 
     def test_triage_consumes_cartographer_structural_handoffs(self):
         triage = read("skills/triage/SKILL.md").lower()
@@ -607,6 +630,7 @@ class ConstellationContentTests(unittest.TestCase):
         expectations = {
             "workbench": [".agent-work/", "not durable project truth"],
             "cartographer": ["current-only structural map", "does not change code"],
+            "scout": ["map-first architecture audit", "does not implement"],
             "conductor": ["does not implement", "cartographer verifies architecture"],
             "crew": ["implementer owns scoped change", "reviewer owns independent verification"],
             "triage": ["does not implement", "issue-ready recommendations"],
@@ -625,13 +649,14 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("producer | artifact/interface | consumer | contract", overview)
 
         expected_edges = [
-            "charter | `docs/agents/orchestrator_context.md` | conductor, cartographer",
+            "charter | `docs/agents/orchestrator_context.md` | conductor, cartographer, scout",
             "charter | `docs/agents/crew_context.md` | crew",
             "workbench | `.agent-work/<work-id>/local_todo.md` | all roles",
-            "cartographer | `docs/architecture/packets/` + `index.md` | conductor, crew",
+            "cartographer | `docs/architecture/packets/` + `index.md` | scout, conductor, crew",
+            "scout | `scout_report` | user, conductor, triage",
             "conductor | `crew_handoff` | crew",
             "crew | `implementer_result` / `review_result` | conductor",
-            "conductor, cartographer, crew | triage candidate | triage",
+            "conductor, cartographer, scout, crew | triage candidate | triage",
         ]
 
         for edge in expected_edges:
@@ -646,6 +671,7 @@ class ConstellationContentTests(unittest.TestCase):
             "charter": ["templates/charter_checklist.template.md", "references/engineering-rubric.md"],
             "workbench": ["templates/local_todo.template.md", "templates/workflow_closeout.template.md"],
             "cartographer": ["templates/cartographer_checklist.template.md", "templates/architecture_packet.template.md"],
+            "scout": ["templates/scout_report.template.md", "references/scout-heuristics.md"],
             "conductor": ["templates/conductor_checklist.template.md", "templates/crew_handoff.template.md"],
             "crew": ["templates/implementer_result.template.md", "templates/review_result.template.md"],
             "triage": ["templates/triage_recommendation.template.md"],

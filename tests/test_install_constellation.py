@@ -13,6 +13,7 @@ SKILL_NAMES = [
     "constellation-charter",
     "constellation-workbench",
     "constellation-cartographer",
+    "constellation-scout",
     "constellation-conductor",
     "constellation-crew",
     "constellation-triage",

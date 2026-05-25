@@ -15,6 +15,11 @@ Path: `skills/cartographer/SKILL.md`
 
 Maintains the current-only structural map in `docs/architecture/` with sparse purpose/constraint overlays.
 
+## Constellation Scout
+Path: `skills/scout/SKILL.md`
+
+Runs map-first architecture audits for bad patterns, inefficient boundaries, and improvement candidates.
+
 ## Constellation Conductor
 Path: `skills/conductor/SKILL.md`
 
