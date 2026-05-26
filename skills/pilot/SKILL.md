@@ -29,4 +29,4 @@ Pilot starts through Workbench templates: `PILOT_CHECKLIST`, `GATED_PLAN`, `PLAN
 
 Issue/repo mechanics follow project Orchestrator context; ask if silent. Do not eagerly create issues. Create/link an issue only when the current gate cannot proceed without it and authority exists.
 
-Templates: `templates/PILOT_CHECKLIST.template.md`, `templates/GATED_PLAN.template.md`, `templates/PLAN_CONSISTENCY_CHECK.template.md`, `templates/CREW_HANDOFF.template.md`, `templates/EVIDENCE_INTEGRATION.template.md`, `templates/PROBLEM_INTERROGATION_RESULT.template.md`.
+Templates: `templates/PILOT_CHECKLIST.template.md`, `templates/GATED_PLAN.template.md`, `templates/PLAN_CONSISTENCY_CHECK.template.md`, `templates/CREW_HANDOFF.template.md`, `templates/EVIDENCE_INTEGRATION.template.md`, `templates/PROBLEM_INTERROGATION_RESULT.template.md`. Reference: `references/role-scope.md`.

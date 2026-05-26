@@ -34,7 +34,7 @@ Do not use Charter to map architecture, plan features, review diffs, edit code/t
 
 ## Required Context
 
-Read fixed context: `docs/CONSTELLATION_OVERVIEW.md`, `docs/OPERATING_PRINCIPLES.md`, `skills/pilot/SKILL.md`, `skills/cartographer/SKILL.md`, and `skills/crew/SKILL.md`.
+Read fixed context: `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `skills/pilot/SKILL.md`, `skills/cartographer/SKILL.md`, and `skills/crew/SKILL.md`.
 
 Read target project context when present: `docs/agents/*`, `AGENTS.md`, README/equivalent overview, philosophy/process docs, and user-provided positive exemplars. Inspect code/tests/configs only when a context decision needs light verification. Do not map the codebase.
 
@@ -54,7 +54,7 @@ Charter seeds and updates project templates. If `.agent-work/templates` is missi
 
 Invoke the `constellation-interrogator` skill for Charter interrogation. Start from `templates/CHARTER_STARTING_QUESTIONS.template.md`; aggressively update it. Ask one decision question at a time and continue drilling until the decision is role-operable.
 
-Use `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, and `references/scenario-bank.md` as doctrine/detail sources.
+Use `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, and `references/scenario-bank.md` as doctrine/detail sources.
 
 ## Context Compile
 
@@ -70,4 +70,4 @@ Final compile requires the checklist to prove all gates complete, no weak/unreso
 
 Templates: `templates/CHARTER_CHECKLIST.template.md`, `templates/CHARTER_OPEN_QUESTIONS.template.md`, `templates/ORCHESTRATOR_CONTEXT.template.md`, `templates/CREW_CONTEXT.template.md`, `templates/GLOSSARY.template.md`.
 
-References: `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.
+References: `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.

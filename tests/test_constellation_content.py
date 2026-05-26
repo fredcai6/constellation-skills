@@ -10,6 +10,10 @@ def read(path):
     return (ROOT / path).read_text(encoding="utf-8")
 
 
+def skill_markdown_paths():
+    return sorted(path for path in (ROOT / "skills").rglob("*.md") if path.is_file())
+
+
 class ConstellationContentTests(unittest.TestCase):
     def test_charter_skill_stays_lean(self):
         body = read("skills/charter/SKILL.md")
@@ -709,8 +713,8 @@ class ConstellationContentTests(unittest.TestCase):
     def test_workbench_merges_local_todo_with_role_checklists(self):
         workbench = read("skills/workbench/SKILL.md").lower()
         local_todo = read("skills/workbench/templates/LOCAL_TODO.template.md").lower()
-        overview = read("docs/CONSTELLATION_OVERVIEW.md").lower()
-        combined = f"{workbench}\n{local_todo}\n{overview}"
+        crew_role = read("skills/crew/references/role-scope.md").lower()
+        combined = f"{workbench}\n{local_todo}\n{crew_role}"
 
         self.assertIn("role-specific checklist", combined)
         self.assertIn("execution controller", combined)
@@ -726,7 +730,7 @@ class ConstellationContentTests(unittest.TestCase):
         charter = read("skills/charter/SKILL.md").lower()
         pilot = read("skills/pilot/SKILL.md").lower()
         cartographer = read("skills/cartographer/SKILL.md").lower()
-        overview = read("docs/CONSTELLATION_OVERVIEW.md").lower()
+        crew_role = read("skills/crew/references/role-scope.md").lower()
 
         self.assertIn(".agent-work/<work-id>/charter_checklist.md", charter)
         self.assertIn("templates/charter_checklist.template.md", charter)
@@ -734,9 +738,9 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("templates/pilot_checklist.template.md", pilot)
         self.assertIn(".agent-work/cartographer_checklist.md", cartographer)
         self.assertIn("templates/cartographer_checklist.template.md", cartographer)
-        self.assertIn("role skills | role-specific checklist templates", overview)
-        self.assertIn("workbench | `.agent-work/<work-id>/local_todo.md`", overview)
-        self.assertNotIn("workbench | role-specific checklist templates", overview)
+        self.assertIn("role-specific checklist", crew_role)
+        self.assertIn("workbench | `.agent-work/<work-id>/local_todo.md`", crew_role)
+        self.assertNotIn("workbench | role-specific checklist templates", crew_role)
 
     def test_evidence_integration_requires_original_intent_not_approval_alone(self):
         evidence = read("skills/pilot/templates/EVIDENCE_INTEGRATION.template.md").lower()
@@ -852,6 +856,52 @@ class ConstellationContentTests(unittest.TestCase):
 
         self.assertIn("templates are the interface", overview)
         self.assertIn("skill.md is trigger, boundary, and resource pointer", overview)
+
+    def test_installed_skill_markdown_does_not_depend_on_source_docs(self):
+        banned = [
+            "docs/constellation_overview.md",
+            "docs/operating_principles.md",
+        ]
+
+        for path in skill_markdown_paths():
+            text = path.read_text(encoding="utf-8").lower()
+            with self.subTest(path=str(path.relative_to(ROOT))):
+                for phrase in banned:
+                    self.assertNotIn(phrase, text)
+
+    def test_role_specific_relationship_references_exist(self):
+        expectations = {
+            "charter": [
+                "pilot owns gated workflow control",
+                "cartographer owns current-only structural truth",
+                "crew executes bounded implementation and review",
+                "give pilot and cartographer orchestrator context",
+                "give crew crew context",
+            ],
+            "pilot": [
+                "cartographer verifies structural truth",
+                "crew executes assigned gates",
+                "crew cannot close gates",
+            ],
+            "cartographer": [
+                "pilot requests cartographer when structural truth may have changed",
+                "crew may consume packets",
+                "crew does not curate architecture",
+            ],
+            "crew": [
+                "workbench | `.agent-work/<work-id>/local_todo.md`",
+                "local todo indexes the active controller",
+                "do not duplicate the role checklist",
+            ],
+        }
+
+        for skill, phrases in expectations.items():
+            role_doc = read(f"skills/{skill}/references/role-scope.md").lower()
+            skill_body = read(f"skills/{skill}/SKILL.md").lower()
+            with self.subTest(skill=skill):
+                self.assertIn("references/role-scope.md", skill_body)
+                for phrase in phrases:
+                    self.assertIn(phrase, role_doc)
 
     def test_skill_bodies_point_to_templates_not_inline_manuals(self):
         expectations = {
