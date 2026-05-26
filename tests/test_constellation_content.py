@@ -339,22 +339,21 @@ class ConstellationContentTests(unittest.TestCase):
             self.assertNotIn("decision note", read(rel_path).lower())
 
     def test_templates_omit_empty_sections_and_open_questions_do_not_accumulate(self):
-        principles = read("docs/OPERATING_PRINCIPLES.md").lower()
+        packet_template = read("skills/cartographer/templates/ARCHITECTURE_PACKET.template.md").lower()
         open_questions = read("skills/charter/templates/CHARTER_OPEN_QUESTIONS.template.md").lower()
 
-        self.assertIn("omit optional sections when empty", principles)
+        self.assertIn("omit optional sections when empty", packet_template)
         self.assertIn("delete this file", open_questions)
         self.assertIn("not a backlog", open_questions)
         self.assertIn(".agent-work/charter_open_questions.md", open_questions)
 
     def test_agents_prefer_project_template_catalog(self):
-        principles = read("docs/OPERATING_PRINCIPLES.md").lower()
         readme = read("README.md").lower()
         charter = read("skills/charter/SKILL.md").lower()
         checklist = read("skills/charter/templates/CHARTER_CHECKLIST.template.md").lower()
         workbench = read("skills/workbench/SKILL.md").lower()
 
-        combined = f"{principles}\n{readme}\n{charter}\n{checklist}\n{workbench}"
+        combined = f"{readme}\n{charter}\n{checklist}\n{workbench}"
         self.assertIn(".agent-work/templates", combined)
         self.assertIn("prefer `.agent-work/templates/<template-name>`", combined)
         self.assertIn("fall back to bundled `templates/<template-name>`", combined)
@@ -860,7 +859,6 @@ class ConstellationContentTests(unittest.TestCase):
     def test_installed_skill_markdown_does_not_depend_on_source_docs(self):
         banned = [
             "docs/constellation_overview.md",
-            "docs/operating_principles.md",
         ]
 
         for path in skill_markdown_paths():
@@ -868,6 +866,28 @@ class ConstellationContentTests(unittest.TestCase):
             with self.subTest(path=str(path.relative_to(ROOT))):
                 for phrase in banned:
                     self.assertNotIn(phrase, text)
+
+    def test_installed_skill_markdown_does_not_use_source_tree_peer_skill_paths(self):
+        banned = [
+            "skills/pilot/skill.md",
+            "skills/cartographer/skill.md",
+            "skills/crew/skill.md",
+        ]
+
+        for path in skill_markdown_paths():
+            text = path.read_text(encoding="utf-8").lower()
+            with self.subTest(path=str(path.relative_to(ROOT))):
+                for phrase in banned:
+                    self.assertNotIn(phrase, text)
+
+    def test_public_workflow_layout_matches_role_artifact_paths(self):
+        readme = read("README.md")
+
+        self.assertIn("  CARTOGRAPHER_CHECKLIST.md", readme)
+        self.assertIn("  SCOUT_REPORT.md", readme)
+        self.assertIn("  <work-id>/", readme)
+        self.assertLess(readme.index("CARTOGRAPHER_CHECKLIST.md"), readme.index("  <work-id>/"))
+        self.assertLess(readme.index("SCOUT_REPORT.md"), readme.index("  <work-id>/"))
 
     def test_role_specific_relationship_references_exist(self):
         expectations = {

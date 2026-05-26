@@ -28,7 +28,7 @@ Runs map-first architecture audits for bad patterns, inefficient boundaries, and
 ## Constellation Pilot
 Path: `skills/pilot/SKILL.md`
 
-Coordinates checklist-driven interrogation, gated plans, Crew handoffs, evidence integration, architecture reconciliation, Triage candidates, and semantic closeout.
+Coordinates interrogation, gated plans, Crew handoffs, evidence integration, architecture reconciliation, Triage candidates, and semantic closeout.
 
 ## Constellation Crew
 Path: `skills/crew/SKILL.md`

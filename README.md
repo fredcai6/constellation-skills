@@ -14,11 +14,11 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | Skill | Purpose |
 |---|---|
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. |
-| `constellation-workbench` | Manage local todos, workflow artifacts, evidence, closeout, and archive. |
-| `constellation-interrogator` | Run relentless one-question interrogation with a traceable question queue. |
+| `constellation-workbench` | Manage local todos, workflow files, evidence, closeout, and archive. |
+| `constellation-interrogator` | Run one-question interrogation with traceable queue. |
 | `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
 | `constellation-scout` | Audit map-first architecture pressure and package improvement candidates. |
-| `constellation-pilot` | Coordinate checklist-driven problem interrogation, gated planning, Crew handoffs, evidence integration, reconciliation, and closeout. |
+| `constellation-pilot` | Coordinate problem interrogation, gated plans, Crew handoffs, evidence integration, reconciliation, and closeout. |
 | `constellation-crew` | Execute bounded implementation and independent review. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
 
@@ -107,7 +107,7 @@ Rules:
 
 ## Baseline assumptions
 
-Constellation assumes a Git repo, Markdown documentation, and file-based workflow artifacts. Issue tracker, structural map generation, CI, and runtime commands are project-specific and should be clarified by Charter.
+Constellation assumes a Git repo, Markdown docs, and file-based workflow state. Charter clarifies issue tracker, structural map generation, CI, and runtime commands.
 
 ## Structural map validation
 
@@ -120,7 +120,7 @@ python scripts/build_architecture_map.py --root . --source-root src --check
 
 ## Recommended durable artifacts
 
-Decision anchors live in `docs/architecture/decisions/` when sparse current-structure rationale is worth preserving.
+Decision anchors live in `docs/architecture/decisions/` when current-structure rationale is worth preserving.
 
 ```text
 docs/
@@ -150,12 +150,12 @@ docs/
     *.template.md
 
   CHARTER_OPEN_QUESTIONS.md
+  CARTOGRAPHER_CHECKLIST.md
+  SCOUT_REPORT.md
 
   <work-id>/
     CHARTER_CHECKLIST.md
-    CARTOGRAPHER_CHECKLIST.md
     INTERROGATOR_QUESTIONS.md
-    SCOUT_REPORT.md
     LOCAL_TODO.md
     PILOT_CHECKLIST.md
     GATED_PLAN.md
@@ -175,9 +175,9 @@ Rules:
 - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
 - Workflow status language follows `skills/workbench/references/status-model.md`.
-- When a role-specific checklist exists, use it as the execution controller. Local Todo should index that controller, track recovery state, and keep completed milestones visibly checked.
+- Role checklist = execution controller. Local Todo indexes it, tracks recovery state, and keeps completed milestones checked.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
 - Charter and Pilot closeout move the complete `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including interrogation sessions.
 - Archived workflow artifacts are historical context only.
-- Agents should not read archived workflow artifacts unless the user explicitly points to them.
-- Anything future agents should rely on must be promoted to durable artifacts.
+- Do not read archived workflow artifacts unless the user points there.
+- Future-agent truth must be promoted to durable artifacts.

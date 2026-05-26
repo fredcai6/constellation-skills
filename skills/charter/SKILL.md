@@ -34,7 +34,7 @@ Do not use Charter to map architecture, plan features, review diffs, edit code/t
 
 ## Required Context
 
-Read fixed context: `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `skills/pilot/SKILL.md`, `skills/cartographer/SKILL.md`, and `skills/crew/SKILL.md`.
+Read fixed context: `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, plus peer skill instructions for `constellation-pilot`, `constellation-cartographer`, and `constellation-crew`.
 
 Read target project context when present: `docs/agents/*`, `AGENTS.md`, README/equivalent overview, philosophy/process docs, and user-provided positive exemplars. Inspect code/tests/configs only when a context decision needs light verification. Do not map the codebase.
 

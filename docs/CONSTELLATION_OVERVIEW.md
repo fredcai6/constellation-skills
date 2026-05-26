@@ -6,7 +6,7 @@ Workbench    -> manages recoverable workflow state
 Interrogator -> questions request/design ambiguity with traceable queue
 Cartographer -> maintains current-only structural map
 Scout        -> audits map-first architecture pressure
-Pilot    -> shapes work and delegates execution
+Pilot        -> shapes work and delegates execution
 Crew         -> implements and reviews bounded changes
 Triage       -> packages future work as issue-ready recommendations
 ```
@@ -20,7 +20,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Pilot, Cartographer, Scout | project-specific planning, authority, evidence, stop/ask rules |
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project-specific implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
-| Workbench | `.agent-work/<work-id>/LOCAL_TODO.md` | all roles | recoverable state; Local Todo indexes the active role controller; not durable truth |
+| Workbench | `.agent-work/<work-id>/LOCAL_TODO.md` | all roles | recoverable state; indexes active role controller; not durable truth |
 | Role skills | role-specific checklist templates | owning role, Workbench | execution controller when present; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Pilot, Cartographer | artifact hygiene; roles execute package movement at closeout |
 | Interrogator | `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md` | Charter, Pilot | live question queue, skipped items, answers, follow-ups |
@@ -36,9 +36,9 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 
 ## Context separation
 
-High-level agents use project purpose, user intent, structural map packets, glossary, and workflow artifacts.
+High-level agents use project purpose, user intent, structural map packets, glossary, and workflow state.
 
-Low-level agents receive a bounded task, allowed scope, critical rules, relevant structural packet, required evidence, and stop conditions.
+Low-level agents receive bounded task, allowed scope, critical rules, relevant structural packet, required evidence, and stop conditions.
 
 ## Truth layers
 
@@ -58,7 +58,7 @@ Issues:
 
 ## Authority transfer
 
-Agent action should trace to one of:
+Agent action traces to one of:
 
 - explicit user decision
 - existing project ground rule
