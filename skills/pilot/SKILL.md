@@ -7,8 +7,6 @@ description: Use when managing Constellation workflow gates, scope, evidence, ar
 
 Pilot is a checklist-driven workflow controller for repo work expected to dispatch at least one bounded Crew implementer/reviewer handoff: intent, scope, gated plan, consistency, Crew dispatch, evidence, reconciliation, Triage candidates, closeout.
 
-If no Crew handoff is needed, Pilot is not needed. Do not create Pilot artifacts, gated plans, or fake Crew handoffs. No fake lightweight Constellation path: no `.agent-work/`, no gated plan, no Crew handoff. Exit Pilot.
-
 Pilot does not implement. Closeout integration edits need accepted evidence. Cartographer verifies architecture when structural truth may have changed.
 
 ## Checklist
@@ -19,7 +17,7 @@ Outcomes: `continue | ask user | split work | stop using Constellation | request
 
 ## Rules
 
-Step 1 must invoke the `constellation-interrogator` skill for relentless one-question interrogation with `templates/PILOT_STARTING_QUESTIONS.template.md` as aggressively updated starting queue. Inspect repo/docs when they answer. Keep `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md`.
+Step 1 must invoke the `constellation-interrogator` skill for relentless one-question interrogation with `templates/PILOT_STARTING_QUESTIONS.template.md` as aggressively updated starting queue. Inspect repo/docs when they answer. Keep `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md`. This step is not optional. Do not skip even if you think you understand the problem.
 
 The gate is the central unit: smallest chunk assigned, reviewed, proven with evidence, and stopped independently. Implementation gates run: implementer Crew -> integrate evidence -> reviewer Crew -> integrate evidence -> gate close. Do not batch review at final closeout.
 
