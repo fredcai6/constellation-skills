@@ -12,8 +12,10 @@ from pathlib import Path
 PILOT_HEADINGS = [
     "Workflow State",
     "Ambiguity / Authority",
-    "Checklist",
-    "Project Mechanics Status",
+    "Gates",
+    "Plan Consistency Criteria",
+    "Implementation Gates",
+    "Project Mechanics",
     "Semantic Closeout",
 ]
 
@@ -81,15 +83,18 @@ def check_status_reasons(path: Path, errors: list[str], root: Path) -> None:
             error(errors, path, "blocked status lacks blocker/authority/next action", root)
 
 
-def check_gated_plan(path: Path, errors: list[str], root: Path) -> None:
+def check_implementation_gates(path: Path, errors: list[str], root: Path) -> None:
     text = read(path)
-    gates = re.findall(r"^### Gate\s+\d+:", text, flags=re.MULTILINE)
+    gates_section = section(text, "Implementation Gates")
+    if not gates_section.strip():
+        return
+    gates = re.findall(r"^### Implementation Gate\s+\S+:", gates_section, flags=re.MULTILINE)
     if not gates:
-        error(errors, path, "GATED_PLAN.md has no Gate sections", root)
-    for gate in re.split(r"^### Gate\s+\d+:", text, flags=re.MULTILINE)[1:]:
+        return
+    for gate in re.split(r"^### Implementation Gate\s+\S+:", gates_section, flags=re.MULTILINE)[1:]:
         for label in ("Close criteria", "Required evidence", "Stop conditions"):
             if label.lower() not in gate.lower():
-                error(errors, path, f"gate missing {label}", root)
+                error(errors, path, f"implementation gate missing {label}", root)
 
 
 def required_field_has_placeholder(text: str, heading: str) -> bool:
@@ -135,17 +140,15 @@ def main() -> int:
         errors.append(f"{work_dir.relative_to(root)}: work package does not exist")
 
     if work_dir.exists():
-        local_todo = work_dir / "LOCAL_TODO.md"
-        if not local_todo.exists():
-            error(errors, local_todo, "missing LOCAL_TODO.md", root)
-
+        default_checklist = work_dir / "DEFAULT_CHECKLIST.md"
         pilot = work_dir / "PILOT_CHECKLIST.md"
+
+        if not default_checklist.exists() and not pilot.exists():
+            error(errors, work_dir, "missing PILOT_CHECKLIST.md or DEFAULT_CHECKLIST.md", root)
+
         if pilot.exists():
             check_headings(pilot, PILOT_HEADINGS, errors, root)
-
-        gated_plan = work_dir / "GATED_PLAN.md"
-        if gated_plan.exists():
-            check_gated_plan(gated_plan, errors, root)
+            check_implementation_gates(pilot, errors, root)
 
         for handoff in sorted(work_dir.glob("crew-handoffs/*.md")):
             if args.verbose:

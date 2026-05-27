@@ -2,7 +2,7 @@
 
 Work file: `.agent-work/CARTOGRAPHER_CHECKLIST.md`
 
-Status values: `pending | in-progress | blocked | complete`
+Status values follow `skills/workbench/references/status-model.md`. Each gate closes only when its listed fields are populated and decision rationale is recorded. Skipped gates require `skipped because <reason>`.
 
 ## Target
 

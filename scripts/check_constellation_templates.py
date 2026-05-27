@@ -10,17 +10,6 @@ from pathlib import Path
 
 
 EXPECTED_TEMPLATE_HEADINGS = {
-    "skills/pilot/templates/GATED_PLAN.template.md": [
-        "Problem Statement",
-        "Intent Protected",
-        "Scope",
-        "Structural Baseline",
-        "Authority / Assumptions",
-        "Test Mode",
-        "Gates",
-        "Plan-Level Stop Conditions",
-        "Final Completion Criteria",
-    ],
     "skills/pilot/templates/CREW_HANDOFF.template.md": [
         "Role",
         "Assigned Gate",
@@ -35,33 +24,23 @@ EXPECTED_TEMPLATE_HEADINGS = {
         "Stop Conditions",
         "Return Format",
     ],
-    "skills/pilot/templates/EVIDENCE_INTEGRATION.template.md": [
-        "Gate",
-        "Crew Result",
-        "Implementation Evidence",
-        "Review Evidence",
-        "Required Evidence Check",
-        "Original Intent Check",
-        "Scope Drift Check",
-        "Assumption Check",
-        "Pilot Decision",
-    ],
-    "skills/pilot/templates/PLAN_CONSISTENCY_CHECK.template.md": [
-        "Inputs",
-        "Consistency Checks",
-        "Findings",
-        "Verdict",
-        "Required Edits Before Dispatch",
-        "Pilot Decision",
+    "skills/pilot/templates/PILOT_CHECKLIST.template.md": [
+        "Workflow State",
+        "Ambiguity / Authority",
+        "Gates",
+        "Plan Consistency Criteria",
+        "Implementation Gates",
+        "Project Mechanics",
+        "Triage Candidates",
+        "Semantic Closeout",
     ],
 }
 
 EXPECTED_TEMPLATES = sorted(
     set(EXPECTED_TEMPLATE_HEADINGS)
     | {
-        "skills/pilot/templates/PILOT_CHECKLIST.template.md",
         "skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md",
-        "skills/workbench/templates/LOCAL_TODO.template.md",
+        "skills/workbench/templates/DEFAULT_CHECKLIST.template.md",
         "skills/crew/templates/IMPLEMENTER_RESULT.template.md",
         "skills/crew/templates/REVIEW_RESULT.template.md",
     }
@@ -71,11 +50,9 @@ STATUS_MODEL = "skills/workbench/references/status-model.md"
 STATUS_REFERENCE = "Status values follow `skills/workbench/references/status-model.md`."
 STATUS_TEMPLATES = [
     "skills/pilot/templates/PILOT_CHECKLIST.template.md",
-    "skills/pilot/templates/GATED_PLAN.template.md",
-    "skills/pilot/templates/EVIDENCE_INTEGRATION.template.md",
     "skills/crew/templates/IMPLEMENTER_RESULT.template.md",
     "skills/crew/templates/REVIEW_RESULT.template.md",
-    "skills/workbench/templates/LOCAL_TODO.template.md",
+    "skills/workbench/templates/DEFAULT_CHECKLIST.template.md",
 ]
 AGENT_WORK_TYPO = ".agent" + "_work"
 
@@ -154,16 +131,14 @@ def check_status_model(root: Path, errors: list[str]) -> None:
 
 def check_pilot_consistency(root: Path, errors: list[str]) -> None:
     checklist = root / "skills/pilot/templates/PILOT_CHECKLIST.template.md"
-    consistency = root / "skills/pilot/templates/PLAN_CONSISTENCY_CHECK.template.md"
-    if not consistency.exists():
-        errors.append(f"{consistency.relative_to(root)}: missing plan consistency template")
+    if not checklist.exists():
+        errors.append(f"{checklist.relative_to(root)}: missing pilot checklist template")
         return
-    if checklist.exists():
-        text = checklist.read_text(encoding="utf-8")
-        if "PLAN_CONSISTENCY_CHECK.md" not in text:
-            errors.append(f"{checklist.relative_to(root)}: does not reference PLAN_CONSISTENCY_CHECK.md")
-        if "ready for Crew" not in text or "explicit override reason" not in text:
-            errors.append(f"{checklist.relative_to(root)}: dispatch does not require ready verdict or override reason")
+    text = checklist.read_text(encoding="utf-8")
+    if "Plan Consistency Criteria" not in text:
+        errors.append(f"{checklist.relative_to(root)}: missing Plan Consistency Criteria section")
+    if "recorded override reason" not in text:
+        errors.append(f"{checklist.relative_to(root)}: dispatch does not require override reason for skipped criteria")
 
 
 def check_closeout(root: Path, errors: list[str]) -> None:

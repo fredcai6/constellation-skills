@@ -2,6 +2,8 @@
 
 This file is the live Charter driver, local todo, and decision record. It is retained for human traceability, not future runtime context.
 
+Status values follow `skills/workbench/references/status-model.md`. Each gate closes only when its Completion criteria are met. Skipped gates require `skipped because <reason>`.
+
 ## Allowed writes
 
 ```text

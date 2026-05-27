@@ -12,9 +12,8 @@ Manage recoverable workflow state. `.agent-work/` is not durable project truth. 
 ```text
 .agent-work/
   <work-id>/
-    LOCAL_TODO.md
-    PILOT_CHECKLIST.md
-    GATED_PLAN.md
+    <ROLE_CHECKLIST>.md          # if role ships one
+    DEFAULT_CHECKLIST.md         # otherwise
     crew-handoffs/
     evidence/
     triage-candidates/
@@ -24,14 +23,20 @@ Manage recoverable workflow state. `.agent-work/` is not durable project truth. 
       <complete work-id package>
 ```
 
-Rules: work IDs `issue-123-slug`, `pr-45-slug`, or `YYYYMMDD-slug`; lowercase, stable, hyphen-separated. Start with `LOCAL_TODO.md`. Prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
+Work IDs: `issue-123-slug`, `pr-45-slug`, `YYYYMMDD-slug`; lowercase, stable, hyphen-separated. Prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
 
-If a role-specific checklist exists, copy it too. It is the execution controller; Local Todo indexes the active controller and recovery state. Do not duplicate the role checklist. Keep controller steps checked (`[x]`) or statused, with notes after steps/gates/blockers and before handoff/final.
+## Controller
 
-Archive only semantically closed workflows; blocked/waiting stays active. Role closeout templates define package movement. Do not read archives unless user points there. Promote durable truth to docs; package future work by project context.
+One controller per work package. Role checklist (`PILOT_CHECKLIST`, `CHARTER_CHECKLIST`, `CARTOGRAPHER_CHECKLIST`) when role ships one; else `DEFAULT_CHECKLIST`. Never both.
+
+Each gate carries goal, criteria, status, evidence/note. Mark `[x]` or status-stamped. Notes after gates/blockers and before handoff/final.
+
+## Archive
+
+Archive only semantically closed workflows; blocked/waiting stays active. Role closeout templates define package movement. Promote durable truth to docs; package future work by project context. Do not read archives unless user points there.
 
 ## Closeout
 
-Closed = todo current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, artifact closeout complete or explained.
+Closed = controller current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, artifact closeout complete or explained.
 
-Templates: `templates/LOCAL_TODO.template.md`, `templates/WORKFLOW_CLOSEOUT.template.md`. Reference: `references/status-model.md`.
+Templates: `templates/DEFAULT_CHECKLIST.template.md`, `templates/WORKFLOW_CLOSEOUT.template.md`. Reference: `references/status-model.md`.

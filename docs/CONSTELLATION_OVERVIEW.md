@@ -20,15 +20,14 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Pilot, Cartographer, Scout | project-specific planning, authority, evidence, stop/ask rules |
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project-specific implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
-| Workbench | `.agent-work/<work-id>/LOCAL_TODO.md` | all roles | recoverable state; indexes active role controller; not durable truth |
-| Role skills | role-specific checklist templates | owning role, Workbench | execution controller when present; Workbench creates/archives files but does not own semantics |
+| Pilot | `.agent-work/<work-id>/PILOT_CHECKLIST.md` | Pilot, Crew, Workbench | Pilot execution controller; framing/implementation/closing gates, evidence per implementation gate; not durable truth |
+| Workbench | `.agent-work/<work-id>/DEFAULT_CHECKLIST.md` | Crew | fallback controller when no role-specific checklist exists; not durable truth |
+| Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Pilot, Cartographer | artifact hygiene; roles execute package movement at closeout |
 | Interrogator | `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md` | Charter, Pilot | live question queue, skipped items, answers, follow-ups |
 | Cartographer | `docs/architecture/packets/` + `index.md` | Scout, Pilot, Crew | current structural truth and sparse purpose/constraint/rationale anchors |
 | Cartographer | mismatch/Triage candidate | Pilot, Triage | current-vs-future separation with structural anchor |
 | Scout | `SCOUT_REPORT` | user, Pilot, Triage | ranked architecture improvement candidates with map/code evidence |
-| Pilot | `GATED_PLAN` | Pilot, Crew | smallest independently stoppable gates with evidence and scope |
-| Pilot | `PLAN_CONSISTENCY_CHECK` | Pilot | pre-dispatch check that plan, authority, evidence, and Crew conditions agree |
 | Pilot | `CREW_HANDOFF` | Crew | bounded task, authority, scope, exclusions, evidence, stop conditions |
 | Crew | `IMPLEMENTER_RESULT` / `REVIEW_RESULT` | Pilot | evidence, blockers, scope drift, assumptions, out-of-scope observations |
 | Pilot, Cartographer, Scout, Crew | Triage candidate | Triage | future work package, not current-scope expansion |
@@ -49,7 +48,7 @@ Code, tests, configs, generated behavior:
 Structural map packets, agent context, glossary:
   compressed durable truth
 
-Framing notes, gated plans, handoffs, local todos:
+Pilot checklist (with embedded implementation gates), handoffs, default checklists:
   workflow-local truth
 
 Issues:

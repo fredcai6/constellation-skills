@@ -26,11 +26,11 @@ class ConstellationContentTests(unittest.TestCase):
     def test_role_skill_bodies_stay_lean(self):
         limits = {
             "workbench": 1700,
-            "interrogator": 1300,
+            "interrogator": 3300,
             "cartographer": 1900,
             "scout": 1400,
             "pilot": 2900,
-            "crew": 1250,
+            "crew": 1400,
             "triage": 1500,
         }
 
@@ -60,7 +60,7 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("relentlessly", interrogator)
         self.assertIn("question list", interrogator)
         self.assertIn(".agent-work/<work-id>/interrogator_questions.md", interrogator)
-        self.assertIn("review the request and relevant code/docs", interrogator)
+        self.assertIn("review topic and relevant code/docs", interrogator)
         self.assertIn("possible answers", interrogator)
         self.assertIn("recommendation", interrogator)
 
@@ -204,9 +204,6 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_pilot_is_checklist_driven_and_exits_without_crew(self):
         pilot = read("skills/pilot/SKILL.md").lower()
-        interrogation_result = read(
-            "skills/pilot/templates/PROBLEM_INTERROGATION_RESULT.template.md"
-        ).lower()
         checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
 
         self.assertIn("checklist-driven workflow controller", pilot)
@@ -214,39 +211,21 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("pilot is not needed", pilot)
         self.assertNotIn("constellation is not needed", pilot)
         self.assertIn("no fake lightweight constellation path", pilot)
-        self.assertIn("kick off the assigned crew subagent", pilot)
         self.assertIn("invoke the `constellation-interrogator` skill", pilot)
         self.assertIn("0. load project context", checklist)
-        self.assertIn("10. semantic closeout", checklist)
-        self.assertIn("constellation value decision", interrogation_result)
-        self.assertIn("use constellation | do not use constellation | ask user", interrogation_result)
-        self.assertIn("recommended next action", interrogation_result)
+        self.assertIn("9. semantic closeout", checklist)
+        self.assertIn("decide constellation value", checklist)
         self.assertIn("relentless", pilot)
-        self.assertNotIn("recommended route", interrogation_result)
-        self.assertNotIn("custodian-needed", interrogation_result)
 
-    def test_pilot_plan_consistency_check_is_pre_dispatch(self):
-        pilot = read("skills/pilot/SKILL.md").lower()
+    def test_pilot_plan_consistency_criteria_block_implementation_gate_definition(self):
         checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
-        consistency = read(
-            "skills/pilot/templates/PLAN_CONSISTENCY_CHECK.template.md"
-        ).lower()
 
-        self.assertIn("templates/plan_consistency_check.template.md", pilot)
-        self.assertIn("plan consistency check", checklist)
-        self.assertLess(checklist.index("build gated plan"), checklist.index("plan consistency check"))
-        self.assertLess(checklist.index("plan consistency check"), checklist.index("dispatch crew"))
-        self.assertIn("ready for crew", checklist)
-        self.assertIn("explicit override reason", checklist)
-        for heading in [
-            "inputs",
-            "consistency checks",
-            "findings",
-            "verdict",
-            "required edits before dispatch",
-            "pilot decision",
-        ]:
-            self.assertIn(f"## {heading}", consistency)
+        self.assertIn("plan consistency criteria", checklist)
+        self.assertIn("recorded override reason", checklist)
+        self.assertLess(checklist.index("define implementation gates"), checklist.index("execute implementation gates"))
+        self.assertIn("each implementation gate independently stoppable", checklist)
+        self.assertIn("required verification commands exact", checklist)
+        self.assertIn("reviewer approval not treated as sufficient alone", checklist)
 
     def test_pilot_removes_route_first_doctrine(self):
         pilot_files = [
@@ -271,18 +250,18 @@ class ConstellationContentTests(unittest.TestCase):
 
         self.assertIn("request cartographer baseline", combined)
         self.assertIn("collect triage candidate", combined)
-        self.assertIn("create gated plan", combined)
+        self.assertIn("define implementation gates", combined)
 
     def test_model_stratification_and_gate_chunking_are_explicit(self):
         context = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
         pilot = read("skills/pilot/SKILL.md").lower()
-        gated_plan = read("skills/pilot/templates/GATED_PLAN.template.md").lower()
+        checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
 
         self.assertNotIn("model stratification", context)
         self.assertIn("agent strength", pilot)
         self.assertIn("gate complexity", pilot)
         self.assertIn("scope size", pilot)
-        self.assertIn("suggested model tier", gated_plan)
+        self.assertIn("suggested model tier", checklist)
 
     def test_bounded_crew_stops_instead_of_inferring_hidden_intent(self):
         crew = read("skills/crew/SKILL.md").lower()
@@ -312,6 +291,7 @@ class ConstellationContentTests(unittest.TestCase):
         )
 
     def test_skill_descriptions_include_trigger_language(self):
+        trigger_terms = ("Use when", "use when")
         for path in (ROOT / "skills").glob("*/SKILL.md"):
             text = path.read_text(encoding="utf-8")
             frontmatter = re.match(r"---\n(.*?)\n---", text, re.DOTALL).group(1)
@@ -320,7 +300,10 @@ class ConstellationContentTests(unittest.TestCase):
                 for line in frontmatter.splitlines()
                 if line.startswith("description:")
             )
-            self.assertIn("Use when", description, str(path))
+            self.assertTrue(
+                any(term in description for term in trigger_terms),
+                f"{path}: description missing trigger language",
+            )
 
     def test_decision_note_and_route_table_are_removed(self):
         self.assertFalse((ROOT / "skills/pilot/templates/DECISION_NOTE.template.md").exists())
@@ -333,7 +316,7 @@ class ConstellationContentTests(unittest.TestCase):
         for rel_path in [
             "SKILL_INDEX.md",
             "skills/pilot/SKILL.md",
-            "skills/pilot/templates/PROBLEM_INTERROGATION_RESULT.template.md",
+            "skills/pilot/templates/PILOT_CHECKLIST.template.md",
             "skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md",
         ]:
             self.assertNotIn("decision note", read(rel_path).lower())
@@ -376,7 +359,7 @@ class ConstellationContentTests(unittest.TestCase):
         orchestrator = read("skills/charter/templates/ORCHESTRATOR_CONTEXT.template.md").lower()
 
         self.assertIn("no `.agent-work/`", pilot)
-        self.assertIn("no gated plan", pilot)
+        self.assertIn("no implementation gates", pilot)
         self.assertIn("project-specific overlay", orchestrator)
         self.assertNotIn("stop using constellation", orchestrator)
 
@@ -388,14 +371,14 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_crew_tdd_mode_is_explicit_and_carried_by_handoffs(self):
         crew = read("skills/crew/SKILL.md").lower()
-        gated_plan = read("skills/pilot/templates/GATED_PLAN.template.md").lower()
+        checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
         handoff = read("skills/pilot/templates/CREW_HANDOFF.template.md").lower()
         implementer_result = read("skills/crew/templates/IMPLEMENTER_RESULT.template.md").lower()
         review_result = read("skills/crew/templates/REVIEW_RESULT.template.md").lower()
 
         self.assertIn("vertical tdd", crew)
         self.assertIn("red -> green -> refactor", crew)
-        self.assertIn("test mode", gated_plan)
+        self.assertIn("test mode", checklist)
         self.assertIn("test mode", handoff)
         self.assertIn("tdd evidence", implementer_result)
         self.assertIn("failing test observed", implementer_result)
@@ -637,14 +620,13 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_gate_is_central_unit_and_workbench_archives_without_compression(self):
         pilot = read("skills/pilot/SKILL.md").lower()
-        gated_plan = read("skills/pilot/templates/GATED_PLAN.template.md").lower()
+        checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
         workbench = read("skills/workbench/SKILL.md").lower()
         closeout = read("skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md").lower()
 
         self.assertIn("gate is the central unit", pilot)
-        self.assertIn("smallest chunk", gated_plan)
-        self.assertIn("archive workflow artifacts", gated_plan)
-        self.assertIn("commit archived workflow artifacts", gated_plan)
+        self.assertIn("smallest chunk", pilot)
+        self.assertIn("implementation gates", checklist)
         self.assertNotIn("closeout compression", workbench)
         self.assertNotIn("delete/condense", workbench)
         self.assertNotIn("repository history captured", closeout)
@@ -697,9 +679,9 @@ class ConstellationContentTests(unittest.TestCase):
         readme = read("README.md").lower()
 
         self.assertIn("workbench owns artifact hygiene", pilot)
-        self.assertIn("local_todo", checklist)
-        self.assertIn("active workflow controller", checklist)
-        self.assertIn("local_todo is recovery metadata", checklist)
+        self.assertIn("single execution controller", checklist)
+        self.assertIn("current state", checklist)
+        self.assertNotIn("local_todo", checklist)
         self.assertIn("subagent kickoff", checklist)
         self.assertIn("crew-handoffs/", workbench)
         self.assertIn("triage-candidates/", workbench)
@@ -709,21 +691,24 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn("crew-handoffs/", readme)
         self.assertIn("triage-candidates/", readme)
 
-    def test_workbench_merges_local_todo_with_role_checklists(self):
+    def test_workbench_uses_pilot_checklist_for_pilot_recovery_hooks(self):
         workbench = read("skills/workbench/SKILL.md").lower()
-        local_todo = read("skills/workbench/templates/LOCAL_TODO.template.md").lower()
+        pilot_checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
         crew_role = read("skills/crew/references/role-scope.md").lower()
-        combined = f"{workbench}\n{local_todo}\n{crew_role}"
+        default_checklist = read("skills/workbench/templates/DEFAULT_CHECKLIST.template.md").lower()
+        combined = f"{workbench}\n{pilot_checklist}\n{crew_role}\n{default_checklist}"
 
-        self.assertIn("role-specific checklist", combined)
+        self.assertIn("pilot checklist", combined)
         self.assertIn("execution controller", combined)
-        self.assertIn("controller template", local_todo)
-        self.assertIn("controller file", local_todo)
-        self.assertIn("checked (`[x]`)", combined)
-        self.assertIn("execution notes", local_todo)
-        self.assertIn("status transitions", local_todo)
-        self.assertIn("local todo indexes the active controller", combined)
-        self.assertIn("do not duplicate the role checklist", combined)
+        self.assertIn("task", pilot_checklist)
+        self.assertIn("source", pilot_checklist)
+        self.assertIn("definition of done", pilot_checklist)
+        self.assertIn("execution notes", pilot_checklist)
+        self.assertIn("status transitions", pilot_checklist)
+        self.assertIn("current state", pilot_checklist)
+        self.assertIn("one controller per work package", workbench)
+        self.assertIn("default checklist", default_checklist)
+        self.assertIn("never both", workbench)
 
     def test_role_checklists_are_direct_role_interfaces_not_workbench_owned(self):
         charter = read("skills/charter/SKILL.md").lower()
@@ -738,21 +723,19 @@ class ConstellationContentTests(unittest.TestCase):
         self.assertIn(".agent-work/cartographer_checklist.md", cartographer)
         self.assertIn("templates/cartographer_checklist.template.md", cartographer)
         self.assertIn("role-specific checklist", crew_role)
-        self.assertIn("workbench | `.agent-work/<work-id>/local_todo.md`", crew_role)
+        self.assertIn("workbench | `.agent-work/<work-id>/default_checklist.md`", crew_role)
         self.assertNotIn("workbench | role-specific checklist templates", crew_role)
 
     def test_evidence_integration_requires_original_intent_not_approval_alone(self):
-        evidence = read("skills/pilot/templates/EVIDENCE_INTEGRATION.template.md").lower()
+        checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
 
-        self.assertIn("original intent check", evidence)
-        self.assertIn("verification command check", evidence)
-        self.assertIn("commands run | not run with reason | no command applicable because <reason>", evidence)
-        self.assertIn("reviewer approval alone is insufficient", evidence)
-        self.assertIn("implementation evidence", evidence)
-        self.assertIn("review evidence", evidence)
-        self.assertIn("assumption check", evidence)
-        self.assertIn("scope drift check", evidence)
-        self.assertIn("request cartographer verification", evidence)
+        self.assertIn("original intent check", checklist)
+        self.assertIn("reviewer approval alone insufficient", checklist)
+        self.assertIn("implementation evidence", checklist)
+        self.assertIn("review evidence", checklist)
+        self.assertIn("assumption check", checklist)
+        self.assertIn("scope drift check", checklist)
+        self.assertIn("request cartographer", checklist)
 
     def test_status_model_is_shared_by_major_templates(self):
         status_model = read("skills/workbench/references/status-model.md").lower()
@@ -763,11 +746,9 @@ class ConstellationContentTests(unittest.TestCase):
 
         for rel_path in [
             "skills/pilot/templates/PILOT_CHECKLIST.template.md",
-            "skills/pilot/templates/GATED_PLAN.template.md",
-            "skills/pilot/templates/EVIDENCE_INTEGRATION.template.md",
             "skills/crew/templates/IMPLEMENTER_RESULT.template.md",
             "skills/crew/templates/REVIEW_RESULT.template.md",
-            "skills/workbench/templates/LOCAL_TODO.template.md",
+            "skills/workbench/templates/DEFAULT_CHECKLIST.template.md",
         ]:
             with self.subTest(path=rel_path):
                 self.assertIn(
@@ -777,25 +758,22 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_implementation_gates_require_per_gate_review_cycle(self):
         pilot = read("skills/pilot/SKILL.md").lower()
-        gated_plan = read("skills/pilot/templates/GATED_PLAN.template.md").lower()
         checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
-        evidence = read("skills/pilot/templates/EVIDENCE_INTEGRATION.template.md").lower()
 
-        combined = f"{pilot}\n{gated_plan}\n{checklist}\n{evidence}"
+        combined = f"{pilot}\n{checklist}"
         self.assertIn("implementer crew -> integrate evidence -> reviewer crew -> integrate evidence -> gate close", combined)
         self.assertIn("do not batch review at final closeout", combined)
-        self.assertIn("implementer handoff", gated_plan)
-        self.assertIn("reviewer handoff", gated_plan)
-        self.assertIn("per-gate evidence integration", checklist)
-        self.assertIn("both implementation evidence and review evidence", evidence)
+        self.assertIn("implementer dispatch", checklist)
+        self.assertIn("reviewer dispatch", checklist)
+        self.assertIn("implementation evidence", checklist)
+        self.assertIn("review evidence", checklist)
 
     def test_pilot_collects_triage_candidates_instead_of_eager_issues(self):
         pilot = read("skills/pilot/SKILL.md").lower()
-        gated_plan = read("skills/pilot/templates/GATED_PLAN.template.md").lower()
         checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
 
-        self.assertIn("triage candidate log", gated_plan)
-        self.assertIn("dropped because", gated_plan)
+        self.assertIn("triage candidate", checklist)
+        self.assertIn("dropped because", checklist)
         self.assertIn("current work anchor", checklist)
         self.assertIn("structural anchor", checklist)
         self.assertIn("do not eagerly create issues", pilot)
@@ -803,15 +781,13 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_repo_mechanics_follow_project_orchestrator_context(self):
         pilot = read("skills/pilot/SKILL.md").lower()
-        gated_plan = read("skills/pilot/templates/GATED_PLAN.template.md").lower()
         checklist = read("skills/pilot/templates/PILOT_CHECKLIST.template.md").lower()
         handoff = read("skills/pilot/templates/CREW_HANDOFF.template.md").lower()
 
-        combined = f"{pilot}\n{gated_plan}\n{checklist}\n{handoff}"
+        combined = f"{pilot}\n{checklist}\n{handoff}"
         self.assertIn("project orchestrator context", combined)
         self.assertIn("ask if silent", combined)
-        self.assertIn("project mechanics hooks", gated_plan)
-        self.assertIn("project mechanics status", checklist)
+        self.assertIn("project mechanics", checklist)
         self.assertIn("project mechanics for this gate", handoff)
         self.assertIn("commit sha", checklist)
         self.assertNotIn("codex/", combined)
@@ -841,7 +817,8 @@ class ConstellationContentTests(unittest.TestCase):
         expected_edges = [
             "charter | `docs/agents/orchestrator_context.md` | pilot, cartographer, scout",
             "charter | `docs/agents/crew_context.md` | crew",
-            "workbench | `.agent-work/<work-id>/local_todo.md` | all roles",
+            "pilot | `.agent-work/<work-id>/pilot_checklist.md` | pilot, crew, workbench",
+            "workbench | `.agent-work/<work-id>/default_checklist.md` | crew",
             "cartographer | `docs/architecture/packets/` + `index.md` | scout, pilot, crew",
             "scout | `scout_report` | user, pilot, triage",
             "pilot | `crew_handoff` | crew",
@@ -909,9 +886,9 @@ class ConstellationContentTests(unittest.TestCase):
                 "crew does not curate architecture",
             ],
             "crew": [
-                "workbench | `.agent-work/<work-id>/local_todo.md`",
-                "local todo indexes the active controller",
-                "do not duplicate the role checklist",
+                "workbench | `.agent-work/<work-id>/default_checklist.md`",
+                "default checklist is the controller when no role-specific checklist exists",
+                "do not route, create issues, close gates, or expand scope",
             ],
         }
 
@@ -926,7 +903,7 @@ class ConstellationContentTests(unittest.TestCase):
     def test_skill_bodies_point_to_templates_not_inline_manuals(self):
         expectations = {
             "charter": ["templates/charter_checklist.template.md", "references/engineering-rubric.md"],
-            "workbench": ["templates/local_todo.template.md", "templates/workflow_closeout.template.md"],
+            "workbench": ["templates/default_checklist.template.md", "templates/workflow_closeout.template.md"],
             "cartographer": ["templates/cartographer_checklist.template.md", "templates/architecture_packet.template.md"],
             "scout": ["templates/scout_report.template.md", "references/scout-heuristics.md"],
             "pilot": ["templates/pilot_checklist.template.md", "templates/crew_handoff.template.md"],

@@ -4,6 +4,9 @@ Status values follow `skills/workbench/references/status-model.md`.
 
 Omit optional sections when empty.
 
+## Assigned Gate
+`<gate id/title>`
+
 ## Result
 `APPROVE | BLOCK | COMMENT`
 

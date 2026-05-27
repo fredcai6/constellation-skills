@@ -154,12 +154,10 @@ docs/
   SCOUT_REPORT.md
 
   <work-id>/
-    CHARTER_CHECKLIST.md
+    CHARTER_CHECKLIST.md           # role-specific controller
     INTERROGATOR_QUESTIONS.md
-    LOCAL_TODO.md
-    PILOT_CHECKLIST.md
-    GATED_PLAN.md
-    PLAN_CONSISTENCY_CHECK.md
+    PILOT_CHECKLIST.md             # role-specific controller (with embedded implementation gates)
+    DEFAULT_CHECKLIST.md           # fallback controller when no role-specific one exists
     crew-handoffs/
     evidence/
     triage-candidates/
@@ -175,7 +173,8 @@ Rules:
 - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
 - Workflow status language follows `skills/workbench/references/status-model.md`.
-- Role checklist = execution controller. Local Todo indexes it, tracks recovery state, and keeps completed milestones checked.
+- Pilot Checklist = single execution controller for Pilot work; implementation gates and per-gate evidence live in its Implementation Gates section.
+- Default Checklist = fallback controller when a role does not ship its own checklist (e.g. Crew multi-step recovery). Never both a role checklist and Default Checklist for the same work.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
 - Charter and Pilot closeout move the complete `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including interrogation sessions.
 - Archived workflow artifacts are historical context only.

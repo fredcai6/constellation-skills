@@ -1,8 +1,8 @@
 # Constellation Status Model
 
-## Step Status
+## Gate Status
 
-Use for checklist/controller steps:
+Use for checklist/controller gates:
 
 ```text
 pending | in-progress | blocked | complete | skipped

@@ -1,6 +1,6 @@
 ---
 name: constellation-interrogator
-description: Grill user on unresolved request/design ambiguity with a traceable queue.
+description: Use when grilling user on unresolved request/design ambiguity with a traceable queue.
 ---
 
 # Constellation Interrogator
