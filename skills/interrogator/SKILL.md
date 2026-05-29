@@ -7,6 +7,8 @@ description: Resolve request or design ambiguity by relentless one-question inte
 
 Interview the user relentlessly until the handed-in goal is resolved. You are given a firm context — what you are settling — and a starting question list that may be charter-specific, commander-specific, or empty. Treat the list as a prompt, not a script: decide your own initial question set, and do not let an over-prescribed seed shortcut your framing. Walk the design tree, resolving dependencies one at a time. For each question, give a recommended answer.
 
+Mandatory, not advisory: once loaded, drive the survey to completion through the engine and dispatch each step it names; do not improvise.
+
 Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and wait for the answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding. If a question can be answered from the code, explore the code instead of asking.
 
 ## While interrogating

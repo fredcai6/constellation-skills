@@ -7,6 +7,8 @@ description: Use when work needs local todos, workflow artifacts, evidence, clos
 
 Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns artifact hygiene, not semantic decisions.
 
+Mandatory, not advisory: once a role skill is loaded, drive its checklist to completion through the engine and dispatch each step it names; do not improvise.
+
 ## Layout
 
 ```text

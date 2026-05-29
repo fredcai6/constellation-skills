@@ -7,6 +7,8 @@ description: Implement a bounded change from a handoff. Use when a handoff defin
 
 Own one scoped change. Build your own plan and work it.
 
+Mandatory, not advisory: once loaded, drive the checklist to completion through the engine and dispatch each step it names; do not improvise.
+
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 
 Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive it through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): one item per implementation step, each with a real test or evidence postcondition. Make the minimal change. TDD when the test mode requires it: red, green, refactor.
