@@ -242,5 +242,72 @@ class CliAndExample(unittest.TestCase):
             self.assertTrue(reloaded["tasks"]["g1"]["evidence"])
 
 
+class Hardening(unittest.TestCase):
+    def _review_gate(self, status="in-progress"):
+        t = gate("g1", status)
+        t["postconditions"] = [{
+            "id": "c2", "statement": "approved",
+            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+            "satisfied": False,
+        }]
+        t["child_checklist"] = "child"
+        return gated(g1=t)
+
+    def _write_child(self, d, verdict):
+        cons = {"verdict": verdict, "findings": []} if verdict else None
+        child = survey(v1=survey_item("v1", "complete"))
+        child["consolidation"] = cons
+        p = Path(d) / "child.json"
+        E.save(p, child)
+        return p
+
+    def test_advance_from_child_approve_completes(self):
+        with tempfile.TemporaryDirectory() as d:
+            child = self._write_child(d, "APPROVE")
+            cl = self._review_gate()
+            msg = E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
+            self.assertEqual(msg, "g1 -> complete")
+            self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+
+    def test_advance_from_child_block_refuses(self):
+        with tempfile.TemporaryDirectory() as d:
+            child = self._write_child(d, "BLOCK")
+            cl = self._review_gate()
+            with self.assertRaises(E.EngineError):
+                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
+            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+            # the child's verdict was still attached as evidence
+            self.assertTrue(any(e["type"] == "review-result" for e in cl["tasks"]["g1"]["evidence"]))
+
+    def test_advance_from_child_without_consolidation_refuses(self):
+        with tempfile.TemporaryDirectory() as d:
+            child = self._write_child(d, None)
+            cl = self._review_gate()
+            with self.assertRaises(E.EngineError):
+                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
+
+    def test_config_ref_resolves_rework_cap(self):
+        with tempfile.TemporaryDirectory() as d:
+            cfg = Path(d) / "charter.json"
+            E.save(cfg, {"config": {"rework_cap": 1}})
+            cl = {"work_id": "t", "type": "gated", "config_ref": "charter.json",
+                  "items": ["g1"], "tasks": {"g1": gate("g1", "complete", command="true")},
+                  "consolidation": None, "triage_candidates": [], "blockers": []}
+            resolved = E.load_config(cl, Path(d))
+            self.assertEqual(E.rework_cap(resolved), 1)
+            # reopen via dispatch should escalate on the 2nd attempt using the resolved cap
+            import types
+            ns = types.SimpleNamespace(verb="reopen", id="g1", reason="redo")
+            E.dispatch(cl, ns, base_dir=Path(d))           # 1 -> in-progress
+            cl["tasks"]["g1"]["status"] = "complete"
+            msg = E.dispatch(cl, ns, base_dir=Path(d))     # 2 -> escalate (cap 1)
+            self.assertIn("ESCALATED", msg)
+
+    def test_inline_config_overrides_ref(self):
+        cl = {"work_id": "t", "type": "gated", "config": {"rework_cap": 9},
+              "config_ref": "nonexistent.json", "items": [], "tasks": {}}
+        self.assertEqual(E.rework_cap(E.load_config(cl, Path("."))), 9)
+
+
 if __name__ == "__main__":
     unittest.main()

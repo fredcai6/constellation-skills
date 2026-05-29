@@ -36,8 +36,22 @@ def save(path: Path, data: dict) -> None:
     Path(path).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def rework_cap(cl: dict) -> int:
-    return int(cl.get("config", {}).get("rework_cap", DEFAULT_REWORK_CAP))
+def load_config(cl: dict, base: Path | None) -> dict:
+    """Resolve config: inline `config` wins; else follow `config_ref` to a file
+    (relative to the checklist's directory); else empty (defaults apply)."""
+    if isinstance(cl.get("config"), dict):
+        return cl["config"]
+    ref = cl.get("config_ref")
+    if ref and base is not None:
+        path = Path(ref) if Path(ref).is_absolute() else base / ref
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return data.get("config", data)
+    return {}
+
+
+def rework_cap(config: dict) -> int:
+    return int((config or {}).get("rework_cap", DEFAULT_REWORK_CAP))
 
 
 def task(cl: dict, iid: str) -> dict:
@@ -121,12 +135,22 @@ def start(cl: dict, iid: str) -> str:
     return f"{iid} -> in-progress"
 
 
-def advance(cl: dict, iid: str) -> str:
+def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None) -> str:
     if cl["type"] != GATED:
         raise EngineError("advance is for gated checklists; use record")
     t = task(cl, iid)
     if t["status"] != "in-progress":
         raise EngineError(f"{iid} is {t['status']!r}, must be in-progress to advance")
+    if from_child:
+        child_path = Path(from_child)
+        if not child_path.is_absolute() and base_dir is not None:
+            child_path = base_dir / from_child
+        if not child_path.exists():
+            raise EngineError(f"child checklist {from_child} not found")
+        cons = json.loads(child_path.read_text(encoding="utf-8")).get("consolidation")
+        if not cons:
+            raise EngineError(f"child {from_child} has no consolidation yet")
+        attach(cl, iid, "review-result", cons)
     posts = t.get("postconditions", [])
     if not posts:
         raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
@@ -188,13 +212,14 @@ def block(cl: dict, iid: str, blocker: str, authority: str, next_action: str) ->
     return f"{iid} -> blocked (bubbled to parent)"
 
 
-def reopen(cl: dict, iid: str, reason: str) -> str:
+def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
     t = task(cl, iid)
     if cl["type"] != GATED:
         raise EngineError("reopen applies to gated checklists")
     if t["status"] != "complete":
         raise EngineError(f"can only reopen a complete gate; {iid} is {t['status']!r}")
-    cap = rework_cap(cl)
+    if cap is None:
+        cap = rework_cap(cl.get("config", {}))
     if t.get("rework_count", 0) + 1 > cap:
         detail = {
             "blocker": f"rework cap {cap} exceeded: {reason}",
@@ -277,9 +302,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     sub = p.add_subparsers(dest="verb", required=True)
 
     sub.add_parser("current")
-    for name in ("start", "advance"):
-        s = sub.add_parser(name)
-        s.add_argument("id")
+    s = sub.add_parser("start")
+    s.add_argument("id")
+    s = sub.add_parser("advance")
+    s.add_argument("id")
+    s.add_argument("--from-child", dest="from_child", help="child checklist file; attach its consolidation as review-result first")
     s = sub.add_parser("record")
     s.add_argument("id")
     s.add_argument("--result", required=True, choices=["pass", "fail"])
@@ -318,14 +345,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
-def dispatch(cl: dict, args: argparse.Namespace) -> str:
+def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -> str:
     v = args.verb
     if v == "current":
         return current(cl)
     if v == "start":
         return start(cl, args.id)
     if v == "advance":
-        return advance(cl, args.id)
+        return advance(cl, args.id, from_child=getattr(args, "from_child", None), base_dir=base_dir)
     if v == "record":
         return record(cl, args.id, args.result, args.finding)
     if v == "consolidate":
@@ -335,7 +362,7 @@ def dispatch(cl: dict, args: argparse.Namespace) -> str:
     if v == "block":
         return block(cl, args.id, args.blocker, args.authority, args.next_action)
     if v == "reopen":
-        return reopen(cl, args.id, args.reason)
+        return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)))
     if v == "append":
         return append(cl, args.id, args.title, args.imperative)
     if v == "attest":
@@ -352,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
     path = Path(args.file)
     cl = load(path)
     try:
-        message = dispatch(cl, args)
+        message = dispatch(cl, args, base_dir=path.parent)
     except EngineError as exc:
         # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
         if not args.dry_run and args.verb != "current":
