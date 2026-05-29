@@ -7,7 +7,7 @@ description: Execute a frozen gate plan gate by gate. Use when handed an execute
 
 Execute a frozen gate plan, one gate at a time, to closure with integrated evidence.
 
-Drive `execute.json` as a `gated` checklist through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`). For each gate:
+Drive `execute.json` as a `gated` checklist through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`). For each gate:
 
 - hand a `CREW_HANDOFF` to a subagent that invokes `constellation-implementer`; integrate its evidence.
 - hand the diff and the gate's review criteria to a subagent that invokes `constellation-reviewer`; integrate its verdict.

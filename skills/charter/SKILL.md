@@ -7,7 +7,7 @@ description: Interrogate engineering doctrine and compile Orchestrator, Crew, Gl
 
 Turn a loose project idea into role-operable context: how the project wants problems approached, what rules the crew must follow, and the terms everyone shares.
 
-Drive `templates/CHARTER.template.json` as a `gated` checklist through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): capture intent, explore existing code, interrogate doctrine, set the rigor level and prune confirmation gates to it, write each durable document as its own gate confirmed by the user, seed project templates, compile.
+Drive `templates/CHARTER.template.json` as a `gated` checklist through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): capture intent, explore existing code, interrogate doctrine, set the rigor level and prune confirmation gates to it, write each durable document as its own gate confirmed by the user, seed project templates, compile.
 
 Durable outputs:
 

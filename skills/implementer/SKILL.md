@@ -9,7 +9,7 @@ Own one scoped change. Build your own plan and work it.
 
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 
-Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive it through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): one item per implementation step, each with a real test or evidence postcondition. Make the minimal change. TDD when the test mode requires it: red, green, refactor.
+Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive it through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): one item per implementation step, each with a real test or evidence postcondition. Make the minimal change. TDD when the test mode requires it: red, green, refactor.
 
 Return evidence in `IMPLEMENTER_RESULT`. Raise a blocker when scope or authority is exceeded; flag out-of-scope finds as triage candidates.
 
