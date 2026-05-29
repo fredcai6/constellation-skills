@@ -17,4 +17,6 @@ The gate is the central unit: the smallest chunk, implemented, reviewed, proven 
 
 Keep the gate list as given. Raise a blocker if a gate is unachievable. Flag out-of-scope finds as triage candidates. When a gate needs current structural truth, request it from a subagent that invokes `constellation-cartographer`.
 
+Be generous with crew timing: wait for the implementer and reviewer to return. Do not abandon, duplicate, or re-dispatch a gate that is still in progress.
+
 Templates: `templates/EXECUTE_PLAN.template.json`, `templates/CREW_HANDOFF.template.md`. Reference: workbench `references/checklist-engine.md`.

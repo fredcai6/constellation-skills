@@ -34,7 +34,7 @@
     "interrogate": {
       "id": "interrogate",
       "title": "Interrogate doctrine",
-      "imperative": "Synthesize what is known into a handoff (the goal: how the project wants problems approached, special crew rules, posture, standards, terms). Hand it with the charter starting questions to a subagent that invokes constellation-interrogator; integrate the resolved understanding from interrogation.json.",
+      "imperative": "Synthesize the goal: how the project wants problems approached, special crew rules, posture, standards, terms. In your own context, load constellation-interrogator and drive interrogation.json with that goal and the charter starting questions; integrate the resolved understanding.",
       "preconditions": [{"id": "p1", "statement": "intent captured", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "doctrine resolved to role-operable decisions", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "interrogation.json",

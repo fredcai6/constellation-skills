@@ -11,6 +11,6 @@ Start from the given criteria in `templates/REVIEW_SURVEY.template.json` and app
 
 The verdict is APPROVE or BLOCK with findings; an open fail cannot consolidate to APPROVE. Keep blockers separate from observations. Flag out-of-scope finds as triage candidates.
 
-Return the verdict in `REVIEW_RESULT`.
+Report a proof-of-life as soon as you start and report each check as you record it. Return the verdict in `REVIEW_RESULT`.
 
 Templates: `templates/REVIEW_SURVEY.template.json`, `templates/REVIEW_RESULT.template.md`. Reference: workbench `references/checklist-engine.md`.

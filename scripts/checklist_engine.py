@@ -342,11 +342,27 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s = sub.add_parser("attach")
     s.add_argument("id")
     s.add_argument("--type", required=True)
-    s.add_argument("--payload", required=True, help="JSON object")
+    s.add_argument("--payload", help="JSON object (or use the quote-safe --field / --payload-file)")
+    s.add_argument("--payload-file", dest="payload_file", help="path to a JSON file holding the payload")
+    s.add_argument("--field", action="append", default=[], metavar="K=V", help="repeatable key=value; avoids passing JSON through the shell")
     s = sub.add_parser("flag-candidate")
     s.add_argument("--from", dest="frm", required=True)
     s.add_argument("--statement", required=True)
     return p.parse_args(argv)
+
+
+def build_payload(args: argparse.Namespace) -> dict:
+    """Assemble an attach payload without forcing JSON through the shell.
+    Priority: --payload-file, then --payload (JSON), then --field K=V pairs."""
+    if getattr(args, "payload_file", None):
+        return json.loads(Path(args.payload_file).read_text(encoding="utf-8"))
+    payload = json.loads(args.payload) if getattr(args, "payload", None) else {}
+    for pair in getattr(args, "field", None) or []:
+        key, _, value = pair.partition("=")
+        payload[key] = value
+    if not payload:
+        raise EngineError("attach needs one of --payload-file, --payload, or --field K=V")
+    return payload
 
 
 def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -> str:
@@ -372,7 +388,7 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
     if v == "attest":
         return attest(cl, args.id, args.cond, args.which, args.note)
     if v == "attach":
-        return attach(cl, args.id, args.type, json.loads(args.payload))
+        return attach(cl, args.id, args.type, build_payload(args))
     if v == "flag-candidate":
         return flag_candidate(cl, args.frm, args.statement)
     raise EngineError(f"unknown verb {v!r}")

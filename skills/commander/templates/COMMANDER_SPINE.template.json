@@ -25,7 +25,7 @@
     "understand": {
       "id": "understand",
       "title": "Understand the ask",
-      "imperative": "Hand the request and context, plus the commander starting questions, to a subagent that invokes constellation-interrogator; save its consolidated problem statement to interrogation.json. Confirm it with the human.",
+      "imperative": "In your own context (the interrogator must reach the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; save the consolidated problem statement. Confirm it with the human.",
       "preconditions": [{"id": "p1", "statement": "baseline context loaded", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "problem statement and protected intent confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "interrogation.json",
