@@ -9,6 +9,8 @@ Write issue-ready recommendations for follow-up work. Triage does not implement,
 
 Drive `templates/TRIAGE.template.json` as a `gated` checklist through the engine (workbench `references/checklist-engine.md`).
 
+Mandatory, not advisory: once loaded, drive the checklist to completion through the engine and dispatch each step it names; do not improvise.
+
 Use when Cartographer finds out-of-scope mismatch; Reviewer finds out-of-scope test/doc/contract gaps; Pilot finds future work during planning; implementation exposes deferred debt; user wants issue-ready text.
 
 ## Inputs

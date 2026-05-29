@@ -9,6 +9,8 @@ Run one bounded issue end to end. The Commander is the human's rigor scaffold, n
 
 One run = one bounded issue = one coherent plan = one clean trace. **Commanders get one shot:** if the plan proves wrong, re-interrogate with the human and start a fresh issue — there is no mid-run re-plan.
 
+When this skill is loaded you own the run: drive every spine step through the engine and dispatch each role. This is mandatory, not advisory — do not improvise or do another role's work yourself.
+
 ## How it works
 
 Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: init, context, understand, plan, execute, reconcile, triage, integrate, archive. The template holds the exact instructions. Each step that needs another role hands an instruction to a subagent that invokes that skill and integrates the compressed result it returns. Keep each step the smallest reasonable bite.

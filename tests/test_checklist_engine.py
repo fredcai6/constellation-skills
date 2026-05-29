@@ -311,6 +311,13 @@ class Hardening(unittest.TestCase):
               "config_ref": "nonexistent.json", "items": [], "tasks": {}}
         self.assertEqual(E.rework_cap(E.load_config(cl, Path("."))), 9)
 
+    def test_attach_via_field_pairs_avoids_shell_json(self):
+        import types
+        ns = types.SimpleNamespace(payload_file=None, payload=None, field=["verdict=APPROVE"])
+        cl = self._review_gate()
+        E.attach(cl, "g1", "review-result", E.build_payload(ns))
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+
 
 class ShippedTemplates(unittest.TestCase):
     def test_every_template_is_valid_json_and_checklists_walk(self):

@@ -4,6 +4,23 @@ The engine is the deterministic state machine an agent transacts with **one step
 
 Tool: `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <verb>`. Installed copies rewrite that command to an absolute path; run that absolute path and do not resolve `scripts/` from the target repo unless that repo vendors the script. In this source repo, the same script lives at `scripts/checklist_engine.py`. Schema: `docs/CHECKLIST_SCHEMA.md`. Model: `docs/CHECKLIST_ENGINE_DESIGN.md`.
 
+## This is mandatory, not advisory
+
+When you have loaded a role skill, you **must** drive its checklist through the engine to completion. The checklist *is* the workflow. Run every step in order, close each gate through the engine, and do not improvise, skip, or do the work outside the checklist. If a step needs another role, dispatch it (below) — do not just describe it.
+
+## Instantiate from the project template
+
+When creating a checklist, prefer the project-specific template at `.agent-work/templates/<name>` if it exists; otherwise use the bundled `skills/<role>/templates/<name>`. Charter seeds the project versions.
+
+## Dispatch: subagent vs your own context
+
+A delegated checklist runs in one of two ways:
+
+- **Bounded, autonomous work** (implementer, reviewer, cartographer, scout): dispatch a **subagent**. Hand it the context it needs and its checklist; it works and returns evidence or a consolidated result.
+- **Work that talks to the human** (interrogator, and any `user-decision` checkpoint): run it in **your own context** by loading that skill and driving its checklist. A subagent cannot reach the human, so it cannot interrogate. The role split still holds — it is a separate checklist — it just runs in the human-reachable context.
+
+If your environment has no nested subagents, keep the orchestration (Commander, Pilot) in the one human-reachable context and dispatch only the leaf workers.
+
 ## One agent, one plan
 
 A checklist is one plan one agent works through — not the whole hierarchy in one file. Delegation is **by reference**: a gate sets `child_checklist: <work-id>` pointing at a separate plan; the sub-agent drives its own checklist. Every agent (Commander, Pilot, implementer, reviewer) has its own.
@@ -24,7 +41,7 @@ record <id> --result pass|fail   # survey: record the check; never blocks
 consolidate [--verdict ...]      # survey: every item visited -> hand up a result
 ```
 
-Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type --payload` (record evidence, e.g. a child survey's verdict), `flag-candidate --from <id> --statement` (out-of-scope discovery).
+Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type <t> --field K=V` (record evidence; use `--field` or `--payload-file` to avoid passing JSON through the shell — e.g. `attach g1 --type review-result --field verdict=APPROVE`), `flag-candidate --from <id> --statement` (out-of-scope discovery).
 
 ## Obey refusals
 
