@@ -40,4 +40,27 @@ The engine answers illegal moves with an imperative, e.g. `REFUSED: g1: postcond
 ## Bubble-up channels
 
 `triage_candidates` (out-of-scope work to capture; Triage drains them at clean-up) and `blockers` (stuck items needing authority). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them.
-</content>
+
+## Context-read step
+
+Every checklist opens with a context-read item so the agent pulls the right baseline (gated: read, then `attest`; survey: read, then `record pass`):
+
+- **High tier** (Commander, Pilot, Cartographer, Scout): `docs/agents/ORCHESTRATOR_CONTEXT.md` + `GLOSSARY.md` + relevant Cartographer packets.
+- **Crew tier** (implementer, reviewer): `docs/agents/CREW_CONTEXT.md` + `GLOSSARY.md` + the handoff + packet.
+
+Engine config (rework cap, rigor checkpoints, rules root) comes from `docs/agents/engine-config.json` via each checklist's `config_ref`.
+
+Division of labor: the **skill** says how to approach the job, the **checklist** says exactly what to do, the **Charter context files** say the project specifics.
+
+## Template set
+
+Copy into `.agent-work/<work-id>/`, fill placeholders, then drive with the engine:
+
+| template | type | role |
+|---|---|---|
+| `skills/commander/templates/COMMANDER_SPINE.template.json` | gated | Commander spine (understand/plan/execute/cleanup) |
+| `skills/pilot/templates/EXECUTE_PLAN.template.json` | gated | the frozen gate plan the Pilot drives |
+| `skills/interrogator/templates/INTERROGATION.template.json` | survey | the Interrogator's question survey |
+| `skills/crew/templates/REVIEW_SURVEY.template.json` | survey | the reviewer's verification survey |
+| `skills/crew/templates/IMPLEMENTER_PLAN.template.json` | gated | the implementer's own working plan |
+| `skills/charter/templates/ENGINE_CONFIG.template.json` | — | Charter writes it to `docs/agents/engine-config.json` |

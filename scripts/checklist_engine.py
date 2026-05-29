@@ -38,15 +38,19 @@ def save(path: Path, data: dict) -> None:
 
 def load_config(cl: dict, base: Path | None) -> dict:
     """Resolve config: inline `config` wins; else follow `config_ref` to a file
-    (relative to the checklist's directory); else empty (defaults apply)."""
+    (tried relative to the working dir, then to the checklist's dir); else empty."""
     if isinstance(cl.get("config"), dict):
         return cl["config"]
     ref = cl.get("config_ref")
-    if ref and base is not None:
-        path = Path(ref) if Path(ref).is_absolute() else base / ref
-        if path.exists():
-            data = json.loads(path.read_text(encoding="utf-8"))
-            return data.get("config", data)
+    if ref:
+        if Path(ref).is_absolute():
+            candidates = [Path(ref)]
+        else:
+            candidates = [Path.cwd() / ref] + ([base / ref] if base is not None else [])
+        for path in candidates:
+            if path.exists():
+                data = json.loads(path.read_text(encoding="utf-8"))
+                return data.get("config", data)
     return {}
 
 

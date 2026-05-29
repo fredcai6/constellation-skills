@@ -33,4 +33,4 @@ Workbench owns artifact hygiene; Pilot owns intent, scope, gates, evidence, Crew
 
 Issue/repo mechanics follow project Orchestrator context; ask if silent. Do not eagerly create issues. Create/link an issue only when the current gate cannot proceed without it and authority exists.
 
-Templates: `templates/PILOT_CHECKLIST.template.md`, `templates/CREW_HANDOFF.template.md`. Reference: `references/role-scope.md`.
+Templates: `templates/EXECUTE_PLAN.template.json` (the gated gate plan, canonical), `templates/CREW_HANDOFF.template.md`. The legacy `templates/PILOT_CHECKLIST.template.md` is superseded by the engine plan. References: `references/role-scope.md`, workbench `references/checklist-engine.md`.

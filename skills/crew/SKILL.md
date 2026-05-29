@@ -19,4 +19,4 @@ On the engine: the reviewer runs a `survey` checklist — visit every check, `ap
 
 Use `DEFAULT_CHECKLIST.md` only for multi-step Crew recovery; one-shot work uses handoff + result.
 
-Templates: `templates/IMPLEMENTER_RESULT.template.md`, `templates/REVIEW_RESULT.template.md`. Reference: `references/role-scope.md`.
+Templates: `templates/IMPLEMENTER_PLAN.template.json` (gated, implementer's own plan), `templates/REVIEW_SURVEY.template.json` (survey, reviewer's checks), `templates/IMPLEMENTER_RESULT.template.md`, `templates/REVIEW_RESULT.template.md`. References: `references/role-scope.md`, workbench `references/checklist-engine.md`.

@@ -56,3 +56,5 @@ When a term is resolved, update `GLOSSARY.md` right there. Don't batch these up 
 `GLOSSARY.md` should be totally devoid of implementation details. Do not treat `GLOSSARY.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
 Keep going until user says enough or design is resolved.
+
+Template: `templates/INTERROGATION.template.json` (survey); seed it from `templates/CHARTER_STARTING_QUESTIONS.template.md` or `templates/PILOT_STARTING_QUESTIONS.template.md`. Engine: workbench `references/checklist-engine.md`.

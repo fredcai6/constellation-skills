@@ -29,4 +29,5 @@ Pause for a `user-decision` at the checkpoints the project enables at Charter ti
 ## Architecture bookend
 
 Architecture is read at the **start** (frame the ask against recorded structure) and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
-</content>
+
+Template: `templates/COMMANDER_SPINE.template.json` (gated). Engine: workbench `references/checklist-engine.md`.

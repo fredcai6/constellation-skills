@@ -1,0 +1,62 @@
+{
+  "work_id": "<work-id>",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["s0-context", "s1-understand", "s2-plan", "s3-execute", "s4-cleanup"],
+  "tasks": {
+    "s0-context": {
+      "id": "s0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the engine config. Note the enabled rigor checkpoints, authority rules, and rework cap for this run, then attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "orchestrator context + glossary + engine config loaded", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "s1-understand": {
+      "id": "s1-understand",
+      "title": "Understand the ask",
+      "imperative": "Dispatch the Interrogator (a survey) to resolve the request; consolidate to a problem statement. If understand.done is an enabled checkpoint, the human confirms it (user-decision).",
+      "preconditions": [{"id": "p1", "statement": "baseline context loaded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "problem statement + protected intent confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": "<work-id>-interrogation",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "s2-plan": {
+      "id": "s2-plan",
+      "title": "Plan the change",
+      "imperative": "Read the recorded architecture (Cartographer packets) to frame the bounded problem, then author the gate plan into <work-id>-execute (the frozen method handed to the Pilot). Get the human to approve the plan.",
+      "preconditions": [{"id": "p1", "statement": "ask is understood and confirmed", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "execute gate plan authored (one bounded issue; no 40-gate sprawl)", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "plan approved", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "s3-execute": {
+      "id": "s3-execute",
+      "title": "Execute the plan",
+      "imperative": "Hand the frozen plan to the Pilot, which drives the Crew gate by gate. Do not touch code. A structural surprise bubbles up as a signal; if the plan is proven wrong, end the run and re-issue (one shot).",
+      "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "every execute gate closed with integrated evidence", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": "<work-id>-execute",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "s4-cleanup": {
+      "id": "s4-cleanup",
+      "title": "Clean up",
+      "imperative": "Reconcile implemented changes into the Cartographer map (architecture write-back), drain triage_candidates to Triage, archive the package. If run.accept is enabled, the human accepts the run.",
+      "preconditions": [{"id": "p1", "statement": "execute complete", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "map reconciled; triage candidates routed; package archived", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "run accepted", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
