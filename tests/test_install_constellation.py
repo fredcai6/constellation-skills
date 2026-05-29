@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install_constellation.py"
 SKILL_NAMES = [
     "constellation-charter",
+    "constellation-commander",
     "constellation-workbench",
     "constellation-interrogator",
     "constellation-cartographer",

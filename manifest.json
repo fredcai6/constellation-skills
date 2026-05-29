@@ -4,6 +4,7 @@
   "description": "Markdown skill set for agent-orchestrated repo development with explicit human decision ownership.",
   "skills": [
     "constellation-charter",
+    "constellation-commander",
     "constellation-workbench",
     "constellation-interrogator",
     "constellation-cartographer",
