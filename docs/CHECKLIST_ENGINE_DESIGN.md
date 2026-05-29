@@ -254,8 +254,7 @@ accept <node>                   owner accepts the returned packet; closes the no
 ## Open questions / not yet decided
 
 - **Naming.** "Interrogate a checklist" collides with the existing `constellation-interrogator` role (which questions the *user*). The querying verbs need distinct names. "Workbench" is kept. Cleanup deferred.
-- Exact JSON schema for a node and the envelope.
-- Whether `accept` and `advance` collapse into one move or stay distinct.
+- Concrete node + envelope JSON: drafted in `CHECKLIST_SCHEMA.md`.
+- `accept` vs `advance`: resolved — `accept` folds into `advance`; the proposal/accept duality lives at the handoff between two plans.
 - Representation of the frozen plan + architecture **snapshot** handed Commander → Pilot (decided: it is a snapshot; open: how it is stored/referenced).
 - Migration order: which role's checklist conforms to the schema first (lean: conform first, restructure roles later).
-</content>
