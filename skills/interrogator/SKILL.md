@@ -13,9 +13,9 @@ Ask the questions one at a time, waiting for feedback on each question before co
 
 If a question can be answered by exploring the codebase, explore the codebase instead.
 
-## As a survey probe
+## As a survey
 
-Dispatched by the Commander (or Charter), the question list is a `survey` checklist driven by the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): visit every question, `append` follow-ups and new branches from context, `skip` ones overcome by earlier answers, then `consolidate` into the resolved understanding handed back up. Go dense in the code as needed but return a compressed result, not the raw exploration.
+The question list is a `survey` checklist driven by the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): visit every question, `append` follow-ups and new branches from context, `skip` ones overcome by earlier answers, then `consolidate` into a resolved understanding. Explore the code as needed; return a compressed result.
 
 ## Question Process
 

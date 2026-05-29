@@ -15,7 +15,7 @@ If no Crew handoff is needed, Pilot is not needed: no `.agent-work/`, no impleme
 
 Use `PILOT_CHECKLIST.md` as single controller. Framing gates (0-4), Implementation gates (5-6) populated and executed in the Implementation Gates section, Closing gates (7-9).
 
-The Pilot is handed a **frozen** gate plan by the Commander and drives it as a `gated` checklist through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`); each gate delegates to Crew by reference. The Pilot networks to Crew, not the human. It does not re-author the gate list — a structural surprise or unachievable gate bubbles up to the Commander as a signal, never an in-run re-plan.
+Drive the frozen gate plan as a `gated` checklist through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`). For each gate: hand an instruction to a subagent that invokes `constellation-implementer`, then one that invokes `constellation-reviewer`; integrate their evidence and close the gate. Keep the gate list as given; raise a blocker if a gate is unachievable.
 
 Outcomes: `continue | ask user | split work | stop using Constellation | request Cartographer baseline | define implementation gates | dispatch Crew | collect Triage candidate | close out`.
 

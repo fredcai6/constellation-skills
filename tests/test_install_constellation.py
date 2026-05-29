@@ -17,7 +17,8 @@ SKILL_NAMES = [
     "constellation-cartographer",
     "constellation-scout",
     "constellation-pilot",
-    "constellation-crew",
+    "constellation-implementer",
+    "constellation-reviewer",
     "constellation-triage",
 ]
 
@@ -66,7 +67,7 @@ class InstallConstellationTests(unittest.TestCase):
                     "user",
                     "--skills",
                     "charter",
-                    "constellation-crew",
+                    "constellation-implementer",
                 ],
                 env={"CODEX_HOME": str(codex_home)},
                 out=lambda _: None,
@@ -75,7 +76,7 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(0, exit_code)
             target_root = codex_home / "skills"
             self.assertEqual(
-                ["constellation-charter", "constellation-crew"],
+                ["constellation-charter", "constellation-implementer"],
                 sorted(path.name for path in target_root.iterdir()),
             )
 

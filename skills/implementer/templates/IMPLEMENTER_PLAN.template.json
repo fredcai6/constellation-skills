@@ -1,5 +1,5 @@
 {
-  "work_id": "<work-id>-<gate>-impl",
+  "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
   "items": ["m0-context", "m1"],

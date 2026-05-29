@@ -7,8 +7,9 @@ Workbench    -> manages recoverable workflow state and drives the checklist engi
 Interrogator -> questions request/design ambiguity as a survey probe
 Cartographer -> maintains current-only structural map
 Scout        -> audits map-first architecture pressure
-Pilot        -> executes the frozen gate plan and delegates to Crew
-Crew         -> implements and reviews bounded changes
+Pilot        -> executes the frozen gate plan
+Implementer  -> implements a bounded change from a handoff
+Reviewer     -> independently verifies a bounded change
 Triage       -> packages future work as issue-ready recommendations
 ```
 

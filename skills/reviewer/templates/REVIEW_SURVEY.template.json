@@ -1,5 +1,5 @@
 {
-  "work_id": "<work-id>-<gate>-review",
+  "work_id": "<work-id>",
   "type": "survey",
   "config_ref": "docs/agents/engine-config.json",
   "items": ["r0-context", "r1-handoff", "r2-scope", "r3-evidence", "r4-quality", "r5-reconciliation"],

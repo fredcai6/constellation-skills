@@ -1,5 +1,5 @@
 {
-  "work_id": "<work-id>-interrogation",
+  "work_id": "<work-id>",
   "type": "survey",
   "config_ref": "docs/agents/engine-config.json",
   "items": ["i0-context", "q1"],

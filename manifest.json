@@ -10,7 +10,8 @@
     "constellation-cartographer",
     "constellation-scout",
     "constellation-pilot",
-    "constellation-crew",
+    "constellation-implementer",
+    "constellation-reviewer",
     "constellation-triage"
   ],
   "artifact_roots": {

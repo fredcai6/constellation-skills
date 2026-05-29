@@ -9,22 +9,17 @@ Run one bounded issue end to end. The Commander is the human's rigor scaffold, n
 
 One run = one bounded issue = one coherent plan = one clean trace. **Commanders get one shot:** if the plan proves wrong, re-interrogate with the human and start a fresh issue — there is no mid-run re-plan.
 
-## Spine
+## How it works
 
-Drive a `gated` spine through the engine (`scripts/checklist_engine.py`; see workbench `references/checklist-engine.md`):
+Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: init, context, understand, plan, execute, reconcile, triage, integrate, archive. The template holds the exact instructions. Each step that needs another role hands an instruction to a subagent that invokes that skill and integrates the compressed result it returns. Keep each step the smallest reasonable bite.
 
-1. **Understand** — dispatch the Interrogator (a `survey`) to resolve the ask; consolidate to a problem statement. Human confirms.
-2. **Plan** — author the execute gate plan (a frozen `gated` method), reading the recorded architecture to frame it. Human approves.
-3. **Execute** — hand the frozen plan to the Pilot, which drives the Crew. Commander does not touch code.
-4. **Clean up** — reconcile implemented changes into the map, drain `triage_candidates` to Triage, archive.
+## Repo (default; Charter overrides)
 
-## Network
-
-Commander talks to **Interrogator, Cartographer, Pilot** — not Crew. Each is dispatched as a sub-agent that goes dense and returns a compressed result; the Commander never combs code itself. Pilot and Cartographer are peers below the Commander; the split from Pilot is by conversation, not altitude.
+Work on a branch off main; commit frequently as gates close; ready the branch to merge back during clean-up. The work area under `.agent-work/<work-id>/` is preserved through the run, then archived. Project specifics come from `ORCHESTRATOR_CONTEXT`.
 
 ## Human checkpoints (rigor dial)
 
-Pause for a `user-decision` at the checkpoints the project enables at Charter time — typically plan-approved, architecture-change intent, and final accept. Pausing for human verification is first-class, not an exception path. The human verifies Commander steps, not Crew steps.
+Pause for a `user-decision` at the checkpoints the project enables at Charter time — typically plan-approved, architecture-change intent, and final accept. Human verification is a first-class step.
 
 ## Architecture bookend
 
