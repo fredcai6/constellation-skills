@@ -54,21 +54,18 @@ Commander spine (strict-sequential)
 
 The `kind` changes as you descend (ordered spine and gates; unordered/scattershot questions). A node's child checklist may be a different kind than its parent; the engine does not care.
 
-**Self-similarity is a capability, not a mandate.** The tree *can* nest arbitrarily, but real trees are shallow: a fixed spine (understand → plan → execute → clean up), a single authored layer (the gate plan, produced by planning `execute`), and gates that are usually **primitive** — the crew is handed "implement this thing" and just does it. Decomposition is used only where it is *real* (a genuine "verify these items" checklist becomes a compound gate); it is never forced for uniformity. A primitive task is the normal terminus, and **how the crew solves a primitive task — its own internal method — is not tracked by the engine.** We track the gate's postconditions, not the crew's keystrokes.
+**Self-similarity is a capability, not a mandate.** The tree *can* nest arbitrarily, but real trees are shallow: a fixed spine (understand → plan → execute → clean up), a single authored layer (the gate plan, produced by planning `execute`), and gates that are usually **primitive** — the crew is handed "implement this thing" and just does it. Decomposition is used only where it is *real* (a genuine "verify these items" checklist becomes a delegated child); it is never forced for uniformity. A primitive task is the terminus *of the parent's plan*: how the crew solves it is the crew's own business — the implementer may keep its **own** `gated` plan (the same skill) to stay organized, but that plan is self-authored, never handed further down, and invisible to the parent, which sees only the returned evidence.
 
-## Typed checklists
+## Two checklist types
 
-One engine, but each checklist declares a `kind` that fixes its policies. Sharing the *structure* is fine; conflating the *semantics* is the trap.
+Every checklist is an ordered list of items and declares one of two types:
 
-| kind | ordering | executor may append? | "next" is |
-|---|---|---|---|
-| `strict-sequential` | hard — cannot advance past an open gate | no | the next pending gate |
-| `priority-queue` | soft — reorder freely | yes | highest-value open node |
-| `unordered-set` | none — all must close | no | any open node |
+| type | item failure | append | completes when | used by |
+|---|---|---|---|---|
+| `gated` | **blocks** (rework) | no | every item satisfied or skipped | execution: Commander spine, Pilot gate plan, the implementer's own plan |
+| `survey` | **recorded, never blocks** | yes | every item visited, then **consolidated** | inquiry/verification: Interrogator questions, reviewer checks |
 
-- Implementation-gate plans and the top-level phase spine are `strict-sequential`.
-- The interrogator's question queue is `priority-queue` (questions spawn follow-ups and branches).
-- A quality/rule checklist where every item must simply be satisfied is `unordered-set`.
+A `survey` is handed a *starting* list and told "verify these, and add more based on the context we gave you" — which is why append is inherent to it. The Interrogator and the reviewer are the **same shape**: hit every item, nothing gates anything, consolidate at the end (a resolved understanding; an APPROVE/BLOCK verdict).
 
 ## Permissions: structure vs state
 

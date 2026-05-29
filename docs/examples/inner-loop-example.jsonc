@@ -1,198 +1,96 @@
-// Proving-ground instance for CHECKLIST_SCHEMA.md.
-// One bounded issue, captured mid-run: understand + plan accepted, execute
-// in-progress (g1 accepted, g2 active), cleanup not yet expanded.
-// `current` resolves to t0.execute.g2. JSONC (comments) for readability only;
-// real state would be plain JSON.
+// Proving-ground for CHECKLIST_SCHEMA.md — TWO linked checklists (separate
+// artifacts), not one nested tree. Mid-run: gate g1 delegated its review to a
+// survey, the survey BLOCKed, so g1 is back in rework and g2 is still pending.
+// `current` on the execute plan resolves to g1. JSONC comments for readability;
+// real state is plain JSON.
+
+// ─────────────────────────────────────────────────────────────────────────
+// Artifact 1: the Pilot's execution plan (gated)
+// ─────────────────────────────────────────────────────────────────────────
 {
-  "work_id": "issue-204-clamp-setpoint",
-  "root": "t0",
+  "work_id": "issue-204-execute",
+  "type": "gated",
   "config_ref": "charter",
-
-  "config": {
-    "rework_cap": 3,
-    "replan": "abort-and-reissue",
-    "human_checkpoints": ["understand.done", "plan.approved", "run.accept"],
-    "rules_root": ["follow CREW_CONTEXT", "no new external deps without user decision"]
-  },
-
-  // Out-of-scope discoveries bubbled up during the run; Triage drains this in cleanup.
-  "triage_candidates": [
-    { "id": "tc1", "from": "t0.execute.g1",
-      "statement": "Setpoint path has no structured logging; out of scope here.", "ts": "..." }
-  ],
-
+  "items": ["g1", "g2"],
   "tasks": {
-    "t0": {
-      "id": "t0", "type": "compound", "title": "Resolve issue-204: clamp setpoint to safe range",
-      "imperative": "Drive the four phases to closure for issue-204.",
-      "tier": "commander",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": null, "struct": "struct:ctrl-core" },
-      "preconditions": [],
-      "postconditions": [
-        { "id": "c0", "statement": "User accepts the completed run",
-          "check": { "kind": "artifact", "evidence_type": "user-decision" }, "satisfied": false }
-      ],
-      "constraints": ["must work with MATLAB Coder", "fail-safe on out-of-range input"],
-      "directives": null,
-      "method": { "ordered": true, "subtasks": ["t0.understand", "t0.plan", "t0.execute", "t0.cleanup"] },
-      "status": "in-progress", "status_detail": {},
-      "evidence": [], "accepted": false, "rework_count": 0,
-      "owner": "human", "executor": "commander"
-    },
-
-    "t0.understand": {
-      "id": "t0.understand", "type": "compound", "title": "Understand the ask",
-      "imperative": "Interrogate the request until the problem is clarified; confirm with the user.",
-      "tier": "probe",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0", "struct": null },
-      "preconditions": [],
-      "postconditions": [
-        { "id": "c1", "statement": "Problem statement + intent confirmed by user",
-          "check": { "kind": "artifact", "evidence_type": "user-decision" },
-          "satisfied": true, "satisfied_by": "e-ud1" }
-      ],
-      "constraints": [],
-      "directives": null,
-      "method": { "ordered": false, "subtasks": ["t0.understand.q1", "t0.understand.q2"] },  // scattershot
-      "status": "complete", "status_detail": {},
-      "evidence": [ { "id": "e-ud1", "type": "user-decision",
-        "payload": { "decision": "Clamp to [min,max] from config; saturate, don't error." },
-        "produced_by": "human", "ts": "..." } ],
-      "accepted": true, "rework_count": 0,
-      "owner": "commander", "executor": "probe:interrogator"
-    },
-    "t0.understand.q1": {
-      "id": "t0.understand.q1", "type": "primitive", "title": "What is the safe range source?",
-      "imperative": "Resolve where min/max come from.", "tier": "probe",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0.understand", "struct": null },
-      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "method": null,
-      "status": "complete", "status_detail": { "answer": "From controller config block." },
-      "evidence": [], "accepted": true, "rework_count": 0,
-      "owner": "probe:interrogator", "executor": "probe:interrogator"
-    },
-    "t0.understand.q2": {
-      "id": "t0.understand.q2", "type": "primitive", "title": "Error vs saturate on out-of-range?",
-      "imperative": "Resolve out-of-range behavior.", "tier": "probe",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0.understand", "struct": null },
-      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "method": null,
-      "status": "complete", "status_detail": { "answer": "Saturate (fail-safe)." },
-      "evidence": [], "accepted": true, "rework_count": 0,
-      "owner": "probe:interrogator", "executor": "probe:interrogator"
-    },
-
-    "t0.plan": {
-      "id": "t0.plan", "type": "compound", "title": "Plan the change",
-      "imperative": "Author the execute gate plan; get the human to approve it.",
-      "tier": "commander",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0", "struct": "struct:ctrl-core" },
-      "preconditions": [
-        { "id": "p1", "statement": "Problem statement confirmed (understand done)",
-          "check": null, "satisfied": true, "satisfied_by": "asserted: understand accepted" }
-      ],
-      "postconditions": [
-        { "id": "c1", "statement": "t0.execute.method authored", "check": null, "satisfied": true,
-          "satisfied_by": "authored 2 gates" },
-        { "id": "c2", "statement": "Plan approved by user",
-          "check": { "kind": "artifact", "evidence_type": "user-decision" },
-          "satisfied": true, "satisfied_by": "e-ud2" }
-      ],
-      "constraints": [],
-      "directives": null,
-      "method": null,  // planning is an act, not a decomposition here
-      "status": "complete", "status_detail": {},
-      "evidence": [ { "id": "e-ud2", "type": "user-decision",
-        "payload": { "decision": "Approved: g1 helper, g2 wiring." }, "produced_by": "human", "ts": "..." } ],
-      "accepted": true, "rework_count": 0,
-      "owner": "commander", "executor": "commander"
-    },
-
-    "t0.execute": {
-      "id": "t0.execute", "type": "compound", "title": "Execute the plan",
-      "imperative": "Run each gate via crew implement-then-review.",
-      "tier": "pilot",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0", "struct": "struct:ctrl-core" },
-      "preconditions": [
-        { "id": "p1", "statement": "Plan approved", "check": null, "satisfied": true,
-          "satisfied_by": "asserted: t0.plan accepted" }
-      ],
-      "postconditions": [
-        { "id": "c1", "statement": "Setpoint is clamped to config range on all paths",
-          "check": null, "satisfied": false }
-      ],
-      "constraints": [],
-      // method is a FORCED decomposition authored by Commander (the plan), handed to Pilot frozen.
-      "method": { "ordered": true, "subtasks": ["t0.execute.g1", "t0.execute.g2"] },
-      "status": "in-progress", "status_detail": {},
-      "evidence": [], "accepted": false, "rework_count": 0,
-      "owner": "commander", "executor": "pilot"
-    },
-    "t0.execute.g1": {
-      "id": "t0.execute.g1", "type": "primitive", "title": "Add clamp() helper",
-      "imperative": "Implement clamp(value, min, max) that saturates; tests pass and a reviewer APPROVES.",
-      "tier": "crew",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0.execute", "struct": "struct:ctrl-core" },
+    "g1": {
+      "id": "g1",
+      "title": "Add clamp() helper",
+      "imperative": "Implement clamp(value,min,max) that saturates; tests pass and the review survey returns APPROVE.",
       "preconditions": [],
       "postconditions": [
         { "id": "c1", "statement": "Unit tests pass",
           "check": { "kind": "command", "command": "make test" }, "satisfied": true, "satisfied_by": "e-cmd1" },
         { "id": "c2", "statement": "Reviewer approves",
           "check": { "kind": "artifact", "evidence_type": "review-result", "match": { "verdict": "APPROVE" } },
-          "satisfied": true, "satisfied_by": "e-rev1" }
+          "satisfied": false }
       ],
-      "constraints": ["must work with MATLAB Coder", "fail-safe on out-of-range input"],
+      "constraints": ["must work with MATLAB Coder", "fail-safe on out-of-range input", "no allocation in hot path"],
       "directives": ["saturate, do not throw, on out-of-range"],
-      "method": null,
-      "status": "complete", "status_detail": {},
+      "child_checklist": "issue-204-g1-review",
+      "status": "in-progress",          // reopened after the review BLOCKed
+      "status_detail": { "reopen_reason": "review BLOCK: v3 dynamic alloc" },
+      "result": null, "finding": null,
       "evidence": [
         { "id": "e-cmd1", "type": "command-output", "payload": { "cmd": "make test", "exit": 0 }, "produced_by": "crew:implementer", "ts": "..." },
-        { "id": "e-rev1", "type": "review-result", "payload": { "verdict": "APPROVE", "notes": "ok" }, "produced_by": "crew:reviewer", "ts": "..." }
+        { "id": "e-rev1", "type": "review-result", "payload": { "verdict": "BLOCK", "findings": ["v3: dynamic alloc in hot path"] }, "produced_by": "crew:reviewer", "ts": "..." }
       ],
-      "accepted": true, "rework_count": 0,
-      "owner": "pilot", "executor": "crew:implementer"
+      "rework_count": 1
     },
-    "t0.execute.g2": {
-      "id": "t0.execute.g2", "type": "primitive", "title": "Wire clamp into setpoint path",
-      "imperative": "Call clamp() on the setpoint before use; tests pass and a reviewer APPROVES.",
-      "tier": "crew",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0.execute", "struct": "struct:ctrl-core" },
+    "g2": {
+      "id": "g2",
+      "title": "Wire clamp into setpoint path",
+      "imperative": "Call clamp() on the setpoint before use; tests pass and review returns APPROVE.",
       "preconditions": [
-        // qualitative, trust-but-verify: g2's first act re-reviews g1's output.
-        { "id": "p1", "statement": "clamp() helper from g1 exists and saturates out-of-range input",
-          "check": null, "satisfied": false }
+        // qualitative, trust-but-verify: g2's first act re-checks g1's output.
+        { "id": "p1", "statement": "clamp() helper exists and saturates out-of-range input", "check": null, "satisfied": false }
       ],
       "postconditions": [
         { "id": "c1", "statement": "Unit tests pass",
           "check": { "kind": "command", "command": "make test" }, "satisfied": false },
         { "id": "c2", "statement": "Reviewer approves",
-          "check": { "kind": "artifact", "evidence_type": "review-result", "match": { "verdict": "APPROVE" } },
-          "satisfied": false }
+          "check": { "kind": "artifact", "evidence_type": "review-result", "match": { "verdict": "APPROVE" } }, "satisfied": false }
       ],
-      "constraints": ["must work with MATLAB Coder", "fail-safe on out-of-range input"],
+      "constraints": ["must work with MATLAB Coder", "fail-safe on out-of-range input", "no allocation in hot path"],
       "directives": null,
-      "method": null,
-      "status": "in-progress", "status_detail": {},
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null, "finding": null,
       "evidence": [],
-      "accepted": false, "rework_count": 0,
-      "owner": "pilot", "executor": "crew:implementer"
-    },
-
-    "t0.cleanup": {
-      "id": "t0.cleanup", "type": "compound", "title": "Clean up",
-      "imperative": "Reconcile the map, drain signals to Triage, archive the package.",
-      "tier": "commander",
-      "anchor": { "work_id": "issue-204-clamp-setpoint", "parent": "t0", "struct": null },
-      "preconditions": [
-        { "id": "p1", "statement": "All execute gates closed", "check": null, "satisfied": false }
-      ],
-      "postconditions": [
-        { "id": "c1", "statement": "Map reconciled; signals routed; package archived", "check": null, "satisfied": false }
-      ],
-      "constraints": [],
-      "directives": null,
-      "method": null,  // LAZY: not expanded until reached (slice-at-a-time)
-      "status": "pending", "status_detail": {},
-      "evidence": [], "accepted": false, "rework_count": 0,
-      "owner": "commander", "executor": "commander"
+      "rework_count": 0
     }
-  }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    { "id": "tc1", "from": "g1", "statement": "Setpoint path has no structured logging; out of scope here.", "ts": "..." }
+  ],
+  "blockers": []
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Artifact 2: the reviewer's verification of g1 (survey)
+// Starting items v1,v2 were handed down; v3 was appended from the
+// "no allocation in hot path" constraint. v3 failed but did NOT block v1/v2;
+// all three consolidated into one verdict.
+// ─────────────────────────────────────────────────────────────────────────
+{
+  "work_id": "issue-204-g1-review",
+  "type": "survey",
+  "config_ref": "charter",
+  "items": ["v1", "v2", "v3"],
+  "tasks": {
+    "v1": { "id": "v1", "title": "Saturates at both bounds", "imperative": "Verify clamp saturates at min and max.",
+            "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+            "status": "complete", "status_detail": {}, "result": "pass", "finding": null, "evidence": [], "rework_count": 0 },
+    "v2": { "id": "v2", "title": "MATLAB Coder compatible", "imperative": "Verify codegen-compatible constructs only.",
+            "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+            "status": "complete", "status_detail": {}, "result": "pass", "finding": null, "evidence": [], "rework_count": 0 },
+    "v3": { "id": "v3", "title": "No allocation in hot path", "imperative": "Verify no dynamic allocation in clamp().",
+            "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+            "status": "complete", "status_detail": {}, "result": "fail", "finding": "uses a dynamic array in clamp()", "evidence": [], "rework_count": 0 }
+  },
+  "consolidation": { "verdict": "BLOCK", "findings": ["v3: dynamic array in hot path"] },
+  "triage_candidates": [],
+  "blockers": []
 }
