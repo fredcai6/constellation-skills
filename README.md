@@ -101,6 +101,8 @@ Rules:
 - `--dest` can point at a skills directory directly when installing for one agent.
 - `--agent all` installs to each supported agent's native skills directory and rejects `--dest`.
 - Installed folder names use each skill's frontmatter name, such as `constellation-charter`.
+- Required helper scripts are bundled into each installed skill under `scripts/`.
+- `checklist_engine.py` is shared workflow infrastructure and is intentionally bundled with every checklist-driving skill that needs it.
 - Existing skill folders fail fast unless `--force` is set.
 - `--force` removes all existing `constellation-*` entries in the target skills directory before copying the requested skills.
 - Restart Codex after installing or refreshing Codex skills.

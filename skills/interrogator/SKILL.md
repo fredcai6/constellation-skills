@@ -9,7 +9,7 @@ Interview the user relentlessly until the handed-in goal is resolved. You are gi
 
 Mandatory, not advisory: once loaded, drive the survey to completion through the engine and dispatch each step it names; do not improvise.
 
-Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and wait for the answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding. If a question can be answered from the code, explore the code instead of asking.
+Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and wait for the answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding. If a question can be answered from the code, explore the code instead of asking.
 
 ## While interrogating
 

@@ -1,6 +1,7 @@
 import copy
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,6 +20,8 @@ def load_engine():
 
 
 E = load_engine()
+PASS_COMMAND = f'"{sys.executable}" -c "import sys; sys.exit(0)"'
+FAIL_COMMAND = f'"{sys.executable}" -c "import sys; sys.exit(1)"'
 
 
 def gate(iid, status="pending", command=None, preconds=None):
@@ -57,11 +60,11 @@ def survey(**tasks):
 
 class CurrentAndOrdering(unittest.TestCase):
     def test_current_is_first_open_gate(self):
-        cl = gated(g1=gate("g1", "in-progress", command="true"), g2=gate("g2"))
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND), g2=gate("g2"))
         self.assertIn("ACTIVE g1", E.current(cl))
 
     def test_current_skips_terminal_items(self):
-        cl = gated(g1=gate("g1", "complete"), g2=gate("g2", "pending", command="true"))
+        cl = gated(g1=gate("g1", "complete"), g2=gate("g2", "pending", command=PASS_COMMAND))
         self.assertIn("ACTIVE g2", E.current(cl))
 
     def test_cannot_start_out_of_order(self):
@@ -86,13 +89,13 @@ class Preconditions(unittest.TestCase):
 
 class AdvanceGated(unittest.TestCase):
     def test_command_postcondition_pass_completes(self):
-        cl = gated(g1=gate("g1", "in-progress", command="true"))
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         E.advance(cl, "g1")
         self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
         self.assertTrue(any(e["type"] == "command-output" for e in cl["tasks"]["g1"]["evidence"]))
 
     def test_command_postcondition_fail_refuses_and_records(self):
-        cl = gated(g1=gate("g1", "in-progress", command="false"))
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
         with self.assertRaises(E.EngineError):
             E.advance(cl, "g1")
         self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
@@ -110,7 +113,7 @@ class AdvanceGated(unittest.TestCase):
         self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
 
     def test_record_refused_on_gated(self):
-        cl = gated(g1=gate("g1", "in-progress", command="true"))
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         with self.assertRaises(E.EngineError):
             E.record(cl, "g1", "pass", None)
 
@@ -126,7 +129,7 @@ class SurveyAndConsolidation(unittest.TestCase):
         cl = survey(v1=survey_item("v1", "complete"))
         E.append(cl, "v2", "extra", "check extra")
         self.assertEqual(cl["items"], ["v1", "v2"])
-        gcl = gated(g1=gate("g1", "in-progress", command="true"))
+        gcl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         with self.assertRaises(E.EngineError):
             E.append(gcl, "g2", "x", "y")
 
@@ -156,7 +159,7 @@ class SurveyAndConsolidation(unittest.TestCase):
 
 class ReworkCap(unittest.TestCase):
     def test_reopen_increments_then_escalates(self):
-        cl = gated(cap=1, g1=gate("g1", "complete", command="true"))
+        cl = gated(cap=1, g1=gate("g1", "complete", command=PASS_COMMAND))
         msg = E.reopen(cl, "g1", "redo")
         self.assertIn("reopened", msg)
         self.assertEqual(cl["tasks"]["g1"]["rework_count"], 1)
@@ -167,7 +170,7 @@ class ReworkCap(unittest.TestCase):
         self.assertTrue(cl["blockers"])
 
     def test_reopen_resets_postconditions(self):
-        cl = gated(cap=3, g1=gate("g1", "complete", command="true"))
+        cl = gated(cap=3, g1=gate("g1", "complete", command=PASS_COMMAND))
         cl["tasks"]["g1"]["postconditions"][0]["satisfied"] = True
         E.reopen(cl, "g1", "redo")
         self.assertFalse(cl["tasks"]["g1"]["postconditions"][0]["satisfied"])
@@ -175,12 +178,12 @@ class ReworkCap(unittest.TestCase):
 
 class BubbleUp(unittest.TestCase):
     def test_block_appends_blocker(self):
-        cl = gated(g1=gate("g1", "in-progress", command="true"))
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         E.block(cl, "g1", "stuck", "user", "ask")
         self.assertEqual(cl["blockers"][0]["item"], "g1")
 
     def test_flag_candidate(self):
-        cl = gated(g1=gate("g1", "in-progress", command="true"))
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         E.flag_candidate(cl, "g1", "found unrelated thing")
         self.assertEqual(cl["triage_candidates"][0]["from"], "g1")
 
@@ -231,7 +234,7 @@ class CliAndExample(unittest.TestCase):
         self.assertEqual(review["consolidation"]["verdict"], "BLOCK")
 
     def test_cli_current_and_refusal(self):
-        cl = gated(g1=gate("g1", "in-progress", command="false"))
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "c.json"
             E.save(f, cl)
@@ -291,7 +294,7 @@ class Hardening(unittest.TestCase):
             cfg = Path(d) / "charter.json"
             E.save(cfg, {"config": {"rework_cap": 1}})
             cl = {"work_id": "t", "type": "gated", "config_ref": "charter.json",
-                  "items": ["g1"], "tasks": {"g1": gate("g1", "complete", command="true")},
+                  "items": ["g1"], "tasks": {"g1": gate("g1", "complete", command=PASS_COMMAND)},
                   "consolidation": None, "triage_candidates": [], "blockers": []}
             resolved = E.load_config(cl, Path(d))
             self.assertEqual(E.rework_cap(resolved), 1)

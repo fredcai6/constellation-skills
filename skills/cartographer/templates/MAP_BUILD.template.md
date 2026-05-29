@@ -20,13 +20,13 @@ It is not architecture truth.
 ## Build Command
 
 ```bash
-python scripts/build_architecture_map.py --root . --source-root src
+python <cartographer-skill-dir>/scripts/build_architecture_map.py --root . --source-root src
 ```
 
 ## Check Command
 
 ```bash
-python scripts/build_architecture_map.py --root . --source-root src --check
+python <cartographer-skill-dir>/scripts/build_architecture_map.py --root . --source-root src --check
 ```
 
 ## Required After Changing

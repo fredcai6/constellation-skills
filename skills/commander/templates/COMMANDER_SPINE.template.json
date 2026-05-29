@@ -7,9 +7,9 @@
     "init": {
       "id": "init",
       "title": "Set up work area",
-      "imperative": "Run: python scripts/init_work_area.py <work-id>. Start the work branch per repo guidance.",
+      "imperative": "Run: python <commander-skill-dir>/scripts/init_work_area.py <work-id>. Start the work branch per repo guidance.",
       "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python scripts/init_work_area.py <work-id>"}, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/init_work_area.py <work-id>"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },

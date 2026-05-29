@@ -1,6 +1,7 @@
 import importlib.util
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -52,6 +53,15 @@ class InstallConstellationTests(unittest.TestCase):
                 sorted(path.name for path in target_root.iterdir()),
             )
             self.assertTrue((target_root / "constellation-charter" / "SKILL.md").exists())
+            self.assertTrue(
+                (target_root / "constellation-charter" / "scripts" / "checklist_engine.py").exists()
+            )
+            self.assertTrue(
+                (target_root / "constellation-commander" / "scripts" / "init_work_area.py").exists()
+            )
+            self.assertTrue(
+                (target_root / "constellation-cartographer" / "scripts" / "build_architecture_map.py").exists()
+            )
 
     def test_codex_user_scope_uses_codex_home_and_accepts_short_or_full_skill_names(self):
         installer = load_installer()
@@ -78,6 +88,110 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(
                 ["constellation-charter", "constellation-implementer"],
                 sorted(path.name for path in target_root.iterdir()),
+            )
+            self.assertTrue(
+                (target_root / "constellation-charter" / "scripts" / "checklist_engine.py").exists()
+            )
+            self.assertTrue(
+                (target_root / "constellation-implementer" / "scripts" / "checklist_engine.py").exists()
+            )
+
+    def test_shared_scripts_are_bundled_with_each_skill_that_requires_them(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+
+            exit_code = installer.main(
+                [
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "user",
+                    "--dest",
+                    str(target_root),
+                    "--skills",
+                    "charter",
+                    "pilot",
+                    "cartographer",
+                ],
+                env={},
+                out=lambda _: None,
+            )
+
+            self.assertEqual(0, exit_code)
+            for skill_name in (
+                "constellation-charter",
+                "constellation-pilot",
+                "constellation-cartographer",
+            ):
+                with self.subTest(skill_name=skill_name):
+                    self.assertTrue(
+                        (target_root / skill_name / "scripts" / "checklist_engine.py").exists()
+                    )
+
+            self.assertTrue(
+                (
+                    target_root
+                    / "constellation-cartographer"
+                    / "scripts"
+                    / "build_architecture_map.py"
+                ).exists()
+            )
+
+    def test_installed_templates_use_absolute_bundled_script_paths(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+
+            exit_code = installer.main(
+                [
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "user",
+                    "--dest",
+                    str(target_root),
+                    "--skills",
+                    "commander",
+                    "cartographer",
+                    "workbench",
+                ],
+                env={},
+                out=lambda _: None,
+            )
+
+            self.assertEqual(0, exit_code)
+            commander_root = target_root / "constellation-commander"
+            spine_path = commander_root / "templates" / "COMMANDER_SPINE.template.json"
+            spine_text = spine_path.read_text(encoding="utf-8")
+            spine = json.loads(spine_text)
+
+            self.assertNotIn("<commander-skill-dir>", spine_text)
+            self.assertIn(
+                (commander_root / "scripts" / "init_work_area.py").as_posix(),
+                spine["tasks"]["init"]["postconditions"][0]["check"]["command"],
+            )
+
+            cartographer_root = target_root / "constellation-cartographer"
+            map_build_text = (
+                cartographer_root / "templates" / "MAP_BUILD.template.md"
+            ).read_text(encoding="utf-8")
+            self.assertNotIn("<cartographer-skill-dir>", map_build_text)
+            self.assertIn(
+                (cartographer_root / "scripts" / "build_architecture_map.py").as_posix(),
+                map_build_text,
+            )
+
+            workbench_root = target_root / "constellation-workbench"
+            reference_text = (
+                workbench_root / "references" / "checklist-engine.md"
+            ).read_text(encoding="utf-8")
+            self.assertNotIn("<skill-dir>", reference_text)
+            self.assertIn(
+                (workbench_root / "scripts" / "checklist_engine.py").as_posix(),
+                reference_text,
             )
 
     def test_dry_run_prints_plan_without_creating_target(self):

@@ -21,6 +21,7 @@ class Skill:
     source_name: str
     install_name: str
     source_path: Path
+    required_scripts: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,17 @@ AGENT_TARGETS: dict[str, AgentTarget] = {
     ),
 }
 AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
+SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
+    "charter": ("checklist_engine.py",),
+    "commander": ("checklist_engine.py", "init_work_area.py"),
+    "workbench": ("checklist_engine.py",),
+    "interrogator": ("checklist_engine.py",),
+    "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
+    "pilot": ("checklist_engine.py",),
+    "implementer": ("checklist_engine.py",),
+    "reviewer": ("checklist_engine.py",),
+}
+REWRITABLE_TEXT_SUFFIXES = {".json", ".md", ".txt"}
 
 
 def parse_frontmatter(skill_md: Path) -> dict[str, str]:
@@ -110,6 +122,7 @@ def discover_skills(source_root: Path = SOURCE_ROOT) -> list[Skill]:
                 source_name=source_path.name,
                 install_name=metadata["name"],
                 source_path=source_path,
+                required_scripts=SKILL_SCRIPT_BUNDLES.get(source_path.name, ()),
             )
         )
 
@@ -144,6 +157,32 @@ def select_skills(requested: Sequence[str] | None, available: Iterable[Skill]) -
         valid = ", ".join(sorted(index))
         raise InstallError(f"unknown skill(s): {', '.join(unknown)}. Valid names: {valid}")
     return selected
+
+
+def validate_required_scripts(skills: Iterable[Skill], scripts_root: Path = REPO_ROOT / "scripts") -> None:
+    missing: list[str] = []
+    for skill in skills:
+        for script in skill.required_scripts:
+            if not (scripts_root / script).is_file():
+                missing.append(f"{skill.install_name}: {scripts_root / script}")
+    if missing:
+        raise InstallError(f"required script(s) missing: {'; '.join(missing)}")
+
+
+def rewrite_installed_skill_paths(target: Path, skill: Skill) -> None:
+    replacements = {
+        "<skill-dir>": target.as_posix(),
+        f"<{skill.source_name}-skill-dir>": target.as_posix(),
+    }
+    for path in target.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in REWRITABLE_TEXT_SUFFIXES:
+            continue
+        text = path.read_text(encoding="utf-8")
+        rewritten = text
+        for token, replacement in replacements.items():
+            rewritten = rewritten.replace(token, replacement)
+        if rewritten != text:
+            path.write_text(rewritten, encoding="utf-8")
 
 
 def home_from_env(env: Mapping[str, str]) -> Path:
@@ -259,6 +298,11 @@ def install_skills(
             else:
                 target.unlink()
         shutil.copytree(skill.source_path, target)
+        rewrite_installed_skill_paths(target, skill)
+        for script in skill.required_scripts:
+            script_target = target / "scripts" / script
+            script_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPO_ROOT / "scripts" / script, script_target)
 
     if not dry_run:
         out(restart_message)
@@ -304,6 +348,7 @@ def main(
         runtime_env = os.environ if env is None else env
         runtime_cwd = Path.cwd() if cwd is None else cwd
         skills = select_skills(args.skills, discover_skills())
+        validate_required_scripts(skills)
         target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
         for agent, target_root in target_roots:
             out(f"{agent.name}:")
