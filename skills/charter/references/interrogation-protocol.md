@@ -21,7 +21,7 @@ Ask one question at a time when pursuing decisions. Gate 0 may request reference
 
 ## First action
 
-Create or resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md` before Gate 0. The checklist is the live todo, gate tracker, and decision record.
+Create or resume the charter checklist (`.agent-work/<work-id>/charter.json`) before Gate 0. The checklist is the live todo, gate tracker, and decision record.
 
 Use `.agent-work/CHARTER_OPEN_QUESTIONS.md` only when provisional durable context exists and weak or unresolved Charter questions remain. It is not a backlog.
 

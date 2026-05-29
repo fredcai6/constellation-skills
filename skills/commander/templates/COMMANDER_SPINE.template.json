@@ -1,0 +1,98 @@
+{
+  "work_id": "<work-id>",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["init", "context", "understand", "plan", "execute", "reconcile", "triage", "integrate", "archive"],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python scripts/init_work_area.py <work-id>. Start the work branch per repo guidance.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python scripts/init_work_area.py <work-id>"}, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "orchestrator context, glossary, engine config loaded", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "Hand the request and context, plus the commander starting questions, to a subagent that invokes constellation-interrogator; save its consolidated problem statement to interrogation.json. Confirm it with the human.",
+      "preconditions": [{"id": "p1", "statement": "baseline context loaded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "problem statement and protected intent confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": "interrogation.json",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Frame the bounded problem against the architecture packets. Author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria and required evidence. Get the human to approve it.",
+      "preconditions": [{"id": "p1", "statement": "ask confirmed", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "execute.json authored, one bounded issue", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "plan approved", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Hand execute.json to a subagent that invokes constellation-pilot. Commit along the branch as gates close. If a gate proves the plan wrong, end the run and re-issue.",
+      "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "every gate closed with integrated evidence", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": "execute.json",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture.",
+      "preconditions": [{"id": "p1", "statement": "execute complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "map reflects the implemented changes", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Hand execute.json triage_candidates to a subagent that invokes constellation-triage; it writes issue-ready recommendations.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "every triage candidate routed or recorded", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "integrate": {
+      "id": "integrate",
+      "title": "Ready the branch",
+      "imperative": "Commit remaining work. Confirm the branch is clean and ready to merge to main per repo guidance.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "branch clean and merge-ready", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive the work area",
+      "imperative": "Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Get the human to accept the run.",
+      "preconditions": [{"id": "p1", "statement": "branch merge-ready", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "work area archived", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "run accepted", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

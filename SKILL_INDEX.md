@@ -3,17 +3,22 @@
 ## Constellation Charter
 Path: `skills/charter/SKILL.md`
 
-Interrogates engineering doctrine and compiles `ORCHESTRATOR_CONTEXT.md`, `CREW_CONTEXT.md`, and `GLOSSARY.md`.
+Interrogates engineering doctrine and compiles `ORCHESTRATOR_CONTEXT.md`, `CREW_CONTEXT.md`, `GLOSSARY.md`, and `engine-config.json`.
+
+## Constellation Commander
+Path: `skills/commander/SKILL.md`
+
+Runs one bounded issue end to end as the human's rigor scaffold: init, understand, plan, execute, reconcile, triage, integrate, archive.
 
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`
 
-Manages `.agent-work/<work-id>/`, local todos, evidence, closeout, and archive.
+Manages `.agent-work/<work-id>/` and drives the checklist engine (gated/survey).
 
 ## Constellation Interrogator
 Path: `skills/interrogator/SKILL.md`
 
-Runs relentless one-question interrogation with a traceable `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md` queue.
+Runs a question survey (`interrogation.json`) and consolidates a resolved understanding.
 
 ## Constellation Cartographer
 Path: `skills/cartographer/SKILL.md`
@@ -28,12 +33,17 @@ Runs map-first architecture audits for bad patterns, inefficient boundaries, and
 ## Constellation Pilot
 Path: `skills/pilot/SKILL.md`
 
-Coordinates interrogation, gated plans, Crew handoffs, evidence integration, architecture reconciliation, Triage candidates, and semantic closeout.
+Executes a frozen gate plan gate by gate, dispatching implementer and reviewer and integrating evidence.
 
-## Constellation Crew
-Path: `skills/crew/SKILL.md`
+## Constellation Implementer
+Path: `skills/implementer/SKILL.md`
 
-Handles bounded implementation and independent review.
+Implements a bounded change from a handoff, driving its own gated plan.
+
+## Constellation Reviewer
+Path: `skills/reviewer/SKILL.md`
+
+Independently verifies a bounded change as a survey and consolidates a verdict.
 
 ## Constellation Triage
 Path: `skills/triage/SKILL.md`

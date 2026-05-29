@@ -5,7 +5,7 @@ description: Run map-first architecture audit. Use when looking for bad patterns
 
 # Constellation Scout
 
-Find architecture trouble from map truth.
+Find architecture trouble from map truth. Drive `templates/SCOUT.template.json` as a `gated` checklist through the engine (workbench `references/checklist-engine.md`).
 
 Read Cartographer artifacts first: packets, index, overlays, generated map. Then sample code to challenge the map, not rediscover whole repo.
 
@@ -21,4 +21,4 @@ Use `references/scout-heuristics.md`. Return ranked candidates with structural a
 
 Ask only when scope, authority, or target value is unclear. Otherwise inspect and report.
 
-Templates: `templates/SCOUT_REPORT.template.md`.
+Templates: `templates/SCOUT.template.json`, `templates/SCOUT_REPORT.template.md`.
