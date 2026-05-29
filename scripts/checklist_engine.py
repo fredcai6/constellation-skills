@@ -1,0 +1,369 @@
+#!/usr/bin/env python
+"""Workbench checklist engine: work one gated/survey plan through its gates.
+
+The engine holds the canonical state; an agent transacts with it one step at a
+time. It enforces *mechanism* (ordering, evidence shape, the rework cap, the
+consolidation consistency guard) and never judges quality. See
+docs/CHECKLIST_SCHEMA.md.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+GATED = "gated"
+SURVEY = "survey"
+TERMINAL = {"complete", "skipped"}
+DEFAULT_REWORK_CAP = 3
+
+
+class EngineError(Exception):
+    """A refusal: the requested transition is not allowed. No exit-0."""
+
+
+# --------------------------------------------------------------------------- #
+# state helpers
+# --------------------------------------------------------------------------- #
+def load(path: Path) -> dict:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def save(path: Path, data: dict) -> None:
+    Path(path).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def rework_cap(cl: dict) -> int:
+    return int(cl.get("config", {}).get("rework_cap", DEFAULT_REWORK_CAP))
+
+
+def task(cl: dict, iid: str) -> dict:
+    if iid not in cl.get("tasks", {}):
+        raise EngineError(f"no such item {iid!r}")
+    return cl["tasks"][iid]
+
+
+def active_id(cl: dict) -> str | None:
+    """First item (in order) that is not yet terminal."""
+    for iid in cl.get("items", []):
+        if cl["tasks"][iid]["status"] not in TERMINAL:
+            return iid
+    return None
+
+
+def _new_evidence_id(t: dict) -> str:
+    return f"e-{t['id']}-{len(t.get('evidence', [])) + 1}"
+
+
+def _check_condition(cond: dict, t: dict) -> bool:
+    """Verify one condition. command -> run it; artifact -> presence/match;
+    null -> the agent must have attested it (trust but verify)."""
+    chk = cond.get("check")
+    if chk is None:
+        return bool(cond.get("satisfied"))
+    kind = chk.get("kind")
+    if kind == "command":
+        proc = subprocess.run(chk["command"], shell=True, capture_output=True, text=True)
+        cond["satisfied"] = proc.returncode == 0
+        eid = _new_evidence_id(t)
+        t.setdefault("evidence", []).append(
+            {
+                "id": eid,
+                "type": "command-output",
+                "payload": {"cmd": chk["command"], "exit": proc.returncode},
+                "produced_by": "engine",
+                "ts": "",
+            }
+        )
+        if cond["satisfied"]:
+            cond["satisfied_by"] = eid
+        return cond["satisfied"]
+    if kind == "artifact":
+        want = chk.get("match", {})
+        for ev in t.get("evidence", []):
+            if ev.get("type") == chk["evidence_type"] and all(
+                ev.get("payload", {}).get(k) == v for k, v in want.items()
+            ):
+                cond["satisfied"] = True
+                cond["satisfied_by"] = ev["id"]
+                return True
+        cond["satisfied"] = False
+        return False
+    raise EngineError(f"unknown check kind {kind!r}")
+
+
+# --------------------------------------------------------------------------- #
+# verbs (each returns a human/agent-readable message; refusals raise)
+# --------------------------------------------------------------------------- #
+def current(cl: dict) -> str:
+    aid = active_id(cl)
+    if aid is None:
+        if cl["type"] == SURVEY and cl.get("consolidation") is None:
+            return "ALL ITEMS VISITED. Next: consolidate"
+        return "DONE: no open items."
+    t = task(cl, aid)
+    return f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
+
+
+def start(cl: dict, iid: str) -> str:
+    t = task(cl, iid)
+    if t["status"] != "pending":
+        raise EngineError(f"{iid} is {t['status']!r}, cannot start")
+    if cl["type"] == GATED and active_id(cl) != iid:
+        raise EngineError(f"{iid} is not the active gate; start {active_id(cl)!r} first")
+    unmet = [c["id"] for c in t.get("preconditions", []) if not _check_condition(c, t)]
+    if unmet:
+        raise EngineError(f"{iid}: preconditions unmet {unmet} (verify upstream work, then attest)")
+    t["status"] = "in-progress"
+    return f"{iid} -> in-progress"
+
+
+def advance(cl: dict, iid: str) -> str:
+    if cl["type"] != GATED:
+        raise EngineError("advance is for gated checklists; use record")
+    t = task(cl, iid)
+    if t["status"] != "in-progress":
+        raise EngineError(f"{iid} is {t['status']!r}, must be in-progress to advance")
+    posts = t.get("postconditions", [])
+    if not posts:
+        raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
+    unmet = [c["id"] for c in posts if not _check_condition(c, t)]
+    if unmet:
+        raise EngineError(f"{iid}: postconditions unmet {unmet}")
+    t["status"] = "complete"
+    return f"{iid} -> complete"
+
+
+def record(cl: dict, iid: str, result: str, finding: str | None) -> str:
+    if cl["type"] != SURVEY:
+        raise EngineError("record is for survey checklists; use advance")
+    if result not in ("pass", "fail"):
+        raise EngineError("result must be pass or fail")
+    t = task(cl, iid)
+    t["result"] = result
+    t["finding"] = finding
+    t["status"] = "complete"
+    return f"{iid} recorded {result}" + (f": {finding}" if finding else "")
+
+
+def consolidate(cl: dict, verdict: str | None, summary: str | None, override_reason: str | None) -> str:
+    if cl["type"] != SURVEY:
+        raise EngineError("consolidate is for survey checklists")
+    open_items = [i for i in cl["items"] if cl["tasks"][i]["status"] not in TERMINAL]
+    if open_items:
+        raise EngineError(f"cannot consolidate; unvisited items {open_items}")
+    fails = [i for i in cl["items"] if cl["tasks"][i].get("result") == "fail"]
+    if verdict == "APPROVE" and fails and not override_reason:
+        raise EngineError(f"cannot APPROVE with failing items {fails}; supply --override-reason")
+    cons: dict = {
+        "verdict": verdict,
+        "findings": [
+            f"{i}: {cl['tasks'][i].get('finding')}" for i in fails if cl["tasks"][i].get("finding")
+        ],
+    }
+    if summary:
+        cons["summary"] = summary
+    if override_reason:
+        cons["override_reason"] = override_reason
+    cl["consolidation"] = cons
+    return f"consolidated: verdict={verdict} findings={len(cons['findings'])}"
+
+
+def skip(cl: dict, iid: str, reason: str) -> str:
+    t = task(cl, iid)
+    t["status"] = "skipped"
+    t.setdefault("status_detail", {})["reason"] = reason
+    return f"{iid} -> skipped because {reason}"
+
+
+def block(cl: dict, iid: str, blocker: str, authority: str, next_action: str) -> str:
+    t = task(cl, iid)
+    detail = {"blocker": blocker, "authority_needed": authority, "next_action": next_action}
+    t["status"] = "blocked"
+    t["status_detail"] = detail
+    cl.setdefault("blockers", []).append({"item": iid, **detail})
+    return f"{iid} -> blocked (bubbled to parent)"
+
+
+def reopen(cl: dict, iid: str, reason: str) -> str:
+    t = task(cl, iid)
+    if cl["type"] != GATED:
+        raise EngineError("reopen applies to gated checklists")
+    if t["status"] != "complete":
+        raise EngineError(f"can only reopen a complete gate; {iid} is {t['status']!r}")
+    cap = rework_cap(cl)
+    if t.get("rework_count", 0) + 1 > cap:
+        detail = {
+            "blocker": f"rework cap {cap} exceeded: {reason}",
+            "authority_needed": "parent agent / human",
+            "next_action": "escalate; do not re-dispatch",
+        }
+        t["status"] = "blocked"
+        t["status_detail"] = detail
+        cl.setdefault("blockers", []).append({"item": iid, **detail})
+        return f"ESCALATED {iid}: rework cap {cap} reached; blocked and bubbled to parent (not reopened)"
+    t["rework_count"] = t.get("rework_count", 0) + 1
+    t["status"] = "in-progress"
+    t.setdefault("status_detail", {})["reopen_reason"] = reason
+    for c in t.get("postconditions", []):
+        c["satisfied"] = False
+        c.pop("satisfied_by", None)
+    return f"{iid} reopened (rework {t['rework_count']}/{cap})"
+
+
+def append(cl: dict, iid: str, title: str, imperative: str) -> str:
+    if cl["type"] != SURVEY:
+        raise EngineError("append only on survey checklists")
+    if iid in cl.get("tasks", {}):
+        raise EngineError(f"item {iid!r} already exists")
+    cl["tasks"][iid] = {
+        "id": iid,
+        "title": title,
+        "imperative": imperative,
+        "preconditions": [],
+        "postconditions": [],
+        "constraints": [],
+        "directives": None,
+        "child_checklist": None,
+        "status": "pending",
+        "status_detail": {},
+        "result": None,
+        "finding": None,
+        "evidence": [],
+        "rework_count": 0,
+    }
+    cl["items"].append(iid)
+    return f"appended {iid}"
+
+
+def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None) -> str:
+    t = task(cl, iid)
+    for c in t.get(which, []):
+        if c["id"] == cond_id:
+            if c.get("check") is not None:
+                raise EngineError(f"{cond_id} is engine-checked; cannot attest")
+            c["satisfied"] = True
+            c["satisfied_by"] = note or "attested"
+            return f"attested {iid}.{cond_id}"
+    raise EngineError(f"{which} {cond_id!r} not found on {iid}")
+
+
+def attach(cl: dict, iid: str, etype: str, payload: dict) -> str:
+    t = task(cl, iid)
+    eid = _new_evidence_id(t)
+    t.setdefault("evidence", []).append(
+        {"id": eid, "type": etype, "payload": payload, "produced_by": "engine", "ts": ""}
+    )
+    return f"attached {eid} ({etype}) to {iid}"
+
+
+def flag_candidate(cl: dict, frm: str, statement: str) -> str:
+    cands = cl.setdefault("triage_candidates", [])
+    cid = f"tc{len(cands) + 1}"
+    cands.append({"id": cid, "from": frm, "statement": statement})
+    return f"flagged {cid}"
+
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--file", required=True, help="checklist JSON file")
+    p.add_argument("--dry-run", action="store_true", help="do not write changes back")
+    sub = p.add_subparsers(dest="verb", required=True)
+
+    sub.add_parser("current")
+    for name in ("start", "advance"):
+        s = sub.add_parser(name)
+        s.add_argument("id")
+    s = sub.add_parser("record")
+    s.add_argument("id")
+    s.add_argument("--result", required=True, choices=["pass", "fail"])
+    s.add_argument("--finding")
+    s = sub.add_parser("consolidate")
+    s.add_argument("--verdict")
+    s.add_argument("--summary")
+    s.add_argument("--override-reason")
+    s = sub.add_parser("skip")
+    s.add_argument("id")
+    s.add_argument("--reason", required=True)
+    s = sub.add_parser("block")
+    s.add_argument("id")
+    s.add_argument("--blocker", required=True)
+    s.add_argument("--authority", default="parent agent")
+    s.add_argument("--next", dest="next_action", default="")
+    s = sub.add_parser("reopen")
+    s.add_argument("id")
+    s.add_argument("--reason", required=True)
+    s = sub.add_parser("append")
+    s.add_argument("id")
+    s.add_argument("--title", required=True)
+    s.add_argument("--imperative", required=True)
+    s = sub.add_parser("attest")
+    s.add_argument("id")
+    s.add_argument("--cond", required=True)
+    s.add_argument("--which", choices=["preconditions", "postconditions"], default="preconditions")
+    s.add_argument("--note")
+    s = sub.add_parser("attach")
+    s.add_argument("id")
+    s.add_argument("--type", required=True)
+    s.add_argument("--payload", required=True, help="JSON object")
+    s = sub.add_parser("flag-candidate")
+    s.add_argument("--from", dest="frm", required=True)
+    s.add_argument("--statement", required=True)
+    return p.parse_args(argv)
+
+
+def dispatch(cl: dict, args: argparse.Namespace) -> str:
+    v = args.verb
+    if v == "current":
+        return current(cl)
+    if v == "start":
+        return start(cl, args.id)
+    if v == "advance":
+        return advance(cl, args.id)
+    if v == "record":
+        return record(cl, args.id, args.result, args.finding)
+    if v == "consolidate":
+        return consolidate(cl, args.verdict, args.summary, args.override_reason)
+    if v == "skip":
+        return skip(cl, args.id, args.reason)
+    if v == "block":
+        return block(cl, args.id, args.blocker, args.authority, args.next_action)
+    if v == "reopen":
+        return reopen(cl, args.id, args.reason)
+    if v == "append":
+        return append(cl, args.id, args.title, args.imperative)
+    if v == "attest":
+        return attest(cl, args.id, args.cond, args.which, args.note)
+    if v == "attach":
+        return attach(cl, args.id, args.type, json.loads(args.payload))
+    if v == "flag-candidate":
+        return flag_candidate(cl, args.frm, args.statement)
+    raise EngineError(f"unknown verb {v!r}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    path = Path(args.file)
+    cl = load(path)
+    try:
+        message = dispatch(cl, args)
+    except EngineError as exc:
+        # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
+        if not args.dry_run and args.verb != "current":
+            save(path, cl)
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 1
+    if not args.dry_run and args.verb != "current":
+        save(path, cl)
+    print(message)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
