@@ -25,7 +25,7 @@ class ConstellationContentTests(unittest.TestCase):
 
     def test_role_skill_bodies_stay_lean(self):
         limits = {
-            "workbench": 1700,
+            "workbench": 2300,
             "interrogator": 3300,
             "cartographer": 1900,
             "scout": 1400,
