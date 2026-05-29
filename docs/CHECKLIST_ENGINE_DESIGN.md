@@ -19,6 +19,19 @@ Two goals, co-equal:
 
 **Recoverability is a side effect of traceability, not a primary design driver.** Because the engine externalizes state, a role *can* be resumed — and for small models it may eventually need to be killed and respawned mid-stream — but that falls out of keeping a faithful trace; it is not the reason the engine exists.
 
+**Per-node model selection is a non-goal (for now).** Routing different model strengths to different tiers is too cute to bake into the baseline; the design assumes you may not have a great model *anywhere* and leans on human checkpoints instead of strong-model-at-top. Model-tier routing may return later as an optimization, never a foundation.
+
+## The human is the top tier
+
+The Commander is **not** an autonomous strong reasoner that replaces human effort. It is a **rigor scaffold** — it decomposes the work, tracks it, and **surfaces decisions to the human rather than making them.** The governing principle: **force the human to make the decisions, not obfuscate them.** A human uses the Commander to *be rigorous*, not to *offload effort*.
+
+The human is the **next-higher level of context management** — the one who knows where this issue sits in the system-of-systems. So the operator sits above the Commander in the tier stack:
+
+- The human **clarifies the issue with the Interrogator** before planning.
+- The Commander can **pause and hand decisions up for human verification** at its checkpoints — *is the plan good? is this architecture change the intent?* — before proceeding.
+
+This is why the design does **not** depend on having a great model: the hard judgment is escalated to the human at gated checkpoints, not performed by the model. Pausing for human verification is a first-class Commander capability, not an exception path.
+
 ## Core model: a single-active-leaf tree
 
 Executing a project is **checklists within checklists**. A project decomposes `understand → plan → execute (implement ⇄ review) → clean up`; each of those, pushed on, is itself a checklist. The interrogator's question queue is a checklist. A pilot's implementation-gate list is a checklist. They share **one structure**: an ordered set of nodes, each with criteria, status, evidence, and an optional **child checklist**.
@@ -141,6 +154,7 @@ Both are dispatched and both return packets, but they are distinct archetypes an
 ### Tier map
 
 ```
+Human (operator)     where this issue sits in the system-of-systems; verifies plan + intent at checkpoints
 Commander            intent + 4-phase spine + produces the gate plan      (never touches code)
   Pilot ‖ Cartographer    executes the gate plan / owns structural truth   (architecture packets, not code)
     Crew: implementer ‖ reviewer                                           (code-dense, bounded scope)
@@ -170,9 +184,16 @@ Architecture is touched at exactly **two bookends of a Commander sequence**, not
 
 Reconciliation is **recording, not verification** — which is why it is correctly **batched once at cleanup** and does *not* conflict with the "never batch review" rule (review is per-gate correctness; reconciliation is end-of-run map maintenance).
 
-Between the bookends, architecture is **frozen read-only context**: Pilot executes against a snapshot of the map packets. If execution reveals the snapshot was wrong or the problem was mis-scoped, that is a **signal that bubbles to Commander** (possibly forcing a re-plan or abort), never a mid-flight edit to durable structural truth.
+Between the bookends, architecture is **frozen read-only context**: Pilot executes against a snapshot of the map packets. If execution reveals the snapshot was wrong or the problem was mis-scoped, that is a **signal that bubbles to Commander**, never a mid-flight edit to durable structural truth.
 
-This closes the loop at issue granularity: **Triage mints issues → each issue is one Commander run → reconciliation updates the map → Scout/Cartographer surface new pressure → Triage mints the next issues.** The issue is the quantum of work; nothing produced is an orphan, because every run reads from and writes back to the same durable map.
+**Commanders get one shot.** There is no mid-run re-plan loop. If a plan is proven wrong, the signal bubbles to the Commander, the issue is **re-interrogated with the human, and the run ends in favor of a fresh issue / fresh Commander run.** One Commander run = one coherent plan = one clean trace. This keeps traceability intact (no plan churn inside a run) and removes the weak-Commander ping-pong failure mode entirely — there is nothing to ping-pong, because re-planning *is* a new run, not an in-run operation.
+
+## Two loops
+
+- **Inner loop** — one Commander run executes **one bounded issue**: understand → plan → execute → clean up. Self-contained, single-shot, one coherent trace.
+- **Outer loop** — minting and prioritizing issues *across* runs. Scout audits the current map for architecture pressure; reconciliation surfaces drift; Crew/Pilot bubble discovered work. **Triage** packages all of it into issues, and each issue becomes a future inner run.
+
+Both loops pivot on the same durable Cartographer map: the inner loop reads it at the start and writes it back at reconcile; the outer loop reads it to find pressure and mint the next issues. **Scout is purely outer-loop** (its own execution window). **Triage is invoked by the Commander inside the clean-up step** — so candidates found during a run are durably captured before the package closes — but the issues it produces are *consumed* by the outer loop. Invocation is inner; consumption is outer. This is the structural answer to the orphan-document problem: the issue is the quantum of work, and every run reads from and writes back to the same map.
 
 ## Rules inherit down the tree
 
