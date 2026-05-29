@@ -13,13 +13,14 @@ Durable outputs:
 docs/agents/ORCHESTRATOR_CONTEXT.md
 docs/agents/CREW_CONTEXT.md
 docs/agents/GLOSSARY.md
+docs/agents/engine-config.json
 .agent-work/templates/*.template.md
 ```
 
 Workflow outputs:
 
 ```text
-.agent-work/<work-id>/CHARTER_CHECKLIST.md
+.agent-work/<work-id>/charter.json
 .agent-work/CHARTER_OPEN_QUESTIONS.md
 .agent-work/archive/<date>-<work-id>/
 ```
@@ -34,7 +35,7 @@ Do not use Charter to map architecture, plan features, review diffs, edit code/t
 
 ## Required Context
 
-Read fixed context: `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, plus peer skill instructions for `constellation-pilot`, `constellation-cartographer`, and `constellation-crew`.
+Read fixed context: `references/rigorous-default.md`, `references/engineering-rubric.md`.
 
 Read target project context when present: `docs/agents/*`, `AGENTS.md`, README/equivalent overview, philosophy/process docs, and user-provided positive exemplars. Inspect code/tests/configs only when a context decision needs light verification. Do not map the codebase.
 
@@ -42,19 +43,19 @@ Read target project context when present: `docs/agents/*`, `AGENTS.md`, README/e
 
 Charter informs Orchestrator context for Pilot/Cartographer and Crew context for implementer/reviewer behavior. Do not redesign Constellation topology. If roles fit poorly, stop using these skills.
 
-Allowed writes are defined by `templates/CHARTER_CHECKLIST.template.md`; all other writes are out of Charter scope.
+Allowed writes are the durable and workflow outputs above; all other writes are out of Charter scope.
 
 ## Workflow Driver
 
-Before Gate 0, create/resume `.agent-work/<work-id>/CHARTER_CHECKLIST.md`. Prefer `.agent-work/templates/CHARTER_CHECKLIST.template.md`; fall back to bundled `templates/CHARTER_CHECKLIST.template.md`. Choose a date-purpose work id unless supplied.
+Before Gate 0, create/resume a `gated` charter checklist (`.agent-work/<work-id>/charter.json`) via the engine. Choose a date-purpose work id unless supplied.
 
-Use `CHARTER_CHECKLIST.md` as the only Charter todo/decision record; no separate decisions file. It owns allowed writes, project template catalog, material decision scale, gate order, contradiction pass, role projection, compile checks, and closeout.
+Use `charter.json` as the only Charter todo/decision record; no separate decisions file. It tracks allowed writes, project template catalog, material decision scale, gate order, contradiction pass, role projection, compile checks, and closeout.
 
 Charter seeds and updates project templates. If `.agent-work/templates` is missing, copy bundled defaults there. When decisions change workflow interfaces, update matching project templates too.
 
 Invoke the `constellation-interrogator` skill for Charter interrogation. Start from `templates/CHARTER_STARTING_QUESTIONS.template.md`; aggressively update it. Ask one decision question at a time and continue drilling until the decision is role-operable.
 
-Use `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, and `references/scenario-bank.md` as doctrine/detail sources.
+Use `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, and `references/scenario-bank.md` as doctrine/detail sources.
 
 ## Context Compile
 
@@ -64,10 +65,10 @@ Project shared rules may appear in both contexts, but must use role-specific wor
 
 Optimize for context density: minimize tokens, maximize information per token, and sacrifice grammar when meaning stays clear. Keep durable context to decisions, not debate.
 
-Final compile requires the checklist to prove all gates complete, no weak/unresolved Charter questions, contradiction pass complete, durable outputs updated, `.agent-work/CHARTER_OPEN_QUESTIONS.md` absent, and the complete `.agent-work/<work-id>/` package archived including `INTERROGATOR_QUESTIONS.md`.
+Final compile requires the checklist to prove all gates complete, no weak/unresolved Charter questions, contradiction pass complete, durable outputs updated, `.agent-work/CHARTER_OPEN_QUESTIONS.md` absent, and the complete `.agent-work/<work-id>/` package archived.
 
 ## Resources
 
-Templates: `templates/CHARTER_CHECKLIST.template.md`, `templates/CHARTER_OPEN_QUESTIONS.template.md`, `templates/ORCHESTRATOR_CONTEXT.template.md`, `templates/CREW_CONTEXT.template.md`, `templates/GLOSSARY.template.md`.
+Templates: `templates/ENGINE_CONFIG.template.json`, `templates/CHARTER_OPEN_QUESTIONS.template.md`, `templates/ORCHESTRATOR_CONTEXT.template.md`, `templates/CREW_CONTEXT.template.md`, `templates/GLOSSARY.template.md`.
 
-References: `references/role-scope.md`, `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.
+References: `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.

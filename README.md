@@ -13,13 +13,15 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 
 | Skill | Purpose |
 |---|---|
-| `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, and Glossary context. |
-| `constellation-workbench` | Manage local todos, workflow files, evidence, closeout, and archive. |
-| `constellation-interrogator` | Run one-question interrogation with traceable queue. |
+| `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, Glossary, and engine config. |
+| `constellation-commander` | Run one bounded issue end to end as the human's rigor scaffold. |
+| `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey). |
+| `constellation-interrogator` | Run a question survey and consolidate a resolved understanding. |
 | `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
 | `constellation-scout` | Audit map-first architecture pressure and package improvement candidates. |
-| `constellation-pilot` | Coordinate problem interrogation, gated plans, Crew handoffs, evidence integration, reconciliation, and closeout. |
-| `constellation-crew` | Execute bounded implementation and independent review. |
+| `constellation-pilot` | Execute a frozen gate plan gate by gate, dispatching implementer and reviewer. |
+| `constellation-implementer` | Implement a bounded change from a handoff, driving its own gated plan. |
+| `constellation-reviewer` | Independently verify a bounded change as a survey and consolidate a verdict. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
 
 ## Install
@@ -147,17 +149,17 @@ docs/
 ```text
 .agent-work/
   templates/
+    *.template.json
     *.template.md
 
   CHARTER_OPEN_QUESTIONS.md
-  CARTOGRAPHER_CHECKLIST.md
   SCOUT_REPORT.md
 
-  <work-id>/
-    CHARTER_CHECKLIST.md           # role-specific controller
-    INTERROGATOR_QUESTIONS.md
-    PILOT_CHECKLIST.md             # role-specific controller (with embedded implementation gates)
-    DEFAULT_CHECKLIST.md           # fallback controller when no role-specific one exists
+  <work-id>/                       # one work-id holds the whole tree
+    spine.json                     # commander
+    interrogation.json
+    execute.json                   # gate plan; g<N>-review.json per gate
+    charter.json                   # when charter runs
     crew-handoffs/
     evidence/
     triage-candidates/

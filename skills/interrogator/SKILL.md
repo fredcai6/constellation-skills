@@ -20,7 +20,7 @@ The question list is a `survey` checklist driven by the engine (`scripts/checkli
 ## Question Process
 
 1 - Review topic and relevant code/docs. Refer to `docs/agents/GLOSSARY.md` to understand established code base language. Refer to `docs/agents/architecture/index.md` to guide architecture crawl
-2 - Create/update `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md`. If given a template, start there. It must include: question list, status, answer, follow-ups.
+2 - Create/update the question survey `.agent-work/<work-id>/interrogation.json` from `templates/INTERROGATION.template.json`. It holds the question list, status, answers, and follow-ups.
 3 - Enter question loop:
 3a - Pick highest value remaining question
 3b - Update question in context of previous answers. Skip question if no long relevant 

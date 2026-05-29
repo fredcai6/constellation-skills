@@ -4,7 +4,7 @@
 `bug | cleanup | missing test | missing doc | missing architecture packet | missing structural node | architecture weakness | structure/constraint mismatch | stale generated map | feature | tooling | unresolved decision | research hardening | dependency cleanup | security/privacy | performance/resource`
 
 ## Source checklist/artifact
-- `<.agent-work/CARTOGRAPHER_CHECKLIST.md | review finding | plan | user note | evidence path>`
+- `<cartographer finding | review finding | plan | user note | evidence path>`
 
 ## Structural anchor
 `struct:<id> | path | none`

@@ -1,36 +1,20 @@
 ---
 name: constellation-pilot
-description: Use when managing Constellation workflow gates, scope, evidence, architecture checks, and closeout.
+description: Execute a frozen gate plan gate by gate. Use when handed an execute plan to drive to closure with evidence.
 ---
 
 # Constellation Pilot
 
-Pilot is a checklist-driven workflow controller for repo work expected to dispatch at least one bounded Crew implementer/reviewer handoff: intent, scope, implementation gates, consistency, Crew dispatch, evidence, reconciliation, Triage candidates, closeout.
+Execute a frozen gate plan, one gate at a time, to closure with integrated evidence.
 
-Pilot does not implement. Closeout integration edits need accepted evidence. Cartographer verifies architecture when structural truth may have changed.
+Drive `execute.json` as a `gated` checklist through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`). For each gate:
 
-If no Crew handoff is needed, Pilot is not needed: no `.agent-work/`, no implementation gates, no fake lightweight Constellation path.
+- hand a `CREW_HANDOFF` to a subagent that invokes `constellation-implementer`; integrate its evidence.
+- hand the diff and the gate's review criteria to a subagent that invokes `constellation-reviewer`; integrate its verdict.
+- close the gate when its postconditions pass.
 
-## Checklist
+The gate is the central unit: the smallest chunk, implemented, reviewed, proven with evidence, closable on its own. Pick implementer and reviewer strength from gate complexity, scope, ambiguity, and risk.
 
-Use `PILOT_CHECKLIST.md` as single controller. Framing gates (0-4), Implementation gates (5-6) populated and executed in the Implementation Gates section, Closing gates (7-9).
+Keep the gate list as given. Raise a blocker if a gate is unachievable. Flag out-of-scope finds as triage candidates. When a gate needs current structural truth, request it from a subagent that invokes `constellation-cartographer`.
 
-Drive the frozen gate plan as a `gated` checklist through the engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`). For each gate: hand an instruction to a subagent that invokes `constellation-implementer`, then one that invokes `constellation-reviewer`; integrate their evidence and close the gate. Keep the gate list as given; raise a blocker if a gate is unachievable.
-
-Outcomes: `continue | ask user | split work | stop using Constellation | request Cartographer baseline | define implementation gates | dispatch Crew | collect Triage candidate | close out`.
-
-## Rules
-
-Gate 1 must invoke the `constellation-interrogator` skill for relentless one-question interrogation with `templates/PILOT_STARTING_QUESTIONS.template.md` as aggressively updated starting queue. Inspect repo/docs when they answer. Keep `.agent-work/<work-id>/INTERROGATOR_QUESTIONS.md`. Not optional; do not skip.
-
-The gate is the central unit: smallest chunk assigned, reviewed, proven with evidence, and stopped independently. Implementation gates run: implementer Crew -> integrate evidence -> reviewer Crew -> integrate evidence -> gate close. Do not batch review at final closeout.
-
-Pick agent strength from gate complexity, scope size, ambiguity, risk, review complexity. Dispatch Crew = create `CREW_HANDOFF`, kick off the assigned Crew subagent. Default sequential; parallel needs authorization and independent gates.
-
-Gate 5 closes only when Plan Consistency Criteria met or each gap has recorded override reason. Pilot writes implementation gate sub-sections directly in `PILOT_CHECKLIST.md`. Evidence integration is recorded in each implementation gate's sub-section as Crew returns.
-
-Workbench owns artifact hygiene; Pilot owns intent, scope, gates, evidence, Crew handoffs, reconciliation, Triage candidates, semantic closeout, closeout-only context curation. Done means Pilot moves the entire `.agent-work/<work-id>/` package to archive, including `INTERROGATOR_QUESTIONS.md`.
-
-Issue/repo mechanics follow project Orchestrator context; ask if silent. Do not eagerly create issues. Create/link an issue only when the current gate cannot proceed without it and authority exists.
-
-Templates: `templates/EXECUTE_PLAN.template.json` (the gated gate plan, canonical), `templates/CREW_HANDOFF.template.md`. The legacy `templates/PILOT_CHECKLIST.template.md` is superseded by the engine plan. References: `references/role-scope.md`, workbench `references/checklist-engine.md`.
+Templates: `templates/EXECUTE_PLAN.template.json`, `templates/CREW_HANDOFF.template.md`. Reference: workbench `references/checklist-engine.md`.

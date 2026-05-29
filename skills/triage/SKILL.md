@@ -11,7 +11,7 @@ Use when Cartographer finds out-of-scope mismatch; Reviewer finds out-of-scope t
 
 ## Inputs
 
-Consume `.agent-work/CARTOGRAPHER_CHECKLIST.md` candidates, review findings, plans, user notes, implementation evidence. Preserve structural anchor, mismatch class, current truth, desired/future concern, evidence, action.
+Consume Cartographer findings, review findings, plans, user notes, implementation evidence, and `execute.json` triage_candidates. Preserve structural anchor, mismatch class, current truth, desired/future concern, evidence, action.
 
 ## Classify
 
