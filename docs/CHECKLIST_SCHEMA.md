@@ -65,29 +65,30 @@ A tree is a flat task registry plus a root pointer. The tree is defined by `meth
 
 ## Condition (pre / post)
 
-The unit that makes "gate on shape, not quality" mechanical.
+A condition is an assertion. The engine can mechanically verify only two kinds of thing; everything else is asserted and verified socially (by the next agent, the reviewer, and the invoker).
 
 | field | type | notes |
 |---|---|---|
 | `id` | string | |
 | `statement` | string | human/agent-readable assertion |
-| `check` | object \| null | how the engine verifies it; `null` = agent/human-asserted |
+| `check` | object \| null | how it is verified; `null` = qualitative/asserted |
 | `satisfied` | bool | |
 | `satisfied_by` | string \| null | evidence-id or note |
 
-`check` kinds:
+### What "engine-checked" means
 
-| `check.kind` | engine verifies | satisfied when |
+The engine cannot judge quality. The only things it can *mechanically* confirm:
+
+| `check.kind` | the engine does | satisfied when |
 |---|---|---|
-| `command` | runs `check.command` | exit 0 |
-| `evidence` | presence of `check.evidence_type` in `task.evidence` | present + shape-valid |
-| `review-verdict` | a `review-result` evidence | verdict `APPROVE` (or owner override w/ reason) |
-| `user-decision` | a `user-decision` evidence | present (this is a human checkpoint) |
-| `task-postcondition` | references `check.task_id` | auto-satisfied when that task is `accepted` |
+| `command` | runs `check.command` | exit 0 — i.e. "the tests/build actually pass" |
+| `artifact` | confirms an evidence item of `check.evidence_type` is attached (optionally with a field match, e.g. `verdict: APPROVE`) | present + shape-valid |
 
-A `null` check means the engine cannot verify the condition itself — it records the agent's/human's assertion and leans on the two-tier verification (reviewer + invoker) for truth. **The engine enforces presence and shape; it never judges quality.**
+That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE`. The `command` check is the literal "these tests work."
 
-The `task-postcondition` kind is what chains an ordered method: a subtask's precondition can reference the prior subtask's id, so state carried forward is mechanical, not asserted.
+### Qualitative conditions (`check: null`) — trust but verify
+
+Most conditions — especially **preconditions** — are qualitative. The engine cannot verify them, so it records the executor's assertion and leans on the tiers for truth. Crucially, a precondition is verified by **the very agent that depends on it**: when gate B is told "you need an interface that does X" (something gate A claimed as a postcondition), B's first job is to confirm that interface exists and does X. **That dependency check is a second review of A's work** — looser and cheaper than chaining by task id, and it falls out of the work naturally. We deliberately chose this over mechanical id-chaining: trust but verify, and keep the initial engine simple.
 
 ## Evidence
 
@@ -146,11 +147,11 @@ A parent compound task cannot reach `complete` until every subtask in its method
   "tier": "crew",
   "anchor": { "work_id": "issue-123", "parent": "t0.execute", "struct": "struct:ctrl-core" },
   "preconditions": [
-    { "id": "p1", "statement": "Plan approved", "check": { "kind": "task-postcondition", "task_id": "t0.plan" }, "satisfied": true, "satisfied_by": "t0.plan" }
+    { "id": "p1", "statement": "Interface A (from the prior gate) exists and saturates out-of-range input", "check": null, "satisfied": false }
   ],
   "postconditions": [
     { "id": "c1", "statement": "Unit tests pass", "check": { "kind": "command", "command": "make test" }, "satisfied": false },
-    { "id": "c2", "statement": "Reviewer approves", "check": { "kind": "review-verdict" }, "satisfied": false }
+    { "id": "c2", "statement": "Reviewer approves", "check": { "kind": "artifact", "evidence_type": "review-result", "match": { "verdict": "APPROVE" } }, "satisfied": false }
   ],
   "constraints": ["must work with MATLAB Coder", "fail-safe on out-of-range input"],
   "directives": ["saturate, do not throw, on out-of-range"],
@@ -164,7 +165,7 @@ A parent compound task cannot reach `complete` until every subtask in its method
 }
 ```
 
-Note the inherited `constraints` (handed down from a `struct:ctrl-core`-anchored ancestor) and the `directives` (a forced specific — saturate, don't throw). The implementer authors no method (it's primitive); it just satisfies the postconditions and returns evidence. The reviewer crew verifies `c2`; the engine checks `c1` by running `make test`.
+Note the inherited `constraints` (handed down from a `struct:ctrl-core`-anchored ancestor) and the `directives` (a forced specific — saturate, don't throw). The implementer authors no method (it's primitive); it just satisfies the postconditions and returns evidence. Precondition `p1` is qualitative — the implementer's first act is confirming interface A actually saturates, which doubles as a second review of the prior gate. The engine checks `c1` by running `make test`; the reviewer crew supplies `c2` as a `review-result` artifact.
 
 ## Engine verbs ↔ schema
 
@@ -173,7 +174,7 @@ Note the inherited `constraints` (handed down from a `struct:ctrl-core`-anchored
 | `current` | walk to deepest open leaf; emit its `imperative` |
 | `criteria <id>` | emit `postconditions` + implied evidence types |
 | `expand <id> --method …` | compound only; author `method` (the slice); owner-only |
-| `start <id>` | check `preconditions`; `pending → in-progress` |
+| `start <id>` | engine checks any `command`/`artifact` preconditions; executor asserts the qualitative ones (verifies upstream work); `pending → in-progress` |
 | `advance <id> --evidence …` | check all `postconditions` (run command checks, verify evidence shapes); `→ complete` (proposal) |
 | `skip <id> --reason …` | `→ skipped` (state op; universal executor right) |
 | `block <id> …` | `→ blocked` with required detail |
@@ -185,8 +186,8 @@ Note the inherited `constraints` (handed down from a `struct:ctrl-core`-anchored
 ## Pinch points (flagged early)
 
 1. **accept vs advance.** Modeled as distinct (`advance` = executor proposes `complete`; `accept` = owner finalizes). Collapsing them loses the "return is a proposal" property. Keep distinct unless it proves noisy.
-2. **Lazy expansion vs handed-down postconditions.** A task's postconditions are authored by its *parent*; its method by its *own* conductor on arrival. If, on expansion, the conductor finds the postconditions unachievable — does it re-author its own slice (allowed: it owns its method) or bubble up (required: it does **not** own its parent's postconditions)? Proposed rule: **re-authoring your own method is free; changing handed-down pre/postconditions is a signal up.** One-shot applies at the Commander tier; lower conductors may re-slice within the frozen plan.
-3. **Condition expressiveness.** Free-text `statement` + optional `check`. The `task-postcondition` check is the only structured dependency. If chains get richer (a precondition needing *several* prior postconditions, or negation), conditions may need a small predicate grammar. Resisting that until forced.
+2. **Lazy expansion vs handed-down postconditions.** *(Resolved.)* Pre/postconditions are **handed down**; the **method is the executor's** to author at its own context level (except `directives` forcing a primitive specific). So re-authoring your own method is free; finding a handed-down postcondition unachievable is a **signal up**, not a self-edit. One-shot applies at the Commander tier; lower conductors freely re-slice within the frozen plan.
+3. **Condition expressiveness.** Free-text `statement` + optional `command`/`artifact` check; **no** structured task-to-task dependency (we chose qualitative trust-but-verify over id-chaining — the dependent agent re-verifies). If cross-task dependencies prove error-prone in practice, a light reference mechanism may return. Resisting until forced.
 4. **Unordered `current`.** With `ordered:false`, `current` is ambiguous (any open subtask). Fine for scattershot questions; revisit if a real partial order (some questions block others) becomes necessary.
 5. **Inherited constraints — union or override?** Currently union down the subtree. A child that must *relax* an ancestor constraint has no mechanism. Probably fine (relaxation should be rare and explicit), but flag it.
 6. **Evidence payload typing.** Left loose (`object`). Reviewer-result vs command-output have very different shapes; the engine only shape-checks minimally. May need per-type payload schemas before the engine can validate `review-verdict` reliably.
