@@ -52,7 +52,9 @@ Commander spine (strict-sequential)
 └─ clean up     → reconciliation (Cartographer) + future work (Triage) + archive/closeout (Workbench)
 ```
 
-The `kind` changes as you descend (sequential spine, priority-queue questions, sequential gates, evidence-gated review). A node's child checklist may be a different kind than its parent; the engine does not care.
+The `kind` changes as you descend (ordered spine and gates; unordered/scattershot questions). A node's child checklist may be a different kind than its parent; the engine does not care.
+
+**Self-similarity is a capability, not a mandate.** The tree *can* nest arbitrarily, but real trees are shallow: a fixed spine (understand → plan → execute → clean up), a single authored layer (the gate plan, produced by planning `execute`), and gates that are usually **primitive** — the crew is handed "implement this thing" and just does it. Decomposition is used only where it is *real* (a genuine "verify these items" checklist becomes a compound gate); it is never forced for uniformity. A primitive task is the normal terminus, and **how the crew solves a primitive task — its own internal method — is not tracked by the engine.** We track the gate's postconditions, not the crew's keystrokes.
 
 ## Typed checklists
 
@@ -171,9 +173,16 @@ Cartographer appears twice on purpose: it is a mid-tier owner of durable structu
 
 ### Rule: a role earns its existence
 
-> A role is justified iff it owns a distinct **(context tier × checklist kind × return artifact)**. If two proposed roles share all three, they are one role.
+> A role is justified iff it owns a distinct **conversation** — a network of who it talks to and the context that conversation accretes. A distinct tier, a distinct checklist kind, *or* a distinct dispatch network each count; sharing *all* of them means it is one role.
 
-This is the guard against role sprawl while still adding roles for the sake of context management (context explosion — especially an architecture diagram crossing multiple file-region boundaries — is the actual enemy).
+This is the guard against role sprawl while still adding roles for context management (context explosion — especially an architecture diagram crossing multiple file-region boundaries — is the actual enemy).
+
+**Commander vs Pilot** are close in altitude — which is why Commander did not exist originally — but they own **different conversations**, and that alone justifies the split: it keeps each context window focused.
+
+- **Commander** networks to the **Interrogator, Cartographer, and Pilot** (understanding, structure, and delegation; the human-facing integrator).
+- **Pilot** networks to the **Crew** (implementation and review).
+
+Merging them would force one window to hold the human/interrogator/cartographer planning dialogue *and* the crew execution loop — the exact context explosion the system exists to prevent.
 
 ## Role roster and lifecycle coverage
 

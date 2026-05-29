@@ -15,9 +15,9 @@
     "rules_root": ["follow CREW_CONTEXT", "no new external deps without user decision"]
   },
 
-  // Signals bubbled up during the run; Triage drains this in cleanup. (NEW — see findings.)
-  "signals": [
-    { "id": "s1", "from": "t0.execute.g1", "kind": "triage-candidate",
+  // Out-of-scope discoveries bubbled up during the run; Triage drains this in cleanup.
+  "triage_candidates": [
+    { "id": "tc1", "from": "t0.execute.g1",
       "statement": "Setpoint path has no structured logging; out of scope here.", "ts": "..." }
   ],
 

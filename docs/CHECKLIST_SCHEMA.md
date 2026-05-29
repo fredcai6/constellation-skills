@@ -27,9 +27,12 @@ A tree is a flat task registry plus a root pointer. The tree is defined by `meth
   "work_id": "issue-123-slug",
   "root": "t0",
   "config_ref": "charter",
+  "triage_candidates": [],
   "tasks": { "t0": { ... }, "t0.understand": { ... }, ... }
 }
 ```
+
+`triage_candidates` is the tree-level bucket of out-of-scope discoveries bubbled up during the run (a gate notices work that must not be done now but must not be lost). Triage drains it in clean-up. This is the existing "Triage candidate" concept, not a new mechanism.
 
 ## Task
 
@@ -41,8 +44,8 @@ A tree is a flat task registry plus a root pointer. The tree is defined by `meth
 | `imperative` | string | the *do-this-now* instruction surfaced to the executor (tool output is a prompt) |
 | `tier` | `commander`\|`pilot`\|`crew`\|`probe` | dispatch hint — which tier executes it |
 | `anchor` | object | `{ work_id, parent: task-id\|null, struct: "struct:<id>"\|null }` |
-| `preconditions` | `[Condition]` | entry guard; must be satisfied to enter `in-progress` |
-| `postconditions` | `[Condition]` | close criteria; must be satisfied to propose `complete` |
+| `preconditions` | `[Condition]` | *optional* entry guard; an unmet precondition **fails** the task, so use only for genuine hard dependencies |
+| `postconditions` | `[Condition]` | **required (≥1)**; close criteria; must be satisfied to propose `complete` |
 | `constraints` | `[string]` | rules; **inherited down the subtree**; forced specifics live here |
 | `directives` | `[string]` \| null | forced primitive specifics handed down by the author |
 | `method` | `Method` \| null | compound only; **null = unexpanded** (conductor authors it on arrival) |
@@ -105,7 +108,7 @@ Most conditions — especially **preconditions** — are qualitative. The engine
 The envelope is the task projected across a tier boundary and translated to the executor's language. It is *derived* from the task, not a separate record.
 
 - **down (dispatch):** `imperative`, `preconditions` (givens), `postconditions` (success target), union of inherited `constraints`, `directives`, the evidence types implied by postcondition checks, and stop conditions.
-- **up (return):** `task.id`, claimed status, `evidence[]`, per-postcondition satisfaction, deviations (skips / OBE with reasons), and `signals[]` (bubbled new-info / out-of-scope / triage candidates).
+- **up (return):** `task.id`, claimed status, `evidence[]`, per-postcondition satisfaction, deviations (skips / OBE with reasons), and `triage_candidates[]` (out-of-scope discoveries bubbled for the owner).
 
 ## Config (Charter-owned)
 
@@ -119,12 +122,12 @@ The envelope is the task projected across a tier boundary and translated to the 
 ## Status
 
 ```
-pending ──(preconditions satisfied)──▶ in-progress
+pending ──(preconditions satisfied, if any)──▶ in-progress
 in-progress ──(postconditions satisfied + evidence shapes present)──▶ complete   [a proposal]
 in-progress ──(blocker)──▶ blocked
 {any} ──(reason; OBE)──▶ skipped
 complete ──(owner reopen, reason)──▶ in-progress   (rework_count++; escalate at cap)
-complete ──(owner accept)──▶ accepted/closed
+complete ──(owner accept)──▶ accepted = true   (node closed; `status` stays `complete`)
 ```
 
 Required `status_detail`:
@@ -181,7 +184,7 @@ Note the inherited `constraints` (handed down from a `struct:ctrl-core`-anchored
 | `append <id> …` | unordered methods only; executor structural add (Interrogator) |
 | `reopen <id> --reason …` | owner-only; `complete → in-progress`; `rework_count++`; escalate at cap |
 | `accept <id>` | owner finalizes; `complete → accepted` |
-| `signal <id> …` | attach a bubbled `signal` (new-info / out-of-scope / triage) for the owner |
+| `flag <id> --candidate …` | record an out-of-scope discovery as a **triage candidate** for the owner; drained by Triage in clean-up |
 
 ## Pinch points (flagged early)
 
