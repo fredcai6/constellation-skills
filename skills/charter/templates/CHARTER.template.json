@@ -2,7 +2,7 @@
   "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["context", "intent", "explore", "interrogate", "orchestrator-context", "crew-context", "glossary", "engine-config", "project-templates", "closeout"],
+  "items": ["context", "intent", "explore", "interrogate", "rigor", "orchestrator-context", "crew-context", "glossary", "engine-config", "project-templates", "closeout"],
   "tasks": {
     "context": {
       "id": "context",
@@ -38,6 +38,15 @@
       "preconditions": [{"id": "p1", "statement": "intent captured", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "doctrine resolved to role-operable decisions", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "interrogation.json",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "rigor": {
+      "id": "rigor",
+      "title": "Set rigor and prune",
+      "imperative": "From the resolved doctrine choose the rigor level: which human checkpoints the project wants. Prune this checklist's document-confirmation checkpoints to match (owner edit), and carry the choice into the engine config.",
+      "preconditions": [{"id": "p1", "statement": "doctrine resolved", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "rigor chosen; checklist pruned to it", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
     "orchestrator-context": {
