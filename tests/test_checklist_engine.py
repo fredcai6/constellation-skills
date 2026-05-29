@@ -309,5 +309,18 @@ class Hardening(unittest.TestCase):
         self.assertEqual(E.rework_cap(E.load_config(cl, Path("."))), 9)
 
 
+class ShippedTemplates(unittest.TestCase):
+    def test_every_template_is_valid_json_and_checklists_walk(self):
+        roots = sorted((ROOT / "skills").glob("*/templates/*.json"))
+        self.assertTrue(roots, "no shipped templates found")
+        for t in roots:
+            with self.subTest(template=str(t.relative_to(ROOT))):
+                data = json.loads(t.read_text(encoding="utf-8"))  # also catches stray tags
+                if "items" not in data:
+                    continue  # config file (e.g. ENGINE_CONFIG), not a checklist
+                self.assertTrue(data["items"])
+                self.assertTrue(E.current(data).startswith("ACTIVE"))
+
+
 if __name__ == "__main__":
     unittest.main()
