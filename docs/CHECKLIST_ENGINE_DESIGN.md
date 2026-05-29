@@ -10,6 +10,15 @@ The fix is to embed the *Checklist Manifesto* property into the mechanism: the c
 
 This is deliberately the **anti-spec-kit** posture: the artifacts are not orphan documents floating on their own. Every checklist node is anchored into the work tree and the project map (see Anchoring).
 
+## Goals
+
+Two goals, co-equal:
+
+1. **Gate less-capable models** (the Checklist Manifesto property): the checklist is held and enforced by the engine, not remembered by the agent, so a weaker model can execute one bounded step at a time without holding the workflow in its head.
+2. **Produce a traceable record**: the checklist tree is a complete, authority-stamped, evidence-backed account of how a bounded problem was understood, planned, executed, verified, and reconciled.
+
+**Recoverability is a side effect of traceability, not a primary design driver.** Because the engine externalizes state, a role *can* be resumed — and for small models it may eventually need to be killed and respawned mid-stream — but that falls out of keeping a faithful trace; it is not the reason the engine exists.
+
 ## Core model: a single-active-leaf tree
 
 Executing a project is **checklists within checklists**. A project decomposes `understand → plan → execute (implement ⇄ review) → clean up`; each of those, pushed on, is itself a checklist. The interrogator's question queue is a checklist. A pilot's implementation-gate list is a checklist. They share **one structure**: an ordered set of nodes, each with criteria, status, evidence, and an optional **child checklist**.
@@ -17,6 +26,18 @@ Executing a project is **checklists within checklists**. A project decomposes `u
 The engine manages a **tree** and walks it **one active leaf at a time**. `current` descends to the deepest open leaf. A parent gate does not close until its child checklist closes.
 
 **No parallel branches.** If multiple scopes must progress in parallel, they are **separate execution windows = separate work-ids = separate trees**, not concurrent branches in one tree. Fan-out (e.g. 1 implementer / 3 reviewers) happens *inside a single gate's execution*: the owner spawns probes and **synthesizes one evidence artifact**. The engine only ever sees "one review gate, one synthesized result." Parallelism never reaches the tree.
+
+The spine maps to roles:
+
+```
+Commander spine (strict-sequential)
+├─ understand   → child: Interrogator question-queue (priority-queue) + Cartographer structural probe
+├─ plan         → Commander authors the gate plan (Cartographer probe for structure)
+├─ execute      → child: Pilot gate plan (strict-sequential) → per gate: Crew implement ⇄ review
+└─ clean up     → reconciliation (Cartographer) + future work (Triage) + archive/closeout (Workbench)
+```
+
+The `kind` changes as you descend (sequential spine, priority-queue questions, sequential gates, evidence-gated review). A node's child checklist may be a different kind than its parent; the engine does not care.
 
 ## Typed checklists
 
@@ -85,6 +106,16 @@ Envelope (sketch):
 - **down:** compressed context in, bounded task, allowed scope + exclusions, inherited rules (see below), required evidence types, stop conditions.
 - **up:** what was done, evidence (by type), deviations (skips / OBE with reasons), assumptions, signals / new-info bubbled up, self-assessed status.
 
+## Context tiering
+
+The Charter context files are **not** read by all roles — they are tiered to match the role tiers, with deliberate overlap but intentional separation:
+
+- `ORCHESTRATOR_CONTEXT` — **high-level** context: architecture and *why*. Read by Commander, Pilot, Cartographer, Scout.
+- `CREW_CONTEXT` — **low-level** context: implementation and *how*. Read by Crew.
+- `GLOSSARY` — shared terms only; the one artifact genuinely read by all.
+
+A role receives the context tier it operates at; the high/low split is intentional, not incidental. The envelope a high-tier role hands down is phrased in the *why*; the executor translates it into the *how* of its own tier and synthesizes the result back up.
+
 ## Two-tier verification
 
 Verification happens at **two tiers**, which is the robustness story for weak agents:
@@ -98,7 +129,14 @@ Even if all low-tier agents are mediocre, the high-tier invoker still checks the
 
 The roles are not a workflow org chart — they are **context-isolation boundaries**. Constellation is a context-budgeting machine; the checklist tree is the spine that routes *which tier of context goes where*. One thing understands the **architecture**; another understands the **no-shit how the code actually works**. We deliberately do not send the high-level role combing through files.
 
-Therefore: **every cross-tier descent is a subagent boundary that returns a compressed artifact.** A high-tier agent that needs dense knowledge **dispatches a probe and gets back a summary, never the raw exploration.** Interrogator, Cartographer, and Scout are all "go dense, return compressed" probes that exist to protect a higher context window. (The current interrogator-inside-Pilot arrangement violates this — it crosses tiers in-context — which is why the interrogator becomes a dispatched probe.)
+Therefore: **every cross-tier descent is a subagent boundary that returns a compressed artifact.** A high-tier agent that needs dense knowledge **dispatches a probe and gets back a summary, never the raw exploration.** (The current interrogator-inside-Pilot arrangement violates this — it crosses tiers in-context — which is why the interrogator becomes a dispatched probe.)
+
+**Probes span tiers; Crew does not.** This is the distinction between two mechanistically-similar archetypes:
+
+- **Probe-curators** (Interrogator, Cartographer, Scout) are invoked by a high-tier role, **descend into dense/low material, and return compressed truth back up** — they live *across* the high/low boundary, and their purpose *is* to cross it so a high-tier role needn't. They also curate durable truth (glossary, map packets, report).
+- **Crew** (implementer, reviewer) lives **entirely at the low tier**: it receives a low-level envelope, works low, returns low-level evidence the Pilot integrates. It never crosses the boundary; it *is* the low side.
+
+Both are dispatched and both return packets, but they are distinct archetypes and likely do not share machinery.
 
 ### Tier map
 
@@ -106,8 +144,10 @@ Therefore: **every cross-tier descent is a subagent boundary that returns a comp
 Commander            intent + 4-phase spine + produces the gate plan      (never touches code)
   Pilot ‖ Cartographer    executes the gate plan / owns structural truth   (architecture packets, not code)
     Crew: implementer ‖ reviewer                                           (code-dense, bounded scope)
-  Probes (dispatched to go-dense, return-compressed): Interrogator, Cartographer, Scout
+  Probe-curators (tier-spanning, dispatched to go-dense / return-compressed): Interrogator, Cartographer, Scout
 ```
+
+Cartographer appears twice on purpose: it is a mid-tier owner of durable structural truth *and* the probe a higher tier dispatches to read/update that truth.
 
 - **Commander** owns only the four-phase split and **produces the gate plan** (leaning on a Cartographer probe for structure). It does not execute.
 - **Pilot** is handed a frozen gate plan, holds architecture packets, executes the gates, and interfaces directly to the implementer/reviewer crew.
@@ -119,9 +159,24 @@ Commander            intent + 4-phase spine + produces the gate plan      (never
 
 This is the guard against role sprawl while still adding roles for the sake of context management (context explosion — especially an architecture diagram crossing multiple file-region boundaries — is the actual enemy).
 
+## Bounded scope and the architecture bookend
+
+A Commander run handles **one bounded problem** — nominally one top-level issue. The gates are the steps needed to fix *that* problem, not an open-ended program of work. **40-gate plans should not exist**; if the work is that large, it is multiple issues / multiple execution windows. Bounding the problem is the Commander's job, and it is what makes everything downstream tractable.
+
+Architecture is touched at exactly **two bookends of a Commander sequence**, not throughout:
+
+- **At the start (read):** contextualize the ask against the *recorded* architecture (Cartographer packets) — framing the bounded problem in the existing structure.
+- **At the end (reconcile / write):** capture the implemented changes back into the map so the *next* effort starts from current truth.
+
+Reconciliation is **recording, not verification** — which is why it is correctly **batched once at cleanup** and does *not* conflict with the "never batch review" rule (review is per-gate correctness; reconciliation is end-of-run map maintenance).
+
+Between the bookends, architecture is **frozen read-only context**: Pilot executes against a snapshot of the map packets. If execution reveals the snapshot was wrong or the problem was mis-scoped, that is a **signal that bubbles to Commander** (possibly forcing a re-plan or abort), never a mid-flight edit to durable structural truth.
+
+This closes the loop at issue granularity: **Triage mints issues → each issue is one Commander run → reconciliation updates the map → Scout/Cartographer surface new pressure → Triage mints the next issues.** The issue is the quantum of work; nothing produced is an orphan, because every run reads from and writes back to the same durable map.
+
 ## Rules inherit down the tree
 
-Project- or section-specific quality rules (e.g. "must work with MATLAB Coder," "must be fail-safe") attach to a **node** and **inherit down its subtree.** Project-wide rules live at the root (Charter's `CREW_CONTEXT`); section-specific rules attach to the relevant subtree. Any leaf gate's **implementer and reviewer both receive the union of inherited rules** in their envelope. The tree we decompose *work* along is the same tree we route *context and rules* along — one structure, both jobs.
+Project- or section-specific quality rules (e.g. "must work with MATLAB Coder," "must be fail-safe") attach to a **node** and **inherit down its subtree.** Project-wide rules live at the root; section-specific rules attach to the relevant subtree. Any leaf gate's **implementer and reviewer both receive the union of inherited rules** in their envelope. The tree we decompose *work* along is the same tree we route *context and rules* along — one structure, both jobs.
 
 ## Anchoring (anti-orphan)
 
@@ -151,7 +206,6 @@ accept <node>                   owner accepts the returned packet; closes the no
 - **Naming.** "Interrogate a checklist" collides with the existing `constellation-interrogator` role (which questions the *user*). The querying verbs need distinct names. "Workbench" is kept. Cleanup deferred.
 - Exact JSON schema for a node and the envelope.
 - Whether `accept` and `advance` collapse into one move or stay distinct.
-- How the Commander↔Pilot handoff freezes the plan (snapshot vs reference).
+- Representation of the frozen plan + architecture **snapshot** handed Commander → Pilot (decided: it is a snapshot; open: how it is stored/referenced).
 - Migration order: which role's checklist conforms to the schema first (lean: conform first, restructure roles later).
 </content>
-</invoke>
