@@ -32,6 +32,8 @@ The human is the **next-higher level of context management** — the one who kno
 
 This is why the design does **not** depend on having a great model: the hard judgment is escalated to the human at gated checkpoints, not performed by the model. Pausing for human verification is a first-class Commander capability, not an exception path.
 
+The human verifies **Commander-level steps, not Crew-level steps** — phase transitions, the plan, architecture intent — never every implementation gate. Crew-level work is abstracted away unless a checkpoint forces a dig-in; per-gate correctness is the crew's two-tier verification, not the human's. Otherwise rigor decays into rubber-stamping. *Which* checkpoints are mandatory is the project's **rigor level**, set at Charter alongside the caps. And because the engine holds canonical state, a run awaiting a human decision simply **parks**: the operator can return hours later, in a different session, and resume from `current`. Every human gate is a clean suspend/resume boundary.
+
 ## Core model: a single-active-leaf tree
 
 Executing a project is **checklists within checklists**. A project decomposes `understand → plan → execute (implement ⇄ review) → clean up`; each of those, pushed on, is itself a checklist. The interrogator's question queue is a checklist. A pilot's implementation-gate list is a checklist. They share **one structure**: an ordered set of nodes, each with criteria, status, evidence, and an optional **child checklist**.
@@ -172,6 +174,27 @@ Cartographer appears twice on purpose: it is a mid-tier owner of durable structu
 > A role is justified iff it owns a distinct **(context tier × checklist kind × return artifact)**. If two proposed roles share all three, they are one role.
 
 This is the guard against role sprawl while still adding roles for the sake of context management (context explosion — especially an architecture diagram crossing multiple file-region boundaries — is the actual enemy).
+
+## Role roster and lifecycle coverage
+
+Every lifecycle stage has exactly one owning role — no gaps, no overlaps. Roles that sit *outside* a single Commander run (Charter, Scout, Cartographer) are cross-cutting **by design**; that they don't fit cleanly in the inner loop is the point. But they must consume the right context tier and stay migrated onto the engine format, so the Workbench changes don't orphan them.
+
+| Role | Archetype | Loop | Produces / owns |
+|---|---|---|---|
+| Human (operator) | top tier | both | decisions at junctions, issue selection |
+| Charter | setup / preflight | bootstrap (out of band) | ORCHESTRATOR_CONTEXT, CREW_CONTEXT, GLOSSARY, rigor + cap config; verifies starting products exist |
+| Commander | conductor | inner | phase spine, the gate plan, run outcome |
+| Pilot | conductor | inner | executed gates, synthesized evidence |
+| Crew (impl ‖ review) | worker (low only) | inner | code changes, evidence, review verdict |
+| Interrogator | probe-curator | inner (understand) | clarified issue, glossary updates |
+| Cartographer | probe-curator + owner | cross-cutting | map packets + index (`struct:<id>` anchors) |
+| Scout | probe-curator | outer | ranked architecture-pressure candidates |
+| Triage | sink | inner-invoked, outer-consumed | issue-ready future work |
+| Workbench | substrate | all | the engine, checklist state, the trace, archive |
+
+**Charter is the preflight.** Before any workflow can start, it verifies the right *products* are populated: the two context tiers, the glossary, the rigor/cap config, and at least a **baseline Cartographer map** so the architecture bookend has something to read at the start. If a starting product is missing, the project isn't ready to be operated by Constellation.
+
+**Cartographer and Scout are the roles most at risk of being left behind** by the engine work, precisely because they don't live inside the inner loop. The migration requirement is explicit: their own checklists conform to the typed-checklist schema; Cartographer's map IDs *are* the anchoring mechanism (`struct:<id>`) the engine references; both speak the unified envelope; and Scout's candidates carry structural anchors so they trace back into the map. Keeping them wired in is a first-class part of the migration, not an afterthought.
 
 ## Bounded scope and the architecture bookend
 
