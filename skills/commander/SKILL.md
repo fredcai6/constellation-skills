@@ -14,7 +14,18 @@ When this skill is loaded you own the run: drive every spine step through the en
 
 ## How it works
 
-Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: init, context, understand, plan, execute, reconcile, triage, integrate, archive. The template holds the exact instructions. Each step that needs another role hands an instruction to a subagent that invokes that skill and integrates the compressed result it returns. Keep each step the smallest reasonable bite.
+Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: **init → context → understand → plan → compact → execute → reconcile → triage → review → archive**. The template holds the exact instructions.
+
+| Step | Where it runs |
+|------|--------------|
+| understand (interrogator) | subagent (must reach the human) |
+| plan | this context |
+| compact | this context — run `/compact`, then reload commander + pilot skills |
+| execute (pilot) | this context — pilot skill loaded after compact |
+| reconcile (cartographer) | subagent |
+| triage | this context — triage skill loaded in-context; user approves issues before filing |
+| review | this context — summarize run, get user acceptance |
+| archive | this context — commit, push, move work area |
 
 ## Repo (default; Charter overrides)
 
