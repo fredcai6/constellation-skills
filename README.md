@@ -19,7 +19,6 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-interrogator` | Run a question survey and consolidate a resolved understanding. |
 | `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
 | `constellation-scout` | Audit map-first architecture pressure and package improvement candidates. |
-| `constellation-pilot` | Execute a frozen gate plan gate by gate, dispatching implementer and reviewer. |
 | `constellation-implementer` | Implement a bounded change from a handoff, driving its own gated plan. |
 | `constellation-reviewer` | Independently verify a bounded change as a survey and consolidate a verdict. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
@@ -78,7 +77,7 @@ python scripts/install_constellation.py --agent all --scope project --project C:
 Install selected skills:
 
 ```powershell
-python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo --skills charter pilot
+python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo --skills charter commander
 ```
 
 Refresh an existing install:
@@ -177,10 +176,10 @@ Rules:
 - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
 - Workflow status language follows `skills/workbench/references/status-model.md`.
-- Pilot Checklist = single execution controller for Pilot work; implementation gates and per-gate evidence live in its Implementation Gates section.
+- execute.json = Commander's frozen gate plan; three tasks per gate (implement/review/integrate); authored at plan time and never edited mid-run.
 - Default Checklist = fallback controller when a role does not ship its own checklist (e.g. Crew multi-step recovery). Never both a role checklist and Default Checklist for the same work.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.
-- Charter and Pilot closeout move the complete `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/`, including interrogation sessions.
+- Commander closes the complete `.agent-work/<work-id>/` package to `.agent-work/archive/<date>-<work-id>/` at archive, including interrogation sessions.
 - Archived workflow artifacts are historical context only.
 - Do not read archived workflow artifacts unless the user points there.
 - Future-agent truth must be promoted to durable artifacts.

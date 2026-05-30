@@ -19,15 +19,15 @@ A delegated checklist runs in one of two ways:
 - **Bounded, autonomous work** (implementer, reviewer, cartographer, scout): dispatch a **subagent**. Hand it the context it needs and its checklist; it works and returns evidence or a consolidated result.
 - **Work that talks to the human** (interrogator, and any `user-decision` checkpoint): run it in **your own context** by loading that skill and driving its checklist. A subagent cannot reach the human, so it cannot interrogate. The role split still holds — it is a separate checklist — it just runs in the human-reachable context.
 
-If your environment has no nested subagents, keep the orchestration (Commander, Pilot) in the one human-reachable context and dispatch only the leaf workers.
+If your environment has no nested subagents, keep the orchestration (Commander) in the one human-reachable context and dispatch only the leaf workers.
 
 ## One agent, one plan
 
-A checklist is one plan one agent works through — not the whole hierarchy in one file. Delegation is **by reference**: a gate sets `child_checklist: <work-id>` pointing at a separate plan; the sub-agent drives its own checklist. Every agent (Commander, Pilot, implementer, reviewer) has its own.
+A checklist is one plan one agent works through — not the whole hierarchy in one file. Delegation is **by reference**: a gate sets `child_checklist: <work-id>` pointing at a separate plan; the sub-agent drives its own checklist. Every agent (Commander, implementer, reviewer) has its own.
 
 ## Two types
 
-- **`gated`** — execution. Ordered; satisfy each item to advance; a failure **blocks** (rework). Used by the Commander spine, the Pilot gate plan, the implementer's own plan.
+- **`gated`** — execution. Ordered; satisfy each item to advance; a failure **blocks** (rework). Used by the Commander spine, Commander's execute.json, the implementer's own plan.
 - **`survey`** — verification/inquiry. Visit every item; **append** more from context; a failure is **recorded, never blocks**; then **consolidate** into one result. Used by the reviewer (→ APPROVE/BLOCK + findings) and the Interrogator (→ resolved understanding).
 
 ## Verb loop
@@ -62,10 +62,10 @@ The engine answers illegal moves with an imperative, e.g. `REFUSED: g1: postcond
 
 Every checklist opens with a context-read item so the agent pulls the right baseline (gated: read, then `attest`; survey: read, then `record pass`):
 
-- **High tier** (Commander, Pilot, Cartographer, Scout): `docs/agents/ORCHESTRATOR_CONTEXT.md` + `GLOSSARY.md` + relevant Cartographer packets.
+- **High tier** (Commander, Cartographer, Scout): `docs/agents/ORCHESTRATOR_CONTEXT.md` + `GLOSSARY.md` + relevant Cartographer packets.
 - **Crew tier** (implementer, reviewer): `docs/agents/CREW_CONTEXT.md` + `GLOSSARY.md` + the handoff + packet.
 
-Engine config (rework cap, rigor checkpoints, rules root) comes from `docs/agents/engine-config.json` via each checklist's `config_ref`.
+Engine config (rework cap, replan policy, human checkpoints) comes from `docs/agents/engine-config.json` via each checklist's `config_ref`.
 
 Division of labor: the **skill** says how to approach the job, the **checklist** says exactly what to do, the **Charter context files** say the project specifics.
 
@@ -76,8 +76,8 @@ Copy into `.agent-work/<work-id>/`, fill placeholders, then drive with the engin
 | template | type | role |
 |---|---|---|
 | `skills/commander/templates/COMMANDER_SPINE.template.json` | gated | Commander spine (understand/plan/execute/cleanup) |
-| `skills/pilot/templates/EXECUTE_PLAN.template.json` | gated | the frozen gate plan the Pilot drives |
+| `skills/commander/templates/EXECUTE_PLAN.template.json` | gated | Commander's frozen gate plan; three tasks per gate (implement/review/integrate) |
 | `skills/interrogator/templates/INTERROGATION.template.json` | survey | the Interrogator's question survey |
-| `skills/crew/templates/REVIEW_SURVEY.template.json` | survey | the reviewer's verification survey |
-| `skills/crew/templates/IMPLEMENTER_PLAN.template.json` | gated | the implementer's own working plan |
+| `skills/reviewer/templates/REVIEW_SURVEY.template.json` | survey | the reviewer's verification survey |
+| `skills/implementer/templates/IMPLEMENTER_PLAN.template.json` | gated | the implementer's own working plan |
 | `skills/charter/templates/ENGINE_CONFIG.template.json` | — | Charter writes it to `docs/agents/engine-config.json` |

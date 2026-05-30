@@ -42,7 +42,7 @@
     },
     "r5-reconciliation": {
       "id": "r5-reconciliation", "title": "Reconciliation check",
-      "imperative": "Does the change diverge from the recorded architecture in a way the Pilot must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
       "preconditions": [], "postconditions": [],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0

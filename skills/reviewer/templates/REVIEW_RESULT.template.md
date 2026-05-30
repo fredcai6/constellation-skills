@@ -29,7 +29,7 @@ Omit optional sections when empty.
 - `<blocker or none>`
 
 ## Out-of-scope observations
-- `<finding for Pilot or none>`
+- `<finding for Commander or none>`
 
 ## Return status
 `complete | partial | blocked | out-of-scope | failed`

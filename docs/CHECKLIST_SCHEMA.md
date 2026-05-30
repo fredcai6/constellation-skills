@@ -6,7 +6,7 @@ Status: **draft / pre-build.** Companion to `CHECKLIST_ENGINE_DESIGN.md`. Expect
 
 A checklist is **one plan that one agent works through** — not the whole multi-tier hierarchy in a single file. The agent is usually *handed* the plan and executes against it. Who handed it down, and how context is translated across tiers, is the **handoff / envelope** concern (see the design doc), not part of this schema. There are therefore **no owner/executor tags** — from the schema's point of view there is just the agent and its plan.
 
-Composition is **by reference, not by nesting.** A gate that delegates work points to a **child checklist** (a separate artifact / work-id); it does not inline the sub-agent's tasks. Every agent has its own plan: Commander, Pilot, implementer, reviewer. The implementer's plan is self-authored, full of primitives, and simply never handed further down.
+Composition is **by reference, not by nesting.** A gate that delegates work points to a **child checklist** (a separate artifact / work-id); it does not inline the sub-agent's tasks. Every agent has its own plan: Commander (spine and execute.json), implementer, reviewer. The implementer's plan is self-authored, full of primitives, and simply never handed further down.
 
 ## Two checklist types
 
@@ -17,7 +17,7 @@ Every checklist is an ordered list of items and declares one type:
 | `gated` | ordered; satisfy each to advance | no | **blocks** (rework / reopen) | every item complete or skipped | the work is done |
 | `survey` | visit every item | **yes** (extend from context) | **recorded, never blocks** | every item visited (resulted or skipped) | a **consolidated** result |
 
-- **`gated`** is execution: the Commander spine, the Pilot gate plan, the implementer's own plan. Ordered, blocking, fixed.
+- **`gated`** is execution: the Commander spine, Commander's execute.json, the implementer's own plan. Ordered, blocking, fixed.
 - **`survey`** is inquiry / verification: the **Interrogator's questions** and the **reviewer's checks** are the same shape — hit every item, add items as context warrants, nothing gates anything, then consolidate (a resolved understanding; an APPROVE/BLOCK verdict). A survey is handed a *starting* list and told "verify these, and add more based on the context we gave you."
 
 **Append is inherent to `survey`, not a separate flag**; `gated` never appends.
@@ -115,7 +115,6 @@ The envelope is the task projected across a tier boundary, translated to the rec
 | `rework_cap` | int | reopen attempts per node before escalation to the parent / human |
 | `replan` | `abort-and-reissue` | Commander is one-shot; a failed plan ends the run and re-issues |
 | `human_checkpoints` | `[string]` | the **rigor dial**: which checkpoints require a `user-decision` (e.g. `understand.done`, `plan.approved`, `run.accept`) |
-| `rules_root` | `[string]` | project-wide constraints inherited from the root |
 
 ## Status
 
@@ -161,7 +160,7 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 
 ## Example: two linked checklists
 
-Mid-run. A `gated` Pilot execute-plan; gate `g1` delegated its review to a `survey`, which found a problem and sent `g1` back. See `examples/` for the full JSON.
+Mid-run. A `gated` Commander execute.json; gate `g1` delegated its review to a `survey`, which found a problem and sent `g1` back. See `examples/` for the full JSON.
 
 ```
 issue-204-execute        (gated)   g1 ⟶ child_checklist: issue-204-g1-review

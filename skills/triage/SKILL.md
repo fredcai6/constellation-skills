@@ -1,32 +1,24 @@
 ---
 name: constellation-triage
-description: Create issue-ready recommendations. Use when Pilot, Cartographer, Crew, or the user finds future work outside implementation.
+description: Create issue-ready recommendations. Use when Commander, Cartographer, Crew, or the user finds future work outside current scope.
 ---
 
 # Constellation Triage
 
-Write issue-ready recommendations for follow-up work. Triage does not implement, keep backlog, or pull work into current scope unless asked. Persist future-work packaging in issues or workflow-local text.
+Write issue-ready recommendations for follow-up work. Triage does not implement, keep backlog, or pull work into current scope unless asked.
 
-Drive `templates/TRIAGE.template.json` as a `gated` checklist through the engine (workbench `references/checklist-engine.md`).
+**No checklist. Work through the candidates directly.**
 
-Mandatory, not advisory: once loaded, drive the checklist to completion through the engine and dispatch each step it names; do not improvise.
+## Steps
 
-Use when Cartographer finds out-of-scope mismatch; Reviewer finds out-of-scope test/doc/contract gaps; Pilot finds future work during planning; implementation exposes deferred debt; user wants issue-ready text.
+1. **Load candidates and authority.** Consume all sources: `execute.json` `triage_candidates`, Cartographer findings, review findings, plans, implementation evidence, user notes. Note issue creation authority from `docs/agents/ORCHESTRATOR_CONTEXT.md`.
 
-## Inputs
+2. **Classify each candidate.** Assign one or more labels: bug, cleanup, missing test, missing doc, missing architecture packet, missing structural node, architecture weakness, structure/constraint mismatch, stale generated map, feature, tooling, unresolved decision, research hardening, dependency cleanup, security/privacy, performance/resource. Preserve structural anchor, current truth, future concern, evidence.
 
-Consume Cartographer findings, review findings, plans, user notes, implementation evidence, and `execute.json` triage_candidates. Preserve structural anchor, mismatch class, current truth, desired/future concern, evidence, action.
-
-## Classify
-
-Use one or more: bug, cleanup, missing test, missing doc, missing architecture packet, missing structural node, architecture weakness, structure/constraint mismatch, stale generated map, feature, tooling, unresolved decision, research hardening, dependency cleanup, security/privacy, performance/resource.
+3. **Write recommendations.** For each candidate produce an issue-ready recommendation using `templates/TRIAGE_RECOMMENDATION.template.md`: what, importance, evidence, acceptance criteria, out of scope. Create issues where authority allows; otherwise produce recommendations and ask.
 
 ## Issue Authority
 
 Ground rules govern direct issue creation. If unclear, produce recommendations and ask.
 
-## Questions
-
-What is this? How important? Who owns it? Why future work? What evidence supports it? What makes it done? What is out of scope?
-
-Templates: `templates/TRIAGE.template.json`, `templates/TRIAGE_RECOMMENDATION.template.md`.
+Templates: `templates/TRIAGE_RECOMMENDATION.template.md`.
