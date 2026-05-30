@@ -2,10 +2,6 @@
   "config": {
     "rework_cap": 3,
     "replan": "abort-and-reissue",
-    "human_checkpoints": ["understand.done", "plan.approved", "run.accept"],
-    "rules_root": [
-      "<project-wide constraint>",
-      "follow ORCHESTRATOR_CONTEXT and CREW_CONTEXT"
-    ]
+    "human_checkpoints": ["understand.done", "plan.approved", "run.accept"]
   }
 }

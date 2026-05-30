@@ -36,7 +36,7 @@ The human verifies **Commander-level steps, not Crew-level steps** — phase tra
 
 ## Core model: a single-active-leaf tree
 
-Executing a project is **checklists within checklists**. A project decomposes `understand → plan → execute (implement ⇄ review) → clean up`; each of those, pushed on, is itself a checklist. The interrogator's question queue is a checklist. A pilot's implementation-gate list is a checklist. They share **one structure**: an ordered set of nodes, each with criteria, status, evidence, and an optional **child checklist**.
+Executing a project is **checklists within checklists**. A project decomposes `understand → plan → execute (implement ⇄ review) → clean up`; each of those, pushed on, is itself a checklist. The interrogator's question queue is a checklist. Commander's execute.json is a checklist. They share **one structure**: an ordered set of nodes, each with criteria, status, evidence, and an optional **child checklist**.
 
 The engine manages a **tree** and walks it **one active leaf at a time**. `current` descends to the deepest open leaf. A parent gate does not close until its child checklist closes.
 
@@ -48,7 +48,7 @@ The spine maps to roles:
 Commander spine (strict-sequential)
 ├─ understand   → child: Interrogator question-queue (priority-queue) + Cartographer structural probe
 ├─ plan         → Commander authors the gate plan (Cartographer probe for structure)
-├─ execute      → child: Pilot gate plan (strict-sequential) → per gate: Crew implement ⇄ review
+├─ execute      → Commander's execute.json (strict-sequential) → per gate: implement → review → integrate
 └─ clean up     → reconciliation (Cartographer) + future work (Triage) + archive/closeout (Workbench)
 ```
 
@@ -62,7 +62,7 @@ Every checklist is an ordered list of items and declares one of two types:
 
 | type | item failure | append | completes when | used by |
 |---|---|---|---|---|
-| `gated` | **blocks** (rework) | no | every item satisfied or skipped | execution: Commander spine, Pilot gate plan, the implementer's own plan |
+| `gated` | **blocks** (rework) | no | every item satisfied or skipped | execution: Commander spine, Commander's execute.json, the implementer's own plan |
 | `survey` | **recorded, never blocks** | yes | every item visited, then **consolidated** | inquiry/verification: Interrogator questions, reviewer checks |
 
 A `survey` is handed a *starting* list and told "verify these, and add more based on the context we gave you" — which is why append is inherent to it. The Interrogator and the reviewer are the **same shape**: hit every item, nothing gates anything, consolidate at the end (a resolved understanding; an APPROVE/BLOCK verdict).
@@ -76,7 +76,7 @@ Two layers, with a clean split:
 
 Consequences:
 
-- An implementer (executor of a Pilot-owned plan) can move a gate to complete and attach evidence, but **cannot add a gate.** New work discovered from below does not edit the plan — it **bubbles up as a signal** (existing crew return statuses: `out-of-scope`, "new information: ambiguity | decision | structural change | Triage candidate"). The owner decides whether to amend. A "replan" is an explicit, audited owner operation, not silent drift.
+- An implementer (executor of a Commander-owned plan) can move a gate to complete and attach evidence, but **cannot add a gate.** New work discovered from below does not edit the plan — it **bubbles up as a signal** (existing crew return statuses: `out-of-scope`, "new information: ambiguity | decision | structural change | Triage candidate"). The owner decides whether to amend. A "replan" is an explicit, audited owner operation, not silent drift.
 - **Append** is the one structural operation an executor may perform, and only on `priority-queue` kinds. The interrogator is both owner and executor of its own queue, which is why it is the exception — not a special case in the engine, just a consequence of owning what it executes.
 
 ### Skip / OBE is a state operation, not a structure change
@@ -111,7 +111,7 @@ So a "needs review" gate cannot close until a reviewer artifact of verdict APPRO
 
 ## Unified context envelope
 
-The context handed *down* to an executor and the context returned *up* from one are the **same object** — CREW_HANDOFF, interrogator-return, REVIEW_RESULT are all instances of a single contract carrying `tier` and `direction`. This kills the per-role artifact sprawl that made spec-kit / OpenSpec / BMAD produce orphan documents.
+The context handed *down* to an executor and the context returned *up* from one are the **same object** — IMPLEMENTER_HANDOFF / REVIEWER_HANDOFF, interrogator-return, REVIEW_RESULT are all instances of a single contract carrying `tier` and `direction`. This kills the per-role artifact sprawl that made spec-kit / OpenSpec / BMAD produce orphan documents.
 
 The boundary contract: **a good manager talks to the employee at the level the employee understands; the employee translates that into its own implementation level, does the work, and synthesizes the result back up into something digestible by the invoker.** Each side translates across the tier line, in its own direction.
 
@@ -124,7 +124,7 @@ Envelope (sketch):
 
 The Charter context files are **not** read by all roles — they are tiered to match the role tiers, with deliberate overlap but intentional separation:
 
-- `ORCHESTRATOR_CONTEXT` — **high-level** context: architecture and *why*. Read by Commander, Pilot, Cartographer, Scout.
+- `ORCHESTRATOR_CONTEXT` — **high-level** context: architecture and *why*. Read by Commander, Cartographer, Scout.
 - `CREW_CONTEXT` — **low-level** context: implementation and *how*. Read by Crew.
 - `GLOSSARY` — shared terms only; the one artifact genuinely read by all.
 
@@ -143,12 +143,12 @@ Even if all low-tier agents are mediocre, the high-tier invoker still checks the
 
 The roles are not a workflow org chart — they are **context-isolation boundaries**. Constellation is a context-budgeting machine; the checklist tree is the spine that routes *which tier of context goes where*. One thing understands the **architecture**; another understands the **no-shit how the code actually works**. We deliberately do not send the high-level role combing through files.
 
-Therefore: **every cross-tier descent is a subagent boundary that returns a compressed artifact.** A high-tier agent that needs dense knowledge **dispatches a probe and gets back a summary, never the raw exploration.** (The current interrogator-inside-Pilot arrangement violates this — it crosses tiers in-context — which is why the interrogator becomes a dispatched probe.)
+Therefore: **every cross-tier descent is a subagent boundary that returns a compressed artifact.** A high-tier agent that needs dense knowledge **dispatches a probe and gets back a summary, never the raw exploration.** (The Interrogator runs in Commander's context rather than as a subagent precisely because interrogation must reach the human — a subagent cannot. This is the sanctioned exception: same context, separate checklist.)
 
 **Probes span tiers; Crew does not.** This is the distinction between two mechanistically-similar archetypes:
 
 - **Probe-curators** (Interrogator, Cartographer, Scout) are invoked by a high-tier role, **descend into dense/low material, and return compressed truth back up** — they live *across* the high/low boundary, and their purpose *is* to cross it so a high-tier role needn't. They also curate durable truth (glossary, map packets, report).
-- **Crew** (implementer, reviewer) lives **entirely at the low tier**: it receives a low-level envelope, works low, returns low-level evidence the Pilot integrates. It never crosses the boundary; it *is* the low side.
+- **Crew** (implementer, reviewer) lives **entirely at the low tier**: it receives a low-level envelope, works low, returns low-level evidence the Commander integrates. It never crosses the boundary; it *is* the low side.
 
 Both are dispatched and both return packets, but they are distinct archetypes and likely do not share machinery.
 
@@ -156,17 +156,16 @@ Both are dispatched and both return packets, but they are distinct archetypes an
 
 ```
 Human (operator)     where this issue sits in the system-of-systems; verifies plan + intent at checkpoints
-Commander            intent + 4-phase spine + produces the gate plan      (never touches code)
-  Pilot ‖ Cartographer    executes the gate plan / owns structural truth   (architecture packets, not code)
-    Crew: implementer ‖ reviewer                                           (code-dense, bounded scope)
+Commander            intent + 4-phase spine + produces and executes the gate plan  (never touches code)
+  Cartographer            owns structural truth                                     (architecture packets, not code)
+    Crew: implementer ‖ reviewer                                                   (code-dense, bounded scope)
   Probe-curators (tier-spanning, dispatched to go-dense / return-compressed): Interrogator, Cartographer, Scout
 ```
 
 Cartographer appears twice on purpose: it is a mid-tier owner of durable structural truth *and* the probe a higher tier dispatches to read/update that truth.
 
-- **Commander** owns only the four-phase split and **produces the gate plan** (leaning on a Cartographer probe for structure). It does not execute.
-- **Pilot** is handed a frozen gate plan, holds architecture packets, executes the gates, and interfaces directly to the implementer/reviewer crew.
-- **Pilot and Cartographer are peers** under Commander; Crew sits below.
+- **Commander** owns the four-phase spine, produces the gate plan, and drives execute.json gate by gate in the same context. It networks to the Interrogator, Cartographer, and Crew (as dispatcher). It does not touch code.
+- **Cartographer** is a peer to Commander's execution; Crew sits below.
 
 ### Rule: a role earns its existence
 
@@ -174,12 +173,7 @@ Cartographer appears twice on purpose: it is a mid-tier owner of durable structu
 
 This is the guard against role sprawl while still adding roles for context management (context explosion — especially an architecture diagram crossing multiple file-region boundaries — is the actual enemy).
 
-**Commander vs Pilot** are close in altitude — which is why Commander did not exist originally — but they own **different conversations**, and that alone justifies the split: it keeps each context window focused.
-
-- **Commander** networks to the **Interrogator, Cartographer, and Pilot** (understanding, structure, and delegation; the human-facing integrator).
-- **Pilot** networks to the **Crew** (implementation and review).
-
-Merging them would force one window to hold the human/interrogator/cartographer planning dialogue *and* the crew execution loop — the exact context explosion the system exists to prevent.
+**Commander and gate execution** share the same conversation: Commander holds the human/planning context and also dispatches and integrates crew results gate by gate. A separate Pilot layer was tried but added a role boundary without a meaningfully distinct conversation — the planning context and the execution context overlapped heavily, and the split hurt visibility. The three-task-per-gate structure in execute.json (implement → review → integrate) makes gate execution visible within Commander's single context without needing a second orchestrator layer.
 
 ## Role roster and lifecycle coverage
 
@@ -189,8 +183,7 @@ Every lifecycle stage has exactly one owning role — no gaps, no overlaps. Role
 |---|---|---|---|
 | Human (operator) | top tier | both | decisions at junctions, issue selection |
 | Charter | setup / preflight | bootstrap (out of band) | ORCHESTRATOR_CONTEXT, CREW_CONTEXT, GLOSSARY, rigor + cap config; verifies starting products exist |
-| Commander | conductor | inner | phase spine, the gate plan, run outcome |
-| Pilot | conductor | inner | executed gates, synthesized evidence |
+| Commander | conductor | inner | phase spine, the gate plan, executed gates, run outcome |
 | Crew (impl ‖ review) | worker (low only) | inner | code changes, evidence, review verdict |
 | Interrogator | probe-curator | inner (understand) | clarified issue, glossary updates |
 | Cartographer | probe-curator + owner | cross-cutting | map packets + index (`struct:<id>` anchors) |
@@ -213,14 +206,14 @@ Architecture is touched at exactly **two bookends of a Commander sequence**, not
 
 Reconciliation is **recording, not verification** — which is why it is correctly **batched once at cleanup** and does *not* conflict with the "never batch review" rule (review is per-gate correctness; reconciliation is end-of-run map maintenance).
 
-Between the bookends, architecture is **frozen read-only context**: Pilot executes against a snapshot of the map packets. If execution reveals the snapshot was wrong or the problem was mis-scoped, that is a **signal that bubbles to Commander**, never a mid-flight edit to durable structural truth.
+Between the bookends, architecture is **frozen read-only context**: Commander executes against a snapshot of the map packets. If execution reveals the snapshot was wrong or the problem was mis-scoped, that is a **signal that surfaces to the human**, never a mid-flight edit to durable structural truth.
 
 **Commanders get one shot.** There is no mid-run re-plan loop. If a plan is proven wrong, the signal bubbles to the Commander, the issue is **re-interrogated with the human, and the run ends in favor of a fresh issue / fresh Commander run.** One Commander run = one coherent plan = one clean trace. This keeps traceability intact (no plan churn inside a run) and removes the weak-Commander ping-pong failure mode entirely — there is nothing to ping-pong, because re-planning *is* a new run, not an in-run operation.
 
 ## Two loops
 
 - **Inner loop** — one Commander run executes **one bounded issue**: understand → plan → execute → clean up. Self-contained, single-shot, one coherent trace.
-- **Outer loop** — minting and prioritizing issues *across* runs. Scout audits the current map for architecture pressure; reconciliation surfaces drift; Crew/Pilot bubble discovered work. **Triage** packages all of it into issues, and each issue becomes a future inner run.
+- **Outer loop** — minting and prioritizing issues *across* runs. Scout audits the current map for architecture pressure; reconciliation surfaces drift; Crew bubbles discovered work. **Triage** packages all of it into issues, and each issue becomes a future inner run.
 
 Both loops pivot on the same durable Cartographer map: the inner loop reads it at the start and writes it back at reconcile; the outer loop reads it to find pressure and mint the next issues. **Scout is purely outer-loop** (its own execution window). **Triage is invoked by the Commander inside the clean-up step** — so candidates found during a run are durably captured before the package closes — but the issues it produces are *consumed* by the outer loop. Invocation is inner; consumption is outer. This is the structural answer to the orphan-document problem: the issue is the quantum of work, and every run reads from and writes back to the same map.
 
@@ -256,5 +249,5 @@ accept <node>                   owner accepts the returned packet; closes the no
 - **Naming.** "Interrogate a checklist" collides with the existing `constellation-interrogator` role (which questions the *user*). The querying verbs need distinct names. "Workbench" is kept. Cleanup deferred.
 - Concrete node + envelope JSON: drafted in `CHECKLIST_SCHEMA.md`.
 - `accept` vs `advance`: resolved — `accept` folds into `advance`; the proposal/accept duality lives at the handoff between two plans.
-- Representation of the frozen plan + architecture **snapshot** handed Commander → Pilot (decided: it is a snapshot; open: how it is stored/referenced).
+- Representation of the frozen plan + architecture **snapshot** (decided: it is a snapshot stored as execute.json; open: how packets are referenced during execution).
 - Migration order: which role's checklist conforms to the schema first (lean: conform first, restructure roles later).

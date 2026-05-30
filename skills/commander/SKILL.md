@@ -12,20 +12,47 @@ Run one bounded issue end to end. The Commander is the human's rigor scaffold, n
 When this skill is loaded you own the run: drive every spine step through the engine and dispatch each role. **This is mandatory, not advisory — do not improvise or do another role's work yourself.**
 
 
+## Checklists you own
+
+Commander drives three checklists in sequence:
+
+| Checklist | Template | When |
+|---|---|---|
+| `spine.json` | `templates/COMMANDER_SPINE.template.json` | Entire run — the fixed workflow |
+| `interrogation.json` | (Interrogator drives it) | The `understand` step; load Interrogator in this context |
+| `execute.json` | `templates/EXECUTE_PLAN.template.json` | Authored at `plan`; driven as frozen at `execute` |
+
+Once authored, `execute.json` is never edited mid-run. If a gate proves the plan wrong, surface the decision to the user before continuing.
+
+
 ## How it works
 
 Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: **init → context → understand → plan → compact → execute → reconcile → triage → review → archive**. The template holds the exact instructions.
 
 | Step | Where it runs |
 |------|--------------|
-| understand (interrogator) | subagent (must reach the human) |
-| plan | this context |
-| compact | this context — run `/compact`, then reload commander + pilot skills |
-| execute (pilot) | this context — pilot skill loaded after compact |
-| reconcile (cartographer) | subagent |
-| triage | this context — triage skill loaded in-context; user approves issues before filing |
+| understand | this context — load `constellation-interrogator`; Interrogator must reach the human |
+| plan | this context — author `execute.json` using `templates/EXECUTE_PLAN.template.json` |
+| compact | this context — run `/compact`, then reload this skill |
+| execute | this context — drive `execute.json` gate by gate |
+| reconcile | subagent — load `constellation-cartographer` |
+| triage | this context — load `constellation-triage`; user approves issues before filing |
 | review | this context — summarize run, get user acceptance |
 | archive | this context — commit, push, move work area |
+
+
+## Executing a gate
+
+Each gate in `execute.json` has three tasks in order:
+
+**`gN-implement`** — Fill `templates/IMPLEMENTER_HANDOFF.template.md` from the gate plan (task, scope, close criteria, constraints, test mode). Dispatch a subagent invoking `constellation-implementer` with the completed handoff. Wait for and integrate the returned `IMPLEMENTER_RESULT`.
+
+**`gN-review`** — Fill `templates/REVIEWER_HANDOFF.template.md` from the gate plan and the `IMPLEMENTER_RESULT` (task statement, how to inspect the diff, close criteria, constraints, evidence produced). Dispatch a subagent invoking `constellation-reviewer` with the completed handoff. Wait for and integrate the returned `REVIEW_RESULT`.
+
+**`gN-integrate`** — Check the verdict. `APPROVE`: run the verification command, confirm postconditions pass, advance the gate. `BLOCK`: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates.
+
+Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait for each subagent to return before advancing. Do not abandon, duplicate, or re-dispatch a task still in progress.
+
 
 ## Repo (default; Charter overrides)
 
@@ -39,4 +66,4 @@ Pause for a `user-decision` at the checkpoints the project enables at Charter ti
 
 Architecture is read at the **start** (frame the ask against recorded structure) and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
 
-Template: `templates/COMMANDER_SPINE.template.json` (gated). Engine: workbench `references/checklist-engine.md`.
+Templates: `templates/COMMANDER_SPINE.template.json`, `templates/EXECUTE_PLAN.template.json`, `templates/IMPLEMENTER_HANDOFF.template.md`, `templates/REVIEWER_HANDOFF.template.md`. Engine: workbench `references/checklist-engine.md`.

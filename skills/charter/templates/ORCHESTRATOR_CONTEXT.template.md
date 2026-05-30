@@ -1,6 +1,6 @@
 # Orchestrator Context
 
-Project-specific overlay for Pilot and Cartographer. Generic role mechanics stay in the skills; this file contains only project rules that affect work shaping, architecture clarification, evidence expectations, and stop/ask behavior.
+Project-specific overlay for Commander and Cartographer. Generic role mechanics stay in the skills; this file contains only project rules that affect work shaping, architecture clarification, evidence expectations, and stop/ask behavior.
 
 Agent-facing context. Use bullets, tables, and fragments. Omit prose that does not change agent action.
 
@@ -33,8 +33,8 @@ Every handoff should include assigned task, allowed scope, specific exclusions i
 
 **Commit sensitivity:** `<ask always | commit local ok | push ok | PR only | direct main allowed | custom>`  
 **Commit archived work packages:** `<yes | no | ask each closeout>`  
-**Pilot may open PRs directly:** `<yes | no | ask first>`  
-**Pilot may merge to main:** `<yes | no | ask first>`
+**Commander may open PRs directly:** `<yes | no | ask first>`  
+**Commander may merge to main:** `<yes | no | ask first>`
 
 ## Evidence And Verification Map
 

@@ -26,7 +26,7 @@ Rules:
 
 - `partial` requires completed portion, missing portion, and next action.
 - `blocked` requires blocker and needed authority/evidence.
-- `out-of-scope` requires scope concern and return-to-Pilot note.
+- `out-of-scope` requires scope concern and return-to-Commander note.
 - `failed` requires failure evidence and recommended recovery.
 
 ## Review Verdict
@@ -41,18 +41,18 @@ Rules:
 
 - `APPROVE` means no blockers found against handoff, evidence, scope, and project rules.
 - `BLOCK` requires blockers.
-- `COMMENT` means observations only; gate may still need Pilot decision.
+- `COMMENT` means observations only; gate may still need Commander decision.
 
-## Pilot Decision
+## Commander Gate Decision
 
 Use for evidence integration and gate control:
 
 ```text
-continue | ask user | revise plan | send back to Crew | request Cartographer | collect Triage candidate | close out | stop Pilot
+continue | ask user | revise plan | send back to Crew | request Cartographer | collect Triage candidate | close out
 ```
 
 Rules:
 
 - Reviewer approval alone does not close a gate.
-- Pilot closes gates only after required evidence is integrated.
+- Commander closes gates only after required evidence is integrated.
 - Any decision that changes scope, authority, architecture, or evidence requires recorded authority.

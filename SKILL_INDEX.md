@@ -8,7 +8,7 @@ Interrogates engineering doctrine and compiles `ORCHESTRATOR_CONTEXT.md`, `CREW_
 ## Constellation Commander
 Path: `skills/commander/SKILL.md`
 
-Runs one bounded issue end to end as the human's rigor scaffold: init, understand, plan, execute, reconcile, triage, integrate, archive.
+Runs one bounded issue end to end as the human's rigor scaffold. Owns and drives three checklists (spine, interrogation, execute plan) and dispatches implementer and reviewer subagents per gate.
 
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`
@@ -30,11 +30,6 @@ Path: `skills/scout/SKILL.md`
 
 Runs map-first architecture audits for bad patterns, inefficient boundaries, and improvement candidates.
 
-## Constellation Pilot
-Path: `skills/pilot/SKILL.md`
-
-Executes a frozen gate plan gate by gate, dispatching implementer and reviewer and integrating evidence.
-
 ## Constellation Implementer
 Path: `skills/implementer/SKILL.md`
 
@@ -48,4 +43,4 @@ Independently verifies a bounded change as a survey and consolidates a verdict.
 ## Constellation Triage
 Path: `skills/triage/SKILL.md`
 
-Produces issue-ready recommendations.
+Classifies and writes issue-ready recommendations for future work. No checklist — works through candidates directly.
