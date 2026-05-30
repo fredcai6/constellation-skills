@@ -5,7 +5,7 @@ description: Use when work needs local todos, workflow artifacts, evidence, clos
 
 # Constellation Workbench
 
-Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns artifact hygiene, not semantic decisions.
+Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns clear workflow managemetn, not semantic decisions.
 
 Mandatory, not advisory: once a role skill is loaded, drive its checklist to completion through the engine and dispatch each step it names; do not improvise.
 
@@ -28,15 +28,11 @@ Work IDs: `issue-123-slug`, `pr-45-slug`, `YYYYMMDD-slug`; lowercase, stable, hy
 
 ## Controller
 
-Each agent drives one JSON checklist via the engine. A role's own template is its controller; `DEFAULT.template.json` covers ad-hoc work. Delegation is by reference (`child_checklist`), so the one work-id holds the whole tree.
+Each agent drives a JSON checklist via the engine. A role's own template is its controller; `DEFAULT.template.json` covers ad-hoc work. Delegation is by reference (`child_checklist`), so the one work-id holds the whole tree.
 
 ## Checklist engine
 
 Drive a controller one step at a time with the absolute path to this installed skill's bundled `scripts/checklist_engine.py` (canonical JSON state). Do not run `scripts/checklist_engine.py` relative to the target repo unless that repo vendors the script. Two types: `gated` (ordered execution; failure blocks) and `survey` (verification/inquiry; visit all, append, never block, consolidate). The engine enforces ordering, evidence shape, the rework cap, and the consolidation guard; it never judges quality. Obey its refusals as the next instruction. See `references/checklist-engine.md`.
-
-## Archive
-
-Archive only semantically closed workflows; blocked/waiting stays active. Role closeout templates define package movement. Promote durable truth to docs; package future work by project context. Do not read archives unless user points there.
 
 ## Closeout
 

@@ -5,11 +5,12 @@ description: Use to run one bounded issue end to end — understand, plan, execu
 
 # Constellation Commander
 
+**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
+
 Run one bounded issue end to end. The Commander is the human's rigor scaffold, not an autonomous reasoner: it decomposes and tracks the work and **surfaces decisions to the human** rather than making them. The human is the top tier — the one who knows where this issue sits in the system of systems. Force the decisions; do not obfuscate them.
 
-One run = one bounded issue = one coherent plan = one clean trace. **Commanders get one shot:** if the plan proves wrong, re-interrogate with the human and start a fresh issue — there is no mid-run re-plan.
+When this skill is loaded you own the run: drive every spine step through the engine and dispatch each role. **This is mandatory, not advisory — do not improvise or do another role's work yourself.**
 
-When this skill is loaded you own the run: drive every spine step through the engine and dispatch each role. This is mandatory, not advisory — do not improvise or do another role's work yourself.
 
 ## How it works
 

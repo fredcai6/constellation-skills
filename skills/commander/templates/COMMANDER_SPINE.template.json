@@ -46,7 +46,7 @@
     "execute": {
       "id": "execute",
       "title": "Execute the plan",
-      "imperative": "Hand execute.json to a subagent that invokes constellation-pilot. Commit along the branch as gates close. If a gate proves the plan wrong, end the run and re-issue.",
+      "imperative": "Initialize a subagent - It must invoke constellation-pilot and use execute.json in the workbench. If a gate proves the plan wrong, raise issue to user.",
       "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "every gate closed with integrated evidence", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "execute.json",
@@ -70,15 +70,6 @@
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
-    "integrate": {
-      "id": "integrate",
-      "title": "Ready the branch",
-      "imperative": "Commit remaining work. Confirm the branch is clean and ready to merge to main per repo guidance.",
-      "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "branch clean and merge-ready", "check": null, "satisfied": false}],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
-    },
     "archive": {
       "id": "archive",
       "title": "Archive the work area",
@@ -88,6 +79,15 @@
         {"id": "c1", "statement": "work area archived", "check": null, "satisfied": false},
         {"id": "c2", "statement": "run accepted", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
       ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "integrate": {
+      "id": "integrate",
+      "title": "Ready the branch",
+      "imperative": "Commit remaining work. Confirm the branch is clean and ready to merge to main per repo guidance.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "branch clean and merge-ready", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     }
