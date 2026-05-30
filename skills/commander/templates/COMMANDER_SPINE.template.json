@@ -2,7 +2,7 @@
   "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["init", "context", "understand", "plan", "execute", "reconcile", "triage", "integrate", "archive"],
+  "items": ["init", "context", "understand", "plan", "compact", "execute", "reconcile", "triage", "review", "archive"],
   "tasks": {
     "init": {
       "id": "init",
@@ -43,11 +43,23 @@
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
+    "compact": {
+      "id": "compact",
+      "title": "Compact context and reload skills",
+      "imperative": "Run /compact to compress conversation context. Then reload the constellation-commander skill into this context and load the constellation-pilot skill into this context. Both must be active and confirmed before proceeding to execute.",
+      "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "context compacted", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "commander and pilot skills loaded in this context", "check": null, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
     "execute": {
       "id": "execute",
       "title": "Execute the plan",
-      "imperative": "Initialize a subagent - It must invoke constellation-pilot and use execute.json in the workbench. If a gate proves the plan wrong, raise issue to user.",
-      "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
+      "imperative": "Using the pilot skill already loaded in this context, drive execute.json gate by gate in this conversation. Do not dispatch a subagent. If a gate proves the plan wrong, surface the decision to the user before continuing.",
+      "preconditions": [{"id": "p1", "statement": "commander and pilot skills loaded", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "every gate closed with integrated evidence", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "execute.json",
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
@@ -64,30 +76,33 @@
     "triage": {
       "id": "triage",
       "title": "Route future work",
-      "imperative": "Hand execute.json triage_candidates to a subagent that invokes constellation-triage; it writes issue-ready recommendations.",
-      "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "every triage candidate routed or recorded", "check": null, "satisfied": false}],
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation — do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed.",
+      "preconditions": [{"id": "p1", "statement": "reconcile complete", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "every triage candidate routed or recorded", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "user approved issue creation", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving.",
+      "preconditions": [{"id": "p1", "statement": "triage complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "run summary accepted by user", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
     "archive": {
       "id": "archive",
-      "title": "Archive the work area",
-      "imperative": "Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Get the human to accept the run.",
-      "preconditions": [{"id": "p1", "statement": "branch merge-ready", "check": null, "satisfied": false}],
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work. Push the branch to remote. Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Confirm the branch is clean and merge-ready per repo guidance.",
+      "preconditions": [{"id": "p1", "statement": "run summary accepted", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "work area archived", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "run accepted", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+        {"id": "c2", "statement": "branch committed and pushed", "check": null, "satisfied": false}
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
-    },
-    "integrate": {
-      "id": "integrate",
-      "title": "Ready the branch",
-      "imperative": "Commit remaining work. Confirm the branch is clean and ready to merge to main per repo guidance.",
-      "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "branch clean and merge-ready", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     }
