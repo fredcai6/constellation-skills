@@ -26,6 +26,8 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | engine config (rework cap, replan policy, human checkpoints) | Commander, Workbench engine | sets the mechanism limits the engine enforces |
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project-specific implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
+| Charter | `docs/agents/AGENT_GUIDE.md` + root `AGENTS.md`/`CLAUDE.md` pointers | all agents (Constellation or external) | single repo-orientation guide: layout, documentation map, conventions; the shared middle of the two contexts, not how to approach the job |
+| Commander | `.agent-work/AGENT_FEEDBACK.md` | future Charter refresh, maintainers | unified run retrospective appended before archive; persists across work-ids; workflow-improvement signal, not project truth |
 | Workbench | `templates/DEFAULT.template.json` | any role | generic gated controller for ad-hoc work; not durable truth |
 | Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |

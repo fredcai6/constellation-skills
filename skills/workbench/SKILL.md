@@ -13,6 +13,8 @@ Mandatory, not advisory: once a role skill is loaded, drive its checklist to com
 
 ```text
 .agent-work/
+  AGENT_FEEDBACK.md              # unified run retrospective; persists across work-ids, never archived
+
   <work-id>/                     # one work-id holds the whole tree
     <checklist>.json             # spine.json, interrogation.json, execute.json, g1-review.json, ...
     crew-handoffs/
@@ -23,6 +25,8 @@ Mandatory, not advisory: once a role skill is loaded, drive its checklist to com
     <date>-<work-id>/
       <complete work-id package>
 ```
+
+`AGENT_FEEDBACK.md` is workflow-improvement signal, not project truth: Commander appends one entry per run at its `feedback` step (template `templates/AGENT_FEEDBACK.template.md`). It lives at the agent-work root, accumulates across runs, and is never moved into `archive/`.
 
 Work IDs: `issue-123-slug`, `pr-45-slug`, `YYYYMMDD-slug`; lowercase, stable, hyphen-separated. Prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
 
@@ -38,4 +42,4 @@ Drive a controller one step at a time with the absolute path to this installed s
 
 Closed = controller current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, artifact closeout complete or explained.
 
-Templates: `templates/DEFAULT.template.json`, `templates/WORKFLOW_CLOSEOUT.template.md`. References: `references/checklist-engine.md`, `references/status-model.md`.
+Templates: `templates/DEFAULT.template.json`, `templates/WORKFLOW_CLOSEOUT.template.md`, `templates/AGENT_FEEDBACK.template.md`. References: `references/checklist-engine.md`, `references/status-model.md`.

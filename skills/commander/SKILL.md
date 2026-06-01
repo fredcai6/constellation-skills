@@ -27,7 +27,7 @@ Once authored, `execute.json` is never edited mid-run. If a gate proves the plan
 
 ## How it works
 
-Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: **init → context → understand → plan → compact → execute → reconcile → triage → review → archive**. The template holds the exact instructions.
+Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the engine one step at a time: **init → context → understand → plan → compact → execute → reconcile → triage → review → feedback → archive**. The template holds the exact instructions.
 
 | Step | Where it runs |
 |------|--------------|
@@ -38,6 +38,7 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 | reconcile | subagent — load `constellation-cartographer` |
 | triage | this context — load `constellation-triage`; user approves issues before filing |
 | review | this context — summarize run, get user acceptance |
+| feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md` |
 | archive | this context — commit, push, move work area |
 
 

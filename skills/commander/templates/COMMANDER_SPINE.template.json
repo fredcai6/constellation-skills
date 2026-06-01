@@ -2,7 +2,7 @@
   "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["init", "context", "understand", "plan", "compact", "execute", "reconcile", "triage", "review", "archive"],
+  "items": ["init", "context", "understand", "plan", "compact", "execute", "reconcile", "triage", "review", "feedback", "archive"],
   "tasks": {
     "init": {
       "id": "init",
@@ -94,11 +94,20 @@
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
+    "feedback": {
+      "id": "feedback",
+      "title": "Record workflow feedback",
+      "imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Append one dated entry for this work-id to .agent-work/AGENT_FEEDBACK.md (create it from templates/AGENT_FEEDBACK.template.md if absent — prefer the project copy under .agent-work/templates/, fall back to the bundled workbench template). This log persists across runs and is never archived with the work-id. Route concrete interface fixes to the closeout Template Update Candidates table and recurring signals to a Charter refresh.",
+      "preconditions": [{"id": "p1", "statement": "run summary accepted", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "run retrospective appended to .agent-work/AGENT_FEEDBACK.md", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
     "archive": {
       "id": "archive",
       "title": "Archive, commit, and push",
-      "imperative": "Commit all remaining work. Push the branch to remote. Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Confirm the branch is clean and merge-ready per repo guidance.",
-      "preconditions": [{"id": "p1", "statement": "run summary accepted", "check": null, "satisfied": false}],
+      "imperative": "Commit all remaining work, including the appended .agent-work/AGENT_FEEDBACK.md entry. Push the branch to remote. Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/, leaving the unified AGENT_FEEDBACK.md at the agent-work root. Confirm the branch is clean and merge-ready per repo guidance.",
+      "preconditions": [{"id": "p1", "statement": "workflow feedback recorded", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "work area archived", "check": null, "satisfied": false},
         {"id": "c2", "statement": "branch committed and pushed", "check": null, "satisfied": false}

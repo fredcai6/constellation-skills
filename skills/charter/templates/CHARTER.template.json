@@ -2,7 +2,7 @@
   "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["context", "intent", "explore", "interrogate", "rigor", "orchestrator-context", "crew-context", "glossary", "engine-config", "project-templates", "closeout"],
+  "items": ["context", "intent", "explore", "interrogate", "rigor", "orchestrator-context", "crew-context", "glossary", "agent-guide", "engine-config", "project-templates", "closeout"],
   "tasks": {
     "context": {
       "id": "context",
@@ -73,6 +73,15 @@
       "imperative": "Write docs/agents/GLOSSARY.md (shared terms only). Confirm it with the user.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "GLOSSARY written and confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "agent-guide": {
+      "id": "agent-guide",
+      "title": "Write AGENT_GUIDE and pointers",
+      "imperative": "Write docs/agents/AGENT_GUIDE.md from templates/AGENT_GUIDE.template.md: the single repo-orientation guide with a table of contents — repository organization, documentation map, conventions, build/test/run, and where to go next. It is the shared middle of Orchestrator and Crew context (where things are), not how to approach the job; derive it from the contexts just written and keep it useful to any agent, Constellation or not. Then write the root pointer files AGENTS.md and CLAUDE.md from templates/AGENTS.pointer.template.md and templates/CLAUDE.pointer.template.md so every agent entry point redirects to the one guide. Confirm with the user.",
+      "preconditions": [{"id": "p1", "statement": "orchestrator and crew context written", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "AGENT_GUIDE and root pointers written and confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },

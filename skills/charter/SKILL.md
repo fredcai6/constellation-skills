@@ -17,6 +17,8 @@ Durable outputs:
 docs/agents/ORCHESTRATOR_CONTEXT.md   # planning, authority, gating, evidence, stop/ask
 docs/agents/CREW_CONTEXT.md           # implementation, verification, review/blocking, stop/report
 docs/agents/GLOSSARY.md               # shared terms only
+docs/agents/AGENT_GUIDE.md            # single repo-orientation guide (TOC, repo layout, doc map); the shared middle of the two contexts
+AGENTS.md, CLAUDE.md                  # root pointer files that redirect to docs/agents/AGENT_GUIDE.md
 docs/agents/engine-config.json        # rework cap, rigor checkpoints, rules root, repo guidance
 .agent-work/templates/*               # project-specific template versions
 ```
@@ -27,4 +29,4 @@ Write each context for its reader: ORCHESTRATOR phrasing explains planning, fram
 
 **FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
 
-Templates: `templates/CHARTER.template.json`, `templates/CHARTER_STARTING_QUESTIONS.template.md`, `templates/ENGINE_CONFIG.template.json`, `templates/ORCHESTRATOR_CONTEXT.template.md`, `templates/CREW_CONTEXT.template.md`, `templates/GLOSSARY.template.md`, `templates/CHARTER_OPEN_QUESTIONS.template.md`. References: `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.
+Templates: `templates/CHARTER.template.json`, `templates/CHARTER_STARTING_QUESTIONS.template.md`, `templates/ENGINE_CONFIG.template.json`, `templates/ORCHESTRATOR_CONTEXT.template.md`, `templates/CREW_CONTEXT.template.md`, `templates/GLOSSARY.template.md`, `templates/AGENT_GUIDE.template.md`, `templates/AGENTS.pointer.template.md`, `templates/CLAUDE.pointer.template.md`, `templates/CHARTER_OPEN_QUESTIONS.template.md`. References: `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.
