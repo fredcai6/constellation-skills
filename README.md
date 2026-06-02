@@ -126,8 +126,12 @@ python scripts/build_architecture_map.py --root . --source-root src --check
 Decision anchors live in `docs/architecture/decisions/` when current-structure rationale is worth preserving.
 
 ```text
+AGENTS.md                          # root pointer -> docs/agents/AGENT_GUIDE.md
+CLAUDE.md                          # root pointer -> docs/agents/AGENT_GUIDE.md
+
 docs/
   agents/
+    AGENT_GUIDE.md                 # single repo-orientation guide (TOC, repo layout, doc map)
     ORCHESTRATOR_CONTEXT.md
     CREW_CONTEXT.md
     GLOSSARY.md
@@ -153,6 +157,7 @@ docs/
     *.template.json
     *.template.md
 
+  AGENT_FEEDBACK.md                # unified run retrospective; persists across work-ids, never archived
   CHARTER_OPEN_QUESTIONS.md
   SCOUT_REPORT.md
 
@@ -172,6 +177,8 @@ docs/
 
 Rules:
 
+- `docs/agents/AGENT_GUIDE.md` is the single repo-orientation guide (repo layout, documentation map, conventions) — the shared middle of Orchestrator and Crew context. Root `AGENTS.md` and `CLAUDE.md` are thin pointers to it; keep guidance in the guide, not the pointers.
+- `.agent-work/AGENT_FEEDBACK.md` is the unified run retrospective. Commander appends one entry per run before archive; it persists across work-ids and is never moved into `archive/`. Use it to improve doctrine over time, not as project truth.
 - If it is in `docs/`, it is meant to guide future workflows.
 - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.

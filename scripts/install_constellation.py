@@ -73,7 +73,6 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "workbench": ("checklist_engine.py",),
     "interrogator": ("checklist_engine.py",),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
-    "pilot": ("checklist_engine.py",),
     "implementer": ("checklist_engine.py",),
     "reviewer": ("checklist_engine.py",),
 }
