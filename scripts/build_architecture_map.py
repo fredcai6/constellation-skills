@@ -17,7 +17,32 @@ ALLOWED_LEVELS = {
 }
 ALLOWED_NODE_STATUS = {"current", "partial", "stale", "disputed"}
 ALLOWED_CONFIDENCE = {"high", "medium", "low", "unknown"}
-ALLOWED_RELATIONSHIPS = {"depends-on", "serves", "constrained-by"}
+ALLOWED_RELATIONSHIPS = {
+    "supports",
+    "depends-on",
+    "emits",
+    "constrained-by",
+    "explained-by",
+    "verified-by",
+}
+# Durable overlay node kinds that anchor to the structural hierarchy.
+ALLOWED_OVERLAY_KINDS = {
+    "capability",
+    "event",
+    "constraint",
+    "assumption",
+    "decision",
+    "claim",
+}
+# Overlay sections that contribute durable nodes, mapped to their node kind.
+OVERLAY_NODE_SECTIONS = {
+    "capabilities": "capability",
+    "events": "event",
+    "constraints": "constraint",
+    "assumptions": "assumption",
+    "decisions": "decision",
+    "claims": "claim",
+}
 SOURCE_SUFFIXES = {".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs", ".java", ".cs"}
 
 
@@ -122,21 +147,23 @@ def parse_overlay(path: Path, repo_root: Path) -> tuple[list[dict[str, Any]], li
     current_section: str | None = None
     current_item: dict[str, Any] | None = None
     in_evidence = False
+    item_indent = 0
 
     def flush() -> None:
         nonlocal current_item
         if not current_section or current_item is None:
             return
-        if current_section in {"purposes", "constraints"}:
-            nodes.append(
-                {
-                    "id": current_item.get("id"),
-                    "kind": current_item.get("kind"),
-                    "parent": current_item.get("parent"),
-                    "label": current_item.get("label"),
-                    "overlay": repo_path(repo_root, path),
-                }
-            )
+        if current_section in OVERLAY_NODE_SECTIONS:
+            node = {
+                "id": current_item.get("id"),
+                "kind": current_item.get("kind") or OVERLAY_NODE_SECTIONS[current_section],
+                "parent": current_item.get("parent"),
+                "label": current_item.get("label"),
+                "overlay": repo_path(repo_root, path),
+            }
+            if current_item.get("summary") is not None:
+                node["summary"] = current_item.get("summary")
+            nodes.append(node)
         elif current_section == "relationships":
             item = dict(current_item)
             item.setdefault("evidence", [repo_path(repo_root, path)])
@@ -152,14 +179,20 @@ def parse_overlay(path: Path, repo_root: Path) -> tuple[list[dict[str, Any]], li
             in_evidence = False
             continue
 
+        indent = len(raw_line) - len(raw_line.lstrip())
         stripped = raw_line.strip()
         if stripped.startswith("- "):
             value = stripped[2:]
-            if in_evidence and current_item is not None:
+            # Evidence list items are nested deeper than the relationship/node
+            # item they belong to; a dash at or above the item indent starts a
+            # new list item and ends the evidence block.
+            if in_evidence and current_item is not None and indent > item_indent:
                 current_item.setdefault("evidence", []).append(parse_overlay_value(value))
                 continue
             flush()
             current_item = {}
+            item_indent = indent
+            in_evidence = False
             if ":" in value:
                 key, item_value = value.split(":", 1)
                 current_item[key.strip()] = parse_overlay_value(item_value)
@@ -244,6 +277,11 @@ def validate_map(nodes: Sequence[dict[str, Any]], relationships: Sequence[dict[s
     seen: set[str] = set()
     duplicates: set[str] = set()
 
+    # Overlay node ids that touch any edge (as source or target). Used to enforce
+    # that durable overlay nodes anchor to the structural hierarchy.
+    edged_ids = {relationship.get("source") for relationship in relationships}
+    edged_ids |= {relationship.get("target") for relationship in relationships}
+
     for node in nodes:
         node_id = node.get("id")
         if not node_id:
@@ -264,6 +302,15 @@ def validate_map(nodes: Sequence[dict[str, Any]], relationships: Sequence[dict[s
             parent = node.get("parent")
             if parent and parent not in ids:
                 errors.append(f"{node_id} missing parent: {parent}")
+        elif "kind" in node:
+            kind = node.get("kind")
+            if kind not in ALLOWED_OVERLAY_KINDS:
+                errors.append(f"{node_id} has disallowed node kind: {kind}")
+            parent = node.get("parent")
+            if parent and parent not in ids:
+                errors.append(f"{node_id} missing parent: {parent}")
+            if node_id not in edged_ids:
+                errors.append(f"overlay node without structural anchor: {node_id}")
 
     for duplicate in sorted(duplicates):
         errors.append(f"duplicate id: {duplicate}")

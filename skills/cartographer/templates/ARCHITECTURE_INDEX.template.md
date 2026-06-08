@@ -26,8 +26,12 @@ Dense navigation for the current-only structural map.
 
 | Anchor | Kind | Parent | Structural links |
 |---|---|---|---|
-| `purpose:<id>` | `purpose` | `<purpose:<id> or none>` | `struct:<id>` |
-| `constraint:<id>` | `constraint` | `<purpose:<id> | constraint:<id> | none>` | `struct:<id>` |
+| `capability:<id>` | `capability` | `<capability:<id> or none>` | `struct:<id>` |
+| `event:<id>` | `event` | `none` | `struct:<id>` |
+| `constraint:<id>` | `constraint` | `<capability:<id> | constraint:<id> | none>` | `struct:<id>` |
+| `assumption:<id>` | `assumption` | `none` | `struct:<id>` |
+| `claim:<id>` | `claim` | `none` | `struct:<id>` |
+| `decision:<id>` | `decision` | `none` | `struct:<id>` |
 
 ## Generated Map Artifacts
 

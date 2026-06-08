@@ -1,6 +1,6 @@
 # Architecture Decision: `<short current-structure decision>`
 
-Use only when the decision materially explains current structure and would be costly to rediscover. Prefer `rationale:<id>` overlays for short rationale. Omit optional sections when empty.
+Use only when the decision materially explains current structure and would be costly to rediscover. Prefer `claim:<id>` overlays for short rationale. Omit optional sections when empty.
 
 ## Status
 

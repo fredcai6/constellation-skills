@@ -13,6 +13,6 @@ Own: `index.md`, `packets/`, `overlays/`, map, `MAP_BUILD.md`.
 
 Track edits/durable judgments in your checklist. Packet-first: reconcile touched node packets before index/overlay ceremony.
 
-May update wording, status/confidence, dependencies, overlays, and map compliance with clear evidence; decide and record rationale. Ask only when durable ownership, parent, dependency direction, boundary, failure semantics, disputed truth, or ambiguous intent would change. Future work routes to Triage.
+May update wording, status/confidence, dependencies, capability/event/constraint/assumption/claim overlays, decision anchors, and map compliance with clear evidence; decide and record rationale as `claim:` overlays or `decision:` anchors. Ask only when durable ownership, parent, dependency direction, boundary, failure semantics, disputed truth, or ambiguous intent would change. Future work routes to Triage.
 
 Templates: `templates/CARTOGRAPHER.template.json`, `templates/ARCHITECTURE_PACKET.template.md`, `templates/ARCHITECTURE_INDEX.template.md`, `templates/ARCHITECTURE_DECISION.template.md`, `templates/MAP_BUILD.template.md`. References: `references/map-model.md`, workbench `references/checklist-engine.md`.

@@ -63,16 +63,22 @@ Direction: consumer -> provider. Relationship type: `depends-on`.
 
 - `<path>`
 
-## Purpose / constraint / rationale anchors
+## Capability / event / constraint anchors
 
-**Serves:**
-- `purpose:<id>`
+**Supports:**
+- `capability:<id>`
+
+**Emits:**
+- `event:<id>`
 
 **Constrained by:**
-- `constraint:<id>`
+- `constraint:<id>` | `assumption:<id>`
 
-**Rationale anchors:**
-- `rationale:<id>`
+**Explained by:**
+- `decision:<id>`
+
+**Verified by:**
+- `claim:<id>`
 
 ## Generated map links
 
