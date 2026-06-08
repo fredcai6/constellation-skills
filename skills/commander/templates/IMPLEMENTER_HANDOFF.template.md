@@ -28,6 +28,15 @@ Concise fragments. Omit filler.
 `<rules the implementation must respect — from project rules or gate-specific needs>`
 - `<rule>`
 
+## Map Anchors (inbound)
+Map context this gate inherits from the mission frame, so the implementation lands on the right structure and honors recorded rules. Omit a line when the gate carries nothing for it.
+- **Structural:** `<struct:id — path/symbol, level — where the work lands or depends>`
+- **Capability:** `<capability:id — behavior this gate changes or relies on>`
+- **Constraints/assumptions:** `<constraint:id | assumption:id — must not be silently violated>`
+- **Decision anchors:** `<decision:id — governs this structure; do not contradict without surfacing a candidate>`
+- **Evidence expectations:** `<claim:id or check this gate must re-confirm>`
+- **Map confidence flags:** `<node id — low-confidence/stale/disputed area; verify rather than trust; omit if none>`
+
 ## Required Evidence
 `<what to produce: test output, command result, inspection note, generated artifact>`
 

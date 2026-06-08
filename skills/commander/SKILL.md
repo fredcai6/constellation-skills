@@ -67,8 +67,18 @@ Pause for a `user-decision` at the checkpoints the project enables at Charter ti
 
 Surface a decision candidate the moment a choice would govern current structure, capabilities, constraints, or future planning behavior — i.e. when an agent could later rediscover or violate it. Force such choices to the human as a `user-decision`; do not bury them. Record the resolution as a candidate for the reconcile step, where Cartographer decides whether it becomes a durable decision anchor. Decision pressure or evidence returned by Implementer/Reviewer feeds the same candidate pool. Do not raise candidates for choices obvious from current structure.
 
+## Mission frame
+
+Plan **map-first**. Before authoring `execute.json`, produce a **mission frame** from the current map (`templates/MISSION_FRAME.template.md`): intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope. The frame is how the durable map feeds planning before any code spelunking, and the source the gate anchors are cut from.
+
+The map is context, not authority over code, and not a tax on trivial work. For a small local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent. When relevant architecture artifacts exist, the frame is required.
+
+Low-confidence, stale, partial, or disputed map areas **alter the plan** — never trust them silently. Flag the area in the frame and either plan a scout/verification step into `execute.json` or surface it to the human as a decision; do not author gates that assume an unverified map.
+
+Each gate **inherits** the relevant frame anchors: the per-gate `anchors` block in `execute.json` carries the structural/capability/constraint/decision/evidence anchors down, and the inbound handoff templates relay them to Implementer and Reviewer so every role plans from the same map context.
+
 ## Architecture bookend
 
-Architecture is read at the **start** (frame the ask against recorded structure) and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
+Architecture is read at the **start** — that read produces the mission frame above — and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
 
-Templates: `templates/COMMANDER_SPINE.template.json`, `templates/EXECUTE_PLAN.template.json`, `templates/IMPLEMENTER_HANDOFF.template.md`, `templates/REVIEWER_HANDOFF.template.md`. Engine: workbench `references/checklist-engine.md`.
+Templates: `templates/COMMANDER_SPINE.template.json`, `templates/EXECUTE_PLAN.template.json`, `templates/MISSION_FRAME.template.md`, `templates/IMPLEMENTER_HANDOFF.template.md`, `templates/REVIEWER_HANDOFF.template.md`. Engine: workbench `references/checklist-engine.md`.
