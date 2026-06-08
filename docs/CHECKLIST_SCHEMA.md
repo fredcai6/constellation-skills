@@ -134,8 +134,42 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 |---|---|---|
 | `command` | runs `check.command` | exit 0 — "the tests/build actually pass" |
 | `artifact` | confirms an evidence item of `check.evidence_type` is attached (optional field match, e.g. `verdict: APPROVE`) | present + shape-valid |
+| `git-change-policy` | collects the staged (`git diff --cached`) or branch (`git diff <base>...HEAD`) diff and evaluates each changed file against an inline artifact policy (globs, size, binary) | **no** files violate the policy — "the closeout diff carries no suspicious artifacts" |
 
 That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE` (produced by a `survey` review's consolidation).
+
+### `git-change-policy` — artifact-output guardrails at closeout
+
+A `git-change-policy` check refuses advancement when the staged or pending diff includes **suspicious artifacts**: oversized files, generated record dumps, disallowed artifact directories, binary/blob additions, or large data files (parquet/pickle/model/checkpoint). It is mechanical only — globs, size, binary — and does **not** judge whether an artifact is semantically useful. The policy is configured **inline on the `check`**:
+
+```json
+{
+  "kind": "git-change-policy",
+  "mode": "staged",                       // "staged" (git diff --cached) | "branch" (vs base)
+  "base": "origin/main",                  // used only when mode == "branch"
+  "max_file_bytes": 1000000,
+  "deny_globs": ["*.parquet","*.pkl","*.pickle","*.joblib","*.pt","*.onnx","data/generated/**","records/**"],
+  "allow_globs": ["docs/**","src/**","tests/**","skills/**","scripts/**",".agent-work/**"],
+  "require_human_waiver_for_binary": true
+}
+```
+
+| field | type | meaning |
+|---|---|---|
+| `mode` | `staged`\|`branch` | which diff to evaluate; `staged` = `git diff --cached`, `branch` = `git diff <base>...HEAD` |
+| `base` | string | branch base ref, used only when `mode == "branch"` (default `origin/main`) |
+| `max_file_bytes` | int \| null | a changed file larger than this violates; `null`/absent = no size constraint |
+| `deny_globs` | `[glob]` | a changed path matching any of these **always** violates (an explicit deny beats an allow) |
+| `allow_globs` | `[glob]` | a changed path matching any of these is **exempt from the size and binary checks** (deny still denies) |
+| `require_human_waiver_for_binary` | bool | when true, a binary/blob addition (outside an `allow_glob`) violates |
+
+**Per-file violation semantics.** A changed file VIOLATES if it matches any `deny_glob`; OR its size exceeds `max_file_bytes`; OR it is binary and `require_human_waiver_for_binary` is true — **UNLESS** it matches an `allow_glob`, which exempts it from the size/binary checks only. An explicit `deny_glob` always wins (a deny inside an allowed directory still denies). Globs use `**` for any number of path segments and `*` within a segment; a bare-basename glob like `*.parquet` matches anywhere in the tree. Empty/missing policy lists mean "no constraint of that kind," and a clean (or empty) diff yields zero violations → satisfied.
+
+**Implementation note (testability).** The engine splits this into a PURE evaluator `evaluate_git_change_policy(files, policy) -> [violations]` (no git, no filesystem; `files` are `{path,size,binary}` dicts) and a thin git collector `_collect_changed_files(policy, base_dir)`. The semantics above are fully unit-testable without a working tree.
+
+**Blocks by default; waivable via the override path.** The check **blocks advance by default**. A human who intends an artifact does not hand-mark the condition — they carry an `override_policy` on it and `waive` it (see *Override policy*). The check's `artifact-policy` evidence (below) records exactly which rule was bypassed, so the waiver's audit trail names the violation.
+
+**Rigor dial.** `max_file_bytes`, `deny_globs`, `allow_globs`, and `require_human_waiver_for_binary` are the **rigor dial** for closeout. They are tuned per project by editing the inline policy on the check in the project's templates (Charter owns the templates / engine-config). There is no separate config loader — the inline policy on the check is the single source.
 
 ### Override policy — a deliberate, auditable waiver
 
@@ -166,8 +200,8 @@ Most conditions, especially **preconditions**, are qualitative. The engine recor
 | field | type | notes |
 |---|---|---|
 | `id` | string | |
-| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver` |
-| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `waiver`: `{cond, authority, reason, forced}` |
+| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy` |
+| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed) |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
 

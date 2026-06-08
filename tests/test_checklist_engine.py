@@ -624,5 +624,209 @@ class ShippedTemplates(unittest.TestCase):
                 self.assertTrue(E.current(data).startswith("ACTIVE"))
 
 
+def _policy(**overrides):
+    """A representative artifact policy (the spine's shape) for evaluator tests."""
+    p = {
+        "mode": "staged",
+        "max_file_bytes": 1_000_000,
+        "deny_globs": ["*.parquet", "*.pkl", "*.pickle", "data/generated/**", "records/**"],
+        "allow_globs": ["docs/**", "src/**", "tests/**", "skills/**", "scripts/**", ".agent-work/**"],
+        "require_human_waiver_for_binary": True,
+    }
+    p.update(overrides)
+    return p
+
+
+class GitChangePolicyEvaluator(unittest.TestCase):
+    """PURE evaluator tests — no git, no working tree."""
+
+    def test_clean_diff_no_violations(self):
+        files = [{"path": "docs/a.md", "size": 10, "binary": False},
+                 {"path": "src/x.py", "size": 500, "binary": False},
+                 {"path": "tests/test_x.py", "size": 80, "binary": False}]
+        self.assertEqual(E.evaluate_git_change_policy(files, _policy()), [])
+
+    def test_empty_diff_satisfied(self):
+        self.assertEqual(E.evaluate_git_change_policy([], _policy()), [])
+
+    def test_empty_policy_no_constraints(self):
+        files = [{"path": "anything", "size": 9_999_999, "binary": True}]
+        self.assertEqual(E.evaluate_git_change_policy(files, {}), [])
+
+    def test_oversized_file_violates(self):
+        files = [{"path": "blob.txt", "size": 2_000_000, "binary": False}]
+        v = E.evaluate_git_change_policy(files, _policy())
+        self.assertEqual(len(v), 1)
+        self.assertIn("exceeds max_file_bytes", v[0])
+
+    def test_oversized_file_in_allow_glob_exempt(self):
+        files = [{"path": "src/big.py", "size": 2_000_000, "binary": False}]
+        self.assertEqual(E.evaluate_git_change_policy(files, _policy()), [])
+
+    def test_denied_records_dir_violates(self):
+        files = [{"path": "records/foo.json", "size": 1, "binary": False}]
+        v = E.evaluate_git_change_policy(files, _policy())
+        self.assertIn("matches deny glob", v[0])
+
+    def test_denied_nested_records_dir_violates(self):
+        # recursive ** — the nested record-dump case
+        files = [{"path": "records/a/b/foo.json", "size": 1, "binary": False}]
+        self.assertTrue(E.evaluate_git_change_policy(files, _policy()))
+
+    def test_denied_parquet_anywhere_violates(self):
+        files = [{"path": "sub/dir/model.parquet", "size": 1, "binary": False}]
+        v = E.evaluate_git_change_policy(files, _policy())
+        self.assertIn("*.parquet", v[0])
+
+    def test_binary_addition_requires_waiver(self):
+        files = [{"path": "blob.dat", "size": 1, "binary": True}]
+        v = E.evaluate_git_change_policy(files, _policy())
+        self.assertIn("binary/blob addition", v[0])
+
+    def test_binary_in_allow_glob_exempt(self):
+        files = [{"path": "skills/img.png", "size": 1, "binary": True}]
+        self.assertEqual(E.evaluate_git_change_policy(files, _policy()), [])
+
+    def test_binary_allowed_when_policy_off(self):
+        files = [{"path": "blob.dat", "size": 1, "binary": True}]
+        self.assertEqual(
+            E.evaluate_git_change_policy(files, _policy(require_human_waiver_for_binary=False)), [])
+
+    def test_deny_beats_allow(self):
+        # an explicit deny always denies, even inside an allow_glob dir
+        files = [{"path": "src/model.parquet", "size": 1, "binary": False}]
+        v = E.evaluate_git_change_policy(files, _policy())
+        self.assertEqual(len(v), 1)
+        self.assertIn("matches deny glob", v[0])
+
+
+class GitChangePolicyCheck(unittest.TestCase):
+    """The git-change-policy CHECK kind wired through advance/waive, with the
+    collector stubbed so tests need no git."""
+
+    def setUp(self):
+        self._orig = E._collect_changed_files
+        E._collect_changed_files = lambda policy, base_dir, _self=self: self._files
+        self._files = []
+
+    def tearDown(self):
+        E._collect_changed_files = self._orig
+
+    def _gate(self, status="in-progress", waivable=True):
+        t = gate("g1", status)
+        cond = {"id": "c4", "statement": "no suspicious artifacts",
+                "check": dict(_policy(), kind="git-change-policy"), "satisfied": False}
+        if waivable:
+            cond["override_policy"] = {"allowed": True, "authority": "human", "reason_required": True}
+        t["postconditions"] = [cond]
+        return gated(g1=t)
+
+    def test_clean_diff_advance_succeeds(self):
+        self._files = [{"path": "docs/a.md", "size": 10, "binary": False}]
+        cl = self._gate()
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["type"], "artifact-policy")
+        self.assertEqual(ev["payload"]["violations"], [])
+
+    def test_violation_blocks_advance_and_records_evidence(self):
+        self._files = [{"path": "records/dump.json", "size": 1, "binary": False}]
+        cl = self._gate(waivable=False)
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["type"], "artifact-policy")
+        self.assertTrue(ev["payload"]["violations"])
+        self.assertIn("records/dump.json", ev["payload"]["violations"][0])
+
+    def test_oversized_blocks_advance(self):
+        self._files = [{"path": "big.txt", "size": 5_000_000, "binary": False}]
+        cl = self._gate(waivable=False)
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+
+    def test_binary_blocks_advance(self):
+        self._files = [{"path": "blob.dat", "size": 1, "binary": True}]
+        cl = self._gate(waivable=False)
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+
+    def test_human_waiver_satisfies_and_records_violation(self):
+        self._files = [{"path": "data/generated/x.parquet", "size": 1, "binary": False}]
+        cl = self._gate(waivable=True)
+        # default: blocked
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        # the violation is on the record before the human waives it
+        viol_ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(viol_ev["type"], "artifact-policy")
+        self.assertTrue(viol_ev["payload"]["violations"])
+        # human waives via the #7 override path
+        E.waive(cl, "g1", "c4", "postconditions", "human", "intentional sample fixture")
+        msg = E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        self.assertIn("WAIVED", msg)
+        # waiver evidence records authority + reason; violation evidence still present
+        types = [e["type"] for e in cl["tasks"]["g1"]["evidence"]]
+        self.assertIn("waiver", types)
+        self.assertIn("artifact-policy", types)
+        waiver = next(e for e in cl["tasks"]["g1"]["evidence"] if e["type"] == "waiver")
+        self.assertEqual(waiver["payload"]["authority"], "human")
+        self.assertEqual(waiver["payload"]["reason"], "intentional sample fixture")
+
+    def test_waived_policy_not_reevaluated_at_advance(self):
+        # a waived policy condition must NOT be re-collected/re-checked at advance
+        self._files = [{"path": "records/dump.json", "size": 1, "binary": False}]
+        cl = self._gate(waivable=True)
+        E.waive(cl, "g1", "c4", "postconditions", "human", "accepted")
+        # if the check re-ran, it would un-waive and refuse; it must not
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete (WAIVED postconditions ['c4'])")
+
+
+class GitChangePolicyCollectorIntegration(unittest.TestCase):
+    """Optional end-to-end: a real temp git repo exercising _collect_changed_files.
+    Skipped if git is unavailable."""
+
+    def setUp(self):
+        import shutil
+        if shutil.which("git") is None:
+            self.skipTest("git not available")
+
+    def _git(self, d, *args):
+        import subprocess
+        return subprocess.run(["git", *args], cwd=str(d), capture_output=True, text=True)
+
+    def test_staged_collector_reports_path_size_binary(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            self._git(d, "init", "-q")
+            self._git(d, "config", "user.email", "t@t")
+            self._git(d, "config", "user.name", "t")
+            (d / "small.txt").write_text("hi", encoding="utf-8")
+            (d / "blob.bin").write_bytes(b"\x00\x01\x02\x00binary\x00data")
+            self._git(d, "add", "small.txt", "blob.bin")
+            files = E._collect_changed_files({"mode": "staged"}, d)
+            by_path = {f["path"]: f for f in files}
+            self.assertIn("small.txt", by_path)
+            self.assertIn("blob.bin", by_path)
+            self.assertEqual(by_path["small.txt"]["size"], 2)
+            self.assertFalse(by_path["small.txt"]["binary"])
+            self.assertTrue(by_path["blob.bin"]["binary"])
+
+    def test_evaluator_over_collected_files_flags_deny_glob(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            self._git(d, "init", "-q")
+            self._git(d, "config", "user.email", "t@t")
+            self._git(d, "config", "user.name", "t")
+            (d / "records").mkdir()
+            (d / "records" / "dump.json").write_text("{}", encoding="utf-8")
+            self._git(d, "add", "records/dump.json")
+            files = E._collect_changed_files({"mode": "staged"}, d)
+            violations = E.evaluate_git_change_policy(files, _policy())
+            self.assertTrue(any("records/dump.json" in v for v in violations))
+
+
 if __name__ == "__main__":
     unittest.main()

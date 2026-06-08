@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -111,9 +112,181 @@ def _new_evidence_id(t: dict) -> str:
     return f"e-{t['id']}-{len(t.get('evidence', [])) + 1}"
 
 
-def _check_condition(cond: dict, t: dict) -> bool:
+# --------------------------------------------------------------------------- #
+# git-change-policy — mechanical artifact-output guardrails (#8)
+#
+# Split deliberately into a PURE evaluator (no git, no filesystem) and a thin
+# git collector, so the policy semantics are fully unit-testable without a
+# working tree. The evaluator decides VIOLATIONS; the collector gathers the
+# changed-file facts (path/size/binary) the evaluator consumes.
+# --------------------------------------------------------------------------- #
+def _glob_to_regex(pattern: str) -> str:
+    r"""Translate a path glob into an anchored regex. `**` matches across path
+    separators (any number of segments); a single `*` matches within one
+    segment (no `/`); `?` matches one non-separator char. A trailing `/**` also
+    matches the directory itself (so `records/**` covers `records/x` and
+    `records/a/b`). We do NOT use `PurePosixPath.match`: before Python 3.13 it
+    treats `**` as a single-segment wildcard, so `records/**` would miss
+    `records/a/b` — exactly the nested record-dump case this policy must catch."""
+    # `records/**` should also match `records/a/b` -> normalize a trailing
+    # `/**` to `(/.*)?` by handling it as part of the `**` translation below.
+    out: list[str] = []
+    i, n = 0, len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "*":
+            if i + 1 < n and pattern[i + 1] == "*":
+                # `**` (optionally `/**` or `**/`) crosses separators
+                i += 2
+                if i < n and pattern[i] == "/":
+                    i += 1
+                    out.append("(?:.*/)?")  # zero or more leading segments
+                else:
+                    out.append(".*")
+                continue
+            out.append("[^/]*")  # single star: within a segment
+        elif c == "?":
+            out.append("[^/]")
+        elif c == "/":
+            # collapse a `/**` suffix so the dir prefix also matches the dir
+            if pattern[i:] == "/**":
+                out.append("(?:/.*)?")
+                i = n
+                continue
+            out.append("/")
+        else:
+            out.append(re.escape(c))
+        i += 1
+    return "^" + "".join(out) + "$"
+
+
+def _glob_match(path: str, pattern: str) -> bool:
+    """Match a POSIX-style path against a glob pattern with recursive `**`.
+
+    We normalize to forward slashes so Windows-style paths still match. A bare
+    basename pattern like `*.parquet` matches on any segment (it is also tried
+    against the final path component) so `sub/dir/x.parquet` is caught."""
+    norm = (path or "").replace("\\", "/")
+    regex = _glob_to_regex(pattern)
+    if re.match(regex, norm):
+        return True
+    # basename-style pattern (no separator): also match the final component,
+    # mirroring `*.parquet` matching anywhere in the tree.
+    if "/" not in pattern:
+        return bool(re.match(regex, norm.rsplit("/", 1)[-1]))
+    return False
+
+
+def evaluate_git_change_policy(files: list[dict], policy: dict) -> list[str]:
+    """PURE policy evaluation. Returns a list of human-readable violations
+    (empty == satisfied). `files` is a list of dicts:
+    `{"path": str, "size": int, "binary": bool}`. No git, no filesystem — this
+    is the fully unit-testable core.
+
+    A file VIOLATES if:
+      - it matches any `deny_globs` entry (an explicit deny ALWAYS denies — it
+        beats an allow); OR
+      - its size exceeds `max_file_bytes`; OR
+      - it is binary and `require_human_waiver_for_binary` is true,
+    UNLESS the path matches an `allow_globs` entry, which exempts it from the
+    SIZE and BINARY checks only (deny still denies). Empty/missing policy lists
+    mean "no constraint of that kind"; a clean (empty) file list yields zero
+    violations."""
+    policy = policy or {}
+    deny = policy.get("deny_globs") or []
+    allow = policy.get("allow_globs") or []
+    max_bytes = policy.get("max_file_bytes")
+    binary_needs_waiver = bool(policy.get("require_human_waiver_for_binary"))
+
+    violations: list[str] = []
+    for f in files:
+        path = f.get("path", "")
+        size = f.get("size")
+        is_binary = bool(f.get("binary"))
+
+        denied = next((g for g in deny if _glob_match(path, g)), None)
+        if denied is not None:
+            violations.append(f"{path}: matches deny glob {denied!r}")
+            # explicit deny is terminal for this file; allow cannot rescue it
+            continue
+
+        allowed = any(_glob_match(path, g) for g in allow)
+        if allowed:
+            continue  # exempt from size/binary checks
+
+        if isinstance(max_bytes, (int, float)) and isinstance(size, (int, float)) and size > max_bytes:
+            violations.append(f"{path}: size {int(size)}B exceeds max_file_bytes {int(max_bytes)}")
+        if is_binary and binary_needs_waiver:
+            violations.append(f"{path}: binary/blob addition requires a human waiver")
+    return violations
+
+
+def _git(args: list[str], base_dir: Path | None) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", *args], cwd=str(base_dir) if base_dir else None,
+        capture_output=True, text=True,
+    )
+
+
+def _collect_changed_files(policy: dict, base_dir: Path | None) -> list[dict]:
+    """Thin git collector: gather `{path, size, binary}` for the changed files.
+
+    mode `staged` -> `git diff --cached`; mode `branch` -> `git diff <base>...HEAD`.
+    Binary detection uses `git diff --numstat` (a binary file shows `-\t-`).
+    Size comes from the working-tree file when present, else `git cat-file` on
+    the staged/HEAD blob. Kept small and isolated so the PURE evaluator carries
+    the testable logic."""
+    policy = policy or {}
+    mode = policy.get("mode", "staged")
+    if mode == "branch":
+        base = policy.get("base", "origin/main")
+        name_args = ["diff", "--name-only", f"{base}...HEAD"]
+        numstat_args = ["diff", "--numstat", f"{base}...HEAD"]
+        blob_ref = "HEAD"
+    else:
+        name_args = ["diff", "--cached", "--name-only"]
+        numstat_args = ["diff", "--cached", "--numstat"]
+        blob_ref = ":"  # the staged index entry for a path is `:<path>`
+
+    names_proc = _git(name_args, base_dir)
+    if names_proc.returncode != 0:
+        raise EngineError(f"git-change-policy: collecting changed files failed: {names_proc.stderr.strip()}")
+    paths = [ln for ln in names_proc.stdout.splitlines() if ln.strip()]
+
+    binary_paths: set[str] = set()
+    numstat_proc = _git(numstat_args, base_dir)
+    if numstat_proc.returncode == 0:
+        for line in numstat_proc.stdout.splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 3 and parts[0] == "-" and parts[1] == "-":
+                binary_paths.add(parts[2])
+
+    root = base_dir or Path.cwd()
+    files: list[dict] = []
+    for path in paths:
+        size = None
+        wt = root / path
+        if wt.is_file():
+            try:
+                size = wt.stat().st_size
+            except OSError:
+                size = None
+        if size is None:
+            ref = f"{blob_ref}{path}" if blob_ref == ":" else f"{blob_ref}:{path}"
+            cat = _git(["cat-file", "-s", ref], base_dir)
+            if cat.returncode == 0:
+                try:
+                    size = int(cat.stdout.strip())
+                except ValueError:
+                    size = None
+        files.append({"path": path, "size": size, "binary": path in binary_paths})
+    return files
+
+
+def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
     """Verify one condition. command -> run it; artifact -> presence/match;
-    null -> the agent must have attested it (trust but verify).
+    git-change-policy -> evaluate the staged/branch diff against an artifact
+    policy (#8); null -> the agent must have attested it (trust but verify).
 
     A WAIVED condition is honored without re-running its check: a human override
     (see `waive`) has accepted the condition, and re-running the command would
@@ -151,6 +324,27 @@ def _check_condition(cond: dict, t: dict) -> bool:
                 return True
         cond["satisfied"] = False
         return False
+    if kind == "git-change-policy":
+        files = _collect_changed_files(chk, base_dir)
+        violations = evaluate_git_change_policy(files, chk)
+        eid = _new_evidence_id(t)
+        t.setdefault("evidence", []).append(
+            {
+                "id": eid,
+                "type": "artifact-policy",
+                "payload": {
+                    "mode": chk.get("mode", "staged"),
+                    "violations": violations,
+                    "files_checked": len(files),
+                },
+                "produced_by": "engine",
+                "ts": "",
+            }
+        )
+        cond["satisfied"] = not violations
+        if cond["satisfied"]:
+            cond["satisfied_by"] = eid
+        return cond["satisfied"]
     raise EngineError(f"unknown check kind {kind!r}")
 
 
@@ -355,13 +549,13 @@ def current(cl: dict) -> str:
     return prefix + f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
 
 
-def start(cl: dict, iid: str) -> str:
+def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
     t = task(cl, iid)
     if t["status"] != "pending":
         raise EngineError(f"{iid} is {t['status']!r}, cannot start")
     if cl["type"] == GATED and active_id(cl) != iid:
         raise EngineError(f"{iid} is not the active gate; start {active_id(cl)!r} first")
-    unmet = [c["id"] for c in t.get("preconditions", []) if not _check_condition(c, t)]
+    unmet = [c["id"] for c in t.get("preconditions", []) if not _check_condition(c, t, base_dir)]
     if unmet:
         raise EngineError(f"{iid}: preconditions unmet {unmet} (verify upstream work, then attest)")
     t["status"] = "in-progress"
@@ -387,7 +581,7 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
     posts = t.get("postconditions", [])
     if not posts:
         raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
-    unmet = [c["id"] for c in posts if not _check_condition(c, t)]
+    unmet = [c["id"] for c in posts if not _check_condition(c, t, base_dir)]
     if unmet:
         raise EngineError(f"{iid}: postconditions unmet {unmet}")
     t["status"] = "complete"
@@ -705,7 +899,7 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
     # carry the owning --session-id. No lease -> legacy behavior (no session).
     require_session(cl, v, getattr(args, "session_id", None), config)
     if v == "start":
-        return start(cl, args.id)
+        return start(cl, args.id, base_dir=base_dir)
     if v == "advance":
         return advance(cl, args.id, from_child=getattr(args, "from_child", None), base_dir=base_dir)
     if v == "record":
