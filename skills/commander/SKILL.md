@@ -52,6 +52,8 @@ Each gate in `execute.json` has three tasks in order:
 
 **`gN-integrate`** — Check the verdict. `APPROVE`: run the verification command, confirm postconditions pass, advance the gate. `BLOCK`: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates.
 
+Closeout checks (the `gN-integrate` tests-pass command, etc.) are engine **postconditions**: `advance` runs them and refuses if any fails. If the **human** decides a specific check is non-blocking, do not hand-edit the checklist to mark it satisfied — use the engine `waive` verb (`waive gN-integrate --cond <id> --authority human --reason "..."`), which records who accepted the risk and why. A check is only waivable if its `override_policy` allows it; overriding that requires the high-friction `--force` and is recorded as forced.
+
 Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait for each subagent to return before advancing. Do not abandon, duplicate, or re-dispatch a task still in progress.
 
 

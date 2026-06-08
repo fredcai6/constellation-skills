@@ -319,6 +319,133 @@ class Hardening(unittest.TestCase):
         self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
 
 
+def _waivable_gate(iid, command, status="in-progress"):
+    """A gate whose command postcondition carries an override policy."""
+    t = gate(iid, status, command=command)
+    t["postconditions"][0]["override_policy"] = {
+        "allowed": True, "authority": "human", "reason_required": True,
+    }
+    return t
+
+
+class Waiver(unittest.TestCase):
+    def test_failed_command_check_refuses_advance(self):
+        # mirrors AdvanceGated; kept here as the baseline the waiver path relaxes
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+
+    def test_command_output_records_exit_status_on_failure(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["type"], "command-output")
+        self.assertEqual(ev["payload"]["exit"], 1)
+
+    def test_allowed_waiver_marks_condition_satisfied(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        msg = E.waive(cl, "g1", "c1", "postconditions", "human", "non-blocking for docs")
+        self.assertIn("waived g1.c1", msg)
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(cond["satisfied"])
+        self.assertTrue(cond["waived"])
+        self.assertEqual(cond["satisfied_by"], cond["waived"]["evidence"])
+
+    def test_waived_failing_command_lets_advance_succeed(self):
+        # hazard #3: a waived FAILING command must NOT be re-run and un-waived at advance
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.waive(cl, "g1", "c1", "postconditions", "human", "accepted risk")
+        msg = E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        self.assertIn("WAIVED", msg)
+        # the waiver survived re-evaluation
+        self.assertTrue(cl["tasks"]["g1"]["postconditions"][0]["waived"])
+
+    def test_waiver_refused_when_no_override_policy(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.waive(cl, "g1", "c1", "postconditions", "human", "please")
+        self.assertFalse(cl["tasks"]["g1"]["postconditions"][0].get("waived"))
+
+    def test_waiver_refused_when_override_not_allowed(self):
+        t = gate("g1", "in-progress", command=FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"] = {"allowed": False}
+        cl = gated(g1=t)
+        with self.assertRaises(E.EngineError):
+            E.waive(cl, "g1", "c1", "postconditions", "human", "please")
+
+    def test_force_waiver_succeeds_without_policy_and_records_forced(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        msg = E.waive(cl, "g1", "c1", "postconditions", "human", "emergency", forced=True)
+        self.assertIn("FORCED", msg)
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(cond["waived"]["forced"])
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["type"], "waiver")
+        self.assertTrue(ev["payload"]["forced"])
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete (WAIVED postconditions ['c1'])")
+
+    def test_waiver_requires_authority(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.waive(cl, "g1", "c1", "postconditions", "", "reason")
+
+    def test_waiver_requires_reason_when_required(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.waive(cl, "g1", "c1", "postconditions", "human", "   ")
+
+    def test_force_waiver_requires_reason(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.waive(cl, "g1", "c1", "postconditions", "human", None, forced=True)
+
+    def test_waiver_evidence_records_cond_authority_reason(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.waive(cl, "g1", "c1", "postconditions", "human", "pyright non-blocking")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["type"], "waiver")
+        self.assertEqual(ev["payload"]["cond"], "c1")
+        self.assertEqual(ev["payload"]["authority"], "human")
+        self.assertEqual(ev["payload"]["reason"], "pyright non-blocking")
+
+    def test_reopen_clears_waiver(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.waive(cl, "g1", "c1", "postconditions", "human", "accepted")
+        E.advance(cl, "g1")
+        E.reopen(cl, "g1", "redo it properly")
+        self.assertFalse(cl["tasks"]["g1"]["postconditions"][0].get("waived"))
+
+    def test_cli_waive_then_advance(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            # advancing a failing gate refuses
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 1)
+            # waive it through the CLI
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--authority", "human", "--reason", "accepted risk"]), 0)
+            # now advance succeeds and the waiver persisted
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            reloaded = E.load(f)
+            self.assertEqual(reloaded["tasks"]["g1"]["status"], "complete")
+            self.assertTrue(reloaded["tasks"]["g1"]["postconditions"][0]["waived"])
+            self.assertTrue(any(e["type"] == "waiver" for e in reloaded["tasks"]["g1"]["evidence"]))
+
+    def test_cli_waive_refused_without_policy(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--authority", "human", "--reason", "x"]), 1)
+
+
 class ShippedTemplates(unittest.TestCase):
     def test_every_template_is_valid_json_and_checklists_walk(self):
         roots = sorted((ROOT / "skills").glob("*/templates/*.json"))

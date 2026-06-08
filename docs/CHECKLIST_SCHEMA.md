@@ -77,6 +77,8 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 | `check` | object \| null | how it is verified; `null` = qualitative/asserted |
 | `satisfied` | bool | |
 | `satisfied_by` | string \| null | evidence-id or note |
+| `override_policy` | object \| null | *optional*; makes the condition **waivable** by a human (see below). Absent → not waivable. |
+| `waived` | object \| null | set by the `waive` verb when a human accepts the condition; a durable marker that survives re-evaluation |
 
 ### What "engine-checked" means
 
@@ -87,6 +89,26 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 
 That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE` (produced by a `survey` review's consolidation).
 
+### Override policy — a deliberate, auditable waiver
+
+By default the engine **refuses** advancement when any postcondition is unmet, and a failed `command` check leaves a `command-output` evidence record with its exit status. That refusal is the whole point: it kills accidental advancement past a failing gate. But a human sometimes legitimately decides a check is non-blocking (e.g. a flaky type-check at a docs-only closeout). That decision belongs to the human, not the engine — so the engine offers a **waiver** path that records *who* accepted the risk and *why*, rather than letting an agent quietly mark a condition satisfied.
+
+A condition opts into being waivable with an optional sibling field `override_policy` (a **sibling of** `check`, not nested inside it):
+
+```json
+"override_policy": { "allowed": true, "authority": "human", "reason_required": true }
+```
+
+| `override_policy` field | type | meaning |
+|---|---|---|
+| `allowed` | bool | the condition may be waived (no `--force` needed) |
+| `authority` | string | who is expected to accept the risk (advisory) |
+| `reason_required` | bool | the `waive` verb refuses an empty `--reason` |
+
+**Absent `override_policy` means the condition is NOT waivable.** All existing conditions behave exactly as before; only a condition that carries this field is waivable through the normal path. A condition without a policy can still be waived, but only via the high-friction `--force` flag, which always demands authority + reason and is recorded as a forced override.
+
+When `waive` succeeds it does three durable things on the condition: sets `satisfied: true`, sets `satisfied_by` to the new waiver evidence id, and stamps a `waived` marker `{authority, reason, evidence, forced}`. The marker matters because `command`/`artifact` checks are **re-evaluated at every `advance`**: the engine short-circuits a waived condition (honors it without re-running its check) so the waiver is not silently overwritten and un-waived. A `reopen` clears the `waived` marker — rework re-evaluates from scratch, so a prior waiver does not carry over.
+
 ### Qualitative conditions (`check: null`) — trust but verify
 
 Most conditions, especially **preconditions**, are qualitative. The engine records the agent's assertion and leans on the tiers for truth. A precondition is verified by **the very agent that depends on it**: told "you need an interface that does X," its first job is to confirm that interface exists — which doubles as a second review of the upstream work. We chose this over mechanical id-chaining: trust but verify, and keep the engine simple.
@@ -96,8 +118,8 @@ Most conditions, especially **preconditions**, are qualitative. The engine recor
 | field | type | notes |
 |---|---|---|
 | `id` | string | |
-| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification` |
-| `payload` | object | command output, diff ref, decision text, verdict, packet ref |
+| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver` |
+| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `waiver`: `{cond, authority, reason, forced}` |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
 
@@ -155,7 +177,8 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |
 | `block <id> …` | both | `→ blocked`; append to `blockers` (bubble to parent) |
-| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap |
+| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; clears any `waived` markers |
+| `waive <id> --cond <id> [--which postconditions] --authority … --reason … [--force]` | both | human override: satisfy a condition **by waiver**; refused unless its `override_policy.allowed` (or `--force`); records a `waiver` evidence record + a durable `waived` marker |
 | `flag-candidate …` | both | record an out-of-scope discovery in `triage_candidates` |
 
 ## Example: two linked checklists

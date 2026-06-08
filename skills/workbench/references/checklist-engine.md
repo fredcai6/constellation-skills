@@ -41,11 +41,25 @@ record <id> --result pass|fail   # survey: record the check; never blocks
 consolidate [--verdict ...]      # survey: every item visited -> hand up a result
 ```
 
-Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type <t> --field K=V` (record evidence; use `--field` or `--payload-file` to avoid passing JSON through the shell — e.g. `attach g1 --type review-result --field verdict=APPROVE`), `flag-candidate --from <id> --statement` (out-of-scope discovery).
+Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type <t> --field K=V` (record evidence; use `--field` or `--payload-file` to avoid passing JSON through the shell — e.g. `attach g1 --type review-result --field verdict=APPROVE`), `waive <id> --cond <id> --authority human --reason "..."` (human override of a check — see below), `flag-candidate --from <id> --statement` (out-of-scope discovery).
 
 ## Obey refusals
 
 The engine answers illegal moves with an imperative, e.g. `REFUSED: g1: postconditions unmet ['c1']`. Treat that as the next instruction — fix the named gap, do not work around it. The refusal *is* the gate.
+
+## Waive: human override of a check
+
+A `command`/`artifact` postcondition that won't pass normally **blocks the gate** — that is correct, and your default is to fix the work, not route around the check. The one sanctioned exception is when the **human** decides a specific check is non-blocking. Do not edit the JSON to mark the condition satisfied; use the engine:
+
+```
+waive <id> --cond <cond-id> [--which postconditions] --authority human --reason "why it's accepted"
+```
+
+- It requires a non-empty `--authority` (who is accepting the risk) and a `--reason` (always, when the condition's `override_policy.reason_required` is set or you use `--force`). The reason becomes durable, auditable evidence (`type: waiver`).
+- It is **refused unless the condition declares an `override_policy` with `allowed: true`** — you cannot waive a check that the plan author never marked waivable. To override that refusal deliberately, pass `--force`; force still demands authority + reason and is recorded as `forced: true`. Treat `--force` as a last resort and surface it to the human.
+- After a waiver, `advance` succeeds and its message names the waived conditions (e.g. `g1 -> complete (WAIVED postconditions ['c1'])`). The waiver is **not** re-run away at advance, and it is cleared if the gate is later `reopen`ed.
+
+The engine does not judge whether a waiver is wise — it only refuses *accidental* advancement and records who authorized the exception. Waiving is a human decision you carry out through the engine, not one you make for the human.
 
 ## Mechanism the engine guarantees
 

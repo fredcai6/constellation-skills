@@ -78,7 +78,13 @@ def _new_evidence_id(t: dict) -> str:
 
 def _check_condition(cond: dict, t: dict) -> bool:
     """Verify one condition. command -> run it; artifact -> presence/match;
-    null -> the agent must have attested it (trust but verify)."""
+    null -> the agent must have attested it (trust but verify).
+
+    A WAIVED condition is honored without re-running its check: a human override
+    (see `waive`) has accepted the condition, and re-running the command would
+    overwrite `satisfied` and silently un-waive it at every `advance`."""
+    if cond.get("waived"):
+        return True
     chk = cond.get("check")
     if chk is None:
         return bool(cond.get("satisfied"))
@@ -121,6 +127,14 @@ def current(cl: dict) -> str:
     if aid is None:
         if cl["type"] == SURVEY and cl.get("consolidation") is None:
             return "ALL ITEMS VISITED. Next: consolidate"
+        waived = []
+        for iid in cl.get("items", []):
+            t = cl["tasks"][iid]
+            for c in t.get("postconditions", []):
+                if c.get("waived"):
+                    waived.append(f"{iid}.{c['id']}")
+        if waived:
+            return f"DONE: no open items. WAIVED: {waived}"
         return "DONE: no open items."
     t = task(cl, aid)
     return f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
@@ -162,6 +176,9 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
     if unmet:
         raise EngineError(f"{iid}: postconditions unmet {unmet}")
     t["status"] = "complete"
+    waived = [c["id"] for c in posts if c.get("waived")]
+    if waived:
+        return f"{iid} -> complete (WAIVED postconditions {waived})"
     return f"{iid} -> complete"
 
 
@@ -240,6 +257,7 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
     for c in t.get("postconditions", []):
         c["satisfied"] = False
         c.pop("satisfied_by", None)
+        c.pop("waived", None)  # rework re-evaluates: a prior waiver does not carry over
     return f"{iid} reopened (rework {t['rework_count']}/{cap})"
 
 
@@ -277,6 +295,54 @@ def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None) -> st
             c["satisfied"] = True
             c["satisfied_by"] = note or "attested"
             return f"attested {iid}.{cond_id}"
+    raise EngineError(f"{which} {cond_id!r} not found on {iid}")
+
+
+def waive(
+    cl: dict,
+    iid: str,
+    cond_id: str,
+    which: str,
+    authority: str,
+    reason: str | None,
+    forced: bool = False,
+) -> str:
+    """Human override: explicitly satisfy a condition by waiver, auditable.
+
+    Refused unless the condition's `override_policy.allowed` is true — unless an
+    explicit high-friction `--force` is given (force still demands authority +
+    reason and is recorded as a forced override). The engine does not judge
+    whether a waiver is wise; it records authority and refuses accidental use."""
+    t = task(cl, iid)
+    for c in t.get(which, []):
+        if c["id"] != cond_id:
+            continue
+        policy = c.get("override_policy") or {}
+        allowed = bool(policy.get("allowed"))
+        if not allowed and not forced:
+            raise EngineError(
+                f"{iid}.{cond_id} is not waivable (no override policy); pass --force to override deliberately"
+            )
+        if not (authority or "").strip():
+            raise EngineError("waive requires a non-empty --authority")
+        reason = (reason or "").strip() or None
+        if (policy.get("reason_required") or forced) and not reason:
+            raise EngineError("waive requires a non-empty --reason")
+        eid = _new_evidence_id(t)
+        t.setdefault("evidence", []).append(
+            {
+                "id": eid,
+                "type": "waiver",
+                "payload": {"cond": cond_id, "authority": authority, "reason": reason, "forced": forced},
+                "produced_by": "human",
+                "ts": "",
+            }
+        )
+        c["satisfied"] = True
+        c["satisfied_by"] = eid
+        c["waived"] = {"authority": authority, "reason": reason, "evidence": eid, "forced": forced}
+        tag = " (FORCED)" if forced else ""
+        return f"waived {iid}.{cond_id}{tag} by {authority} -> {eid}"
     raise EngineError(f"{which} {cond_id!r} not found on {iid}")
 
 
@@ -339,6 +405,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s.add_argument("--cond", required=True)
     s.add_argument("--which", choices=["preconditions", "postconditions"], default="preconditions")
     s.add_argument("--note")
+    s = sub.add_parser("waive")
+    s.add_argument("id")
+    s.add_argument("--cond", required=True)
+    s.add_argument("--which", choices=["preconditions", "postconditions"], default="postconditions")
+    s.add_argument("--authority", required=True, help="who is accepting the risk (e.g. human)")
+    s.add_argument("--reason", help="why the check is being waived")
+    s.add_argument("--force", action="store_true", help="waive even without an override policy (high-friction; recorded as forced)")
     s = sub.add_parser("attach")
     s.add_argument("id")
     s.add_argument("--type", required=True)
@@ -387,6 +460,8 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         return append(cl, args.id, args.title, args.imperative)
     if v == "attest":
         return attest(cl, args.id, args.cond, args.which, args.note)
+    if v == "waive":
+        return waive(cl, args.id, args.cond, args.which, args.authority, args.reason, forced=args.force)
     if v == "attach":
         return attach(cl, args.id, args.type, build_payload(args))
     if v == "flag-candidate":

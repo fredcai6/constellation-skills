@@ -48,7 +48,7 @@
       "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions pass, advance this gate. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
       "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
       "postconditions": [
-        {"id": "c1", "statement": "<observable behavior>; tests pass", "check": {"kind": "command", "command": "<exact test command>"}, "satisfied": false},
+        {"id": "c1", "statement": "<observable behavior>; tests pass", "check": {"kind": "command", "command": "<exact test command>"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
         {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
       ],
       "constraints": [],
