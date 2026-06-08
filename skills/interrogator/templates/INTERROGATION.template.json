@@ -14,8 +14,8 @@
     },
     "q1": {
       "id": "q1",
-      "title": "<starting question>",
-      "imperative": "<ask one question at a time with a recommended answer; explore the codebase if it can answer; append follow-ups and new branches; skip questions overcome by earlier answers>",
+      "title": "<starting question: what capability is being added or changed?>",
+      "imperative": "<frame from behavior first: what capability is being added/changed (present tense), concrete examples/use cases incl. edge cases, architecturally meaningful events, governing rules/constraints/assumptions. Ask one question at a time with a recommended answer; explore the codebase if it can answer; append follow-ups and new branches; skip questions overcome by earlier answers>",
       "preconditions": [], "postconditions": [],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0

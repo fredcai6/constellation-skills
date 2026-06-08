@@ -5,7 +5,9 @@ description: Resolve request or design ambiguity by relentless one-question inte
 
 # Constellation Interrogator
 
-Interview the user relentlessly until the handed-in goal is resolved to common understanding. If you're given a list, treat it as a as a prompt, not a script: decide your own initial question set, and do not let an over-prescribed seed shortcut your framing. Walk the design tree, resolving dependencies one at a time. For each question, give a recommended answer.
+Interview the user relentlessly until the handed-in goal is resolved to common understanding. If you're given a list, treat it as a prompt, not a script: decide your own initial question set, and do not let an over-prescribed seed shortcut your framing. Walk the design tree, resolving dependencies one at a time. For each question, give a recommended answer.
+
+Frame an ambiguous ask in behavior terms first. Start from the capability, then drill: **what capability is being added or changed** (the present-tense thing the system will do); **concrete examples/use cases** of that capability in action, including the edge cases; **events that matter** architecturally (boundary-crossing or contract signals, not every runtime event); and the **governing rules/constraints/assumptions**. Resolve which capability is in play before debating mechanism. Map this framing to the existing `capability`/`event`/`constraint`/`assumption` ontology so the resolved understanding hands cleanly to the Cartographer.
 
 **Mandatory, not advisory: once loaded, drive the survey to completion through the engine and dispatch each step it names; do not improvise.**
 
