@@ -17,6 +17,18 @@ Status values follow `skills/workbench/references/status-model.md`.
 ## Behavior changed
 `<yes/no + summary>`
 
+## Map Impact
+Graph-impact notes carried UP so Cartographer reconcile consumes durable context without rediscovering it from scratch. Frame against the inbound Map Anchors using matching vocabulary; cite the diff. Omit a line when the work touched nothing for it. Skip the whole section for trivial local edits (no structural, capability, constraint, or decision impact).
+
+- **Structural anchors touched:** `<struct:id — path/symbol, level — what changed there>`
+- **Capabilities added/changed/affected:** `<capability:id or new label — behavior now observable; references "Behavior changed" above>`
+- **Events added/changed/affected:** `<event:id or new label — only if architecturally meaningful>`
+- **Constraints/assumptions touched:** `<constraint:id | assumption:id — honored, stressed, or newly relied on>`
+- **Decision candidates / resolved decisions:** `<decision:id or candidate — rationale that may need authority; surface when a choice was forced>`
+- **Claims/evidence produced:** `<claim:id or assertion — backed by the Evidence above; what it verifies>`
+- **Trust limitations / drift found:** `<map area now low-confidence/stale/disputed, or manual-traceability gap>`
+- **Triage candidates:** `<future work, unresolved decision, or structure/constraint mismatch — for Cartographer to route>`
+
 ## Test mode
 **Required:** `<test-first | test-after | evidence-only | none>`  
 **Satisfied:** `<yes/no + reason>`

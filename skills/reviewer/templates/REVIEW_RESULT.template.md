@@ -22,6 +22,17 @@ Omit optional sections when empty.
 ## Code/doc quality
 `<code quality and doc quality: minimal, maintainable, tested, and project-rule compliant?>`
 
+## Map impact verdict
+Check the implementer's `Map Impact` notes against the diff and evidence so durable context reaches Cartographer reconcile intact. Skip for trivial local edits with no structural/capability/constraint/decision impact.
+
+- **Evidence supports claimed change:** `<does the produced evidence actually back the claimed behavior/capability change?>`
+- **Constraints not violated:** `<were inbound constraints/assumptions honored, not silently broken?>`
+- **Notes match the diff:** `<do the map-impact notes match what the diff actually touched — no missing or overstated structural/capability/event impact?>`
+- **Decision candidates surfaced:** `<were decision candidates surfaced when the change required authority the implementer lacked?>`
+- **Durable context routed:** `<is durable context / triage candidates routed to Cartographer or Triage rather than dropped?>`
+
+BLOCK when graph-impact claims are materially wrong or missing for architecture-significant work (structural, capability, constraint, or decision impact). Do not block trivial local edits for absent notes.
+
 ## Reconciliation check
 `<docs/contracts/structural baseline concerns?>`
 
