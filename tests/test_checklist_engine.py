@@ -446,6 +446,171 @@ class Waiver(unittest.TestCase):
                         "--authority", "human", "--reason", "x"]), 1)
 
 
+def _old_ts(seconds_ago):
+    """An ISO-8601 timestamp `seconds_ago` in the past (for stale-lease tests)."""
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(seconds=seconds_ago)).isoformat()
+
+
+class Leasing(unittest.TestCase):
+    def test_first_claim_creates_active_lease(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        msg = E.claim(cl, "s1", "commander", ".", {})
+        self.assertIn("claimed lease s1", msg)
+        sess = cl["engine_session"]
+        self.assertEqual(sess["status"], "active")
+        self.assertEqual(sess["session_id"], "s1")
+        self.assertEqual(sess["claimed_by"], "commander")
+        self.assertIsNone(sess["previous_session_id"])
+        self.assertIsNone(sess["takeover_reason"])
+
+    def test_same_session_reclaim_is_idempotent_and_refreshes(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        cl["engine_session"]["last_heartbeat"] = _old_ts(10)
+        before = cl["engine_session"]["last_heartbeat"]
+        msg = E.claim(cl, "s1", "commander", ".", {})  # no refusal
+        self.assertIn("resumed lease s1", msg)
+        self.assertNotEqual(cl["engine_session"]["last_heartbeat"], before)
+        self.assertEqual(cl["engine_session"]["status"], "active")
+
+    def test_different_active_session_claim_refused(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        with self.assertRaises(E.EngineError):
+            E.claim(cl, "s2", "commander", ".", {})
+        # original lease untouched
+        self.assertEqual(cl["engine_session"]["session_id"], "s1")
+
+    def test_mutating_verb_refused_with_missing_or_wrong_session(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        # missing session
+        with self.assertRaises(E.EngineError):
+            E.require_session(cl, "start", None, {})
+        # wrong session
+        with self.assertRaises(E.EngineError):
+            E.require_session(cl, "start", "s2", {})
+
+    def test_mutating_verb_allowed_with_matching_session(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        E.require_session(cl, "start", "s1", {})  # does not raise
+        self.assertEqual(E.start(cl, "g1"), "g1 -> in-progress")
+
+    def test_backward_compat_no_lease_allows_mutation_without_session(self):
+        # no engine_session -> legacy flow works with no --session-id
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        self.assertNotIn("engine_session", cl)
+        E.require_session(cl, "start", None, {})  # no-op
+        self.assertEqual(E.start(cl, "g1"), "g1 -> in-progress")
+        E.require_session(cl, "advance", None, {})
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+
+    def test_stale_lease_blocks_mutation_until_reclaimed(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        cl["engine_session"]["last_heartbeat"] = _old_ts(10_000)
+        cfg = {"lease_stale_seconds": 1800}
+        self.assertTrue(E._is_stale(cl["engine_session"], cfg))
+        # a mutating verb against a stale-only lease refuses with a claim instruction
+        with self.assertRaises(E.EngineError):
+            E.require_session(cl, "start", "s1", cfg)
+        # but it can be reclaimed (same session) — does not permanently lock
+        msg = E.claim(cl, "s1", "commander", ".", cfg)
+        self.assertEqual(cl["engine_session"]["status"], "active")
+        self.assertFalse(E._is_stale(cl["engine_session"], cfg))
+
+    def test_stale_lease_reclaimed_by_force(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        cl["engine_session"]["last_heartbeat"] = _old_ts(10_000)
+        cfg = {"lease_stale_seconds": 1800}
+        msg = E.claim(cl, "s2", "commander", ".", cfg, force=True, reason="resumed crashed parent")
+        self.assertEqual(cl["engine_session"]["session_id"], "s2")
+        self.assertEqual(cl["engine_session"]["previous_session_id"], "s1")
+
+    def test_force_takeover_records_audit_trail(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        with self.assertRaises(E.EngineError):
+            E.claim(cl, "s2", "commander", ".", {})  # active, must force
+        msg = E.claim(cl, "s2", "commander", ".", {}, force=True, reason="lost parent resurrected")
+        self.assertIn("FORCED", msg)
+        sess = cl["engine_session"]
+        self.assertEqual(sess["session_id"], "s2")
+        self.assertEqual(sess["previous_session_id"], "s1")
+        self.assertEqual(sess["takeover_reason"], "lost parent resurrected")
+
+    def test_force_takeover_requires_reason(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        with self.assertRaises(E.EngineError):
+            E.claim(cl, "s2", "commander", ".", {}, force=True, reason="  ")
+
+    def test_heartbeat_only_by_owner(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        cl["engine_session"]["last_heartbeat"] = _old_ts(10)
+        before = cl["engine_session"]["last_heartbeat"]
+        E.heartbeat(cl, "s1")
+        self.assertNotEqual(cl["engine_session"]["last_heartbeat"], before)
+        with self.assertRaises(E.EngineError):
+            E.heartbeat(cl, "s2")
+
+    def test_release_closes_lease_and_allows_new_claim(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        E.release(cl, "s1")
+        self.assertEqual(cl["engine_session"]["status"], "released")
+        # released lease no longer gates mutation
+        E.require_session(cl, "start", None, {})  # no raise
+        # and a fresh claim succeeds
+        msg = E.claim(cl, "s2", "commander", ".", {})
+        self.assertIn("claimed lease s2", msg)
+        self.assertEqual(cl["engine_session"]["status"], "active")
+
+    def test_release_only_by_owner_unless_forced(self):
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        with self.assertRaises(E.EngineError):
+            E.release(cl, "s2")
+        # non-owner force needs a reason
+        with self.assertRaises(E.EngineError):
+            E.release(cl, "s2", force=True, reason="")
+        E.release(cl, "s2", force=True, reason="cleanup after crash")
+        self.assertEqual(cl["engine_session"]["status"], "released")
+
+    def test_current_reports_active_lease_without_session(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        out = E.current(cl)  # read-only, no session needed
+        self.assertIn("LEASE active: s1", out)
+        self.assertIn("ACTIVE g1", out)
+
+    def test_cli_claim_then_advance_with_session(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "s1",
+                        "--claimed-by", "commander", "--worktree", "."]), 0)
+            # mutating without --session-id is refused once a lease exists
+            self.assertEqual(E.main(["--file", str(f), "start", "g1"]), 1)
+            # with the matching session it succeeds
+            self.assertEqual(
+                E.main(["--file", str(f), "start", "g1", "--session-id", "s1"]), 0)
+            self.assertEqual(
+                E.main(["--file", str(f), "advance", "g1", "--session-id", "s1"]), 0)
+            reloaded = E.load(f)
+            self.assertEqual(reloaded["tasks"]["g1"]["status"], "complete")
+            # heartbeat + release through the CLI
+            self.assertEqual(E.main(["--file", str(f), "heartbeat", "--session-id", "s1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "release", "--session-id", "s1"]), 0)
+            self.assertEqual(E.load(f)["engine_session"]["status"], "released")
+
+
 class ShippedTemplates(unittest.TestCase):
     def test_every_template_is_valid_json_and_checklists_walk(self):
         roots = sorted((ROOT / "skills").glob("*/templates/*.json"))

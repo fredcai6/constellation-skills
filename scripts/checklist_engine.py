@@ -13,16 +13,51 @@ import argparse
 import json
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 GATED = "gated"
 SURVEY = "survey"
 TERMINAL = {"complete", "skipped"}
 DEFAULT_REWORK_CAP = 3
+DEFAULT_LEASE_STALE_SECONDS = 1800
+
+# Verbs that mutate canonical state and therefore require the active session
+# (once a lease exists). `current` is read-only; `claim`/`heartbeat`/`release`
+# manage the lease itself and are handled separately.
+MUTATING_VERBS = {
+    "start", "advance", "record", "consolidate", "skip", "block",
+    "reopen", "append", "attest", "waive", "attach", "flag-candidate",
+}
 
 
 class EngineError(Exception):
     """A refusal: the requested transition is not allowed. No exit-0."""
+
+
+# --------------------------------------------------------------------------- #
+# time source (single hook so tests can control time)
+# --------------------------------------------------------------------------- #
+def _now() -> str:
+    """Current UTC time as an ISO-8601 string. The single module-level time
+    hook: monkeypatch this in tests to control claim/heartbeat timestamps."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _parse_ts(value: str) -> datetime:
+    """Parse an ISO-8601 timestamp, tolerating a trailing 'Z'. Returns a
+    timezone-aware datetime (assumes UTC when no offset is present)."""
+    text = (value or "").strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    dt = datetime.fromisoformat(text)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def lease_stale_seconds(config: dict) -> int:
+    return int((config or {}).get("lease_stale_seconds", DEFAULT_LEASE_STALE_SECONDS))
 
 
 # --------------------------------------------------------------------------- #
@@ -120,13 +155,193 @@ def _check_condition(cond: dict, t: dict) -> bool:
 
 
 # --------------------------------------------------------------------------- #
+# session leasing — actor authority over the checklist STATE
+# --------------------------------------------------------------------------- #
+def _is_stale(session: dict | None, config: dict) -> bool:
+    """A lease is stale when its `last_heartbeat` is older than the configured
+    timeout. A missing/closed lease, or one with an unparseable heartbeat, is
+    treated conservatively (a missing one is not 'stale'; it just isn't active).
+    Tests can drive staleness by writing an old `last_heartbeat` directly, or by
+    monkeypatching `_now`."""
+    if not session or session.get("status") != "active":
+        return False
+    hb = session.get("last_heartbeat")
+    if not hb:
+        return True
+    try:
+        age = (_parse_ts(_now()) - _parse_ts(hb)).total_seconds()
+    except (ValueError, TypeError):
+        return True
+    return age > lease_stale_seconds(config)
+
+
+def _active_lease(cl: dict) -> dict | None:
+    """The lease iff it is present and `status: active`; else None. A released
+    lease does not gate mutation."""
+    sess = cl.get("engine_session")
+    if isinstance(sess, dict) and sess.get("status") == "active":
+        return sess
+    return None
+
+
+def require_session(cl: dict, verb: str, session_id: str | None, config: dict) -> None:
+    """The backward-compat gate. Mutating verbs are only session-gated ONCE an
+    ACTIVE lease exists. With no active lease, a missing `--session-id` is fine
+    (every existing checklist/template has no `engine_session`). With an active,
+    non-stale lease, the caller's `--session-id` must match its `session_id`. A
+    STALE active lease does not silently block — but it must be reclaimed via
+    `claim` first, so a mutating verb against a stale-only lease is refused with
+    an instruction to claim."""
+    if verb not in MUTATING_VERBS:
+        return
+    lease = _active_lease(cl)
+    if lease is None:
+        return  # no lease claimed: legacy behavior, no session needed
+    if _is_stale(lease, config):
+        raise EngineError(
+            f"checklist lease {lease.get('session_id')!r} is stale; "
+            f"`claim` it (same id or --force --reason) before mutating"
+        )
+    if session_id != lease.get("session_id"):
+        raise EngineError(
+            f"checklist is owned by active session {lease.get('session_id')!r}; "
+            f"pass --session-id {lease.get('session_id')!r} or take over with "
+            f"`claim --force --reason ...`"
+        )
+
+
+def claim(
+    cl: dict,
+    session_id: str,
+    claimed_by: str,
+    worktree: str,
+    config: dict,
+    force: bool = False,
+    reason: str | None = None,
+) -> str:
+    """Claim ownership of the checklist for `session_id`.
+
+    - No existing/closed/stale lease: create a fresh active lease.
+    - Same `session_id` already active: idempotent resume; refresh heartbeat.
+    - A DIFFERENT active, non-stale lease: refuse unless `--force --reason`.
+    - `--force` takes over any lease, recording the prior session in
+      `previous_session_id` and the `takeover_reason` (force needs a reason)."""
+    if not (session_id or "").strip():
+        raise EngineError("claim requires a non-empty --session-id")
+    reason = (reason or "").strip() or None
+    if force and not reason:
+        raise EngineError("claim --force requires a non-empty --reason")
+
+    existing = cl.get("engine_session")
+    existing = existing if isinstance(existing, dict) else None
+    now = _now()
+
+    # idempotent same-session resume of an active lease
+    if (
+        existing
+        and existing.get("status") == "active"
+        and existing.get("session_id") == session_id
+        and not force
+    ):
+        existing["last_heartbeat"] = now
+        existing["claimed_by"] = claimed_by or existing.get("claimed_by")
+        if worktree is not None:
+            existing["worktree"] = worktree
+        return f"resumed lease {session_id} (heartbeat refreshed)"
+
+    blocking = (
+        existing
+        and existing.get("status") == "active"
+        and existing.get("session_id") != session_id
+        and not _is_stale(existing, config)
+    )
+    if blocking and not force:
+        raise EngineError(
+            f"checklist already owned by active session "
+            f"{existing.get('session_id')!r}; use `claim --force --reason ...` to take over"
+        )
+
+    previous_id = None
+    takeover_reason = None
+    if existing and existing.get("session_id") and existing.get("session_id") != session_id:
+        if force:
+            previous_id = existing.get("session_id")
+            takeover_reason = reason
+        elif _is_stale(existing, config):
+            previous_id = existing.get("session_id")
+            takeover_reason = reason or "stale lease reclaimed"
+
+    cl["engine_session"] = {
+        "session_id": session_id,
+        "status": "active",
+        "claimed_at": now,
+        "last_heartbeat": now,
+        "claimed_by": claimed_by,
+        "worktree": worktree,
+        "previous_session_id": previous_id,
+        "takeover_reason": takeover_reason,
+    }
+    if force and previous_id:
+        return f"FORCED takeover of {previous_id} by {session_id} -> active (reason: {takeover_reason})"
+    if previous_id:
+        return f"reclaimed stale lease {previous_id}; {session_id} -> active"
+    return f"claimed lease {session_id} -> active"
+
+
+def heartbeat(cl: dict, session_id: str) -> str:
+    """Refresh the active lease's `last_heartbeat`. Only the owning session may
+    heartbeat; refuses if there is no active lease or the id mismatches."""
+    lease = _active_lease(cl)
+    if lease is None:
+        raise EngineError("no active lease to heartbeat; `claim` first")
+    if session_id != lease.get("session_id"):
+        raise EngineError(
+            f"heartbeat session {session_id!r} does not own the lease "
+            f"({lease.get('session_id')!r})"
+        )
+    lease["last_heartbeat"] = _now()
+    return f"heartbeat {session_id} @ {lease['last_heartbeat']}"
+
+
+def release(cl: dict, session_id: str, force: bool = False, reason: str | None = None) -> str:
+    """Close the lease (`status: released`). Only the owning session may release,
+    unless `--force --reason` is given. After release, a new `claim` succeeds."""
+    sess = cl.get("engine_session")
+    if not isinstance(sess, dict) or sess.get("status") != "active":
+        raise EngineError("no active lease to release")
+    if session_id != sess.get("session_id") and not force:
+        raise EngineError(
+            f"release session {session_id!r} does not own the lease "
+            f"({sess.get('session_id')!r}); use --force --reason to override"
+        )
+    if force and session_id != sess.get("session_id") and not (reason or "").strip():
+        raise EngineError("release --force (non-owner) requires a non-empty --reason")
+    sess["status"] = "released"
+    sess["released_at"] = _now()
+    return f"released lease {sess.get('session_id')}"
+
+
+def _lease_line(cl: dict) -> str | None:
+    """Human-readable active-lease summary for `current`, or None if no lease."""
+    sess = cl.get("engine_session")
+    if not isinstance(sess, dict):
+        return None
+    status = sess.get("status")
+    if status == "active":
+        return f"LEASE active: {sess.get('session_id')} (by {sess.get('claimed_by')}, heartbeat {sess.get('last_heartbeat')})"
+    return f"LEASE {status}: {sess.get('session_id')}"
+
+
+# --------------------------------------------------------------------------- #
 # verbs (each returns a human/agent-readable message; refusals raise)
 # --------------------------------------------------------------------------- #
 def current(cl: dict) -> str:
+    lease = _lease_line(cl)
+    prefix = f"{lease}\n" if lease else ""
     aid = active_id(cl)
     if aid is None:
         if cl["type"] == SURVEY and cl.get("consolidation") is None:
-            return "ALL ITEMS VISITED. Next: consolidate"
+            return prefix + "ALL ITEMS VISITED. Next: consolidate"
         waived = []
         for iid in cl.get("items", []):
             t = cl["tasks"][iid]
@@ -134,10 +349,10 @@ def current(cl: dict) -> str:
                 if c.get("waived"):
                     waived.append(f"{iid}.{c['id']}")
         if waived:
-            return f"DONE: no open items. WAIVED: {waived}"
-        return "DONE: no open items."
+            return prefix + f"DONE: no open items. WAIVED: {waived}"
+        return prefix + "DONE: no open items."
     t = task(cl, aid)
-    return f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
+    return prefix + f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
 
 
 def start(cl: dict, iid: str) -> str:
@@ -371,40 +586,68 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--dry-run", action="store_true", help="do not write changes back")
     sub = p.add_subparsers(dest="verb", required=True)
 
+    def add_session(parser: argparse.ArgumentParser) -> None:
+        # optional on every mutating verb; only enforced once a lease exists
+        parser.add_argument("--session-id", dest="session_id", default=None,
+                            help="owning engine session (required only once a lease has been claimed)")
+
     sub.add_parser("current")
+
+    s = sub.add_parser("claim")
+    s.add_argument("--session-id", dest="session_id", required=True)
+    s.add_argument("--claimed-by", dest="claimed_by", default="agent", help="role claiming the lease")
+    s.add_argument("--worktree", default=".")
+    s.add_argument("--force", action="store_true", help="take over an active/ambiguous lease (records prior session)")
+    s.add_argument("--reason", help="required with --force: why the takeover is justified")
+    s = sub.add_parser("heartbeat")
+    s.add_argument("--session-id", dest="session_id", required=True)
+    s = sub.add_parser("release")
+    s.add_argument("--session-id", dest="session_id", required=True)
+    s.add_argument("--force", action="store_true", help="release a lease you do not own (requires --reason)")
+    s.add_argument("--reason", help="required when force-releasing a lease you do not own")
+
     s = sub.add_parser("start")
     s.add_argument("id")
+    add_session(s)
     s = sub.add_parser("advance")
     s.add_argument("id")
     s.add_argument("--from-child", dest="from_child", help="child checklist file; attach its consolidation as review-result first")
+    add_session(s)
     s = sub.add_parser("record")
     s.add_argument("id")
     s.add_argument("--result", required=True, choices=["pass", "fail"])
     s.add_argument("--finding")
+    add_session(s)
     s = sub.add_parser("consolidate")
     s.add_argument("--verdict")
     s.add_argument("--summary")
     s.add_argument("--override-reason")
+    add_session(s)
     s = sub.add_parser("skip")
     s.add_argument("id")
     s.add_argument("--reason", required=True)
+    add_session(s)
     s = sub.add_parser("block")
     s.add_argument("id")
     s.add_argument("--blocker", required=True)
     s.add_argument("--authority", default="parent agent")
     s.add_argument("--next", dest="next_action", default="")
+    add_session(s)
     s = sub.add_parser("reopen")
     s.add_argument("id")
     s.add_argument("--reason", required=True)
+    add_session(s)
     s = sub.add_parser("append")
     s.add_argument("id")
     s.add_argument("--title", required=True)
     s.add_argument("--imperative", required=True)
+    add_session(s)
     s = sub.add_parser("attest")
     s.add_argument("id")
     s.add_argument("--cond", required=True)
     s.add_argument("--which", choices=["preconditions", "postconditions"], default="preconditions")
     s.add_argument("--note")
+    add_session(s)
     s = sub.add_parser("waive")
     s.add_argument("id")
     s.add_argument("--cond", required=True)
@@ -412,15 +655,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s.add_argument("--authority", required=True, help="who is accepting the risk (e.g. human)")
     s.add_argument("--reason", help="why the check is being waived")
     s.add_argument("--force", action="store_true", help="waive even without an override policy (high-friction; recorded as forced)")
+    add_session(s)
     s = sub.add_parser("attach")
     s.add_argument("id")
     s.add_argument("--type", required=True)
     s.add_argument("--payload", help="JSON object (or use the quote-safe --field / --payload-file)")
     s.add_argument("--payload-file", dest="payload_file", help="path to a JSON file holding the payload")
     s.add_argument("--field", action="append", default=[], metavar="K=V", help="repeatable key=value; avoids passing JSON through the shell")
+    add_session(s)
     s = sub.add_parser("flag-candidate")
     s.add_argument("--from", dest="frm", required=True)
     s.add_argument("--statement", required=True)
+    add_session(s)
     return p.parse_args(argv)
 
 
@@ -440,8 +686,24 @@ def build_payload(args: argparse.Namespace) -> dict:
 
 def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -> str:
     v = args.verb
+    config = load_config(cl, base_dir)
     if v == "current":
         return current(cl)
+    if v == "claim":
+        return claim(
+            cl, args.session_id, args.claimed_by, args.worktree, config,
+            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+        )
+    if v == "heartbeat":
+        return heartbeat(cl, args.session_id)
+    if v == "release":
+        return release(
+            cl, args.session_id,
+            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+        )
+    # Actor-authority gate: once an active lease exists, a mutating verb must
+    # carry the owning --session-id. No lease -> legacy behavior (no session).
+    require_session(cl, v, getattr(args, "session_id", None), config)
     if v == "start":
         return start(cl, args.id)
     if v == "advance":

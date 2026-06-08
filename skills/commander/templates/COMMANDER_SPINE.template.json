@@ -7,9 +7,12 @@
     "init": {
       "id": "init",
       "title": "Set up work area",
-      "imperative": "Run: python <commander-skill-dir>/scripts/init_work_area.py <work-id>. Start the work branch per repo guidance.",
+      "imperative": "Run: python <commander-skill-dir>/scripts/init_work_area.py <work-id>. Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: <engine> claim --session-id <commander-session-id> --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id <commander-session-id> on every mutating engine call against this spine.",
       "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/init_work_area.py <work-id>"}, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/init_work_area.py <work-id>"}, "satisfied": false},
+        {"id": "c2", "statement": "engine session lease claimed for this spine (commander owns the state)", "check": null, "satisfied": false}
+      ],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
@@ -107,11 +110,12 @@
     "archive": {
       "id": "archive",
       "title": "Archive, commit, and push",
-      "imperative": "Commit all remaining work, including the appended .agent-work/AGENT_FEEDBACK.md entry. Push the branch to remote. Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/, leaving the unified AGENT_FEEDBACK.md at the agent-work root. Run the archive-phase feedback invariant check before marking archive complete: python <commander-skill-dir>/scripts/verify_agent_feedback.py <work-id> --phase archive. Confirm the branch is clean and merge-ready per repo guidance.",
+      "imperative": "Commit all remaining work, including the appended .agent-work/AGENT_FEEDBACK.md entry. Push the branch to remote. Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/, leaving the unified AGENT_FEEDBACK.md at the agent-work root. Run the archive-phase feedback invariant check before marking archive complete: python <commander-skill-dir>/scripts/verify_agent_feedback.py <work-id> --phase archive. Confirm the branch is clean and merge-ready per repo guidance. Finally, release the engine session lease on this spine: <engine> release --session-id <commander-session-id>.",
       "preconditions": [{"id": "p1", "statement": "workflow feedback recorded", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "work area archived and durable feedback log left at .agent-work root", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/verify_agent_feedback.py <work-id> --phase archive"}, "satisfied": false},
-        {"id": "c2", "statement": "branch committed and pushed", "check": null, "satisfied": false}
+        {"id": "c2", "statement": "branch committed and pushed", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "engine session lease released", "check": null, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0

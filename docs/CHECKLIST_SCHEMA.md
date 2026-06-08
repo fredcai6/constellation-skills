@@ -39,11 +39,59 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "tasks": { "g1": { Task }, "g2": { Task } },
   "consolidation": null,            // survey only: the consolidated result (verdict / understanding)
   "triage_candidates": [],          // out-of-scope discoveries, bubbled to the parent agent
-  "blockers": []                    // stuck items, bubbled to the parent agent
+  "blockers": [],                   // stuck items, bubbled to the parent agent
+  "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
 ```
 
 `triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up.
+
+## Engine session — actor authority over the state
+
+The engine owns canonical state and enforces *mechanism*. It also enforces **actor authority** over that state: a single, leasing agent owns the right to mutate a given checklist at a time. A lost-and-resurrected parent session once produced two controlling agents in one worktree; the lease refuses that conflicting mutation. Authority is over the checklist **state**, not over each item — there are still no per-task owner/executor tags (see Scope).
+
+A claimed lease lives in the optional top-level `engine_session`:
+
+```json
+"engine_session": {
+  "session_id": "commander/issue-420/attempt-2",
+  "status": "active",                  // active | released
+  "claimed_at": "<iso8601>",
+  "last_heartbeat": "<iso8601>",
+  "claimed_by": "commander",           // role that claimed it (advisory)
+  "worktree": ".",
+  "previous_session_id": "commander/issue-420/attempt-1",  // set on takeover/reclaim, else null
+  "takeover_reason": null              // set on force takeover / stale reclaim, else null
+}
+```
+
+| field | type | notes |
+|---|---|---|
+| `session_id` | string | the owning session; passed to mutating verbs as `--session-id` |
+| `status` | `active`\|`released` | only an **active** lease gates mutation |
+| `claimed_at` / `last_heartbeat` | iso8601 | real timestamps; staleness is `now - last_heartbeat > lease_stale_seconds` |
+| `claimed_by` | string | role (advisory audit) |
+| `worktree` | string | where the session runs |
+| `previous_session_id` | string \| null | the prior owner, recorded on force takeover or stale reclaim |
+| `takeover_reason` | string \| null | why the takeover happened (force requires a non-empty reason) |
+
+### The backward-compat gate
+
+**A checklist with no `engine_session` behaves exactly as before:** mutating verbs work without `--session-id`. Session enforcement only kicks in **once a lease has been claimed** (an active `engine_session` exists). `--session-id` is optional on every mutating verb; it is only required, and only checked, once an active lease is present. No shipped template requires a lease except the Commander spine, which claims one at `init` and releases it at `archive`.
+
+### Leasing verbs
+
+| verb | shape | effect |
+|---|---|---|
+| `claim` | `--session-id <id> --claimed-by <role> [--worktree .] [--force --reason "..."]` | create an active lease (none exists); **idempotently resume + refresh heartbeat** if the same `session_id` already owns it; **refuse** if a different active, non-stale lease exists. `--force --reason "..."` takes over an active/ambiguous lease, recording `previous_session_id` + `takeover_reason`; force requires a non-empty reason. |
+| `heartbeat` | `--session-id <id>` | refresh `last_heartbeat`; only the owning session may heartbeat |
+| `release` | `--session-id <id> [--force --reason "..."]` | mark the lease `status: released` (closed); only the owning session may release, unless `--force --reason` overrides. After release a new `claim` succeeds. |
+
+### Mutating verbs and stale leases
+
+Once an **active** lease exists, the state-changing verbs (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `attest`, `waive`, `attach`, `flag-candidate`) **refuse** unless `--session-id` matches the active lease's `session_id`. The read-only `current` needs no session and reports active-lease metadata when present.
+
+A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**. A stale lease does not permanently lock the checklist, but it does not silently let a stranger mutate either: a mutating verb against a stale-only lease is **refused with an instruction to `claim` first**. The next session reclaims it via `claim` (same id, or `--force --reason`), which records the prior session in `previous_session_id` before proceeding. Timestamps are real (the engine has a single `_now()` time hook); staleness is computed by parsing `last_heartbeat`.
 
 ## Task
 
@@ -137,6 +185,7 @@ The envelope is the task projected across a tier boundary, translated to the rec
 | `rework_cap` | int | reopen attempts per node before escalation to the parent / human |
 | `replan` | `abort-and-reissue` | Commander is one-shot; a failed plan ends the run and re-issues |
 | `human_checkpoints` | `[string]` | the **rigor dial**: which checkpoints require a `user-decision` (e.g. `understand.done`, `plan.approved`, `run.accept`) |
+| `lease_stale_seconds` | int | a lease whose `last_heartbeat` is older than this is **stale** and may be reclaimed (default 1800) |
 
 ## Status
 
@@ -168,7 +217,10 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 
 | verb | applies | reads/writes |
 |---|---|---|
-| `current` | both | walk to the active item; emit its `imperative` |
+| `current` | both | walk to the active item; emit its `imperative`; reports active-lease metadata when present (no session needed) |
+| `claim --session-id <id> --claimed-by <role> [--worktree .] [--force --reason …]` | both | take the actor-authority lease; idempotent same-session resume; refuses a different active lease unless forced |
+| `heartbeat --session-id <id>` | both | refresh the active lease's `last_heartbeat` (owner only) |
+| `release --session-id <id> [--force --reason …]` | both | close the lease (`status: released`); owner only unless forced |
 | `criteria <id>` | gated | emit `postconditions` + implied evidence types |
 | `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress` |
 | `advance <id> --evidence …` | gated | check all `postconditions`; `→ complete` |
@@ -180,6 +232,8 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 | `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; clears any `waived` markers |
 | `waive <id> --cond <id> [--which postconditions] --authority … --reason … [--force]` | both | human override: satisfy a condition **by waiver**; refused unless its `override_policy.allowed` (or `--force`); records a `waiver` evidence record + a durable `waived` marker |
 | `flag-candidate …` | both | record an out-of-scope discovery in `triage_candidates` |
+
+Every **mutating** verb above (`start`/`advance`/`record`/`consolidate`/`skip`/`block`/`reopen`/`append`/`attest`/`waive`/`attach`/`flag-candidate`) accepts an optional `--session-id`; it is required, and checked against the active lease, **only once a lease has been claimed** (see *Engine session*).
 
 ## Example: two linked checklists
 

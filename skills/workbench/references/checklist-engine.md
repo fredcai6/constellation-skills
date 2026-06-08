@@ -43,6 +43,22 @@ consolidate [--verdict ...]      # survey: every item visited -> hand up a resul
 
 Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type <t> --field K=V` (record evidence; use `--field` or `--payload-file` to avoid passing JSON through the shell — e.g. `attach g1 --type review-result --field verdict=APPROVE`), `waive <id> --cond <id> --authority human --reason "..."` (human override of a check — see below), `flag-candidate --from <id> --statement` (out-of-scope discovery).
 
+## Session lease: who owns the checklist state
+
+The engine enforces **actor authority** over a checklist's state so a resumed or duplicated parent session cannot concurrently mutate the same plan. One session leases the checklist; mutating verbs then require that session's id.
+
+```
+claim     --session-id <id> --claimed-by <role> [--worktree .] [--force --reason "..."]
+heartbeat --session-id <id>
+release   --session-id <id>
+```
+
+- `claim` takes the lease. The **same** `session_id` re-claiming is idempotent (it just refreshes the heartbeat) — safe to call on resume. A **different** active session is refused; take over only with `--force --reason "..."`, which records the prior session for audit.
+- `heartbeat` keeps your lease fresh; `release` closes it when you are done.
+- **Once a lease exists, every mutating verb needs `--session-id <id>` matching the active lease** (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `attest`, `waive`, `attach`, `flag-candidate`). Pass it on each call. Read-only `current` needs no session and shows the active lease.
+- A lease goes **stale** if its heartbeat lapses (config `lease_stale_seconds`, default 1800s). A stale lease does not lock the plan forever, but you must `claim` it (same id, or `--force --reason`) before mutating — the engine will refuse and tell you to claim.
+- A checklist with **no lease** behaves exactly as before: mutating verbs work without `--session-id`. Only claim a lease when your workflow wires it (the Commander spine claims at `init`, releases at `archive`).
+
 ## Obey refusals
 
 The engine answers illegal moves with an imperative, e.g. `REFUSED: g1: postconditions unmet ['c1']`. Treat that as the next instruction — fix the named gap, do not work around it. The refusal *is* the gate.
