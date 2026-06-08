@@ -15,8 +15,8 @@
     },
     "audit": {
       "id": "audit",
-      "title": "Audit architecture pressure",
-      "imperative": "Audit map-first for bad patterns, inefficient boundaries, and drift. Gather improvement candidates with map and code evidence.",
+      "title": "Audit architecture and map-quality pressure",
+      "imperative": "Audit map-first for structural pressure and map-quality pressure: stale/low-confidence nodes, map/code mismatch, missing capability anchors, ungrounded capability/claim/decision, constraints without evidence/explanation, wrong dependency direction, and high-maintenance edges that fail the Inclusion Rule. In periodic map-quality mode, ask whether the map still deserves planning authority. Gather candidates with map and code evidence.",
       "preconditions": [{"id": "p1", "statement": "current map loaded", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "candidates gathered with evidence", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
@@ -25,7 +25,7 @@
     "report": {
       "id": "report",
       "title": "Write SCOUT_REPORT",
-      "imperative": "Write SCOUT_REPORT with ranked candidates and evidence. Route candidates to triage.",
+      "imperative": "Write SCOUT_REPORT with ranked candidates and evidence. Record each finding's disposition: current-truth fix -> Cartographer, or future work -> Triage. Route future-work candidates to triage; Scout reports candidates only and never edits the map.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "SCOUT_REPORT written; candidates routed", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
