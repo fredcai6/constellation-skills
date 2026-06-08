@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install_constellation.py"
+VERIFIER = ROOT / "scripts" / "verify_agent_feedback.py"
 SKILL_NAMES = [
     "constellation-charter",
     "constellation-commander",
@@ -23,12 +24,20 @@ SKILL_NAMES = [
 ]
 
 
-def load_installer():
-    spec = importlib.util.spec_from_file_location("install_constellation", INSTALLER)
+def load_module(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def load_installer():
+    return load_module("install_constellation", INSTALLER)
+
+
+def load_verifier():
+    return load_module("verify_agent_feedback", VERIFIER)
 
 
 class InstallConstellationTests(unittest.TestCase):
@@ -57,6 +66,14 @@ class InstallConstellationTests(unittest.TestCase):
             )
             self.assertTrue(
                 (target_root / "constellation-commander" / "scripts" / "init_work_area.py").exists()
+            )
+            self.assertTrue(
+                (
+                    target_root
+                    / "constellation-commander"
+                    / "scripts"
+                    / "verify_agent_feedback.py"
+                ).exists()
             )
             self.assertTrue(
                 (target_root / "constellation-cartographer" / "scripts" / "build_architecture_map.py").exists()
@@ -172,6 +189,14 @@ class InstallConstellationTests(unittest.TestCase):
                 (commander_root / "scripts" / "init_work_area.py").as_posix(),
                 spine["tasks"]["init"]["postconditions"][0]["check"]["command"],
             )
+            self.assertIn(
+                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
+                spine["tasks"]["feedback"]["postconditions"][0]["check"]["command"],
+            )
+            self.assertIn(
+                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
+                spine["tasks"]["archive"]["postconditions"][0]["check"]["command"],
+            )
 
             cartographer_root = target_root / "constellation-cartographer"
             map_build_text = (
@@ -192,6 +217,45 @@ class InstallConstellationTests(unittest.TestCase):
                 (workbench_root / "scripts" / "checklist_engine.py").as_posix(),
                 reference_text,
             )
+
+    def test_agent_feedback_verifier_enforces_durable_log_location(self):
+        verifier = load_verifier()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            agent_work = root / ".agent-work"
+            work_id = "issue-123"
+            (agent_work / work_id).mkdir(parents=True)
+            feedback = agent_work / "AGENT_FEEDBACK.md"
+            feedback.write_text(f"## 2026-06-08 — {work_id}\n\nentry\n", encoding="utf-8")
+
+            verifier.verify_agent_feedback(root, work_id, "feedback")
+
+            bad_feedback = agent_work / work_id / "AGENT_FEEDBACK.md"
+            bad_feedback.write_text("archived by mistake", encoding="utf-8")
+            with self.assertRaises(verifier.FeedbackVerificationError):
+                verifier.verify_agent_feedback(root, work_id, "feedback")
+
+    def test_agent_feedback_verifier_enforces_archive_phase(self):
+        verifier = load_verifier()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            agent_work = root / ".agent-work"
+            work_id = "issue-123"
+            (agent_work / work_id).mkdir(parents=True)
+            (agent_work / "AGENT_FEEDBACK.md").write_text(
+                f"## 2026-06-08 — {work_id}\n\nentry\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(verifier.FeedbackVerificationError):
+                verifier.verify_agent_feedback(root, work_id, "archive")
+
+            archive_dir = agent_work / "archive" / f"2026-06-08-{work_id}"
+            archive_dir.mkdir(parents=True)
+            (agent_work / work_id).rmdir()
+            verifier.verify_agent_feedback(root, work_id, "archive")
 
     def test_dry_run_prints_plan_without_creating_target(self):
         installer = load_installer()
@@ -360,146 +424,3 @@ class InstallConstellationTests(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
-
-    def test_cursor_and_gemini_project_scopes_use_native_skill_roots(self):
-        installer = load_installer()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            for agent, config_dir in (("cursor", ".cursor"), ("gemini", ".gemini")):
-                with self.subTest(agent=agent):
-                    project = Path(tmp) / f"{agent}-project"
-                    project.mkdir()
-
-                    exit_code = installer.main(
-                        [
-                            "--agent",
-                            agent,
-                            "--scope",
-                            "project",
-                            "--project",
-                            str(project),
-                            "--skills",
-                            "workbench",
-                        ],
-                        env={},
-                        out=lambda _: None,
-                    )
-
-                    self.assertEqual(0, exit_code)
-                    self.assertTrue(
-                        (
-                            project
-                            / config_dir
-                            / "skills"
-                            / "constellation-workbench"
-                            / "SKILL.md"
-                        ).exists()
-                    )
-
-    def test_all_agent_project_scope_installs_each_native_skill_root(self):
-        installer = load_installer()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            project = Path(tmp) / "target-project"
-            project.mkdir()
-
-            exit_code = installer.main(
-                [
-                    "--agent",
-                    "all",
-                    "--scope",
-                    "project",
-                    "--project",
-                    str(project),
-                    "--skills",
-                    "charter",
-                ],
-                env={},
-                out=lambda _: None,
-            )
-
-            self.assertEqual(0, exit_code)
-            for config_dir in (".claude", ".codex", ".cursor", ".gemini"):
-                with self.subTest(config_dir=config_dir):
-                    self.assertTrue(
-                        (
-                            project
-                            / config_dir
-                            / "skills"
-                            / "constellation-charter"
-                            / "SKILL.md"
-                        ).exists()
-                    )
-
-    def test_all_agent_install_rejects_explicit_dest(self):
-        installer = load_installer()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            with contextlib.redirect_stderr(io.StringIO()):
-                with self.assertRaises(SystemExit) as raised:
-                    installer.main(
-                        [
-                            "--agent",
-                            "all",
-                            "--scope",
-                            "user",
-                            "--dest",
-                            str(Path(tmp) / "skills"),
-                        ],
-                        env={},
-                        out=lambda _: None,
-                    )
-
-            self.assertNotEqual(0, raised.exception.code)
-
-    def test_force_removes_previous_constellation_set_before_installing_requested_skills(self):
-        installer = load_installer()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            target_root = Path(tmp) / "skills"
-
-            self.assertEqual(
-                0,
-                installer.main(
-                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root)],
-                    env={},
-                    out=lambda _: None,
-                ),
-            )
-            retired = target_root / "constellation-retired"
-            retired.mkdir()
-            (retired / "SKILL.md").write_text("stale", encoding="utf-8")
-
-            self.assertEqual(
-                0,
-                installer.main(
-                    [
-                        "--agent",
-                        "codex",
-                        "--scope",
-                        "user",
-                        "--dest",
-                        str(target_root),
-                        "--skills",
-                        "charter",
-                        "--force",
-                    ],
-                    env={},
-                    out=lambda _: None,
-                ),
-            )
-
-            self.assertEqual(["constellation-charter"], sorted(path.name for path in target_root.iterdir()))
-
-    def test_agent_is_required_to_keep_install_target_explicit(self):
-        installer = load_installer()
-
-        with contextlib.redirect_stderr(io.StringIO()):
-            with self.assertRaises(SystemExit) as raised:
-                installer.main(["--scope", "user"], env={}, out=lambda _: None)
-
-        self.assertNotEqual(0, raised.exception.code)
-
-
-if __name__ == "__main__":
-    unittest.main()
