@@ -195,6 +195,18 @@ Decision anchors live in `docs/architecture/decisions/*.md` and back `decision:`
 
 Decision anchors are sparse durable context. Link them from packets and overlays via `explained-by`. Short rationale should usually be captured as `claim:` overlays; use a decision file only when the rationale needs authority, consequence, and review-trigger fields. Each decision must name structural anchors, current structural consequence, authority, and a review trigger. Detailed decision-anchor capture is defined in the decision template.
 
+### Candidate vs Anchor
+
+A decision **candidate** is a why-context signal raised during a run — by Commander when it forces a choice to the human, or returned as decision pressure or evidence from Implementer/Reviewer. A candidate is not yet durable; it is a claim that a decision may govern current structure. A durable decision **anchor** is the promoted subset: only candidates that govern current structure, capabilities, constraints, or future planning behavior become anchor files. Most candidates resolve into packet prose or a `claim:` overlay and never become anchors.
+
+### Promote, Reject, or Route
+
+When reconciling decision candidates, the Cartographer does exactly one of:
+
+- **Promote** to a decision anchor when the rationale governs current structure/capabilities/constraints, carries authority, and would be costly to rediscover from code, packets, and overlays. Author it from the decision template and link it via `explained-by`.
+- **Reject** (do not durably record) when the rationale is obvious from current structure, is short and verifiable — capture it as a `claim:` instead — or is merely historical. Rejection keeps the map sparse.
+- **Route to Triage** when the candidate is about future work, an unresolved decision, or a structure/constraint mismatch rather than current rationale. It leaves the map as an `unresolved decision` triage candidate, not an anchor.
+
 ## Generated Map Contract
 
 When configured, generated map artifacts combine packets, overlays, and repo source tree into:
