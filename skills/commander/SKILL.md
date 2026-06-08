@@ -56,6 +56,8 @@ Closeout checks (the `gN-integrate` tests-pass command, etc.) are engine **postc
 
 Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait for each subagent to return before advancing. Do not abandon, duplicate, or re-dispatch a task still in progress.
 
+**Never hand-launch a crew.** Every implementer/reviewer dispatch goes through `scripts/run_crew.py`, not a raw CLI call. It launches foreground/blocking, assigns a stable session name, records durable launch metadata in `.agent-work/<work-id>/crew-runs.json` before the crew starts, captures stdout/stderr, and refuses to return success unless the expected result artifact exists. It refuses a duplicate crew on the same gate/worktree unless the prior attempt is explicitly abandoned (`--abandon <session> --relaunch`). Before `execute` and before each dispatch, run `scripts/recover_crews.py <work-id>` and only launch when it reports no unresolved running/resumable/conflicting crew; resume a recoverable attempt (`run_crew.py --resume <session>`) or explicitly abandon/relaunch rather than colliding two crews in one worktree. The wrapper is the process/launch layer only: it does not advance gates, integrate results, or touch git.
+
 
 ## Repo (default; Charter overrides)
 

@@ -62,7 +62,7 @@
     "execute": {
       "id": "execute",
       "title": "Execute the plan",
-      "imperative": "Drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate. If a gate proves the plan wrong, surface the decision to the user before continuing.",
+      "imperative": "Drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python <commander-skill-dir>/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python <commander-skill-dir>/scripts/recover_crews.py <work-id> and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing.",
       "preconditions": [{"id": "p1", "statement": "commander skill loaded", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "every gate closed with integrated evidence", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "execute.json",

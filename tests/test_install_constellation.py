@@ -76,6 +76,12 @@ class InstallConstellationTests(unittest.TestCase):
                 ).exists()
             )
             self.assertTrue(
+                (target_root / "constellation-commander" / "scripts" / "run_crew.py").exists()
+            )
+            self.assertTrue(
+                (target_root / "constellation-commander" / "scripts" / "recover_crews.py").exists()
+            )
+            self.assertTrue(
                 (target_root / "constellation-cartographer" / "scripts" / "build_architecture_map.py").exists()
             )
 
