@@ -52,7 +52,11 @@ Each gate in `execute.json` has three tasks in order:
 
 **`gN-integrate`** — Check the verdict. `APPROVE`: run the verification command, confirm postconditions pass, advance the gate. `BLOCK`: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates.
 
+Closeout checks (the `gN-integrate` tests-pass command, etc.) are engine **postconditions**: `advance` runs them and refuses if any fails. If the **human** decides a specific check is non-blocking, do not hand-edit the checklist to mark it satisfied — use the engine `waive` verb (`waive gN-integrate --cond <id> --authority human --reason "..."`), which records who accepted the risk and why. A check is only waivable if its `override_policy` allows it; overriding that requires the high-friction `--force` and is recorded as forced.
+
 Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait for each subagent to return before advancing. Do not abandon, duplicate, or re-dispatch a task still in progress.
+
+**Never hand-launch a crew.** Every implementer/reviewer dispatch goes through `scripts/run_crew.py`, not a raw CLI call. It launches foreground/blocking, assigns a stable session name, records durable launch metadata in `.agent-work/<work-id>/crew-runs.json` before the crew starts, captures stdout/stderr, and refuses to return success unless the expected result artifact exists. It refuses a duplicate crew on the same gate/worktree unless the prior attempt is explicitly abandoned (`--abandon <session> --relaunch`). Before `execute` and before each dispatch, run `scripts/recover_crews.py <work-id>` and only launch when it reports no unresolved running/resumable/conflicting crew; resume a recoverable attempt (`run_crew.py --resume <session>`) or explicitly abandon/relaunch rather than colliding two crews in one worktree. The wrapper is the process/launch layer only: it does not advance gates, integrate results, or touch git.
 
 
 ## Repo (default; Charter overrides)
@@ -63,8 +67,22 @@ Work on a branch off main; commit frequently as gates close; ready the branch to
 
 Pause for a `user-decision` at the checkpoints the project enables at Charter time — typically plan-approved, architecture-change intent, and final accept. Human verification is a first-class step.
 
+## Decision candidates
+
+Surface a decision candidate the moment a choice would govern current structure, capabilities, constraints, or future planning behavior — i.e. when an agent could later rediscover or violate it. Force such choices to the human as a `user-decision`; do not bury them. Record the resolution as a candidate for the reconcile step, where Cartographer decides whether it becomes a durable decision anchor. Decision pressure or evidence returned by Implementer/Reviewer feeds the same candidate pool. Do not raise candidates for choices obvious from current structure.
+
+## Mission frame
+
+Plan **map-first**. Before authoring `execute.json`, produce a **mission frame** from the current map (`templates/MISSION_FRAME.template.md`): intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope. The frame is how the durable map feeds planning before any code spelunking, and the source the gate anchors are cut from.
+
+The map is context, not authority over code, and not a tax on trivial work. For a small local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent. When relevant architecture artifacts exist, the frame is required.
+
+Low-confidence, stale, partial, or disputed map areas **alter the plan** — never trust them silently. Flag the area in the frame and either plan a scout/verification step into `execute.json` or surface it to the human as a decision; do not author gates that assume an unverified map.
+
+Each gate **inherits** the relevant frame anchors: the per-gate `anchors` block in `execute.json` carries the structural/capability/constraint/decision/evidence anchors down, and the inbound handoff templates relay them to Implementer and Reviewer so every role plans from the same map context.
+
 ## Architecture bookend
 
-Architecture is read at the **start** (frame the ask against recorded structure) and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
+Architecture is read at the **start** — that read produces the mission frame above — and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
 
-Templates: `templates/COMMANDER_SPINE.template.json`, `templates/EXECUTE_PLAN.template.json`, `templates/IMPLEMENTER_HANDOFF.template.md`, `templates/REVIEWER_HANDOFF.template.md`. Engine: workbench `references/checklist-engine.md`.
+Templates: `templates/COMMANDER_SPINE.template.json`, `templates/EXECUTE_PLAN.template.json`, `templates/MISSION_FRAME.template.md`, `templates/IMPLEMENTER_HANDOFF.template.md`, `templates/REVIEWER_HANDOFF.template.md`. Engine: workbench `references/checklist-engine.md`.

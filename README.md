@@ -17,7 +17,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-commander` | Run one bounded issue end to end as the human's rigor scaffold. |
 | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey). |
 | `constellation-interrogator` | Run a question survey and consolidate a resolved understanding. |
-| `constellation-cartographer` | Maintain the current-only structural map and sparse purpose/constraint overlays. |
+| `constellation-cartographer` | Maintain the current-only multidimensional map: structural hierarchy plus sparse capability/event/constraint/assumption/decision/claim overlays. |
 | `constellation-scout` | Audit map-first architecture pressure and package improvement candidates. |
 | `constellation-implementer` | Implement a bounded change from a handoff, driving its own gated plan. |
 | `constellation-reviewer` | Independently verify a bounded change as a survey and consolidate a verdict. |

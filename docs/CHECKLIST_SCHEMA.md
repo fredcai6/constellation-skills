@@ -39,11 +39,59 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "tasks": { "g1": { Task }, "g2": { Task } },
   "consolidation": null,            // survey only: the consolidated result (verdict / understanding)
   "triage_candidates": [],          // out-of-scope discoveries, bubbled to the parent agent
-  "blockers": []                    // stuck items, bubbled to the parent agent
+  "blockers": [],                   // stuck items, bubbled to the parent agent
+  "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
 ```
 
 `triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up.
+
+## Engine session — actor authority over the state
+
+The engine owns canonical state and enforces *mechanism*. It also enforces **actor authority** over that state: a single, leasing agent owns the right to mutate a given checklist at a time. A lost-and-resurrected parent session once produced two controlling agents in one worktree; the lease refuses that conflicting mutation. Authority is over the checklist **state**, not over each item — there are still no per-task owner/executor tags (see Scope).
+
+A claimed lease lives in the optional top-level `engine_session`:
+
+```json
+"engine_session": {
+  "session_id": "commander/issue-420/attempt-2",
+  "status": "active",                  // active | released
+  "claimed_at": "<iso8601>",
+  "last_heartbeat": "<iso8601>",
+  "claimed_by": "commander",           // role that claimed it (advisory)
+  "worktree": ".",
+  "previous_session_id": "commander/issue-420/attempt-1",  // set on takeover/reclaim, else null
+  "takeover_reason": null              // set on force takeover / stale reclaim, else null
+}
+```
+
+| field | type | notes |
+|---|---|---|
+| `session_id` | string | the owning session; passed to mutating verbs as `--session-id` |
+| `status` | `active`\|`released` | only an **active** lease gates mutation |
+| `claimed_at` / `last_heartbeat` | iso8601 | real timestamps; staleness is `now - last_heartbeat > lease_stale_seconds` |
+| `claimed_by` | string | role (advisory audit) |
+| `worktree` | string | where the session runs |
+| `previous_session_id` | string \| null | the prior owner, recorded on force takeover or stale reclaim |
+| `takeover_reason` | string \| null | why the takeover happened (force requires a non-empty reason) |
+
+### The backward-compat gate
+
+**A checklist with no `engine_session` behaves exactly as before:** mutating verbs work without `--session-id`. Session enforcement only kicks in **once a lease has been claimed** (an active `engine_session` exists). `--session-id` is optional on every mutating verb; it is only required, and only checked, once an active lease is present. No shipped template requires a lease except the Commander spine, which claims one at `init` and releases it at `archive`.
+
+### Leasing verbs
+
+| verb | shape | effect |
+|---|---|---|
+| `claim` | `--session-id <id> --claimed-by <role> [--worktree .] [--force --reason "..."]` | create an active lease (none exists); **idempotently resume + refresh heartbeat** if the same `session_id` already owns it; **refuse** if a different active, non-stale lease exists. `--force --reason "..."` takes over an active/ambiguous lease, recording `previous_session_id` + `takeover_reason`; force requires a non-empty reason. |
+| `heartbeat` | `--session-id <id>` | refresh `last_heartbeat`; only the owning session may heartbeat |
+| `release` | `--session-id <id> [--force --reason "..."]` | mark the lease `status: released` (closed); only the owning session may release, unless `--force --reason` overrides. After release a new `claim` succeeds. |
+
+### Mutating verbs and stale leases
+
+Once an **active** lease exists, the state-changing verbs (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `attest`, `waive`, `attach`, `flag-candidate`) **refuse** unless `--session-id` matches the active lease's `session_id`. The read-only `current` needs no session and reports active-lease metadata when present.
+
+A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**. A stale lease does not permanently lock the checklist, but it does not silently let a stranger mutate either: a mutating verb against a stale-only lease is **refused with an instruction to `claim` first**. The next session reclaims it via `claim` (same id, or `--force --reason`), which records the prior session in `previous_session_id` before proceeding. Timestamps are real (the engine has a single `_now()` time hook); staleness is computed by parsing `last_heartbeat`.
 
 ## Task
 
@@ -77,6 +125,8 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 | `check` | object \| null | how it is verified; `null` = qualitative/asserted |
 | `satisfied` | bool | |
 | `satisfied_by` | string \| null | evidence-id or note |
+| `override_policy` | object \| null | *optional*; makes the condition **waivable** by a human (see below). Absent → not waivable. |
+| `waived` | object \| null | set by the `waive` verb when a human accepts the condition; a durable marker that survives re-evaluation |
 
 ### What "engine-checked" means
 
@@ -84,8 +134,62 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 |---|---|---|
 | `command` | runs `check.command` | exit 0 — "the tests/build actually pass" |
 | `artifact` | confirms an evidence item of `check.evidence_type` is attached (optional field match, e.g. `verdict: APPROVE`) | present + shape-valid |
+| `git-change-policy` | collects the staged (`git diff --cached`) or branch (`git diff <base>...HEAD`) diff and evaluates each changed file against an inline artifact policy (globs, size, binary) | **no** files violate the policy — "the closeout diff carries no suspicious artifacts" |
 
 That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE` (produced by a `survey` review's consolidation).
+
+### `git-change-policy` — artifact-output guardrails at closeout
+
+A `git-change-policy` check refuses advancement when the staged or pending diff includes **suspicious artifacts**: oversized files, generated record dumps, disallowed artifact directories, binary/blob additions, or large data files (parquet/pickle/model/checkpoint). It is mechanical only — globs, size, binary — and does **not** judge whether an artifact is semantically useful. The policy is configured **inline on the `check`**:
+
+```json
+{
+  "kind": "git-change-policy",
+  "mode": "staged",                       // "staged" (git diff --cached) | "branch" (vs base)
+  "base": "origin/main",                  // used only when mode == "branch"
+  "max_file_bytes": 1000000,
+  "deny_globs": ["*.parquet","*.pkl","*.pickle","*.joblib","*.pt","*.onnx","data/generated/**","records/**"],
+  "allow_globs": ["docs/**","src/**","tests/**","skills/**","scripts/**",".agent-work/**"],
+  "require_human_waiver_for_binary": true
+}
+```
+
+| field | type | meaning |
+|---|---|---|
+| `mode` | `staged`\|`branch` | which diff to evaluate; `staged` = `git diff --cached`, `branch` = `git diff <base>...HEAD` |
+| `base` | string | branch base ref, used only when `mode == "branch"` (default `origin/main`) |
+| `max_file_bytes` | int \| null | a changed file larger than this violates; `null`/absent = no size constraint |
+| `deny_globs` | `[glob]` | a changed path matching any of these **always** violates (an explicit deny beats an allow) |
+| `allow_globs` | `[glob]` | a changed path matching any of these is **exempt from the size and binary checks** (deny still denies) |
+| `require_human_waiver_for_binary` | bool | when true, a binary/blob addition (outside an `allow_glob`) violates |
+
+**Per-file violation semantics.** A changed file VIOLATES if it matches any `deny_glob`; OR its size exceeds `max_file_bytes`; OR it is binary and `require_human_waiver_for_binary` is true — **UNLESS** it matches an `allow_glob`, which exempts it from the size/binary checks only. An explicit `deny_glob` always wins (a deny inside an allowed directory still denies). Globs use `**` for any number of path segments and `*` within a segment; a bare-basename glob like `*.parquet` matches anywhere in the tree. Empty/missing policy lists mean "no constraint of that kind," and a clean (or empty) diff yields zero violations → satisfied.
+
+**Implementation note (testability).** The engine splits this into a PURE evaluator `evaluate_git_change_policy(files, policy) -> [violations]` (no git, no filesystem; `files` are `{path,size,binary}` dicts) and a thin git collector `_collect_changed_files(policy, base_dir)`. The semantics above are fully unit-testable without a working tree.
+
+**Blocks by default; waivable via the override path.** The check **blocks advance by default**. A human who intends an artifact does not hand-mark the condition — they carry an `override_policy` on it and `waive` it (see *Override policy*). The check's `artifact-policy` evidence (below) records exactly which rule was bypassed, so the waiver's audit trail names the violation.
+
+**Rigor dial.** `max_file_bytes`, `deny_globs`, `allow_globs`, and `require_human_waiver_for_binary` are the **rigor dial** for closeout. They are tuned per project by editing the inline policy on the check in the project's templates (Charter owns the templates / engine-config). There is no separate config loader — the inline policy on the check is the single source.
+
+### Override policy — a deliberate, auditable waiver
+
+By default the engine **refuses** advancement when any postcondition is unmet, and a failed `command` check leaves a `command-output` evidence record with its exit status. That refusal is the whole point: it kills accidental advancement past a failing gate. But a human sometimes legitimately decides a check is non-blocking (e.g. a flaky type-check at a docs-only closeout). That decision belongs to the human, not the engine — so the engine offers a **waiver** path that records *who* accepted the risk and *why*, rather than letting an agent quietly mark a condition satisfied.
+
+A condition opts into being waivable with an optional sibling field `override_policy` (a **sibling of** `check`, not nested inside it):
+
+```json
+"override_policy": { "allowed": true, "authority": "human", "reason_required": true }
+```
+
+| `override_policy` field | type | meaning |
+|---|---|---|
+| `allowed` | bool | the condition may be waived (no `--force` needed) |
+| `authority` | string | who is expected to accept the risk (advisory) |
+| `reason_required` | bool | the `waive` verb refuses an empty `--reason` |
+
+**Absent `override_policy` means the condition is NOT waivable.** All existing conditions behave exactly as before; only a condition that carries this field is waivable through the normal path. A condition without a policy can still be waived, but only via the high-friction `--force` flag, which always demands authority + reason and is recorded as a forced override.
+
+When `waive` succeeds it does three durable things on the condition: sets `satisfied: true`, sets `satisfied_by` to the new waiver evidence id, and stamps a `waived` marker `{authority, reason, evidence, forced}`. The marker matters because `command`/`artifact` checks are **re-evaluated at every `advance`**: the engine short-circuits a waived condition (honors it without re-running its check) so the waiver is not silently overwritten and un-waived. A `reopen` clears the `waived` marker — rework re-evaluates from scratch, so a prior waiver does not carry over.
 
 ### Qualitative conditions (`check: null`) — trust but verify
 
@@ -96,8 +200,8 @@ Most conditions, especially **preconditions**, are qualitative. The engine recor
 | field | type | notes |
 |---|---|---|
 | `id` | string | |
-| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification` |
-| `payload` | object | command output, diff ref, decision text, verdict, packet ref |
+| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy` |
+| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed) |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
 
@@ -115,6 +219,7 @@ The envelope is the task projected across a tier boundary, translated to the rec
 | `rework_cap` | int | reopen attempts per node before escalation to the parent / human |
 | `replan` | `abort-and-reissue` | Commander is one-shot; a failed plan ends the run and re-issues |
 | `human_checkpoints` | `[string]` | the **rigor dial**: which checkpoints require a `user-decision` (e.g. `understand.done`, `plan.approved`, `run.accept`) |
+| `lease_stale_seconds` | int | a lease whose `last_heartbeat` is older than this is **stale** and may be reclaimed (default 1800) |
 
 ## Status
 
@@ -146,7 +251,10 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 
 | verb | applies | reads/writes |
 |---|---|---|
-| `current` | both | walk to the active item; emit its `imperative` |
+| `current` | both | walk to the active item; emit its `imperative`; reports active-lease metadata when present (no session needed) |
+| `claim --session-id <id> --claimed-by <role> [--worktree .] [--force --reason …]` | both | take the actor-authority lease; idempotent same-session resume; refuses a different active lease unless forced |
+| `heartbeat --session-id <id>` | both | refresh the active lease's `last_heartbeat` (owner only) |
+| `release --session-id <id> [--force --reason …]` | both | close the lease (`status: released`); owner only unless forced |
 | `criteria <id>` | gated | emit `postconditions` + implied evidence types |
 | `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress` |
 | `advance <id> --evidence …` | gated | check all `postconditions`; `→ complete` |
@@ -155,8 +263,11 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |
 | `block <id> …` | both | `→ blocked`; append to `blockers` (bubble to parent) |
-| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap |
+| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; clears any `waived` markers |
+| `waive <id> --cond <id> [--which postconditions] --authority … --reason … [--force]` | both | human override: satisfy a condition **by waiver**; refused unless its `override_policy.allowed` (or `--force`); records a `waiver` evidence record + a durable `waived` marker |
 | `flag-candidate …` | both | record an out-of-scope discovery in `triage_candidates` |
+
+Every **mutating** verb above (`start`/`advance`/`record`/`consolidate`/`skip`/`block`/`reopen`/`append`/`attest`/`waive`/`attach`/`flag-candidate`) accepts an optional `--session-id`; it is required, and checked against the active lease, **only once a lease has been claimed** (see *Engine session*).
 
 ## Example: two linked checklists
 

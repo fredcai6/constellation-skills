@@ -13,6 +13,15 @@ Own: `index.md`, `packets/`, `overlays/`, map, `MAP_BUILD.md`.
 
 Track edits/durable judgments in your checklist. Packet-first: reconcile touched node packets before index/overlay ceremony.
 
-May update wording, status/confidence, dependencies, overlays, and map compliance with clear evidence; decide and record rationale. Ask only when durable ownership, parent, dependency direction, boundary, failure semantics, disputed truth, or ambiguous intent would change. Future work routes to Triage.
+May update wording, status/confidence, dependencies, capability/event/constraint/assumption/claim overlays, decision anchors, and map compliance with clear evidence; decide and record rationale as `claim:` overlays or `decision:` anchors. Ask only when durable ownership, parent, dependency direction, boundary, failure semantics, disputed truth, or ambiguous intent would change. Future work routes to Triage.
+
+## Consuming Scout audit findings
+
+Scout reports map-quality audit candidates only; it never edits the map. For each finding, read its **Disposition** and act:
+
+- **Current-truth fix -> Cartographer**: the map disagrees with current code/structure (stale status, map/code mismatch, wrong dependency, ungrounded or missing anchor that current truth supports, constraint lacking evidence/explanation, high-maintenance edge that fails the Inclusion Rule). Reconcile it in place — update status/confidence, add the missing capability anchor or supporting/`verified-by`/`explained-by` edge, fix the dependency direction, or retire the edge. Decision candidates follow the map-model "Promote, Reject, or Route" step; do not duplicate it.
+- **Future work -> Triage**: redesign, new structure, or remediation that is not current truth. Leave the map as-is and let it route to Triage.
+
+Promote only accepted current truth; reject what fails the Inclusion Rule; route the rest.
 
 Templates: `templates/CARTOGRAPHER.template.json`, `templates/ARCHITECTURE_PACKET.template.md`, `templates/ARCHITECTURE_INDEX.template.md`, `templates/ARCHITECTURE_DECISION.template.md`, `templates/MAP_BUILD.template.md`. References: `references/map-model.md`, workbench `references/checklist-engine.md`.

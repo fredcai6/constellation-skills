@@ -1,7 +1,7 @@
 # Triage Recommendation: `<title>`
 
 ## Classification
-`bug | cleanup | missing test | missing doc | missing architecture packet | missing structural node | architecture weakness | structure/constraint mismatch | stale generated map | feature | tooling | unresolved decision | research hardening | dependency cleanup | security/privacy | performance/resource`
+`bug | cleanup | missing test | missing doc | missing architecture packet | missing structural node | missing capability anchor | architecture weakness | structure/constraint mismatch | stale generated map | ungrounded claim/decision | bad map edge | feature | tooling | unresolved decision | research hardening | dependency cleanup | security/privacy | performance/resource`
 
 ## Source checklist/artifact
 - `<cartographer finding | review finding | plan | user note | evidence path>`

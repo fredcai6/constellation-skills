@@ -13,6 +13,8 @@ Start from the given criteria in `templates/REVIEW_SURVEY.template.json` and app
 
 The verdict is APPROVE or BLOCK with findings; an open fail cannot consolidate to APPROVE. Keep blockers separate from observations. Flag out-of-scope finds as triage candidates.
 
+Verify the implementer's `Map Impact` notes against the diff and evidence: evidence backs the claimed behavior/capability change, constraints were not violated, the notes match the diff, decision candidates are surfaced when authority is required, and durable context routes to Cartographer or Triage. BLOCK when graph-impact claims are materially wrong or missing for architecture-significant work; do not block trivial local edits for absent notes.
+
 Report a proof-of-life as soon as you start and report each check as you record it. Return the verdict in `REVIEW_RESULT`.
 
 **FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**

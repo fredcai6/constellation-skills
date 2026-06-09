@@ -15,6 +15,8 @@ Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive i
 
 Report a proof-of-life as soon as you start, and report progress and evidence at each step, so Commander can see you are working. Return evidence in `IMPLEMENTER_RESULT`. Raise a blocker when scope or authority is exceeded; flag out-of-scope finds as triage candidates.
 
+Fill the result's `Map Impact` notes from the inbound Map Anchors and the actual diff, reusing the anchor vocabulary so Cartographer reconcile inherits durable context instead of rediscovering it. This is conditional: skip it for trivial local edits with no structural, capability, constraint, or decision impact. You are not a durable map owner — record candidates and impact, do not author the map.
+
 **FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
 
 Templates: `templates/IMPLEMENTER_PLAN.template.json`, `templates/IMPLEMENTER_RESULT.template.md`. Reference: workbench `references/checklist-engine.md`.

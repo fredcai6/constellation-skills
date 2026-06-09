@@ -50,20 +50,31 @@ class BuildArchitectureMapTests(unittest.TestCase):
                 PACKET.replace("struct:core", "struct:storage").replace("Core", "Storage"),
             )
             write(
-                repo / "docs/architecture/overlays/purpose.yml",
+                repo / "docs/architecture/overlays/capability.yml",
                 """
-purposes:
-  - id: purpose:prediction
-    kind: purpose
+capabilities:
+  - id: capability:prediction
+    kind: capability
     parent: null
     label: Prediction
+events:
+  - id: event:prediction-ready
+    kind: event
+    parent: null
+    label: Prediction ready
 relationships:
   - source: struct:core
-    type: serves
-    target: purpose:prediction
+    type: supports
+    target: capability:prediction
     provenance: curated
     evidence:
-      - docs/architecture/overlays/purpose.yml
+      - docs/architecture/overlays/capability.yml
+  - source: capability:prediction
+    type: emits
+    target: event:prediction-ready
+    provenance: curated
+    evidence:
+      - docs/architecture/overlays/capability.yml
 """,
             )
             write(repo / "src/core/service.py", "import json\n")
@@ -79,10 +90,11 @@ relationships:
             self.assertIn("struct:core", node_ids)
             self.assertIn("struct:storage", node_ids)
             self.assertIn("struct:module:src.core.service", node_ids)
-            self.assertIn("purpose:prediction", node_ids)
+            self.assertIn("capability:prediction", node_ids)
+            self.assertIn("event:prediction-ready", node_ids)
 
             relationship_types = {edge["type"] for edge in data["relationships"]}
-            self.assertEqual({"depends-on", "serves"}, relationship_types)
+            self.assertEqual({"depends-on", "supports", "emits"}, relationship_types)
             self.assertTrue(
                 any(
                     finding["class"] == "parallel canonical docs"
@@ -121,6 +133,57 @@ relationships:
                 builder.build_architecture_map(repo, source_roots=("src",), write_output=False)
 
             self.assertIn("missing parent", str(raised.exception))
+
+    def test_rejects_disallowed_overlay_node_kind(self):
+        builder = load_builder()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            write(repo / "docs/architecture/packets/core.md", PACKET)
+            write(
+                repo / "docs/architecture/overlays/bad.yml",
+                """
+capabilities:
+  - id: purpose:prediction
+    kind: purpose
+    parent: null
+    label: Prediction
+relationships:
+  - source: struct:core
+    type: supports
+    target: purpose:prediction
+    provenance: curated
+    evidence:
+      - docs/architecture/overlays/bad.yml
+""",
+            )
+
+            with self.assertRaises(builder.MapBuildError) as raised:
+                builder.build_architecture_map(repo, source_roots=("src",), write_output=False)
+
+            self.assertIn("disallowed node kind", str(raised.exception))
+
+    def test_rejects_overlay_node_without_structural_anchor(self):
+        builder = load_builder()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            write(repo / "docs/architecture/packets/core.md", PACKET)
+            write(
+                repo / "docs/architecture/overlays/floating.yml",
+                """
+capabilities:
+  - id: capability:orphan
+    kind: capability
+    parent: null
+    label: Orphan
+""",
+            )
+
+            with self.assertRaises(builder.MapBuildError) as raised:
+                builder.build_architecture_map(repo, source_roots=("src",), write_output=False)
+
+            self.assertIn("without structural anchor", str(raised.exception))
 
 
 if __name__ == "__main__":

@@ -14,9 +14,10 @@ Work file: `.agent-work/SCOUT_REPORT.md`
 ### Candidate: `<title>`
 
 **Rank:** `1..n`  
-**Class:** `shallow structural node | pass-through | low locality | low leverage | duplicate responsibility | dependency pressure | constraint pressure | scattered test surface | map/code pressure`  
+**Class:** `shallow structural node | pass-through | low locality | low leverage | duplicate responsibility | dependency pressure | constraint pressure | scattered test surface | map/code pressure | stale/low-confidence packet | map/code mismatch | missing capability anchor | ungrounded capability/claim/decision | constraint without evidence/explanation | high-maintenance edge`  
 **Structural anchor:** `struct:<id> | path`  
 **Confidence:** `high | medium | low`  
+**Disposition:** `current-truth fix -> Cartographer | future work -> Triage`  
 
 **Current pain:** `<what hurts now>`  
 **Evidence:** `<map/code/test/config paths and observations>`  
@@ -27,7 +28,9 @@ Work file: `.agent-work/SCOUT_REPORT.md`
 
 ## Triage Handoff
 
-- `<candidate title>` -> classification `architecture weakness | structure/constraint mismatch | cleanup | missing test | performance/resource`
+Only future-work findings route here; current-truth fixes go to Cartographer instead.
+
+- `<candidate title>` -> classification `architecture weakness | structure/constraint mismatch | cleanup | missing test | performance/resource | stale generated map | missing architecture packet | missing structural node | missing capability anchor | ungrounded claim/decision | bad map edge | unresolved decision`
 
 ## Non-Findings
 

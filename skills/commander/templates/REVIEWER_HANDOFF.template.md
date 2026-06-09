@@ -28,6 +28,15 @@ Concise fragments. Omit filler.
 `<rules inherited from the gate plan; each becomes a review check>`
 - `<rule>`
 
+## Map Anchors (inbound)
+Map context this gate inherits from the mission frame; review the change against these so it lands on the right structure and honors recorded rules. Omit a line when the gate carries nothing for it.
+- **Structural:** `<struct:id — path/symbol, level — where the work lands or depends>`
+- **Capability:** `<capability:id — behavior this gate changes or relies on>`
+- **Constraints/assumptions:** `<constraint:id | assumption:id — verify it was not silently violated>`
+- **Decision anchors:** `<decision:id — governs this structure; flag any contradiction as a decision candidate>`
+- **Evidence expectations:** `<claim:id or check this gate must re-confirm>`
+- **Map confidence flags:** `<node id — low-confidence/stale/disputed area; confirm rather than trust; omit if none>`
+
 ## Evidence Produced
 `<test output, command results, artifacts from IMPLEMENTER_RESULT — include pass/fail>`
 

@@ -41,16 +41,47 @@ record <id> --result pass|fail   # survey: record the check; never blocks
 consolidate [--verdict ...]      # survey: every item visited -> hand up a result
 ```
 
-Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type <t> --field K=V` (record evidence; use `--field` or `--payload-file` to avoid passing JSON through the shell — e.g. `attach g1 --type review-result --field verdict=APPROVE`), `flag-candidate --from <id> --statement` (out-of-scope discovery).
+Other verbs: `skip <id> --reason` (OBE), `block <id> --blocker ... --authority ... --next ...` (bubbles to parent), `reopen <id> --reason` (gated rework; escalates at the cap), `append <id> --title --imperative` (survey only), `attest <id> --cond <id>` (assert a qualitative precondition — trust but verify), `attach <id> --type <t> --field K=V` (record evidence; use `--field` or `--payload-file` to avoid passing JSON through the shell — e.g. `attach g1 --type review-result --field verdict=APPROVE`), `waive <id> --cond <id> --authority human --reason "..."` (human override of a check — see below), `flag-candidate --from <id> --statement` (out-of-scope discovery).
+
+## Session lease: who owns the checklist state
+
+The engine enforces **actor authority** over a checklist's state so a resumed or duplicated parent session cannot concurrently mutate the same plan. One session leases the checklist; mutating verbs then require that session's id.
+
+```
+claim     --session-id <id> --claimed-by <role> [--worktree .] [--force --reason "..."]
+heartbeat --session-id <id>
+release   --session-id <id>
+```
+
+- `claim` takes the lease. The **same** `session_id` re-claiming is idempotent (it just refreshes the heartbeat) — safe to call on resume. A **different** active session is refused; take over only with `--force --reason "..."`, which records the prior session for audit.
+- `heartbeat` keeps your lease fresh; `release` closes it when you are done.
+- **Once a lease exists, every mutating verb needs `--session-id <id>` matching the active lease** (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `attest`, `waive`, `attach`, `flag-candidate`). Pass it on each call. Read-only `current` needs no session and shows the active lease.
+- A lease goes **stale** if its heartbeat lapses (config `lease_stale_seconds`, default 1800s). A stale lease does not lock the plan forever, but you must `claim` it (same id, or `--force --reason`) before mutating — the engine will refuse and tell you to claim.
+- A checklist with **no lease** behaves exactly as before: mutating verbs work without `--session-id`. Only claim a lease when your workflow wires it (the Commander spine claims at `init`, releases at `archive`).
 
 ## Obey refusals
 
 The engine answers illegal moves with an imperative, e.g. `REFUSED: g1: postconditions unmet ['c1']`. Treat that as the next instruction — fix the named gap, do not work around it. The refusal *is* the gate.
 
+## Waive: human override of a check
+
+A `command`/`artifact` postcondition that won't pass normally **blocks the gate** — that is correct, and your default is to fix the work, not route around the check. The one sanctioned exception is when the **human** decides a specific check is non-blocking. Do not edit the JSON to mark the condition satisfied; use the engine:
+
+```
+waive <id> --cond <cond-id> [--which postconditions] --authority human --reason "why it's accepted"
+```
+
+- It requires a non-empty `--authority` (who is accepting the risk) and a `--reason` (always, when the condition's `override_policy.reason_required` is set or you use `--force`). The reason becomes durable, auditable evidence (`type: waiver`).
+- It is **refused unless the condition declares an `override_policy` with `allowed: true`** — you cannot waive a check that the plan author never marked waivable. To override that refusal deliberately, pass `--force`; force still demands authority + reason and is recorded as `forced: true`. Treat `--force` as a last resort and surface it to the human.
+- After a waiver, `advance` succeeds and its message names the waived conditions (e.g. `g1 -> complete (WAIVED postconditions ['c1'])`). The waiver is **not** re-run away at advance, and it is cleared if the gate is later `reopen`ed.
+
+The engine does not judge whether a waiver is wise — it only refuses *accidental* advancement and records who authorized the exception. Waiving is a human decision you carry out through the engine, not one you make for the human.
+
 ## Mechanism the engine guarantees
 
 - **Ordering** — cannot start a later gate before the active one (gated).
 - **Evidence shape** — `command` postconditions must exit 0; `artifact` postconditions need a matching evidence item present. Quality is judged by the reviewer/human, not the engine.
+- **Artifact-output guardrails** — a `git-change-policy` postcondition collects the staged (`git diff --cached`) or branch (`git diff <base>...HEAD`) diff and refuses advance when a changed file violates an inline policy: matches a `deny_glob` (e.g. `records/**`, `*.parquet`), exceeds `max_file_bytes`, or is a binary/blob addition when `require_human_waiver_for_binary` is set — unless the path matches an `allow_glob`, which exempts it from the size/binary checks (a deny always wins). It is purely mechanical (globs/size/binary), records an `artifact-policy` evidence item listing the violations, and is **waivable** by a human via `waive` (the condition carries an `override_policy`). The Commander spine's `archive` gate uses it (postcondition `c4`) to refuse closeout on suspicious artifacts unless the human accepts the risk. The policy values are the per-project rigor dial — tune them on the check in the project's templates. See `docs/CHECKLIST_SCHEMA.md` for the field table and full semantics.
 - **Rework cap** — `reopen` counts; on the (cap+1)th it stops re-dispatching and escalates to the parent. The cap is set at Charter time.
 - **Consolidation guard** — `consolidate` refuses `APPROVE` while any item is `fail`, unless an explicit `--override-reason` is given.
 

@@ -17,9 +17,19 @@ Does not update architecture truth. Does not implement. Does not redesign, chang
 
 Inputs: `docs/architecture/`, `docs/agents/ORCHESTRATOR_CONTEXT.md`, relevant code/tests/config, user focus.
 
-Audit for: shallow structural node; pass-through module; scattered interface knowledge; duplicated responsibility; wrong dependency direction; constraint pressure; over-fragmented map; missing deep module; test surface below real interface; map/code pressure.
+## Modes
 
-Use `references/scout-heuristics.md`. Return ranked candidates with structural anchor, evidence, current pain, improvement direction, confidence, risk, test impact, Triage handoff.
+- **After-work reconcile** (default): audit the scopes a run just touched, reacting to that change.
+- **Map-quality audit** (periodic): sweep the whole map to ask "does the map still deserve planning authority?" — independent of any single change. Triggered on a human/Commander cadence (e.g. after N runs, before a planning round, or when the map feels stale or distrusted), not by a scheduler. Both modes produce candidates only; they differ in scope and trigger, not in output ownership.
+
+Audit for:
+
+- **Structural pressure:** shallow structural node; pass-through module; scattered interface knowledge; duplicated responsibility; wrong dependency direction; over-fragmented map; missing deep module; test surface below real interface; map/code pressure.
+- **Map-quality pressure (multidimensional):** stale or low-confidence packet/node; map/code mismatch; missing capability anchor for an important structural node; ungrounded capability/claim/decision (no supporting `struct:`/evidence); constraint without supporting evidence or explanation; high-maintenance edge that does not improve planning (fails the Inclusion Rule).
+
+Disposition every finding: an **immediate current-truth fix** (map says X, current code/structure says Y) routes to Cartographer; **future work** (redesign, new structure, unresolved decision) routes to Triage. Scout reports the disposition; it never applies either.
+
+Use `references/scout-heuristics.md`. Return ranked candidates with structural anchor, evidence, current pain, improvement direction, confidence, risk, test impact, disposition, Triage handoff.
 
 Ask only when scope, authority, or target value is unclear. Otherwise inspect and report.
 
