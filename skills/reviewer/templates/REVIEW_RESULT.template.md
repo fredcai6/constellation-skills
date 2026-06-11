@@ -42,5 +42,13 @@ BLOCK when graph-impact claims are materially wrong or missing for architecture-
 ## Out-of-scope observations
 - `<finding for Commander or none>`
 
+## Workflow Feedback
+Mandatory section. A `none` answer requires a run-specific reason: `none — confirmed after review: <what you checked>`; a bare `none` is treated as an unfilled field. This is workflow signal, not project signal: you are the only one who saw this friction — if you do not report it here, it is lost.
+
+- **Handoff gaps:** `<what concrete wording in the handoff confused you, or which field was missing/wrong — name the field>`
+- **Context rediscovered:** `<context you had to dig up that the anchors, evidence, or handoff should have carried>`
+- **Instructions improvised around:** `<skill/template/engine instruction that did not cover the situation, and what you did instead>`
+- **What would have made this easier:** `<one concrete change to the handoff, templates, or skill — or none>`
+
 ## Return status
 `complete | partial | blocked | out-of-scope | failed`

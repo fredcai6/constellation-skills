@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import shutil
+import subprocess
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
@@ -68,8 +72,10 @@ AGENT_TARGETS: dict[str, AgentTarget] = {
 }
 AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
 SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
+    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "apply_lessons_delta.py"),
+    "lessons-auditor": ("checklist_engine.py",),
     "charter": ("checklist_engine.py",),
-    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "run_crew.py", "recover_crews.py"),
+    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py"),
     "workbench": ("checklist_engine.py",),
     "interrogator": ("checklist_engine.py",),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
@@ -307,6 +313,83 @@ def install_skills(
         out(restart_message)
 
 
+def _hash_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _source_commit() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "unknown"
+    return result.stdout.strip() if result.returncode == 0 else "unknown"
+
+
+def write_template_baselines(
+    skills: Sequence[Skill],
+    project_root: Path,
+    *,
+    out: Callable[[str], object],
+) -> None:
+    """Seed pristine blank-template baselines + manifest for a project install.
+
+    The baseline is what three-way template reconciliation diffs against; the
+    installer therefore never overwrites an existing baseline — upgrades are
+    reconciled by check_skill_freshness.py, which owns baseline promotion.
+    """
+    templates_root = project_root / ".agent-work" / "templates"
+    baseline_root = templates_root / ".baseline"
+    manifest_path = templates_root / "TEMPLATES_MANIFEST.json"
+
+    if baseline_root.exists() or manifest_path.exists():
+        out(
+            "Template baseline already exists; leaving it untouched. "
+            "Run scripts/check_skill_freshness.py to reconcile against this install."
+        )
+        return
+
+    entries: list[dict[str, str]] = []
+    for skill in skills:
+        source_templates = skill.source_path / "templates"
+        if not source_templates.is_dir():
+            continue
+        for template in sorted(source_templates.iterdir()):
+            if not template.is_file():
+                continue
+            target = baseline_root / skill.install_name / template.name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(template, target)
+            entries.append(
+                {
+                    "skill": skill.install_name,
+                    "template": template.name,
+                    "sha256": _hash_file(template),
+                }
+            )
+
+    if not entries:
+        return
+
+    manifest = {
+        "generated": date.today().isoformat(),
+        "source_commit": _source_commit(),
+        "baseline_origin": "baseline-from-install",
+        "templates": entries,
+    }
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    out(
+        f"Template baseline seeded: {len(entries)} template(s) -> {baseline_root} "
+        f"(manifest: {manifest_path})"
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Install Constellation skills for supported agents at user or project scope.",
@@ -359,6 +442,9 @@ def main(
                 restart_message=agent.restart_message,
                 out=out,
             )
+        if args.scope == "project" and not args.dry_run and not args.dest:
+            project_root = args.project.expanduser() if args.project else runtime_cwd
+            write_template_baselines(skills, project_root, out=out)
     except InstallError as exc:
         parser.exit(2, f"error: {exc}\n")
 

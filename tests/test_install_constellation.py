@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install_constellation.py"
 VERIFIER = ROOT / "scripts" / "verify_agent_feedback.py"
 SKILL_NAMES = [
+    "constellation-admiral",
     "constellation-charter",
     "constellation-commander",
     "constellation-workbench",
@@ -19,6 +20,7 @@ SKILL_NAMES = [
     "constellation-cartographer",
     "constellation-scout",
     "constellation-implementer",
+    "constellation-lessons-auditor",
     "constellation-reviewer",
     "constellation-triage",
 ]
@@ -233,7 +235,11 @@ class InstallConstellationTests(unittest.TestCase):
             work_id = "issue-123"
             (agent_work / work_id).mkdir(parents=True)
             feedback = agent_work / "AGENT_FEEDBACK.md"
-            feedback.write_text(f"## 2026-06-08 — {work_id}\n\nentry\n", encoding="utf-8")
+            feedback.write_text(
+                f"## 2026-06-08 — {work_id}\n\n"
+                "**Friction / unclear:**\n- spine step ambiguous about lease release\n",
+                encoding="utf-8",
+            )
 
             verifier.verify_agent_feedback(root, work_id, "feedback")
 
@@ -251,7 +257,8 @@ class InstallConstellationTests(unittest.TestCase):
             work_id = "issue-123"
             (agent_work / work_id).mkdir(parents=True)
             (agent_work / "AGENT_FEEDBACK.md").write_text(
-                f"## 2026-06-08 — {work_id}\n\nentry\n",
+                f"## 2026-06-08 — {work_id}\n\n"
+                "**Friction / unclear:**\n- spine step ambiguous about lease release\n",
                 encoding="utf-8",
             )
 
@@ -430,3 +437,59 @@ class InstallConstellationTests(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
+
+
+class TemplateBaselineTests(unittest.TestCase):
+    def test_project_install_seeds_baseline_and_manifest(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            exit_code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander", "workbench"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            self.assertEqual(0, exit_code)
+
+            manifest_path = project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json"
+            baseline_root = project / ".agent-work" / "templates" / ".baseline"
+            self.assertTrue(manifest_path.is_file())
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(manifest["baseline_origin"], "baseline-from-install")
+            self.assertTrue(manifest["templates"])
+            for entry in manifest["templates"]:
+                copy = baseline_root / entry["skill"] / entry["template"]
+                self.assertTrue(copy.is_file(), copy)
+                self.assertEqual(len(entry["sha256"]), 64)
+            names = {e["template"] for e in manifest["templates"]}
+            self.assertIn("COMMANDER_SPINE.template.json", names)
+            self.assertIn("LESSONS.template.md", names)
+
+    def test_reinstall_leaves_existing_baseline_untouched(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            args = ["--agent", "claude", "--scope", "project", "--project", str(project),
+                    "--skills", "workbench"]
+            installer.main(args, env={}, cwd=project, out=lambda _line: None)
+            manifest_path = project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json"
+            original = manifest_path.read_text(encoding="utf-8")
+
+            messages = []
+            installer.main(args + ["--force"], env={}, cwd=project, out=messages.append)
+            self.assertEqual(original, manifest_path.read_text(encoding="utf-8"))
+            self.assertTrue(any("leaving it untouched" in m for m in messages))
+
+    def test_user_scope_install_writes_no_baseline(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "workbench"],
+                env={}, out=lambda _line: None,
+            )
+            self.assertFalse((Path(tmp) / ".agent-work").exists())

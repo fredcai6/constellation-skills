@@ -47,4 +47,4 @@ Map context this gate inherits from the mission frame; review the change against
 Stop and return BLOCK if: the diff cannot be accessed, evidence is absent or unverifiable, or a policy decision is required before a verdict is possible.
 
 ## Return Format
-Return REVIEW_RESULT: verdict (APPROVE or BLOCK), per-check findings, blockers, out-of-scope observations.
+Return REVIEW_RESULT: verdict (APPROVE or BLOCK), per-check findings, blockers, out-of-scope observations, workflow feedback (what in this handoff or the workflow made the review harder than it needed to be).

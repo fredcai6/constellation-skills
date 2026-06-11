@@ -7,7 +7,7 @@ description: Use when work needs local todos, workflow artifacts, evidence, clos
 
 Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns clear workflow managemetn, not semantic decisions.
 
-Mandatory, not advisory: once a role skill is loaded, drive its checklist to completion through the engine and dispatch each step it names; do not improvise.
+Mandatory, no exceptions: once a role skill is loaded, drive its checklist to completion through the engine and dispatch each step it names. Within a step, judgment is the role's — when an instruction does not fit the work, the role does the closest compliant thing and reports the misfit; reporting misfit is compliance, not deviation.
 
 ## Layout
 
