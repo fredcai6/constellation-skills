@@ -21,13 +21,41 @@ import shutil
 import sys
 from pathlib import Path
 
+def _utf8_stdio() -> None:
+    """Per field feedback: don't make every call site set PYTHONIOENCODING."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError):
+            pass
+
+
+_utf8_stdio()
+
 
 class FreshnessError(Exception):
     pass
 
 
 def _hash(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """Line-ending-insensitive content hash (CRLF checkouts vs LF writes)."""
+    text = path.read_text(encoding="utf-8")
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _normalized_baseline_hash(baseline: Path, skill: str, skills_root: Path) -> str:
+    """Hash the pristine baseline as it would look after install-time path rewriting.
+
+    The installer rewrites <skill-dir> / <name-skill-dir> tokens to absolute paths
+    in installed copies; the baseline keeps the token form. Comparing raw hashes
+    would flag every script-referencing template as changed forever.
+    """
+    text = baseline.read_text(encoding="utf-8")
+    installed = (skills_root / skill).as_posix()
+    short = skill.removeprefix("constellation-")
+    text = text.replace("<skill-dir>", installed)
+    text = text.replace(f"<{short}-skill-dir>", installed)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def _load_manifest(templates_root: Path) -> dict:
@@ -60,8 +88,12 @@ def check(project_root: Path, skills_root: Path) -> list[dict[str, str]]:
         elif upstream_hash is None:
             status = "upstream-removed"
         else:
-            upstream_changed = upstream_hash != baseline_hash
-            local_changed = local_hash is not None and local_hash != baseline_hash
+            normalized = _normalized_baseline_hash(baseline, skill, skills_root)
+            upstream_changed = upstream_hash not in (baseline_hash, normalized)
+            local_changed = local_hash is not None and local_hash not in (
+                baseline_hash,
+                normalized,
+            )
             if upstream_changed and local_changed:
                 status = "both-changed"
             elif upstream_changed:

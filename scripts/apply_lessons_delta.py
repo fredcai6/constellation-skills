@@ -16,6 +16,17 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+def _utf8_stdio() -> None:
+    """Per field feedback: don't make every call site set PYTHONIOENCODING."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError):
+            pass
+
+
+_utf8_stdio()
+
 
 SCOPES = ("handoff", "commander", "admiral", "project", "constellation")
 DEFAULT_CAP = 20

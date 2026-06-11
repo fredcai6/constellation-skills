@@ -493,3 +493,31 @@ class TemplateBaselineTests(unittest.TestCase):
                 env={}, out=lambda _line: None,
             )
             self.assertFalse((Path(tmp) / ".agent-work").exists())
+
+
+class BaselineOnlyTests(unittest.TestCase):
+    def test_baseline_only_seeds_manifest_without_installing_skills(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            exit_code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--baseline-only"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            self.assertEqual(0, exit_code)
+            self.assertTrue(
+                (project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json").is_file()
+            )
+            self.assertFalse((project / ".claude" / "skills").exists())
+
+    def test_baseline_only_requires_project_scope(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(SystemExit):
+                installer.main(
+                    ["--agent", "claude", "--scope", "user", "--baseline-only"],
+                    env={}, cwd=Path(tmp), out=lambda _line: None,
+                )
