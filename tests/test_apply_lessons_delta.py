@@ -138,6 +138,39 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertEqual(book.active[0].lesson_id, "handoff-diff-command")
         self.assertEqual(book.dormant, [])
 
+
+    def test_amend_updates_fields_preserving_counters(self):
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        self.run_delta(
+            {"work_id": "issue-2",
+             "ops": [{"op": "confirm", "id": "handoff-diff-command", "grounding": "recurred"}]}
+        )
+        self.run_delta(
+            {"work_id": "issue-3",
+             "ops": [{"op": "amend", "id": "handoff-diff-command",
+                      "statement": "Reviewer handoffs carry the exact diff command AND base commit.",
+                      "grounding": "issue-3 reviewer rediscovered the base commit"}]}
+        )
+        book = self.m.load_playbook(self.file)
+        lesson = book.active[0]
+        self.assertIn("base commit", lesson.statement)
+        self.assertEqual(lesson.confirmed, 1)
+        self.assertEqual(lesson.mentions, 2)
+        self.assertTrue(any("amended" in h and "was:" in h for h in lesson.history))
+
+    def test_amend_requires_grounding_and_a_field(self):
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        self.run_delta(
+            {"work_id": "issue-2",
+             "ops": [{"op": "amend", "id": "handoff-diff-command", "statement": "x"}]},
+            expect_rc=1,
+        )
+        self.run_delta(
+            {"work_id": "issue-2",
+             "ops": [{"op": "amend", "id": "handoff-diff-command", "grounding": "g"}]},
+            expect_rc=1,
+        )
+
     def test_rejects_bad_scope_and_duplicate_id(self):
         self.run_delta({"work_id": "issue-1", "ops": [add_op(scope="vibes")]}, expect_rc=1)
         self.run_delta({"work_id": "issue-1", "ops": [add_op()]})

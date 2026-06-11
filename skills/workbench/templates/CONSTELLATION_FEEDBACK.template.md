@@ -3,10 +3,11 @@
 Lessons scoped `constellation` — about the skills, templates, or engine themselves,
 not this project. Appended by the feedback/closeout steps; swept by the skills
 repo's `collect_feedback.py`, which treats scope tags as claims to verify
-(cross-project recurrence is the validator). Entries above the collected marker
-have been swept; append new entries below it. Never archived with a run.
-
-<!-- collected: never -->
+(cross-project recurrence is the validator). Per-entry collection/resolution
+state lives in the sidecar `CONSTELLATION_FEEDBACK.collected.json` (script-owned;
+collected means ingested by a sweep, resolved means acted on upstream — a
+candidate stays visible in sweep reports until resolved). Just append entries;
+never edit the sidecar by hand. Never archived with a run.
 
 ## `<date>` — `<project>` — `<work-id>`
 

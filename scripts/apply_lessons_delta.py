@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Deterministically apply structured lesson delta operations to a LESSONS.md playbook.
 
-The LLM proposes operations (add/confirm/disconfirm/mention/retire) in a JSON delta
+The LLM proposes operations (add/amend/confirm/disconfirm/mention/retire) in a JSON delta
 file; this script validates and applies them mechanically. The LLM never writes the
 playbook directly. All-or-nothing: any invalid op rejects the whole delta.
 """
@@ -232,7 +232,7 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
     for op in ops:
         kind = op.get("op")
         lesson_id = op.get("id", "")
-        if kind not in ("add", "confirm", "disconfirm", "mention", "retire"):
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire"):
             raise LessonsDeltaError(f"unknown op {kind!r}")
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", lesson_id or ""):
             raise LessonsDeltaError(f"op {kind}: invalid lesson id {lesson_id!r} (kebab-case)")
@@ -248,6 +248,19 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
             raise LessonsDeltaError(
                 f"{kind} {lesson_id}: grounding citation is required (no citation, no count)"
             )
+        if kind == "amend":
+            if not str(op.get("grounding", "")).strip():
+                raise LessonsDeltaError(
+                    f"amend {lesson_id}: grounding citation is required (what justifies the change)"
+                )
+            if not any(str(op.get(f, "")).strip() for f in ("statement", "scope", "task_class")):
+                raise LessonsDeltaError(
+                    f"amend {lesson_id}: provide at least one of statement/scope/task_class"
+                )
+            if op.get("scope") and op["scope"] not in SCOPES:
+                raise LessonsDeltaError(
+                    f"amend {lesson_id}: scope must be one of {', '.join(SCOPES)}"
+                )
         if kind == "retire" and not str(op.get("reason", "")).strip():
             raise LessonsDeltaError(f"retire {lesson_id}: reason is required")
     return work_id, bool(tick), ops
@@ -288,6 +301,18 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
         if not found:
             raise LessonsDeltaError(f"{kind} {lesson_id}: no such lesson")
         lesson, section = found
+
+        if kind == "amend":
+            old_statement = lesson.statement
+            if str(op.get("statement", "")).strip():
+                lesson.statement = str(op["statement"]).strip()
+            if op.get("scope"):
+                lesson.scope = op["scope"]
+            if str(op.get("task_class", "")).strip():
+                lesson.task_class = str(op["task_class"]).strip()
+            lesson.history.append(f"amended {stamp} — {op['grounding']} (was: {old_statement})")
+            log.append(f"amended lesson:{lesson_id} (counters preserved)")
+            continue
 
         if kind == "confirm":
             if section == "dormant":
