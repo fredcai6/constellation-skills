@@ -830,3 +830,28 @@ class GitChangePolicyCollectorIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Cp1252StdioTests(unittest.TestCase):
+    def test_current_survives_cp1252_stdio_with_unicode_task_text(self):
+        import os
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as d:
+            cl = gated(g1=gate("g1"))
+            cl["tasks"]["g1"]["imperative"] = "calibrate → ≈ 0.5 per §7.6 — unicode imperative"
+            path = Path(d) / "plan.json"
+            path.write_text(json.dumps(cl), encoding="utf-8")
+
+            env = dict(os.environ)
+            env.pop("PYTHONUTF8", None)
+            env["PYTHONIOENCODING"] = "cp1252"  # reproduce the captured-console regime
+            proc = subprocess.run(
+                [sys.executable, str(SCRIPT), "--file", str(path), "current"],
+                capture_output=True,
+                env=env,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", "replace"))
+            decoded = proc.stdout.decode("utf-8")
+            self.assertIn("unicode imperative", decoded)
+            self.assertIn("→ ≈ 0.5 per §7.6", decoded)
