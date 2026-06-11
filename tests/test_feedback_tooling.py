@@ -111,33 +111,59 @@ class CollectFeedbackTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_recurring_candidate_grouped_across_projects(self):
-        grouped = self.m.collect(self.roots)
-        self.assertEqual(len(grouped), 1)
-        hits = next(iter(grouped.values()))
+        new, open_unresolved = self.m.collect(self.roots)
+        self.assertEqual(len(new), 1)
+        self.assertEqual(open_unresolved, {})
+        hits = next(iter(new.values()))
         self.assertEqual(sorted(p for p, _ in hits), ["alpha", "beta"])
-        report = self.m.render_report(grouped)
-        self.assertIn("Recurring", report)
+        report = self.m.render_report(new, open_unresolved)
+        self.assertIn("recurring", report)
         self.assertIn("engine-current-crash-cp1252", report)
 
-    def test_mark_advances_marker_and_entries_not_recollected(self):
+    def test_collected_entries_move_to_open_until_resolved(self):
+        self.m.mark_collected(self.roots[0])
+        new, open_unresolved = self.m.collect([self.roots[0]])
+        self.assertEqual(new, {})
+        self.assertEqual(len(open_unresolved), 1)
+        report = self.m.render_report(new, open_unresolved)
+        self.assertIn("not yet resolved", report)
+
+    def test_resolved_entries_disappear(self):
+        self.m.mark_collected(self.roots[0])
+        (_, open_unresolved) = self.m.collect([self.roots[0]])
+        fp = next(iter(open_unresolved))
+        self.assertTrue(self.m.mark_resolved(self.roots[0], fp, "fixed in PR #19"))
+        new, open_after = self.m.collect([self.roots[0]])
+        self.assertEqual(new, {})
+        self.assertEqual(open_after, {})
+        # resolving twice is a no-op
+        self.assertFalse(self.m.mark_resolved(self.roots[0], fp, "again"))
+
+    def test_partial_collection_is_per_entry(self):
+        # add a second, different entry to alpha AFTER marking the first collected
+        self.m.mark_collected(self.roots[0])
         feedback = self.roots[0] / ".agent-work" / "CONSTELLATION_FEEDBACK.md"
-        self.m.mark_collected(feedback)
-        grouped = self.m.collect([self.roots[0]])
-        self.assertEqual(grouped, {})
+        feedback.write_text(
+            feedback.read_text(encoding="utf-8")
+            + "\n## 2026-06-11 — alpha — issue-9\n\n"
+            + "- **Candidate:** `another-thing`\n"
+            + "- **Observed:** `something else entirely`\n"
+            + "- **Proposal:** `do a different thing`\n",
+            encoding="utf-8",
+        )
+        new, open_unresolved = self.m.collect([self.roots[0]])
+        self.assertEqual(len(new), 1)
+        self.assertEqual(len(open_unresolved), 1)
 
     def test_template_placeholder_entries_skipped(self):
         root = Path(self.tmp.name) / "fresh"
         (root / ".agent-work").mkdir(parents=True)
         (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
-            "# Constellation Feedback Export\n\n<!-- collected: never -->\n\n"
+            "# Constellation Feedback Export\n\n"
             "## `<date>` — `<project>` — `<work-id>`\n\n- **Candidate:** `<slug>`\n",
             encoding="utf-8",
         )
-        self.assertEqual(self.m.collect([root]), {})
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertEqual(self.m.collect([root]), ({}, {}))
 
 
 class FreshnessPathTokenTests(unittest.TestCase):
