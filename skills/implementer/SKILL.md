@@ -7,13 +7,15 @@ description: Implement a bounded change from a handoff. Use when a handoff defin
 
 Own one scoped change. Build your own plan and work it.
 
-**Mandatory, not advisory: once loaded, drive the checklist to completion through the engine and dispatch each step it names; do not improvise.**
+**Mandatory, no exceptions: once loaded, drive the checklist to completion through the engine and dispatch each step it names. Within a step, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit in your workflow feedback; reporting misfit is compliance, not deviation.**
 
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 
 Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive it through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): one item per implementation step, each with a real test or evidence postcondition. Make the minimal change. TDD when the test mode requires it: red, green, refactor.
 
 Report a proof-of-life as soon as you start, and report progress and evidence at each step, so Commander can see you are working. Return evidence in `IMPLEMENTER_RESULT`. Raise a blocker when scope or authority is exceeded; flag out-of-scope finds as triage candidates.
+
+Fill the result's `Workflow Feedback` section honestly: name the handoff field, anchor, or instruction that was ambiguous, missing, or improvised around. You are the only one who saw that friction — Commander harvests it so future handoffs improve.
 
 Fill the result's `Map Impact` notes from the inbound Map Anchors and the actual diff, reusing the anchor vocabulary so Cartographer reconcile inherits durable context instead of rediscovering it. This is conditional: skip it for trivial local edits with no structural, capability, constraint, or decision impact. You are not a durable map owner — record candidates and impact, do not author the map.
 

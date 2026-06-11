@@ -13,6 +13,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 
 | Skill | Purpose |
 |---|---|
+| `constellation-admiral` | Run an epic as the human's delegate: latitude contract, Commander waves, adjudication, lessons-and-architecture closeout. |
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, Glossary, and engine config. |
 | `constellation-commander` | Run one bounded issue end to end as the human's rigor scaffold. |
 | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey). |
@@ -22,6 +23,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-implementer` | Implement a bounded change from a handoff, driving its own gated plan. |
 | `constellation-reviewer` | Independently verify a bounded change as a survey and consolidate a verdict. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
+| `constellation-lessons-auditor` | Fresh-context Reflector at closeout: distill scoped, grounded lesson candidates from run artifacts; nominate, never apply. |
 
 ## Install
 

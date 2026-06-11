@@ -4,12 +4,65 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
 
 class FeedbackVerificationError(Exception):
     """Raised when the durable feedback-log invariant is broken."""
+
+
+_BARE_NONE_RE = re.compile(r"^[-*]?\s*`?none\.?`?\s*$", re.IGNORECASE)
+_SIGNAL_SECTIONS = ("Friction / unclear", "Crew-reported friction", "Improvement signals")
+
+
+def _entry_block(text: str, work_id: str) -> str | None:
+    """Return the feedback entry block for work_id (its ## heading to the next ##)."""
+    lines = text.splitlines()
+    start = None
+    for i, line in enumerate(lines):
+        if line.startswith("## ") and work_id in line:
+            start = i
+            break
+    if start is None:
+        return None
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if lines[j].startswith("## "):
+            end = j
+            break
+    return "\n".join(lines[start:end])
+
+
+def _boilerplate_errors(entry: str, work_id: str) -> list[str]:
+    """Reject content-free entries: every signal bullet is a bare 'none'."""
+    bullets: list[str] = []
+    in_section = False
+    for line in entry.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("**") and stripped.rstrip(":*").lstrip("*") in (
+            s for s in _SIGNAL_SECTIONS
+        ):
+            in_section = True
+            continue
+        if stripped.startswith("**"):
+            in_section = False
+            continue
+        if in_section and stripped.startswith(("-", "*")):
+            bullets.append(stripped.lstrip("-* ").strip())
+    if not bullets:
+        return [
+            f"feedback entry for {work_id!r} has no bullets under its signal sections "
+            f"({', '.join(_SIGNAL_SECTIONS)})"
+        ]
+    if all(_BARE_NONE_RE.match(b) for b in bullets):
+        return [
+            f"feedback entry for {work_id!r} is content-free: every signal bullet is a bare "
+            "'none'. A 'none' requires a run-specific reason, e.g. "
+            "'none — confirmed after review: <what you checked>'"
+        ]
+    return []
 
 
 def _current_run_archive_dirs(agent_work: Path, work_id: str) -> list[Path]:
@@ -34,15 +87,30 @@ def verify_agent_feedback(root: Path, work_id: str, phase: str) -> None:
         text = feedback.read_text(encoding="utf-8")
         if work_id not in text:
             errors.append(f"durable feedback log does not mention work id {work_id!r}: {feedback}")
+        else:
+            entry = _entry_block(text, work_id)
+            if entry is None:
+                errors.append(
+                    f"work id {work_id!r} appears in {feedback} but not as a '## ' entry heading"
+                )
+            else:
+                errors.extend(_boilerplate_errors(entry, work_id))
 
     work_feedback = agent_work / work_id / "AGENT_FEEDBACK.md"
     if work_feedback.exists():
         errors.append(f"feedback log must stay durable, not inside the work area: {work_feedback}")
 
+    work_lessons = agent_work / work_id / "LESSONS.md"
+    if work_lessons.exists():
+        errors.append(f"lessons playbook must stay durable, not inside the work area: {work_lessons}")
+
     archive_dirs = _current_run_archive_dirs(agent_work, work_id)
     archived_feedback = [path for base in archive_dirs for path in base.rglob("AGENT_FEEDBACK.md")]
     for path in archived_feedback:
         errors.append(f"feedback log must not be archived with the run package: {path}")
+    archived_lessons = [path for base in archive_dirs for path in base.rglob("LESSONS.md")]
+    for path in archived_lessons:
+        errors.append(f"lessons playbook must not be archived with the run package: {path}")
 
     if phase == "archive":
         work_area = agent_work / work_id

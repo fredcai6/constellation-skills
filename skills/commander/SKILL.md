@@ -9,7 +9,7 @@ description: Use to run one bounded issue end to end — understand, plan, execu
 
 Run one bounded issue end to end. The Commander is the human's rigor scaffold, not an autonomous reasoner: it decomposes and tracks the work and **surfaces decisions to the human** rather than making them. The human is the top tier — the one who knows where this issue sits in the system of systems. Force the decisions; do not obfuscate them.
 
-When this skill is loaded you own the run: drive every spine step through the engine and dispatch each role. **This is mandatory, not advisory — do not improvise or do another role's work yourself.**
+When this skill is loaded you own the run: drive every spine step through the engine and dispatch each role. **This is mandatory, no exceptions — every spine step goes through the engine, and you never do another role's work yourself. Within a step, judgment is yours; when an instruction does not fit the run, do the closest compliant thing and surface the misfit at the feedback step — reporting misfit is compliance, not deviation.**
 
 
 ## Checklists you own
@@ -38,7 +38,7 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 | reconcile | subagent — load `constellation-cartographer` |
 | triage | this context — load `constellation-triage`; user approves issues before filing |
 | review | this context — summarize run, get user acceptance |
-| feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md` |
+| feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md`; distill lesson delta ops and apply via `scripts/apply_lessons_delta.py` (never edit `LESSONS.md` directly) |
 | archive | this context — commit, push, move work area |
 
 
@@ -50,7 +50,7 @@ Each gate in `execute.json` has three tasks in order:
 
 **`gN-review`** — Fill `templates/REVIEWER_HANDOFF.template.md` from the gate plan and the `IMPLEMENTER_RESULT` (task statement, how to inspect the diff, close criteria, constraints, evidence produced). Dispatch a subagent invoking `constellation-reviewer` with the completed handoff. Wait for and integrate the returned `REVIEW_RESULT`.
 
-**`gN-integrate`** — Check the verdict. `APPROVE`: run the verification command, confirm postconditions pass, advance the gate. `BLOCK`: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates.
+**`gN-integrate`** — Check the verdict. `APPROVE`: run the verification command, confirm postconditions pass, advance the gate. `BLOCK`: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates. Harvest each result's `Workflow Feedback` section into the run's lesson-candidate pool — it feeds the `feedback` step's retrospective; do not drop it.
 
 Closeout checks (the `gN-integrate` tests-pass command, etc.) are engine **postconditions**: `advance` runs them and refuses if any fails. If the **human** decides a specific check is non-blocking, do not hand-edit the checklist to mark it satisfied — use the engine `waive` verb (`waive gN-integrate --cond <id> --authority human --reason "..."`), which records who accepted the risk and why. A check is only waivable if its `override_policy` allows it; overriding that requires the high-friction `--force` and is recorded as forced.
 

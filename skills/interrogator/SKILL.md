@@ -9,7 +9,7 @@ Interview the user relentlessly until the handed-in goal is resolved to common u
 
 Frame an ambiguous ask in behavior terms first. Start from the capability, then drill: **what capability is being added or changed** (the present-tense thing the system will do); **concrete examples/use cases** of that capability in action, including the edge cases; **events that matter** architecturally (boundary-crossing or contract signals, not every runtime event); and the **governing rules/constraints/assumptions**. Resolve which capability is in play before debating mechanism. Map this framing to the existing `capability`/`event`/`constraint`/`assumption` ontology so the resolved understanding hands cleanly to the Cartographer.
 
-**Mandatory, not advisory: once loaded, drive the survey to completion through the engine and dispatch each step it names; do not improvise.**
+**Mandatory, no exceptions: once loaded, drive the survey to completion through the engine and dispatch each step it names. Within a question, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit; reporting misfit is compliance, not deviation.**
 
 Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and wait for the answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding. If a question can be answered from the code, explore the code instead of asking.
 
