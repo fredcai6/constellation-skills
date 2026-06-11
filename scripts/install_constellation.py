@@ -413,6 +413,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--dry-run", action="store_true", help="Print the install plan only.")
     parser.add_argument("--force", action="store_true", help="Replace existing installed skill folders.")
+    parser.add_argument(
+        "--baseline-only",
+        action="store_true",
+        help=(
+            "Seed the project template baseline + manifest without installing skills. "
+            "For projects that consume user-scope skills but need template versioning. "
+            "Requires --scope project."
+        ),
+    )
     return parser
 
 
@@ -431,6 +440,18 @@ def main(
         runtime_cwd = Path.cwd() if cwd is None else cwd
         skills = select_skills(args.skills, discover_skills())
         validate_required_scripts(skills)
+
+        if args.baseline_only:
+            if args.scope != "project":
+                raise InstallError("--baseline-only requires --scope project")
+            if args.dest:
+                raise InstallError("--baseline-only does not take --dest")
+            project_root = args.project.expanduser() if args.project else runtime_cwd
+            if not project_root.is_dir():
+                raise InstallError(f"project directory does not exist: {project_root}")
+            write_template_baselines(skills, project_root, out=out)
+            return 0
+
         target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
         for agent, target_root in target_roots:
             out(f"{agent.name}:")

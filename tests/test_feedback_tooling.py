@@ -138,3 +138,28 @@ class CollectFeedbackTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FreshnessPathTokenTests(unittest.TestCase):
+    def test_installed_path_rewritten_template_is_up_to_date(self):
+        m = load("check_skill_freshness")
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            skills_root = Path(tmp) / "user-skills"
+            project.mkdir()
+            # user-scope install (rewrites path tokens to absolute paths)
+            installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(skills_root),
+                 "--skills", "commander"],
+                env={}, out=lambda _line: None,
+            )
+            # project baseline seeded from pristine repo source (token form)
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander", "--baseline-only"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            statuses = {r["template"]: r["status"] for r in m.check(project, skills_root)}
+            self.assertEqual(statuses["COMMANDER_SPINE.template.json"], "up-to-date")

@@ -23,6 +23,17 @@ MARKER_RE = re.compile(r"<!--\s*collected:\s*(.*?)\s*-->")
 ENTRY_HEADING_RE = re.compile(r"^## .+$", re.MULTILINE)
 FIELD_RE = re.compile(r"^- \*\*(.+?):\*\*\s*`?(.*?)`?\s*$")
 
+def _utf8_stdio() -> None:
+    """Per field feedback: don't make every call site set PYTHONIOENCODING."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError):
+            pass
+
+
+_utf8_stdio()
+
 
 def parse_entries(text: str) -> list[dict[str, str]]:
     markers = list(MARKER_RE.finditer(text))
