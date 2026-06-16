@@ -494,6 +494,69 @@ class TemplateBaselineTests(unittest.TestCase):
             )
             self.assertFalse((Path(tmp) / ".agent-work").exists())
 
+    def test_project_install_seeds_editable_working_copies(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander", "workbench"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            templates_root = project / ".agent-work" / "templates"
+            manifest = json.loads(
+                (templates_root / "TEMPLATES_MANIFEST.json").read_text(encoding="utf-8")
+            )
+            # every baselined template gets a flat, editable working copy (not under .baseline/)
+            for entry in manifest["templates"]:
+                local = templates_root / entry["template"]
+                self.assertTrue(local.is_file(), local)
+            spine = templates_root / "COMMANDER_SPINE.template.json"
+            self.assertTrue(spine.is_file())
+            # seeded in token form: identical content to its baseline anchor
+            baseline = (templates_root / ".baseline" / "constellation-commander"
+                        / "COMMANDER_SPINE.template.json")
+            self.assertEqual(spine.read_text(encoding="utf-8"),
+                             baseline.read_text(encoding="utf-8"))
+
+    def test_install_never_clobbers_existing_working_copy(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            templates_root = project / ".agent-work" / "templates"
+            templates_root.mkdir(parents=True)
+            custom = templates_root / "COMMANDER_SPINE.template.json"
+            custom.write_text("PROJECT-CUSTOMIZED\n", encoding="utf-8")
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            # a project edit (or Charter seed) is never overwritten by reinstall
+            self.assertEqual("PROJECT-CUSTOMIZED\n", custom.read_text(encoding="utf-8"))
+
+    def test_seeded_working_copy_reads_up_to_date_against_baseline(self):
+        installer = load_installer()
+        freshness = load_module(
+            "check_skill_freshness", ROOT / "scripts" / "check_skill_freshness.py"
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            skills_root = project / ".claude" / "skills"
+            statuses = {r["template"]: r["status"]
+                        for r in freshness.check(project, skills_root)}
+            # a freshly seeded, unedited copy (token form) is neither customized nor drifted,
+            # even for a spine template whose <skill-dir> tokens were rewritten at install
+            self.assertEqual("up-to-date", statuses["COMMANDER_SPINE.template.json"])
+
 
 class BaselineOnlyTests(unittest.TestCase):
     def test_baseline_only_seeds_manifest_without_installing_skills(self):
@@ -511,6 +574,21 @@ class BaselineOnlyTests(unittest.TestCase):
                 (project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json").is_file()
             )
             self.assertFalse((project / ".claude" / "skills").exists())
+
+    def test_baseline_only_also_seeds_working_copies(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander", "--baseline-only"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            self.assertTrue(
+                (project / ".agent-work" / "templates"
+                 / "COMMANDER_SPINE.template.json").is_file()
+            )
 
     def test_baseline_only_requires_project_scope(self):
         installer = load_installer()

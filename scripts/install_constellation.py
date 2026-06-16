@@ -390,6 +390,51 @@ def write_template_baselines(
     )
 
 
+def write_template_working_copies(
+    skills: Sequence[Skill],
+    project_root: Path,
+    *,
+    out: Callable[[str], object],
+) -> int:
+    """Seed editable project-local template working copies (flat, never clobbered).
+
+    The pristine `.baseline/` is only the reconcile anchor; these flat copies at
+    `.agent-work/templates/<name>` are what a project actually edits and commits —
+    the half of the versioned-template model the baseline alone does not provide.
+    Skills resolve a template project-local-first (`.agent-work/templates/<name>`,
+    falling back to the bundled copy), so without a working copy a template edit
+    has nowhere to live but the installed skill (which a reinstall overwrites).
+
+    Copies are taken from the bundled source in token form (identical content to
+    the baseline), so they are portable/committable and read as `up-to-date`
+    against the baseline until the project edits them. Existing copies — Charter
+    seeds or prior project edits — are never overwritten; only missing ones are
+    filled, so this is safe to re-run and to extend when new templates appear
+    upstream. Returns the number of copies newly seeded.
+    """
+    templates_root = project_root / ".agent-work" / "templates"
+    seeded = 0
+    for skill in skills:
+        source_templates = skill.source_path / "templates"
+        if not source_templates.is_dir():
+            continue
+        for template in sorted(source_templates.iterdir()):
+            if not template.is_file():
+                continue
+            target = templates_root / template.name
+            if target.exists():
+                continue  # never clobber a project edit or a Charter seed
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(template, target)
+            seeded += 1
+    if seeded:
+        out(
+            f"Template working copies seeded: {seeded} editable copy(ies) -> "
+            f"{templates_root} (edit + commit these; reconcile with check_skill_freshness.py)"
+        )
+    return seeded
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Install Constellation skills for supported agents at user or project scope.",
@@ -450,6 +495,7 @@ def main(
             if not project_root.is_dir():
                 raise InstallError(f"project directory does not exist: {project_root}")
             write_template_baselines(skills, project_root, out=out)
+            write_template_working_copies(skills, project_root, out=out)
             return 0
 
         target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
@@ -466,6 +512,7 @@ def main(
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
             write_template_baselines(skills, project_root, out=out)
+            write_template_working_copies(skills, project_root, out=out)
     except InstallError as exc:
         parser.exit(2, f"error: {exc}\n")
 

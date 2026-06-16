@@ -67,6 +67,12 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         self.assertEqual(statuses["LESSONS.template.md"], "upstream-changed")
 
         self.m.update_baseline(self.project, self.skills_root)
+        # A project-local working copy is now seeded at install, so promoting the
+        # baseline alone leaves that copy stale (it reads project-customized until
+        # reconciled). The reconcile step brings the working copy up to the new
+        # upstream too; then it reads up-to-date.
+        local = self.project / ".agent-work" / "templates" / "LESSONS.template.md"
+        local.write_text(upstream.read_text(encoding="utf-8"), encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
         self.assertEqual(statuses["LESSONS.template.md"], "up-to-date")
         manifest = json.loads(
