@@ -33,8 +33,15 @@ highest-leverage habit for multi-hour gold/training runs.
 Before launching any detached multi-hour process, write the crash-resume state
 note FIRST: **step · slug · next command · process PID · expected output
 artifact**. When honored, every recovery was a clean resume from the note; the
-one time it was skipped, ~3h vanished to forensics. Treat "update the state note"
-as a mechanical step that precedes the detach, never an afterthought.
+one time it was skipped, ~3h vanished to forensics.
+
+This is now **mechanical, not advisory**: the spine `execute` step carries a
+`command` precondition (`scripts/verify_state_note.py <work-id>`) that refuses to
+enter the detach-heavy phase until `.agent-work/<work-id>/STATE_NOTE.md` is filled
+(step, slug, next command, pid, expected artifact — `pid: none — foreground` is a
+valid value). The engine guarantees the *first* note exists; re-writing it before
+each subsequent detach (the PID changes) stays your discipline. Seed the note from
+`.agent-work/templates/STATE_NOTE.template.md`.
 
 ## Watcher-sleep is the dominant Commander kill
 
