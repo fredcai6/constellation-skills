@@ -466,6 +466,130 @@ class InboxFilingTests(unittest.TestCase):
         self.assertTrue(self.inbox.exists())
 
 
+class InboxLifecycleTests(unittest.TestCase):
+    """The update-on-recurrence and auto-close-on-resolve lifecycle."""
+
+    def setUp(self):
+        self.m = load("collect_feedback")
+        self.tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self.tmp.name)
+        self.inbox = self.base / "skills-repo" / ".agent-work" / "CONSTELLATION_INBOX.json"
+        self.roots = []
+        for name in ("alpha", "beta"):  # share the recurring cp1252 finding
+            self._project(name, FEEDBACK_ENTRY.format(project=name))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _project(self, name, body):
+        root = self.base / name
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(body, encoding="utf-8")
+        self.roots.append(root)
+        return root
+
+    def _merged(self):
+        return self.m.merge_hits(*self.m.collect(self.roots))
+
+    def _filer(self):
+        calls = []
+
+        def f(spec, *, repo=None):
+            calls.append(spec)
+            n = 100 + len(calls)
+            return {"number": str(n), "url": f"https://x/y/issues/{n}"}
+
+        f.calls = calls
+        return f
+
+    def _recorder(self):
+        calls = []
+
+        def f(ref, body, *, repo=None):
+            calls.append((ref, body))
+
+        f.calls = calls
+        return f
+
+    def _file_once(self, filer):
+        return self.m.sync_issues(self._merged(), {}, inbox_path=self.inbox, filer=filer, confirm=True)
+
+    def test_recurrence_growth_comments_and_watermarks(self):
+        filer, commenter = self._filer(), self._recorder()
+        self._file_once(filer)  # filed at 2× / 2 projects
+        self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))  # now 3× / 3 projects
+        res = self.m.sync_issues(
+            self._merged(), {}, inbox_path=self.inbox, filer=filer, commenter=commenter, confirm=True
+        )
+        self.assertEqual(res["filed"], [])  # already filed
+        self.assertEqual(len(res["updated"]), 1)
+        self.assertEqual(len(commenter.calls), 1)
+        self.assertEqual(len(filer.calls), 1)  # filer not called again
+        ledger = json.loads(self.inbox.read_text(encoding="utf-8"))
+        (_, rec), = ledger["filed"].items()
+        self.assertEqual(rec["occurrences"], 3)  # watermark advanced
+        self.assertEqual(rec["projects"], ["alpha", "beta", "gamma"])
+        # re-running with no further growth does not re-comment
+        res2 = self.m.sync_issues(
+            self._merged(), {}, inbox_path=self.inbox, filer=filer, commenter=commenter, confirm=True
+        )
+        self.assertEqual(res2["updated"], [])
+        self.assertEqual(len(commenter.calls), 1)
+
+    def test_resolved_finding_is_auto_closed(self):
+        filer, closer = self._filer(), self._recorder()
+        self._file_once(filer)
+        fp = next(iter(self._merged()))
+        self.m.mark_resolved(self.roots[0], fp, "fixed in PR #99")
+        res = self.m.sync_issues(
+            self.m.merge_hits(*self.m.collect(self.roots)),
+            self.m.resolved_across(self.roots),
+            inbox_path=self.inbox, filer=filer, closer=closer, confirm=True,
+        )
+        self.assertEqual(len(res["closed"]), 1)
+        self.assertEqual(len(closer.calls), 1)
+        self.assertIn("fixed in PR #99", closer.calls[0][1])
+        ledger = json.loads(self.inbox.read_text(encoding="utf-8"))
+        (_, rec), = ledger["filed"].items()
+        self.assertEqual(rec["status"], "closed")
+        self.assertEqual(rec["resolved_note"], "fixed in PR #99")
+
+    def test_dry_run_reports_actions_without_calling_gh(self):
+        filer, commenter, closer = self._filer(), self._recorder(), self._recorder()
+        self._file_once(filer)  # 1 real filer call
+        self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))
+        res = self.m.sync_issues(
+            self._merged(), {}, inbox_path=self.inbox,
+            filer=filer, commenter=commenter, closer=closer, confirm=False,
+        )
+        self.assertEqual(len(res["would_update"]), 1)
+        self.assertEqual(commenter.calls, [])
+        self.assertEqual(len(filer.calls), 1)  # unchanged by the dry run
+
+    def test_closed_issue_stays_closed_even_if_it_recurs(self):
+        filer, commenter, closer = self._filer(), self._recorder(), self._recorder()
+        self._file_once(filer)
+        fp = next(iter(self._merged()))
+        self.m.mark_resolved(self.roots[0], fp, "done")
+        self.m.sync_issues(
+            self.m.merge_hits(*self.m.collect(self.roots)), self.m.resolved_across(self.roots),
+            inbox_path=self.inbox, filer=filer, closer=closer, confirm=True,
+        )  # closes it
+        self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))  # finding recurs again
+        res = self.m.sync_issues(
+            self.m.merge_hits(*self.m.collect(self.roots)), self.m.resolved_across(self.roots),
+            inbox_path=self.inbox, filer=filer, commenter=commenter, closer=closer, confirm=True,
+        )
+        self.assertEqual(res["filed"], [])
+        self.assertEqual(res["updated"], [])  # closed entry is not re-commented
+        self.assertEqual(commenter.calls, [])
+
+    def test_resolved_across_unions_project_notes(self):
+        fp = next(iter(self._merged()))
+        self.m.mark_resolved(self.roots[1], fp, "fixed upstream")
+        self.assertEqual(self.m.resolved_across(self.roots), {fp: "fixed upstream"})
+
+
 class FreshnessPathTokenTests(unittest.TestCase):
     def test_installed_path_rewritten_template_is_up_to_date(self):
         m = load("check_skill_freshness")
