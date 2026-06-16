@@ -17,6 +17,13 @@ Rules the apply script enforces:
   (feedback entry, log line, engine state). No citation, no entry.
 - `confirmed`/`disconfirmed` are symmetric; when disconfirmed catches confirmed,
   the lesson is flagged `charter-review` instead of silently kept.
+- **Counter semantics split by scope.** For most scopes a confirm is *trust* —
+  the lesson held again. For a `constellation`-scoped lesson it is the opposite:
+  a recurrence of an unfixed shared-machinery defect. The script accrues
+  `recurrences` (debt), not `confirmed` (trust), and flags `recurrence-debt`.
+  Pay the debt by exporting to `CONSTELLATION_FEEDBACK.md` and fixing upstream,
+  then retire it — never let a constellation defect get "confirmed" into a
+  permanent local workaround.
 - Active lessons unconfirmed for `dormancy-runs` ticks auto-demote to Dormant and
   stop being injected. Confirming a dormant lesson revives it.
 
@@ -29,7 +36,8 @@ Lesson shape (script-owned; shown for readers):
 - statement: <the lesson, one or two sentences, actionable>
 - grounding: <artifact citation that produced it>
 - mentions: 0 / confirmed: 0 / disconfirmed: 0
-- status: active | charter-review
+- recurrences: 0   (constellation scope only — debt; omitted when 0)
+- status: active | charter-review | recurrence-debt
 - added / last-confirmed: <date> (<work-id>)
 ```
 
