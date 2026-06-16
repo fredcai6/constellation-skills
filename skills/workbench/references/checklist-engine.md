@@ -10,7 +10,7 @@ When you have loaded a role skill, you **must** drive its checklist through the 
 
 ## Instantiate from the project template
 
-When creating a checklist, prefer the project-specific template at `.agent-work/templates/<name>` if it exists; otherwise use the bundled `skills/<role>/templates/<name>`. Charter seeds the project versions.
+When creating a checklist, prefer the project-specific template at `.agent-work/templates/<name>` if it exists; otherwise use the bundled `skills/<role>/templates/<name>`. A project-scope install seeds an editable working copy of every template there (never clobbering existing edits), so this is the home a project edits and commits; Charter and later runs customize them, and `check_skill_freshness.py` reconciles them against the `.baseline/` when the skill upstream changes. If a project-local copy carries `<…-skill-dir>` tokens, resolve them to the installed skill directory (the path your own SKILL.md already uses).
 
 ## Dispatch: subagent vs your own context
 
