@@ -37,6 +37,15 @@ from pathlib import Path
 ACTIVE_STATUSES = {"running", "resumable"}
 DEFAULT_LAUNCHER = "claude"
 
+# Dispatch modes. "spawn" (default) launches a real `claude` CLI subprocess via
+# `launch_process`. "external" records the durable registry entry but spawns
+# NOTHING — the crew is dispatched out-of-band (e.g. as an Agent-tool subagent in
+# the Constellation harness, where no headless `claude` CLI exists). The external
+# marker below lets recovery/recover_crews tell a hand-dispatched crew apart from
+# a spawned one.
+DISPATCH_SPAWN = "spawn"
+DISPATCH_EXTERNAL = "external"
+
 
 class CrewLaunchError(Exception):
     """A refusal: the requested launch/recovery is not allowed. No exit-0."""
@@ -358,6 +367,101 @@ def resume_crew(
     return final, entry
 
 
+def record_external_attempt(
+    *,
+    work_id: str,
+    gate: str,
+    role: str,
+    handoff: str,
+    result: str,
+    worktree: str,
+    model: str | None,
+    attempt: int,
+    root: Path,
+    entries: list[dict],
+) -> dict:
+    """Record a durable crew-runs.json entry for an EXTERNALLY-dispatched crew
+    WITHOUT spawning a subprocess.
+
+    This is the first-class form of the hand-improvisation Constellation runs do
+    today: in the Agent-tool harness there is no headless `claude` CLI to spawn,
+    so the implementer/reviewer is dispatched out-of-band (an Agent-tool subagent)
+    and only the wrapper's DURABLE safety properties are wanted — a registry
+    record, the duplicate-guard, and result-artifact verification. It reuses the
+    same pure helpers as `launch_crew` (`session_name`, `run_log_paths`,
+    `_relativize`, `save_registry`) so the registry logic is never forked.
+
+    The entry is marked `dispatch="external"` and is PID-less (`pid=None`) so
+    downstream tooling (recover_crews) can tell it apart from a spawned crew. It
+    starts in `running` status so `active_duplicate`/`next_attempt` and the
+    recovery classifier treat it exactly like a spawned in-flight attempt until
+    its result is verified (see `verify_external_result`). Refuses if the handoff
+    file is missing, matching the spawn path's precondition."""
+    handoff_path = Path(handoff)
+    if not handoff_path.is_absolute():
+        handoff_path = root / handoff
+    if not handoff_path.is_file():
+        raise CrewLaunchError(f"refusing to record: handoff file is missing: {handoff_path}")
+
+    name = session_name(work_id, gate, role, attempt)
+    stdout_path, stderr_path = run_log_paths(work_id, gate, role, attempt, root)
+    started = _now()
+
+    entry = {
+        "crew_id": name,
+        "work_id": work_id,
+        "gate": gate,
+        "role": role,
+        "attempt": attempt,
+        "status": "running",
+        "session_name": name,
+        "dispatch": DISPATCH_EXTERNAL,
+        "pid": None,
+        "worktree": worktree,
+        "handoff": _relativize(handoff, root),
+        "result": _relativize(result, root),
+        "stdout": _relativize(str(stdout_path), root),
+        "stderr": _relativize(str(stderr_path), root),
+        "started_at": started,
+        "last_heartbeat": started,
+        "completed_at": None,
+        "abandoned": False,
+    }
+    if model:
+        entry["model"] = model
+    # Durable record — the crew is dispatched by the caller out-of-band, so unlike
+    # the spawn path there is no child to run and no completion to finalize here.
+    entries.append(entry)
+    save_registry(registry_path(work_id, root), entries)
+    return entry
+
+
+def verify_external_result(entries: list[dict], session: str, root: Path) -> tuple[bool, dict]:
+    """Verify whether the result artifact exists for a recorded attempt and, when
+    present, mark it resolved/`completed` in the registry.
+
+    Returns (present, entry). Reuses the same `result_exists` verification helper
+    the spawn path uses — no duplicated artifact logic. When the result is present
+    the entry is finalized to `completed` (clearing its hold on the gate/worktree);
+    when absent the entry is left untouched so the duplicate-guard keeps holding.
+    Refuses if the named crew is unknown or has been abandoned."""
+    entry = find_entry(entries, session)
+    if entry is None:
+        raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
+    if is_abandoned(entry):
+        raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
+
+    present = result_exists(entry["result"], root)
+    entry["result_present"] = present
+    if present:
+        now = _now()
+        entry["status"] = "completed"
+        entry["completed_at"] = now
+        entry["last_heartbeat"] = now
+    save_registry(registry_path(entry["work_id"], root), entries)
+    return present, entry
+
+
 def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
     """Mark a prior attempt abandoned (releases its hold on the gate/worktree)."""
     entry = find_entry(entries, session)
@@ -384,10 +488,27 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--result")
     p.add_argument("--root", default=".", type=Path, help="repo root (default: cwd)")
     p.add_argument("--command", default=DEFAULT_LAUNCHER, help="agent launcher binary (override for non-default CLIs)")
+    p.add_argument(
+        "--dispatch",
+        choices=[DISPATCH_SPAWN, DISPATCH_EXTERNAL],
+        default=DISPATCH_SPAWN,
+        help=(
+            "how to dispatch the crew. 'spawn' (default) launches the agent CLI "
+            "subprocess. 'external' records the durable registry entry + duplicate-"
+            "guard but spawns NOTHING (the crew is dispatched out-of-band, e.g. as "
+            "an Agent-tool subagent); verify its result later with --verify-result."
+        ),
+    )
     # recovery flags
     p.add_argument("--resume", help="continue a recorded crew by its session name")
     p.add_argument("--abandon", help="mark a prior crew abandoned (releases its gate/worktree hold)")
     p.add_argument("--relaunch", action="store_true", help="with --abandon: relaunch a fresh attempt (attempt++)")
+    p.add_argument(
+        "--verify-result",
+        dest="verify_result",
+        help="verify the result artifact for an externally-dispatched crew (by session name) "
+             "and, if present, mark it completed in the registry",
+    )
     return p
 
 
@@ -396,6 +517,14 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root)
 
     try:
+        # --- verify an externally-dispatched crew's result ------------------ #
+        if args.verify_result:
+            entries = load_registry_for_resume(args.verify_result, root)
+            present, entry = verify_external_result(entries, args.verify_result, root)
+            print(f"verify {entry['session_name']} -> "
+                  f"{'present' if present else 'absent'} ({entry['status']})")
+            return 0 if present else 1
+
         # --- resume an existing crew ---------------------------------------- #
         if args.resume:
             entries = load_registry_for_resume(args.resume, root)
@@ -434,6 +563,13 @@ def main(argv: list[str] | None = None) -> int:
             result = args.result or abandoned["result"]
             entries = load_registry(registry_path(work_id, root))
             attempt = next_attempt(entries, work_id, gate, role, worktree)
+            if args.dispatch == DISPATCH_EXTERNAL:
+                entry = record_external_attempt(
+                    work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
+                    worktree=worktree, model=args.model, attempt=attempt, root=root, entries=entries,
+                )
+                print(f"relaunched {entry['session_name']} -> {entry['status']} (external)")
+                return 0
             exit_code, entry = launch_crew(
                 work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
                 worktree=worktree, model=args.model, launcher=args.command,
@@ -452,6 +588,16 @@ def main(argv: list[str] | None = None) -> int:
                 f"--abandon --relaunch) before launching."
             )
         attempt = next_attempt(entries, args.work_id, args.gate, args.role, args.worktree)
+        if args.dispatch == DISPATCH_EXTERNAL:
+            entry = record_external_attempt(
+                work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
+                result=args.result, worktree=args.worktree, model=args.model,
+                attempt=attempt, root=root, entries=entries,
+            )
+            print(f"crew {entry['session_name']} -> {entry['status']} "
+                  f"(external: dispatched out-of-band; verify with "
+                  f"--verify-result {entry['session_name']})")
+            return 0
         exit_code, entry = launch_crew(
             work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
             result=args.result, worktree=args.worktree, model=args.model, launcher=args.command,
