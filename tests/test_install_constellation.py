@@ -205,6 +205,12 @@ class InstallConstellationTests(unittest.TestCase):
                 (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
                 spine["tasks"]["archive"]["postconditions"][0]["check"]["command"],
             )
+            # the state-note precondition on execute is bundled and its token rewritten
+            self.assertTrue((commander_root / "scripts" / "verify_state_note.py").exists())
+            self.assertIn(
+                (commander_root / "scripts" / "verify_state_note.py").as_posix(),
+                spine["tasks"]["execute"]["preconditions"][1]["check"]["command"],
+            )
 
             cartographer_root = target_root / "constellation-cartographer"
             map_build_text = (

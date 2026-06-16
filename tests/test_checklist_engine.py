@@ -86,6 +86,21 @@ class Preconditions(unittest.TestCase):
         E.attest(cl, "g1", "p1", "preconditions", "checked it")
         self.assertEqual(E.start(cl, "g1"), "g1 -> in-progress")
 
+    def test_command_precondition_refuses_start_until_it_passes(self):
+        # The state-note precondition on `execute` relies on this seam: `start`
+        # runs a command precondition and refuses the gate on non-zero exit.
+        failing = [{"id": "p1", "statement": "state note present",
+                    "check": {"kind": "command", "command": FAIL_COMMAND}, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=failing))
+        with self.assertRaises(E.EngineError):
+            E.start(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "pending")
+
+        passing = [{"id": "p1", "statement": "state note present",
+                    "check": {"kind": "command", "command": PASS_COMMAND}, "satisfied": False}]
+        cl2 = gated(g1=gate("g1", "pending", preconds=passing))
+        self.assertEqual(E.start(cl2, "g1"), "g1 -> in-progress")
+
 
 class AdvanceGated(unittest.TestCase):
     def test_command_postcondition_pass_completes(self):

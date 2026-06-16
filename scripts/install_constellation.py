@@ -72,10 +72,10 @@ AGENT_TARGETS: dict[str, AgentTarget] = {
 }
 AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
 SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
-    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "apply_lessons_delta.py"),
+    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py"),
     "lessons-auditor": ("checklist_engine.py",),
     "charter": ("checklist_engine.py",),
-    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py"),
+    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py"),
     "workbench": ("checklist_engine.py",),
     "interrogator": ("checklist_engine.py",),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
