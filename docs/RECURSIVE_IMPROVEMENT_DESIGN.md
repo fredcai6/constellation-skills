@@ -146,7 +146,13 @@ The `scope` field is the router. Everything below reuses it.
   which is the safety valve every survey source ends up needing.
 - Practical transport (you run a handful of local projects): a small
   `scripts/collect_feedback.py` that sweeps known project roots for
-  `CONSTELLATION_FEEDBACK.md` and opens/updates issues here.
+  `CONSTELLATION_FEEDBACK.md` and opens issues here. `--file-issues` turns open,
+  validated (recurring) findings into a GitHub-issue backlog in this repo, gated:
+  it dry-runs by default and files nothing until `--confirm`; a local ledger
+  (`.agent-work/CONSTELLATION_INBOX.json`) keys on the finding fingerprint so
+  re-runs never duplicate. The *update* half (commenting on an existing issue when
+  a finding recurs further) is still to come — it pairs with the recurrence-debt
+  semantics so a recurrence reads as unpaid debt, not fresh confirmation.
 
 ### Where Claude Code hooks fit (and where they don't)
 

@@ -14,8 +14,15 @@ observed+proposal content hash only when no slug is present. Recurrence is
 counted by how many entries share a fingerprint — including repeats within a
 single project — and a finding is promoted to validated/recurring once it
 reaches RECURRENCE_THRESHOLD occurrences. Cross-project recurrence remains a
-distinct, stronger callout. Issue filing stays human-gated: this script only
-reports.
+distinct, stronger callout.
+
+Issue filing stays human-gated. `--file-issues` turns open, validated findings
+into a backlog of GitHub issues in *this* repo (the design's "opens/updates
+issues here"), but defaults to a dry run: it prints what it would file and files
+nothing until `--confirm` is passed. Only recurring/validated findings are filed
+by default (`--include-singles` widens). A local ledger
+(`.agent-work/CONSTELLATION_INBOX.json`, one entry per finding fingerprint)
+makes filing idempotent so re-runs never open duplicates.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -31,6 +39,7 @@ from pathlib import Path
 ENTRY_HEADING_RE = re.compile(r"^## .+$", re.MULTILINE)
 FIELD_RE = re.compile(r"^- \*\*(.+?):\*\*\s*`?(.*?)`?\s*$")
 SIDECAR_NAME = "CONSTELLATION_FEEDBACK.collected.json"
+INBOX_NAME = "CONSTELLATION_INBOX.json"
 
 # A finding is treated as recurring/validated once this many entries share a
 # fingerprint, regardless of how many distinct projects contributed. Cross-project
@@ -66,6 +75,20 @@ def parse_entries(text: str) -> list[dict[str, str]]:
                 entry[field.group(1).strip().lower()] = field.group(2).strip()
         entries.append(entry)
     return entries
+
+
+def _is_finding(entry: dict[str, str]) -> bool:
+    """A parsed block is a real finding only if it carries at least one substantive
+    field. Section headers and malformed blocks (no candidate, observed, or
+    proposal) are export noise — they otherwise hash-collide on empty content into
+    bogus "recurring" candidates. Same spirit as the `<date>` placeholder skip.
+    """
+    return any((entry.get(k) or "").strip() for k in ("candidate", "observed", "proposal"))
+
+
+def iter_findings(text: str) -> list[dict[str, str]]:
+    """Parsed entries that are actually findings (content-less blocks dropped)."""
+    return [e for e in parse_entries(text) if _is_finding(e)]
 
 
 def _hash12(basis: str) -> str:
@@ -144,7 +167,7 @@ def collect(project_roots: list[Path]) -> tuple[Hits, Hits]:
         if not feedback.is_file():
             continue
         state = load_sidecar(root)
-        for entry in parse_entries(feedback.read_text(encoding="utf-8")):
+        for entry in iter_findings(feedback.read_text(encoding="utf-8")):
             fp = fingerprint(entry)
             if _in_sidecar(entry, state["resolved"]):
                 continue
@@ -161,7 +184,7 @@ def mark_collected(root: Path) -> int:
     state = load_sidecar(root)
     today = date.today().isoformat()
     marked = 0
-    for entry in parse_entries(feedback.read_text(encoding="utf-8")):
+    for entry in iter_findings(feedback.read_text(encoding="utf-8")):
         fp = fingerprint(entry)
         if not _in_sidecar(entry, state["collected"]):
             state["collected"][fp] = today
@@ -178,6 +201,155 @@ def mark_resolved(root: Path, fp: str, note: str) -> bool:
     state["collected"].setdefault(fp, date.today().isoformat())
     save_sidecar(root, state)
     return True
+
+
+# --- Inbox: human-gated issue filing -------------------------------------------
+
+
+def merge_hits(*groups: Hits) -> Hits:
+    """Merge candidate groups (e.g. new + open) into one fingerprint -> hits view.
+
+    Filing eligibility cares about a finding's *total* open occurrences across the
+    whole sweep, regardless of which projects have already marked it collected, so
+    the new and open-unresolved buckets are merged before counting recurrence.
+    """
+    merged: Hits = {}
+    for group in groups:
+        for fp, hits in group.items():
+            merged.setdefault(fp, []).extend(hits)
+    return merged
+
+
+def _inbox_path_for(root: Path) -> Path:
+    return root / ".agent-work" / INBOX_NAME
+
+
+def load_inbox(path: Path) -> dict:
+    if path.is_file():
+        return json.loads(path.read_text(encoding="utf-8"))
+    return {"filed": {}}
+
+
+def save_inbox(path: Path, state: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+
+
+def issue_spec(fp: str, hits: list[tuple[str, dict[str, str]]], labels=()) -> dict:
+    """Render one finding group into a fileable GitHub issue spec."""
+    first = hits[0][1]
+    projects = sorted({p for p, _ in hits})
+    candidate = (first.get("candidate") or "").strip()
+    # A backlog title should read like a finding, not a hash. Prefer the human slug;
+    # when an entry carries none, degrade to a trimmed observed snippet before the
+    # bare fingerprint, so the issue is at least scannable.
+    if candidate:
+        label = candidate
+    else:
+        observed = (first.get("observed") or "").strip()
+        label = (observed[:60].rstrip() + "…") if len(observed) > 60 else (observed or fp)
+    title = f"[constellation-feedback] {label} ({len(hits)}× / {len(projects)} project(s))"
+    body = [
+        "Auto-surfaced by `scripts/collect_feedback.py` from consuming-project "
+        "exports. Triage and any resulting skill/template/engine change stay "
+        "human-gated — this issue is a backlog entry, not a decision.",
+        "",
+        f"- **fingerprint:** `{fp}`",
+        f"- **occurrences:** {len(hits)} across {len(projects)} project(s): "
+        f"{', '.join(projects)}",
+    ]
+    for key in ("observed", "cost", "proposal", "grounding", "template vintage", "confidence"):
+        if first.get(key):
+            body.append(f"- **{key}:** {first[key]}")
+    body += [
+        "",
+        "_Validation signal: recurrence. Cross-project recurrence is the strongest; "
+        "a single-project scope tag is a claim to verify, not a fact._",
+    ]
+    return {
+        "fingerprint": fp,
+        "candidate": candidate or fp,
+        "title": title,
+        "body": "\n".join(body),
+        "projects": projects,
+        "occurrences": len(hits),
+        "labels": list(labels),
+    }
+
+
+def gh_file_issue(spec: dict, *, repo: str | None = None) -> dict:
+    """Default filer: open a GitHub issue via `gh`. Returns {number, url}."""
+    cmd = ["gh", "issue", "create", "--title", spec["title"], "--body", spec["body"]]
+    for label in spec.get("labels", ()):
+        cmd += ["--label", label]
+    if repo:
+        cmd += ["--repo", repo]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    out = result.stdout.strip()
+    url = out.splitlines()[-1] if out else ""
+    number = url.rstrip("/").rsplit("/", 1)[-1] if url else ""
+    return {"number": number, "url": url}
+
+
+def eligible_for_filing(
+    merged: Hits, inbox: dict, *, include_singles: bool
+) -> list[tuple[str, list[tuple[str, dict[str, str]]]]]:
+    """Open findings worth filing, most-recurring first, skipping already-filed.
+
+    Default keeps the backlog high-signal: only findings at or above the
+    recurrence threshold. `include_singles` widens to every open finding.
+    """
+    out = []
+    for fp, hits in sorted(merged.items(), key=lambda kv: -len(kv[1])):
+        if fp in inbox["filed"]:
+            continue
+        if not include_singles and len(hits) < RECURRENCE_THRESHOLD:
+            continue
+        out.append((fp, hits))
+    return out
+
+
+def file_issues(
+    merged: Hits,
+    *,
+    inbox_path: Path,
+    filer=gh_file_issue,
+    include_singles: bool = False,
+    confirm: bool = False,
+    labels=(),
+    repo: str | None = None,
+) -> dict:
+    """File open, validated findings as issues. Dry run unless `confirm`.
+
+    Idempotent: the ledger at `inbox_path` records one entry per finding
+    fingerprint, so a finding is never filed twice. The ledger is saved after each
+    successful file, so a mid-run filer failure leaves the already-filed issues
+    durably recorded (no orphans, no re-files).
+    """
+    inbox = load_inbox(inbox_path)
+    eligible = eligible_for_filing(merged, inbox, include_singles=include_singles)
+    specs = [issue_spec(fp, hits, labels=labels) for fp, hits in eligible]
+    if not confirm:
+        return {"would_file": specs, "filed": []}
+
+    filed = []
+    for spec in specs:
+        ref = filer(spec, repo=repo)
+        inbox["filed"][spec["fingerprint"]] = {
+            "issue": ref.get("number", ""),
+            "url": ref.get("url", ""),
+            "title": spec["title"],
+            "candidate": spec["candidate"],
+            "projects": spec["projects"],
+            "occurrences": spec["occurrences"],
+            "date": date.today().isoformat(),
+        }
+        save_inbox(inbox_path, inbox)
+        filed.append({**spec, **ref})
+    return {"would_file": [], "filed": filed}
+
+
+# --- Reporting ------------------------------------------------------------------
 
 
 def _render_group(lines: list[str], title: str, group: Hits) -> None:
@@ -233,7 +405,54 @@ def render_report(new: Hits, open_unresolved: Hits) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
+def _file_issues_cli(new, open_unresolved, args, filer) -> int:
+    """Handle the --file-issues mode; returns an exit code."""
+    inbox_path = args.inbox or (Path.cwd() / ".agent-work" / INBOX_NAME)
+    merged = merge_hits(new, open_unresolved)
+    try:
+        result = file_issues(
+            merged,
+            inbox_path=inbox_path,
+            filer=filer,
+            include_singles=args.include_singles,
+            confirm=args.confirm,
+            labels=args.label,
+            repo=args.repo,
+        )
+    except FileNotFoundError:
+        print("error: `gh` not found on PATH; cannot file issues", file=sys.stderr)
+        return 1
+    except subprocess.CalledProcessError as exc:
+        print(f"error: gh failed: {exc.stderr or exc}", file=sys.stderr)
+        print(f"(any issues filed before the failure are recorded in {inbox_path})", file=sys.stderr)
+        return 1
+
+    if not args.confirm:
+        specs = result["would_file"]
+        if not specs:
+            print(
+                "No findings eligible for filing "
+                "(need >= 2 occurrences; pass --include-singles to widen)."
+            )
+            return 0
+        print(f"DRY RUN — {len(specs)} issue(s) would be filed; re-run with --confirm:\n")
+        for spec in specs:
+            print(f"  [would file] {spec['title']}")
+            print(f"               fingerprint {spec['fingerprint']}, projects: {', '.join(spec['projects'])}")
+        return 0
+
+    filed = result["filed"]
+    if not filed:
+        print("Nothing new to file (all eligible findings already in the inbox ledger).")
+        return 0
+    for entry in filed:
+        ref = f"#{entry['number']}" if entry.get("number") else entry.get("url", "")
+        print(f"filed {ref}: {entry['title']}")
+    print(f"\nfiled {len(filed)} issue(s); ledger: {inbox_path}")
+    return 0
+
+
+def main(argv: list[str] | None = None, *, filer=gh_file_issue) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("projects", nargs="*", type=Path, help="Project roots to sweep")
     parser.add_argument(
@@ -251,6 +470,26 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--note", default="", help="Resolution note for --resolve (e.g. 'fixed in PR #19')"
     )
+    parser.add_argument(
+        "--file-issues",
+        action="store_true",
+        help="File open validated findings as GitHub issues here (dry run unless --confirm)",
+    )
+    parser.add_argument(
+        "--confirm", action="store_true", help="With --file-issues, actually open the issues"
+    )
+    parser.add_argument(
+        "--include-singles",
+        action="store_true",
+        help="With --file-issues, also file single-occurrence findings (default: recurring only)",
+    )
+    parser.add_argument(
+        "--label", action="append", default=[], help="Label to apply to filed issues (repeatable)"
+    )
+    parser.add_argument(
+        "--inbox", type=Path, help="Inbox ledger path (default .agent-work/CONSTELLATION_INBOX.json)"
+    )
+    parser.add_argument("--repo", help="Target repo OWNER/NAME for gh (default: inferred from cwd)")
     args = parser.parse_args(argv)
 
     roots = list(args.projects)
@@ -272,6 +511,10 @@ def main(argv: list[str] | None = None) -> int:
             if mark_resolved(root, args.resolve, args.note.strip()):
                 print(f"resolved {args.resolve} in {root.name}: {args.note.strip()}")
         return 0
+
+    if args.file_issues:
+        new, open_unresolved = collect(roots)
+        return _file_issues_cli(new, open_unresolved, args, filer)
 
     new, open_unresolved = collect(roots)
     report = render_report(new, open_unresolved)
