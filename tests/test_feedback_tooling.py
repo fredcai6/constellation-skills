@@ -613,3 +613,37 @@ class FreshnessPathTokenTests(unittest.TestCase):
             )
             statuses = {r["template"]: r["status"] for r in m.check(project, skills_root)}
             self.assertEqual(statuses["COMMANDER_SPINE.template.json"], "up-to-date")
+
+    def test_token_working_copy_up_to_date_against_promoted_baseline(self):
+        # After the standard reconcile (--update-baseline promotes the baseline to
+        # the installed absolute-path form), a token-form working copy must still
+        # read up-to-date — not as a phantom `project-customized` edit.
+        m = load("check_skill_freshness")
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            skills_root = Path(tmp) / "user-skills"
+            project.mkdir()
+            installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(skills_root),
+                 "--skills", "commander"],
+                env={}, out=lambda _line: None,
+            )
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander", "--baseline-only"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            spine = "COMMANDER_SPINE.template.json"  # references <commander-skill-dir> tokens
+            # the token-form working copy exists and is untouched by the project
+            wc = project / ".agent-work" / "templates" / spine
+            self.assertIn("<commander-skill-dir>", wc.read_text(encoding="utf-8"))
+
+            # promote the baseline to the absolute-form installed upstream
+            m.update_baseline(project, skills_root)
+            promoted = (project / ".agent-work" / "templates" / ".baseline"
+                        / "constellation-commander" / spine)
+            self.assertNotIn("<commander-skill-dir>", promoted.read_text(encoding="utf-8"))
+
+            statuses = {r["template"]: r["status"] for r in m.check(project, skills_root)}
+            self.assertEqual(statuses[spine], "up-to-date")  # not phantom-customized

@@ -43,14 +43,20 @@ def _hash(path: Path) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _normalized_baseline_hash(baseline: Path, skill: str, skills_root: Path) -> str:
-    """Hash the pristine baseline as it would look after install-time path rewriting.
+def _normalized_hash(path: Path, skill: str, skills_root: Path) -> str:
+    """Content hash after resolving <skill-dir> / <name-skill-dir> tokens to the
+    installed skill dir, so the three sides compare on equal footing.
 
-    The installer rewrites <skill-dir> / <name-skill-dir> tokens to absolute paths
-    in installed copies; the baseline keeps the token form. Comparing raw hashes
-    would flag every script-referencing template as changed forever.
+    A template lives in three forms: the installed skill copy has absolute paths
+    (rewritten at install), while the baseline and the project working copy keep
+    the portable token form — and a *promoted* baseline (check_skill_freshness
+    --update-baseline copies the installed upstream) becomes absolute too.
+    Comparing raw hashes would flag a token-form working copy against an
+    absolute-form baseline as a phantom edit forever. Normalizing every side to
+    the resolved (absolute) form neutralizes the token-vs-absolute difference
+    while leaving genuine edits visible. Tokenless templates hash unchanged.
     """
-    text = baseline.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8")
     installed = (skills_root / skill).as_posix()
     short = skill.removeprefix("constellation-")
     text = text.replace("<skill-dir>", installed)
@@ -79,21 +85,21 @@ def check(project_root: Path, skills_root: Path) -> list[dict[str, str]]:
         upstream = skills_root / skill / "templates" / name
         local = templates_root / name
 
-        baseline_hash = _hash(baseline) if baseline.is_file() else None
-        upstream_hash = _hash(upstream) if upstream.is_file() else None
-        local_hash = _hash(local) if local.is_file() else None
+        # Normalize every side to the resolved form so token-vs-absolute path
+        # differences (baseline/working copy in token form, installed upstream and
+        # promoted baselines in absolute form) never read as edits — only real
+        # content changes do.
+        base_n = _normalized_hash(baseline, skill, skills_root) if baseline.is_file() else None
+        up_n = _normalized_hash(upstream, skill, skills_root) if upstream.is_file() else None
+        local_n = _normalized_hash(local, skill, skills_root) if local.is_file() else None
 
-        if baseline_hash is None:
+        if base_n is None:
             status = "baseline-missing"
-        elif upstream_hash is None:
+        elif up_n is None:
             status = "upstream-removed"
         else:
-            normalized = _normalized_baseline_hash(baseline, skill, skills_root)
-            upstream_changed = upstream_hash not in (baseline_hash, normalized)
-            local_changed = local_hash is not None and local_hash not in (
-                baseline_hash,
-                normalized,
-            )
+            upstream_changed = up_n != base_n
+            local_changed = local_n is not None and local_n != base_n
             if upstream_changed and local_changed:
                 status = "both-changed"
             elif upstream_changed:
