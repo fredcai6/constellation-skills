@@ -6,9 +6,16 @@ per-entry state in a sidecar (`CONSTELLATION_FEEDBACK.collected.json`): entries
 are deduplicated by a semantic fingerprint (normalized observed+proposal text)
 and each fingerprint is independently `collected` (ingested by a sweep) and
 later `resolved` (acted on upstream). Collected-but-unresolved candidates stay
-visible in every report until resolved — collected never means fixed. Recurring
-candidates are grouped across projects: cross-project recurrence is the
-validation signal. Issue filing stays human-gated: this script only reports.
+visible in every report until resolved — collected never means fixed.
+
+A finding's fingerprint is derived from its stable candidate slug (prose drifts
+run to run; the human-assigned slug does not), falling back to the legacy
+observed+proposal content hash only when no slug is present. Recurrence is
+counted by how many entries share a fingerprint — including repeats within a
+single project — and a finding is promoted to validated/recurring once it
+reaches RECURRENCE_THRESHOLD occurrences. Cross-project recurrence remains a
+distinct, stronger callout. Issue filing stays human-gated: this script only
+reports.
 """
 
 from __future__ import annotations
@@ -24,6 +31,11 @@ from pathlib import Path
 ENTRY_HEADING_RE = re.compile(r"^## .+$", re.MULTILINE)
 FIELD_RE = re.compile(r"^- \*\*(.+?):\*\*\s*`?(.*?)`?\s*$")
 SIDECAR_NAME = "CONSTELLATION_FEEDBACK.collected.json"
+
+# A finding is treated as recurring/validated once this many entries share a
+# fingerprint, regardless of how many distinct projects contributed. Cross-project
+# recurrence remains a distinct, stronger signal called out separately.
+RECURRENCE_THRESHOLD = 2
 
 
 def _utf8_stdio() -> None:
@@ -56,11 +68,53 @@ def parse_entries(text: str) -> list[dict[str, str]]:
     return entries
 
 
-def fingerprint(entry: dict[str, str]) -> str:
+def _hash12(basis: str) -> str:
+    return hashlib.sha256(basis.encode("utf-8")).hexdigest()[:12]
+
+
+def _content_fingerprint(entry: dict[str, str]) -> str:
+    """Legacy fingerprint: hash of normalized observed+proposal prose.
+
+    Kept for backward-compatible sidecar lookups (entries collected/resolved
+    under the old scheme) and as the fallback when an entry has no candidate slug.
+    """
     basis = (entry.get("observed", "") + "|" + entry.get("proposal", "")).lower()
     basis = re.sub(r"[^a-z0-9|]+", " ", basis)
     basis = re.sub(r"\s+", " ", basis).strip()
-    return hashlib.sha256(basis.encode("utf-8")).hexdigest()[:12]
+    return _hash12(basis)
+
+
+def fingerprint(entry: dict[str, str]) -> str:
+    """Stable identity for a finding.
+
+    Derived from the normalized candidate slug when present — the slug is the
+    stable human-assigned identity that survives prose drift across runs. Falls
+    back to the legacy observed+proposal content hash only when no slug exists.
+    Always 12 hex chars so the sidecar shape is unchanged.
+    """
+    slug = re.sub(r"[^a-z0-9]+", "-", entry.get("candidate", "").lower()).strip("-")
+    if slug:
+        return _hash12("candidate:" + slug)
+    return _content_fingerprint(entry)
+
+
+def fingerprints(entry: dict[str, str]) -> list[str]:
+    """All fingerprints an entry may be keyed under in a sidecar.
+
+    The current slug-based fingerprint plus the legacy content fingerprint, so
+    that collected/resolved state recorded under the old scheme still matches
+    after the fingerprint change. Order: new fingerprint first.
+    """
+    fps = [fingerprint(entry)]
+    legacy = _content_fingerprint(entry)
+    if legacy not in fps:
+        fps.append(legacy)
+    return fps
+
+
+def _in_sidecar(entry: dict[str, str], table: dict) -> bool:
+    """True if any of the entry's fingerprints (new or legacy) is in `table`."""
+    return any(fp in table for fp in fingerprints(entry))
 
 
 def _sidecar_path(root: Path) -> Path:
@@ -92,9 +146,9 @@ def collect(project_roots: list[Path]) -> tuple[Hits, Hits]:
         state = load_sidecar(root)
         for entry in parse_entries(feedback.read_text(encoding="utf-8")):
             fp = fingerprint(entry)
-            if fp in state["resolved"]:
+            if _in_sidecar(entry, state["resolved"]):
                 continue
-            bucket = open_unresolved if fp in state["collected"] else new
+            bucket = open_unresolved if _in_sidecar(entry, state["collected"]) else new
             bucket.setdefault(fp, []).append((root.name, entry))
     return new, open_unresolved
 
@@ -109,7 +163,7 @@ def mark_collected(root: Path) -> int:
     marked = 0
     for entry in parse_entries(feedback.read_text(encoding="utf-8")):
         fp = fingerprint(entry)
-        if fp not in state["collected"]:
+        if not _in_sidecar(entry, state["collected"]):
             state["collected"][fp] = today
             marked += 1
     save_sidecar(root, state)
@@ -135,7 +189,10 @@ def _render_group(lines: list[str], title: str, group: Hits) -> None:
         first = hits[0][1]
         projects = sorted({p for p, _ in hits})
         lines.append(f"### {first.get('candidate', fp)} ({fp})")
-        lines.append(f"- projects: {', '.join(projects)} ({len(hits)} entr(ies))")
+        lines.append(
+            f"- occurrences: {len(hits)} across {len(projects)} project(s): "
+            f"{', '.join(projects)}"
+        )
         for key in ("observed", "cost", "proposal", "grounding", "template vintage", "confidence"):
             if first.get(key):
                 lines.append(f"- {key}: {first[key]}")
@@ -148,15 +205,29 @@ def render_report(new: Hits, open_unresolved: Hits) -> str:
         lines.append("No new or open candidates.")
         return "\n".join(lines) + "\n"
 
-    recurring = {fp: hits for fp, hits in new.items() if len({p for p, _ in hits}) > 1}
+    # Recurrence is counted by total occurrences sharing a fingerprint (within a
+    # single project counts), not only across projects. Cross-project recurrence
+    # is a distinct, stronger validation callout.
+    recurring = {fp: hits for fp, hits in new.items() if len(hits) >= RECURRENCE_THRESHOLD}
+    cross_project = {fp: hits for fp, hits in recurring.items() if len({p for p, _ in hits}) > 1}
     singles = {fp: hits for fp, hits in new.items() if fp not in recurring}
 
     lines.append(
-        f"{len(new)} new candidate(s) ({len(recurring)} recurring across projects), "
+        f"{len(new)} new candidate(s) ({len(recurring)} recurring, "
+        f"{len(cross_project)} of them across multiple projects), "
         f"{len(open_unresolved)} previously collected and still unresolved."
     )
     lines.append("")
-    _render_group(lines, "New — recurring (validated by cross-project recurrence)", recurring)
+    _render_group(
+        lines,
+        f"New — recurring (validated, >= {RECURRENCE_THRESHOLD} occurrences)",
+        recurring,
+    )
+    _render_group(
+        lines,
+        "New — cross-project recurrence (strongest validation signal)",
+        cross_project,
+    )
     _render_group(lines, "New — single-project (scope tag is a claim, verify)", singles)
     _render_group(lines, "Open — collected earlier, not yet resolved", open_unresolved)
     return "\n".join(lines) + "\n"
