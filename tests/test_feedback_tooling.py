@@ -242,6 +242,51 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertEqual(new, {})
         self.assertEqual(open_unresolved, {})
 
+    def test_lesson_id_groups_across_slug_drift(self):
+        # Same originating lesson id, three drifted candidate slugs (the real
+        # spine-lease case): they must share ONE fingerprint and count as 3.
+        root = Path(self.tmp.name) / "drift2"
+        (root / ".agent-work").mkdir(parents=True)
+        slugs = [
+            "spine-lease-stale-on-long-crew",
+            "spine-lease-stale-on-long-crew-step",
+            "spine-lease-stale-on-long-crew` (CORROBORATES issue-446)",
+        ]
+        body = "# Constellation Feedback Export\n"
+        for i, slug in enumerate(slugs):
+            body += (
+                f"\n## 2026-06-15 — drift2 — issue-{i}\n\n"
+                "- **Lesson:** `spine-lease-stale-on-long-crew`\n"
+                f"- **Candidate:** `{slug}`\n"
+                f"- **Observed:** `worded differently each time, run {i}`\n"
+                "- **Proposal:** `heartbeat the lease around long gates`\n"
+            )
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(body, encoding="utf-8")
+        new, _ = self.m.collect([root])
+        self.assertEqual(len(new), 1)  # one finding, not three
+        self.assertEqual(len(next(iter(new.values()))), 3)  # 3 occurrences
+
+    def test_lesson_id_takes_precedence_over_slug(self):
+        entry = {"lesson": "my-stable-id", "candidate": "some-drifty-slug",
+                 "observed": "x", "proposal": "y"}
+        self.assertEqual(self.m.fingerprint(entry), self.m._hash12("lesson:my-stable-id"))
+        self.assertNotEqual(self.m.fingerprint(entry), self.m._hash12("candidate:some-drifty-slug"))
+
+    def test_annotation_stripped_slug_groups_without_lesson_id(self):
+        # No lesson id: annotation/cross-ref differences in the slug must not split.
+        a = {"candidate": "crew-survey-state-in-worktree-root", "observed": "p", "proposal": "q"}
+        b = {"candidate": "crew-survey-state-in-worktree-root (CORROBORATES issue-446)",
+             "observed": "p2", "proposal": "q2"}
+        self.assertEqual(self.m.fingerprint(a), self.m.fingerprint(b))
+
+    def test_legacy_raw_slug_state_still_matches(self):
+        # A finding recorded under the OLD raw (un-stripped) slug fingerprint must
+        # still be recognized after annotation-stripping changes the primary fp.
+        entry = {"candidate": "thing (CORROBORATES x)", "observed": "o", "proposal": "p"}
+        raw_fp = self.m._hash12("candidate:" + self.m._raw_slug("thing (CORROBORATES x)"))
+        self.assertNotEqual(self.m.fingerprint(entry), raw_fp)  # primary now differs
+        self.assertIn(raw_fp, self.m.fingerprints(entry))  # but still a known key
+
     def test_contentless_section_blocks_are_not_findings(self):
         # Section-header blocks with no candidate/observed/proposal are export
         # noise; they must not collide into a bogus "recurring" candidate.

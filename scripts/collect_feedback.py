@@ -8,13 +8,19 @@ and each fingerprint is independently `collected` (ingested by a sweep) and
 later `resolved` (acted on upstream). Collected-but-unresolved candidates stay
 visible in every report until resolved — collected never means fixed.
 
-A finding's fingerprint is derived from its stable candidate slug (prose drifts
-run to run; the human-assigned slug does not), falling back to the legacy
-observed+proposal content hash only when no slug is present. Recurrence is
-counted by how many entries share a fingerprint — including repeats within a
-single project — and a finding is promoted to validated/recurring once it
-reaches RECURRENCE_THRESHOLD occurrences. Cross-project recurrence remains a
-distinct, stronger callout.
+A finding's identity (fingerprint) is derived, in order of preference, from:
+(1) the originating **lesson id** carried in the export's `Lesson` field — the
+stable id the lessons playbook already curates (unique ids, `amend` to reword
+without forking identity); (2) the **candidate slug**, with parenthetical
+annotations/cross-refs stripped (those drift run-to-run but are not identity);
+(3) the legacy observed+proposal **content hash**. Slugs drift even when humans
+mean the same finding (`spine-lease-stale-on-long-crew` vs `...-step` vs one with
+a trailing "(CORROBORATES …)"), so a stable lesson id is the durable handle;
+the slug is the fallback when no lesson id is present. Recurrence is counted by
+how many entries share a fingerprint — including repeats within a single
+project — and a finding is promoted to validated/recurring once it reaches
+RECURRENCE_THRESHOLD occurrences. Cross-project recurrence remains a distinct,
+stronger callout.
 
 Issue filing stays human-gated. `--file-issues` turns open, validated findings
 into a backlog of GitHub issues in *this* repo (the design's "opens/updates
@@ -107,32 +113,65 @@ def _content_fingerprint(entry: dict[str, str]) -> str:
     return _hash12(basis)
 
 
-def fingerprint(entry: dict[str, str]) -> str:
-    """Stable identity for a finding.
+def _slugify(text: str) -> str:
+    """Normalize a human label into a stable kebab slug.
 
-    Derived from the normalized candidate slug when present — the slug is the
-    stable human-assigned identity that survives prose drift across runs. Falls
-    back to the legacy observed+proposal content hash only when no slug exists.
-    Always 12 hex chars so the sidecar shape is unchanged.
+    Strips parenthetical annotations and cross-refs (e.g. "(CORROBORATES
+    issue-446)") that drift run-to-run but are not part of a finding's identity,
+    then collapses the rest to kebab-case.
     """
-    slug = re.sub(r"[^a-z0-9]+", "-", entry.get("candidate", "").lower()).strip("-")
+    text = re.sub(r"\([^)]*\)", " ", text.lower())
+    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+
+
+def _raw_slug(text: str) -> str:
+    """The pre-annotation-stripping slug (the prior scheme), for back-compat lookup."""
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
+def fingerprint(entry: dict[str, str]) -> str:
+    """Stable identity for a finding, in order of preference.
+
+    1. the originating lesson id (`Lesson` field) — the identity the lessons
+       playbook curates and keeps stable across rewording via `amend`;
+    2. the candidate slug with annotations stripped — the fallback when an entry
+       has no lesson id;
+    3. the legacy observed+proposal content hash — last resort.
+    Always 12 hex chars so the sidecar/ledger shape is unchanged.
+    """
+    lesson = _slugify(entry.get("lesson", ""))
+    if lesson:
+        return _hash12("lesson:" + lesson)
+    slug = _slugify(entry.get("candidate", ""))
     if slug:
         return _hash12("candidate:" + slug)
     return _content_fingerprint(entry)
 
 
 def fingerprints(entry: dict[str, str]) -> list[str]:
-    """All fingerprints an entry may be keyed under in a sidecar.
+    """Every key an entry may be recorded under, newest scheme first.
 
-    The current slug-based fingerprint plus the legacy content fingerprint, so
-    that collected/resolved state recorded under the old scheme still matches
-    after the fingerprint change. Order: new fingerprint first.
+    Includes the lesson-id fingerprint, the annotation-stripped slug fingerprint,
+    the prior raw-slug fingerprint (pre-stripping), and the legacy content hash —
+    so collected/resolved/filed state recorded under ANY earlier scheme still
+    matches after an identity change.
     """
-    fps = [fingerprint(entry)]
-    legacy = _content_fingerprint(entry)
-    if legacy not in fps:
-        fps.append(legacy)
-    return fps
+    out: list[str] = []
+
+    def add(fp: str) -> None:
+        if fp and fp not in out:
+            out.append(fp)
+
+    lesson = _slugify(entry.get("lesson", ""))
+    if lesson:
+        add(_hash12("lesson:" + lesson))
+    candidate = entry.get("candidate", "")
+    if _slugify(candidate):
+        add(_hash12("candidate:" + _slugify(candidate)))
+    if _raw_slug(candidate):
+        add(_hash12("candidate:" + _raw_slug(candidate)))
+    add(_content_fingerprint(entry))
+    return out
 
 
 def _in_sidecar(entry: dict[str, str], table: dict) -> bool:
