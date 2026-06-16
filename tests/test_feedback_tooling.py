@@ -155,6 +155,87 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertEqual(len(new), 1)
         self.assertEqual(len(open_unresolved), 1)
 
+    def test_same_slug_different_prose_is_one_recurring_candidate(self):
+        # Same candidate slug, deliberately different observed/proposal prose
+        # (prose drift across runs). They must share a fingerprint and count as
+        # one recurring candidate with occurrence count 2.
+        a = {
+            "candidate": "run-crew-cli-launcher-misfit",
+            "observed": "run_crew.py builds claude --session argv; no such binary here",
+            "proposal": "add a registry-only dispatch mode for Agent-tool harnesses",
+        }
+        b = {
+            "candidate": "run-crew-cli-launcher-misfit",
+            "observed": "the installed claude CLI rejects --session/--role/--handoff entirely",
+            "proposal": "document a non-CLI / --dispatch=external path that records but never spawns",
+        }
+        self.assertEqual(self.m.fingerprint(a), self.m.fingerprint(b))
+
+        root = Path(self.tmp.name) / "drift"
+        (root / ".agent-work").mkdir(parents=True)
+        body = "# Constellation Feedback Export\n"
+        for i, e in enumerate((a, b)):
+            body += (
+                f"\n## 2026-06-11 — drift — issue-{i}\n\n"
+                f"- **Candidate:** `{e['candidate']}`\n"
+                f"- **Observed:** `{e['observed']}`\n"
+                f"- **Proposal:** `{e['proposal']}`\n"
+            )
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(body, encoding="utf-8")
+
+        new, open_unresolved = self.m.collect([root])
+        self.assertEqual(len(new), 1)  # one recurring candidate, not two
+        hits = next(iter(new.values()))
+        self.assertEqual(len(hits), 2)  # occurrence count 2
+
+    def test_single_project_recurrence_trips_validated_signal(self):
+        # A finding that recurs twice within ONE project must trip the
+        # recurring/validated signal even with no cross-project recurrence.
+        root = Path(self.tmp.name) / "solo"
+        (root / ".agent-work").mkdir(parents=True)
+        body = "# Constellation Feedback Export\n"
+        for i, prose in enumerate(("worded one way", "worded a different way")):
+            body += (
+                f"\n## 2026-06-11 — solo — issue-{i}\n\n"
+                "- **Candidate:** `spine-lease-stale-on-long-crew`\n"
+                f"- **Observed:** `lease lapses mid-gate, {prose}`\n"
+                "- **Proposal:** `heartbeat the lease around long gates`\n"
+            )
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(body, encoding="utf-8")
+
+        new, open_unresolved = self.m.collect([root])
+        hits = next(iter(new.values()))
+        self.assertEqual(len(hits), 2)
+        self.assertEqual(len({p for p, _ in hits}), 1)  # single project only
+        report = self.m.render_report(new, open_unresolved)
+        self.assertIn("recurring", report)
+        self.assertIn("occurrences: 2", report)
+
+    def test_legacy_resolved_fingerprint_still_resolves(self):
+        # Backward-compat: an entry whose legacy content-hash is recorded in
+        # `resolved` must still be treated as resolved after the fingerprint
+        # change (which now keys on the candidate slug).
+        entry = self.m.parse_entries(
+            FEEDBACK_ENTRY.format(project="alpha")
+        )[0]
+        legacy_fp = self.m._content_fingerprint(entry)
+        # slug-based fingerprint must differ from the legacy content hash
+        self.assertNotEqual(self.m.fingerprint(entry), legacy_fp)
+
+        sidecar = self.roots[0] / ".agent-work" / "CONSTELLATION_FEEDBACK.collected.json"
+        sidecar.write_text(
+            json.dumps(
+                {
+                    "collected": {legacy_fp: "2026-06-11"},
+                    "resolved": {legacy_fp: {"date": "2026-06-11", "note": "fixed upstream"}},
+                }
+            ),
+            encoding="utf-8",
+        )
+        new, open_unresolved = self.m.collect([self.roots[0]])
+        self.assertEqual(new, {})
+        self.assertEqual(open_unresolved, {})
+
     def test_template_placeholder_entries_skipped(self):
         root = Path(self.tmp.name) / "fresh"
         (root / ".agent-work").mkdir(parents=True)

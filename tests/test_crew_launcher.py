@@ -250,6 +250,95 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(1, code)
 
 
+class ExternalDispatchTests(unittest.TestCase):
+    """--dispatch external: record the durable registry entry + duplicate-guard
+    + result verification WITHOUT spawning any subprocess (the Agent-tool harness
+    has no headless `claude` CLI to launch)."""
+
+    def test_external_dispatch_records_without_spawning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            # fake_launch installs the spawn seam; for external dispatch it must
+            # never be called.
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--handoff", handoff, "--result", result,
+                        "--dispatch", "external",
+                    ])
+            self.assertEqual(0, code)
+            self.assertEqual([], calls)  # nothing spawned
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(1, len(reg))
+            self.assertEqual("external", reg[0]["dispatch"])
+            self.assertIsNone(reg[0]["pid"])
+            self.assertEqual("running", reg[0]["status"])
+            self.assertEqual(
+                "constellation/issue-1/g1/implementer/attempt-1", reg[0]["session_name"]
+            )
+
+    def test_external_missing_handoff_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            with contextlib.redirect_stderr(io.StringIO()):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer",
+                    "--handoff", ".agent-work/issue-1/crew-handoffs/g1-implementer.md",
+                    "--result", result, "--dispatch", "external",
+                ])
+            self.assertEqual(1, code)
+
+    def test_external_duplicate_active_lock_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            argv = [
+                "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                "--role", "implementer", "--handoff", handoff, "--result", result,
+                "--dispatch", "external",
+            ]
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0, RC.main(argv))
+            # the first external attempt is `running` and holds the slot
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(1, RC.main(argv))
+
+    def test_verify_result_absent_then_present_marks_completed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--dispatch", "external",
+                ])
+            # result artifact not written yet -> verify is nonzero, stays running
+            with contextlib.redirect_stdout(io.StringIO()):
+                code_absent = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(1, code_absent)
+            self.assertEqual(
+                "running", RC.load_registry(RC.registry_path("issue-1", root))[0]["status"]
+            )
+            # write the result artifact (the out-of-band crew finished) -> completed
+            (root / result).parent.mkdir(parents=True, exist_ok=True)
+            (root / result).write_text("RESULT\n", encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()):
+                code_present = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(0, code_present)
+            self.assertEqual(
+                "completed", RC.load_registry(RC.registry_path("issue-1", root))[0]["status"]
+            )
+
+
 class ProcessAliveTests(unittest.TestCase):
     def test_pid_zero_or_none_is_dead(self):
         self.assertFalse(RC.process_alive(None))

@@ -699,6 +699,24 @@ class GitChangePolicyEvaluator(unittest.TestCase):
         self.assertEqual(len(v), 1)
         self.assertIn("matches deny glob", v[0])
 
+    def test_canonical_shared_file_denied_despite_agent_work_allow(self):
+        # lesson:shared-files-not-on-mission-branch — committing canonical
+        # shared state (LESSONS.md / AGENT_FEEDBACK.md / CONSTELLATION_FEEDBACK*)
+        # on a mission branch clobbers sibling runs. `.agent-work/**` is an
+        # allow_glob, so only an explicit deny on the exact file catches it.
+        policy = _policy(
+            deny_globs=[".agent-work/LESSONS.md"],
+            allow_globs=[".agent-work/**"],
+        )
+        files = [{"path": ".agent-work/LESSONS.md", "size": 10, "binary": False}]
+        v = E.evaluate_git_change_policy(files, policy)
+        self.assertEqual(len(v), 1)
+        self.assertIn("matches deny glob", v[0])
+        self.assertIn(".agent-work/LESSONS.md", v[0])
+        # an ordinary scratch path under the same allow_glob still passes
+        scratch = [{"path": ".agent-work/issue-472/notes.md", "size": 10, "binary": False}]
+        self.assertEqual(E.evaluate_git_change_policy(scratch, policy), [])
+
 
 class GitChangePolicyCheck(unittest.TestCase):
     """The git-change-policy CHECK kind wired through advance/waive, with the
