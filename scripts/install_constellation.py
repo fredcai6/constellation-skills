@@ -336,25 +336,36 @@ def write_template_baselines(
     project_root: Path,
     *,
     out: Callable[[str], object],
-) -> None:
+) -> set[tuple[str, str]]:
     """Seed pristine blank-template baselines + manifest for a project install.
 
     The baseline is what three-way template reconciliation diffs against; the
     installer therefore never overwrites an existing baseline — upgrades are
     reconciled by check_skill_freshness.py, which owns baseline promotion.
+
+    Returns the set of (skill_install_name, template_name) keys that ENTERED
+    tracking this run — every template on a fresh seed, only the genuinely-new
+    ones on an extend. The caller seeds working copies for exactly this set, so a
+    reinstall never backfills working copies for templates the project chose not
+    to track (which would otherwise read as false `project-customized` drift and
+    mask later upstream changes).
     """
     templates_root = project_root / ".agent-work" / "templates"
     baseline_root = templates_root / ".baseline"
     manifest_path = templates_root / "TEMPLATES_MANIFEST.json"
 
     if baseline_root.exists() or manifest_path.exists():
-        out(
-            "Template baseline already exists; leaving it untouched. "
-            "Run scripts/check_skill_freshness.py to reconcile against this install."
+        # The baseline is the reconcile anchor; never overwrite an existing one.
+        # But DO track templates that shipped *after* this project's baseline — a
+        # new upstream template otherwise never reaches an established project's
+        # versioned-template tracking (check_skill_freshness only sees the
+        # manifest). Existing baselines and manifest entries are left untouched.
+        return extend_template_baselines(
+            skills, templates_root, baseline_root, manifest_path, out=out
         )
-        return
 
     entries: list[dict[str, str]] = []
+    seeded: set[tuple[str, str]] = set()
     for skill in skills:
         source_templates = skill.source_path / "templates"
         if not source_templates.is_dir():
@@ -372,9 +383,10 @@ def write_template_baselines(
                     "sha256": _hash_file(template),
                 }
             )
+            seeded.add((skill.install_name, template.name))
 
     if not entries:
-        return
+        return set()
 
     manifest = {
         "generated": date.today().isoformat(),
@@ -388,12 +400,75 @@ def write_template_baselines(
         f"Template baseline seeded: {len(entries)} template(s) -> {baseline_root} "
         f"(manifest: {manifest_path})"
     )
+    return seeded
+
+
+def extend_template_baselines(
+    skills: Sequence[Skill],
+    templates_root: Path,
+    baseline_root: Path,
+    manifest_path: Path,
+    *,
+    out: Callable[[str], object],
+) -> set[tuple[str, str]]:
+    """Track upstream templates that aren't in this project's baseline yet.
+
+    Adds a pristine baseline copy + manifest entry for every passed-skill template
+    not already tracked, leaving every existing baseline file and manifest entry
+    untouched (mirrors the never-clobber working-copy seeding). This is what lets a
+    template shipped after a project's initial install reach its versioned-template
+    tracking on a later reinstall. Returns the set of (skill, template) keys newly
+    tracked.
+    """
+    if not manifest_path.is_file():
+        # A baseline dir without a manifest is a hand-made/odd state; don't guess.
+        out("Template baseline present without a manifest; leaving it untouched.")
+        return set()
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest.setdefault("templates", [])
+    tracked = {(e["skill"], e["template"]) for e in manifest["templates"]}
+
+    added: set[tuple[str, str]] = set()
+    for skill in skills:
+        source_templates = skill.source_path / "templates"
+        if not source_templates.is_dir():
+            continue
+        for template in sorted(source_templates.iterdir()):
+            if not template.is_file():
+                continue
+            if (skill.install_name, template.name) in tracked:
+                continue  # already tracked — never re-anchor an existing baseline
+            target = baseline_root / skill.install_name / template.name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.exists():  # never clobber an existing anchor file
+                shutil.copy2(template, target)
+            manifest["templates"].append(
+                {
+                    "skill": skill.install_name,
+                    "template": template.name,
+                    "sha256": _hash_file(template),
+                }
+            )
+            added.add((skill.install_name, template.name))
+
+    if added:
+        manifest["templates"].sort(key=lambda e: (e["skill"], e["template"]))
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        out(
+            f"Template baseline extended: +{len(added)} new template(s) now tracked -> "
+            f"{baseline_root}. Run check_skill_freshness.py to reconcile."
+        )
+    else:
+        out("Template baseline already tracks every installed template; left untouched.")
+    return added
 
 
 def write_template_working_copies(
     skills: Sequence[Skill],
     project_root: Path,
     *,
+    only: set[tuple[str, str]],
     out: Callable[[str], object],
 ) -> int:
     """Seed editable project-local template working copies (flat, never clobbered).
@@ -405,12 +480,15 @@ def write_template_working_copies(
     falling back to the bundled copy), so without a working copy a template edit
     has nowhere to live but the installed skill (which a reinstall overwrites).
 
-    Copies are taken from the bundled source in token form (identical content to
-    the baseline), so they are portable/committable and read as `up-to-date`
-    against the baseline until the project edits them. Existing copies — Charter
-    seeds or prior project edits — are never overwritten; only missing ones are
-    filled, so this is safe to re-run and to extend when new templates appear
-    upstream. Returns the number of copies newly seeded.
+    Seeds copies ONLY for `only` — the (skill, template) keys that entered baseline
+    tracking this run (every template on a fresh seed, only the genuinely-new ones
+    on a reinstall). This deliberately does NOT backfill a working copy for every
+    template a project lacks one for: a frozen copy of a template the project never
+    customizes reads as false `project-customized` drift and masks later upstream
+    changes the project should adopt. Copies are taken from the bundled source in
+    token form (identical to the baseline, so they read `up-to-date`); existing
+    copies — Charter seeds or prior edits — are never overwritten. Returns the
+    number newly seeded.
     """
     templates_root = project_root / ".agent-work" / "templates"
     seeded = 0
@@ -421,6 +499,8 @@ def write_template_working_copies(
         for template in sorted(source_templates.iterdir()):
             if not template.is_file():
                 continue
+            if (skill.install_name, template.name) not in only:
+                continue  # only seed templates entering tracking this run
             target = templates_root / template.name
             if target.exists():
                 continue  # never clobber a project edit or a Charter seed
@@ -494,8 +574,8 @@ def main(
             project_root = args.project.expanduser() if args.project else runtime_cwd
             if not project_root.is_dir():
                 raise InstallError(f"project directory does not exist: {project_root}")
-            write_template_baselines(skills, project_root, out=out)
-            write_template_working_copies(skills, project_root, out=out)
+            seeded = write_template_baselines(skills, project_root, out=out)
+            write_template_working_copies(skills, project_root, only=seeded, out=out)
             return 0
 
         target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
@@ -511,8 +591,8 @@ def main(
             )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
-            write_template_baselines(skills, project_root, out=out)
-            write_template_working_copies(skills, project_root, out=out)
+            seeded = write_template_baselines(skills, project_root, out=out)
+            write_template_working_copies(skills, project_root, only=seeded, out=out)
     except InstallError as exc:
         parser.exit(2, f"error: {exc}\n")
 

@@ -485,8 +485,69 @@ class TemplateBaselineTests(unittest.TestCase):
 
             messages = []
             installer.main(args + ["--force"], env={}, cwd=project, out=messages.append)
+            # same skill set -> no new templates -> manifest byte-identical, untouched
             self.assertEqual(original, manifest_path.read_text(encoding="utf-8"))
-            self.assertTrue(any("leaving it untouched" in m for m in messages))
+            self.assertTrue(any("left untouched" in m for m in messages))
+
+    def test_reinstall_adds_new_upstream_template_to_existing_baseline(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            base = ["--agent", "claude", "--scope", "project", "--project", str(project),
+                    "--baseline-only"]
+            # initial baseline tracks only workbench templates
+            installer.main(base + ["--skills", "workbench"], env={}, cwd=project, out=lambda _l: None)
+            troot = project / ".agent-work" / "templates"
+            mpath = troot / "TEMPLATES_MANIFEST.json"
+            before = {(e["skill"], e["template"]): e["sha256"]
+                      for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
+            self.assertTrue(before)
+            self.assertFalse(any(s == "constellation-commander" for s, _ in before))
+            wb_baseline = (troot / ".baseline" / "constellation-workbench"
+                           / "LESSONS.template.md").read_text(encoding="utf-8")
+
+            # a later install brings a skill whose templates the project never tracked
+            messages = []
+            installer.main(base + ["--skills", "workbench", "commander"],
+                           env={}, cwd=project, out=messages.append)
+            after = {(e["skill"], e["template"]): e["sha256"]
+                     for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
+
+            # new skill's templates are now tracked, with baseline anchors present
+            self.assertIn(("constellation-commander", "COMMANDER_SPINE.template.json"), after)
+            self.assertTrue((troot / ".baseline" / "constellation-commander"
+                             / "COMMANDER_SPINE.template.json").is_file())
+            self.assertTrue(any("new template" in m for m in messages))
+            # the genuinely-new template also gets an editable working copy
+            self.assertTrue((troot / "COMMANDER_SPINE.template.json").is_file())
+            # existing workbench anchors are untouched (same shas, same baseline bytes)
+            for key, sha in before.items():
+                self.assertEqual(after[key], sha)
+            self.assertEqual(
+                wb_baseline,
+                (troot / ".baseline" / "constellation-workbench" / "LESSONS.template.md")
+                .read_text(encoding="utf-8"),
+            )
+
+    def test_reinstall_does_not_backfill_removed_working_copies(self):
+        # The over-seed guard: a project that drops a working copy (choosing to be
+        # a lean consumer of the installed skill) must not have it silently
+        # backfilled on reinstall — a frozen copy would read as false drift and
+        # mask later upstream changes.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            args = ["--agent", "claude", "--scope", "project", "--project", str(project),
+                    "--baseline-only", "--skills", "workbench"]
+            installer.main(args, env={}, cwd=project, out=lambda _l: None)
+            troot = project / ".agent-work" / "templates"
+            lessons_wc = troot / "LESSONS.template.md"
+            self.assertTrue(lessons_wc.is_file())  # fresh install seeded it
+            lessons_wc.unlink()  # project opts out of tracking it locally
+
+            installer.main(args, env={}, cwd=project, out=lambda _l: None)  # reinstall
+            self.assertFalse(lessons_wc.exists())  # not backfilled (already tracked)
 
     def test_user_scope_install_writes_no_baseline(self):
         installer = load_installer()
