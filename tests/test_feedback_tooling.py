@@ -242,6 +242,21 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertEqual(new, {})
         self.assertEqual(open_unresolved, {})
 
+    def test_contentless_section_blocks_are_not_findings(self):
+        # Section-header blocks with no candidate/observed/proposal are export
+        # noise; they must not collide into a bogus "recurring" candidate.
+        root = Path(self.tmp.name) / "noisy"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback Export\n\n"
+            "## 2026-06-15 | epic-453 follow-ups (#471/#472)\n\n"
+            "some prose with no finding fields\n\n"
+            "## 2026-06-15 | epic-453 — background-work failure modes\n\n"
+            "more prose, still no fields\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(self.m.collect([root]), ({}, {}))
+
     def test_template_placeholder_entries_skipped(self):
         root = Path(self.tmp.name) / "fresh"
         (root / ".agent-work").mkdir(parents=True)
@@ -251,6 +266,159 @@ class CollectFeedbackTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertEqual(self.m.collect([root]), ({}, {}))
+
+
+class InboxFilingTests(unittest.TestCase):
+    """The human-gated issue-filing inbox: dry-run by default, --confirm to file,
+    recurring-only by default, idempotent via a local ledger."""
+
+    def setUp(self):
+        self.m = load("collect_feedback")
+        self.tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self.tmp.name)
+        # The ledger lives in the skills repo's (gitignored) .agent-work, not in
+        # any consuming project — one issue per finding across all projects.
+        self.inbox = self.base / "skills-repo" / ".agent-work" / "CONSTELLATION_INBOX.json"
+        self.roots = []
+        # alpha & beta share the recurring cp1252 candidate (2 occurrences)
+        for name in ("alpha", "beta"):
+            self._write_project(name, FEEDBACK_ENTRY.format(project=name))
+        # gamma carries a distinct single-project candidate (1 occurrence)
+        self._write_project(
+            "gamma",
+            "# Constellation Feedback Export\n\n"
+            "## 2026-06-12 — gamma — issue-7\n\n"
+            "- **Candidate:** `gamma-only-flaky-thing`\n"
+            "- **Observed:** `only gamma ever hit this`\n"
+            "- **Proposal:** `do the gamma fix`\n",
+        )
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write_project(self, name, body):
+        root = self.base / name
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(body, encoding="utf-8")
+        self.roots.append(root)
+
+    def _merged(self):
+        return self.m.merge_hits(*self.m.collect(self.roots))
+
+    def _fake_filer(self):
+        calls = []
+
+        def filer(spec, *, repo=None):
+            calls.append(spec)
+            n = 40 + len(calls)
+            return {"number": str(n), "url": f"https://github.com/x/y/issues/{n}"}
+
+        filer.calls = calls
+        return filer
+
+    def test_dry_run_files_nothing(self):
+        filer = self._fake_filer()
+        result = self.m.file_issues(
+            self._merged(), inbox_path=self.inbox, filer=filer, confirm=False
+        )
+        self.assertEqual(result["filed"], [])
+        # only the recurring candidate is eligible; gamma single is excluded
+        self.assertEqual(len(result["would_file"]), 1)
+        self.assertEqual(filer.calls, [])  # nothing actually filed
+        self.assertFalse(self.inbox.exists())  # ledger untouched
+
+    def test_confirm_files_recurring_only(self):
+        filer = self._fake_filer()
+        result = self.m.file_issues(
+            self._merged(), inbox_path=self.inbox, filer=filer, confirm=True
+        )
+        self.assertEqual(len(result["filed"]), 1)
+        self.assertEqual(len(filer.calls), 1)
+        self.assertIn("engine-current-crash-cp1252", filer.calls[0]["title"])
+        ledger = json.loads(self.inbox.read_text(encoding="utf-8"))
+        (_, rec), = ledger["filed"].items()
+        self.assertEqual(rec["issue"], "41")
+        self.assertEqual(rec["occurrences"], 2)
+        self.assertEqual(rec["projects"], ["alpha", "beta"])
+
+    def test_idempotent_no_double_file(self):
+        filer = self._fake_filer()
+        self.m.file_issues(self._merged(), inbox_path=self.inbox, filer=filer, confirm=True)
+        again = self.m.file_issues(
+            self._merged(), inbox_path=self.inbox, filer=filer, confirm=True
+        )
+        self.assertEqual(again["filed"], [])
+        self.assertEqual(len(filer.calls), 1)  # only one create call, ever
+
+    def test_include_singles_widens(self):
+        filer = self._fake_filer()
+        result = self.m.file_issues(
+            self._merged(), inbox_path=self.inbox, filer=filer, confirm=True,
+            include_singles=True,
+        )
+        self.assertEqual(
+            sorted(s["candidate"] for s in result["filed"]),
+            ["engine-current-crash-cp1252", "gamma-only-flaky-thing"],
+        )
+
+    def test_issue_spec_carries_substance(self):
+        merged = self._merged()
+        fp = next(f for f, hits in merged.items() if len(hits) >= self.m.RECURRENCE_THRESHOLD)
+        spec = self.m.issue_spec(fp, merged[fp])
+        self.assertIn("engine-current-crash-cp1252", spec["title"])
+        self.assertIn("engine current crashes on cp1252", spec["body"])  # observed
+        self.assertIn("set utf-8 io encoding", spec["body"])  # proposal
+        self.assertIn("alpha", spec["body"])  # project list
+        self.assertIn(fp, spec["body"])  # fingerprint
+
+    def test_issue_spec_title_degrades_without_slug(self):
+        # No candidate slug -> title falls back to a trimmed observed snippet, not
+        # the bare fingerprint, so the backlog item stays scannable.
+        hits = [("solo", {"observed": "engine deadlocks when two crews share a worktree lease"})]
+        spec = self.m.issue_spec("deadbeef0000", hits)
+        self.assertIn("engine deadlocks", spec["title"])
+        self.assertNotIn("deadbeef0000", spec["title"])
+        # but the ledger identity still falls back to the fingerprint
+        self.assertEqual(spec["candidate"], "deadbeef0000")
+
+    def test_partial_failure_keeps_earlier_filed(self):
+        calls = []
+
+        def flaky(spec, *, repo=None):
+            calls.append(spec)
+            if len(calls) == 2:
+                raise RuntimeError("gh blew up")
+            return {"number": "50", "url": "u"}
+
+        with self.assertRaises(RuntimeError):
+            self.m.file_issues(
+                self._merged(), inbox_path=self.inbox, filer=flaky, confirm=True,
+                include_singles=True,
+            )
+        ledger = json.loads(self.inbox.read_text(encoding="utf-8"))
+        self.assertEqual(len(ledger["filed"]), 1)  # first survived the crash
+
+    def test_cli_dry_run_is_default_and_safe(self):
+        def boom(spec, *, repo=None):
+            raise AssertionError("dry run must never file")
+
+        rc = self.m.main(
+            ["--file-issues", "--inbox", str(self.inbox)] + [str(r) for r in self.roots],
+            filer=boom,
+        )
+        self.assertEqual(rc, 0)
+        self.assertFalse(self.inbox.exists())
+
+    def test_cli_confirm_files_via_injected_filer(self):
+        filer = self._fake_filer()
+        rc = self.m.main(
+            ["--file-issues", "--confirm", "--inbox", str(self.inbox)]
+            + [str(r) for r in self.roots],
+            filer=filer,
+        )
+        self.assertEqual(rc, 0)
+        self.assertEqual(len(filer.calls), 1)  # recurring only by default
+        self.assertTrue(self.inbox.exists())
 
 
 class FreshnessPathTokenTests(unittest.TestCase):
