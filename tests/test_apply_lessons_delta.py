@@ -176,6 +176,85 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
         self.run_delta({"work_id": "issue-2", "ops": [add_op()]}, expect_rc=1)
 
+    def _confirm(self, lesson_id, work_id, grounding="it recurred again"):
+        self.run_delta(
+            {"work_id": work_id, "ops": [{"op": "confirm", "id": lesson_id, "grounding": grounding}]}
+        )
+
+    def test_constellation_confirm_is_debt_not_trust(self):
+        self.run_delta(
+            {"work_id": "issue-1", "ops": [add_op("run-crew-cli-misfit", scope="constellation")]}
+        )
+        self._confirm("run-crew-cli-misfit", "issue-2")
+        lesson = self.m.load_playbook(self.file).active[0]
+        # trust counter stays 0; debt counter accrues; status flags debt
+        self.assertEqual(lesson.confirmed, 0)
+        self.assertEqual(lesson.recurrences, 1)
+        self.assertEqual(lesson.status, "recurrence-debt")
+        # still counts as a mention and resets dormancy (debt stays visible)
+        self.assertEqual(lesson.mentions, 2)
+        self.assertEqual(lesson.runs_since_confirmed, 0)
+        self.assertTrue(any("constellation debt" in h for h in lesson.history))
+
+    def test_constellation_recurrence_accrues_more_debt(self):
+        self.run_delta(
+            {"work_id": "issue-1", "ops": [add_op("spine-lease-stale", scope="constellation")]}
+        )
+        self._confirm("spine-lease-stale", "issue-2")
+        self._confirm("spine-lease-stale", "issue-3")
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.recurrences, 2)
+        self.assertEqual(lesson.confirmed, 0)
+
+    def test_non_constellation_confirm_unchanged(self):
+        # the split must not leak: a project-scoped lesson confirms as trust
+        self.run_delta({"work_id": "issue-1", "ops": [add_op("project-thing", scope="project")]})
+        self._confirm("project-thing", "issue-2")
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.confirmed, 1)
+        self.assertEqual(lesson.recurrences, 0)
+        self.assertEqual(lesson.status, "active")
+
+    def test_recurrence_debt_renders_and_round_trips(self):
+        self.run_delta(
+            {"work_id": "issue-1", "ops": [add_op("engine-quirk", scope="constellation")]}
+        )
+        self._confirm("engine-quirk", "issue-2")
+        text = self.file.read_text(encoding="utf-8")
+        self.assertIn("- recurrences: 1", text)
+        self.assertIn("- status: recurrence-debt", text)
+        # round-trips: reload then rerender preserves the debt counter and status
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.active[0].recurrences, 1)
+        self.assertIn("- recurrences: 1", self.m.render_playbook(book))
+
+    def test_constellation_confirm_revives_dormant_as_debt(self):
+        self.run_delta(
+            {"work_id": "issue-1", "ops": [add_op("crew-survey-state", scope="constellation")]}
+        )
+        self.run_delta(
+            {"work_id": "issue-2", "ops": [{"op": "retire", "id": "crew-survey-state", "reason": "test"}]}
+        )
+        self._confirm("crew-survey-state", "issue-3")
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.dormant, [])
+        lesson = book.active[0]
+        self.assertEqual(lesson.recurrences, 1)
+        self.assertEqual(lesson.status, "recurrence-debt")
+
+    def test_constellation_debt_paid_by_retire(self):
+        self.run_delta(
+            {"work_id": "issue-1", "ops": [add_op("fixed-upstream", scope="constellation")]}
+        )
+        self._confirm("fixed-upstream", "issue-2")
+        self.run_delta(
+            {"work_id": "issue-3",
+             "ops": [{"op": "retire", "id": "fixed-upstream", "reason": "fixed upstream in PR #99"}]}
+        )
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.active, [])
+        self.assertIn("fixed-upstream", [l.lesson_id for l in book.dormant])
+
     def test_rejects_noop_delta(self):
         self.run_delta({"work_id": "issue-1", "ops": []}, expect_rc=1)
 

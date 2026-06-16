@@ -53,6 +53,7 @@ class Lesson:
     mentions: int = 1
     confirmed: int = 0
     disconfirmed: int = 0
+    recurrences: int = 0
     status: str = "active"
     added: str = ""
     last_confirmed: str = "none"
@@ -70,6 +71,12 @@ class Lesson:
             f"- mentions: {self.mentions}",
             f"- confirmed: {self.confirmed}",
             f"- disconfirmed: {self.disconfirmed}",
+        ]
+        # Debt counter is rendered only when it has accrued, so non-constellation
+        # lessons stay clean and round-trip identically (parse defaults it to 0).
+        if self.recurrences:
+            lines.append(f"- recurrences: {self.recurrences}")
+        lines += [
             f"- status: {self.status}",
             f"- added: {self.added}",
             f"- last-confirmed: {self.last_confirmed}",
@@ -107,7 +114,13 @@ def _default_preamble() -> str:
         "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 -->\n\n"
         "Curated, bounded workflow lessons. Read the Active section at the Commander\n"
         "context step. Never edit by hand or by LLM: apply structured deltas via\n"
-        "apply_lessons_delta.py, which enforces cap, grounding, and counter rules.\n"
+        "apply_lessons_delta.py, which enforces cap, grounding, and counter rules.\n\n"
+        "Counter semantics split by scope: for most scopes a confirm is trust\n"
+        "(the lesson held again). For a constellation-scoped lesson it is the\n"
+        "opposite — a recurrence of an unfixed shared-machinery defect, so it\n"
+        "accrues recurrences (debt) and flags recurrence-debt. Pay the debt by\n"
+        "exporting to CONSTELLATION_FEEDBACK and fixing upstream, then retire it;\n"
+        "do not keep confirming it into a permanent workaround.\n"
     )
 
 
@@ -136,6 +149,7 @@ def parse_lessons(block: str) -> list[Lesson]:
                 mentions=int(current.get("mentions", "1")),
                 confirmed=int(current.get("confirmed", "0")),
                 disconfirmed=int(current.get("disconfirmed", "0")),
+                recurrences=int(current.get("recurrences", "0")),
                 status=current.get("status", "active"),
                 added=current.get("added", ""),
                 last_confirmed=current.get("last-confirmed", "none"),
@@ -324,14 +338,32 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                 lesson.retired = ""
                 book.active.append(lesson)
                 log.append(f"revived lesson:{lesson_id} from dormant")
-            lesson.confirmed += 1
             lesson.mentions += 1
             lesson.last_confirmed = stamp
             lesson.runs_since_confirmed = 0
-            lesson.history.append(f"confirmed {stamp} — {op['grounding']}")
-            if lesson.status == "charter-review" and lesson.confirmed > lesson.disconfirmed:
-                lesson.status = "active"
-            log.append(f"confirmed lesson:{lesson_id} (now {lesson.confirmed})")
+            if lesson.scope == "constellation":
+                # Counter-semantics split. A constellation-scoped lesson is about
+                # the shared skills/templates/engine — so a recurrence is the
+                # defect biting AGAIN, still unfixed. That is debt, not validated
+                # trust. It accrues `recurrences` (debt), never `confirmed`
+                # (trust), and flags recurrence-debt so the signal is "export to
+                # CONSTELLATION_FEEDBACK and fix upstream," not "this is confirmed."
+                lesson.recurrences += 1
+                lesson.status = "recurrence-debt"
+                lesson.history.append(
+                    f"recurred {stamp} (constellation debt, not trust) — {op['grounding']}"
+                )
+                log.append(
+                    f"recurrence-debt lesson:{lesson_id} (now {lesson.recurrences} unfixed "
+                    "recurrence(s)) — export to CONSTELLATION_FEEDBACK and fix upstream; "
+                    "confirming a constellation defect logs debt, not trust"
+                )
+            else:
+                lesson.confirmed += 1
+                lesson.history.append(f"confirmed {stamp} — {op['grounding']}")
+                if lesson.status == "charter-review" and lesson.confirmed > lesson.disconfirmed:
+                    lesson.status = "active"
+                log.append(f"confirmed lesson:{lesson_id} (now {lesson.confirmed})")
         elif kind == "disconfirm":
             lesson.disconfirmed += 1
             lesson.mentions += 1
@@ -402,6 +434,13 @@ def main(argv: list[str] | None = None) -> int:
         f"playbook: {len(book.active)} active / {len(book.dormant)} dormant "
         f"(cap {book.cap}, run {book.run_tick})"
     )
+    debt = [l for l in book.active if l.scope == "constellation" and l.recurrences > 0]
+    if debt:
+        total = sum(l.recurrences for l in debt)
+        print(
+            f"recurrence-debt: {len(debt)} constellation lesson(s), {total} unfixed "
+            "recurrence(s) — fix upstream, don't keep confirming"
+        )
     return 0
 
 
