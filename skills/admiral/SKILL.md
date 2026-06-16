@@ -41,6 +41,7 @@ Operating doctrine, learned from field fleets:
 - Status to the user per the contract: default stop-and-present at wave checkpoints; run ahead only when cleared.
 - Merge green, reviewed PRs sequentially; **gate merges on check exit codes, never chain** a merge after a watch command. Verify main before each wave dispatch. Hold rebases to wave boundaries; if ground shifts under a running Commander, stop-and-relaunch on fresh ground rather than steering mid-flight.
 - A Commander that dies or stalls: inspect its worktree (commits, workbench state, orphan processes) before acting; relaunch a continuation into the same worktree resuming from its engine state — don't restart from zero. Log every incident and recovery.
+- **Surviving long detached compute is platform doctrine, not project lore** — the three kill vectors, watcher-sleep, the "completed"-but-sleeping hazard, detach + state-note-first, and the recovery drill live in `references/fleet-doctrine.md`. Carry its launch-execution rules into every launch order and follow its recovery drill when a ship dies; keep `.agent-work/LESSONS.md` for genuinely project-specific fleet rules rather than relearning the platform doctrine there.
 - The project's playbook (`.agent-work/LESSONS.md` Active section) and platform invariants ride in every launch order's inherited-context block.
 
 ## Closeout (second bookend — the improvement engine)
@@ -53,4 +54,4 @@ The run cannot close with unrouted observations. Engine-enforced:
 4. Repo hygiene: branches merged or dispositioned, worktrees swept, ADMIRAL_LOG archived to main under `.agent-work/archive/`.
 5. Present the epic summary; user acceptance closes the run.
 
-Templates: `templates/ADMIRAL_SPINE.template.json`, `templates/LATITUDE_CONTRACT.template.md`, `templates/LAUNCH_ORDER.template.md`, `templates/ADMIRAL_LOG.template.md`. Engine: workbench `references/checklist-engine.md`.
+Templates: `templates/ADMIRAL_SPINE.template.json`, `templates/LATITUDE_CONTRACT.template.md`, `templates/LAUNCH_ORDER.template.md`, `templates/ADMIRAL_LOG.template.md`. References: `references/fleet-doctrine.md` (platform/harness survival doctrine). Engine: workbench `references/checklist-engine.md`.
