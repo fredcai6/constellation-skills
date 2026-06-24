@@ -48,6 +48,47 @@ from pathlib import Path
 
 ENTRY_HEADING_RE = re.compile(r"^## .+$", re.MULTILINE)
 FIELD_RE = re.compile(r"^- \*\*(.+?):\*\*\s*`?(.*?)`?\s*$")
+PROSE_HEADING_RE = re.compile(r"^### (.+)$", re.MULTILINE)
+# Inline bold field label, e.g. **Observed:** / **Upstream fix:** — value runs to
+# the next such label or end of the sub-block.
+INLINE_FIELD_RE = re.compile(r"\*\*([A-Z][A-Za-z /]+?):\*\*\s*")
+
+# Map a prose field label (lowercased) to the canonical finding key.
+_PROSE_LABELS = {
+    "observed": "observed",
+    "upstream fix": "proposal",
+    "proposal": "proposal",
+    "lesson": "lesson",
+    "impact": "cost",
+    "cost": "cost",
+    "grounding": "grounding",
+    "confidence": "confidence",
+}
+
+
+def _map_prose_label(label: str) -> str | None:
+    if label.startswith("recommended"):
+        return "proposal"
+    return _PROSE_LABELS.get(label)
+
+
+def _extract_inline_fields(body: str) -> tuple[dict[str, str], str]:
+    """Pull `**Label:** value` spans out of a prose sub-block.
+
+    Returns (fields, leading_prose) where leading_prose is the text before the
+    first label (used as `observed` when no explicit **Observed:** is present).
+    """
+    matches = list(INLINE_FIELD_RE.finditer(body))
+    if not matches:
+        return {}, body.strip()
+    fields: dict[str, str] = {}
+    for i, m in enumerate(matches):
+        label = m.group(1).strip().lower()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(body)
+        value = body[m.end() : end].strip().strip(".").strip()
+        if label not in fields:
+            fields[label] = value
+    return fields, body[: matches[0].start()].strip()
 SIDECAR_NAME = "CONSTELLATION_FEEDBACK.collected.json"
 INBOX_NAME = "CONSTELLATION_INBOX.json"
 
@@ -87,6 +128,38 @@ def parse_entries(text: str) -> list[dict[str, str]]:
     return entries
 
 
+def parse_prose_findings(text: str) -> list[dict[str, str]]:
+    """Parse the legacy prose export shape into finding dicts.
+
+    A finding is a `### <label>` sub-heading under a `## <epic>` block. The label
+    (minus a leading `Lesson:` prefix) is the candidate slug; inline `**Field:**`
+    spans and the leading paragraph supply observed/proposal/lesson/etc. The
+    field-format parser (`parse_entries`) ignores these blocks (they carry no
+    `- **Field:**` list lines), so the two parsers never double-count.
+    """
+    findings: list[dict[str, str]] = []
+    blocks = list(ENTRY_HEADING_RE.finditer(text))
+    for i, block_match in enumerate(blocks):
+        block_end = blocks[i + 1].start() if i + 1 < len(blocks) else len(text)
+        block = text[block_match.start() : block_end]
+        subs = list(PROSE_HEADING_RE.finditer(block))
+        for j, sub in enumerate(subs):
+            sub_end = subs[j + 1].start() if j + 1 < len(subs) else len(block)
+            body = block[sub.end() : sub_end]
+            heading = sub.group(1).strip()
+            candidate = re.sub(r"^Lesson:\s*", "", heading)
+            fields, lead = _extract_inline_fields(body)
+            entry: dict[str, str] = {"heading": heading, "candidate": candidate}
+            for label, value in fields.items():
+                key = _map_prose_label(label)
+                if key and value and key not in entry:
+                    entry[key] = value
+            if "observed" not in entry and lead:
+                entry["observed"] = lead
+            findings.append(entry)
+    return findings
+
+
 def _is_finding(entry: dict[str, str]) -> bool:
     """A parsed block is a real finding only if it carries at least one substantive
     field. Section headers and malformed blocks (no candidate, observed, or
@@ -96,9 +169,18 @@ def _is_finding(entry: dict[str, str]) -> bool:
     return any((entry.get(k) or "").strip() for k in ("candidate", "observed", "proposal"))
 
 
+def _is_prose_finding(entry: dict[str, str]) -> bool:
+    """Prose blocks always have a candidate (derived from the heading), so a
+    prose entry is a real finding only if it also carries observed or proposal.
+    """
+    return any((entry.get(k) or "").strip() for k in ("observed", "proposal"))
+
+
 def iter_findings(text: str) -> list[dict[str, str]]:
-    """Parsed entries that are actually findings (content-less blocks dropped)."""
-    return [e for e in parse_entries(text) if _is_finding(e)]
+    """Findings in either export shape (content-less blocks dropped)."""
+    field = [e for e in parse_entries(text) if _is_finding(e)]
+    prose = [e for e in parse_prose_findings(text) if _is_prose_finding(e)]
+    return field + prose
 
 
 def _hash12(basis: str) -> str:

@@ -312,6 +312,72 @@ class CollectFeedbackTests(unittest.TestCase):
         )
         self.assertEqual(self.m.collect([root]), ({}, {}))
 
+    def test_prose_finding_surfaced_network_elo_shape(self):
+        # `### Lesson: <slug>  (confidence: x)` heading + standalone **Field:** lines
+        root = Path(self.tmp.name) / "elo"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback\n\n"
+            "## 2026-06-20 — from `wc2026-pipeline`\n\n"
+            "### Lesson: worktree-isolation-not-real-on-windows  (confidence: high)\n"
+            "**Observed:** isolation worktree did not create per-agent dirs on Windows.\n"
+            "**Recommended platform guidance:** verify isolation before parallel dispatch.\n",
+            encoding="utf-8",
+        )
+        new, open_unresolved = self.m.collect([root])
+        self.assertEqual(len(new), 1)
+        first = next(iter(new.values()))[0][1]
+        self.assertEqual(first["candidate"], "worktree-isolation-not-real-on-windows  (confidence: high)")
+        self.assertIn("did not create per-agent dirs", first["observed"])
+        self.assertIn("verify isolation", first["proposal"])
+
+    def test_prose_finding_fingerprints_on_inline_lesson_id(self):
+        # story_time shape: `### <slug> (scope)` + inline **Lesson:** id + **Upstream fix:**
+        root = Path(self.tmp.name) / "story"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback\n\n"
+            "## epic-1 (story_time, 2026-06-22)\n\n"
+            "### worktree-isolation-not-guaranteed (constellation)\n"
+            "Agent-tool isolation did not create separate dirs and subagents collided. "
+            "**Upstream fix:** make Agent worktree isolation real. "
+            "**Lesson:** worktree-isolation-not-guaranteed.\n",
+            encoding="utf-8",
+        )
+        new, _ = self.m.collect([root])
+        self.assertEqual(len(new), 1)
+        fp = next(iter(new))
+        self.assertEqual(fp, self.m._hash12("lesson:worktree-isolation-not-guaranteed"))
+        first = next(iter(new.values()))[0][1]
+        self.assertIn("subagents collided", first["observed"])
+        self.assertIn("make Agent worktree isolation real", first["proposal"])
+
+    def test_prose_contentless_subblock_not_a_finding(self):
+        root = Path(self.tmp.name) / "empty"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback\n\n"
+            "## Template-delta recommendations\n\n"
+            "### just a heading with no fields and no prose body\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(self.m.collect([root]), ({}, {}))
+
+    def test_field_and_prose_not_double_counted(self):
+        # A file mixing a field-format block and a prose block yields exactly 2.
+        root = Path(self.tmp.name) / "mixed"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            FEEDBACK_ENTRY.format(project="mixed")
+            + "\n## epic-2 (mixed, 2026-06-23)\n\n"
+            "### powershell-heredoc-use-here-string (constellation)\n"
+            "PR bodies fail with heredoc. **Upstream fix:** prescribe gh pr create -F file. "
+            "**Lesson:** powershell-heredoc-use-here-string.\n",
+            encoding="utf-8",
+        )
+        new, _ = self.m.collect([root])
+        self.assertEqual(len(new), 2)
+
 
 class InboxFilingTests(unittest.TestCase):
     """The human-gated issue-filing inbox: dry-run by default, --confirm to file,
