@@ -90,6 +90,8 @@ def _extract_inline_fields(body: str) -> tuple[dict[str, str], str]:
         if label not in fields:
             fields[label] = value
     return fields, body[: matches[0].start()].strip()
+
+
 SIDECAR_NAME = "CONSTELLATION_FEEDBACK.collected.json"
 INBOX_NAME = "CONSTELLATION_INBOX.json"
 

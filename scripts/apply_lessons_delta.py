@@ -58,7 +58,7 @@ class Lesson:
     added: str = ""
     last_confirmed: str = "none"
     runs_since_confirmed: int = 0
-    retired: str = ""
+    retired: str = ""  # parse-only back-compat: legacy files carry this; the engine never sets it
     history: list[str] = field(default_factory=list)
 
     def render(self) -> str:

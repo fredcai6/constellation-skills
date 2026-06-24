@@ -137,7 +137,6 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         book = self.m.load_playbook(self.file)
         self.assertEqual([l.lesson_id for l in book.active], ["handoff-diff-command"])
 
-
     def test_amend_updates_fields_preserving_counters(self):
         self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
         self.run_delta(
