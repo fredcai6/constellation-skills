@@ -96,15 +96,11 @@ class Playbook:
     dormancy_runs: int
     preamble: str
     active: list[Lesson]
-    dormant: list[Lesson]
 
-    def find(self, lesson_id: str) -> tuple[Lesson, str] | None:
+    def find(self, lesson_id: str) -> Lesson | None:
         for lesson in self.active:
             if lesson.lesson_id == lesson_id:
-                return lesson, "active"
-        for lesson in self.dormant:
-            if lesson.lesson_id == lesson_id:
-                return lesson, "dormant"
+                return lesson
         return None
 
 
@@ -183,7 +179,7 @@ def parse_lessons(block: str) -> list[Lesson]:
 
 def load_playbook(path: Path) -> Playbook:
     if not path.exists():
-        text = _default_preamble() + "\n## Active\n\n## Dormant\n"
+        text = _default_preamble() + "\n## Active\n"
     else:
         text = path.read_text(encoding="utf-8")
 
@@ -193,13 +189,17 @@ def load_playbook(path: Path) -> Playbook:
     run_tick, cap, dormancy = (int(state.group(i)) for i in (1, 2, 3))
 
     active_idx = text.find("\n## Active")
+    if active_idx == -1:
+        raise LessonsDeltaError(f"playbook missing '## Active' section: {path}")
     dormant_idx = text.find("\n## Dormant")
-    if active_idx == -1 or dormant_idx == -1 or dormant_idx < active_idx:
-        raise LessonsDeltaError(f"playbook missing '## Active'/'## Dormant' sections: {path}")
 
     preamble = text[:active_idx].rstrip("\n")
-    active_block = text[active_idx + len("\n## Active") : dormant_idx]
-    dormant_block = text[dormant_idx + len("\n## Dormant") :]
+    if dormant_idx != -1 and dormant_idx > active_idx:
+        # Legacy file: parse the Active slice up to the graveyard, discard the
+        # graveyard entirely (it is GC'd on the next render).
+        active_block = text[active_idx + len("\n## Active") : dormant_idx]
+    else:
+        active_block = text[active_idx + len("\n## Active") :]
 
     return Playbook(
         run_tick=run_tick,
@@ -207,7 +207,6 @@ def load_playbook(path: Path) -> Playbook:
         dormancy_runs=dormancy,
         preamble=preamble,
         active=parse_lessons(active_block),
-        dormant=parse_lessons(dormant_block),
     )
 
 
@@ -219,10 +218,6 @@ def render_playbook(book: Playbook) -> str:
     )
     parts = [preamble, "", "## Active", ""]
     for lesson in book.active:
-        parts.append(lesson.render())
-        parts.append("")
-    parts.extend(["## Dormant", ""])
-    for lesson in book.dormant:
         parts.append(lesson.render())
         parts.append("")
     return "\n".join(parts).rstrip("\n") + "\n"
@@ -290,11 +285,11 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
 
     for op in ordered:
         kind, lesson_id = op["op"], op["id"]
-        found = book.find(lesson_id)
+        lesson = book.find(lesson_id)
 
         if kind == "add":
-            if found:
-                raise LessonsDeltaError(f"add {lesson_id}: id already exists ({found[1]})")
+            if lesson:
+                raise LessonsDeltaError(f"add {lesson_id}: id already exists")
             if len(book.active) >= book.cap:
                 raise LessonsDeltaError(
                     f"add {lesson_id}: active cap {book.cap} reached — retire before adding"
@@ -312,9 +307,8 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             log.append(f"added lesson:{lesson_id}")
             continue
 
-        if not found:
+        if not lesson:
             raise LessonsDeltaError(f"{kind} {lesson_id}: no such lesson")
-        lesson, section = found
 
         if kind == "amend":
             old_statement = lesson.statement
@@ -329,25 +323,10 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             continue
 
         if kind == "confirm":
-            if section == "dormant":
-                if len(book.active) >= book.cap:
-                    raise LessonsDeltaError(
-                        f"confirm {lesson_id}: cannot revive, active cap {book.cap} reached"
-                    )
-                book.dormant.remove(lesson)
-                lesson.retired = ""
-                book.active.append(lesson)
-                log.append(f"revived lesson:{lesson_id} from dormant")
             lesson.mentions += 1
             lesson.last_confirmed = stamp
             lesson.runs_since_confirmed = 0
             if lesson.scope == "constellation":
-                # Counter-semantics split. A constellation-scoped lesson is about
-                # the shared skills/templates/engine — so a recurrence is the
-                # defect biting AGAIN, still unfixed. That is debt, not validated
-                # trust. It accrues `recurrences` (debt), never `confirmed`
-                # (trust), and flags recurrence-debt so the signal is "export to
-                # CONSTELLATION_FEEDBACK and fix upstream," not "this is confirmed."
                 lesson.recurrences += 1
                 lesson.status = "recurrence-debt"
                 lesson.history.append(
@@ -380,25 +359,26 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             lesson.mentions += 1
             log.append(f"mentioned lesson:{lesson_id} (now {lesson.mentions})")
         elif kind == "retire":
-            if section == "dormant":
-                raise LessonsDeltaError(f"retire {lesson_id}: already dormant")
             book.active.remove(lesson)
-            lesson.retired = f"{stamp} — {op['reason']}"
-            book.dormant.append(lesson)
-            log.append(f"retired lesson:{lesson_id}")
+            log.append(f"deleted lesson:{lesson_id} — {op['reason']}")
 
     if tick:
         book.run_tick += 1
-        demoted: list[Lesson] = []
+        expired: list[Lesson] = []
         for lesson in book.active:
             lesson.runs_since_confirmed += 1
+            # Constellation lessons are pinned: shared-machinery debt persists until
+            # fixed upstream and retired by hand — never silently auto-deleted.
+            if lesson.scope == "constellation":
+                continue
             if lesson.runs_since_confirmed > book.dormancy_runs:
-                demoted.append(lesson)
-        for lesson in demoted:
+                expired.append(lesson)
+        for lesson in expired:
             book.active.remove(lesson)
-            lesson.retired = f"{stamp} — auto-dormant: unconfirmed for {book.dormancy_runs} runs"
-            book.dormant.append(lesson)
-            log.append(f"auto-demoted lesson:{lesson.lesson_id} to dormant")
+            log.append(
+                f"auto-deleted lesson:{lesson.lesson_id} "
+                f"(unconfirmed for {book.dormancy_runs} runs)"
+            )
         log.append(f"tick -> run {book.run_tick}")
 
     return log
@@ -431,8 +411,7 @@ def main(argv: list[str] | None = None) -> int:
     for line in log:
         print(line)
     print(
-        f"playbook: {len(book.active)} active / {len(book.dormant)} dormant "
-        f"(cap {book.cap}, run {book.run_tick})"
+        f"playbook: {len(book.active)} active (cap {book.cap}, run {book.run_tick})"
     )
     debt = [l for l in book.active if l.scope == "constellation" and l.recurrences > 0]
     if debt:

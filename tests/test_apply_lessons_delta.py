@@ -99,7 +99,7 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         ops = [add_op(f"lesson-{i}") for i in range(20)]
         self.run_delta({"work_id": "seed", "ops": ops})
         self.run_delta({"work_id": "over", "ops": [add_op("lesson-21")]}, expect_rc=1)
-        # retire-before-add in one delta succeeds
+        # retire-before-add in one delta succeeds; the retired lesson is GONE (deleted)
         self.run_delta(
             {
                 "work_id": "swap",
@@ -110,33 +110,32 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
             }
         )
         book = self.m.load_playbook(self.file)
+        ids = [l.lesson_id for l in book.active]
         self.assertEqual(len(book.active), 20)
-        self.assertIn("lesson-0", [l.lesson_id for l in book.dormant])
+        self.assertNotIn("lesson-0", ids)        # deleted, not parked
+        self.assertIn("lesson-21", ids)
+        self.assertFalse(hasattr(book, "dormant"))
 
-    def test_tick_auto_demotes_unconfirmed(self):
+    def test_tick_auto_deletes_unconfirmed(self):
         self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
         for i in range(11):
             self.run_delta({"work_id": f"run-{i}", "tick": True})
         book = self.m.load_playbook(self.file)
-        self.assertEqual(book.active, [])
-        self.assertIn("auto-dormant", book.dormant[0].retired)
+        self.assertEqual(book.active, [])        # deleted after dormancy window
+        self.assertNotIn("## Dormant", self.file.read_text(encoding="utf-8"))
 
-    def test_confirm_revives_dormant(self):
+    def test_retire_deletes_and_id_is_reusable(self):
         self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
         self.run_delta(
-            {"work_id": "issue-2", "ops": [{"op": "retire", "id": "handoff-diff-command", "reason": "test"}]}
-        )
-        self.run_delta(
-            {
-                "work_id": "issue-3",
-                "ops": [
-                    {"op": "confirm", "id": "handoff-diff-command", "grounding": "it recurred"}
-                ],
-            }
+            {"work_id": "issue-2",
+             "ops": [{"op": "retire", "id": "handoff-diff-command", "reason": "internalized"}]}
         )
         book = self.m.load_playbook(self.file)
-        self.assertEqual(book.active[0].lesson_id, "handoff-diff-command")
-        self.assertEqual(book.dormant, [])
+        self.assertEqual(book.active, [])
+        # the id is free again — re-adding (relearning) just works, no collision
+        self.run_delta({"work_id": "issue-3", "ops": [add_op()]})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual([l.lesson_id for l in book.active], ["handoff-diff-command"])
 
 
     def test_amend_updates_fields_preserving_counters(self):
@@ -228,19 +227,15 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertEqual(book.active[0].recurrences, 1)
         self.assertIn("- recurrences: 1", self.m.render_playbook(book))
 
-    def test_constellation_confirm_revives_dormant_as_debt(self):
+    def test_constellation_pinned_from_auto_delete(self):
         self.run_delta(
-            {"work_id": "issue-1", "ops": [add_op("crew-survey-state", scope="constellation")]}
+            {"work_id": "issue-1", "ops": [add_op("worktree-isolation", scope="constellation")]}
         )
-        self.run_delta(
-            {"work_id": "issue-2", "ops": [{"op": "retire", "id": "crew-survey-state", "reason": "test"}]}
-        )
-        self._confirm("crew-survey-state", "issue-3")
+        for i in range(12):
+            self.run_delta({"work_id": f"run-{i}", "tick": True})
         book = self.m.load_playbook(self.file)
-        self.assertEqual(book.dormant, [])
-        lesson = book.active[0]
-        self.assertEqual(lesson.recurrences, 1)
-        self.assertEqual(lesson.status, "recurrence-debt")
+        # constellation debt is pinned: unpaid upstream defect is never auto-deleted
+        self.assertEqual([l.lesson_id for l in book.active], ["worktree-isolation"])
 
     def test_constellation_debt_paid_by_retire(self):
         self.run_delta(
@@ -252,8 +247,8 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
              "ops": [{"op": "retire", "id": "fixed-upstream", "reason": "fixed upstream in PR #99"}]}
         )
         book = self.m.load_playbook(self.file)
-        self.assertEqual(book.active, [])
-        self.assertIn("fixed-upstream", [l.lesson_id for l in book.dormant])
+        self.assertEqual(book.active, [])        # deleted once paid
+        self.assertNotIn("fixed-upstream", self.file.read_text(encoding="utf-8"))
 
     def test_rejects_noop_delta(self):
         self.run_delta({"work_id": "issue-1", "ops": []}, expect_rc=1)
@@ -269,6 +264,35 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
             expect_rc=1,
         )
         self.assertEqual(self.file.read_text(encoding="utf-8"), before)
+
+    def test_legacy_dormant_section_discarded_on_load(self):
+        # An existing playbook with a populated ## Dormant section must load (active
+        # preserved) and render WITHOUT the graveyard — GC'd on first write.
+        self.file.write_text(
+            "# Lessons Playbook\n\n"
+            "<!-- playbook-state: run-tick=3 cap=20 dormancy-runs=10 -->\n\n"
+            "## Active\n\n"
+            "### lesson:live-one\n"
+            "- scope: project\n- task-class: general-workflow\n"
+            "- statement: still active\n- grounding: g\n"
+            "- mentions: 1\n- confirmed: 0\n- disconfirmed: 0\n"
+            "- status: active\n- added: 2026-06-01 (x)\n"
+            "- last-confirmed: none\n- runs-since-confirmed: 0\n\n"
+            "## Dormant\n\n"
+            "### lesson:old-ghost\n"
+            "- scope: project\n- task-class: general-workflow\n"
+            "- statement: parked long ago\n- grounding: g\n"
+            "- mentions: 1\n- confirmed: 0\n- disconfirmed: 0\n"
+            "- status: active\n- added: 2026-05-01 (y)\n"
+            "- last-confirmed: none\n- runs-since-confirmed: 99\n"
+            "- retired: 2026-05-02 (y) — auto-dormant\n",
+            encoding="utf-8",
+        )
+        book = self.m.load_playbook(self.file)
+        self.assertEqual([l.lesson_id for l in book.active], ["live-one"])
+        rendered = self.m.render_playbook(book)
+        self.assertNotIn("## Dormant", rendered)
+        self.assertNotIn("old-ghost", rendered)
 
 
 if __name__ == "__main__":
