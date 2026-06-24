@@ -100,6 +100,7 @@ verified inheritance.
   in the child env of any *other* subprocess whose output you capture — cp1252
   pipes corrupt captured output silently.
 - The spine lease goes stale after `lease_stale_seconds` (default 1800s) of no
-  heartbeat; a long crew/compute step lapses it and the next mutating verb is
-  refused. Re-claim with the same session id (idempotent) on resume — treat it
-  as expected, not an error.
+  heartbeat, but staleness gates **non-owners only**: as the lease owner you are
+  never refused for your own staleness — every mutating verb refreshes the lease,
+  so a long crew/compute step or idle gap self-heals on your next verb. A re-claim
+  is only needed to take over a *different* session's lease.
