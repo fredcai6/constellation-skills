@@ -132,7 +132,7 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertEqual(new, {})
         self.assertEqual(len(open_unresolved), 1)
         report = self.m.render_report(new, open_unresolved)
-        self.assertIn("not yet resolved", report)
+        self.assertIn("still open", report)
 
     def test_partial_collection_is_per_entry(self):
         # add a second, different entry to alpha AFTER marking the first collected

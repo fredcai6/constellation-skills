@@ -4,9 +4,10 @@
 Reads `.agent-work/CONSTELLATION_FEEDBACK.md` from each project root and tracks
 per-entry state in a sidecar (`CONSTELLATION_FEEDBACK.collected.json`): entries
 are deduplicated by a semantic fingerprint (normalized observed+proposal text)
-and each fingerprint is independently `collected` (ingested by a sweep) and
-later `resolved` (acted on upstream). Collected-but-unresolved candidates stay
-visible in every report until resolved — collected never means fixed.
+and each fingerprint carries one state: `collected` (ingested by a sweep).
+Consuming repos remove a handled finding from their export rather than marking
+it resolved, so there is no resolved state — collected entries stay visible in
+every report until the consuming repo deletes them.
 
 A finding's identity (fingerprint) is derived, in order of preference, from:
 (1) the originating **lesson id** carried in the export's `Lesson` field — the
@@ -25,14 +26,14 @@ stronger callout.
 Issue management stays human-gated. `--file-issues` syncs a GitHub-issue backlog
 in *this* repo (the design's "opens/updates issues here") and defaults to a dry
 run — it prints what it would do and touches nothing until `--confirm`. The sync
-does three things, all keyed off a local ledger
+does two things, both keyed off a local ledger
 (`.agent-work/CONSTELLATION_INBOX.json`, one entry per finding fingerprint):
 **file** a new issue for each open validated finding not yet filed (recurring
-only by default; `--include-singles` widens); **comment** on a filed issue when
-its recurrence grows past the ledger's watermark, so the backlog reflects live
-pressure not day-one pressure; and **close** a filed issue once its finding is
-resolved in any swept project, so the backlog tracks completion. The ledger makes
-all three idempotent — re-runs never duplicate, re-comment, or re-close.
+only by default; `--include-singles` widens); and **comment** on a filed issue
+when its recurrence grows past the ledger's watermark, so the backlog reflects
+live pressure not day-one pressure. Both actions are idempotent — re-runs never
+duplicate or re-comment. Issues are closed the normal way: a fixing PR references
+the issue and a human closes it.
 """
 
 from __future__ import annotations
@@ -601,7 +602,7 @@ def render_report(new: Hits, open_unresolved: Hits) -> str:
         cross_project,
     )
     _render_group(lines, "New — single-project (scope tag is a claim, verify)", singles)
-    _render_group(lines, "Open — collected earlier, not yet resolved", open_unresolved)
+    _render_group(lines, "Open — collected earlier, still open", open_unresolved)
     return "\n".join(lines) + "\n"
 
 
@@ -675,8 +676,8 @@ def main(
     parser.add_argument(
         "--file-issues",
         action="store_true",
-        help="Sync the issue backlog here: file new findings, comment on grown ones, "
-        "close resolved ones (dry run unless --confirm)",
+        help="Sync the issue backlog here: file new findings and comment on grown ones "
+        "(dry run unless --confirm)",
     )
     parser.add_argument(
         "--confirm", action="store_true", help="With --file-issues, actually open the issues"
