@@ -81,8 +81,11 @@ machinery itself:
     paragraph counts as a finding.
 - `_is_finding()` updated to accept either shape; identity still flows through `fingerprint()`
   (lesson id → candidate slug → content hash), so prose entries that carry a `**Lesson:**`
-  id fingerprint stably and the cross-project `worktree-isolation-not-guaranteed` finally
-  groups across network_elo + story_time.
+  id fingerprint stably. Note this buys **visibility, not auto-grouping**: network_elo named
+  the worktree-isolation finding `…-not-real-on-windows` and story_time `…-not-guaranteed`,
+  with no shared `Lesson:` id — so they surface as two findings, not one. The parser stops
+  them being invisible; cross-repo grouping is what the field-format `Lesson:` id buys going
+  forward (Piece 3), not something the parser can infer.
 - Note in `_render_group`/report that st-cleanroom-e3's export is byte-identical to
   story_time's (a clone) — dedup by project name already collapses it; no special-casing.
 
