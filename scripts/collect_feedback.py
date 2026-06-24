@@ -4,9 +4,10 @@
 Reads `.agent-work/CONSTELLATION_FEEDBACK.md` from each project root and tracks
 per-entry state in a sidecar (`CONSTELLATION_FEEDBACK.collected.json`): entries
 are deduplicated by a semantic fingerprint (normalized observed+proposal text)
-and each fingerprint is independently `collected` (ingested by a sweep) and
-later `resolved` (acted on upstream). Collected-but-unresolved candidates stay
-visible in every report until resolved — collected never means fixed.
+and each fingerprint carries one state: `collected` (ingested by a sweep).
+Consuming repos remove a handled finding from their export rather than marking
+it resolved, so there is no resolved state — collected entries stay visible in
+every report until the consuming repo deletes them.
 
 A finding's identity (fingerprint) is derived, in order of preference, from:
 (1) the originating **lesson id** carried in the export's `Lesson` field — the
@@ -25,14 +26,14 @@ stronger callout.
 Issue management stays human-gated. `--file-issues` syncs a GitHub-issue backlog
 in *this* repo (the design's "opens/updates issues here") and defaults to a dry
 run — it prints what it would do and touches nothing until `--confirm`. The sync
-does three things, all keyed off a local ledger
+does two things, both keyed off a local ledger
 (`.agent-work/CONSTELLATION_INBOX.json`, one entry per finding fingerprint):
 **file** a new issue for each open validated finding not yet filed (recurring
-only by default; `--include-singles` widens); **comment** on a filed issue when
-its recurrence grows past the ledger's watermark, so the backlog reflects live
-pressure not day-one pressure; and **close** a filed issue once its finding is
-resolved in any swept project, so the backlog tracks completion. The ledger makes
-all three idempotent — re-runs never duplicate, re-comment, or re-close.
+only by default; `--include-singles` widens); and **comment** on a filed issue
+when its recurrence grows past the ledger's watermark, so the backlog reflects
+live pressure not day-one pressure. Both actions are idempotent — re-runs never
+duplicate or re-comment. Issues are closed the normal way: a fixing PR references
+the issue and a human closes it.
 """
 
 from __future__ import annotations
@@ -48,6 +49,49 @@ from pathlib import Path
 
 ENTRY_HEADING_RE = re.compile(r"^## .+$", re.MULTILINE)
 FIELD_RE = re.compile(r"^- \*\*(.+?):\*\*\s*`?(.*?)`?\s*$")
+PROSE_HEADING_RE = re.compile(r"^### (.+)$", re.MULTILINE)
+# Inline bold field label, e.g. **Observed:** / **Upstream fix:** — value runs to
+# the next such label or end of the sub-block.
+INLINE_FIELD_RE = re.compile(r"\*\*([A-Z][A-Za-z /]+?):\*\*\s*")
+
+# Map a prose field label (lowercased) to the canonical finding key.
+_PROSE_LABELS = {
+    "observed": "observed",
+    "upstream fix": "proposal",
+    "proposal": "proposal",
+    "lesson": "lesson",
+    "impact": "cost",
+    "cost": "cost",
+    "grounding": "grounding",
+    "confidence": "confidence",
+}
+
+
+def _map_prose_label(label: str) -> str | None:
+    if label.startswith("recommended"):
+        return "proposal"
+    return _PROSE_LABELS.get(label)
+
+
+def _extract_inline_fields(body: str) -> tuple[dict[str, str], str]:
+    """Pull `**Label:** value` spans out of a prose sub-block.
+
+    Returns (fields, leading_prose) where leading_prose is the text before the
+    first label (used as `observed` when no explicit **Observed:** is present).
+    """
+    matches = list(INLINE_FIELD_RE.finditer(body))
+    if not matches:
+        return {}, body.strip()
+    fields: dict[str, str] = {}
+    for i, m in enumerate(matches):
+        label = m.group(1).strip().lower()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(body)
+        value = body[m.end() : end].strip().strip(".").strip()
+        if label not in fields:
+            fields[label] = value
+    return fields, body[: matches[0].start()].strip()
+
+
 SIDECAR_NAME = "CONSTELLATION_FEEDBACK.collected.json"
 INBOX_NAME = "CONSTELLATION_INBOX.json"
 
@@ -87,6 +131,38 @@ def parse_entries(text: str) -> list[dict[str, str]]:
     return entries
 
 
+def parse_prose_findings(text: str) -> list[dict[str, str]]:
+    """Parse the legacy prose export shape into finding dicts.
+
+    A finding is a `### <label>` sub-heading under a `## <epic>` block. The label
+    (minus a leading `Lesson:` prefix) is the candidate slug; inline `**Field:**`
+    spans and the leading paragraph supply observed/proposal/lesson/etc. The
+    field-format parser (`parse_entries`) ignores these blocks (they carry no
+    `- **Field:**` list lines), so the two parsers never double-count.
+    """
+    findings: list[dict[str, str]] = []
+    blocks = list(ENTRY_HEADING_RE.finditer(text))
+    for i, block_match in enumerate(blocks):
+        block_end = blocks[i + 1].start() if i + 1 < len(blocks) else len(text)
+        block = text[block_match.start() : block_end]
+        subs = list(PROSE_HEADING_RE.finditer(block))
+        for j, sub in enumerate(subs):
+            sub_end = subs[j + 1].start() if j + 1 < len(subs) else len(block)
+            body = block[sub.end() : sub_end]
+            heading = sub.group(1).strip()
+            candidate = re.sub(r"^Lesson:\s*", "", heading)
+            fields, lead = _extract_inline_fields(body)
+            entry: dict[str, str] = {"heading": heading, "candidate": candidate}
+            for label, value in fields.items():
+                key = _map_prose_label(label)
+                if key and value and key not in entry:
+                    entry[key] = value
+            if "observed" not in entry and lead:
+                entry["observed"] = lead
+            findings.append(entry)
+    return findings
+
+
 def _is_finding(entry: dict[str, str]) -> bool:
     """A parsed block is a real finding only if it carries at least one substantive
     field. Section headers and malformed blocks (no candidate, observed, or
@@ -96,9 +172,18 @@ def _is_finding(entry: dict[str, str]) -> bool:
     return any((entry.get(k) or "").strip() for k in ("candidate", "observed", "proposal"))
 
 
+def _is_prose_finding(entry: dict[str, str]) -> bool:
+    """Prose blocks always have a candidate (derived from the heading), so a
+    prose entry is a real finding only if it also carries observed or proposal.
+    """
+    return any((entry.get(k) or "").strip() for k in ("observed", "proposal"))
+
+
 def iter_findings(text: str) -> list[dict[str, str]]:
-    """Parsed entries that are actually findings (content-less blocks dropped)."""
-    return [e for e in parse_entries(text) if _is_finding(e)]
+    """Findings in either export shape (content-less blocks dropped)."""
+    field = [e for e in parse_entries(text) if _is_finding(e)]
+    prose = [e for e in parse_prose_findings(text) if _is_prose_finding(e)]
+    return field + prose
 
 
 def _hash12(basis: str) -> str:
@@ -191,7 +276,7 @@ def load_sidecar(root: Path) -> dict:
     path = _sidecar_path(root)
     if path.is_file():
         return json.loads(path.read_text(encoding="utf-8"))
-    return {"collected": {}, "resolved": {}}
+    return {"collected": {}}
 
 
 def save_sidecar(root: Path, state: dict) -> None:
@@ -212,8 +297,6 @@ def collect(project_roots: list[Path]) -> tuple[Hits, Hits]:
         state = load_sidecar(root)
         for entry in iter_findings(feedback.read_text(encoding="utf-8")):
             fp = fingerprint(entry)
-            if _in_sidecar(entry, state["resolved"]):
-                continue
             bucket = open_unresolved if _in_sidecar(entry, state["collected"]) else new
             bucket.setdefault(fp, []).append((root.name, entry))
     return new, open_unresolved
@@ -234,30 +317,6 @@ def mark_collected(root: Path) -> int:
             marked += 1
     save_sidecar(root, state)
     return marked
-
-
-def mark_resolved(root: Path, fp: str, note: str) -> bool:
-    state = load_sidecar(root)
-    if fp in state["resolved"]:
-        return False
-    state["resolved"][fp] = {"date": date.today().isoformat(), "note": note}
-    state["collected"].setdefault(fp, date.today().isoformat())
-    save_sidecar(root, state)
-    return True
-
-
-def resolved_across(project_roots: list[Path]) -> dict[str, str]:
-    """fingerprint -> resolution note, unioned across all swept project sidecars.
-
-    A finding resolved in any project is fixed upstream (the export is the same
-    shared-machinery finding), so the inbox closes its issue.
-    """
-    out: dict[str, str] = {}
-    for root in project_roots:
-        for fp, info in load_sidecar(root).get("resolved", {}).items():
-            note = info.get("note", "") if isinstance(info, dict) else str(info)
-            out.setdefault(fp, note)
-    return out
 
 
 # --- Inbox: human-gated issue filing -------------------------------------------
@@ -357,15 +416,6 @@ def gh_comment_issue(ref: str, body: str, *, repo: str | None = None) -> dict:
     return {}
 
 
-def gh_close_issue(ref: str, comment: str, *, repo: str | None = None) -> dict:
-    """Default closer: close an issue with a comment via `gh`."""
-    cmd = ["gh", "issue", "close", ref, "--comment", comment]
-    if repo:
-        cmd += ["--repo", repo]
-    subprocess.run(cmd, capture_output=True, text=True, check=True)
-    return {}
-
-
 def eligible_for_filing(
     merged: Hits, inbox: dict, *, include_singles: bool
 ) -> list[tuple[str, list[tuple[str, dict[str, str]]]]]:
@@ -412,30 +462,20 @@ def _recurrence_comment(entry: dict, occurrences: int, projects: list[str], hits
 
 def sync_issues(
     merged: Hits,
-    resolved: dict[str, str],
     *,
     inbox_path: Path,
     filer=gh_file_issue,
     commenter=gh_comment_issue,
-    closer=gh_close_issue,
     include_singles: bool = False,
     confirm: bool = False,
     labels=(),
     repo: str | None = None,
 ) -> dict:
-    """Open / update / close the inbox issues for the current sweep. Dry run unless
-    `confirm`. Three lifecycle actions:
-
-    - **file** a new issue for each eligible open finding not yet in the ledger;
-    - **comment** on a filed, still-open issue whose recurrence has grown since it
-      was last recorded (more occurrences or a new project) — the ledger's
-      occurrence/project counts are the watermark, so a comment advances them and
-      re-runs never re-comment the same level;
-    - **close** a filed, still-open issue whose finding is now resolved in any
-      swept project — so the backlog tracks completion, not just first sighting.
-
-    The ledger is saved after each successful action, so a mid-run gh failure
-    leaves prior actions durably recorded.
+    """File new eligible findings and comment on filed issues whose recurrence has
+    grown since the ledger watermark. Dry run unless `confirm`. The ledger is saved
+    after each successful action so a mid-run gh failure leaves prior actions durably
+    recorded. Issues are closed the normal way (a fixing PR references them) — there
+    is no auto-close.
     """
     inbox = load_inbox(inbox_path)
     ledger = inbox.setdefault("filed", {})
@@ -447,8 +487,6 @@ def sync_issues(
 
     to_update = []
     for fp, hits in merged.items():
-        if fp in resolved:
-            continue  # the close path owns a resolved finding
         entry = ledger.get(fp)
         if not entry or not _is_open(entry):
             continue
@@ -459,28 +497,19 @@ def sync_issues(
         if grew:
             to_update.append((fp, entry, occ, projects, hits))
 
-    to_close = []
-    for fp, note in resolved.items():
-        entry = ledger.get(fp)
-        if entry and _is_open(entry):
-            to_close.append((fp, entry, note))
-
     if not confirm:
         return {
             "would_file": to_file,
             "would_update": [
                 {"fingerprint": fp, "ref": _issue_ref(e),
-                 "from": f"{e.get('occurrences', 0)}×/{len(e.get('projects', []))}p",
-                 "to": f"{occ}×/{len(projs)}p"}
+                 "from": f"{e.get('occurrences', 0)}x/{len(e.get('projects', []))}p",
+                 "to": f"{occ}x/{len(projs)}p"}
                 for fp, e, occ, projs, _ in to_update
             ],
-            "would_close": [
-                {"fingerprint": fp, "ref": _issue_ref(e), "note": n} for fp, e, n in to_close
-            ],
-            "filed": [], "updated": [], "closed": [],
+            "filed": [], "updated": [],
         }
 
-    filed, updated, closed = [], [], []
+    filed, updated = [], []
     for spec in to_file:
         ref = filer(spec, repo=repo)
         ledger[spec["fingerprint"]] = {
@@ -503,23 +532,7 @@ def sync_issues(
         save_inbox(inbox_path, inbox)
         updated.append({"fingerprint": fp, "ref": _issue_ref(entry), "occurrences": occ})
 
-    for fp, entry, note in to_close:
-        closer(
-            _issue_ref(entry),
-            f"Resolved upstream: {note}. Auto-closed by collect_feedback "
-            "(finding no longer open in any swept project).",
-            repo=repo,
-        )
-        entry["status"] = "closed"
-        entry["closed_date"] = date.today().isoformat()
-        entry["resolved_note"] = note
-        save_inbox(inbox_path, inbox)
-        closed.append({"fingerprint": fp, "ref": _issue_ref(entry), "note": note})
-
-    return {
-        "would_file": [], "would_update": [], "would_close": [],
-        "filed": filed, "updated": updated, "closed": closed,
-    }
+    return {"would_file": [], "would_update": [], "filed": filed, "updated": updated}
 
 
 def file_issues(
@@ -532,11 +545,9 @@ def file_issues(
     labels=(),
     repo: str | None = None,
 ) -> dict:
-    """Open-only path (file new eligible findings, no update/close). Thin wrapper
-    over `sync_issues` with no resolved set; kept for callers/tests that only want
-    the filing action."""
+    """Thin wrapper over `sync_issues` for callers/tests that only file."""
     return sync_issues(
-        merged, {}, inbox_path=inbox_path, filer=filer,
+        merged, inbox_path=inbox_path, filer=filer,
         include_singles=include_singles, confirm=confirm, labels=labels, repo=repo,
     )
 
@@ -593,23 +604,20 @@ def render_report(new: Hits, open_unresolved: Hits) -> str:
         cross_project,
     )
     _render_group(lines, "New — single-project (scope tag is a claim, verify)", singles)
-    _render_group(lines, "Open — collected earlier, not yet resolved", open_unresolved)
+    _render_group(lines, "Open — collected earlier, still open", open_unresolved)
     return "\n".join(lines) + "\n"
 
 
-def _file_issues_cli(roots, new, open_unresolved, args, filer, commenter, closer) -> int:
-    """Handle the --file-issues mode (file/update/close); returns an exit code."""
+def _file_issues_cli(roots, new, open_unresolved, args, filer, commenter) -> int:
+    """Handle the --file-issues mode (file/comment); returns an exit code."""
     inbox_path = args.inbox or (Path.cwd() / ".agent-work" / INBOX_NAME)
     merged = merge_hits(new, open_unresolved)
-    resolved = resolved_across(roots)
     try:
         result = sync_issues(
             merged,
-            resolved,
             inbox_path=inbox_path,
             filer=filer,
             commenter=commenter,
-            closer=closer,
             include_singles=args.include_singles,
             confirm=args.confirm,
             labels=args.label,
@@ -624,35 +632,31 @@ def _file_issues_cli(roots, new, open_unresolved, args, filer, commenter, closer
         return 1
 
     if not args.confirm:
-        wf, wu, wc = result["would_file"], result["would_update"], result["would_close"]
-        if not (wf or wu or wc):
+        wf, wu = result["would_file"], result["would_update"]
+        if not (wf or wu):
             print(
-                "Inbox up to date: nothing to file, update, or close "
+                "Inbox up to date: nothing to file or update "
                 "(recurring findings only; --include-singles to widen)."
             )
             return 0
-        print(f"DRY RUN — {len(wf)} file, {len(wu)} update, {len(wc)} close; re-run with --confirm:\n")
+        print(f"DRY RUN — {len(wf)} file, {len(wu)} update; re-run with --confirm:\n")
         for spec in wf:
             print(f"  [file]   {spec['title']}")
             print(f"           fingerprint {spec['fingerprint']}, projects: {', '.join(spec['projects'])}")
         for u in wu:
             print(f"  [update] {u['ref']}  {u['from']} -> {u['to']}  ({u['fingerprint']})")
-        for c in wc:
-            print(f"  [close]  {c['ref']}  resolved: {c['note']}  ({c['fingerprint']})")
         return 0
 
-    filed, updated, closed = result["filed"], result["updated"], result["closed"]
-    if not (filed or updated or closed):
-        print("Inbox already up to date (nothing to file, update, or close).")
+    filed, updated = result["filed"], result["updated"]
+    if not (filed or updated):
+        print("Inbox already up to date (nothing to file or update).")
         return 0
     for entry in filed:
         ref = f"#{entry['number']}" if entry.get("number") else entry.get("url", "")
         print(f"filed  {ref}: {entry['title']}")
     for u in updated:
-        print(f"update {u['ref']}: now {u['occurrences']}× ({u['fingerprint']})")
-    for c in closed:
-        print(f"close  {c['ref']}: {c['note']} ({c['fingerprint']})")
-    print(f"\nfiled {len(filed)}, updated {len(updated)}, closed {len(closed)}; ledger: {inbox_path}")
+        print(f"update {u['ref']}: now {u['occurrences']}x ({u['fingerprint']})")
+    print(f"\nfiled {len(filed)}, updated {len(updated)}; ledger: {inbox_path}")
     return 0
 
 
@@ -661,7 +665,6 @@ def main(
     *,
     filer=gh_file_issue,
     commenter=gh_comment_issue,
-    closer=gh_close_issue,
 ) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("projects", nargs="*", type=Path, help="Project roots to sweep")
@@ -673,18 +676,10 @@ def main(
         "--mark", action="store_true", help="Record current entries as collected (per entry)"
     )
     parser.add_argument(
-        "--resolve",
-        metavar="FINGERPRINT",
-        help="Mark one candidate resolved across the given projects",
-    )
-    parser.add_argument(
-        "--note", default="", help="Resolution note for --resolve (e.g. 'fixed in PR #19')"
-    )
-    parser.add_argument(
         "--file-issues",
         action="store_true",
-        help="Sync the issue backlog here: file new findings, comment on grown ones, "
-        "close resolved ones (dry run unless --confirm)",
+        help="Sync the issue backlog here: file new findings and comment on grown ones "
+        "(dry run unless --confirm)",
     )
     parser.add_argument(
         "--confirm", action="store_true", help="With --file-issues, actually open the issues"
@@ -714,18 +709,9 @@ def main(
         print("error: no project roots given (args or --config)", file=sys.stderr)
         return 2
 
-    if args.resolve:
-        if not args.note.strip():
-            print("error: --resolve requires --note (what resolved it)", file=sys.stderr)
-            return 2
-        for root in roots:
-            if mark_resolved(root, args.resolve, args.note.strip()):
-                print(f"resolved {args.resolve} in {root.name}: {args.note.strip()}")
-        return 0
-
     if args.file_issues:
         new, open_unresolved = collect(roots)
-        return _file_issues_cli(roots, new, open_unresolved, args, filer, commenter, closer)
+        return _file_issues_cli(roots, new, open_unresolved, args, filer, commenter)
 
     new, open_unresolved = collect(roots)
     report = render_report(new, open_unresolved)

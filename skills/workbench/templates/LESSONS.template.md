@@ -24,8 +24,12 @@ Rules the apply script enforces:
   Pay the debt by exporting to `CONSTELLATION_FEEDBACK.md` and fixing upstream,
   then retire it — never let a constellation defect get "confirmed" into a
   permanent local workaround.
-- Active lessons unconfirmed for `dormancy-runs` ticks auto-demote to Dormant and
-  stop being injected. Confirming a dormant lesson revives it.
+- `retire` **deletes** a lesson outright — there is no graveyard. Delete a lesson
+  once you believe it's handled (internalized into the workflow, or a
+  constellation defect fixed upstream); worst case it re-surfaces in a later run
+  and you learn it again. Active lessons unconfirmed for `dormancy-runs` ticks are
+  auto-deleted, except `constellation`-scoped debt, which is pinned until you
+  retire it by hand.
 
 Lesson shape (script-owned; shown for readers):
 
@@ -42,5 +46,3 @@ Lesson shape (script-owned; shown for readers):
 ```
 
 ## Active
-
-## Dormant

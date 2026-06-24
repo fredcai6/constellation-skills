@@ -132,18 +132,7 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertEqual(new, {})
         self.assertEqual(len(open_unresolved), 1)
         report = self.m.render_report(new, open_unresolved)
-        self.assertIn("not yet resolved", report)
-
-    def test_resolved_entries_disappear(self):
-        self.m.mark_collected(self.roots[0])
-        (_, open_unresolved) = self.m.collect([self.roots[0]])
-        fp = next(iter(open_unresolved))
-        self.assertTrue(self.m.mark_resolved(self.roots[0], fp, "fixed in PR #19"))
-        new, open_after = self.m.collect([self.roots[0]])
-        self.assertEqual(new, {})
-        self.assertEqual(open_after, {})
-        # resolving twice is a no-op
-        self.assertFalse(self.m.mark_resolved(self.roots[0], fp, "again"))
+        self.assertIn("still open", report)
 
     def test_partial_collection_is_per_entry(self):
         # add a second, different entry to alpha AFTER marking the first collected
@@ -217,31 +206,6 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertIn("recurring", report)
         self.assertIn("occurrences: 2", report)
 
-    def test_legacy_resolved_fingerprint_still_resolves(self):
-        # Backward-compat: an entry whose legacy content-hash is recorded in
-        # `resolved` must still be treated as resolved after the fingerprint
-        # change (which now keys on the candidate slug).
-        entry = self.m.parse_entries(
-            FEEDBACK_ENTRY.format(project="alpha")
-        )[0]
-        legacy_fp = self.m._content_fingerprint(entry)
-        # slug-based fingerprint must differ from the legacy content hash
-        self.assertNotEqual(self.m.fingerprint(entry), legacy_fp)
-
-        sidecar = self.roots[0] / ".agent-work" / "CONSTELLATION_FEEDBACK.collected.json"
-        sidecar.write_text(
-            json.dumps(
-                {
-                    "collected": {legacy_fp: "2026-06-11"},
-                    "resolved": {legacy_fp: {"date": "2026-06-11", "note": "fixed upstream"}},
-                }
-            ),
-            encoding="utf-8",
-        )
-        new, open_unresolved = self.m.collect([self.roots[0]])
-        self.assertEqual(new, {})
-        self.assertEqual(open_unresolved, {})
-
     def test_lesson_id_groups_across_slug_drift(self):
         # Same originating lesson id, three drifted candidate slugs (the real
         # spine-lease case): they must share ONE fingerprint and count as 3.
@@ -311,6 +275,72 @@ class CollectFeedbackTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertEqual(self.m.collect([root]), ({}, {}))
+
+    def test_prose_finding_surfaced_network_elo_shape(self):
+        # `### Lesson: <slug>  (confidence: x)` heading + standalone **Field:** lines
+        root = Path(self.tmp.name) / "elo"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback\n\n"
+            "## 2026-06-20 — from `wc2026-pipeline`\n\n"
+            "### Lesson: worktree-isolation-not-real-on-windows  (confidence: high)\n"
+            "**Observed:** isolation worktree did not create per-agent dirs on Windows.\n"
+            "**Recommended platform guidance:** verify isolation before parallel dispatch.\n",
+            encoding="utf-8",
+        )
+        new, open_unresolved = self.m.collect([root])
+        self.assertEqual(len(new), 1)
+        first = next(iter(new.values()))[0][1]
+        self.assertEqual(first["candidate"], "worktree-isolation-not-real-on-windows  (confidence: high)")
+        self.assertIn("did not create per-agent dirs", first["observed"])
+        self.assertIn("verify isolation", first["proposal"])
+
+    def test_prose_finding_fingerprints_on_inline_lesson_id(self):
+        # story_time shape: `### <slug> (scope)` + inline **Lesson:** id + **Upstream fix:**
+        root = Path(self.tmp.name) / "story"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback\n\n"
+            "## epic-1 (story_time, 2026-06-22)\n\n"
+            "### worktree-isolation-not-guaranteed (constellation)\n"
+            "Agent-tool isolation did not create separate dirs and subagents collided. "
+            "**Upstream fix:** make Agent worktree isolation real. "
+            "**Lesson:** worktree-isolation-not-guaranteed.\n",
+            encoding="utf-8",
+        )
+        new, _ = self.m.collect([root])
+        self.assertEqual(len(new), 1)
+        fp = next(iter(new))
+        self.assertEqual(fp, self.m._hash12("lesson:worktree-isolation-not-guaranteed"))
+        first = next(iter(new.values()))[0][1]
+        self.assertIn("subagents collided", first["observed"])
+        self.assertIn("make Agent worktree isolation real", first["proposal"])
+
+    def test_prose_contentless_subblock_not_a_finding(self):
+        root = Path(self.tmp.name) / "empty"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            "# Constellation Feedback\n\n"
+            "## Template-delta recommendations\n\n"
+            "### just a heading with no fields and no prose body\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(self.m.collect([root]), ({}, {}))
+
+    def test_field_and_prose_not_double_counted(self):
+        # A file mixing a field-format block and a prose block yields exactly 2.
+        root = Path(self.tmp.name) / "mixed"
+        (root / ".agent-work").mkdir(parents=True)
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(
+            FEEDBACK_ENTRY.format(project="mixed")
+            + "\n## epic-2 (mixed, 2026-06-23)\n\n"
+            "### powershell-heredoc-use-here-string (constellation)\n"
+            "PR bodies fail with heredoc. **Upstream fix:** prescribe gh pr create -F file. "
+            "**Lesson:** powershell-heredoc-use-here-string.\n",
+            encoding="utf-8",
+        )
+        new, _ = self.m.collect([root])
+        self.assertEqual(len(new), 2)
 
 
 class InboxFilingTests(unittest.TestCase):
@@ -512,82 +542,40 @@ class InboxLifecycleTests(unittest.TestCase):
         return f
 
     def _file_once(self, filer):
-        return self.m.sync_issues(self._merged(), {}, inbox_path=self.inbox, filer=filer, confirm=True)
+        return self.m.sync_issues(self._merged(), inbox_path=self.inbox, filer=filer, confirm=True)
 
     def test_recurrence_growth_comments_and_watermarks(self):
         filer, commenter = self._filer(), self._recorder()
-        self._file_once(filer)  # filed at 2× / 2 projects
-        self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))  # now 3× / 3 projects
+        self._file_once(filer)  # filed at 2x / 2 projects
+        self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))  # now 3x / 3 projects
         res = self.m.sync_issues(
-            self._merged(), {}, inbox_path=self.inbox, filer=filer, commenter=commenter, confirm=True
+            self._merged(), inbox_path=self.inbox, filer=filer, commenter=commenter, confirm=True
         )
-        self.assertEqual(res["filed"], [])  # already filed
+        self.assertEqual(res["filed"], [])
         self.assertEqual(len(res["updated"]), 1)
         self.assertEqual(len(commenter.calls), 1)
-        self.assertEqual(len(filer.calls), 1)  # filer not called again
+        self.assertEqual(len(filer.calls), 1)
         ledger = json.loads(self.inbox.read_text(encoding="utf-8"))
         (_, rec), = ledger["filed"].items()
-        self.assertEqual(rec["occurrences"], 3)  # watermark advanced
+        self.assertEqual(rec["occurrences"], 3)
         self.assertEqual(rec["projects"], ["alpha", "beta", "gamma"])
-        # re-running with no further growth does not re-comment
         res2 = self.m.sync_issues(
-            self._merged(), {}, inbox_path=self.inbox, filer=filer, commenter=commenter, confirm=True
+            self._merged(), inbox_path=self.inbox, filer=filer, commenter=commenter, confirm=True
         )
         self.assertEqual(res2["updated"], [])
         self.assertEqual(len(commenter.calls), 1)
 
-    def test_resolved_finding_is_auto_closed(self):
-        filer, closer = self._filer(), self._recorder()
-        self._file_once(filer)
-        fp = next(iter(self._merged()))
-        self.m.mark_resolved(self.roots[0], fp, "fixed in PR #99")
-        res = self.m.sync_issues(
-            self.m.merge_hits(*self.m.collect(self.roots)),
-            self.m.resolved_across(self.roots),
-            inbox_path=self.inbox, filer=filer, closer=closer, confirm=True,
-        )
-        self.assertEqual(len(res["closed"]), 1)
-        self.assertEqual(len(closer.calls), 1)
-        self.assertIn("fixed in PR #99", closer.calls[0][1])
-        ledger = json.loads(self.inbox.read_text(encoding="utf-8"))
-        (_, rec), = ledger["filed"].items()
-        self.assertEqual(rec["status"], "closed")
-        self.assertEqual(rec["resolved_note"], "fixed in PR #99")
-
     def test_dry_run_reports_actions_without_calling_gh(self):
-        filer, commenter, closer = self._filer(), self._recorder(), self._recorder()
-        self._file_once(filer)  # 1 real filer call
+        filer, commenter = self._filer(), self._recorder()
+        self._file_once(filer)
         self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))
         res = self.m.sync_issues(
-            self._merged(), {}, inbox_path=self.inbox,
-            filer=filer, commenter=commenter, closer=closer, confirm=False,
+            self._merged(), inbox_path=self.inbox,
+            filer=filer, commenter=commenter, confirm=False,
         )
         self.assertEqual(len(res["would_update"]), 1)
         self.assertEqual(commenter.calls, [])
-        self.assertEqual(len(filer.calls), 1)  # unchanged by the dry run
-
-    def test_closed_issue_stays_closed_even_if_it_recurs(self):
-        filer, commenter, closer = self._filer(), self._recorder(), self._recorder()
-        self._file_once(filer)
-        fp = next(iter(self._merged()))
-        self.m.mark_resolved(self.roots[0], fp, "done")
-        self.m.sync_issues(
-            self.m.merge_hits(*self.m.collect(self.roots)), self.m.resolved_across(self.roots),
-            inbox_path=self.inbox, filer=filer, closer=closer, confirm=True,
-        )  # closes it
-        self._project("gamma", FEEDBACK_ENTRY.format(project="gamma"))  # finding recurs again
-        res = self.m.sync_issues(
-            self.m.merge_hits(*self.m.collect(self.roots)), self.m.resolved_across(self.roots),
-            inbox_path=self.inbox, filer=filer, commenter=commenter, closer=closer, confirm=True,
-        )
-        self.assertEqual(res["filed"], [])
-        self.assertEqual(res["updated"], [])  # closed entry is not re-commented
-        self.assertEqual(commenter.calls, [])
-
-    def test_resolved_across_unions_project_notes(self):
-        fp = next(iter(self._merged()))
-        self.m.mark_resolved(self.roots[1], fp, "fixed upstream")
-        self.assertEqual(self.m.resolved_across(self.roots), {fp: "fixed upstream"})
+        self.assertEqual(len(filer.calls), 1)
 
 
 class FreshnessPathTokenTests(unittest.TestCase):

@@ -42,7 +42,7 @@
     "playbook": {
       "id": "playbook",
       "title": "Reconcile against the existing playbook",
-      "imperative": "Read .agent-work/LESSONS.md (Active and Dormant). Map candidates to existing lessons: re-validations become confirm ops, contradictions become disconfirm ops, near-duplicates merge. Flag Active lessons this run's evidence undermines even if no one complained.",
+      "imperative": "Read .agent-work/LESSONS.md (Active). Map candidates to existing lessons: re-validations become confirm ops, contradictions become disconfirm ops, near-duplicates merge. Flag Active lessons this run's evidence undermines even if no one complained.",
       "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },

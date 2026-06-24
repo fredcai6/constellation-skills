@@ -403,7 +403,7 @@ uniqueness, and counter rules. The LLM never writes the playbook directly.
 Reflexion bounds memory at 1–3 reflections; ACE prunes; "revisit at ~30" had no
 grounding. Revisions: hard cap (start 15–20, enforced by the apply script);
 retire-before-add beyond the cap; `last_confirmed_run` field; lessons unconfirmed
-for N runs auto-demote to a non-injected **dormant** section. Selection filter at
+for N runs are auto-deleted (no dormant section), except `constellation`-scoped debt, which is pinned until explicitly retired. Selection filter at
 `context`: inject by `scope` overlap with the mission frame.
 
 ### 5.4 Anti-boilerplate floor on Workflow Feedback (severity 2)

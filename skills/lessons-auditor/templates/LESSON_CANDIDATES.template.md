@@ -19,7 +19,7 @@ candidate cites a grounding artifact line; ungrounded candidates were discarded.
 ## Existing-Lesson Reconciliation
 - `confirm lesson:<id>` — `<grounding>`
 - `disconfirm lesson:<id>` — `<grounding>`
-- `<or none — checked Active and Dormant against this run's evidence>`
+- `<or none — checked Active lessons against this run's evidence>`
 
 ## Playbook Delta (ready to apply)
 
