@@ -81,22 +81,33 @@ One new seam replaces the inline `subprocess.run(chk["command"], shell=True, ...
 at the `kind == "command"` branch. Three helpers, the first pure and the fiddliest:
 
 - **`_bash_candidates_from_git(git_path: str) -> list[str]`** — *pure*, no
-  filesystem access. Given the path to a `git` executable (e.g.
-  `C:\Program Files\Git\cmd\git.exe`), return the candidate `bash.exe` paths to
-  probe, derived from git's install layout: `bash.exe` under `bin/` and `usr/bin/`
-  of git's parent and grandparent directories (Git for Windows ships
-  `…\Git\bin\bash.exe` and `…\Git\usr\bin\bash.exe` while `git.exe` is commonly on
-  `PATH` only via `…\Git\cmd\git.exe`, so `shutil.which("bash")` alone misses it).
-  Returns paths in priority order; performs no existence check. This is the
-  bug-prone piece (like #33's `normalize_path`) and is unit-tested directly with a
-  sample path, no git install required.
+  filesystem access. Given the path to a `git` executable, return candidate
+  `bash.exe` paths to probe. This is a **backstop**, not the primary lookup
+  (`_find_posix_shell` tries `shutil.which("bash")` first — see below): it only runs
+  when git is on `PATH` but the bash directories are not. It must therefore be
+  robust to *where* git was found, because `shutil.which("git")` does not resolve to
+  a fixed layout — on a stock Git-for-Windows box it commonly returns
+  `…\Git\mingw64\bin\git.exe` (Git root = great-grandparent), but it can also be
+  `…\Git\cmd\git.exe` (root = grandparent) or `…\Git\bin\git.exe` (root = parent).
+  Bash lives at `…\Git\bin\bash.exe` and `…\Git\usr\bin\bash.exe` in every case. So
+  the helper **walks up several ancestor directories** of `git_path` (parent through
+  great-grandparent — 4 levels, covering all three git locations) and, for each
+  ancestor `D`, emits `D\bin\bash.exe` and `D\usr\bin\bash.exe`. It returns these in
+  priority order and performs **no** existence check (the caller filters). This is
+  the bug-prone piece (like #33's `normalize_path`) and is unit-tested directly with
+  sample paths — crucially **both** `…\Git\mingw64\bin\git.exe` and
+  `…\Git\cmd\git.exe`, asserting `…\Git\bin\bash.exe` / `…\Git\usr\bin\bash.exe`
+  appear for both — with no git install required.
 
 - **`_find_posix_shell() -> str | None`** — locate a POSIX shell, touching the
-  filesystem/`PATH`:
+  filesystem/`PATH`. `shutil.which("bash")` is the **primary** path (a stock
+  Git-for-Windows install puts `…\Git\usr\bin` on `PATH`, so this usually succeeds
+  directly); the git-derived candidates are the backstop:
   - Non-Windows: `shutil.which("sh")` (POSIX always has `/bin/sh`).
-  - Windows: `shutil.which("bash")`; else the first `_bash_candidates_from_git(g)`
-    entry that exists on disk, where `g = shutil.which("git")`; else
-    `shutil.which("sh")`; else `None`.
+  - Windows: `shutil.which("bash")` if found; else, **only if** `g =
+    shutil.which("git")` is non-`None`, the first `_bash_candidates_from_git(g)`
+    entry that exists on disk; else `shutil.which("sh")`; else `None`. The `if g:`
+    guard matters — `_bash_candidates_from_git` is never called on `None`.
 
 - **`_run_check_command(command: str) -> tuple[subprocess.CompletedProcess, str]`**
   — run a check command and report which shell ran it. If `_find_posix_shell()`
@@ -107,7 +118,11 @@ at the `kind == "command"` branch. Three helpers, the first pure and the fiddlie
 
 The `kind == "command"` branch calls `_run_check_command` and **stamps the marker
 into the evidence payload**, extending the existing `{"cmd": ..., "exit": ...}` to
-`{"cmd": ..., "exit": ..., "shell": marker}`. Nothing else in that branch changes:
+`{"cmd": ..., "exit": ..., "shell": marker}`. The two marker values — exactly
+`"posix"` and `"cmd-fallback"` — are fixed string literals that must appear
+**identically** in the engine code, `checklist-engine.md`, and `CHECKLIST_SCHEMA.md`
+so the doc/code drift check has an exact string to match. Nothing else in that
+branch changes:
 it still sets `cond["satisfied"]` from `returncode == 0`, appends one
 `command-output` evidence item, and sets `satisfied_by` on success.
 
@@ -138,8 +153,17 @@ The `artifact` and `git-change-policy` check kinds are untouched.
   operational PR-body rule: when this Commander opens its PR on Windows, write the
   body to a file and use `gh pr create -F <file>` — never a heredoc or `@'...'@`
   here-string `--body` (see fleet-doctrine "Windows shell hazards"). This is the
-  Admiral→Commander handoff path, covering the case where the Commander is the
-  PR-opener; the Admiral's own copy lives in fleet-doctrine above.
+  Admiral→Commander handoff path, covering an *Admiral-dispatched* Commander.
+
+- **`skills/commander/templates/COMMANDER_SPINE.template.json`** — the `archive`
+  step (where the Commander commits, pushes, and may open its PR — postcondition
+  `c2` "branch committed and pushed") gains the same `gh pr create -F <file>` rule
+  in its step imperative. This closes the **solo-Commander** gap: a Commander run
+  directly (not dispatched by an Admiral, so no LAUNCH_ORDER and no reason to read
+  the Admiral's fleet-doctrine) still meets the rule at the exact step it opens a
+  PR. Charter still gates *whether* the Commander opens PRs at all
+  (ORCHESTRATOR_CONTEXT "Commander may open PRs directly"); this only prescribes
+  *how*, on Windows, when it does.
 
 - **`skills/workbench/references/checklist-engine.md`** — the "Evidence shape"
   bullet (`command` postconditions must exit 0) gains a clause: command checks run
@@ -156,32 +180,45 @@ The `artifact` and `git-change-policy` check kinds are untouched.
 **Component 1 (TDD), in `tests/test_checklist_engine.py`** (mirroring its existing
 `PASS_COMMAND` / `FAIL_COMMAND` cross-platform style):
 
-- `_bash_candidates_from_git` returns the expected `bin/bash.exe` and
-  `usr/bin/bash.exe` candidates (parent and grandparent) for a sample
-  `…\Git\cmd\git.exe` path — pure, no git install, runs on every platform.
+- `_bash_candidates_from_git` returns `…\Git\bin\bash.exe` and
+  `…\Git\usr\bin\bash.exe` among its candidates for **both** a
+  `…\Git\mingw64\bin\git.exe` input (Git root = great-grandparent) **and** a
+  `…\Git\cmd\git.exe` input (root = grandparent) — pure, no git install, runs on
+  every platform. The two-input assertion is the guard against a parent/grandparent-
+  only derivation that would miss the real stock-box `which("git")` layout.
 - `_find_posix_shell` monkeypatched: with `shutil.which("bash")` returning a path it
-  picks that; with all lookups returning `None` on a simulated Windows it returns
-  `None`.
+  picks that; on a simulated Windows with `which("bash")` **and** `which("git")`
+  both `None`, it falls through to `which("sh")`/`None` **without** calling
+  `_bash_candidates_from_git(None)` (exercises the `if g:` guard — no crash).
 - `_run_check_command` with `_find_posix_shell` monkeypatched to `None` returns
   marker `"cmd-fallback"` and still runs the command (cmd path); the
   command-check branch then stamps `shell: "cmd-fallback"` into the evidence.
 - A **guarded integration test** (`@unittest.skipUnless` a POSIX shell is found)
-  runs a genuinely POSIX-form check, `echo isolated | grep -q isolated`, as a
-  `command` postcondition and asserts: it **passes** (exit 0, gate advances) and its
-  `command-output` evidence carries `shell: "posix"`. On cmd.exe that same command
-  would false-FAIL, so this test is the regression guard for the fix.
+  runs a POSIX-form check, `echo isolated | grep -q isolated`, as a `command`
+  postcondition and asserts the gate **advances** and its `command-output` evidence
+  carries `shell: "posix"`. **The `shell: "posix"` assertion is the regression
+  guard** — it proves the command was routed through bash. The command's pass/fail
+  alone does *not* discriminate: where Git's `usr\bin` is on `PATH`, `grep` / `&&` /
+  pipes also succeed under cmd.exe, so an exit-code-only assertion would pass even
+  unrouted; and where Git's POSIX tools are absent the test `skipUnless`-skips. So
+  the marker, not the exit code, is what this test verifies.
 - The existing command-check tests (`test_command_postcondition_pass_completes`,
   `…_fail_…`, `test_command_output_records_exit_status_on_failure`, etc.) now
   exercise the routed path unchanged and must stay green — the real-world guard that
-  routing broke nothing.
+  routing broke nothing. Their `PASS_COMMAND` / `FAIL_COMMAND` embed a
+  backslash-bearing Windows python path (`"C:\…\python.exe" -c "…"`); this was the
+  central regression worry, and it runs **correctly** under `bash -c` (verified
+  empirically: exit 0 / exit 1, no quoting breakage on Git Bash), so routing does
+  not disturb them.
 
 **Component 2** is a documentation edit, gated by **review against this spec**
 (mirroring #32/#33, whose doc tasks were reviewed, not unit-tested): the
-fleet-doctrine section, the LAUNCH_ORDER `## Return Shape` edit, and the
-checklist-engine.md / CHECKLIST_SCHEMA.md edits name `gh pr create -F`, the
-here-string-is-for-commits-not-PR-bodies correction, the POSIX-shell routing, and
-the `shell` evidence field exactly, with no stale "runs under cmd" or
-"here-strings fix PR bodies" wording left behind.
+fleet-doctrine section, the LAUNCH_ORDER `## Return Shape` edit, the COMMANDER_SPINE
+`archive`-step edit, and the checklist-engine.md / CHECKLIST_SCHEMA.md edits name
+`gh pr create -F`, the here-string-is-for-commits-not-PR-bodies correction, the
+POSIX-shell routing, and the `shell` evidence field (literal values `"posix"` /
+`"cmd-fallback"`, identical to the engine code) exactly, with no stale "runs under
+cmd" or "here-strings fix PR bodies" wording left behind.
 
 **Full suite:** must remain green (currently 222 passed / 1 skipped on main).
 
@@ -200,7 +237,8 @@ the `shell` evidence field exactly, with no stale "runs under cmd" or
   itself.
 - **No new explicit "open a PR" spine step.** PR-opening authority is Charter-gated
   (ORCHESTRATOR_CONTEXT "Commander may open PRs directly"); the rule rides in
-  fleet-doctrine + the LAUNCH_ORDER handoff rather than a new mandated gate.
+  fleet-doctrine + the LAUNCH_ORDER handoff + the *existing* `archive`-step
+  imperative rather than a new mandated gate.
 - **8.3 short-form / `\\?\` UNC git paths** in `_bash_candidates_from_git` are not
   specially canonicalized; `shutil.which` returns normal long paths in practice, and
   the `shutil.which("bash")` / `which("sh")` fallbacks cover odd layouts.
