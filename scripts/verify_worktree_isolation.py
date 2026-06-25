@@ -139,7 +139,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.here is not None:
         if args.paths:
             parser.error("--here takes no positional PATH arguments")
-        ok, reason = check_here(current_toplevel(), args.here)
+        try:
+            actual = current_toplevel()
+        except RuntimeError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        ok, reason = check_here(actual, args.here)
         if ok:
             print(f"worktree OK: in {args.here}")
             return 0
@@ -155,9 +160,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"worktree path does not exist: {p}", file=sys.stderr)
         return 1
 
-    ok, reason = check_distinct_real(
-        args.paths, registered_worktrees(), primary_checkout()
-    )
+    try:
+        registered = registered_worktrees()
+        primary = primary_checkout()
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    ok, reason = check_distinct_real(args.paths, registered, primary)
     if ok:
         print(f"worktree isolation verified: {len(args.paths)} distinct worktrees")
         return 0

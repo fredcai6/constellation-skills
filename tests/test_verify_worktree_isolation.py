@@ -183,5 +183,34 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(self.m.main(["--here", str(self.wt)]), 1)
 
 
+class CliErrorTests(unittest.TestCase):
+    def setUp(self):
+        self.m = load("verify_worktree_isolation")
+
+    def test_here_with_positional_paths_is_usage_error(self):
+        # argparse usage errors exit 2 — assert the rejection branch fires.
+        with self.assertRaises(SystemExit) as cm:
+            self.m.main(["--here", "/a", "/b"])
+        self.assertEqual(cm.exception.code, 2)
+
+
+@unittest.skipUnless(HAS_GIT, "git not available")
+class GitFailureTests(unittest.TestCase):
+    def setUp(self):
+        self.m = load("verify_worktree_isolation")
+        self.tmp = tempfile.TemporaryDirectory()
+        self._cwd = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self._cwd)
+        self.tmp.cleanup()
+
+    def test_gate_outside_git_repo_returns_1_not_crash(self):
+        # A real directory that is not a registered worktree (and likely not in
+        # any repo): the gate must return 1 cleanly, never raise.
+        os.chdir(self.tmp.name)
+        self.assertEqual(self.m.main([self.tmp.name]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
