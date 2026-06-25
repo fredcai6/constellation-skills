@@ -72,43 +72,73 @@ Named to parallel the existing `scripts/verify_state_note.py`. Two modes:
   mismatch the message names both the actual and expected toplevel and instructs
   the Commander to run all git ops in its assigned worktree.
 
+**Enforcement is layered, and honest about its ceiling.** The Admiral's multi-path
+gate is the **mechanical guarantee**: run before launch, it deterministically
+confirms the wave's worktrees are real and distinct, and the Admiral does not launch
+on a non-zero exit. `--here`, run *by* the Commander, is **risk-reduction, not a hard
+gate** — an agent that skips it proceeds in whatever cwd it has, exactly as before.
+To give `--here` teeth without a chokepoint it cannot have, the Commander's **return
+shape requires pasting its `--here` confirmation** (the matched toplevel); a report
+lacking it is a red flag the Admiral adjudicates before trusting the Commander's
+commits. With no engine chokepoint on Agent-tool dispatch, the owner-side check is
+necessarily evidence-in-report, not a refusal — and the spec says so plainly rather
+than implying a guarantee it cannot make.
+
 **Internals as pure, separately-testable units** (the gate-vs-stamp aesthetic from
 \#32):
 
-- `normalize_path(p) -> str` — resolve to an absolute real path and fold Windows
-  case and separators (`C:/Programs/x` and `C:\Programs\X` must compare equal). The
-  fiddliest, most bug-prone piece; tested directly.
-- `parse_worktree_list(porcelain) -> list[str]` — the registered worktree paths
-  (the `worktree ` lines of `git worktree list --porcelain`).
-- `primary_worktree(porcelain) -> str` — the primary/main checkout (the first
-  entry).
-- `check_distinct_real(expected, registered, primary) -> (ok: bool, reason: str)` —
-  the pure decision for the multi-path mode.
+- `normalize_path(p) -> str` — canonicalize for comparison with
+  `os.path.normcase(os.path.realpath(p))`: `realpath` resolves Windows junctions and
+  symlinks (temp dirs under `AppData\Local\Temp` are commonly junctioned, and
+  `git worktree list` vs `git rev-parse --show-toplevel` can emit different forms of
+  the same location), and `normcase` folds drive-letter case and `/` vs `\`
+  separators so `C:/Programs/x` and `C:\Programs\X` compare equal. The fiddliest,
+  most bug-prone piece; tested directly, including a path with a junction/symlink
+  component. (8.3 short-form and `\\?\` UNC inputs are a known residual gap — see Out
+  of scope.)
+- `parse_worktree_list(porcelain) -> list[str]` — the registered worktree paths (the
+  `worktree ` lines of `git worktree list --porcelain`, ignoring the `HEAD` /
+  `branch` / `bare` lines).
+- `check_distinct_real(provisioned_paths, registered, primary) -> (ok: bool, reason: str)`
+  — the pure decision for the multi-path mode: every provisioned path is registered,
+  none equals `primary`, and no two provisioned paths collide (all compared via
+  `normalize_path`); each failure's `reason` names the offending path.
 - `check_here(actual_toplevel, expected) -> (ok: bool, reason: str)` — the pure
   decision for `--here`.
 
-The CLI `main(argv)` shells out to git (`git worktree list --porcelain`,
-`git rev-parse --show-toplevel`) and delegates to the pure helpers, returning the
-exit code. The decision logic is therefore unit-testable without git; one
-integration test exercises a real `git worktree add`.
+The CLI `main(argv)` shells out to git and delegates to the pure helpers, returning
+the exit code. It obtains the **primary checkout** robustly — the normalized parent
+of `git rev-parse --git-common-dir` (ordering-independent, rather than trusting the
+first `git worktree list` entry, which is undefined for a bare repo) — and passes it
+into `check_distinct_real`; for `--here` it reads `git rev-parse --show-toplevel`.
+The decision logic is therefore unit-testable without git; one integration test
+(guarded by skip-if-`git`-absent) exercises a real `git worktree add`.
 
 ### Component 2 — doctrine + template
 
 - **`skills/admiral/references/fleet-doctrine.md`** — a new dedicated section
   stating the doctrine: worktree isolation is a harness no-op on Windows; the
   Agent-tool `isolation:"worktree"` flag does **not** provision; the Admiral runs
-  `git worktree add` itself, hands off the absolute path, verifies with
-  `verify_worktree_isolation.py`, and sweeps worktrees on closeout. Framed as
+  `git worktree add` itself, **logs that command + its outcome in ADMIRAL_LOG** as
+  the material fleet action it is, hands off the absolute path, and gates the wave on
+  `verify_worktree_isolation.py`. Plus the **sweep lifecycle**: a worktree is removed
+  (`git worktree remove` + `git worktree prune`) only after its Commander's PR is
+  merged **or** the Commander is confirmed dead with no continuation pending — never
+  while a live or recovering Commander still holds it (this dovetails with the
+  existing "confirm dead before launching into a worktree" recovery rule). Framed as
   correctness / data-loss doctrine, not a buried engine quirk.
 
 - **`skills/admiral/templates/LAUNCH_ORDER.template.md`** — upgrade the existing
   `## Workspace` field from a vague `<worktree path, branch name, base commit>` to:
-  the **provisioned** absolute worktree path + branch + base commit, plus an
-  explicit first-step instruction to run
-  `verify_worktree_isolation.py --here <path>` before any git operation. This
-  replaces the issue's "add a `worktree isolation verified: yes/no — if no,
-  sequential required` pre-ruling field": under manual provisioning isolation is
-  always real, so the field becomes a self-check, not a sequential-fallback flag.
+  the **provisioned** absolute worktree path + branch + base commit + the exact
+  `git worktree add` command that created it (so a recovery agent can trace its
+  origin), plus an explicit first-step instruction to run
+  `verify_worktree_isolation.py --here <path>` before any git operation. The
+  `## Return Shape` field is extended to require the Commander to **paste its `--here`
+  confirmation** in its report. This replaces the issue's "add a `worktree isolation
+  verified: yes/no — if no, sequential required` pre-ruling field": under manual
+  provisioning isolation is always real, so the check becomes an evidence-in-report
+  self-check, not a sequential-fallback flag.
 
 - **`skills/admiral/SKILL.md`** — line 38 ("One Commander per issue, each in an
   isolated worktree") updated to reflect explicit provisioning + verify rather than
@@ -117,22 +147,31 @@ integration test exercises a real `git worktree add`.
 
 ## Testing
 
-- **Task 1 (TDD).** Unit tests for the pure helpers:
-  - `normalize_path` folds a `C:/`-form vs `C:\`-form path to equal, and folds
-    case on Windows.
-  - `parse_worktree_list` extracts exactly the registered paths from porcelain
-    text; `primary_worktree` returns the first entry.
-  - `check_distinct_real` passes for N distinct registered non-primary paths;
-    fails when a path is unregistered, when a path equals the primary checkout,
-    and when two expected paths resolve to the same worktree.
-  - `check_here` passes on a match and fails on a mismatch, naming both paths.
-  - One integration test: `git worktree add` a real worktree in a temp repo and
-    assert the multi-path mode passes for it and `--here` passes from inside it.
+**Task 1 (TDD)** — automated unit tests for the pure helpers, plus one integration
+test:
 
-- **Task 2.** Doc fidelity — the three doctrine/template edits reviewed against
-  this spec; the LAUNCH_ORDER `## Workspace` field and the fleet-doctrine section
-  must name `verify_worktree_isolation.py` and the `git worktree add` provisioning
-  step exactly.
+- `normalize_path` folds a `C:/`-form vs `C:\`-form path to equal and folds case on
+  Windows; a path with a junction/symlink component resolves to the same value as its
+  real target (the temp-dir realpath case).
+- `parse_worktree_list` extracts exactly the registered paths from porcelain text and
+  ignores the `HEAD` / `branch` / `bare` lines.
+- `check_distinct_real` passes for N distinct registered non-primary paths; fails
+  when a path is unregistered, when a path equals the primary checkout, and when two
+  provisioned paths resolve to the same worktree — each failure's `reason` names the
+  offending path.
+- `check_here` passes on a match and fails on a mismatch, naming both actual and
+  expected.
+- Integration test (guarded by skip-if-`git`-absent): `git worktree add` a real
+  worktree in a temp repo, then assert the multi-path mode passes for it and `--here`
+  passes from inside it. The test normalizes the temp path through `normalize_path`
+  before comparing, so a junctioned temp dir does not cause a false failure.
+
+**Task 2 is a doc edit, not an automated test** (mirroring \#32, whose doc task was
+reviewed, not unit-tested). Its gate is a **review checklist** against this spec: the
+fleet-doctrine section, the LAUNCH_ORDER `## Workspace` + `## Return Shape` edits, and
+the SKILL.md lines name `verify_worktree_isolation.py` and the `git worktree add`
+provisioning + sweep-lifecycle steps exactly, with no stale "trust the flag" wording
+left behind.
 
 ## Out of scope (YAGNI)
 
@@ -146,3 +185,10 @@ integration test exercises a real `git worktree add`.
   cases (Commander-level and crew-level) are addressed by provisioning + verify.
 - **No `--json` output** from the verify helper; a human-readable message plus exit
   code is sufficient for its callers (the Admiral and each Commander).
+- **8.3 short-form (`C:\PROGRA~1`) and `\\?\` UNC path canonicalization** are a known
+  residual gap in `normalize_path`: `os.path.realpath` covers the common cases, and
+  the Admiral passes provisioned paths in the same form `git worktree add` received,
+  so they are not expected to bite. Full canonicalization is deferred until the field
+  surfaces a need.
+- **Bare repositories are out of scope** — Constellation projects are never bare;
+  primary-checkout identification assumes a non-bare repo with a working tree.
