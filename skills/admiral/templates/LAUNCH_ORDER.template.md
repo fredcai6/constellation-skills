@@ -22,7 +22,8 @@ A measured negative on the stated question is a complete, successful deliverable
 `<assigned findings file — sole writer this wave; any shared-file fences>`
 
 ## Workspace
-`<worktree path, branch name, base commit — verify main freshness before dispatch>`
+`<absolute worktree path, provisioned for you via "git worktree add" — branch name, base commit, and the exact add command that created it. Verify main freshness before dispatch. Worktrees lack untracked inputs; see Data Locations.>`
+First step, before any git operation: run `py scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
 
 ## Inherited Context
 `<Active lessons from .agent-work/LESSONS.md relevant to this mission; platform/technical invariants from the project playbook (encodings, shell quirks, crew-launch rules)>`
@@ -37,4 +38,4 @@ A measured negative on the stated question is a complete, successful deliverable
 Stop and return when: `<conditions — scope exceeded, decision outside inherited latitude needed, budget crossed, evidence impossible>`
 
 ## Return Shape
-`<the required form of the final report: verdict + evidence + map impact + triage candidates + workflow feedback; where the verdict gets posted>`
+`<the required form of the final report: verdict + evidence + map impact + triage candidates + workflow feedback; where the verdict gets posted. Include your "verify_worktree_isolation.py --here" confirmation (the matched worktree path) as evidence you worked in isolation.>`
