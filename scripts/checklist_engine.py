@@ -393,30 +393,47 @@ def _active_lease(cl: dict) -> dict | None:
     return None
 
 
+def _refresh_owner_heartbeat(cl: dict, session_id: str | None) -> None:
+    """Stamp liveness: if `session_id` owns the active lease, advance its
+    `last_heartbeat` to now. No-op when there is no active lease, a different
+    session owns it, or `session_id` is falsy. Called on every mutating verb the
+    owner issues, so an actively-working owner never goes stale and a genuine
+    idle gap self-heals on the owner's next verb. It never writes a takeover
+    record — the owner resuming its own work is not a takeover."""
+    lease = _active_lease(cl)
+    if lease is not None and session_id and session_id == lease.get("session_id"):
+        lease["last_heartbeat"] = _now()
+
+
 def require_session(cl: dict, verb: str, session_id: str | None, config: dict) -> None:
-    """The backward-compat gate. Mutating verbs are only session-gated ONCE an
-    ACTIVE lease exists. With no active lease, a missing `--session-id` is fine
-    (every existing checklist/template has no `engine_session`). With an active,
-    non-stale lease, the caller's `--session-id` must match its `session_id`. A
-    STALE active lease does not silently block — but it must be reclaimed via
-    `claim` first, so a mutating verb against a stale-only lease is refused with
-    an instruction to claim."""
+    """The actor-authority gate. Mutating verbs are session-gated only ONCE an
+    ACTIVE lease exists; with no active lease a missing `--session-id` is fine
+    (legacy checklists/templates have no `engine_session`).
+
+    Staleness gates **non-owners only** — it answers "has the owner gone quiet
+    long enough that someone else may seize the lease?" The rightful owner is
+    NEVER blocked by its own staleness, because an owner issuing a verb IS the
+    liveness signal (the stamp `_refresh_owner_heartbeat` records it). So the
+    owner always passes; a non-owner is refused — with a `claim` instruction if
+    the lease is stale, or an ownership instruction if it is a different,
+    still-active lease."""
     if verb not in MUTATING_VERBS:
         return
     lease = _active_lease(cl)
     if lease is None:
         return  # no lease claimed: legacy behavior, no session needed
+    if session_id == lease.get("session_id"):
+        return  # the owner is never blocked by its own staleness
     if _is_stale(lease, config):
         raise EngineError(
             f"checklist lease {lease.get('session_id')!r} is stale; "
             f"`claim` it (same id or --force --reason) before mutating"
         )
-    if session_id != lease.get("session_id"):
-        raise EngineError(
-            f"checklist is owned by active session {lease.get('session_id')!r}; "
-            f"pass --session-id {lease.get('session_id')!r} or take over with "
-            f"`claim --force --reason ...`"
-        )
+    raise EngineError(
+        f"checklist is owned by active session {lease.get('session_id')!r}; "
+        f"pass --session-id {lease.get('session_id')!r} or take over with "
+        f"`claim --force --reason ...`"
+    )
 
 
 def claim(
@@ -912,7 +929,12 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         )
     # Actor-authority gate: once an active lease exists, a mutating verb must
     # carry the owning --session-id. No lease -> legacy behavior (no session).
-    require_session(cl, v, getattr(args, "session_id", None), config)
+    session_id = getattr(args, "session_id", None)
+    require_session(cl, v, session_id, config)
+    # Owner activity = liveness: a mutating verb by the owner refreshes the lease,
+    # so an actively-working session never goes stale and an idle gap self-heals.
+    if v in MUTATING_VERBS:
+        _refresh_owner_heartbeat(cl, session_id)
     if v == "start":
         return start(cl, args.id, base_dir=base_dir)
     if v == "advance":
