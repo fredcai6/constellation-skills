@@ -77,6 +77,42 @@ session resume, sweep task notifications, inspect each affected worktree
 (commits, workbench state, orphan processes), and relaunch continuations with
 verified inheritance.
 
+## Worktree isolation is a harness no-op on Windows — provision it yourself
+
+The Agent-tool `isolation:"worktree"` parameter is a **harness primitive that
+silently does nothing on Windows**: subagents launched with it run in the shared
+checkout, not their own worktree. A parallel wave dispatched in that belief
+collides in the single checkout — two Commanders racing a push, three crews
+colliding on `git checkout -b`, a commit landing on a sibling's branch. That is
+data loss, not friction. (A git-level probe cannot catch it: `git worktree add` in
+a temp dir tests *git's* worktree support, which is fine on Windows — it is the
+Agent *tool* that skips provisioning — so the probe returns a false green.)
+
+**Do not trust the flag — provision the worktree yourself.** `git worktree add`
+works fine on Windows. Before a parallel wave:
+
+1. For each Commander, run `git worktree add <path> -b <branch> <base>` from the
+   main checkout, and **log that command and its outcome in the ADMIRAL_LOG** — a
+   provisioned worktree is a material fleet action.
+2. Hand each Commander its **absolute** worktree path in the LAUNCH_ORDER
+   `## Workspace` field, with the instruction to run
+   `py scripts/verify_worktree_isolation.py --here <path>` as its first step and
+   paste the result into its return report.
+3. Gate the wave: `py scripts/verify_worktree_isolation.py <path1> <path2> ...`
+   must exit 0 (every path a real, registered worktree, distinct from each other
+   and from the main checkout) before you launch. A non-zero exit means isolation
+   is not real — fix it; do not launch.
+
+The gate is the **mechanical guarantee**; `--here` is the Commander's own
+risk-reduction, surfaced as evidence in its report rather than a hard refusal
+(Agent-tool dispatch has no engine chokepoint to refuse at).
+
+**Sweep on the right boundary.** Remove a worktree (`git worktree remove <path>`
+then `git worktree prune`) only after its Commander's PR is **merged**, or the
+Commander is **confirmed dead with no continuation pending** — never while a live
+or recovering Commander still holds it. This is the same "confirm dead before you
+touch its worktree" rule the recovery drill already applies.
+
 ## Adjudication invariants (Admiral errors that bit)
 
 - **Issue-close gates on verified MERGED, not on green checks.** Sequence:

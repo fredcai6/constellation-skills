@@ -35,7 +35,7 @@ Do what the epic needs. Two hard requirements only:
 
 Operating doctrine, learned from field fleets:
 
-- One Commander per issue, each in an isolated worktree; pick model tier per issue complexity. Never two commanders in one worktree — stop/confirm-dead the original before launching a continuation into its worktree.
+- One Commander per issue, each in its own worktree you **provision explicitly** with `git worktree add` — the Agent-tool `isolation:"worktree"` flag is a silent no-op on Windows — and verify with `verify_worktree_isolation.py` before the wave; pick model tier per issue complexity. Never two commanders in one worktree — stop/confirm-dead the original before launching a continuation into its worktree. See `references/fleet-doctrine.md`, "Worktree isolation is a harness no-op on Windows".
 - Every dispatch carries a completed `templates/LAUNCH_ORDER.template.md`. Paste prior-wave verdict text — pointers are weak, commanders start cold. Pre-rule foreseeable ambiguities (marked overridable). A measured negative is a complete, successful deliverable: say so.
 - One writer per shared document per wave; assign findings files explicitly.
 - Status to the user per the contract: default stop-and-present at wave checkpoints; run ahead only when cleared.
@@ -51,7 +51,7 @@ The run cannot close with unrouted observations. Engine-enforced:
 1. Dispatch a fresh-context subagent invoking `constellation-lessons-auditor` with a compiled run brief; every returned candidate gets a routed disposition (template delta / playbook delta / Charter nomination / constellation export / retire / drop-with-reason). Apply playbook deltas only via `apply_lessons_delta.py`.
 2. Append the epic retrospective to `.agent-work/AGENT_FEEDBACK.md`; the feedback invariant check must pass.
 3. Architecture audit: hand the epic's net change to `constellation-cartographer` for reconcile.
-4. Repo hygiene: branches merged or dispositioned, worktrees swept, ADMIRAL_LOG archived to main under `.agent-work/archive/`.
+4. Repo hygiene: branches merged or dispositioned, worktrees swept (`git worktree remove` + `git worktree prune`, only after merge or confirmed-dead), ADMIRAL_LOG archived to main under `.agent-work/archive/`.
 5. Present the epic summary; user acceptance closes the run.
 
 Templates: `templates/ADMIRAL_SPINE.template.json`, `templates/LATITUDE_CONTRACT.template.md`, `templates/LAUNCH_ORDER.template.md`, `templates/ADMIRAL_LOG.template.md`. References: `references/fleet-doctrine.md` (platform/harness survival doctrine). Engine: workbench `references/checklist-engine.md`.
