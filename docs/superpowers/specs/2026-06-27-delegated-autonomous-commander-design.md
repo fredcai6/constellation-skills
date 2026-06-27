@@ -62,6 +62,16 @@ recovering a *dead* Commander, which remains a fresh agent into its worktree per
 drill — `fleet-doctrine.md`'s "no SendMessage/agent-resume primitive" line is about reviving a
 host-exited process, not about answering a live Commander's query.)
 
+**A delegate is not a replacement, and the chain terminates at the human.** Escalating
+*upward* is always legitimate — at every tier. When the Admiral itself cannot answer a query
+or adjudicate a float from its own epic knowledge and granted latitude, **"I need to talk to my
+human" is a first-class, correct move, not a failure**: it reaches the human out-of-band (the
+latitude contract's out-of-taxonomy / expiry escalation already provides for exactly this). The
+autonomous reading lets each tier act with the rope it was *given*; it never strips the right to
+ask the tier above. So the back-channel is one link in a chain — Commander → Admiral → human —
+and the terminus is always the human. The doctrine for both tiers must say plainly that asking
+up is sanctioned, never a mark against the asker.
+
 ## Behavior
 
 ### A. Delegated/autonomous mode — `commander/SKILL.md` + `COMMANDER_SPINE` + `interrogator/SKILL.md`; Admiral back-channel in `admiral/SKILL.md` + `LATITUDE_CONTRACT` + `LAUNCH_ORDER`
