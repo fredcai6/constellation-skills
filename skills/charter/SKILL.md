@@ -14,8 +14,8 @@ Drive `templates/CHARTER.template.json` as a `gated` checklist through the absol
 Durable outputs:
 
 ```text
-docs/agents/ORCHESTRATOR_CONTEXT.md   # planning, authority, gating, evidence, stop/ask
-docs/agents/CREW_CONTEXT.md           # implementation, verification, review/blocking, stop/report
+docs/agents/ORCHESTRATOR_CONTEXT.md   # project deltas over inherited global-orchestrator doctrine
+docs/agents/CREW_CONTEXT.md           # project deltas over inherited global-crew doctrine
 docs/agents/GLOSSARY.md               # shared terms only
 docs/agents/AGENT_GUIDE.md            # single repo-orientation guide (TOC, repo layout, doc map); the shared middle of the two contexts
 AGENTS.md, CLAUDE.md                  # root pointer files that redirect to docs/agents/AGENT_GUIDE.md
@@ -25,7 +25,7 @@ docs/agents/engine-config.json        # rework cap, rigor checkpoints, rules roo
 
 ## Compile
 
-Write each context for its reader: ORCHESTRATOR phrasing explains planning, framing, gating, authority, evidence, stop/ask impact; CREW phrasing explains implementation, verification, review/blocking, stop/report impact. A shared rule may appear in both, in role-specific wording. Optimize for density: minimize tokens, maximize information per token, sacrifice grammar when meaning stays clear. Keep durable context to decisions, free of process history.
+The global approach baseline is **inherited, not authored here**: roles load `references/global-orchestrator.md` / `references/global-crew.md` / `references/global-everyone.md` (bundled with each skill at install) at their context-read step. Charter writes only the **project deltas** over that baseline — never restate inherited doctrine. ORCHESTRATOR deltas cover project facts (purpose, authority), non-default rigor, and planning/evidence/stop-ask departures; CREW deltas cover project rules that change implementation or review. Optimize for density: minimize tokens, maximize information per token, sacrifice grammar when meaning stays clear. Keep durable context to decisions, free of process history.
 
 **FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
 

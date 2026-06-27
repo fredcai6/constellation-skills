@@ -11,7 +11,7 @@ Write issue-ready recommendations for follow-up work. Triage does not implement,
 
 ## Steps
 
-1. **Load candidates and authority.** Consume all sources: `execute.json` `triage_candidates`, Cartographer findings, review findings, plans, implementation evidence, user notes. Note issue creation authority from `docs/agents/ORCHESTRATOR_CONTEXT.md`.
+1. **Load candidates and authority.** Consume all sources: `execute.json` `triage_candidates`, Cartographer findings, review findings, plans, implementation evidence, user notes. Note issue creation authority from `docs/agents/ORCHESTRATOR_CONTEXT.md` if present (the default posture is the inherited `references/global-orchestrator.md`).
 
 2. **Classify each candidate.** Assign one or more labels: bug, cleanup, missing test, missing doc, missing architecture packet, missing structural node, missing capability anchor, architecture weakness, structure/constraint mismatch, stale generated map, ungrounded claim/decision, bad map edge, feature, tooling, unresolved decision, research hardening, dependency cleanup, security/privacy, performance/resource. Preserve structural anchor, current truth, future concern, evidence.
 

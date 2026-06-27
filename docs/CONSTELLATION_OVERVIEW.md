@@ -20,11 +20,12 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 
 | Producer | Artifact/interface | Consumer | Contract |
 |---|---|---|---|
+| Skills (`_shared`, bundled at install) | `references/global-{everyone,orchestrator,crew}.md` | all roles | inherited approach doctrine read first at each checklist's context step; identical across projects; the home for general-workflow `constellation` lessons |
 | Commander | `.agent-work/<work-id>/spine.json` (gated) | Cartographer, Interrogator, human | one bounded issue: understand/plan/execute/cleanup; drives interrogation and gate plan; human verifies at checkpoints |
 | Commander | `.agent-work/<work-id>/execute.json` (gated) | Implementer, Reviewer | frozen gate plan authored at plan time; three tasks per gate (implement/review/integrate); not edited mid-run |
-| Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Commander, Cartographer, Scout | project-specific planning, authority, evidence, stop/ask rules |
+| Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Commander, Cartographer, Scout | project DELTAS over inherited global-orchestrator doctrine: planning, authority, evidence, stop/ask departures |
 | Charter | engine config (rework cap, replan policy, human checkpoints) | Commander, Workbench engine | sets the mechanism limits the engine enforces |
-| Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project-specific implementation/review rules usable inside a handoff |
+| Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project DELTAS over inherited global-crew doctrine: implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
 | Charter | `docs/agents/AGENT_GUIDE.md` + root `AGENTS.md`/`CLAUDE.md` pointers | all agents (Constellation or external) | single repo-orientation guide: layout, documentation map, conventions; the shared middle of the two contexts, not how to approach the job |
 | Commander | `.agent-work/AGENT_FEEDBACK.md` | future Charter refresh, maintainers | unified run retrospective appended before archive; persists across work-ids; workflow-improvement signal, not project truth |
@@ -43,9 +44,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 
 ## Context separation
 
-High-level agents use project purpose, user intent, structural map packets, glossary, and workflow state.
-
-Low-level agents receive bounded task, allowed scope, critical rules, relevant structural packet, required evidence, and stop conditions.
+Two orthogonal axes. **Audience:** high-level (orchestrator) agents use project purpose, user intent, structural map packets, glossary, and workflow state; low-level (crew) agents receive bounded task, allowed scope, critical rules, relevant structural packet, required evidence, and stop conditions. **Source:** each agent reads its inherited *global* doctrine (bundled with the skill at `references/global-{everyone,<tier>}.md`, identical across projects) first, then the project's thin *local* deltas (`docs/agents/*`, read if present) — layered, never merged. The global buckets hold the approach baseline; the project files hold only departures.
 
 ## Truth layers
 

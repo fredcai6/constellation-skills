@@ -2,10 +2,10 @@
 
 Single entry point for any agent working in this repository — Constellation roles and external/general agents alike. Root pointer files (`AGENTS.md`, `CLAUDE.md`, and any tool-specific equivalents) redirect here so there is one guide, not many.
 
-Scope is deliberately narrow: **how this repo is organized and where the important documentation lives** — the shared middle of Orchestrator and Crew context. It does *not* cover how to approach the job. For that:
+Scope is deliberately narrow: **how this repo is organized and where the important documentation lives** — the shared middle of Orchestrator and Crew context. It does *not* cover how to approach the job. The default approach is inherited global doctrine bundled with each skill (`references/global-everyone.md` plus `references/global-orchestrator.md` / `references/global-crew.md`); the project layers only its deltas on top:
 
-- Planning, authority, gating, evidence, stop/ask → `docs/agents/ORCHESTRATOR_CONTEXT.md`
-- Implementation, verification, review/blocking, stop/report → `docs/agents/CREW_CONTEXT.md`
+- Planning, authority, gating, evidence, stop/ask — project deltas → `docs/agents/ORCHESTRATOR_CONTEXT.md`
+- Implementation, verification, review/blocking, stop/report — project deltas → `docs/agents/CREW_CONTEXT.md`
 - Shared terms → `docs/agents/GLOSSARY.md`
 
 Agent-facing. Bullets, tables, fragments. Omit anything that does not help an agent find its way around.
@@ -39,8 +39,8 @@ Where the important documents live and what each is the source of truth for.
 |---|---|
 | `README.md` | `<project overview, install, top-level usage>` |
 | `docs/agents/AGENT_GUIDE.md` | this guide — repo orientation and the documentation map |
-| `docs/agents/ORCHESTRATOR_CONTEXT.md` | planning, authority, gating, evidence, stop/ask |
-| `docs/agents/CREW_CONTEXT.md` | implementation, verification, review/blocking, stop/report |
+| `docs/agents/ORCHESTRATOR_CONTEXT.md` | project planning/authority deltas over inherited global-orchestrator doctrine |
+| `docs/agents/CREW_CONTEXT.md` | project implementation/review deltas over inherited global-crew doctrine |
 | `docs/agents/GLOSSARY.md` | shared terms |
 | `docs/architecture/index.md` | current structural map entry point |
 | `docs/architecture/packets/` | per-node structural truth and constraints |
@@ -77,6 +77,6 @@ Universal commands only. Area-specific commands belong in handoffs, not here.
 ## Where to Go Next
 
 - Orienting / finding a file or doc → you are in the right place.
-- Planning or shaping work → `docs/agents/ORCHESTRATOR_CONTEXT.md`.
-- Implementing or reviewing a bounded change → `docs/agents/CREW_CONTEXT.md`.
+- Planning or shaping work → inherited global-orchestrator doctrine + project deltas in `docs/agents/ORCHESTRATOR_CONTEXT.md`.
+- Implementing or reviewing a bounded change → inherited global-crew doctrine + project deltas in `docs/agents/CREW_CONTEXT.md`.
 - Understanding current structure before changing it → `docs/architecture/index.md`.

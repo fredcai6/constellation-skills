@@ -63,7 +63,7 @@ Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait 
 
 ## Repo (default; Charter overrides)
 
-Work on a branch off main; commit frequently as gates close; ready the branch to merge back during clean-up. The work area under `.agent-work/<work-id>/` is preserved through the run, then archived. Project specifics come from `ORCHESTRATOR_CONTEXT`.
+Work on a branch off main; commit frequently as gates close; ready the branch to merge back during clean-up. The work area under `.agent-work/<work-id>/` is preserved through the run, then archived. The approach baseline is inherited global doctrine (`references/global-orchestrator.md` + `references/global-everyone.md`); project-specific deltas come from `ORCHESTRATOR_CONTEXT` when present.
 
 ## Human checkpoints (rigor dial)
 

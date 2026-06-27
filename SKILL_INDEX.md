@@ -3,7 +3,7 @@
 ## Constellation Charter
 Path: `skills/charter/SKILL.md`
 
-Interrogates engineering doctrine and compiles `ORCHESTRATOR_CONTEXT.md`, `CREW_CONTEXT.md`, `GLOSSARY.md`, and `engine-config.json`.
+Interrogates engineering doctrine and compiles project-delta `ORCHESTRATOR_CONTEXT.md` / `CREW_CONTEXT.md` (over the inherited global doctrine bundled with each skill), `GLOSSARY.md`, and `engine-config.json`.
 
 ## Constellation Commander
 Path: `skills/commander/SKILL.md`

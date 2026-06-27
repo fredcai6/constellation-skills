@@ -7,7 +7,7 @@
     "m0-context": {
       "id": "m0-context",
       "title": "Load baseline context",
-      "imperative": "Read docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the handoff, and the relevant packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the relevant packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "crew context + glossary + handoff loaded; handoff complete", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,

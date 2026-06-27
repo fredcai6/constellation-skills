@@ -163,6 +163,67 @@ class InstallConstellationTests(unittest.TestCase):
                 ).exists()
             )
 
+    def test_global_doctrine_buckets_bundled_per_audience(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+
+            exit_code = installer.main(
+                [
+                    "--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                    "--skills", "commander", "implementer", "interrogator", "charter",
+                ],
+                env={},
+                out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+
+            def refs(skill_name):
+                ref_dir = target_root / skill_name / "references"
+                return {p.name for p in ref_dir.glob("global-*.md")}
+
+            # everyone-global reaches every role; tier buckets reach only their tier
+            self.assertEqual({"global-everyone.md", "global-orchestrator.md"}, refs("constellation-commander"))
+            self.assertEqual({"global-everyone.md", "global-crew.md"}, refs("constellation-implementer"))
+            self.assertEqual({"global-everyone.md"}, refs("constellation-interrogator"))
+            # Charter carries all three: the baseline it elicits project deltas from
+            self.assertEqual(
+                {"global-everyone.md", "global-orchestrator.md", "global-crew.md"},
+                refs("constellation-charter"),
+            )
+
+    def test_shared_reference_dir_is_not_installed_as_a_skill(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root)],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(
+                sorted(SKILL_NAMES),
+                sorted(path.name for path in target_root.iterdir()),
+            )
+            self.assertFalse((target_root / "_shared").exists())
+
+    def test_force_refreshes_global_doctrine_buckets(self):
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            args = ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                    "--skills", "implementer"]
+            installer.main(args, env={}, out=lambda _: None)
+
+            bucket = target_root / "constellation-implementer" / "references" / "global-crew.md"
+            bucket.write_text("STALE\n", encoding="utf-8")
+
+            installer.main(args + ["--force"], env={}, out=lambda _: None)
+            self.assertNotEqual("STALE\n", bucket.read_text(encoding="utf-8"))
+            self.assertIn("Global doctrine", bucket.read_text(encoding="utf-8"))
+
     def test_installed_templates_use_absolute_bundled_script_paths(self):
         installer = load_installer()
 
