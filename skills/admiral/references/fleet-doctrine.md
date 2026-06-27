@@ -113,6 +113,26 @@ Commander is **confirmed dead with no continuation pending** — never while a l
 or recovering Commander still holds it. This is the same "confirm dead before you
 touch its worktree" rule the recovery drill already applies.
 
+## Windows shell hazards (PR bodies and command-checks)
+
+Two Windows shell traps bit fleets repeatedly; both come from Windows running a
+different shell than the POSIX one every author assumes.
+
+**PR bodies — use `gh pr create -F <file>`.** On Windows PowerShell, a multi-line PR
+body fails both as a bash heredoc and as a PowerShell `@'...'@` here-string passed to
+`--body`. Write the body to a temp file and run `gh pr create -F <file>` (or
+`--body-file <file>`) — the only reliable form. Note the trap: `@'...'@` here-strings
+*do* work for `git commit -m`, so do not assume they also work for
+`gh pr create --body`. They do not.
+
+**Command-checks run under bash.** The checklist engine runs `command`-kind checks
+(postconditions/preconditions) under a POSIX shell, so an authored test/verify
+command may freely use `grep`, `&&`, and pipes and will behave the same on Windows as
+on Mac/Linux. On a box with no bash on `PATH` (git installed without Git for Windows)
+the engine falls back to cmd.exe and stamps `shell: cmd-fallback` into the check's
+evidence — a check that needs bash then visibly fails rather than silently
+false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run".
+
 ## Adjudication invariants (Admiral errors that bit)
 
 - **Issue-close gates on verified MERGED, not on green checks.** Sequence:
