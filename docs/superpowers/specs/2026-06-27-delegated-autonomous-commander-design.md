@@ -49,14 +49,22 @@ code**. This matches the fold-back arc's posture (#32/#33/#35 each chose the no-
 path): a `mode: autonomous` field or a `mode: reasoning` gate marker would be enforcement
 surface the field has not yet shown it needs, and would create two modes to maintain.
 
-Autonomous mode is **not** a licence to guess. A genuine decision outside the Commander's
-inherited latitude still **floats to the Admiral** (per the launch order's Stop Conditions
-and the latitude contract's float-up routing) rather than blocking on an unreachable human —
-the human's reachability moves up one tier, it does not vanish.
+Autonomous mode is **not** a licence to guess. When the human is offline, reachability moves
+**up one tier to the Admiral** — for *context*, not only for decisions. The Admiral dispatched
+the Commander, holds the epic-level picture, and can reach the human out-of-band, so it is the
+Commander's reachable oracle. Beyond the frozen launch order the Commander has two recourses,
+both up the same channel: **float an out-of-latitude decision**, and **query the Admiral for
+missing context** — rather than guessing or blocking. Mechanically this is a *float-and-continue*
+round-trip, not synchronous mid-run RPC: the Commander surfaces the need in its return/stop
+shape and the Admiral answers and **continues** the Commander (context intact), so "human
+unreachable" never means "stuck." (This is the live-Commander query path; it is distinct from
+recovering a *dead* Commander, which remains a fresh agent into its worktree per the recovery
+drill — `fleet-doctrine.md`'s "no SendMessage/agent-resume primitive" line is about reviving a
+host-exited process, not about answering a live Commander's query.)
 
 ## Behavior
 
-### A. Delegated/autonomous mode — `commander/SKILL.md` + `COMMANDER_SPINE` + `interrogator/SKILL.md`
+### A. Delegated/autonomous mode — `commander/SKILL.md` + `COMMANDER_SPINE` + `interrogator/SKILL.md`; Admiral back-channel in `admiral/SKILL.md` + `LATITUDE_CONTRACT` + `LAUNCH_ORDER`
 
 A new **"Delegated/autonomous mode"** section in `skills/commander/SKILL.md` (after "Human
 checkpoints (rigor dial)", which it qualifies). Contents:
@@ -67,8 +75,9 @@ checkpoints (rigor dial)", which it qualifies). Contents:
 - **`understand` reading.** The Interrogator's "must reach the human" is read as **reconcile
   the ask against the frozen launch order** (Mission, Pre-Rulings, Inherited Context,
   Inherited Latitude) as the source of truth. An open question the launch order does not
-  answer and that exceeds inherited latitude is **floated to the Admiral** per the launch
-  order's Stop Conditions — not guessed, not blocked on the human.
+  answer is taken to the Admiral via the back-channel below — **floated** if it is a decision
+  outside inherited latitude, **queried** if it is missing context — not guessed, not blocked on
+  the human.
 - **The Interrogator skill must carry the delegated reading too.** The `understand` step loads
   `constellation-interrogator` (child-checklist `interrogation.json`), whose SKILL is written
   as hard human-facing prose ("interview the user relentlessly," "ask one question at a time
@@ -76,9 +85,10 @@ checkpoints (rigor dial)", which it qualifies). Contents:
   Commander to block on a human who is not there. So **`skills/interrogator/SKILL.md` gains a
   short delegated-context clause**: when driven without a reachable human (a Commander under an
   Admiral launch order, or any delegated dispatch), the "user" is the **frozen launch order /
-  the dispatching delegate** — answer each question from it, and **float a genuine unknown that
-  the source does not answer and that exceeds inherited latitude to the delegate** rather than
-  waiting on a human. The interactive reading is unchanged. (The Admiral also loads the
+  the dispatching delegate** — answer each question from it; when the source does not answer and
+  you cannot safely proceed, **take it to the delegate (query the Admiral)** — a missing fact as
+  a context query, a choice outside inherited latitude as a float — rather than waiting on a
+  human. The interactive reading is unchanged. (The Admiral also loads the
   Interrogator at its `latitude` step, where the human *is* reachable; the clause is scoped to
   the no-reachable-human case so it does not disturb that path.)
 - **`user-decision` checkpoints.** The four `user-decision` postconditions (`understand` c1,
@@ -88,6 +98,23 @@ checkpoints (rigor dial)", which it qualifies). Contents:
   ratifying at the epic return boundary. The engine is unchanged — it already only requires a
   `user-decision` artifact to be present; the citation rides in the evidence payload for
   audit. Interactive (human-driven) runs are unchanged.
+- **Reaching the Admiral for context (the back-channel).** The launch order is the source of
+  truth, but it cannot anticipate everything. When the Commander needs context it does not
+  have — a clarification, a fact about the wider epic, a read on intent the pre-rulings do not
+  settle — it **queries the Admiral** rather than guessing: it surfaces the specific need in
+  its return/stop shape, and the Admiral answers (from its epic-level knowledge, or by reaching
+  the human out-of-band) and **continues** the Commander with the answer. This is the same
+  float-up channel that carries out-of-latitude decisions, widened to carry **context queries**
+  too — so the human going offline removes synchronous chat, not the Commander's ability to get
+  unblocked. **Admiral-side reciprocal** (so the channel has a receiver): `skills/admiral/SKILL.md`'s
+  execute doctrine states the Admiral **fields Commander context queries**, not only
+  `user-decision` escalations — answer from epic knowledge or reach the human out-of-band, then
+  continue the Commander; the `LATITUDE_CONTRACT.template.md` float-up routing line broadens from
+  "Commander `user-decision`s" to "Commander floats — **decisions and context queries**"; and the
+  `LAUNCH_ORDER.template.md` `## Stop Conditions` add "context the launch order does not cover and
+  you cannot safely proceed without" as a sanctioned reason to return-and-query. The Commander
+  always has a reachable delegate one tier up; it never has to choose between guessing and
+  blocking.
 
 The four spine steps' imperatives (`understand`, `plan`, `triage`, `review` in
 `skills/commander/templates/COMMANDER_SPINE.template.json`) each gain a brief clause: "In
