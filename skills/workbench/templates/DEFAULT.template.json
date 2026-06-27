@@ -7,7 +7,7 @@
     "context": {
       "id": "context",
       "title": "Load baseline context",
-      "imperative": "Read the context for your tier (ORCHESTRATOR_CONTEXT or CREW_CONTEXT) plus GLOSSARY. Attest c1.",
+      "imperative": "Read your inherited global doctrine: this skill's references/global-everyone.md plus references/global-orchestrator.md or references/global-crew.md for your tier. Then read the project deltas for your tier if present (docs/agents/ORCHESTRATOR_CONTEXT.md or docs/agents/CREW_CONTEXT.md) plus docs/agents/GLOSSARY.md. Attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "baseline context loaded", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,

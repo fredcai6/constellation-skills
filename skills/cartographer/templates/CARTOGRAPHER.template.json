@@ -7,7 +7,7 @@
     "context": {
       "id": "context",
       "title": "Load map and context",
-      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "context and current map loaded", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,

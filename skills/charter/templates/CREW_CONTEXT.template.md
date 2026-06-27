@@ -1,6 +1,10 @@
-# Crew Context
+# Crew Context — project deltas
 
-Project-specific overlay for Crew implementer/reviewer behavior. Generic execution discipline stays in the skill; this file contains only project rules that change implementation or review.
+**Deltas over inherited global doctrine.** Implementation and review discipline, required handoff fields,
+the result-is-the-deliverable rule, and the generic block/stop criteria are inherited from
+`references/global-crew.md` and `references/global-everyone.md` and must NOT be restated here. This file
+carries only project-specific rules that change implementation or review. Omit any section with no project
+delta.
 
 Agent-facing context. Use bullets, tables, and fragments. Omit prose that does not change agent action.
 
@@ -10,27 +14,9 @@ Agent-facing context. Use bullets, tables, and fragments. Omit prose that does n
 
 ## Scope And Exceptions
 
-`<Omit this section when context applies cleanly to the whole repo. Include only partial coverage or material subsystem differences.>`
+`<Omit when context applies cleanly to the whole repo. Include only partial coverage or material subsystem differences.>`
 
-## Handoff Discipline
-
-Crew works from the assigned handoff. Use the handoff task, allowed scope, specific exclusions, success criteria, required evidence, handoff-required verification commands, test mode or no-test-surface rationale, stop conditions, and return format.
-
-Stop and report if required handoff fields are missing, contradictory, or impossible.
-
-## Required Handoff Fields
-
-- assigned task
-- allowed scope
-- specific exclusions, if any
-- success criteria
-- required evidence
-- required verification commands, if any
-- test mode or no-test-surface rationale
-- stop conditions
-- return format
-
-## Subsystem Rigor
+## Subsystem Rigor (deltas)
 
 | Subsystem | Rigor profile | Execution context | Crew implication |
 |---|---|---|---|
@@ -38,7 +24,7 @@ Stop and report if required handoff fields are missing, contradictory, or imposs
 
 ## Implementation Rules
 
-- `<project-specific implementation rule>`
+- `<project-specific implementation rule: naming/labeling conventions, in-file documentation strategy, module shape>`
 - `<project-specific implementation rule>`
 
 ## Interface And Contract Rules
@@ -48,7 +34,9 @@ Stop and report if required handoff fields are missing, contradictory, or imposs
 
 ## Failure And Reporting Rules
 
-**Default failure policy:** `<fail visibly mechanism by execution context>`  
+`<Include only where the project departs from the global fail-visibly / no-hidden-fallback default.>`
+
+**Default failure policy:** `<fail-visibly mechanism by execution context>`  
 **Fallback policy:** `<forbidden | explicit only | allowed with evidence | other>`  
 **Degraded output policy:** `<none | visibly labeled | status/event required | other>`  
 **Required reporting mechanism:** `<status object | event code | log | audit record | none>`
@@ -56,46 +44,24 @@ Stop and report if required handoff fields are missing, contradictory, or imposs
 ## State, Side Effects, And Determinism
 
 - `<state/side-effect rule>`
-- `<determinism/randomness rule>`
-- `<units/frames/identity rule if material>`
+- `<determinism/randomness rule; units/frames/identity rule if material>`
 
-## Evidence Requirements
+## Evidence Requirements (project additions beyond the global baseline)
 
-**Behavior changes:** `<project-specific evidence beyond generic test-led execution>`  
-**Bug fixes:** `<regression evidence>`  
-**Interface/contract changes:** `<contract/caller evidence>`  
-**Generated artifacts:** `<regenerate/check/review evidence>`  
-**Verification commands:** `<universal commands only; area-specific commands come from the handoff>`  
-**No relevant test surface:** `<artifact categories and required review evidence>`
+- `<project-specific evidence beyond generic test-led execution>`
+- `<no-test-surface artifact categories and required review evidence, if project-specific>`
 
-## Documentation Rules
+## Documentation, Dependency, Security (project)
 
-- `<project-specific docs/contracts/context update rule>`
-- `<generated artifact documentation rule if material>`
+- `<project-specific docs/contracts/context update rule; generated-artifact rule if material>`
+- `<dependency approval/evidence rule; canonical command only if truly project-wide>`
+- `<secret/private data rule; public or user-facing claim evidence/wording rule>`
 
-## Dependency And Tooling Rules
-
-- `<dependency approval/evidence rule>`
-- `<canonical command only if truly project-wide>`
-
-## Security, Privacy, And Publicness
-
-- `<secret/private data rule>`
-- `<public or user-facing claim evidence/wording rule>`
-
-## Compromise Policy
-
-- `<accepted compromise tracking or blocking rule>`
-- `<exit-condition requirement if material>`
-
-## Review Block Criteria
-
-Block when:
+## Review Block Criteria (project-specific, beyond the global blockers)
 
 - `<project-specific blocker>`
 - `<project-specific blocker>`
-- task instructions, context, tests, docs, or observed behavior conflict in a way that affects implementation or review
 
-## Stop And Report
+## Compromise Policy (project)
 
-Stop and report when task authority is exceeded, required evidence cannot be produced, a material rule is ambiguous, a contract decision is needed, assigned scope is exceeded, or project context conflicts with observed behavior.
+- `<accepted compromise tracking or blocking rule; exit-condition requirement if material>`

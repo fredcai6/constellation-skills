@@ -15,7 +15,7 @@ Own: `.agent-work/SCOUT_REPORT.md` candidates. No durable truth.
 
 Does not update architecture truth. Does not implement. Does not redesign, change code, create packets, decide future structure, or own Triage.
 
-Inputs: `docs/architecture/`, `docs/agents/ORCHESTRATOR_CONTEXT.md`, relevant code/tests/config, user focus.
+Inputs: inherited global doctrine (`references/global-orchestrator.md` + `references/global-everyone.md`), `docs/architecture/`, `docs/agents/ORCHESTRATOR_CONTEXT.md` if present, relevant code/tests/config, user focus.
 
 ## Modes
 

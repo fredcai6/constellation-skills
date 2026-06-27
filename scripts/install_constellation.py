@@ -14,6 +14,7 @@ from typing import Callable, Iterable, Mapping, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = REPO_ROOT / "skills"
+SHARED_REFERENCE_ROOT = SOURCE_ROOT / "_shared"
 
 
 class InstallError(Exception):
@@ -26,6 +27,7 @@ class Skill:
     install_name: str
     source_path: Path
     required_scripts: tuple[str, ...]
+    required_references: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -82,6 +84,28 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "implementer": ("checklist_engine.py",),
     "reviewer": ("checklist_engine.py",),
 }
+# Global doctrine buckets (single source: skills/_shared/), bundled into each skill's
+# references/ at install exactly as the scripts above are bundled into scripts/. The
+# audience Venn is enforced by which buckets a skill carries: everyone-global is shared
+# by all; the tier buckets reach only their tier. A role reads its own bucket(s) at the
+# checklist context-read step; the project supplies thin local deltas under docs/agents/.
+_GLOBAL_EVERYONE = ("global-everyone.md",)
+_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md")
+_GLOBAL_CREW = ("global-everyone.md", "global-crew.md")
+_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md")
+SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
+    "admiral": _GLOBAL_ORCHESTRATOR,
+    "lessons-auditor": _GLOBAL_EVERYONE,
+    "charter": _GLOBAL_ALL_TIERS,  # the baseline Charter elicits project deltas from
+    "commander": _GLOBAL_ORCHESTRATOR,
+    "workbench": _GLOBAL_ALL_TIERS,  # generic driver for either tier
+    "interrogator": _GLOBAL_EVERYONE,
+    "cartographer": _GLOBAL_ORCHESTRATOR,
+    "scout": _GLOBAL_ORCHESTRATOR,
+    "implementer": _GLOBAL_CREW,
+    "reviewer": _GLOBAL_CREW,
+    "triage": _GLOBAL_ORCHESTRATOR,
+}
 REWRITABLE_TEXT_SUFFIXES = {".json", ".md", ".txt"}
 
 
@@ -117,7 +141,11 @@ def discover_skills(source_root: Path = SOURCE_ROOT) -> list[Skill]:
         raise InstallError(f"source skill root does not exist: {source_root}")
 
     skills: list[Skill] = []
-    for source_path in sorted(path for path in source_root.iterdir() if path.is_dir()):
+    for source_path in sorted(
+        path
+        for path in source_root.iterdir()
+        if path.is_dir() and not path.name.startswith("_")  # _shared holds bundled refs, not a skill
+    ):
         skill_md = source_path / "SKILL.md"
         if not skill_md.exists():
             raise InstallError(f"source skill is missing SKILL.md: {source_path}")
@@ -128,6 +156,7 @@ def discover_skills(source_root: Path = SOURCE_ROOT) -> list[Skill]:
                 install_name=metadata["name"],
                 source_path=source_path,
                 required_scripts=SKILL_SCRIPT_BUNDLES.get(source_path.name, ()),
+                required_references=SKILL_REFERENCE_BUNDLES.get(source_path.name, ()),
             )
         )
 
@@ -172,6 +201,18 @@ def validate_required_scripts(skills: Iterable[Skill], scripts_root: Path = REPO
                 missing.append(f"{skill.install_name}: {scripts_root / script}")
     if missing:
         raise InstallError(f"required script(s) missing: {'; '.join(missing)}")
+
+
+def validate_required_references(
+    skills: Iterable[Skill], shared_root: Path = SHARED_REFERENCE_ROOT
+) -> None:
+    missing: list[str] = []
+    for skill in skills:
+        for reference in skill.required_references:
+            if not (shared_root / reference).is_file():
+                missing.append(f"{skill.install_name}: {shared_root / reference}")
+    if missing:
+        raise InstallError(f"required reference(s) missing: {'; '.join(missing)}")
 
 
 def rewrite_installed_skill_paths(target: Path, skill: Skill) -> None:
@@ -308,6 +349,10 @@ def install_skills(
             script_target = target / "scripts" / script
             script_target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPO_ROOT / "scripts" / script, script_target)
+        for reference in skill.required_references:
+            reference_target = target / "references" / reference
+            reference_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(SHARED_REFERENCE_ROOT / reference, reference_target)
 
     if not dry_run:
         out(restart_message)
@@ -565,6 +610,7 @@ def main(
         runtime_cwd = Path.cwd() if cwd is None else cwd
         skills = select_skills(args.skills, discover_skills())
         validate_required_scripts(skills)
+        validate_required_references(skills)
 
         if args.baseline_only:
             if args.scope != "project":

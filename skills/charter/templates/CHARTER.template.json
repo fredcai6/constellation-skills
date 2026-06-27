@@ -7,7 +7,7 @@
     "context": {
       "id": "context",
       "title": "Load existing context",
-      "imperative": "Read any existing docs/agents/*, AGENTS.md, and the README/overview. Attest c1.",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-everyone.md, references/global-orchestrator.md, references/global-crew.md) — the baseline you will elicit project deltas from — then any existing docs/agents/*, AGENTS.md, and the README/overview. Attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "existing project context loaded", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
@@ -34,7 +34,7 @@
     "interrogate": {
       "id": "interrogate",
       "title": "Interrogate doctrine",
-      "imperative": "Synthesize the goal: how the project wants problems approached, special crew rules, posture, standards, terms. In your own context, load constellation-interrogator and drive interrogation.json with that goal and the charter starting questions; integrate the resolved understanding.",
+      "imperative": "Synthesize the goal: how the project wants problems approached, special crew rules, posture, standards, terms — but only where the project DEPARTS from the inherited global baseline (do not re-elicit doctrine the global buckets already state). In your own context, load constellation-interrogator and drive interrogation.json with that goal and the charter starting questions; integrate the resolved understanding.",
       "preconditions": [{"id": "p1", "statement": "intent captured", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "doctrine resolved to role-operable decisions", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "interrogation.json",
@@ -52,7 +52,7 @@
     "orchestrator-context": {
       "id": "orchestrator-context",
       "title": "Write ORCHESTRATOR_CONTEXT",
-      "imperative": "Write docs/agents/ORCHESTRATOR_CONTEXT.md (planning, authority, gating, evidence, stop/ask). Confirm it with the user.",
+      "imperative": "Write docs/agents/ORCHESTRATOR_CONTEXT.md as project DELTAS over the inherited global doctrine — do not restate references/global-orchestrator.md or references/global-everyone.md; capture only project facts (purpose, authority), non-default rigor, and where this project departs. Confirm it with the user.",
       "preconditions": [{"id": "p1", "statement": "doctrine resolved", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "ORCHESTRATOR_CONTEXT written and confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
@@ -61,7 +61,7 @@
     "crew-context": {
       "id": "crew-context",
       "title": "Write CREW_CONTEXT",
-      "imperative": "Write docs/agents/CREW_CONTEXT.md (implementation, verification, review/blocking, stop/report). Confirm it with the user.",
+      "imperative": "Write docs/agents/CREW_CONTEXT.md as project DELTAS over the inherited global doctrine — do not restate references/global-crew.md or references/global-everyone.md; capture only project rules that change implementation or review. Confirm it with the user.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "CREW_CONTEXT written and confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,

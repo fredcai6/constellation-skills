@@ -91,14 +91,14 @@ The engine does not judge whether a waiver is wise — it only refuses *accident
 
 ## Context-read step
 
-Every checklist opens with a context-read item so the agent pulls the right baseline (gated: read, then `attest`; survey: read, then `record pass`):
+Every checklist opens with a context-read item so the agent pulls the right baseline (gated: read, then `attest`; survey: read, then `record pass`). Each agent reads its **inherited global doctrine** (bundled with the skill at `references/global-*.md`) first, then the project's thin **local deltas** if they exist:
 
-- **High tier** (Commander, Cartographer, Scout): `docs/agents/ORCHESTRATOR_CONTEXT.md` + `GLOSSARY.md` + relevant Cartographer packets.
-- **Crew tier** (implementer, reviewer): `docs/agents/CREW_CONTEXT.md` + `GLOSSARY.md` + the handoff + packet.
+- **High tier** (Commander, Cartographer, Scout): `references/global-orchestrator.md` + `references/global-everyone.md`, then `docs/agents/ORCHESTRATOR_CONTEXT.md` + `GLOSSARY.md` + relevant Cartographer packets if present.
+- **Crew tier** (implementer, reviewer): `references/global-crew.md` + `references/global-everyone.md`, then `docs/agents/CREW_CONTEXT.md` + `GLOSSARY.md` + the handoff + packet if present.
 
-Engine config (rework cap, replan policy, human checkpoints) comes from `docs/agents/engine-config.json` via each checklist's `config_ref`.
+The global buckets are inherited and identical across projects; the project files carry only departures, so a missing `docs/agents/*` degrades gracefully to global-only. Engine config (rework cap, replan policy, human checkpoints) comes from `docs/agents/engine-config.json` via each checklist's `config_ref`.
 
-Division of labor: the **skill** says how to approach the job, the **checklist** says exactly what to do, the **Charter context files** say the project specifics.
+Division of labor: the **skill** (its bundled global doctrine) says how to approach the job, the **checklist** says exactly what to do, the **Charter context files** say the project-specific deltas.
 
 ## Template set
 

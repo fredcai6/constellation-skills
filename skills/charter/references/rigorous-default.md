@@ -1,31 +1,15 @@
 # Rigorous Default
 
-Charter starts here unless the user explicitly relaxes or strengthens by subsystem.
+The rigorous default posture is now **inherited runtime doctrine**, not a Charter-only reference. It is
+authored once in the global buckets bundled with every skill at install:
 
-Default posture:
+- `references/global-everyone.md` — platform/engine doctrine plus the fail-visible / one-canonical-path posture.
+- `references/global-orchestrator.md` — the default planning/shaping/evidence posture (correctness over
+  velocity, map-first, test-led where a surface exists, machine-checkable evidence, tracked compromises).
+- `references/global-crew.md` — the default implementation and review discipline.
 
-- correctness over velocity
-- small composable units
-- explicit contracts at meaningful boundaries
-- one canonical path
-- behavior changes are test-led where a test surface exists
-- no relevant test surface means review/inspection evidence, not a TDD exception
-- machine-checkable evidence when practical
-- fail visibly rather than produce plausible wrong output
-- no hidden fallback
-- clear canonical input/data boundaries
-- no speculative abstraction
-- current context and architecture docs updated when their meaning changes
-- compromises tracked with owner, reason, and exit condition when they affect future work
-
-Cost of the default:
-
-- slower starts
-- more up-front test and evidence design
-- fewer shortcuts through ambiguous boundaries
-- more explicit stop/report behavior
-- more documentation maintenance when meaning changes
-
-Relaxation must name what gets faster, what risk increases, and where the relaxation applies.
-
-Strengthening must name the extra proof, constraint, or enforcement mechanism.
+Charter starts from that baseline and interrogates only where the project **departs** — relaxing or
+strengthening by subsystem — using the 15-axis `engineering-rubric.md`. Relaxation must name what gets
+faster, what risk increases, and where it applies; strengthening must name the extra proof, constraint, or
+enforcement mechanism. Record departures as project deltas in `ORCHESTRATOR_CONTEXT.md` /
+`CREW_CONTEXT.md`; never restate the inherited baseline.
