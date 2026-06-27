@@ -56,7 +56,7 @@ the human's reachability moves up one tier, it does not vanish.
 
 ## Behavior
 
-### A. Delegated/autonomous mode — `commander/SKILL.md` + `COMMANDER_SPINE`
+### A. Delegated/autonomous mode — `commander/SKILL.md` + `COMMANDER_SPINE` + `interrogator/SKILL.md`
 
 A new **"Delegated/autonomous mode"** section in `skills/commander/SKILL.md` (after "Human
 checkpoints (rigor dial)", which it qualifies). Contents:
@@ -69,6 +69,18 @@ checkpoints (rigor dial)", which it qualifies). Contents:
   Inherited Latitude) as the source of truth. An open question the launch order does not
   answer and that exceeds inherited latitude is **floated to the Admiral** per the launch
   order's Stop Conditions — not guessed, not blocked on the human.
+- **The Interrogator skill must carry the delegated reading too.** The `understand` step loads
+  `constellation-interrogator` (child-checklist `interrogation.json`), whose SKILL is written
+  as hard human-facing prose ("interview the user relentlessly," "ask one question at a time
+  and **wait for the answer**"). Loaded unqualified in a delegated run it instructs the
+  Commander to block on a human who is not there. So **`skills/interrogator/SKILL.md` gains a
+  short delegated-context clause**: when driven without a reachable human (a Commander under an
+  Admiral launch order, or any delegated dispatch), the "user" is the **frozen launch order /
+  the dispatching delegate** — answer each question from it, and **float a genuine unknown that
+  the source does not answer and that exceeds inherited latitude to the delegate** rather than
+  waiting on a human. The interactive reading is unchanged. (The Admiral also loads the
+  Interrogator at its `latitude` step, where the human *is* reachable; the clause is scoped to
+  the no-reachable-human case so it does not disturb that path.)
 - **`user-decision` checkpoints.** The four `user-decision` postconditions (`understand` c1,
   `plan` c3, `triage` c2, `review` c1) are satisfied in delegated mode by **attaching a
   `user-decision` evidence item that cites the governing launch-order section** (e.g. via the
@@ -91,14 +103,22 @@ truth; a verdict message is a convenience an idle Agent-tool commander can silen
 When a dispatched commander returns only an `idle_notification` (`idleReason: available`)
 with no verdict text, the Admiral **verifies from the artifact set** (branch / commit / PR /
 changed files) and a **clean-room reviewer subagent** pointed at those artifacts, and
-**never blocks waiting on a verdict message**. This dovetails with the existing
-"confirm-dead-before-you-touch-its-worktree" and "issue-close-gates-on-verified-MERGED"
-invariants. `skills/admiral/SKILL.md`'s Execute-doctrine bullet on a Commander that "dies or
-stalls" gains a pointer: an **idle** commander with complete artifacts is *done*, verified
-from artifacts — not a stall to wait on. Doctrine only; no script (the clean-room is a fresh
-reviewer subagent, which the Admiral already knows how to dispatch).
+**never blocks waiting on a verdict message**.
 
-### C. Compact step — `COMMANDER_SPINE` `compact`
+**This judges the *verdict*, not the commander's liveness — the two must not collapse.** The
+new invariant lets the Admiral *accept the work* from artifacts instead of hanging on a
+dropped message; it does **not** weaken the existing sleeper-hazard rule that an idle/"completed"
+commander **may still resurrect**, so before it **reuses, sweeps, or launches a continuation
+into that worktree** the Admiral must still confirm the commander is dead (TaskStop / no live
+PID). Idle-with-complete-artifacts means *the verdict is in the artifacts* — not that the
+process is gone. The spec wording must keep "trust the artifacts for the verdict" and "confirm
+dead before you touch the worktree" as two separate rulings. This extends the existing
+"confirm-dead-before-you-touch-its-worktree" and "issue-close-gates-on-verified-MERGED"
+invariants rather than overriding them. `skills/admiral/SKILL.md`'s Execute-doctrine bullet on
+a Commander that "dies or stalls" gains a pointer to it. Doctrine only; no script (the
+clean-room is a fresh reviewer subagent, which the Admiral already knows how to dispatch).
+
+### C. Compact step — `COMMANDER_SPINE` `compact` + `fleet-doctrine.md` quirk bullet
 
 Reframe the `compact` step `imperative` from the unconditional "Run /compact to compress
 conversation context" to **conditional**: ensure context headroom for the execute phase —
@@ -110,6 +130,13 @@ invocation becomes conditional so the step stops being a permanent skip-with-rea
 The step keeps its place, items (c1/c2), and `check: null` attestations; only the imperative
 wording changes (c1 reads "context headroom ensured (compaction run if available, else
 auto-compaction noted)").
+
+The reframe makes one existing line stale: `fleet-doctrine.md`'s "Engine/platform quirks"
+bullet currently says "the spine `compact` step invokes a user-level CLI the agent cannot run
+— skip with reason; harness auto-compaction covers it." After this change the step is
+**conditional**, not a mandated skip. Update that bullet to match (compaction is run if the
+harness exposes it, else auto-compaction covers it, and the skill-reload always runs) so the
+doctrine and the spine do not contradict.
 
 ### D. Reasoning gate — `commander/SKILL.md` "Executing a gate"
 
@@ -123,6 +150,17 @@ crew `review-result`. The rule of thumb: a crew on a pure design note is **shall
 safer; reserve crew dispatch for gates that produce code or an independently-verifiable
 change. This is an alternative gate **shape the Commander already has the freedom to author**
 (`execute.json` is authored per-run); the doctrine makes it sanctioned and discoverable.
+
+**This edit must reconcile two existing absolutes in the same SKILL, not just add a paragraph.**
+The commander SKILL today states "Each gate in `execute.json` has three tasks in order"
+(implement → review → integrate) and "**Never hand-launch a crew** — every implementer/reviewer
+dispatch goes through `run_crew.py`." Read literally, both forbid a crew-less gate. The
+reasoning-gate prose must **qualify** them in place: a *crew gate* has the three-task shape and
+**when a gate dispatches a crew it must go through `run_crew.py`** (the no-raw-CLI rule is about
+*how* you launch a crew, and is untouched); a *reasoning gate* dispatches **no** crew and so has
+neither task. The plan must carry this as an explicit edit to the existing "Executing a gate"
+and "Never hand-launch a crew" wording — otherwise the new paragraph reads as contradicting the
+old absolutes.
 
 `skills/commander/templates/EXECUTE_PLAN.template.json` is **not** edited: it is strict JSON
 (the suite `json.load`s it) so it cannot carry an explanatory comment, and adding a second
@@ -147,9 +185,14 @@ All changes are documentation/template text — **no engine code, so no unit tes
 #32/#33's doc tasks and #35's Task 2, which were review-gated). Gates:
 
 - **Review against this spec.** Each component's named files carry exactly the reading above,
-  with no stale "the interrogator must reach the human" / "Run /compact" absolutes left
-  unqualified and no contradiction between the new commander-skill sections and the spine
-  imperatives.
+  with **no stale absolute left unqualified anywhere it appears**: the interrogator's
+  "interview the user / wait for the answer" (now carries the delegated clause, §A), the
+  commander SKILL's "every gate has three tasks" / "Never hand-launch a crew" (now reconciled
+  with the reasoning gate, §D), the spine `compact` "Run /compact" (now conditional, §C), and
+  the fleet-doctrine "skip with reason" compact quirk bullet (now matches the conditional
+  step, §C). The verify-from-artifacts invariant (§B) must read as judging the *verdict*, not
+  liveness — it must not weaken "confirm dead before you touch the worktree." No contradiction
+  between the new commander-skill sections and the spine imperatives.
 - **JSON validity.** `COMMANDER_SPINE.template.json` (the only edited `.json`) must still
   parse (`py -c "import json; json.load(open(...))"`) after editing — the sole mechanical
   check. (`EXECUTE_PLAN.template.json` is not edited; see component D.)
