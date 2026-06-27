@@ -9,7 +9,7 @@ Verify one bounded change independently.
 
 **Mandatory, no exceptions: once loaded, drive the survey to completion through the engine and dispatch each step it names. Within a check, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit in your workflow feedback; reporting misfit is compliance, not deviation.**
 
-Start from the given criteria in `templates/REVIEW_SURVEY.template.json` and append checks the context warrants (one per inherited rule). Drive it as a `survey` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): visit every check, record pass or fail with a finding, then consolidate to a verdict.
+Start from the given criteria in `templates/REVIEW_SURVEY.template.json` and append checks the context warrants (one per inherited rule). Drive it as a `survey` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): visit every check, record pass or fail with a finding, then consolidate to a verdict. Create the survey checklist at the path the handoff gives ("Survey State Location": `.agent-work/<work-id>/<gate>-review/review.json`) — under the issue workbench, never at the worktree root, so closeout finds no orphan untracked scratch.
 
 The verdict is APPROVE or BLOCK with findings; an open fail cannot consolidate to APPROVE. Keep blockers separate from observations. Flag out-of-scope finds as triage candidates.
 

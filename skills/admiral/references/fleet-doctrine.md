@@ -147,11 +147,14 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
 - **Re-validate after any promotion.** A change that only breaks a committed
   pointer *after* promotion is invisible to reviewers who validated
   pre-promotion; re-run validation post-promotion before declaring done.
+- **Verify an idle commander from artifacts; never block on a dropped verdict.** An Agent-tool commander sometimes ends with only an `idle_notification` (`idleReason: available`) and never emits its verdict text, even with the work complete. Artifacts are ground truth; the verdict message is a convenience it can silently drop. When a dispatched commander returns idle with no verdict, **verify from the artifact set** (branch / commit / PR / changed files) and a **clean-room reviewer subagent** pointed at them, and accept the work on that basis — do not hang waiting for a message. This judges the **verdict**, not liveness: it does **not** weaken the sleeper-hazard rule — an idle/"completed" commander may still resurrect, so **confirm it dead before you reuse, sweep, or launch a continuation into its worktree**. "The verdict is in the artifacts" is not "the process is gone."
 
 ## Engine/platform quirks
 
-- The spine `compact` step invokes a user-level CLI the agent cannot run — skip
-  with reason; harness auto-compaction covers it.
+- The spine `compact` step no longer mandates `/compact`: run a harness compaction
+  command if one is exposed, else rely on harness auto-compaction — either is fine —
+  and **always reload the commander skill** (the load-bearing half). It is a
+  conditional step now, not a permanent skip-with-reason.
 - The engine owns utf-8 stdio internally, but still set `PYTHONIOENCODING=utf-8`
   in the child env of any *other* subprocess whose output you capture — cp1252
   pipes corrupt captured output silently.

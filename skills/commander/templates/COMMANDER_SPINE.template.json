@@ -28,7 +28,7 @@
     "understand": {
       "id": "understand",
       "title": "Understand the ask",
-      "imperative": "In your own context (the interrogator must reach the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human.",
+      "imperative": "In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral — float a decision outside latitude, or query for missing context — per Stop Conditions. See the commander skill's Delegated/autonomous mode.",
       "preconditions": [{"id": "p1", "statement": "baseline context loaded", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "problem statement and protected intent confirmed", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": "interrogation.json",
@@ -37,7 +37,7 @@
     "plan": {
       "id": "plan",
       "title": "Author the gate plan",
-      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the current map using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision — never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Get the human to approve it.",
+      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the current map using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision — never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Get the human to approve it. In delegated mode, satisfy c3 (plan approved) by attaching a user-decision evidence item citing the launch order's frozen plan and scope (attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'); surface a plan-invalidating discovery to the Admiral rather than blocking on the human. See the commander skill's Delegated/autonomous mode.",
       "preconditions": [{"id": "p1", "statement": "ask confirmed", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist", "check": null, "satisfied": false},
@@ -49,11 +49,11 @@
     },
     "compact": {
       "id": "compact",
-      "title": "Compact context and reload skills",
-      "imperative": "Run /compact to compress conversation context. Then reload the constellation-commander skill into this context. Confirm it is active before proceeding to execute.",
+      "title": "Ensure context headroom and reload skills",
+      "imperative": "Ensure context headroom for the execute phase: if your harness exposes a compaction command (e.g. /compact), run it; otherwise rely on harness auto-compaction — either is fine. Then ALWAYS reload the constellation-commander skill into this context and confirm it is active before proceeding to execute. The skill-reload is mandatory regardless of whether a compaction command was available; the compaction itself is best-effort.",
       "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
       "postconditions": [
-        {"id": "c1", "statement": "context compacted", "check": null, "satisfied": false},
+        {"id": "c1", "statement": "context headroom ensured (compaction run if available, else auto-compaction relied on)", "check": null, "satisfied": false},
         {"id": "c2", "statement": "commander skill reloaded in this context", "check": null, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
@@ -62,7 +62,7 @@
     "execute": {
       "id": "execute",
       "title": "Execute the plan",
-      "imperative": "Before entering this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/<work-id>/STATE_NOTE.md (step · slug · next command · PID · expected artifact) from .agent-work/templates/STATE_NOTE.template.md — the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python <commander-skill-dir>/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python <commander-skill-dir>/scripts/recover_crews.py <work-id> and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing.",
+      "imperative": "Before entering this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/<work-id>/STATE_NOTE.md (step · slug · next command · PID · expected artifact) from .agent-work/templates/STATE_NOTE.template.md — the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python <commander-skill-dir>/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python <commander-skill-dir>/scripts/recover_crews.py <work-id> and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
       "preconditions": [
         {"id": "p1", "statement": "commander skill loaded", "check": null, "satisfied": false},
         {"id": "p2", "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/verify_state_note.py <work-id>"}, "satisfied": false}
@@ -83,7 +83,7 @@
     "triage": {
       "id": "triage",
       "title": "Route future work",
-      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation — do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed.",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation — do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed. In delegated mode, satisfy c2 (user approved issue creation) by attaching a user-decision evidence item citing the launch order's issue-filing authority (attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'), or float to the Admiral when filing falls outside inherited latitude. See the commander skill's Delegated/autonomous mode.",
       "preconditions": [{"id": "p1", "statement": "reconcile complete", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "every triage candidate routed or recorded", "check": null, "satisfied": false},
@@ -95,7 +95,7 @@
     "review": {
       "id": "review",
       "title": "Review accomplishments with user",
-      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving.",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving. In delegated mode, satisfy c1 (run summary accepted) by attaching a user-decision evidence item citing the launch order (attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'); the Admiral ratifies at the epic return boundary. See the commander skill's Delegated/autonomous mode.",
       "preconditions": [{"id": "p1", "statement": "triage complete", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "run summary accepted by user", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
