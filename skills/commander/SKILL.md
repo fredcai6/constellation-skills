@@ -31,9 +31,9 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 
 | Step | Where it runs |
 |------|--------------|
-| understand | this context — load `constellation-interrogator`; Interrogator must reach the human |
+| understand | this context — load `constellation-interrogator`; interactive: the Interrogator reaches the human, else (delegated) reconcile against the launch order — see "Delegated/autonomous mode" |
 | plan | this context — author `execute.json` using `templates/EXECUTE_PLAN.template.json` |
-| compact | this context — run `/compact`, then reload this skill |
+| compact | this context — ensure context headroom (compaction if the harness exposes it, else auto-compaction), then reload this skill |
 | execute | this context — drive `execute.json` gate by gate |
 | reconcile | subagent — load `constellation-cartographer` |
 | triage | this context — load `constellation-triage`; user approves issues before filing |
