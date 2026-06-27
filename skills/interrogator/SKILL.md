@@ -13,6 +13,8 @@ Frame an ambiguous ask in behavior terms first. Start from the capability, then 
 
 Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and wait for the answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding. If a question can be answered from the code, explore the code instead of asking.
 
+**Delegated context (no reachable human).** When you are driven without a reachable human — a Commander running under an Admiral launch order, or any delegated dispatch — your "user" is the **frozen launch order / the dispatching delegate**. Answer each question from it, and `skip` questions it already settles. When the source does not answer and you cannot safely proceed, **take it to the delegate** rather than waiting on a human: a missing fact as a **context query**, a choice outside inherited latitude as a **float**. ("Wait for the answer" above is the interactive reading; in delegated mode the answer comes from the launch order or the delegate, never from blocking on an absent human.) The Admiral's own `latitude` interrogation, where the human *is* reachable, is unchanged.
+
 **FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
 
 ## While interrogating
