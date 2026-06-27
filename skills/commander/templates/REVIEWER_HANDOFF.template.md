@@ -5,6 +5,9 @@ Concise fragments. Omit filler.
 ## Gate
 `<gate id from execute.json, e.g. g1>`
 
+## Survey State Location
+Create your review survey checklist at `.agent-work/<work-id>/<gate>-review/review.json` — under the issue workbench, **never at the worktree root**. This keeps the survey state with the run's artifacts so closeout leaves no orphan untracked scratch.
+
 ## What Was Implemented
 `<brief description of the change>`
 
