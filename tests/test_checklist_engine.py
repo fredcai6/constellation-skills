@@ -954,6 +954,14 @@ class PosixShellRoutingTests(unittest.TestCase):
                                side_effect=AssertionError("called with None git")):
             self.assertIsNone(E._find_posix_shell())
 
+    def test_find_posix_shell_falls_back_to_sh_on_windows(self):
+        # bash and git both missing, but a POSIX sh is on PATH: the final
+        # `return shutil.which("sh")` branch is taken even on Windows.
+        with mock.patch.object(E.os, "name", "nt"), \
+             mock.patch.object(E.shutil, "which",
+                               side_effect=lambda n: r"X:\sh.exe" if n == "sh" else None):
+            self.assertEqual(E._find_posix_shell(), r"X:\sh.exe")
+
     def test_run_check_command_cmd_fallback_marker(self):
         with mock.patch.object(E, "_find_posix_shell", return_value=None):
             proc, marker = E._run_check_command(PASS_COMMAND)
