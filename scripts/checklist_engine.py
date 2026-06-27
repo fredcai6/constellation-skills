@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 def _utf8_stdio() -> None:
@@ -298,6 +300,59 @@ def _collect_changed_files(policy: dict, base_dir: Path | None) -> list[dict]:
     return files
 
 
+def _bash_candidates_from_git(git_path: str) -> list[str]:
+    """Candidate bash.exe paths derived from a git executable path. Windows
+    backstop for when `git` is on PATH but its bash directory is not.
+
+    `shutil.which("git")` resolves git to varying depths — `…\\Git\\mingw64\\bin\\git.exe`
+    (Git root = great-grandparent), `…\\Git\\cmd\\git.exe` (grandparent), or
+    `…\\Git\\bin\\git.exe` (parent) — while bash always lives at `…\\Git\\bin\\bash.exe`
+    and `…\\Git\\usr\\bin\\bash.exe`. Walk up 4 ancestor directories and, for each,
+    emit both bash locations. Pure: no filesystem access (the caller filters by
+    existence). Uses PureWindowsPath so it parses Windows paths the same on any host
+    OS — this helper only runs on Windows but its unit tests run anywhere."""
+    candidates: list[str] = []
+    d = PureWindowsPath(git_path).parent
+    for _ in range(4):
+        candidates.append(str(d / "bin" / "bash.exe"))
+        candidates.append(str(d / "usr" / "bin" / "bash.exe"))
+        d = d.parent
+    return candidates
+
+
+def _find_posix_shell() -> str | None:
+    """Locate a POSIX shell to run `command` checks under: bash on Windows, sh on
+    POSIX. Returns the shell path, or None if none is found. On Windows
+    `shutil.which("bash")` is the primary lookup (Git for Windows usually puts its
+    bash dir on PATH); the git-derived candidates are a backstop for when git is on
+    PATH but bash is not."""
+    if os.name != "nt":
+        return shutil.which("sh")
+    found = shutil.which("bash")
+    if found:
+        return found
+    git = shutil.which("git")
+    if git:
+        for cand in _bash_candidates_from_git(git):
+            if os.path.isfile(cand):
+                return cand
+    return shutil.which("sh")
+
+
+def _run_check_command(command: str) -> tuple[subprocess.CompletedProcess, str]:
+    """Run a `command`-kind check. Route it through a POSIX shell when one is found
+    (so authored grep/&&/pipe checks behave the same on Windows as on POSIX);
+    otherwise fall back to the platform shell (cmd.exe on Windows) and flag that in
+    the marker. Returns (completed process, marker) where marker is "posix" or
+    "cmd-fallback"."""
+    shell = _find_posix_shell()
+    if shell:
+        proc = subprocess.run([shell, "-c", command], capture_output=True, text=True)
+        return proc, "posix"
+    proc = subprocess.run(command, shell=True, capture_output=True, text=True)
+    return proc, "cmd-fallback"
+
+
 def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
     """Verify one condition. command -> run it; artifact -> presence/match;
     git-change-policy -> evaluate the staged/branch diff against an artifact
@@ -313,14 +368,14 @@ def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
         return bool(cond.get("satisfied"))
     kind = chk.get("kind")
     if kind == "command":
-        proc = subprocess.run(chk["command"], shell=True, capture_output=True, text=True)
+        proc, shell_marker = _run_check_command(chk["command"])
         cond["satisfied"] = proc.returncode == 0
         eid = _new_evidence_id(t)
         t.setdefault("evidence", []).append(
             {
                 "id": eid,
                 "type": "command-output",
-                "payload": {"cmd": chk["command"], "exit": proc.returncode},
+                "payload": {"cmd": chk["command"], "exit": proc.returncode, "shell": shell_marker},
                 "produced_by": "engine",
                 "ts": "",
             }

@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -923,3 +924,56 @@ class Cp1252StdioTests(unittest.TestCase):
             decoded = proc.stdout.decode("utf-8")
             self.assertIn("unicode imperative", decoded)
             self.assertIn("→ ≈ 0.5 per §7.6", decoded)
+
+
+class PosixShellRoutingTests(unittest.TestCase):
+    def test_bash_candidates_from_mingw64_git(self):
+        # which("git") on a stock box resolves to the mingw64 copy; Git root is the
+        # great-grandparent, so a parent/grandparent-only walk would miss bash.
+        cands = E._bash_candidates_from_git(r"C:\Program Files\Git\mingw64\bin\git.exe")
+        self.assertIn(r"C:\Program Files\Git\bin\bash.exe", cands)
+        self.assertIn(r"C:\Program Files\Git\usr\bin\bash.exe", cands)
+
+    def test_bash_candidates_from_cmd_git(self):
+        cands = E._bash_candidates_from_git(r"C:\Program Files\Git\cmd\git.exe")
+        self.assertIn(r"C:\Program Files\Git\bin\bash.exe", cands)
+        self.assertIn(r"C:\Program Files\Git\usr\bin\bash.exe", cands)
+
+    def test_find_posix_shell_prefers_which_bash(self):
+        with mock.patch.object(E.os, "name", "nt"), \
+             mock.patch.object(E.shutil, "which",
+                               side_effect=lambda n: r"X:\bash.exe" if n == "bash" else None):
+            self.assertEqual(E._find_posix_shell(), r"X:\bash.exe")
+
+    def test_find_posix_shell_guards_none_git(self):
+        # which() returns None for everything: git is None, so the if-guard must
+        # prevent _bash_candidates_from_git(None) from ever being called.
+        with mock.patch.object(E.os, "name", "nt"), \
+             mock.patch.object(E.shutil, "which", return_value=None), \
+             mock.patch.object(E, "_bash_candidates_from_git",
+                               side_effect=AssertionError("called with None git")):
+            self.assertIsNone(E._find_posix_shell())
+
+    def test_run_check_command_cmd_fallback_marker(self):
+        with mock.patch.object(E, "_find_posix_shell", return_value=None):
+            proc, marker = E._run_check_command(PASS_COMMAND)
+        self.assertEqual(marker, "cmd-fallback")
+        self.assertEqual(proc.returncode, 0)
+
+    def test_command_evidence_stamps_cmd_fallback_marker(self):
+        with mock.patch.object(E, "_find_posix_shell", return_value=None):
+            cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+            E.advance(cl, "g1")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["payload"]["shell"], "cmd-fallback")
+
+    @unittest.skipUnless(E._find_posix_shell(), "no POSIX shell found")
+    def test_posix_routing_runs_pipe_and_marks_evidence(self):
+        # The shell:"posix" assertion is the real guard — it proves the command was
+        # routed through bash. (The command's pass/fail alone does not discriminate:
+        # where Git's usr\bin is on PATH, grep/pipes also pass under cmd.exe.)
+        cl = gated(g1=gate("g1", "in-progress", command="echo isolated | grep -q isolated"))
+        E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["payload"]["shell"], "posix")
