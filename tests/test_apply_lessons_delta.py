@@ -353,6 +353,23 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "engine-attest",
             "applied_evidence": "e"}]}, expect_rc=1)
 
+    def test_export_requires_grounding(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "export", "id": "engine-attest"}]},
+                       expect_rc=1)
+
+    def test_export_sets_exported_and_pins(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "export", "id": "engine-attest",
+            "grounding": "CONSTELLATION_FEEDBACK.md 2026-06-27 engine-attest"}]})
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.status, "exported")
+
+    def test_export_refuses_non_constellation(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})  # handoff scope
+        self.run_delta({"work_id": "i2", "ops": [{"op": "export", "id": "handoff-diff-command",
+            "grounding": "g"}]}, expect_rc=1)
+
 
 if __name__ == "__main__":
     unittest.main()

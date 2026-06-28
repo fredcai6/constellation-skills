@@ -261,7 +261,7 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
     for op in ops:
         kind = op.get("op")
         lesson_id = op.get("id", "")
-        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply"):
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply", "export"):
             raise LessonsDeltaError(f"unknown op {kind!r}")
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", lesson_id or ""):
             raise LessonsDeltaError(f"op {kind}: invalid lesson id {lesson_id!r} (kebab-case)")
@@ -296,6 +296,8 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
             raise LessonsDeltaError(f"defer {lesson_id}: reason is required")
         if kind == "apply" and not str(op.get("applied_evidence", "")).strip():
             raise LessonsDeltaError(f"apply {lesson_id}: applied_evidence citation is required")
+        if kind == "export" and not str(op.get("grounding", "")).strip():
+            raise LessonsDeltaError(f"export {lesson_id}: grounding (CONSTELLATION_FEEDBACK citation) required")
     return work_id, bool(tick), ops
 
 
@@ -403,6 +405,17 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             log.append(
                 f"applied lesson:{lesson_id} -> {effective_target} (paid; deleted) "
                 f"— {op['applied_evidence']}"
+            )
+        elif kind == "export":
+            if lesson.scope != "constellation":
+                raise LessonsDeltaError(
+                    f"export {lesson_id}: only constellation-scoped lessons export upstream"
+                )
+            lesson.status = "exported"
+            lesson.history.append(f"exported {stamp} — {op['grounding']}")
+            log.append(
+                f"exported lesson:{lesson_id} to CONSTELLATION_FEEDBACK "
+                f"(pinned until upstream ships) — {op['grounding']}"
             )
         elif kind == "defer":
             count = lesson.recurrences if lesson.scope == "constellation" else lesson.confirmed
