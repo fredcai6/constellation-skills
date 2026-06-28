@@ -331,6 +331,28 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertEqual(lesson.status, "deferred")
         self.assertEqual(lesson.deferred_at, 2)
 
+    def test_apply_requires_applied_evidence(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command"}]},
+                       expect_rc=1)
+
+    def test_apply_deletes_non_constellation_lesson(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "docs/agents/CREW_CONTEXT.md §Implementation Rules"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_apply_requires_a_target(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})  # no target
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "e"}]}, expect_rc=1)
+
+    def test_apply_refuses_constellation(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation",
+            target="skills/_shared/global-everyone.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "engine-attest",
+            "applied_evidence": "e"}]}, expect_rc=1)
+
 
 if __name__ == "__main__":
     unittest.main()

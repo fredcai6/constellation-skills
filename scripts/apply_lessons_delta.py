@@ -261,7 +261,7 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
     for op in ops:
         kind = op.get("op")
         lesson_id = op.get("id", "")
-        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer"):
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply"):
             raise LessonsDeltaError(f"unknown op {kind!r}")
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", lesson_id or ""):
             raise LessonsDeltaError(f"op {kind}: invalid lesson id {lesson_id!r} (kebab-case)")
@@ -294,6 +294,8 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
             raise LessonsDeltaError(f"retire {lesson_id}: reason is required")
         if kind == "defer" and not str(op.get("reason", "")).strip():
             raise LessonsDeltaError(f"defer {lesson_id}: reason is required")
+        if kind == "apply" and not str(op.get("applied_evidence", "")).strip():
+            raise LessonsDeltaError(f"apply {lesson_id}: applied_evidence citation is required")
     return work_id, bool(tick), ops
 
 
@@ -303,7 +305,7 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
     stamp = _stamp(work_id)
 
     # Retires first so retire-before-add can satisfy the cap within one delta.
-    ordered = sorted(ops, key=lambda op: 0 if op["op"] == "retire" else 1)
+    ordered = sorted(ops, key=lambda op: 0 if op["op"] in ("retire", "apply") else 1)
 
     for op in ordered:
         kind, lesson_id = op["op"], op["id"]
@@ -386,6 +388,22 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
         elif kind == "retire":
             book.active.remove(lesson)
             log.append(f"deleted lesson:{lesson_id} — {op['reason']}")
+        elif kind == "apply":
+            if lesson.scope == "constellation":
+                raise LessonsDeltaError(
+                    f"apply {lesson_id}: constellation lessons cannot be applied in-project; "
+                    "use export to queue the fix upstream"
+                )
+            effective_target = str(op.get("target", "")).strip() or lesson.target
+            if not effective_target:
+                raise LessonsDeltaError(
+                    f"apply {lesson_id}: target required (set on the lesson or in the op)"
+                )
+            book.active.remove(lesson)
+            log.append(
+                f"applied lesson:{lesson_id} -> {effective_target} (paid; deleted) "
+                f"— {op['applied_evidence']}"
+            )
         elif kind == "defer":
             count = lesson.recurrences if lesson.scope == "constellation" else lesson.confirmed
             lesson.status = "deferred"
