@@ -293,6 +293,28 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertNotIn("## Dormant", rendered)
         self.assertNotIn("old-ghost", rendered)
 
+    def test_add_accepts_target_and_round_trips(self):
+        self.run_delta({"work_id": "issue-1", "ops": [
+            add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.active[0].target, "docs/agents/CREW_CONTEXT.md")
+        self.assertIn("- target: docs/agents/CREW_CONTEXT.md", self.file.read_text(encoding="utf-8"))
+
+    def test_thresholds_default_when_absent_and_render_explicit(self):
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.apply_recurrences, 1)
+        self.assertEqual(book.apply_confirmed, 3)
+        self.assertIn("apply-recurrences=1 apply-confirmed=3", self.file.read_text(encoding="utf-8"))
+
+    def test_thresholds_round_trip_custom_values(self):
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        text = self.file.read_text(encoding="utf-8").replace(
+            "apply-recurrences=1 apply-confirmed=3", "apply-recurrences=2 apply-confirmed=5")
+        self.file.write_text(text, encoding="utf-8")
+        book = self.m.load_playbook(self.file)
+        self.assertEqual((book.apply_recurrences, book.apply_confirmed), (2, 5))
+
 
 if __name__ == "__main__":
     unittest.main()

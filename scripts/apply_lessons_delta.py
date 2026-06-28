@@ -31,9 +31,12 @@ _utf8_stdio()
 SCOPES = ("handoff", "commander", "admiral", "project", "constellation")
 DEFAULT_CAP = 20
 DEFAULT_DORMANCY_RUNS = 10
+DEFAULT_APPLY_RECURRENCES = 1
+DEFAULT_APPLY_CONFIRMED = 3
 
 STATE_RE = re.compile(
-    r"<!--\s*playbook-state:\s*run-tick=(\d+)\s+cap=(\d+)\s+dormancy-runs=(\d+)\s*-->"
+    r"<!--\s*playbook-state:\s*run-tick=(\d+)\s+cap=(\d+)\s+dormancy-runs=(\d+)"
+    r"(?:\s+apply-recurrences=(\d+))?(?:\s+apply-confirmed=(\d+))?\s*-->"
 )
 LESSON_HEADING_RE = re.compile(r"^### lesson:([a-z0-9][a-z0-9-]*)$")
 FIELD_RE = re.compile(r"^- ([a-z-]+): (.*)$")
@@ -58,6 +61,8 @@ class Lesson:
     added: str = ""
     last_confirmed: str = "none"
     runs_since_confirmed: int = 0
+    target: str = ""
+    deferred_at: int = -1
     retired: str = ""  # parse-only back-compat: legacy files carry this; the engine never sets it
     history: list[str] = field(default_factory=list)
 
@@ -68,6 +73,10 @@ class Lesson:
             f"- task-class: {self.task_class}",
             f"- statement: {self.statement}",
             f"- grounding: {self.grounding}",
+        ]
+        if self.target:
+            lines.append(f"- target: {self.target}")
+        lines += [
             f"- mentions: {self.mentions}",
             f"- confirmed: {self.confirmed}",
             f"- disconfirmed: {self.disconfirmed}",
@@ -82,6 +91,8 @@ class Lesson:
             f"- last-confirmed: {self.last_confirmed}",
             f"- runs-since-confirmed: {self.runs_since_confirmed}",
         ]
+        if self.deferred_at >= 0:
+            lines.append(f"- deferred-at: {self.deferred_at}")
         if self.retired:
             lines.append(f"- retired: {self.retired}")
         for entry in self.history:
@@ -94,6 +105,8 @@ class Playbook:
     run_tick: int
     cap: int
     dormancy_runs: int
+    apply_recurrences: int
+    apply_confirmed: int
     preamble: str
     active: list[Lesson]
 
@@ -107,7 +120,7 @@ class Playbook:
 def _default_preamble() -> str:
     return (
         "# Lessons Playbook\n\n"
-        "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 -->\n\n"
+        "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 -->\n\n"
         "Curated, bounded workflow lessons. Read the Active section at the Commander\n"
         "context step. Never edit by hand or by LLM: apply structured deltas via\n"
         "apply_lessons_delta.py, which enforces cap, grounding, and counter rules.\n\n"
@@ -150,6 +163,8 @@ def parse_lessons(block: str) -> list[Lesson]:
                 added=current.get("added", ""),
                 last_confirmed=current.get("last-confirmed", "none"),
                 runs_since_confirmed=int(current.get("runs-since-confirmed", "0")),
+                target=current.get("target", ""),
+                deferred_at=int(current.get("deferred-at", "-1")),
                 retired=current.get("retired", ""),
                 history=list(history),
             )
@@ -187,6 +202,8 @@ def load_playbook(path: Path) -> Playbook:
     if not state:
         raise LessonsDeltaError(f"playbook missing playbook-state marker: {path}")
     run_tick, cap, dormancy = (int(state.group(i)) for i in (1, 2, 3))
+    apply_recurrences = int(state.group(4)) if state.group(4) else DEFAULT_APPLY_RECURRENCES
+    apply_confirmed = int(state.group(5)) if state.group(5) else DEFAULT_APPLY_CONFIRMED
 
     active_idx = text.find("\n## Active")
     if active_idx == -1:
@@ -205,6 +222,8 @@ def load_playbook(path: Path) -> Playbook:
         run_tick=run_tick,
         cap=cap,
         dormancy_runs=dormancy,
+        apply_recurrences=apply_recurrences,
+        apply_confirmed=apply_confirmed,
         preamble=preamble,
         active=parse_lessons(active_block),
     )
@@ -213,7 +232,8 @@ def load_playbook(path: Path) -> Playbook:
 def render_playbook(book: Playbook) -> str:
     preamble = STATE_RE.sub(
         f"<!-- playbook-state: run-tick={book.run_tick} cap={book.cap} "
-        f"dormancy-runs={book.dormancy_runs} -->",
+        f"dormancy-runs={book.dormancy_runs} apply-recurrences={book.apply_recurrences} "
+        f"apply-confirmed={book.apply_confirmed} -->",
         book.preamble,
     )
     parts = [preamble, "", "## Active", ""]
@@ -301,6 +321,7 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                     task_class=str(op["task_class"]).strip(),
                     statement=str(op["statement"]).strip(),
                     grounding=str(op["grounding"]).strip(),
+                    target=str(op.get("target", "")).strip(),
                     added=stamp,
                 )
             )
@@ -318,6 +339,8 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                 lesson.scope = op["scope"]
             if str(op.get("task_class", "")).strip():
                 lesson.task_class = str(op["task_class"]).strip()
+            if str(op.get("target", "")).strip():
+                lesson.target = str(op["target"]).strip()
             lesson.history.append(f"amended {stamp} — {op['grounding']} (was: {old_statement})")
             log.append(f"amended lesson:{lesson_id} (counters preserved)")
             continue
