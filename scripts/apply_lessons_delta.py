@@ -261,7 +261,7 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
     for op in ops:
         kind = op.get("op")
         lesson_id = op.get("id", "")
-        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire"):
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer"):
             raise LessonsDeltaError(f"unknown op {kind!r}")
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", lesson_id or ""):
             raise LessonsDeltaError(f"op {kind}: invalid lesson id {lesson_id!r} (kebab-case)")
@@ -292,6 +292,8 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
                 )
         if kind == "retire" and not str(op.get("reason", "")).strip():
             raise LessonsDeltaError(f"retire {lesson_id}: reason is required")
+        if kind == "defer" and not str(op.get("reason", "")).strip():
+            raise LessonsDeltaError(f"defer {lesson_id}: reason is required")
     return work_id, bool(tick), ops
 
 
@@ -384,6 +386,12 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
         elif kind == "retire":
             book.active.remove(lesson)
             log.append(f"deleted lesson:{lesson_id} — {op['reason']}")
+        elif kind == "defer":
+            count = lesson.recurrences if lesson.scope == "constellation" else lesson.confirmed
+            lesson.status = "deferred"
+            lesson.deferred_at = count
+            lesson.history.append(f"deferred {stamp} at {count} — {op['reason']}")
+            log.append(f"deferred lesson:{lesson_id} at {count} — {op['reason']}")
 
     if tick:
         book.run_tick += 1

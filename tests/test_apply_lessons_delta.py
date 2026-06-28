@@ -315,6 +315,22 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         book = self.m.load_playbook(self.file)
         self.assertEqual((book.apply_recurrences, book.apply_confirmed), (2, 5))
 
+    def test_defer_requires_reason(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "defer", "id": "handoff-diff-command"}]},
+                       expect_rc=1)
+
+    def test_defer_sets_status_and_records_count(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})
+        self.run_delta({"work_id": "i2", "ops": [
+            {"op": "confirm", "id": "handoff-diff-command", "grounding": "g"},
+            {"op": "confirm", "id": "handoff-diff-command", "grounding": "g"}]})
+        self.run_delta({"work_id": "i3", "ops": [
+            {"op": "defer", "id": "handoff-diff-command", "reason": "needs human"}]})
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.status, "deferred")
+        self.assertEqual(lesson.deferred_at, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
