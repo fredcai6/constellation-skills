@@ -222,8 +222,7 @@ Expected: FAIL (`unknown op 'defer'`).
 
 In `validate_delta`, add `defer` to the allowed-op tuple and a reason check:
 ```python
-        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire",
-                        "apply", "export", "defer"):
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer"):
             raise LessonsDeltaError(f"unknown op {kind!r}")
 ```
 ```python
@@ -240,8 +239,6 @@ In `apply_delta`, after the `retire` branch, add:
             lesson.history.append(f"deferred {stamp} at {count} — {op['reason']}")
             log.append(f"deferred lesson:{lesson_id} at {count} — {op['reason']}")
 ```
-
-(`apply` and `export` are added in Tasks 3–4; adding them to the validate tuple now is harmless — they are validated and applied in those tasks.)
 
 - [ ] **Step 4: Run to verify pass**
 
@@ -299,7 +296,11 @@ Expected: FAIL.
 
 - [ ] **Step 3: Implement**
 
-In `validate_delta`, add an applied_evidence check:
+In `validate_delta`, add `apply` to the allowed-op tuple and an applied_evidence check:
+```python
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply"):
+            raise LessonsDeltaError(f"unknown op {kind!r}")
+```
 ```python
         if kind == "apply" and not str(op.get("applied_evidence", "")).strip():
             raise LessonsDeltaError(f"apply {lesson_id}: applied_evidence citation is required")
@@ -381,7 +382,11 @@ Expected: FAIL.
 
 - [ ] **Step 3: Implement**
 
-In `validate_delta`, add a grounding check for export:
+In `validate_delta`, add `export` to the allowed-op tuple and a grounding check:
+```python
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply", "export"):
+            raise LessonsDeltaError(f"unknown op {kind!r}")
+```
 ```python
         if kind == "export" and not str(op.get("grounding", "")).strip():
             raise LessonsDeltaError(f"export {lesson_id}: grounding (CONSTELLATION_FEEDBACK citation) required")
