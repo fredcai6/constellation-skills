@@ -243,6 +243,30 @@ def render_playbook(book: Playbook) -> str:
     return "\n".join(parts).rstrip("\n") + "\n"
 
 
+def ripe_lessons(book: Playbook) -> list[Lesson]:
+    """Threshold-ripe lessons still awaiting an apply/export/defer disposition."""
+    ripe: list[Lesson] = []
+    for lesson in book.active:
+        if lesson.status == "charter-review":
+            continue
+        if lesson.scope == "constellation":
+            if lesson.recurrences < book.apply_recurrences:
+                continue
+            if lesson.status == "exported":
+                continue
+            count = lesson.recurrences
+        else:
+            if lesson.confirmed < book.apply_confirmed:
+                continue
+            if not lesson.target:
+                continue
+            count = lesson.confirmed
+        if lesson.status == "deferred" and lesson.deferred_at >= count:
+            continue
+        ripe.append(lesson)
+    return ripe
+
+
 def _stamp(work_id: str) -> str:
     return f"{date.today().isoformat()} ({work_id})"
 
@@ -448,10 +472,19 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("delta", type=Path, help="JSON delta file with work_id, tick, ops")
+    parser.add_argument("delta", type=Path, nargs="?", help="JSON delta file with work_id, tick, ops")
     parser.add_argument("--file", type=Path, default=Path(".agent-work/LESSONS.md"))
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--ripe", action="store_true", help="list ripe-unpaid lessons and exit")
     args = parser.parse_args(argv)
+
+    if args.ripe:
+        book = load_playbook(args.file)
+        for lesson in ripe_lessons(book):
+            print(f"{lesson.lesson_id}\t{lesson.scope}\ttarget={lesson.target or 'CONSTELLATION_FEEDBACK.md'}")
+        return 0
+    if args.delta is None:
+        parser.error("delta file is required unless --ripe is given")
 
     try:
         delta = json.loads(args.delta.read_text(encoding="utf-8"))
