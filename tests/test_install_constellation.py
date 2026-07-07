@@ -19,6 +19,7 @@ SKILL_NAMES = [
     "constellation-workbench",
     "constellation-interrogator",
     "constellation-cartographer",
+    "constellation-docent",
     "constellation-scout",
     "constellation-implementer",
     "constellation-lessons-auditor",
@@ -139,6 +140,7 @@ class InstallConstellationTests(unittest.TestCase):
                     "charter",
                     "interrogator",
                     "cartographer",
+                    "docent",
                 ],
                 env={},
                 out=lambda _: None,
@@ -161,6 +163,14 @@ class InstallConstellationTests(unittest.TestCase):
                     / "constellation-cartographer"
                     / "scripts"
                     / "build_architecture_map.py"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target_root
+                    / "constellation-docent"
+                    / "scripts"
+                    / "docent_freshness.py"
                 ).exists()
             )
 
