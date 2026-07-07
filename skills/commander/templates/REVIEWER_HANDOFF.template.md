@@ -13,6 +13,7 @@ Create your review survey checklist at `.agent-work/<work-id>/<gate>-review/revi
 
 ## How to Inspect the Diff
 `<exact diff command, commit range, or branch — how to see what changed>`
+Check the handoff's Deliverable Path Check note before flagging an expected artifact as missing — a path marked Local-only is intentionally absent from this diff, not a defect.
 
 ## Task Statement
 `<the original task the implementer was given — what it was supposed to build>`
