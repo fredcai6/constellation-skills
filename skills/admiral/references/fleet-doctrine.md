@@ -140,10 +140,14 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
 
 ## Engine/platform quirks
 
-- The spine `compact` step no longer mandates `/compact`: run a harness compaction
-  command if one is exposed, else rely on harness auto-compaction — either is fine —
-  and **always reload the commander skill** (the load-bearing half). It is a
-  conditional step now, not a permanent skip-with-reason.
+- The Commander spine has no dedicated `compact` step (removed — it was permanent
+  skip-with-reason ceremony, since `/compact` is user-level and most harnesses
+  don't expose it to agents). Context headroom and the **mandatory** commander
+  skill reload now open `execute`'s imperative directly: compaction is best-effort
+  (run it if the harness exposes it, else rely on auto-compaction), the reload is
+  not. Spines instantiated before this change keep their own `compact` step in
+  their instantiated JSON and still run it to completion; only new instantiations
+  from the template drop it.
 - The engine owns utf-8 stdio internally, but still set `PYTHONIOENCODING=utf-8`
   in the child env of any *other* subprocess whose output you capture — cp1252
   pipes corrupt captured output silently.
