@@ -49,7 +49,7 @@ Operating doctrine, learned from field fleets:
 
 The run cannot close with unrouted observations. Engine-enforced:
 
-1. Dispatch a fresh-context subagent invoking `constellation-lessons-auditor` with a compiled run brief; every returned candidate gets a routed disposition (template delta / playbook delta / Charter nomination / constellation export / retire / drop-with-reason). Apply playbook deltas only via `apply_lessons_delta.py`.
+1. Dispatch a fresh-context subagent invoking `constellation-lessons-auditor` with a compiled run brief; every returned candidate gets a routed disposition (template delta / playbook delta / Charter nomination / constellation export / retire / drop-with-reason). Apply playbook deltas only via `apply_lessons_delta.py`. When the epic runs against this repo (constellation-skills) itself — self-maintenance/dogfooding — the run brief additionally includes a fresh `collect_feedback.py` sweep over the known dogfood project roots, so the cross-project feedback loop cannot go dormant between epics; see `docs/DEBT_SWEEP_CADENCE.md` for the current roots list and exact invocation. In any other consuming repo this bullet is a no-op (no `docs/DEBT_SWEEP_CADENCE.md` there, nothing to sweep).
 2. Append the epic retrospective to `.agent-work/AGENT_FEEDBACK.md`; the feedback invariant check must pass.
 3. Architecture audit: hand the epic's net change to `constellation-cartographer` for reconcile.
 4. Repo hygiene: branches merged or dispositioned, worktrees swept (`git worktree remove` + `git worktree prune`, only after merge or confirmed-dead), ADMIRAL_LOG archived to main under `.agent-work/archive/`.
