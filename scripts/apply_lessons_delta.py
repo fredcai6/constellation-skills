@@ -16,6 +16,10 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_work_root import durable_root
+
+
 def _utf8_stdio() -> None:
     """Per field feedback: don't make every call site set PYTHONIOENCODING."""
     for stream in (sys.stdout, sys.stderr):
@@ -509,13 +513,17 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("delta", type=Path, nargs="?", help="JSON delta file with work_id, tick, ops")
-    parser.add_argument("--file", type=Path, default=Path(".agent-work/LESSONS.md"))
+    parser.add_argument("--file", type=Path, default=None)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--ripe", action="store_true", help="list ripe-unpaid lessons and exit")
     args = parser.parse_args(argv)
 
+    # Default only: resolve the durable playbook root so a linked-worktree run reads
+    # and writes the MAIN checkout's playbook. An explicit --file always wins.
+    target = args.file if args.file is not None else durable_root() / ".agent-work" / "LESSONS.md"
+
     if args.ripe:
-        book = load_playbook(args.file)
+        book = load_playbook(target)
         for lesson in ripe_lessons(book):
             print(f"{lesson.lesson_id}\t{lesson.scope}\ttarget={lesson.target or 'CONSTELLATION_FEEDBACK.md'}")
         return 0
@@ -524,7 +532,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         delta = json.loads(args.delta.read_text(encoding="utf-8"))
-        book = load_playbook(args.file)
+        book = load_playbook(target)
         log = apply_delta(book, delta)
     except (OSError, json.JSONDecodeError) as exc:
         print(f"error: cannot read delta: {exc}", file=sys.stderr)
@@ -536,8 +544,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print("DRY RUN — no write")
     else:
-        args.file.parent.mkdir(parents=True, exist_ok=True)
-        args.file.write_text(render_playbook(book), encoding="utf-8")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(render_playbook(book), encoding="utf-8")
 
     for line in log:
         print(line)

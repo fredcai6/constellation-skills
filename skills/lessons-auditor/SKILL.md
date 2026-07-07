@@ -19,6 +19,7 @@ Drive `templates/LESSONS_AUDIT.template.json` as a `survey` through the absolute
 - **Corroborate with telemetry where it exists**: rework counts, BLOCK verdicts, waives, re-dispatches, incident entries. Friction that co-occurs with telemetry outranks friction that is only asserted.
 - **Beware performative legibility**: artifacts were written by agents who knew they'd be read. Weight friction the run *worked around* (improvisations, repeated rediscovery) over friction the run *complained about*.
 - **Check existing lessons both ways**: a run that contradicts an Active lesson yields a `disconfirm` op; one that re-validates it yields `confirm`, not a duplicate. Phrase-different duplicates consolidate to one candidate.
+- **Dedup sibling ids to a confirm, not a new add**: when the *same defect* surfaces under sibling lesson ids across multiple worktrees in one epic, that is a `confirm` of the existing lesson (or an `amend` to reword it) — **never a new slug that forks its identity**. A fresh `add` for a recurring defect splits its history: recurrence counting undercounts, and the constellation-export fingerprint (which keys off the stable lesson id) stops tracking it as one debt. Authoring the delta as a confirm/amend against the existing id keeps that identity — and its debt-not-trust counter — stable.
 
 ## Form selection
 

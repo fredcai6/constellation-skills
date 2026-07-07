@@ -12,19 +12,23 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_work_root import durable_root
 from apply_lessons_delta import LessonsDeltaError, load_playbook, ripe_lessons
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--file", type=Path, default=Path(".agent-work/LESSONS.md"))
+    parser.add_argument("--file", type=Path, default=None)
     args = parser.parse_args(argv)
 
-    if not args.file.exists():
+    # Default only: resolve the durable playbook root. An explicit --file wins.
+    target = args.file if args.file is not None else durable_root() / ".agent-work" / "LESSONS.md"
+
+    if not target.exists():
         print("lessons gate: no playbook — clear")
         return 0
     try:
-        book = load_playbook(args.file)
+        book = load_playbook(target)
     except LessonsDeltaError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
