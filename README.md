@@ -24,6 +24,7 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-reviewer` | Independently verify a bounded change as a survey and consolidate a verdict. |
 | `constellation-triage` | Turn findings, gaps, drift, and future work into issue-ready recommendations. |
 | `constellation-lessons-auditor` | Fresh-context Reflector at closeout: distill scoped, grounded lesson candidates from run artifacts; nominate, never apply. |
+| `constellation-docent` | Generate a self-contained static HTML explainer site for humans from Cartographer map truth, stamped with the source-map digest so a stale site is visibly flagged. |
 
 ## Install
 
