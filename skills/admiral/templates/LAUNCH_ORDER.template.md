@@ -32,7 +32,8 @@ First step, before any git operation: run `py scripts/verify_worktree_isolation.
 `<absolute paths into the main checkout for untracked inputs (DBs, model artifacts) — worktrees do not contain them>`
 
 ## Budget
-`<model tier, compute/time budget, session-window notes>`
+- **Model tier (required):** `<the model tier this dispatch runs at — every dispatch names one, never left unset>`. Pick the least-powerful model that can do the job; escalate the tier only when complexity, ambiguity, or risk demands it.
+- **Compute/time, session-window:** `<compute/time budget, session-window notes>`
 
 ## Stop Conditions
 Stop and return when: `<conditions — scope exceeded, decision outside inherited latitude needed, budget crossed, evidence impossible>`, or when you need **context the launch order does not cover and cannot safely proceed without** — return-and-query the Admiral (it answers and continues you). Asking up is always sanctioned.

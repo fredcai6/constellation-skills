@@ -35,7 +35,7 @@ Do what the epic needs. Two hard requirements only:
 
 Operating doctrine, learned from field fleets:
 
-- One Commander per issue, each in its own worktree you **provision explicitly** with `git worktree add` — the Agent-tool `isolation:"worktree"` flag is a silent no-op on Windows — and verify with `verify_worktree_isolation.py` before the wave; pick model tier per issue complexity. Never two commanders in one worktree — stop/confirm-dead the original before launching a continuation into its worktree. See `references/fleet-doctrine.md`, "Worktree isolation is a harness no-op on Windows".
+- One Commander per issue, each in its own worktree you **provision explicitly** with `git worktree add` — the Agent-tool `isolation:"worktree"` flag is a silent no-op on Windows — and verify with `verify_worktree_isolation.py` before the wave; pick model tier per issue complexity — least-powerful model that works, escalating only when complexity, ambiguity, or risk demands it — and record it in the launch order's required Budget model-tier slot. Never two commanders in one worktree — stop/confirm-dead the original before launching a continuation into its worktree. See `references/fleet-doctrine.md`, "Worktree isolation is a harness no-op on Windows".
 - Every dispatch carries a completed `templates/LAUNCH_ORDER.template.md`. Paste prior-wave verdict text — pointers are weak, commanders start cold. Pre-rule foreseeable ambiguities (marked overridable). A measured negative is a complete, successful deliverable: say so.
 - Right-size the dispatch: for small, bounded autonomous work, dispatch an implementer-with-plan directly rather than standing up a full Commander — reserve the Commander's understand/plan/execute/reconcile spine for work that actually needs it.
 - One writer per shared document per wave; assign findings files explicitly.
@@ -55,5 +55,7 @@ The run cannot close with unrouted observations. Engine-enforced:
 3. Architecture audit: hand the epic's net change to `constellation-cartographer` for reconcile.
 4. Repo hygiene: branches merged or dispositioned, worktrees swept (`git worktree remove` + `git worktree prune`, only after merge or confirmed-dead), ADMIRAL_LOG archived to main under `.agent-work/archive/`.
 5. Present the epic summary; user acceptance closes the run.
+
+**Unchanged-tree shortcut.** Re-running the full suite once per merged PR is often redundant when a wave batches several merges before a single close — the sanctioned pattern is to batch the merges and re-verify once, on the final merged main, in a fresh worktree, rather than per-PR. The shortcut only substitutes for a redundant re-run when its evidence contract holds: `git rev-parse HEAD` matches the hash recorded with the last green run, AND `git status --porcelain` is empty, AND the prior green output is pasted alongside the matched hash. Any tree change — a different HEAD or a dirty tree — voids the shortcut and forces a fresh run; this is doctrine and evidence shape only, no engine or script change.
 
 Templates: `templates/ADMIRAL_SPINE.template.json`, `templates/LATITUDE_CONTRACT.template.md`, `templates/LAUNCH_ORDER.template.md`, `templates/ADMIRAL_LOG.template.md`. References: `references/fleet-doctrine.md` (platform/harness survival doctrine). Engine: workbench `references/checklist-engine.md`.
