@@ -410,6 +410,56 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertEqual([l.lesson_id for l in self.m.ripe_lessons(self.m.load_playbook(self.file))],
                          ["handoff-diff-command"])
 
+    # --- reproduction-drill gate on ripe doctrine applies (issue-55) ---
+
+    def test_apply_ripe_doctrine_refused_without_drill(self):
+        # A ripe (confirmed>=3) lesson whose target is a doctrine .md file cannot be
+        # applied without a drill field; the whole delta is refused and nothing written.
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
+        self._confirm(3)  # confirmed==3 == apply-confirmed default => ripe
+        before = self.file.read_text(encoding="utf-8")
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "skills/commander/SKILL.md edited"}]}, expect_rc=1)
+        # refused, nothing changed: the lesson is still present
+        self.assertEqual(self.file.read_text(encoding="utf-8"), before)
+        self.assertEqual([l.lesson_id for l in self.m.load_playbook(self.file).active],
+                         ["handoff-diff-command"])
+
+    def test_apply_ripe_doctrine_accepted_with_drill(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
+        self._confirm(3)
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "skills/commander/SKILL.md edited",
+            "drill": "docs/superpowers/drills/handoff-diff-command.md"}]})
+        # paid and deleted
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_apply_non_ripe_doctrine_exempt_from_drill(self):
+        # Below the apply-confirmed threshold => not ripe => no drill needed.
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
+        self._confirm(1)  # confirmed==1 < 3 => not ripe
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "skills/commander/SKILL.md edited"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_apply_ripe_code_target_exempt_from_drill(self):
+        # A ripe apply whose target is code (.py) is exempt — its test suite is the proof.
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="scripts/run_crew.py")]})
+        self._confirm(3)
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "scripts/run_crew.py patched"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_apply_ripe_template_json_is_doctrine_refused_without_drill(self):
+        # A *.template.json target is doctrine (an agent reads it) even though it is .json.
+        self.run_delta({"work_id": "i1", "ops": [
+            add_op(target="skills/commander/templates/COMMANDER_SPINE.template.json")]})
+        self._confirm(3)
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "spine template edited"}]}, expect_rc=1)
+        self.assertEqual([l.lesson_id for l in self.m.load_playbook(self.file).active],
+                         ["handoff-diff-command"])
+
 
 if __name__ == "__main__":
     unittest.main()

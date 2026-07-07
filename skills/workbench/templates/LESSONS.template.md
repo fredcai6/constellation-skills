@@ -47,6 +47,14 @@ Rules the apply script enforces:
      Prohibitions backfire here, so state the target shape directly.
   4. Discipline slip → a **prohibition plus a rationalization counter** (last resort, for
      letter-vs-spirit dodges where the agent already knows better).
+- **Prove the doctrine edit with a reproduction drill.** Applying a *ripe* lesson whose
+  `target` is a **doctrine artifact** (a `.md` skill/doc or a `.template.*`) requires a
+  reproduction **drill**, referenced in the apply op's `drill` field — before/after-arm
+  proof (fail reproduces on the old text, no longer fires on the edited text) that the
+  fresh-context auditor, not the editor, runs and commits under
+  `docs/superpowers/drills/`. The apply script refuses a ripe doctrine apply that omits
+  `drill` (field-presence only — it never grades the drill). Code-targeted applies (a test
+  suite is the proof) and non-ripe applies are exempt.
 
 Lesson shape (script-owned; shown for readers):
 
