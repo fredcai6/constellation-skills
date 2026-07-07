@@ -155,6 +155,28 @@ def result_exists(result: str | os.PathLike[str], root: Path) -> bool:
     return path.is_file()
 
 
+def result_fresh(result: str | os.PathLike[str], root: Path, since: str) -> bool:
+    """Whether the expected result artifact exists AND is FRESH relative to the
+    crew's dispatch time `since` (an ISO-8601 string — the registry entry's
+    `started_at`). This is the ONE canonical freshness definition; every result
+    check reuses it, so a stale leftover result from a prior attempt at the same
+    path can never pass as success and the definition can never fork.
+
+    Fresh means the artifact's mtime is at/after `since` floored to whole seconds.
+    A missing file is never fresh (existence is a precondition of freshness). The
+    floor keeps coarse filesystem mtime resolution from falsely flagging a result
+    written in the same second as dispatch. Single machine, no clock skew: both
+    the mtime and `since` are POSIX-based, so the comparison is
+    timezone-independent."""
+    path = Path(result)
+    if not path.is_absolute():
+        path = root / path
+    if not path.is_file():
+        return False
+    floor = datetime.fromisoformat(since).replace(microsecond=0)
+    return path.stat().st_mtime >= floor.timestamp()
+
+
 # --------------------------------------------------------------------------- #
 # injectable seams — argv construction (pure) and the real launch
 # --------------------------------------------------------------------------- #
@@ -295,9 +317,12 @@ def launch_crew(
     )
 
     have_result = result_exists(result, root)
+    fresh = result_fresh(result, root, started)
     entry["completed_at"] = _now()
     entry["last_heartbeat"] = entry["completed_at"]
-    if exit_code == 0 and have_result:
+    # A child that exits 0 but leaves only a STALE prior-attempt result at the
+    # path (mtime predates this dispatch) is `failed`, not `completed`.
+    if exit_code == 0 and fresh:
         entry["status"] = "completed"
         final = 0
     else:
@@ -305,6 +330,7 @@ def launch_crew(
         final = exit_code if exit_code != 0 else 1
     entry["exit_code"] = exit_code
     entry["result_present"] = have_result
+    entry["result_fresh"] = fresh
     save_registry(reg, entries)
     return final, entry
 
@@ -341,8 +367,12 @@ def resume_crew(
     if not stderr_path.is_absolute():
         stderr_path = root / entry["stderr"]
 
+    # Dispatch time for THIS resume: freshness is judged against the moment we
+    # relaunch the child, not the original launch, so a stale prior-attempt result
+    # left at the path cannot pass this resume as `completed`.
+    resumed_at = _now()
     entry["status"] = "running"
-    entry["last_heartbeat"] = _now()
+    entry["last_heartbeat"] = resumed_at
     entry["pid"] = os.getpid()
     reg = registry_path(work_id, root)
     save_registry(reg, entries)
@@ -357,11 +387,13 @@ def resume_crew(
     exit_code = launch(argv, stdin=b"", env=crew_env(), stdout_path=stdout_path, stderr_path=stderr_path)
 
     have_result = result_exists(entry["result"], root)
+    fresh = result_fresh(entry["result"], root, resumed_at)
     entry["completed_at"] = _now()
     entry["last_heartbeat"] = entry["completed_at"]
-    entry["status"] = "completed" if (exit_code == 0 and have_result) else "failed"
+    entry["status"] = "completed" if (exit_code == 0 and fresh) else "failed"
     entry["exit_code"] = exit_code
     entry["result_present"] = have_result
+    entry["result_fresh"] = fresh
     save_registry(reg, entries)
     final = 0 if entry["status"] == "completed" else (exit_code if exit_code != 0 else 1)
     return final, entry
@@ -437,14 +469,18 @@ def record_external_attempt(
 
 
 def verify_external_result(entries: list[dict], session: str, root: Path) -> tuple[bool, dict]:
-    """Verify whether the result artifact exists for a recorded attempt and, when
-    present, mark it resolved/`completed` in the registry.
+    """Verify whether the result artifact is present AND fresh for a recorded
+    attempt and, when fresh, mark it resolved/`completed` in the registry.
 
-    Returns (present, entry). Reuses the same `result_exists` verification helper
-    the spawn path uses — no duplicated artifact logic. When the result is present
-    the entry is finalized to `completed` (clearing its hold on the gate/worktree);
-    when absent the entry is left untouched so the duplicate-guard keeps holding.
-    Refuses if the named crew is unknown or has been abandoned."""
+    Returns (fresh, entry). Reuses the canonical `result_fresh` helper the spawn
+    path uses — no duplicated freshness logic. Freshness is judged against the
+    entry's `started_at` (its dispatch time), so a stale leftover result from a
+    prior attempt at the same path does NOT clear the hold. Both `result_present`
+    (existence) and `result_fresh` are recorded on the entry so the CLI can tell
+    the two failure modes apart (MISSING vs STALE). Only a fresh result finalizes
+    the entry to `completed` (clearing its hold on the gate/worktree); otherwise
+    the entry is left `running` so the duplicate-guard keeps holding. Refuses if
+    the named crew is unknown or has been abandoned."""
     entry = find_entry(entries, session)
     if entry is None:
         raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
@@ -452,14 +488,16 @@ def verify_external_result(entries: list[dict], session: str, root: Path) -> tup
         raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
 
     present = result_exists(entry["result"], root)
+    fresh = result_fresh(entry["result"], root, entry["started_at"])
     entry["result_present"] = present
-    if present:
+    entry["result_fresh"] = fresh
+    if fresh:
         now = _now()
         entry["status"] = "completed"
         entry["completed_at"] = now
         entry["last_heartbeat"] = now
     save_registry(registry_path(entry["work_id"], root), entries)
-    return present, entry
+    return fresh, entry
 
 
 def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
@@ -520,10 +558,26 @@ def main(argv: list[str] | None = None) -> int:
         # --- verify an externally-dispatched crew's result ------------------ #
         if args.verify_result:
             entries = load_registry_for_resume(args.verify_result, root)
-            present, entry = verify_external_result(entries, args.verify_result, root)
-            print(f"verify {entry['session_name']} -> "
-                  f"{'present' if present else 'absent'} ({entry['status']})")
-            return 0 if present else 1
+            fresh, entry = verify_external_result(entries, args.verify_result, root)
+            if fresh:
+                print(f"verify {entry['session_name']} -> fresh ({entry['status']})")
+                return 0
+            # Fail visibly, distinguishing the two modes. The entry is left
+            # `running` (verify_external_result only completes on a fresh result).
+            if entry.get("result_present"):
+                print(
+                    f"REFUSED: result artifact stale: {entry['result']} predates "
+                    f"dispatch {entry['started_at']} "
+                    f"({entry['session_name']} left {entry['status']})",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"REFUSED: result artifact absent: {entry['result']} "
+                    f"({entry['session_name']} left {entry['status']})",
+                    file=sys.stderr,
+                )
+            return 1
 
         # --- resume an existing crew ---------------------------------------- #
         if args.resume:

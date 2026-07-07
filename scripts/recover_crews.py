@@ -159,7 +159,15 @@ def classify_registry(
 def _default_result_present(root: Path) -> ResultPredicate:
     def predicate(entry: dict) -> bool:
         result = entry.get("result")
-        return bool(result) and run_crew.result_exists(result, root)
+        if not result:
+            return False
+        # Prefer the canonical freshness gate against the entry's dispatch time so
+        # a stale prior-attempt leftover is not classified as a landed result; fall
+        # back to mere existence only for legacy entries with no started_at.
+        since = entry.get("started_at")
+        if since:
+            return run_crew.result_fresh(result, root, since)
+        return run_crew.result_exists(result, root)
 
     return predicate
 
