@@ -28,16 +28,13 @@ Agent-facing. Dense by design.
 
 ## Windows shell hazards
 
-- A multiline `gh … --body` (`gh pr create`, `gh pr comment`, any `gh … --body`) FAILS the PowerShell 5.1
-  argument parse. Write the body to a temp file and use `-F <file>` / `--body-file`, or route the call
-  through the Bash tool. `@'…'@` here-strings fix `git commit -m`, NOT `gh … --body`.
-- Bash tool for POSIX command sequences; PowerShell for cmdlets. Don't feed heredocs to PowerShell.
+- See `windows.md` (canonical, grounded) for the `gh ... --body` and `py` launcher recipes. Quick rule: Bash
+  tool for POSIX command sequences, PowerShell for cmdlets — don't feed heredocs to PowerShell.
 
 ## Parallel dispatch and worktrees
 
-- Agent-tool `isolation:"worktree"` does NOT reliably create distinct working dirs on every harness. Before
-  any parallel dispatch, verify `git worktree list` shows N distinct paths; if unverified, treat isolation as
-  ABSENT and **serialize**. Never launch a continuation into a possibly-sleeping agent's worktree.
+- See `windows.md` (canonical, grounded) for the `isolation:"worktree"` no-op hazard and its verification
+  recipe. Never launch a continuation into a possibly-sleeping agent's worktree.
 
 ## Detached and long work
 

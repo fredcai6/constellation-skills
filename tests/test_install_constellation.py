@@ -193,6 +193,39 @@ class InstallConstellationTests(unittest.TestCase):
                 refs("constellation-charter"),
             )
 
+    def test_windows_md_bundled_alongside_global_everyone(self):
+        # windows.md is the canonical Windows/harness hazard doctrine; it must ship
+        # to every tier bucket (orchestrator, crew, all-tier) alongside global-everyone.md,
+        # same mechanism, since the hazards apply to every role. It intentionally does
+        # NOT match the `global-*.md` glob used by test_global_doctrine_buckets_bundled_per_audience
+        # above, so it needs its own assertion.
+        installer = load_installer()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+
+            exit_code = installer.main(
+                [
+                    "--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                    "--skills", "commander", "implementer", "charter",
+                ],
+                env={},
+                out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+
+            for skill_name in (
+                "constellation-commander",   # orchestrator-tier
+                "constellation-implementer",  # crew-tier
+                "constellation-charter",      # all-tier
+            ):
+                with self.subTest(skill_name=skill_name):
+                    windows_md = target_root / skill_name / "references" / "windows.md"
+                    self.assertTrue(windows_md.is_file(), windows_md)
+                    self.assertTrue(
+                        (target_root / skill_name / "references" / "global-everyone.md").is_file()
+                    )
+
     def test_shared_reference_dir_is_not_installed_as_a_skill(self):
         installer = load_installer()
 
