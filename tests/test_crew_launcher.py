@@ -2,10 +2,27 @@ import importlib.util
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
+
+
+def iso(ts: float) -> str:
+    """ISO-8601 UTC string for a POSIX timestamp — used to build `started_at`
+    values relative to a controlled file mtime."""
+    return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+
+
+def write_result_with_mtime(path: Path, mtime: float) -> None:
+    """Write a result artifact and stamp its mtime deterministically into the
+    past/future, so STALE vs FRESH is decided by the clock we choose, not by
+    wall-time flakiness."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("RESULT\n", encoding="utf-8")
+    os.utime(path, (mtime, mtime))
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -337,6 +354,128 @@ class ExternalDispatchTests(unittest.TestCase):
             self.assertEqual(
                 "completed", RC.load_registry(RC.registry_path("issue-1", root))[0]["status"]
             )
+
+
+class ResultFreshnessTests(unittest.TestCase):
+    """The canonical freshness gate: a result artifact must exist AND be at/after
+    the crew's dispatch time. A stale leftover from a prior attempt is not fresh."""
+
+    BASE = 1_000_000_000.0  # fixed reference clock (2001) — deterministic
+
+    def test_missing_file_is_not_fresh(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertFalse(
+                RC.result_fresh("nope/result.md", root, iso(self.BASE))
+            )
+
+    def test_result_after_dispatch_is_fresh(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = root / "result.md"
+            write_result_with_mtime(result, self.BASE + 60)  # written after dispatch
+            self.assertTrue(RC.result_fresh("result.md", root, iso(self.BASE)))
+
+    def test_stale_result_before_dispatch_is_not_fresh(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = root / "result.md"
+            write_result_with_mtime(result, self.BASE - 60)  # leftover from before
+            self.assertFalse(RC.result_fresh("result.md", root, iso(self.BASE)))
+
+    def test_same_second_is_not_falsely_stale(self):
+        """Sub-second `started_at` after the file mtime within the SAME whole
+        second must still read fresh — the floor guards coarse mtime resolution."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = root / "result.md"
+            write_result_with_mtime(result, self.BASE + 0.2)
+            # dispatch stamped 0.7s in — same whole second, later fraction
+            self.assertTrue(
+                RC.result_fresh("result.md", root, iso(self.BASE + 0.7))
+            )
+
+    def test_verify_result_stale_refuses_and_leaves_running(self):
+        """--verify-result on a STALE leftover prints a STALE refusal, returns 1,
+        and leaves the entry running (its hold on the gate is not cleared)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--dispatch", "external",
+                ])
+            # a leftover result from a PRIOR attempt, older than this dispatch
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            dispatch_ts = datetime.fromisoformat(entry["started_at"]).timestamp()
+            write_result_with_mtime(root / result, dispatch_ts - 3600)
+            err = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+                code = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(1, code)
+            self.assertIn("stale", err.getvalue().lower())
+            reg = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("running", reg["status"])
+            self.assertTrue(reg["result_present"])
+            self.assertFalse(reg["result_fresh"])
+
+    def test_verify_result_missing_refuses_with_absent_message(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--dispatch", "external",
+                ])
+            err = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+                code = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(1, code)
+            self.assertIn("absent", err.getvalue().lower())
+            reg = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("running", reg["status"])
+
+    def test_launch_finding_only_stale_result_marks_failed(self):
+        """A spawn that exits 0 but leaves only a STALE prior-attempt result at the
+        path is `failed`, not `completed`."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            # a leftover from a prior attempt is already on disk, far in the past
+            write_result_with_mtime(root / result, self.BASE)
+            # the fake child exits 0 but writes nothing new
+            with fake_launch(RC, 0, write_result_at=None):
+                code, entry = RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="reviewer",
+                    handoff=handoff, result=result, worktree=".", model=None,
+                    launcher="claude", attempt=1, root=root, entries=[],
+                )
+            self.assertNotEqual(0, code)
+            self.assertEqual("failed", entry["status"])
+            self.assertTrue(entry["result_present"])   # the leftover exists
+            self.assertFalse(entry["result_fresh"])    # but it predates dispatch
+
+    def test_recover_default_predicate_rejects_stale_uses_started_at(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "reviewer")
+            write_result_with_mtime(root / result, self.BASE)
+            predicate = REC._default_result_present(root)
+            stale = {"result": result, "started_at": iso(self.BASE + 3600)}
+            fresh = {"result": result, "started_at": iso(self.BASE - 3600)}
+            legacy = {"result": result}  # no started_at -> existence fallback
+            self.assertFalse(predicate(stale))
+            self.assertTrue(predicate(fresh))
+            self.assertTrue(predicate(legacy))
 
 
 class ProcessAliveTests(unittest.TestCase):
