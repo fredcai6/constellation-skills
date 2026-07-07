@@ -515,6 +515,16 @@ class InstallConstellationTests(unittest.TestCase):
                 self.assertTrue(
                     (target_root / skill / "scripts" / "verify_lessons_applied.py").exists())
 
+    def test_worktree_isolation_verifier_bundled_into_commander_and_admiral(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                            "--skills", "commander", "admiral"], env={}, out=lambda _: None)
+            for skill in ("constellation-commander", "constellation-admiral"):
+                self.assertTrue(
+                    (target_root / skill / "scripts" / "verify_worktree_isolation.py").exists())
+
 
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
