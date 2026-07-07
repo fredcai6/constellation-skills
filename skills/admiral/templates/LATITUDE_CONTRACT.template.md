@@ -26,6 +26,8 @@ Confirmed by the human before wave 1. The dial between "I don't care, go" and
 | `<project-specific class>` | `surfaced | delegated` |
 | **Out-of-taxonomy** | **always escalates, with one line on why it fit no class** |
 
+- **Apply a lesson / fold doctrine** — may the fleet apply a ripe lesson to a project doc/template (and export constellation debt) without surfacing, or must each apply be surfaced? Default: surface. When delegated, applies are logged as rulings in ADMIRAL_LOG; constellation lessons are always exported, never silently confirmed.
+
 ## Float-Up Routing
 When a Commander floats — a `user-decision` **or a context query**: for a decision, adjudicate inside delegated classes and log a RULING, escalate surfaced classes and out-of-taxonomy to the human. For a **context query** (the Commander needs a fact or clarification it lacks), answer from epic knowledge and continue it; reach the human out-of-band when the answer is beyond your knowledge or latitude — a delegate is not a replacement, so "I need to talk to my human" is always available. `<any per-class nuance>`
 

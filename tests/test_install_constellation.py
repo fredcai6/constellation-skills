@@ -505,6 +505,16 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(0, exit_code)
             self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
 
+    def test_lessons_gate_verifier_bundled_into_commander_and_admiral(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                            "--skills", "commander", "admiral"], env={}, out=lambda _: None)
+            for skill in ("constellation-commander", "constellation-admiral"):
+                self.assertTrue(
+                    (target_root / skill / "scripts" / "verify_lessons_applied.py").exists())
+
 
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
