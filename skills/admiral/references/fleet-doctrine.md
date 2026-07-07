@@ -109,6 +109,23 @@ Commander is **confirmed dead with no continuation pending** — never while a l
 or recovering Commander still holds it. This is the same "confirm dead before you
 touch its worktree" rule the recovery drill already applies.
 
+**Harvest before you sweep — a required precondition of removal.** A worktree
+carries durable learning the shared root does not yet hold: its lessons-delta,
+its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. Just
+as you confirm a Commander dead before touching its worktree, you harvest that
+trio into the shared durable `.agent-work/` at the main checkout **before**
+`git worktree remove` — removal is not permitted until it is collected, because a
+swept worktree's learning is unrecoverable. Live grounding: this epic
+(`20260706-dogfood-audit`) kept its learning only because the Admiral
+hand-harvested every worktree — 12+ manual reconciliations across the run — and
+issue-54 had to improvise a snapshot-then-delta dance (copy the canonical
+`LESSONS.md` into its worktree before applying a delta, so the apply would not run
+against a vacuous empty playbook) for exactly the reason g1's git-common-dir
+resolution now removes: it points the durable trio at one shared root, so the
+harvest is **mostly automatic** and the improvisation is unnecessary. The manual
+harvest above remains the fallback for consuming projects on older scripts, or any
+hand reconciliation.
+
 ## Windows shell hazards (command-checks)
 
 See `windows.md` (hazard #1) for the canonical `gh ... --body` recipe and its

@@ -47,6 +47,9 @@ import sys
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_work_root import durable_root
+
 ENTRY_HEADING_RE = re.compile(r"^## .+$", re.MULTILINE)
 FIELD_RE = re.compile(r"^- \*\*(.+?):\*\*\s*`?(.*?)`?\s*$")
 PROSE_HEADING_RE = re.compile(r"^### (.+)$", re.MULTILINE)
@@ -291,23 +294,30 @@ def collect(project_roots: list[Path]) -> tuple[Hits, Hits]:
     new: Hits = {}
     open_unresolved: Hits = {}
     for root in project_roots:
-        feedback = root / ".agent-work" / "CONSTELLATION_FEEDBACK.md"
+        # Resolve to the durable (main-checkout) root so a linked-worktree sweep
+        # reads the shared export + sidecar, not the disposable worktree copy.
+        # A non-git root resolves to itself (no-op), preserving existing behavior.
+        droot = durable_root(root)
+        feedback = droot / ".agent-work" / "CONSTELLATION_FEEDBACK.md"
         if not feedback.is_file():
             continue
-        state = load_sidecar(root)
+        state = load_sidecar(droot)
         for entry in iter_findings(feedback.read_text(encoding="utf-8")):
             fp = fingerprint(entry)
             bucket = open_unresolved if _in_sidecar(entry, state["collected"]) else new
-            bucket.setdefault(fp, []).append((root.name, entry))
+            bucket.setdefault(fp, []).append((droot.name, entry))
     return new, open_unresolved
 
 
 def mark_collected(root: Path) -> int:
     """Record every current entry fingerprint as collected; returns count newly marked."""
-    feedback = root / ".agent-work" / "CONSTELLATION_FEEDBACK.md"
+    # Durable-root resolution mirrors collect(): a worktree marks the shared
+    # sidecar; a non-git root is unchanged.
+    droot = durable_root(root)
+    feedback = droot / ".agent-work" / "CONSTELLATION_FEEDBACK.md"
     if not feedback.is_file():
         return 0
-    state = load_sidecar(root)
+    state = load_sidecar(droot)
     today = date.today().isoformat()
     marked = 0
     for entry in iter_findings(feedback.read_text(encoding="utf-8")):
@@ -315,7 +325,7 @@ def mark_collected(root: Path) -> int:
         if not _in_sidecar(entry, state["collected"]):
             state["collected"][fp] = today
             marked += 1
-    save_sidecar(root, state)
+    save_sidecar(droot, state)
     return marked
 
 
@@ -610,7 +620,9 @@ def render_report(new: Hits, open_unresolved: Hits) -> str:
 
 def _file_issues_cli(roots, new, open_unresolved, args, filer, commenter) -> int:
     """Handle the --file-issues mode (file/comment); returns an exit code."""
-    inbox_path = args.inbox or (Path.cwd() / ".agent-work" / INBOX_NAME)
+    # Default only: the ledger lives under the durable (main-checkout) .agent-work
+    # so worktree runs share one backlog. An explicit --inbox wins.
+    inbox_path = args.inbox or (durable_root() / ".agent-work" / INBOX_NAME)
     merged = merge_hits(new, open_unresolved)
     try:
         result = sync_issues(

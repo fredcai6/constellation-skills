@@ -8,6 +8,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_work_root import durable_root
+
 
 class FeedbackVerificationError(Exception):
     """Raised when the durable feedback-log invariant is broken."""
@@ -76,9 +79,18 @@ def _current_run_archive_dirs(agent_work: Path, work_id: str) -> list[Path]:
     ]
 
 
-def verify_agent_feedback(root: Path, work_id: str, phase: str) -> None:
+def verify_agent_feedback(
+    root: Path, work_id: str, phase: str, durable: Path | None = None
+) -> None:
+    # The DURABLE feedback log resolves under `durable` (the shared main-checkout
+    # root when run inside a linked worktree); the work-area and archive negative
+    # checks stay `root`-local (worktree-local). `durable` defaults to `root`, so
+    # an explicit --root wins for BOTH.
+    if durable is None:
+        durable = root
     agent_work = root / ".agent-work"
-    feedback = agent_work / "AGENT_FEEDBACK.md"
+    durable_agent_work = durable / ".agent-work"
+    feedback = durable_agent_work / "AGENT_FEEDBACK.md"
     errors: list[str] = []
 
     if not feedback.is_file():
@@ -128,12 +140,20 @@ def verify_agent_feedback(root: Path, work_id: str, phase: str) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("work_id")
-    parser.add_argument("--root", default=".", type=Path)
+    parser.add_argument("--root", default=None, type=Path)
     parser.add_argument("--phase", choices=("feedback", "archive"), required=True)
     args = parser.parse_args(argv)
 
+    # Explicit --root wins for BOTH the durable log and the work-area/archive
+    # checks. When omitted, work-area/archive stay cwd-local while the durable log
+    # resolves to the shared main-checkout root (durable across worktree removal).
+    if args.root is not None:
+        local_root, durable = args.root, args.root
+    else:
+        local_root, durable = Path("."), durable_root()
+
     try:
-        verify_agent_feedback(args.root, args.work_id, args.phase)
+        verify_agent_feedback(local_root, args.work_id, args.phase, durable=durable)
     except FeedbackVerificationError as exc:
         print(str(exc), file=sys.stderr)
         return 1
