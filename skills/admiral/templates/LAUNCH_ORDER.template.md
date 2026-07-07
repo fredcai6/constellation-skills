@@ -39,4 +39,5 @@ Stop and return when: `<conditions — scope exceeded, decision outside inherite
 
 ## Return Shape
 `<the required form of the final report: verdict + evidence + map impact + triage candidates + workflow feedback; where the verdict gets posted. Include your "verify_worktree_isolation.py --here" confirmation (the matched worktree path) as evidence you worked in isolation.>`
+Write your result artifact and send your verdict **before** going idle: an idle notification with no artifact reads as stalled, not done, so deliver first — the Admiral judges completion from what you produced, not from a message that arrives after you've already gone quiet.
 When you open the PR on Windows, write the body to a temp file and use `gh pr create -F <file>` — never a heredoc or a PowerShell `@'...'@` here-string `--body` (both fail for PR bodies; here-strings work for `git commit -m` only). See `references/fleet-doctrine.md`, "Windows shell hazards".
