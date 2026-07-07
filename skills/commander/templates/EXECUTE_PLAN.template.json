@@ -7,7 +7,7 @@
     "e0-context": {
       "id": "e0-context",
       "title": "Load execution context",
-      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant Cartographer packet(s) for the bounded problem. Confirm the frozen plan's intent and scope, then attest c1.",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant Cartographer packet(s) for the bounded problem. This checklist's config_ref (docs/agents/engine-config.json) is absent-by-design in repos that vendor their own scripts; the engine degrades it gracefully to built-in defaults (rework cap, lease-stale seconds), so a missing engine-config is a sanctioned degradation, not a gap to fix. Confirm the frozen plan's intent and scope, then attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,

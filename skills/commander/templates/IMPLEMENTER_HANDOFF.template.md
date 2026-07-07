@@ -20,13 +20,17 @@ Concise fragments. Omit filler.
 
 ## Allowed Scope
 `<files, modules, regions, or decisions the implementer may touch>`
+When the gate adds or changes a validation, **pre-authorize the test files that already exercise the gated behavior** (their test data/harness, not excluded production code) so a legitimate minimal reconciliation of those tests does not read as an out-of-scope breach.
 
 ## Specific Exclusions
 `<things that look in-scope but are off-limits; omit section if none>`
+In a multi-issue wave, **annotate every fenced / do-not-touch line with the OWNING issue number**, and where two gates' or issues' scopes intersect, name the exclusion explicitly at the intersection.
 
 ## Constraints
 `<rules the implementation must respect — from project rules or gate-specific needs>`
 - `<rule>`
+
+When the task passes an object/dataclass-typed parameter, **name its fields explicitly** rather than leaving the crew to infer the shape from surrounding call sites.
 
 ## Map Anchors (inbound)
 Map context this gate inherits from the mission frame, so the implementation lands on the right structure and honors recorded rules. Omit a line when the gate carries nothing for it.
@@ -44,6 +48,7 @@ Map context this gate inherits from the mission frame, so the implementation lan
 
 ## Required Evidence
 `<what to produce: test output, command result, inspection note, generated artifact>`
+When the crew must assert a specific return/message string, **quote the EXACT expected string** so the crew asserts equality, not a substring guess; mark any illustrative example string as illustrative.
 
 ## Verification Commands
 
