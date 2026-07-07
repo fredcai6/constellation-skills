@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -54,6 +55,13 @@ DISPATCH_EXTERNAL = "external"
 # `entry_backend` (dispatch == "external" -> external, else cli).
 BACKEND_CLI = "cli"
 BACKEND_EXTERNAL = "external"
+
+# The `--backend auto` token opts into auto-detection (Decision 4): choose `cli`
+# when a headless `claude` CLI is found on PATH, else `external`. `None` (flag
+# omitted, backend derived from legacy `--dispatch`) is treated the same as
+# `auto` by `select_backend`, but the CLI never passes `auto`/`None` unless the
+# operator explicitly asked for `--backend auto` (Decision 5, backward compat).
+BACKEND_AUTO = "auto"
 
 
 class CrewLaunchError(Exception):
@@ -568,6 +576,37 @@ class ExternalBackend(CrewBackend):
 
 
 # --------------------------------------------------------------------------- #
+# backend selection — explicit override wins, else auto-detect (Decision 4)
+# --------------------------------------------------------------------------- #
+def select_backend(
+    explicit: str | None,
+    *,
+    launcher: str = DEFAULT_LAUNCHER,
+    which=shutil.which,
+) -> CrewBackend:
+    """Choose the crew-launch backend (Decision 4). PURE (given an injectable
+    `which`): explicit override always wins; otherwise auto-detect from whether the
+    headless `claude` CLI is on PATH.
+
+      * `explicit in {"cli","external"}` -> that backend (explicit override wins);
+      * `explicit in {None, "auto"}`     -> auto-detect: `which(launcher)` truthy
+        (the CLI is on PATH) -> `CliBackend`; else `ExternalBackend`.
+
+    `which` is injectable so tests control PATH presence without touching the real
+    PATH. Fails visibly on an unknown token (no hidden fallback)."""
+    if explicit == BACKEND_CLI:
+        return CliBackend()
+    if explicit == BACKEND_EXTERNAL:
+        return ExternalBackend()
+    if explicit not in (None, BACKEND_AUTO):
+        raise CrewLaunchError(
+            f"unknown backend {explicit!r} (expected one of "
+            f"{BACKEND_AUTO!r}, {BACKEND_CLI!r}, {BACKEND_EXTERNAL!r})"
+        )
+    return CliBackend() if which(launcher) else ExternalBackend()
+
+
+# --------------------------------------------------------------------------- #
 # public module functions — thin backward-compatible wrappers over the backends
 # --------------------------------------------------------------------------- #
 def launch_crew(
@@ -606,11 +645,23 @@ def resume_crew(
     entries: list[dict],
     launch: "callable | None" = None,
 ) -> tuple[int, dict]:
-    """Continue a recorded crew using its STORED session name and handoff. Thin
-    wrapper over `CliBackend.resume` (signature + observable behavior preserved).
-    Refuses if the named crew is unknown or has been abandoned. `launch` defaults
-    to the module-level `launch_process` resolved at CALL time."""
-    return CliBackend().resume(session, root=root, entries=entries, launch=launch)
+    """Continue a recorded crew using its STORED session name and handoff, routing
+    to the RECORDED entry's backend (Decision 6). `entry_backend(entry)` picks the
+    backend: a `cli` entry relaunches the subprocess and finalizes (today's
+    behavior); an `external` entry is unrecoverable-by-wrapper — `ExternalBackend`
+    raises `CrewLaunchError` with the SendMessage-to-agentId / --abandon --relaunch
+    guidance, so recovery NEVER silently spawns for an externally-dispatched crew.
+
+    An unknown session has no entry to route from, so it falls to `CliBackend`,
+    which raises the standard `cannot resume: no crew recorded` refusal (unchanged).
+    `launch` defaults to the module-level `launch_process` resolved at CALL time."""
+    entry = find_entry(entries, session)
+    backend: CrewBackend = (
+        ExternalBackend()
+        if entry is not None and entry_backend(entry) == BACKEND_EXTERNAL
+        else CliBackend()
+    )
+    return backend.resume(session, root=root, entries=entries, launch=launch)
 
 
 def record_external_attempt(
@@ -685,10 +736,25 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[DISPATCH_SPAWN, DISPATCH_EXTERNAL],
         default=DISPATCH_SPAWN,
         help=(
-            "how to dispatch the crew. 'spawn' (default) launches the agent CLI "
-            "subprocess. 'external' records the durable registry entry + duplicate-"
-            "guard but spawns NOTHING (the crew is dispatched out-of-band, e.g. as "
-            "an Agent-tool subagent); verify its result later with --verify-result."
+            "LEGACY selector, kept backward compatible. 'spawn' (default) launches "
+            "the agent CLI subprocess; 'external' records the durable registry entry "
+            "+ duplicate-guard but spawns NOTHING (the crew is dispatched out-of-band, "
+            "e.g. as an Agent-tool subagent); verify its result later with "
+            "--verify-result. 'spawn' maps to the 'cli' backend, 'external' to the "
+            "'external' backend. Superseded by --backend (which wins when given)."
+        ),
+    )
+    p.add_argument(
+        "--backend",
+        choices=[BACKEND_AUTO, BACKEND_CLI, BACKEND_EXTERNAL],
+        default=None,
+        help=(
+            "canonical crew-launch backend selector (Decisions 4-5). When given it "
+            "wins over --dispatch: 'cli' spawns the agent CLI subprocess, 'external' "
+            "records-only (out-of-band dispatch), 'auto' auto-detects (cli when a "
+            "headless 'claude' CLI is on PATH, else external). When omitted the "
+            "backend is derived from --dispatch (spawn->cli, external->external) with "
+            "NO auto-detection, so existing invocations keep their exact behavior."
         ),
     )
     # recovery flags
@@ -758,6 +824,16 @@ def main(argv: list[str] | None = None) -> int:
         else:
             entries = []
 
+        # Resolve the effective backend (Decisions 4-5). --backend wins when given;
+        # otherwise derive it from the legacy --dispatch (spawn->cli,
+        # external->external) with NO auto-detection, so an invocation with no new
+        # flag resolves to the exact same backend it does today. Only an explicit
+        # `--backend auto` opts into PATH auto-detection.
+        backend_token = args.backend if args.backend is not None else (
+            BACKEND_EXTERNAL if args.dispatch == DISPATCH_EXTERNAL else BACKEND_CLI
+        )
+        backend = select_backend(backend_token, launcher=args.command)
+
         # --- abandon (optionally relaunch) ---------------------------------- #
         if args.abandon:
             abandoned = abandon_crew(entries, args.abandon, root)
@@ -771,18 +847,14 @@ def main(argv: list[str] | None = None) -> int:
             result = args.result or abandoned["result"]
             entries = load_registry(registry_path(work_id, root))
             attempt = next_attempt(entries, work_id, gate, role, worktree)
-            if args.dispatch == DISPATCH_EXTERNAL:
-                entry = record_external_attempt(
-                    work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-                    worktree=worktree, model=args.model, attempt=attempt, root=root, entries=entries,
-                )
+            spec = CrewSpec(
+                work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
+                worktree=worktree, attempt=attempt, model=args.model, launcher=args.command,
+            )
+            exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
+            if backend.name == BACKEND_EXTERNAL:
                 print(f"relaunched {entry['session_name']} -> {entry['status']} (external)")
                 return 0
-            exit_code, entry = launch_crew(
-                work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-                worktree=worktree, model=args.model, launcher=args.command,
-                attempt=attempt, root=root, entries=entries,
-            )
             print(f"relaunched {entry['session_name']} -> {entry['status']}")
             return exit_code
 
@@ -796,21 +868,17 @@ def main(argv: list[str] | None = None) -> int:
                 f"--abandon --relaunch) before launching."
             )
         attempt = next_attempt(entries, args.work_id, args.gate, args.role, args.worktree)
-        if args.dispatch == DISPATCH_EXTERNAL:
-            entry = record_external_attempt(
-                work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
-                result=args.result, worktree=args.worktree, model=args.model,
-                attempt=attempt, root=root, entries=entries,
-            )
+        spec = CrewSpec(
+            work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
+            result=args.result, worktree=args.worktree, attempt=attempt,
+            model=args.model, launcher=args.command,
+        )
+        exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
+        if backend.name == BACKEND_EXTERNAL:
             print(f"crew {entry['session_name']} -> {entry['status']} "
                   f"(external: dispatched out-of-band; verify with "
                   f"--verify-result {entry['session_name']})")
             return 0
-        exit_code, entry = launch_crew(
-            work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
-            result=args.result, worktree=args.worktree, model=args.model, launcher=args.command,
-            attempt=attempt, root=root, entries=entries,
-        )
         print(f"crew {entry['session_name']} -> {entry['status']}")
         return exit_code
     except CrewLaunchError as exc:
