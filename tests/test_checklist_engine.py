@@ -1138,3 +1138,249 @@ class PosixShellRoutingTests(unittest.TestCase):
         self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
         ev = cl["tasks"]["g1"]["evidence"][-1]
         self.assertEqual(ev["payload"]["shell"], "posix")
+
+
+def _add_op(nid, after=None, posts=None, **extra):
+    """An `amend` add op with the required minimum fields, plus overrides."""
+    op = {
+        "op": "add", "id": nid,
+        "title": f"title {nid}", "imperative": f"do {nid}",
+        "postconditions": posts if posts is not None else [
+            {"id": "c1", "statement": "done", "check": None, "satisfied": False}
+        ],
+    }
+    if after is not None:
+        op["after"] = after
+    op.update(extra)
+    return op
+
+
+class AmendVerb(unittest.TestCase):
+    def test_amend_refused_on_survey(self):
+        cl = survey(v1=survey_item("v1"))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g9")]}, "r", "human")
+
+    def test_amend_refuses_empty_authority(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g9")]}, "r", "")
+
+    def test_amend_refuses_empty_reason(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g9")]}, "  ", "human")
+
+    def test_amend_refuses_empty_or_missing_ops(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": []}, "r", "human")
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {}, "r", "human")
+
+    def test_amend_adds_pending_gate_at_position_and_logs(self):
+        # g1 complete (frozen), g2 pending. Insert g1a after g1 must land AFTER g1
+        # (index 1) which is >= floor (1). New gate is pending with full shape.
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "pending", command=PASS_COMMAND))
+        msg = E.amend(cl, {"ops": [_add_op("g1a", after="g1")]}, "insert step", "human")
+        self.assertIn("g1a", msg)
+        self.assertEqual(cl["items"], ["g1", "g1a", "g2"])
+        t = cl["tasks"]["g1a"]
+        self.assertEqual(t["status"], "pending")
+        self.assertEqual(t["rework_count"], 0)
+        self.assertEqual(t["evidence"], [])
+        self.assertIn("preconditions", t)
+        self.assertIn("postconditions", t)
+        # audit trail
+        self.assertEqual(len(cl["amendments"]), 1)
+        rec = cl["amendments"][0]
+        self.assertEqual(rec["reason"], "insert step")
+        self.assertEqual(rec["authority"], "human")
+        self.assertTrue(rec["ops"])
+
+    def test_amend_add_appends_at_end_when_no_after(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        E.amend(cl, {"ops": [_add_op("g2")]}, "add tail", "human")
+        self.assertEqual(cl["items"], ["g1", "g2"])
+
+    def test_amend_add_later_op_can_reference_earlier_added_id(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        E.amend(cl, {"ops": [_add_op("g2"), _add_op("g3", after="g2")]}, "chain", "human")
+        self.assertEqual(cl["items"], ["g1", "g2", "g3"])
+
+    def test_amend_add_refuses_before_frozen_gate(self):
+        # g1 complete (frozen at index 0, floor=1), g2 pending. Adding with after
+        # omitted appends at end (fine); but inserting before the frozen gate is
+        # impossible via `after` — simulate by requiring after references a later
+        # frozen boundary. Here we make g2 complete too and try to insert after g1
+        # (index 1) which is < floor (2) -> refuse.
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "complete", command=PASS_COMMAND),
+                   g3=gate("g3", "pending", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, {"ops": [_add_op("g1a", after="g1")]}, "bad insert", "human")
+        self.assertIn("frozen", str(ctx.exception))
+
+    def test_amend_add_refuses_duplicate_id(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g1")]}, "dup", "human")
+
+    def test_amend_add_refuses_bad_id_and_missing_postconditions(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("Bad_ID")]}, "r", "human")
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g2", posts=[])]}, "r", "human")
+
+    def test_amend_drops_pending_gate(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "pending", command=PASS_COMMAND))
+        E.amend(cl, {"ops": [{"op": "drop", "id": "g2"}]}, "cut it", "human")
+        self.assertEqual(cl["items"], ["g1"])
+        self.assertNotIn("g2", cl["tasks"])
+
+    def test_amend_drop_refuses_non_pending(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, {"ops": [{"op": "drop", "id": "g1"}]}, "r", "human")
+        self.assertIn("pending", str(ctx.exception))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [{"op": "drop", "id": "g2"}]}, "r", "human")
+
+    def test_amend_rescopes_pending_gate(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        newposts = [{"id": "c1", "statement": "new", "check": None, "satisfied": False}]
+        E.amend(cl, {"ops": [{"op": "rescope", "id": "g1",
+                              "title": "retitled", "imperative": "new imp",
+                              "postconditions": newposts}]}, "reshape", "human")
+        t = cl["tasks"]["g1"]
+        self.assertEqual(t["title"], "retitled")
+        self.assertEqual(t["imperative"], "new imp")
+        self.assertEqual(t["postconditions"], newposts)
+        self.assertEqual(t["status"], "pending")
+
+    def test_amend_rescope_refuses_non_pending(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [{"op": "rescope", "id": "g1", "title": "x"}]}, "r", "human")
+
+    def test_amend_rescope_refuses_no_fields_and_empty_postconditions(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [{"op": "rescope", "id": "g1"}]}, "r", "human")
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [{"op": "rescope", "id": "g1", "postconditions": []}]}, "r", "human")
+
+    def test_amend_all_or_nothing_leaves_checklist_identical(self):
+        # 1st op valid (add g2), 2nd op invalid (drop a complete gate). The whole
+        # delta must abort: items/tasks byte-identical, no amendments recorded.
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "pending", command=PASS_COMMAND))
+        before = copy.deepcopy(cl)
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g3"),
+                                 {"op": "drop", "id": "g1"}]}, "r", "human")
+        self.assertEqual(cl["items"], before["items"])
+        self.assertEqual(cl["tasks"], before["tasks"])
+        self.assertNotIn("amendments", cl)
+
+    def test_amend_in_mutating_verbs(self):
+        self.assertIn("amend", E.MUTATING_VERBS)
+
+    def test_amend_cli_round_trip(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "delta.json"
+            delta.write_text(json.dumps({"ops": [_add_op("g2", after="g1")]}), encoding="utf-8")
+            rc = E.main(["--file", str(f), "amend", "--delta", str(delta),
+                         "--reason", "cli add", "--authority", "human"])
+            self.assertEqual(rc, 0)
+            reloaded = E.load(f)
+            self.assertEqual(reloaded["items"], ["g1", "g2"])
+            self.assertEqual(reloaded["amendments"][0]["authority"], "human")
+
+    def test_amend_cli_bad_delta_file_refuses(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            rc = E.main(["--file", str(f), "amend", "--delta", str(Path(d) / "nope.json"),
+                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(rc, 1)
+
+
+class ReopenCascade(unittest.TestCase):
+    def test_reopen_cascades_downstream_complete_and_supersedes_evidence(self):
+        cl = gated(g1=_artifact_gate("g1", "complete"),
+                   g2=_artifact_gate("g2", "complete"),
+                   g3=gate("g3", "pending", command=PASS_COMMAND))
+        # give both g1 and g2 their own review-result evidence
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        E.attach(cl, "g2", "review-result", {"verdict": "APPROVE"})
+        cl["tasks"]["g1"]["postconditions"][0]["satisfied"] = True
+        cl["tasks"]["g2"]["postconditions"][0]["satisfied"] = True
+        msg = E.reopen(cl, "g1", "rework g1")
+        # target back in-progress
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        # downstream g2 reset to pending
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+        self.assertFalse(cl["tasks"]["g2"]["postconditions"][0]["satisfied"])
+        self.assertEqual(cl["tasks"]["g2"]["status_detail"]["superseded_by_reopen"], "g1")
+        # g2's evidence retained but marked superseded
+        ev = cl["tasks"]["g2"]["evidence"][0]
+        self.assertIn("superseded", ev)
+        self.assertEqual(ev["superseded"]["by"], "reopen:g1")
+        self.assertEqual(ev["superseded"]["reason"], "rework g1")
+        # target's own evidence superseded too
+        self.assertIn("superseded", cl["tasks"]["g1"]["evidence"][0])
+        self.assertIn("cascade-reset downstream", msg)
+        self.assertIn("g2", msg)
+
+    def test_reopen_cascade_leaves_downstream_skipped_untouched(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "skipped", command=PASS_COMMAND),
+                   g3=gate("g3", "complete", command=PASS_COMMAND))
+        cl["tasks"]["g2"]["status_detail"] = {"reason": "OBE"}
+        msg = E.reopen(cl, "g1", "redo")
+        # skipped downstream untouched
+        self.assertEqual(cl["tasks"]["g2"]["status"], "skipped")
+        self.assertNotIn("superseded_by_reopen", cl["tasks"]["g2"]["status_detail"])
+        # complete downstream g3 was reset
+        self.assertEqual(cl["tasks"]["g3"]["status"], "pending")
+        self.assertIn("g3", msg)
+
+    def test_reopen_no_cascade_when_no_downstream_touchable(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   g2=gate("g2", "pending", command=PASS_COMMAND))
+        msg = E.reopen(cl, "g1", "redo")
+        # g2 already pending -> not cascaded, message has no cascade clause
+        self.assertNotIn("cascade-reset", msg)
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+
+    def test_superseded_evidence_does_not_satisfy_artifact_recheck(self):
+        # g1 passes on its own review-result; reopen supersedes it; advance must
+        # refuse until FRESH evidence is attached.
+        cl = gated(g1=_artifact_gate("g1", "in-progress"))
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+        E.reopen(cl, "g1", "stale approval")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")  # only evidence is superseded -> inert
+        # fresh evidence rescues it
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+
+    def test_superseded_evidence_refused_by_attest_reference(self):
+        cl = gated(g1=_artifact_gate("g1", "complete"),
+                   g2=_artifact_gate("g2", "pending"))
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        E.reopen(cl, "g1", "supersede it")  # supersedes g1's evidence
+        with self.assertRaises(E.EngineError) as ctx:
+            E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
+        self.assertIn("superseded", str(ctx.exception))
