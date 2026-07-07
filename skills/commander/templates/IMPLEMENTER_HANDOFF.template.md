@@ -37,6 +37,11 @@ Map context this gate inherits from the mission frame, so the implementation lan
 - **Evidence expectations:** `<claim:id or check this gate must re-confirm>`
 - **Map confidence flags:** `<node id — low-confidence/stale/disputed area; verify rather than trust; omit if none>`
 
+## Deliverable Path Check
+`<required — filled by the commander at gate-planning time, before dispatch. For each of this gate's deliverable artifact path(s), classify it:>`
+- **Committed** — `<path>`; verified via `git check-ignore <path>` exiting 1 (not ignored) before dispatch — record the exact command run and its exit code.
+- **Local-only** — `<path>`; intentionally gitignored (e.g. under `.agent-work/`) — state this explicitly so the reviewer does not expect it in the diff.
+
 ## Required Evidence
 `<what to produce: test output, command result, inspection note, generated artifact>`
 
