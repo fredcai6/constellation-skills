@@ -22,7 +22,7 @@ Commander drives three checklists in sequence:
 | `interrogation.json` | (Interrogator drives it) | The `understand` step; load Interrogator in this context |
 | `execute.json` | `templates/EXECUTE_PLAN.template.json` | Authored at `plan`; driven as frozen at `execute` |
 
-Once authored, `execute.json` is never edited mid-run. If a gate proves the plan wrong, surface the decision to the user before continuing.
+Once authored, `execute.json` is never **hand-edited** mid-run — that ban stands. When a gate proves the plan wrong, change it through the engine, not the JSON: use the `amend` verb (a validated delta that adds/drops/rescopes **pending** gates and records reason + authority) to re-plan the gated tail, and `reopen` (which cascade-resets downstream gates and supersedes their evidence) when a closed gate's work must be redone. Either way, surface the decision to the user/Admiral before continuing.
 
 
 ## How it works

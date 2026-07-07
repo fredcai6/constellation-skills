@@ -40,11 +40,12 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "consolidation": null,            // survey only: the consolidated result (verdict / understanding)
   "triage_candidates": [],          // out-of-scope discoveries, bubbled to the parent agent
   "blockers": [],                   // stuck items, bubbled to the parent agent
+  "amendments": [],                 // gated only: audit log of `amend` deltas (see Amend delta)
   "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
 ```
 
-`triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up.
+`triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up. `amendments` is a separate append-only audit log: each `amend` verb (gated only) appends one entry `{ts, reason, authority, ops:[...]}` recording an intentional mid-run re-plan (see *Amend delta — intentional mid-run re-planning*). The field is created lazily on the first amendment.
 
 ## Engine session — actor authority over the state
 
@@ -89,7 +90,7 @@ A claimed lease lives in the optional top-level `engine_session`:
 
 ### Mutating verbs and stale leases
 
-Once an **active** lease exists, the state-changing verbs (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `attest`, `waive`, `attach`, `flag-candidate`) **refuse** unless `--session-id` matches the active lease's `session_id`. The read-only `current` needs no session and reports active-lease metadata when present.
+Once an **active** lease exists, the state-changing verbs (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `amend`, `attest`, `waive`, `attach`, `flag-candidate`) **refuse** unless `--session-id` matches the active lease's `session_id`. The read-only `current` needs no session and reports active-lease metadata when present.
 
 A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**. Staleness gates **non-owners only** — it answers "has the owner gone quiet long enough that someone else may seize the lease?" The rightful **owner is never blocked by its own staleness**: every mutating verb the owner issues **and that succeeds** refreshes `last_heartbeat` (the completed work itself is the liveness signal), so an actively-working owner never goes stale and a genuine idle gap self-heals on the owner's next successful verb — no re-claim, and **no takeover record** (resuming your own work is not a takeover). A **refused** mutating verb (one that passes the ownership gate but the verb itself raises — e.g. `start` on an unmet precondition or `advance` on a failing postcondition) does **not** refresh `last_heartbeat`, even though `main()` still persists any state it mutated on the error path: a session that only issues failing verbs must still be able to go stale and be reclaimed. A **different** session against a stale lease is still **refused with an instruction to `claim` first**; that reclaim records the prior session in `previous_session_id`. Timestamps are real (the engine has a single `_now()` time hook); staleness is computed by parsing `last_heartbeat`.
 
@@ -205,6 +206,7 @@ Most conditions, especially **preconditions**, are qualitative. The engine recor
 | `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `no-posix-shell` (a bash-less Windows box, where the engine refuses to run POSIX-form text through cmd.exe and records a visible failure — returncode 127 — instead); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed) |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
+| `superseded` | object \| null | *optional, additive*; set by the `reopen` cascade to `{by, reason, ts}` (`by` is `reopen:<gate-id>`). The evidence is **retained** (the audit trail is never deleted) but rendered **inert for satisfaction**: the `_check_condition` artifact branch skips a superseded item, and `attest --evidence` refuses to satisfy a condition from one. So a reopened gate cannot re-pass an artifact postcondition from the stale approval the reopen just invalidated — fresh evidence is required. |
 
 ## Envelope (a projection, not stored)
 
@@ -248,6 +250,26 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 
 **Consistency guard (engine-enforced):** `consolidate` refuses a `verdict: APPROVE` while any item still has `result: fail`, unless an explicit `override_reason` is supplied. This is pure shape-checking — the engine is not judging quality, only refusing a verdict that contradicts its own recorded findings. It kills the weak-reviewer failure mode: dutifully recording "v3: fail," then rubber-stamping APPROVE.
 
+## Amend delta — intentional mid-run re-planning
+
+A `gated` plan is frozen once authored — the agent works the gates it was handed, it does not hand-edit the JSON. The one sanctioned way to change a gated plan mid-run is the `amend` verb, the planning-time counterpart to `waive`: like a waiver it demands a non-empty `--reason` and `--authority` (human ratification), and like a waiver the engine does not judge whether the re-plan is wise — it enforces *mechanism* and records who authorized it. `amend` applies to **gated checklists only**.
+
+```
+amend --delta <file.json> --reason "..." --authority human [--session-id <id>]
+```
+
+The delta file is JSON `{"ops": [...]}` with a non-empty `ops` list. Every op touches **PENDING gates only** — a `complete`, `in-progress`, `blocked`, or `skipped` gate is frozen and can never be edited by an amendment. Three op kinds:
+
+| op | shape | effect |
+|---|---|---|
+| `add` | `{"op":"add","id":"…","title":"…","imperative":"…","postconditions":[…],"after":"<gate-id>"?, …}` | insert a **new pending gate**. `id` must match `^[a-z0-9][a-z0-9-]*$` and be unique; `title` and `imperative` non-empty; **≥1 postcondition**. `after` names an existing gate to insert **behind** (omit to append at the end). `preconditions`/`constraints` default to empty, `directives`/`child_checklist` to null — the same shape `append` builds. |
+| `drop` | `{"op":"drop","id":"<gate-id>"}` | remove a **pending** gate (dropping a non-pending gate is refused). |
+| `rescope` | `{"op":"rescope","id":"<gate-id>", …fields}` | overwrite provided fields on a **pending** gate; overwritable fields are `title`, `imperative`, `postconditions`, `preconditions`, `constraints`, `directives`. At least one is required; if `postconditions` is given it must stay **≥1**. |
+
+**Position / floor rule (`add`).** A new gate may not be inserted **before a frozen (non-pending) gate**. The engine computes a *floor* = one past the index of the last non-pending gate; an `add` whose landing index falls below the floor is refused, naming the frozen gate that blocks it. So an amendment can reorder and extend the pending tail but never re-sequence work that is already underway or done.
+
+**All-or-nothing.** The whole delta is validated and built on **copies**; canonical state is touched only once *every* op passes. Any invalid op refuses the entire amendment and leaves the checklist **unmutated** — important, because the engine persists state even on the error path, so a partially-applied delta could otherwise leak. On success the engine appends one audit entry to the top-level `amendments` list: `{ts, reason, authority, ops:[…]}` (the `ops` are human-readable summaries such as `"added g3"`, `"dropped g4"`, `"rescoped g2"`). `amend` is a mutating verb: once a lease exists it needs the owning `--session-id`, and a successful amend refreshes the lease.
+
 ## Engine verbs ↔ schema
 
 | verb | applies | reads/writes |
@@ -264,12 +286,13 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |
 | `block <id> …` | both | `→ blocked`; append to `blockers` (bubble to parent) |
-| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; clears any `waived`/`attested` markers |
+| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; resets the gate's postconditions (clears any `waived`/`attested` markers) and **cascades**: every downstream `complete`/`in-progress` gate resets to `pending` (pre- and postconditions cleared, `status_detail.superseded_by_reopen` stamped); `skipped`/`blocked` downstream gates are left untouched. Evidence on the target and each cascaded gate is marked `superseded` — **retained**, but inert for satisfaction, so the reopened work needs fresh evidence |
+| `amend --delta <file> --reason … --authority …` | gated | intentional mid-run re-plan: apply a validated delta of `add`/`drop`/`rescope` ops that touch **PENDING gates only**; **all-or-nothing** (an invalid op leaves the checklist unmutated); appends an audit entry to `amendments`. Needs `--reason` + `--authority` (human ratification), like `waive` (see *Amend delta*) |
 | `attest <id> --cond <id> [--which preconditions\|postconditions] [--evidence <eid>]` | both | satisfy a `check: null` condition by manual attestation; OR satisfy an `artifact` postcondition **by reference** to an already-attached artifact `<eid>` (verified: exists + `evidence_type` + `match`) — avoids re-attaching the same artifact to a sibling gate. `--which` selects the condition list (default `preconditions`). Refuses `command`/`git-change-policy` checks. |
 | `waive <id> --cond <id> [--which postconditions] --authority … --reason … [--force]` | both | human override: satisfy a condition **by waiver**; refused unless its `override_policy.allowed` (or `--force`); records a `waiver` evidence record + a durable `waived` marker |
 | `flag-candidate …` | both | record an out-of-scope discovery in `triage_candidates` |
 
-Every **mutating** verb above (`start`/`advance`/`record`/`consolidate`/`skip`/`block`/`reopen`/`append`/`attest`/`waive`/`attach`/`flag-candidate`) accepts an optional `--session-id`; it is required, and checked against the active lease, **only once a lease has been claimed** (see *Engine session*).
+Every **mutating** verb above (`start`/`advance`/`record`/`consolidate`/`skip`/`block`/`reopen`/`append`/`amend`/`attest`/`waive`/`attach`/`flag-candidate`) accepts an optional `--session-id`; it is required, and checked against the active lease, **only once a lease has been claimed** (see *Engine session*).
 
 ## Example: two linked checklists
 
