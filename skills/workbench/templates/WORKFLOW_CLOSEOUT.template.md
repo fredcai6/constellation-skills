@@ -21,15 +21,12 @@
 
 - `<path/title or none>`
 
-## Template Update Candidates
+## Lesson dispositions
 
-Use this only for workflow friction that should change future templates or checklist interfaces. Do not mutate durable doctrine silently.
-
-| Template | Problem observed | Proposed change | Authority needed | Disposition |
-|---|---|---|---|---|
-| `<template>` | `<what agent had to remember, improvise, or repeat>` | `<specific field/rule/change>` | `none | Charter | user` | `applied | defer to Charter | dropped because <reason>` |
-
-Template update candidates are workflow feedback, not project truth. If a candidate changes role behavior, authority, evidence, or checklist interface, route to Charter unless already explicitly delegated. If a candidate is purely typo/format cleanup, it may be applied directly when within scope.
+Template/interface and doctrine fixes are now lessons carrying a `target`, settled at the
+Commander `feedback` step by the forced apply-or-defer gate (`verify_lessons_applied.py`) — not
+a separate advisory table. Confirm here only that the gate passed: every ripe lesson was
+applied, exported, or deferred with a reason.
 
 ## Reconciliation status
 

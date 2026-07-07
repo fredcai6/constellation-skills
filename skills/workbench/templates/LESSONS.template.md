@@ -1,6 +1,6 @@
 # Lessons Playbook
 
-<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 -->
+<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 -->
 
 Curated, bounded workflow lessons for this repo — the distilled derivative of the
 append-only `.agent-work/AGENT_FEEDBACK.md` log. Read the **Active** section at the
@@ -30,6 +30,13 @@ Rules the apply script enforces:
   and you learn it again. Active lessons unconfirmed for `dormancy-runs` ticks are
   auto-deleted, except `constellation`-scoped debt, which is pinned until you
   retire it by hand.
+- **Apply-or-defer is forced at feedback.** A lesson is *ripe* when its scope threshold is
+  crossed — non-constellation `confirmed >= apply-confirmed` (default 3) with a `target`, or
+  constellation `recurrences >= apply-recurrences` (default 1). The `feedback` step refuses to
+  advance (via `verify_lessons_applied.py`) until every ripe lesson is settled: **apply** it
+  (`apply` op — edit the `target`, then the lesson is deleted as paid), **export** it
+  (`export` op — constellation only; status `exported`, pinned until shipped upstream), or
+  **defer** it (`defer` op — records `deferred-at`; re-fires only when the count climbs).
 
 Lesson shape (script-owned; shown for readers):
 
@@ -39,9 +46,10 @@ Lesson shape (script-owned; shown for readers):
 - task-class: general-workflow | <project-domain-tag>
 - statement: <the lesson, one or two sentences, actionable>
 - grounding: <artifact citation that produced it>
+- target: <editable artifact this applies to: docs/agents/*, a template, skills/_shared/global-*, or CONSTELLATION_FEEDBACK.md> (optional)
 - mentions: 0 / confirmed: 0 / disconfirmed: 0
 - recurrences: 0   (constellation scope only — debt; omitted when 0)
-- status: active | charter-review | recurrence-debt
+- status: active | charter-review | recurrence-debt | deferred | exported
 - added / last-confirmed: <date> (<work-id>)
 ```
 

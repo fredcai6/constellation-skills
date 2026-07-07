@@ -174,10 +174,17 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
         self.run_delta({"work_id": "issue-2", "ops": [add_op()]}, expect_rc=1)
 
-    def _confirm(self, lesson_id, work_id, grounding="it recurred again"):
-        self.run_delta(
-            {"work_id": work_id, "ops": [{"op": "confirm", "id": lesson_id, "grounding": grounding}]}
-        )
+    def _confirm(self, n_or_lesson_id, work_id_or_lid="handoff-diff-command", grounding="it recurred again"):
+        """Support both old signature (lesson_id, work_id) and new signature (n, lid)."""
+        if isinstance(n_or_lesson_id, int):
+            # New signature: _confirm(n, lid="handoff-diff-command")
+            for _ in range(n_or_lesson_id):
+                self.run_delta({"work_id": "x", "ops": [{"op": "confirm", "id": work_id_or_lid, "grounding": "g"}]})
+        else:
+            # Old signature: _confirm(lesson_id, work_id, grounding="...")
+            self.run_delta(
+                {"work_id": work_id_or_lid, "ops": [{"op": "confirm", "id": n_or_lesson_id, "grounding": grounding}]}
+            )
 
     def test_constellation_confirm_is_debt_not_trust(self):
         self.run_delta(
@@ -292,6 +299,116 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         rendered = self.m.render_playbook(book)
         self.assertNotIn("## Dormant", rendered)
         self.assertNotIn("old-ghost", rendered)
+
+    def test_add_accepts_target_and_round_trips(self):
+        self.run_delta({"work_id": "issue-1", "ops": [
+            add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.active[0].target, "docs/agents/CREW_CONTEXT.md")
+        self.assertIn("- target: docs/agents/CREW_CONTEXT.md", self.file.read_text(encoding="utf-8"))
+
+    def test_thresholds_default_when_absent_and_render_explicit(self):
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.apply_recurrences, 1)
+        self.assertEqual(book.apply_confirmed, 3)
+        self.assertIn("apply-recurrences=1 apply-confirmed=3", self.file.read_text(encoding="utf-8"))
+
+    def test_thresholds_round_trip_custom_values(self):
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        text = self.file.read_text(encoding="utf-8").replace(
+            "apply-recurrences=1 apply-confirmed=3", "apply-recurrences=2 apply-confirmed=5")
+        self.file.write_text(text, encoding="utf-8")
+        book = self.m.load_playbook(self.file)
+        self.assertEqual((book.apply_recurrences, book.apply_confirmed), (2, 5))
+
+    def test_defer_requires_reason(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "defer", "id": "handoff-diff-command"}]},
+                       expect_rc=1)
+
+    def test_defer_sets_status_and_records_count(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})
+        self.run_delta({"work_id": "i2", "ops": [
+            {"op": "confirm", "id": "handoff-diff-command", "grounding": "g"},
+            {"op": "confirm", "id": "handoff-diff-command", "grounding": "g"}]})
+        self.run_delta({"work_id": "i3", "ops": [
+            {"op": "defer", "id": "handoff-diff-command", "reason": "needs human"}]})
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.status, "deferred")
+        self.assertEqual(lesson.deferred_at, 2)
+
+    def test_apply_requires_applied_evidence(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command"}]},
+                       expect_rc=1)
+
+    def test_apply_deletes_non_constellation_lesson(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "docs/agents/CREW_CONTEXT.md §Implementation Rules"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_apply_requires_a_target(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})  # no target
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "e"}]}, expect_rc=1)
+
+    def test_apply_refuses_constellation(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation",
+            target="skills/_shared/global-everyone.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "engine-attest",
+            "applied_evidence": "e"}]}, expect_rc=1)
+
+    def test_export_requires_grounding(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "export", "id": "engine-attest"}]},
+                       expect_rc=1)
+
+    def test_export_sets_exported_and_pins(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "export", "id": "engine-attest",
+            "grounding": "CONSTELLATION_FEEDBACK.md 2026-06-27 engine-attest"}]})
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.status, "exported")
+
+    def test_export_refuses_non_constellation(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})  # handoff scope
+        self.run_delta({"work_id": "i2", "ops": [{"op": "export", "id": "handoff-diff-command",
+            "grounding": "g"}]}, expect_rc=1)
+
+    def test_ripe_selects_confirmed_threshold_with_target(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self._confirm(3)
+        ripe = self.m.ripe_lessons(self.m.load_playbook(self.file))
+        self.assertEqual([l.lesson_id for l in ripe], ["handoff-diff-command"])
+
+    def test_ripe_excludes_targetless_non_constellation(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})  # no target
+        self._confirm(3)
+        self.assertEqual(self.m.ripe_lessons(self.m.load_playbook(self.file)), [])
+
+    def test_ripe_selects_constellation_recurrence(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op("engine-attest", "constellation")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "confirm", "id": "engine-attest", "grounding": "g"}]})
+        ripe = self.m.ripe_lessons(self.m.load_playbook(self.file))
+        self.assertEqual([l.lesson_id for l in ripe], ["engine-attest"])
+
+    def test_ripe_suppresses_exported_and_fresh_defer(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self._confirm(3)
+        self.run_delta({"work_id": "i2", "ops": [
+            {"op": "defer", "id": "handoff-diff-command", "reason": "later"}]})
+        self.assertEqual(self.m.ripe_lessons(self.m.load_playbook(self.file)), [])
+
+    def test_ripe_refires_when_count_climbs_past_defer(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self._confirm(3)
+        self.run_delta({"work_id": "i2", "ops": [
+            {"op": "defer", "id": "handoff-diff-command", "reason": "later"}]})
+        self._confirm(1)  # confirmed now 4 > deferred_at 3
+        self.assertEqual([l.lesson_id for l in self.m.ripe_lessons(self.m.load_playbook(self.file))],
+                         ["handoff-diff-command"])
 
 
 if __name__ == "__main__":

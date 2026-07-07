@@ -53,7 +53,8 @@
         {"id": "c2", "statement": "epic retrospective recorded and feedback invariant passes", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_agent_feedback.py <epic-id> --phase feedback"}, "satisfied": false},
         {"id": "c3", "statement": "architecture reconciled for the epic's net change", "check": null, "satisfied": false},
         {"id": "c4", "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived", "check": null, "satisfied": false},
-        {"id": "c5", "statement": "epic summary accepted by the human", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+        {"id": "c5", "statement": "epic summary accepted by the human", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false},
+        {"id": "c6", "statement": "no threshold-ripe lesson left unpaid across the epic (applied, exported, or deferred)", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"}, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
