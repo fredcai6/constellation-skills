@@ -24,9 +24,14 @@ A measured negative on the stated question is a complete, successful deliverable
 ## Workspace
 `<absolute worktree path, provisioned for you via "git worktree add" — branch name, base commit, and the exact add command that created it. Verify main freshness before dispatch. Worktrees lack untracked inputs; see Data Locations.>`
 First step, before any git operation: run `py scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
+NOTE: PR integration defaults to **server-side merge** (the GitHub merge on the PR itself, not a local merge that would diverge your worktree from main).
 
 ## Inherited Context
 `<Active lessons from .agent-work/LESSONS.md relevant to this mission; platform/technical invariants from the project playbook (encodings, shell quirks, crew-launch rules)>`
+**Charter-lite carrier:** when the target project has no `docs/agents/` overlay, this block doubles as the doctrine carrier — the thin doctrine deltas the Commander would otherwise read from `docs/agents/*` ride inline here.
+
+## Pre-empted Steps
+`<spine steps the Admiral has already performed or ratified this wave — so the Commander cites this launch order rather than redoing them (e.g. context already established, plan already frozen); omit a step you have not pre-empted>`
 
 ## Data Locations
 `<absolute paths into the main checkout for untracked inputs (DBs, model artifacts) — worktrees do not contain them>`
