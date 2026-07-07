@@ -174,7 +174,7 @@ A `git-change-policy` check refuses advancement when the staged or pending diff 
 
 ### Override policy — a deliberate, auditable waiver
 
-By default the engine **refuses** advancement when any postcondition is unmet, and a failed `command` check leaves a `command-output` evidence record with its exit status and a `shell` field naming the shell that ran it (`posix`, or `cmd-fallback` on a bash-less Windows box). `command` checks run under a POSIX shell so authored `grep`/`&&`/pipe checks are portable. That refusal is the whole point: it kills accidental advancement past a failing gate. But a human sometimes legitimately decides a check is non-blocking (e.g. a flaky type-check at a docs-only closeout). That decision belongs to the human, not the engine — so the engine offers a **waiver** path that records *who* accepted the risk and *why*, rather than letting an agent quietly mark a condition satisfied.
+By default the engine **refuses** advancement when any postcondition is unmet, and a failed `command` check leaves a `command-output` evidence record with its exit status and a `shell` field naming the shell that ran it (`posix`, or `no-posix-shell` on a bash-less Windows box). `command` checks run under a POSIX shell so authored `grep`/`&&`/pipe checks are portable; on a bash-less Windows box the engine **refuses** to run the POSIX-form text through cmd.exe and instead records a visible failure (returncode 127, `shell: no-posix-shell`) rather than silently passing or misinterpreting the check. That refusal is the whole point: it kills accidental advancement past a failing gate. But a human sometimes legitimately decides a check is non-blocking (e.g. a flaky type-check at a docs-only closeout). That decision belongs to the human, not the engine — so the engine offers a **waiver** path that records *who* accepted the risk and *why*, rather than letting an agent quietly mark a condition satisfied.
 
 A condition opts into being waivable with an optional sibling field `override_policy` (a **sibling of** `check`, not nested inside it):
 
@@ -202,7 +202,7 @@ Most conditions, especially **preconditions**, are qualitative. The engine recor
 |---|---|---|
 | `id` | string | |
 | `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy` |
-| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `cmd-fallback` (which shell ran the check); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed) |
+| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `no-posix-shell` (a bash-less Windows box, where the engine refuses to run POSIX-form text through cmd.exe and records a visible failure — returncode 127 — instead); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed) |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
 

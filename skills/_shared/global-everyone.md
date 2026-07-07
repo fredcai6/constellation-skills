@@ -26,8 +26,9 @@ Agent-facing. Dense by design.
   genuine idle gap. If another session seized the lease during such a gap, recovery is a same-id re-claim
   (idempotent, not a takeover) — free.
 - `command` postconditions run under a POSIX shell — author `grep` / `&&` / pipe checks in POSIX form; they
-  then behave the same on every platform (a Windows box without bash fails such a check **visibly** rather
-  than silently passing).
+  then behave the same on every platform. On a Windows box without bash/sh the engine **refuses** to run the
+  POSIX-form check text through cmd.exe: the check fails **visibly** (returncode 127, marker `no-posix-shell`,
+  stderr naming the missing shell) rather than silently passing or being misinterpreted by cmd.exe.
 
 ## Windows shell hazards
 

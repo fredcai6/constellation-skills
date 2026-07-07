@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -37,6 +38,13 @@ class FreshnessError(Exception):
     pass
 
 
+def _platform_interpreter() -> str:
+    """Mirror of install_constellation._platform_interpreter: `py` on Windows,
+    `python3` elsewhere. Kept here so freshness normalization reverses the same
+    interpreter rewrite the installer applies to installed copies."""
+    return "py" if os.name == "nt" else "python3"
+
+
 def _hash(path: Path) -> str:
     """Line-ending-insensitive content hash (CRLF checkouts vs LF writes)."""
     text = path.read_text(encoding="utf-8")
@@ -55,10 +63,16 @@ def _normalized_hash(path: Path, skill: str, skills_root: Path) -> str:
     absolute-form baseline as a phantom edit forever. Normalizing every side to
     the resolved (absolute) form neutralizes the token-vs-absolute difference
     while leaving genuine edits visible. Tokenless templates hash unchanged.
+
+    The installer also rewrites the `python <` interpreter prefix to the platform
+    interpreter (`py`/`python3`); the token-form baseline/working-copy keep `python
+    <`. Apply the same interpreter rewrite here FIRST (before the `<…-skill-dir>`
+    token consumes the trailing `<`) so that rewrite, too, reads as no edit.
     """
     text = path.read_text(encoding="utf-8")
     installed = (skills_root / skill).as_posix()
     short = skill.removeprefix("constellation-")
+    text = text.replace("python <", f"{_platform_interpreter()} <")
     text = text.replace("<skill-dir>", installed)
     text = text.replace(f"<{short}-skill-dir>", installed)
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
