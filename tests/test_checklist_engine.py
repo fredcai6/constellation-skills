@@ -643,6 +643,41 @@ class Leasing(unittest.TestCase):
         self.assertEqual(reloaded["tasks"]["g1"]["status"], "in-progress")
         self.assertNotEqual(reloaded["engine_session"]["last_heartbeat"], before)
 
+    def test_read_only_current_does_not_refresh_owner_heartbeat(self):
+        # A read-only `current` must never advance the owner's liveness stamp.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        cl["engine_session"]["last_heartbeat"] = _old_ts(60)  # old but not stale
+        before = cl["engine_session"]["last_heartbeat"]
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "current"]), 0)
+            reloaded = E.load(f)
+        self.assertEqual(reloaded["engine_session"]["last_heartbeat"], before)
+
+    def test_no_refresh_on_refused_mutating_call_by_owner(self):
+        # The crux: a mutating verb by the OWNER that passes require_session but is
+        # then REFUSED by the verb itself (here `start g2` out of order) must NOT
+        # refresh the lease — even though main() persists the checklist on the
+        # EngineError path. Otherwise a session that only issues failing verbs
+        # would keep its lease alive forever and never go stale.
+        cl = gated(g1=gate("g1"), g2=gate("g2"))
+        E.claim(cl, "s1", "commander", ".", {})
+        cl["engine_session"]["last_heartbeat"] = _old_ts(60)  # old but not stale
+        before = cl["engine_session"]["last_heartbeat"]
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            # start g2 refuses (g1 not complete): require_session passes (owner s1),
+            # the verb raises -> REFUSED (exit 1), main still saves on error path.
+            self.assertEqual(
+                E.main(["--file", str(f), "start", "g2", "--session-id", "s1"]), 1)
+            reloaded = E.load(f)
+        self.assertEqual(reloaded["tasks"]["g2"]["status"], "pending")
+        self.assertEqual(reloaded["engine_session"]["last_heartbeat"], before)
+
     def test_refresh_owner_heartbeat_noop_for_nonowner_and_no_lease(self):
         cl = gated(g1=gate("g1", command=PASS_COMMAND))
         E._refresh_owner_heartbeat(cl, "s1")            # no lease: no-op, no crash

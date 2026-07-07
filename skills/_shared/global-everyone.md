@@ -19,9 +19,12 @@ Agent-facing. Dense by design.
 - A postcondition whose `check` is `null` is confirmed by **attest** (your manual verification); `attach`
   won't satisfy it. Never hand-edit the checklist JSON to mark a condition satisfied — use `attest` /
   `attach` / `waive`.
-- Re-claiming a stale lease with the **same** session id is idempotent and safe (not a takeover); only a
-  different id is a takeover. On a long step, heartbeat or expect a stale-lease refusal on the next mutating
-  verb — recovery is a same-id re-claim, free.
+- The lease owner is **never blocked by its own staleness**: every mutating verb that **succeeds**
+  auto-refreshes `last_heartbeat`, so an actively-working owner never goes stale and a manual `heartbeat` is
+  rarely needed. A **refused** verb (ownership gate passed, but the verb itself raised) does **not** refresh —
+  a session that only fails can still go stale and be reclaimed. The explicit `heartbeat` verb remains for a
+  genuine idle gap. If another session seized the lease during such a gap, recovery is a same-id re-claim
+  (idempotent, not a takeover) — free.
 - `command` postconditions run under a POSIX shell — author `grep` / `&&` / pipe checks in POSIX form; they
   then behave the same on every platform (a Windows box without bash fails such a check **visibly** rather
   than silently passing).

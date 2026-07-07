@@ -468,10 +468,12 @@ def _active_lease(cl: dict) -> dict | None:
 def _refresh_owner_heartbeat(cl: dict, session_id: str | None) -> None:
     """Stamp liveness: if `session_id` owns the active lease, advance its
     `last_heartbeat` to now. No-op when there is no active lease, a different
-    session owns it, or `session_id` is falsy. Called on every mutating verb the
-    owner issues, so an actively-working owner never goes stale and a genuine
-    idle gap self-heals on the owner's next verb. It never writes a takeover
-    record — the owner resuming its own work is not a takeover."""
+    session owns it, or `session_id` is falsy. Called after every mutating verb
+    the owner issues *and that succeeds*, so an actively-working owner never goes
+    stale and a genuine idle gap self-heals on the owner's next successful verb.
+    A refused verb never reaches here, so a failing-only session can still go
+    stale. It never writes a takeover record — the owner resuming its own work is
+    not a takeover."""
     lease = _active_lease(cl)
     if lease is not None and session_id and session_id == lease.get("session_id"):
         lease["last_heartbeat"] = _now()
@@ -1042,10 +1044,22 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
     # carry the owning --session-id. No lease -> legacy behavior (no session).
     session_id = getattr(args, "session_id", None)
     require_session(cl, v, session_id, config)
-    # Owner activity = liveness: a mutating verb by the owner refreshes the lease,
-    # so an actively-working session never goes stale and an idle gap self-heals.
+    # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
+    # so it never refreshes the lease even though main() persists on the error
+    # path. Only a verb that returns successfully reaches the stamp below.
+    message = _run_verb(cl, args, base_dir)
+    # Owner activity = liveness: a SUCCESSFUL mutating verb by the owner refreshes
+    # the lease, so an actively-working session never goes stale and an idle gap
+    # self-heals. A refused verb never gets here.
     if v in MUTATING_VERBS:
         _refresh_owner_heartbeat(cl, session_id)
+    return message
+
+
+def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
+    """Execute a mutating verb and return its message, or raise EngineError if the
+    verb refuses. Read-only/lease verbs are handled by `dispatch` before this."""
+    v = args.verb
     if v == "start":
         return start(cl, args.id, base_dir=base_dir)
     if v == "advance":
