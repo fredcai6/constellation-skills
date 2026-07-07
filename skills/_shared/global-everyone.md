@@ -9,8 +9,13 @@ Agent-facing. Dense by design.
 
 ## Engine verbs
 
-- Artifact postconditions (`kind: artifact` — `user-decision`, `review-result`, …): **attach** the evidence;
-  you cannot **attest** them. An APPROVE `review-result` attaches to BOTH `gN-review` and `gN-integrate`.
+- Artifact postconditions (`kind: artifact` — `user-decision`, `review-result`, …): **attach** the evidence
+  once, then satisfy a sibling gate's identical artifact postcondition **by reference** —
+  `attest <task> --cond <id> --which postconditions --evidence <evidence-id>` — instead of re-attaching. E.g.
+  attach the APPROVE `review-result` to `gN-review`, then
+  `attest gN-integrate --cond <id> --which postconditions --evidence e-gN-review-1`. The engine still verifies
+  the referenced artifact exists and matches the required `evidence_type` + `match` (it is not a thin-air
+  assert). (`attach`-ing the same artifact to BOTH gates still works — backward compatible.)
 - A postcondition whose `check` is `null` is confirmed by **attest** (your manual verification); `attach`
   won't satisfy it. Never hand-edit the checklist JSON to mark a condition satisfied — use `attest` /
   `attach` / `waive`.

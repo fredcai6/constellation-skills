@@ -129,6 +129,18 @@ def _new_evidence_id(t: dict) -> str:
     return f"e-{t['id']}-{len(t.get('evidence', [])) + 1}"
 
 
+def _find_evidence(cl: dict, eid: str) -> dict | None:
+    """Find an evidence item by id across ALL tasks' evidence lists. Evidence ids
+    are globally unique (`e-<task>-<n>`), so a checklist-wide search lets one task's
+    artifact postcondition be satisfied by reference to an artifact attached to a
+    sibling task (see `attest --evidence`). Returns the evidence dict or None."""
+    for t in cl.get("tasks", {}).values():
+        for ev in t.get("evidence", []):
+            if ev.get("id") == eid:
+                return ev
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # git-change-policy — mechanical artifact-output guardrails (#8)
 #
@@ -362,6 +374,11 @@ def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
     (see `waive`) has accepted the condition, and re-running the command would
     overwrite `satisfied` and silently un-waive it at every `advance`."""
     if cond.get("waived"):
+        return True
+    if cond.get("attested"):
+        # An artifact postcondition satisfied by cross-task reference (see `attest
+        # --evidence`): honor it without re-scanning, since the artifact branch only
+        # looks at this task's OWN evidence and would otherwise reset it to False.
         return True
     chk = cond.get("check")
     if chk is None:
@@ -754,6 +771,7 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
         c["satisfied"] = False
         c.pop("satisfied_by", None)
         c.pop("waived", None)  # rework re-evaluates: a prior waiver does not carry over
+        c.pop("attested", None)  # nor a prior artifact-by-reference attestation
     return f"{iid} reopened (rework {t['rework_count']}/{cap})"
 
 
@@ -782,15 +800,52 @@ def append(cl: dict, iid: str, title: str, imperative: str) -> str:
     return f"appended {iid}"
 
 
-def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None) -> str:
+def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evidence_id: str | None = None) -> str:
+    """Satisfy a condition by attestation.
+
+    Two paths:
+    - `check: null` (qualitative): the agent's manual verification stands in for a
+      mechanical check — set `satisfied` from the note. Unchanged legacy behavior.
+    - `check.kind == "artifact"`: satisfy the postcondition **by reference** to an
+      already-attached artifact (`--evidence <id>`), instead of re-attaching the
+      same artifact to a sibling task. The engine still enforces mechanism: the
+      referenced evidence must EXIST, be of the required `evidence_type`, and match
+      the required `match` fields. It never lets an agent assert an artifact out of
+      thin air (that is what a `check: null` attest does, not this).
+
+    `command` / `git-change-policy` checks stay engine-checked and refuse attest."""
     t = task(cl, iid)
     for c in t.get(which, []):
-        if c["id"] == cond_id:
-            if c.get("check") is not None:
-                raise EngineError(f"{cond_id} is engine-checked; cannot attest")
+        if c["id"] != cond_id:
+            continue
+        chk = c.get("check")
+        if chk is None:
             c["satisfied"] = True
             c["satisfied_by"] = note or "attested"
             return f"attested {iid}.{cond_id}"
+        if chk.get("kind") == "artifact":
+            if not evidence_id:
+                raise EngineError(
+                    f"{cond_id} is an artifact check; attest it by referencing an "
+                    f"already-attached artifact via --evidence <id>"
+                )
+            ev = _find_evidence(cl, evidence_id)
+            if ev is None:
+                raise EngineError(f"evidence {evidence_id!r} not found in this checklist")
+            want_type = chk.get("evidence_type")
+            if ev.get("type") != want_type:
+                raise EngineError(
+                    f"evidence {evidence_id!r} is type {ev.get('type')!r}, "
+                    f"not the required {want_type!r}"
+                )
+            want_match = chk.get("match", {})
+            if not all(ev.get("payload", {}).get(k) == v for k, v in want_match.items()):
+                raise EngineError(f"evidence {evidence_id!r} does not match required {want_match}")
+            c["satisfied"] = True
+            c["satisfied_by"] = evidence_id
+            c["attested"] = {"evidence": evidence_id, "note": note}
+            return f"attested {iid}.{cond_id} via {evidence_id}"
+        raise EngineError(f"{cond_id} is engine-checked; cannot attest")
     raise EngineError(f"{which} {cond_id!r} not found on {iid}")
 
 
@@ -928,6 +983,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s.add_argument("--cond", required=True)
     s.add_argument("--which", choices=["preconditions", "postconditions"], default="preconditions")
     s.add_argument("--note")
+    s.add_argument("--evidence", help="evidence id that satisfies an artifact postcondition by reference (avoids re-attaching the same artifact to a sibling task)")
     add_session(s)
     s = sub.add_parser("waive")
     s.add_argument("id")
@@ -1007,7 +1063,7 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
     if v == "append":
         return append(cl, args.id, args.title, args.imperative)
     if v == "attest":
-        return attest(cl, args.id, args.cond, args.which, args.note)
+        return attest(cl, args.id, args.cond, args.which, args.note, evidence_id=getattr(args, "evidence", None))
     if v == "waive":
         return waive(cl, args.id, args.cond, args.which, args.authority, args.reason, forced=args.force)
     if v == "attach":

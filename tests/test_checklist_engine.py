@@ -134,6 +134,87 @@ class AdvanceGated(unittest.TestCase):
             E.record(cl, "g1", "pass", None)
 
 
+def _artifact_gate(iid, status="in-progress"):
+    """A gate whose single postcondition is an `artifact`/`review-result`
+    check matching `verdict: APPROVE` (the gN-review / gN-integrate shape)."""
+    t = gate(iid, status)
+    t["postconditions"] = [{
+        "id": "c1", "statement": "approved",
+        "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+        "satisfied": False,
+    }]
+    return t
+
+
+class AttestArtifactByReference(unittest.TestCase):
+    def test_attest_artifact_by_reference_cross_task(self):
+        # Attach the APPROVE review-result ONCE to g1 (gN-review); satisfy g2's
+        # (gN-integrate) identical artifact postcondition by reference — no re-attach.
+        cl = gated(g1=_artifact_gate("g1"), g2=_artifact_gate("g2"))
+        self.assertEqual(E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"}),
+                         "attached e-g1-1 (review-result) to g1")
+        res = E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
+        self.assertEqual(res, "attested g2.c1 via e-g1-1")
+        c = cl["tasks"]["g2"]["postconditions"][0]
+        self.assertTrue(c["satisfied"])
+        self.assertEqual(c["satisfied_by"], "e-g1-1")
+        self.assertEqual(c["attested"], {"evidence": "e-g1-1", "note": None})
+
+    def test_attest_artifact_survives_advance(self):
+        # The `attested` short-circuit must hold through re-evaluation at advance:
+        # g2's own evidence is empty, so without it the artifact branch would reset.
+        cl = gated(g1=_artifact_gate("g1"), g2=_artifact_gate("g2"))
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
+        self.assertEqual(E.advance(cl, "g2"), "g2 -> complete")
+        self.assertEqual(cl["tasks"]["g2"]["status"], "complete")
+
+    def test_attest_artifact_requires_evidence(self):
+        cl = gated(g1=_artifact_gate("g1"))
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g1", "c1", "postconditions", None)
+
+    def test_attest_artifact_evidence_not_found(self):
+        cl = gated(g1=_artifact_gate("g1"))
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g1", "c1", "postconditions", None, evidence_id="e-nope-1")
+
+    def test_attest_artifact_type_mismatch(self):
+        cl = gated(g1=_artifact_gate("g1"), g2=_artifact_gate("g2"))
+        E.attach(cl, "g1", "command-output", {"verdict": "APPROVE"})
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
+
+    def test_attest_artifact_match_fails(self):
+        cl = gated(g1=_artifact_gate("g1"), g2=_artifact_gate("g2"))
+        E.attach(cl, "g1", "review-result", {"verdict": "BLOCK"})
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
+
+    def test_attest_still_refuses_command_check(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g1", "c1", "postconditions", None, evidence_id="e-x-1")
+
+    def test_reopen_clears_attested_marker(self):
+        cl = gated(g1=_artifact_gate("g1"), g2=_artifact_gate("g2"))
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
+        E.advance(cl, "g2")
+        E.reopen(cl, "g2", "rework")
+        c = cl["tasks"]["g2"]["postconditions"][0]
+        self.assertNotIn("attested", c)
+        self.assertFalse(c["satisfied"])
+
+    def test_null_check_attest_unchanged(self):
+        # backward compat: a check:null condition is still attested with just a note.
+        pre = [{"id": "p1", "statement": "iface exists", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        self.assertEqual(E.attest(cl, "g1", "p1", "preconditions", "checked it"),
+                         "attested g1.p1")
+        self.assertTrue(cl["tasks"]["g1"]["preconditions"][0]["satisfied"])
+
+
 class SurveyAndConsolidation(unittest.TestCase):
     def test_record_fail_does_not_block(self):
         cl = survey(v1=survey_item("v1", "in-progress"), v2=survey_item("v2"))

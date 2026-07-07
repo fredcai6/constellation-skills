@@ -127,6 +127,7 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 | `satisfied_by` | string \| null | evidence-id or note |
 | `override_policy` | object \| null | *optional*; makes the condition **waivable** by a human (see below). Absent → not waivable. |
 | `waived` | object \| null | set by the `waive` verb when a human accepts the condition; a durable marker that survives re-evaluation |
+| `attested` | object \| null | set by `attest --evidence` when an `artifact` postcondition is satisfied by reference to an already-attached artifact; a durable marker (like `waived`) that survives re-evaluation; cleared by `reopen` |
 
 ### What "engine-checked" means
 
@@ -136,7 +137,7 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 | `artifact` | confirms an evidence item of `check.evidence_type` is attached (optional field match, e.g. `verdict: APPROVE`) | present + shape-valid |
 | `git-change-policy` | collects the staged (`git diff --cached`) or branch (`git diff <base>...HEAD`) diff and evaluates each changed file against an inline artifact policy (globs, size, binary) | **no** files violate the policy — "the closeout diff carries no suspicious artifacts" |
 
-That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE` (produced by a `survey` review's consolidation).
+That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE` (produced by a `survey` review's consolidation). An `artifact` postcondition may also be satisfied by `attest --evidence <id>` referencing an already-attached artifact of the matching type, instead of re-attaching it to a second task — the engine still verifies the referenced artifact exists and matches the required `evidence_type` + `match`, so this never asserts an artifact from thin air.
 
 ### `git-change-policy` — artifact-output guardrails at closeout
 
@@ -263,7 +264,8 @@ Beyond that one field, consolidation is the agent's prose summary, handed up.
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |
 | `block <id> …` | both | `→ blocked`; append to `blockers` (bubble to parent) |
-| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; clears any `waived` markers |
+| `reopen <id> --reason …` | gated | `complete → in-progress`; `rework_count++`; escalate at cap; clears any `waived`/`attested` markers |
+| `attest <id> --cond <id> [--which preconditions\|postconditions] [--evidence <eid>]` | both | satisfy a `check: null` condition by manual attestation; OR satisfy an `artifact` postcondition **by reference** to an already-attached artifact `<eid>` (verified: exists + `evidence_type` + `match`) — avoids re-attaching the same artifact to a sibling gate. `--which` selects the condition list (default `preconditions`). Refuses `command`/`git-change-policy` checks. |
 | `waive <id> --cond <id> [--which postconditions] --authority … --reason … [--force]` | both | human override: satisfy a condition **by waiver**; refused unless its `override_policy.allowed` (or `--force`); records a `waiver` evidence record + a durable `waived` marker |
 | `flag-candidate …` | both | record an out-of-scope discovery in `triage_candidates` |
 
