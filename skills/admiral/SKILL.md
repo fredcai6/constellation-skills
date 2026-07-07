@@ -37,6 +37,7 @@ Operating doctrine, learned from field fleets:
 
 - One Commander per issue, each in its own worktree you **provision explicitly** with `git worktree add` — the Agent-tool `isolation:"worktree"` flag is a silent no-op on Windows — and verify with `verify_worktree_isolation.py` before the wave; pick model tier per issue complexity. Never two commanders in one worktree — stop/confirm-dead the original before launching a continuation into its worktree. See `references/fleet-doctrine.md`, "Worktree isolation is a harness no-op on Windows".
 - Every dispatch carries a completed `templates/LAUNCH_ORDER.template.md`. Paste prior-wave verdict text — pointers are weak, commanders start cold. Pre-rule foreseeable ambiguities (marked overridable). A measured negative is a complete, successful deliverable: say so.
+- Right-size the dispatch: for small, bounded autonomous work, dispatch an implementer-with-plan directly rather than standing up a full Commander — reserve the Commander's understand/plan/execute/reconcile spine for work that actually needs it.
 - One writer per shared document per wave; assign findings files explicitly.
 - Status to the user per the contract: default stop-and-present at wave checkpoints; run ahead only when cleared.
 - Merge green, reviewed PRs sequentially; **gate merges on check exit codes, never chain** a merge after a watch command. Verify main before each wave dispatch. Hold rebases to wave boundaries; if ground shifts under a running Commander, stop-and-relaunch on fresh ground rather than steering mid-flight.
