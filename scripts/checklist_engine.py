@@ -354,15 +354,28 @@ def _find_posix_shell() -> str | None:
 def _run_check_command(command: str) -> tuple[subprocess.CompletedProcess, str]:
     """Run a `command`-kind check. Route it through a POSIX shell when one is found
     (so authored grep/&&/pipe checks behave the same on Windows as on POSIX);
-    otherwise fall back to the platform shell (cmd.exe on Windows) and flag that in
-    the marker. Returns (completed process, marker) where marker is "posix" or
-    "cmd-fallback"."""
+    when NO POSIX shell is available, FAIL VISIBLY instead of routing the POSIX-form
+    check text through the platform shell (cmd.exe on Windows) — a silent cmd.exe run
+    would misinterpret grep/&&/pipe checks and could false-pass or false-fail. In that
+    case we do not call subprocess.run at all: we return a synthetic failed result
+    (returncode 127) whose stderr names the missing shell. Returns (completed process,
+    marker) where marker is "posix" or "no-posix-shell"; POSIX-form text is never run
+    through cmd.exe."""
     shell = _find_posix_shell()
     if shell:
         proc = subprocess.run([shell, "-c", command], capture_output=True, text=True)
         return proc, "posix"
-    proc = subprocess.run(command, shell=True, capture_output=True, text=True)
-    return proc, "cmd-fallback"
+    proc = subprocess.CompletedProcess(
+        args=command,
+        returncode=127,
+        stdout="",
+        stderr=(
+            "no POSIX shell (bash/sh) found to run a command-type check; the engine "
+            "refuses to run POSIX-form check text through cmd.exe — install Git for "
+            "Windows (bash) or a POSIX sh so command checks can run"
+        ),
+    )
+    return proc, "no-posix-shell"
 
 
 def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
@@ -815,40 +828,49 @@ def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evide
       the required `match` fields. It never lets an agent assert an artifact out of
       thin air (that is what a `check: null` attest does, not this).
 
-    `command` / `git-change-policy` checks stay engine-checked and refuse attest."""
+    `command` / `git-change-policy` checks stay engine-checked and refuse attest.
+
+    The requested `which` list is searched FIRST (an explicit `--which` still wins),
+    then the OTHER condition list as a fallback — precondition ids (`p*`) and
+    postcondition ids (`c*`) are disjoint, so a bare `attest <id> --cond c1` (default
+    `--which preconditions`) still resolves a postcondition without forcing the caller
+    to pass `--which postconditions`. If the cond is in neither list, the error names
+    both."""
     t = task(cl, iid)
-    for c in t.get(which, []):
-        if c["id"] != cond_id:
-            continue
-        chk = c.get("check")
-        if chk is None:
-            c["satisfied"] = True
-            c["satisfied_by"] = note or "attested"
-            return f"attested {iid}.{cond_id}"
-        if chk.get("kind") == "artifact":
-            if not evidence_id:
-                raise EngineError(
-                    f"{cond_id} is an artifact check; attest it by referencing an "
-                    f"already-attached artifact via --evidence <id>"
-                )
-            ev = _find_evidence(cl, evidence_id)
-            if ev is None:
-                raise EngineError(f"evidence {evidence_id!r} not found in this checklist")
-            want_type = chk.get("evidence_type")
-            if ev.get("type") != want_type:
-                raise EngineError(
-                    f"evidence {evidence_id!r} is type {ev.get('type')!r}, "
-                    f"not the required {want_type!r}"
-                )
-            want_match = chk.get("match", {})
-            if not all(ev.get("payload", {}).get(k) == v for k, v in want_match.items()):
-                raise EngineError(f"evidence {evidence_id!r} does not match required {want_match}")
-            c["satisfied"] = True
-            c["satisfied_by"] = evidence_id
-            c["attested"] = {"evidence": evidence_id, "note": note}
-            return f"attested {iid}.{cond_id} via {evidence_id}"
-        raise EngineError(f"{cond_id} is engine-checked; cannot attest")
-    raise EngineError(f"{which} {cond_id!r} not found on {iid}")
+    other = "postconditions" if which == "preconditions" else "preconditions"
+    for list_name in (which, other):
+        for c in t.get(list_name, []):
+            if c["id"] != cond_id:
+                continue
+            chk = c.get("check")
+            if chk is None:
+                c["satisfied"] = True
+                c["satisfied_by"] = note or "attested"
+                return f"attested {iid}.{cond_id}"
+            if chk.get("kind") == "artifact":
+                if not evidence_id:
+                    raise EngineError(
+                        f"{cond_id} is an artifact check; attest it by referencing an "
+                        f"already-attached artifact via --evidence <id>"
+                    )
+                ev = _find_evidence(cl, evidence_id)
+                if ev is None:
+                    raise EngineError(f"evidence {evidence_id!r} not found in this checklist")
+                want_type = chk.get("evidence_type")
+                if ev.get("type") != want_type:
+                    raise EngineError(
+                        f"evidence {evidence_id!r} is type {ev.get('type')!r}, "
+                        f"not the required {want_type!r}"
+                    )
+                want_match = chk.get("match", {})
+                if not all(ev.get("payload", {}).get(k) == v for k, v in want_match.items()):
+                    raise EngineError(f"evidence {evidence_id!r} does not match required {want_match}")
+                c["satisfied"] = True
+                c["satisfied_by"] = evidence_id
+                c["attested"] = {"evidence": evidence_id, "note": note}
+                return f"attested {iid}.{cond_id} via {evidence_id}"
+            raise EngineError(f"{cond_id} is engine-checked; cannot attest")
+    raise EngineError(f"condition {cond_id!r} not found in preconditions or postconditions on {iid}")
 
 
 def waive(

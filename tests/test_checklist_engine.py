@@ -214,6 +214,25 @@ class AttestArtifactByReference(unittest.TestCase):
                          "attested g1.p1")
         self.assertTrue(cl["tasks"]["g1"]["preconditions"][0]["satisfied"])
 
+    def test_bare_postcondition_attest_falls_back_to_other_list(self):
+        # A bare `attest <id> --cond c1` uses the default which=preconditions, but the
+        # null postcondition lives in the postconditions list. The fallback finds it.
+        post = [{"id": "c1", "statement": "docs updated", "check": None, "satisfied": False}]
+        g = gate("g1", "in-progress")
+        g["postconditions"] = post
+        cl = gated(g1=g)
+        self.assertEqual(E.attest(cl, "g1", "c1", "preconditions", "verified"),
+                         "attested g1.c1")
+        self.assertTrue(cl["tasks"]["g1"]["postconditions"][0]["satisfied"])
+
+    def test_attest_not_found_names_both_lists(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError) as ctx:
+            E.attest(cl, "g1", "nope", "preconditions", "note")
+        msg = str(ctx.exception)
+        self.assertIn("preconditions", msg)
+        self.assertIn("postconditions", msg)
+
 
 class SurveyAndConsolidation(unittest.TestCase):
     def test_record_fail_does_not_block(self):
@@ -1078,18 +1097,36 @@ class PosixShellRoutingTests(unittest.TestCase):
                                side_effect=lambda n: r"X:\sh.exe" if n == "sh" else None):
             self.assertEqual(E._find_posix_shell(), r"X:\sh.exe")
 
-    def test_run_check_command_cmd_fallback_marker(self):
+    def test_run_check_command_no_posix_shell_fails_visibly(self):
+        # With no POSIX shell, the engine refuses to route POSIX-form text through
+        # cmd.exe: it returns a synthetic FAILED result (returncode 127) with the
+        # marker "no-posix-shell" and a stderr naming the missing shell.
         with mock.patch.object(E, "_find_posix_shell", return_value=None):
             proc, marker = E._run_check_command(PASS_COMMAND)
-        self.assertEqual(marker, "cmd-fallback")
-        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(marker, "no-posix-shell")
+        self.assertEqual(proc.returncode, 127)
+        self.assertIn("POSIX shell", proc.stderr)
 
-    def test_command_evidence_stamps_cmd_fallback_marker(self):
+    def test_command_evidence_stamps_no_posix_shell_marker(self):
         with mock.patch.object(E, "_find_posix_shell", return_value=None):
             cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
-            E.advance(cl, "g1")
+            # the check now FAILS visibly, so advance is refused (postcondition unmet)
+            with self.assertRaises(E.EngineError):
+                E.advance(cl, "g1")
         ev = cl["tasks"]["g1"]["evidence"][-1]
-        self.assertEqual(ev["payload"]["shell"], "cmd-fallback")
+        self.assertEqual(ev["payload"]["shell"], "no-posix-shell")
+        self.assertEqual(ev["payload"]["exit"], 127)
+
+    def test_no_posix_shell_never_invokes_subprocess_run(self):
+        # Anti-regression: the no-shell branch must NOT run POSIX text through
+        # cmd.exe. Patch subprocess.run to explode if called, and confirm the
+        # failed no-posix-shell result still comes back without invoking it.
+        with mock.patch.object(E, "_find_posix_shell", return_value=None), \
+             mock.patch.object(E.subprocess, "run",
+                               side_effect=AssertionError("subprocess.run must not run in the no-shell branch")):
+            proc, marker = E._run_check_command(PASS_COMMAND)
+        self.assertEqual(marker, "no-posix-shell")
+        self.assertEqual(proc.returncode, 127)
 
     @unittest.skipUnless(E._find_posix_shell(), "no POSIX shell found")
     def test_posix_routing_runs_pipe_and_marks_evidence(self):

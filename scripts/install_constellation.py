@@ -215,8 +215,20 @@ def validate_required_references(
         raise InstallError(f"required reference(s) missing: {'; '.join(missing)}")
 
 
+def _platform_interpreter() -> str:
+    """Interpreter for installed command strings: the `py` launcher on Windows,
+    `python3` elsewhere. Installed spine imperatives ship the literal `python <…>`
+    prefix; rewriting it here spares Windows users the recurring `python`->`py`
+    hand-patch (the source templates keep `python <…>` to preserve the authoring
+    contract)."""
+    return "py" if os.name == "nt" else "python3"
+
+
 def rewrite_installed_skill_paths(target: Path, skill: Skill) -> None:
+    # Rewrite the interpreter prefix FIRST, before the skill-dir tokens consume the
+    # trailing `<`: the replacement preserves the `<` so `<…-skill-dir>` still resolves.
     replacements = {
+        "python <": f"{_platform_interpreter()} <",
         "<skill-dir>": target.as_posix(),
         f"<{skill.source_name}-skill-dir>": target.as_posix(),
     }

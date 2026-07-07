@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -325,6 +326,49 @@ class InstallConstellationTests(unittest.TestCase):
                 (workbench_root / "scripts" / "checklist_engine.py").as_posix(),
                 reference_text,
             )
+
+    def test_platform_interpreter_maps_os_name(self):
+        # Narrow unit: os.name -> interpreter. (Mocking os.name only around this
+        # pure helper is safe; mocking it around a full install would break pathlib
+        # on a Windows host.)
+        installer = load_installer()
+        with mock.patch.object(installer.os, "name", "nt"):
+            self.assertEqual("py", installer._platform_interpreter())
+        with mock.patch.object(installer.os, "name", "posix"):
+            self.assertEqual("python3", installer._platform_interpreter())
+
+    def _install_commander_spine(self, installer, interpreter):
+        # Drive the REAL rewrite path but pin the platform interpreter, so the test
+        # runs identically on any host (os.name can't be safely faked around a full
+        # install because pathlib refuses to build a foreign path flavor).
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            with mock.patch.object(installer, "_platform_interpreter", return_value=interpreter):
+                exit_code = installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest",
+                     str(target_root), "--skills", "commander"],
+                    env={}, out=lambda _: None,
+                )
+            self.assertEqual(0, exit_code)
+            commander_root = target_root / "constellation-commander"
+            spine_path = commander_root / "templates" / "COMMANDER_SPINE.template.json"
+            return spine_path.read_text(encoding="utf-8"), commander_root.as_posix()
+
+    def test_installed_spine_rewrites_interpreter_prefix_on_windows(self):
+        installer = load_installer()
+        spine_text, commander_root = self._install_commander_spine(installer, "py")
+        # the literal `python <` interpreter prefix is gone; the resolved command
+        # now carries the `py` launcher (and the `<…-skill-dir>` token resolved).
+        self.assertNotIn("python <", spine_text)
+        self.assertNotIn("<commander-skill-dir>", spine_text)
+        self.assertIn(f"py {commander_root}/scripts/init_work_area.py", spine_text)
+
+    def test_installed_spine_rewrites_interpreter_prefix_on_posix(self):
+        installer = load_installer()
+        spine_text, commander_root = self._install_commander_spine(installer, "python3")
+        self.assertNotIn("python <", spine_text)
+        self.assertNotIn("<commander-skill-dir>", spine_text)
+        self.assertIn(f"python3 {commander_root}/scripts/init_work_area.py", spine_text)
 
     def test_agent_feedback_verifier_enforces_durable_log_location(self):
         verifier = load_verifier()
