@@ -10,6 +10,7 @@ docs/CHECKLIST_SCHEMA.md.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -46,6 +47,7 @@ DEFAULT_LEASE_STALE_SECONDS = 1800
 MUTATING_VERBS = {
     "start", "advance", "record", "consolidate", "skip", "block",
     "reopen", "append", "attest", "waive", "attach", "flag-candidate",
+    "amend",
 }
 
 
@@ -416,6 +418,10 @@ def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
     if kind == "artifact":
         want = chk.get("match", {})
         for ev in t.get("evidence", []):
+            if ev.get("superseded"):
+                # A superseded evidence item (see `reopen` cascade) is inert: it
+                # must not re-satisfy a gate from a stale approval after reopen.
+                continue
             if ev.get("type") == chk["evidence_type"] and all(
                 ev.get("payload", {}).get(k) == v for k, v in want.items()
             ):
@@ -761,7 +767,37 @@ def block(cl: dict, iid: str, blocker: str, authority: str, next_action: str) ->
     return f"{iid} -> blocked (bubbled to parent)"
 
 
+def _reset_conditions(conds: list[dict]) -> None:
+    """Reset each condition to unsatisfied and drop the markers that would let a
+    stale approval carry across a rework: `satisfied_by`, `waived` (a prior human
+    waiver does not survive rework) and `attested` (nor an artifact-by-reference
+    attestation). Shared by the target-gate reset and the downstream cascade."""
+    for c in conds:
+        c["satisfied"] = False
+        c.pop("satisfied_by", None)
+        c.pop("waived", None)
+        c.pop("attested", None)
+
+
+def _supersede_evidence(t: dict, iid: str, reason: str) -> None:
+    """Mark every evidence item on task `t` superseded by a reopen of `iid`.
+    Evidence is RETAINED (audit trail preserved) but rendered inert for
+    satisfaction (see `_check_condition` artifact branch and `attest --evidence`):
+    a reopened gate must not re-pass from the stale approval it just invalidated."""
+    for ev in t.get("evidence", []):
+        ev["superseded"] = {"by": f"reopen:{iid}", "reason": reason, "ts": _now()}
+
+
 def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
+    """Reopen a complete gate for rework. Increments `rework_count`, escalates
+    (blocks + bubbles, no reopen) when the cap is exceeded, and on the success
+    path resets the gate's postconditions and CASCADES downstream: every later
+    gate that is `complete`/`in-progress` is reset to `pending` (both pre- and
+    postconditions cleared, evidence superseded, `status_detail.superseded_by_reopen`
+    stamped). `skipped`/`blocked` downstream gates are deliberate OBE/bubble states
+    and are left untouched. Evidence on the target and each cascaded gate is
+    superseded (retained, not deleted) so a reopened gate cannot re-pass from a
+    stale approval — the bug this cascade fixes."""
     t = task(cl, iid)
     if cl["type"] != GATED:
         raise EngineError("reopen applies to gated checklists")
@@ -782,12 +818,171 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
     t["rework_count"] = t.get("rework_count", 0) + 1
     t["status"] = "in-progress"
     t.setdefault("status_detail", {})["reopen_reason"] = reason
-    for c in t.get("postconditions", []):
-        c["satisfied"] = False
-        c.pop("satisfied_by", None)
-        c.pop("waived", None)  # rework re-evaluates: a prior waiver does not carry over
-        c.pop("attested", None)  # nor a prior artifact-by-reference attestation
-    return f"{iid} reopened (rework {t['rework_count']}/{cap})"
+    _reset_conditions(t.get("postconditions", []))
+    _supersede_evidence(t, iid, reason)
+    # Cascade to downstream gates: reopening an upstream gate invalidates the work
+    # that depended on it. Only complete/in-progress gates are reset; skipped and
+    # blocked gates are deliberate states we do not churn.
+    items = cl.get("items", [])
+    cascaded: list[str] = []
+    if iid in items:
+        for did in items[items.index(iid) + 1:]:
+            dt = cl["tasks"][did]
+            if dt["status"] not in ("complete", "in-progress"):
+                continue
+            dt["status"] = "pending"
+            _reset_conditions(dt.get("preconditions", []))
+            _reset_conditions(dt.get("postconditions", []))
+            _supersede_evidence(dt, iid, reason)
+            dt.setdefault("status_detail", {})["superseded_by_reopen"] = iid
+            cascaded.append(did)
+    msg = f"{iid} reopened (rework {t['rework_count']}/{cap})"
+    if cascaded:
+        msg += f"; cascade-reset downstream {cascaded} (evidence superseded, retained)"
+    return msg
+
+
+_AMEND_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def _build_amend_task(op: dict) -> dict:
+    """Build a full pending task from an `add` op, mirroring `append()`'s shape.
+    `preconditions`/`constraints` default to empty; `directives`/`child_checklist`
+    default to None. Deep-copied so the caller's op dict is never aliased into
+    canonical state."""
+    return {
+        "id": op["id"],
+        "title": op["title"],
+        "imperative": op["imperative"],
+        "preconditions": copy.deepcopy(op.get("preconditions") or []),
+        "postconditions": copy.deepcopy(op["postconditions"]),
+        "constraints": copy.deepcopy(op.get("constraints") or []),
+        "directives": copy.deepcopy(op.get("directives")),
+        "child_checklist": op.get("child_checklist"),
+        "status": "pending",
+        "status_detail": {},
+        "result": None,
+        "finding": None,
+        "evidence": [],
+        "rework_count": 0,
+    }
+
+
+def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | None = None) -> str:
+    """Intentional mid-stream re-planning of a GATED checklist. Apply a delta of
+    `add`/`drop`/`rescope` ops that touch PENDING gates only — completed and
+    in-progress gates are never edited. The whole delta is ALL-OR-NOTHING: it is
+    validated and built on COPIES, and only committed to `cl` once every op passes,
+    so a refusal leaves `cl` unmutated (important: `main()` persists `cl` even on
+    the error path). Records an audit entry to `cl["amendments"]`.
+
+    - `add`: insert a new pending gate (`id` kebab-ish and unique; non-empty
+      `title`/`imperative`; >=1 postcondition). `after` names an existing gate to
+      insert behind (omit to append). The insert may not land before a frozen
+      (non-pending) gate.
+    - `drop`: remove a pending gate.
+    - `rescope`: overwrite provided fields (title/imperative/pre/postconditions/
+      constraints/directives) on a pending gate; postconditions if given stay >=1.
+    Requires non-empty `--reason` and `--authority` (human ratification), same as
+    `waive`."""
+    if cl.get("type") != GATED:
+        raise EngineError("amend applies to gated checklists")
+    if not (authority or "").strip():
+        raise EngineError("amend requires a non-empty --authority")
+    if not (reason or "").strip():
+        raise EngineError("amend requires a non-empty --reason")
+    ops = (delta or {}).get("ops")
+    if not isinstance(ops, list) or not ops:
+        raise EngineError("amend delta needs a non-empty 'ops' list")
+
+    # Build the new state on copies; commit to cl only after every op validates.
+    new_items = list(cl["items"])
+    new_tasks = dict(cl["tasks"])
+    summaries: list[str] = []
+
+    def _floor() -> int:
+        """1 + index of the last non-pending (frozen) gate; 0 if none. A new gate
+        may not be inserted at an index below this."""
+        floor = 0
+        for idx, tid in enumerate(new_items):
+            if new_tasks[tid]["status"] != "pending":
+                floor = idx + 1
+        return floor
+
+    for op in ops:
+        kind = op.get("op")
+        if kind == "add":
+            nid = op.get("id")
+            if not isinstance(nid, str) or not _AMEND_ID_RE.match(nid):
+                raise EngineError(f"add: id {nid!r} must match ^[a-z0-9][a-z0-9-]*$")
+            if nid in new_tasks:
+                raise EngineError(f"add {nid}: id already exists")
+            if not (op.get("title") or "").strip():
+                raise EngineError(f"add {nid}: a non-empty title is required")
+            if not (op.get("imperative") or "").strip():
+                raise EngineError(f"add {nid}: a non-empty imperative is required")
+            posts = op.get("postconditions")
+            if not isinstance(posts, list) or len(posts) < 1:
+                raise EngineError(f"add {nid}: a gated gate needs >=1 postcondition")
+            after = op.get("after")
+            if after is not None:
+                if after not in new_tasks:
+                    raise EngineError(f"add {nid}: after {after!r} does not exist")
+                insert_at = new_items.index(after) + 1
+            else:
+                insert_at = len(new_items)
+            floor = _floor()
+            if insert_at < floor:
+                frozen = new_items[floor - 1]
+                raise EngineError(
+                    f"add {nid}: cannot insert before frozen (non-pending) gate {frozen}"
+                )
+            new_tasks[nid] = _build_amend_task(op)
+            new_items.insert(insert_at, nid)
+            summaries.append(f"added {nid}")
+        elif kind == "drop":
+            tid = op.get("id")
+            if tid not in new_tasks:
+                raise EngineError(f"drop {tid}: no such gate")
+            status = new_tasks[tid]["status"]
+            if status != "pending":
+                raise EngineError(f"drop {tid}: only a pending gate can be dropped (is {status!r})")
+            new_items.remove(tid)
+            del new_tasks[tid]
+            summaries.append(f"dropped {tid}")
+        elif kind == "rescope":
+            tid = op.get("id")
+            if tid not in new_tasks:
+                raise EngineError(f"rescope {tid}: no such gate")
+            status = new_tasks[tid]["status"]
+            if status != "pending":
+                raise EngineError(f"rescope {tid}: only a pending gate can be rescoped (is {status!r})")
+            overwritable = ("title", "imperative", "postconditions",
+                            "preconditions", "constraints", "directives")
+            fields = {k: op[k] for k in overwritable if k in op}
+            if not fields:
+                raise EngineError(f"rescope {tid}: at least one overwritable field is required")
+            if "postconditions" in fields:
+                posts = fields["postconditions"]
+                if not isinstance(posts, list) or len(posts) < 1:
+                    raise EngineError(f"rescope {tid}: postconditions must be a non-empty list")
+            # Deep-copy the task before overwriting so the original object in
+            # cl["tasks"] stays untouched until the final commit (all-or-nothing).
+            updated = copy.deepcopy(new_tasks[tid])
+            for key, value in fields.items():
+                updated[key] = copy.deepcopy(value)
+            new_tasks[tid] = updated
+            summaries.append(f"rescoped {tid}")
+        else:
+            raise EngineError(f"amend: unknown op kind {kind!r}")
+
+    # Commit: every op validated. Only now do we touch canonical state.
+    cl["items"] = new_items
+    cl["tasks"] = new_tasks
+    cl.setdefault("amendments", []).append(
+        {"ts": _now(), "reason": reason, "authority": authority, "ops": summaries}
+    )
+    return f"amended: {', '.join(summaries)} (authority {authority})"
 
 
 def append(cl: dict, iid: str, title: str, imperative: str) -> str:
@@ -856,6 +1051,10 @@ def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evide
                 ev = _find_evidence(cl, evidence_id)
                 if ev is None:
                     raise EngineError(f"evidence {evidence_id!r} not found in this checklist")
+                if ev.get("superseded"):
+                    raise EngineError(
+                        f"evidence {evidence_id!r} is superseded and cannot satisfy a condition"
+                    )
                 want_type = chk.get("evidence_type")
                 if ev.get("type") != want_type:
                     raise EngineError(
@@ -1002,6 +1201,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s.add_argument("--title", required=True)
     s.add_argument("--imperative", required=True)
     add_session(s)
+    s = sub.add_parser("amend")
+    s.add_argument("--delta", required=True, help="path to a JSON delta file: {\"ops\": [...]}")
+    s.add_argument("--reason", required=True, help="why this re-planning is justified")
+    s.add_argument("--authority", required=True, help="who ratified the amendment (e.g. human)")
+    add_session(s)
     s = sub.add_parser("attest")
     s.add_argument("id")
     s.add_argument("--cond", required=True)
@@ -1098,6 +1302,12 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
         return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)))
     if v == "append":
         return append(cl, args.id, args.title, args.imperative)
+    if v == "amend":
+        try:
+            delta = json.loads(Path(args.delta).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise EngineError(f"amend: cannot read delta {args.delta!r}: {exc}")
+        return amend(cl, delta, args.reason, args.authority, base_dir=base_dir)
     if v == "attest":
         return attest(cl, args.id, args.cond, args.which, args.note, evidence_id=getattr(args, "evidence", None))
     if v == "waive":
