@@ -22,7 +22,7 @@ Drive `templates/ADMIRAL_SPINE.template.json` through the engine: **init → lat
 
 ## Latitude (first bookend)
 
-Before anything launches, settle how much rope you have. Load `constellation-interrogator` and fill `templates/LATITUDE_CONTRACT.template.md`: epic intent and success shape (honest-null acceptability), checkpoint protocol, **decision classes** (which choices you may adjudicate vs. must surface), float-up routing for Commander `user-decision`s, comms style, budget/model parameters, pre-rulings, and an **expiry** (time or event). The contract is the dial between "I don't care, go" and "float me the details" — get it confirmed by the human before wave 1.
+Before anything launches, settle how much rope you have. Load `constellation-interrogator` and fill `templates/LATITUDE_CONTRACT.template.md`: epic intent and success shape (honest-null acceptability), checkpoint protocol, **decision classes** (which choices you may adjudicate vs. must surface), **permission prerequisites** for each delegated class (pre-clearance or recorded fallback for when the harness classifier vetoes it), float-up routing for Commander `user-decision`s, comms style, budget/model parameters, pre-rulings, and an **expiry** (time or event). The contract is the dial between "I don't care, go" and "float me the details" — get it confirmed by the human before wave 1.
 
 A decision that fits no listed class is **out-of-taxonomy and always escalates** with one line on why it didn't fit. When the contract expires or the ground shifts under it, surface a contract-refresh decision; do not keep sailing on a stale contract.
 
