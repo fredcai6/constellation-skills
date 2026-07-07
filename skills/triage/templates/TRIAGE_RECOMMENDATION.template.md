@@ -47,5 +47,10 @@
 ## Related artifacts
 - `<architecture packet / handoff / evidence / file path>`
 
+## Disposition
+`fixed-now | filed | recommend-and-defer`
+
+**Detail:** `<fixed-now: fix commit sha | filed: issue number | recommend-and-defer: reason filing authority was unclear or unavailable this run>`
+
 ## Issue creation authority
 `create issue directly | ask user | issue-ready only`

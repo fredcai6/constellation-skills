@@ -21,6 +21,7 @@ Confirmed by the human before wave 1. The dial between "I don't care, go" and
 | Scope change (issue added/dropped/re-scoped) | `surfaced | delegated` |
 | Merge to main | `surfaced | delegated` |
 | Issue filing / closing | `surfaced | delegated` |
+| Fix-now triage (bounded fix applied immediately, not filed as an issue) | `surfaced | delegated` |
 | Spend / budget / model tier | `surfaced | delegated` |
 | Production defaults / user-visible behavior | `surfaced | delegated` |
 | `<project-specific class>` | `surfaced | delegated` |
