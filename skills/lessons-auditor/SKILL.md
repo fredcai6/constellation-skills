@@ -20,8 +20,27 @@ Drive `templates/LESSONS_AUDIT.template.json` as a `survey` through the absolute
 - **Beware performative legibility**: artifacts were written by agents who knew they'd be read. Weight friction the run *worked around* (improvisations, repeated rediscovery) over friction the run *complained about*.
 - **Check existing lessons both ways**: a run that contradicts an Active lesson yields a `disconfirm` op; one that re-validates it yields `confirm`, not a duplicate. Phrase-different duplicates consolidate to one candidate.
 
+## Form selection
+
+For every candidate you route toward a `target` (an eventual `apply` op), name the
+strongest fix form the target supports — pick the highest rung that fits, not the
+easiest to write:
+
+1. Mechanical constraint → an **engine gate or script check**. One-line test: could a
+   script refuse this instead of a sentence warning about it? If yes, this rung wins.
+2. Omitted element → a **required template slot** — a structural field the artifact
+   cannot skip, not a reminder to remember it.
+3. Wrong-shaped output → a **positive recipe or contract** stating what to produce.
+   Prohibitions backfire here, so state the target shape directly.
+4. Discipline slip → a **prohibition plus a rationalization counter** (last resort, for
+   letter-vs-spirit dodges where the agent already knows better).
+
+If the strongest available rung is 1 but the `target` is a doc, not code, say so in the
+candidate — that is a signal for the human or Charter to route the fix to the engine
+instead of a template.
+
 ## Output
 
-Return `LESSON_CANDIDATES` (`templates/LESSON_CANDIDATES.template.md`): each candidate with `scope` (`handoff | commander | admiral | project | constellation`), `task-class` (`general-workflow` or a domain tag), observed/cost/proposal, grounding citation, **routing disposition** (template delta / playbook delta / Charter nomination / constellation export / retire existing / drop), and **confidence** (`high | medium | low` — low-confidence routings queue for human review, never propagate silently). Include a ready-to-apply `lessons-delta.json` block for the playbook-delta candidates; the dispatcher applies it via `apply_lessons_delta.py` — you do not.
+Return `LESSON_CANDIDATES` (`templates/LESSON_CANDIDATES.template.md`): each candidate with `scope` (`handoff | commander | admiral | project | constellation`), `task-class` (`general-workflow` or a domain tag), observed/cost/proposal, grounding citation, **routing disposition** (template delta / playbook delta / Charter nomination / constellation export / retire existing / drop), and **confidence** (`high | medium | low` — low-confidence routings queue for human review, never propagate silently). Write the `Proposal` in the strongest form the ladder supports (see Form selection) rather than as a bare instruction to remember. Include a ready-to-apply `lessons-delta.json` block for the playbook-delta candidates; the dispatcher applies it via `apply_lessons_delta.py` — you do not.
 
 Templates: `templates/LESSONS_AUDIT.template.json`, `templates/RUN_BRIEF.template.md`, `templates/LESSON_CANDIDATES.template.md`. Reference: workbench `references/checklist-engine.md`.

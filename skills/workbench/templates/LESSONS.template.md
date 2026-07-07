@@ -37,6 +37,16 @@ Rules the apply script enforces:
   (`apply` op — edit the `target`, then the lesson is deleted as paid), **export** it
   (`export` op — constellation only; status `exported`, pinned until shipped upstream), or
   **defer** it (`defer` op — records `deferred-at`; re-fires only when the count climbs).
+- **Match the fix form to the failure before applying.** Name the strongest rung the
+  `target` supports — pick the highest that fits, not the easiest:
+  1. Mechanical constraint → an **engine gate or script check**. One-line test: could a
+     script refuse this instead of a sentence warning about it? If yes, this rung wins.
+  2. Omitted element → a **required template slot** — a structural field the artifact
+     cannot skip, not a reminder to remember it.
+  3. Wrong-shaped output → a **positive recipe or contract** stating what to produce.
+     Prohibitions backfire here, so state the target shape directly.
+  4. Discipline slip → a **prohibition plus a rationalization counter** (last resort, for
+     letter-vs-spirit dodges where the agent already knows better).
 
 Lesson shape (script-owned; shown for readers):
 
