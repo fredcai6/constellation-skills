@@ -267,6 +267,27 @@ def ripe_lessons(book: Playbook) -> list[Lesson]:
     return ripe
 
 
+def _apply_threshold_ripe(book: Playbook, lesson: Lesson) -> bool:
+    """Is this non-constellation lesson ripe for apply?
+
+    Apply only ever reaches non-constellation lessons (constellation is refused
+    earlier in the apply branch), so ripeness here is `confirmed >= apply_confirmed`
+    — the same threshold `ripe_lessons()` uses for non-constellation lessons.
+    Single source of the number; do not fork it.
+    """
+    return lesson.confirmed >= book.apply_confirmed
+
+
+def _is_doctrine_target(target: str) -> bool:
+    """A path is a doctrine artifact (an agent reads it; no unit test grades it) when it
+    ends in `.md` OR contains `.template.` — covers SKILL.md, _shared/*.md, docs/** prose,
+    and *.template.json / *.template.md spine/checklist/handoff templates. Everything else
+    (`.py`, `.js`, …) is a code target and is exempt. Pure path rule: never inspects
+    contents or judges quality."""
+    path = target.strip().lower()
+    return path.endswith(".md") or ".template." in path
+
+
 def _stamp(work_id: str) -> str:
     return f"{date.today().isoformat()} ({work_id})"
 
@@ -425,10 +446,25 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                 raise LessonsDeltaError(
                     f"apply {lesson_id}: target required (set on the lesson or in the op)"
                 )
+            # Reproduction-drill gate: a ripe doctrine apply pays out (deletes the lesson)
+            # only if it carries a drill reference — the process-doc analogue of a
+            # regression test. Field-presence ONLY: never open the drill file, never judge
+            # its quality (same doctrine as the engine — mechanism, not quality). Non-ripe
+            # applies and code-target applies are exempt.
+            drill = str(op.get("drill", "")).strip()
+            if _apply_threshold_ripe(book, lesson) and _is_doctrine_target(effective_target):
+                if not drill:
+                    raise LessonsDeltaError(
+                        f"apply {lesson_id}: ripe doctrine target {effective_target!r} requires "
+                        "a reproduction drill — add a 'drill' field referencing "
+                        "docs/superpowers/drills/<lesson-id>.md (run the before/after arm drill "
+                        "first; see lessons-auditor SKILL)"
+                    )
             book.active.remove(lesson)
             log.append(
                 f"applied lesson:{lesson_id} -> {effective_target} (paid; deleted) "
                 f"— {op['applied_evidence']}"
+                + (f" drill={drill}" if drill else "")
             )
         elif kind == "export":
             if lesson.scope != "constellation":

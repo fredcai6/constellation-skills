@@ -58,5 +58,6 @@ class VerifyLessonsAppliedTests(unittest.TestCase):
             self._apply({"work_id": "x", "ops": [
                 {"op": "confirm", "id": "handoff-diff-command", "grounding": "g"}]})
         self._apply({"work_id": "x2", "ops": [
-            {"op": "apply", "id": "handoff-diff-command", "applied_evidence": "edited CREW_CONTEXT"}]})
+            {"op": "apply", "id": "handoff-diff-command", "applied_evidence": "edited CREW_CONTEXT",
+             "drill": "docs/superpowers/drills/handoff-diff-command.md"}]})
         self.assertEqual(0, self.verify.main(["--file", str(self.file)]))

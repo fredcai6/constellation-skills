@@ -39,6 +39,31 @@ If the strongest available rung is 1 but the `target` is a doc, not code, say so
 candidate — that is a signal for the human or Charter to route the fix to the engine
 instead of a template.
 
+## Reproduction drills
+
+Applying a lesson as a prose edit to a `SKILL.md`, template, or doc proves nothing on its
+own — dead doctrine reads as progress until the failure recurs. So an `apply` op that
+targets a **ripe doctrine artifact** (a `.md` file or a `.template.*`) must carry a
+**reproduction drill**, supplied as the apply op's `drill` field. A drill is the lesson's
+failure scenario run against a **throwaway** subagent twice:
+
+- **Before-arm** — arm the subagent with the *old* doctrine text (the state that let the
+  failure recur) and the failure scenario under its real, combined pressures; observe the
+  failure reproduce and **capture it verbatim**.
+- **After-arm** — arm a fresh subagent with the *edited* text and the same scenario;
+  observe the failure no longer fire.
+
+Keep it lightweight: one scenario, combined pressures only where they are load-bearing,
+verbatim capture in the before-arm. **You** — the fresh-context auditor, not the editor who
+made the edit — write the drill record; the editor must not grade its own fix (the same
+separation by which you nominate and never apply). Commit the scenario + record under
+`docs/superpowers/drills/<lesson-id>.md` so a corpus accumulates (future evals seed);
+that path is the apply op's `drill` value. **Honest-null:** a before-arm that will not
+reproduce is itself a complete, reportable finding — the lesson may already be
+internalized, mis-scoped, or the pressure was wrong. Report what the null says; do not
+force a reproduction. Non-ripe applies and **code-targeted** fixes are exempt — a code fix
+already has a test suite as its behavioral proof.
+
 ## Output
 
 Return `LESSON_CANDIDATES` (`templates/LESSON_CANDIDATES.template.md`): each candidate with `scope` (`handoff | commander | admiral | project | constellation`), `task-class` (`general-workflow` or a domain tag), observed/cost/proposal, grounding citation, **routing disposition** (template delta / playbook delta / Charter nomination / constellation export / retire existing / drop), and **confidence** (`high | medium | low` — low-confidence routings queue for human review, never propagate silently). Write the `Proposal` in the strongest form the ladder supports (see Form selection) rather than as a bare instruction to remember. Include a ready-to-apply `lessons-delta.json` block for the playbook-delta candidates; the dispatcher applies it via `apply_lessons_delta.py` — you do not.
