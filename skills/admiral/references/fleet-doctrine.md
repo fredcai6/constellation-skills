@@ -67,29 +67,25 @@ Hard rule: **never launch a continuation into a "completed" Commander's worktree
 without first confirming the original is dead** (TaskStop it, or verify no live
 PID). Two agents in one worktree corrupts engine state and duplicates compute.
 
-## Recovery drill (no agent-resume on this harness)
+## Recovery drill
 
-There is no SendMessage/agent-resume primitive: recovery for a stalled or dead
-Commander is a **fresh agent pointed into the dead Commander's worktree**, which
-survives the process (worktrees + workbench artifacts are on disk). Resume from
-the engine's on-disk spine/execute state — do **not** restart from zero. On
+For a stalled-but-**alive** agent, resume it directly: `SendMessage` to the
+agent's id/name continues it with full context (see `windows.md` hazard #2 —
+there is no `--resume` CLI flag, but the `SendMessage` resume primitive does
+exist). Use worktree recovery only for a **confirmed-dead** Commander (host-
+process exit, box reboot, no live PID) — there is no id left to message: a
+**fresh agent pointed into the dead Commander's worktree**, which survives the
+process (worktrees + workbench artifacts are on disk). Resume from the
+engine's on-disk spine/execute state — do **not** restart from zero. On
 session resume, sweep task notifications, inspect each affected worktree
 (commits, workbench state, orphan processes), and relaunch continuations with
 verified inheritance.
 
 ## Worktree isolation is a harness no-op on Windows — provision it yourself
 
-The Agent-tool `isolation:"worktree"` parameter is a **harness primitive that
-silently does nothing on Windows**: subagents launched with it run in the shared
-checkout, not their own worktree. A parallel wave dispatched in that belief
-collides in the single checkout — two Commanders racing a push, three crews
-colliding on `git checkout -b`, a commit landing on a sibling's branch. That is
-data loss, not friction. (A git-level probe cannot catch it: `git worktree add` in
-a temp dir tests *git's* worktree support, which is fine on Windows — it is the
-Agent *tool* that skips provisioning — so the probe returns a false green.)
-
-**Do not trust the flag — provision the worktree yourself.** `git worktree add`
-works fine on Windows. Before a parallel wave:
+See `windows.md` (hazard #3) for the base fact, its grounding, and why a
+git-level probe alone returns a false green. **Admiral-specific process** —
+do not trust the flag; provision the worktree yourself before a parallel wave:
 
 1. For each Commander, run `git worktree add <path> -b <branch> <base>` from the
    main checkout, and **log that command and its outcome in the ADMIRAL_LOG** — a
@@ -113,17 +109,10 @@ Commander is **confirmed dead with no continuation pending** — never while a l
 or recovering Commander still holds it. This is the same "confirm dead before you
 touch its worktree" rule the recovery drill already applies.
 
-## Windows shell hazards (PR bodies and command-checks)
+## Windows shell hazards (command-checks)
 
-Two Windows shell traps bit fleets repeatedly; both come from Windows running a
-different shell than the POSIX one every author assumes.
-
-**PR bodies — use `gh pr create -F <file>`.** On Windows PowerShell, a multi-line PR
-body fails both as a bash heredoc and as a PowerShell `@'...'@` here-string passed to
-`--body`. Write the body to a temp file and run `gh pr create -F <file>` (or
-`--body-file <file>`) — the only reliable form. Note the trap: `@'...'@` here-strings
-*do* work for `git commit -m`, so do not assume they also work for
-`gh pr create --body`. They do not.
+See `windows.md` (hazard #1) for the canonical `gh ... --body` recipe and its
+grounding — do not restate it here.
 
 **Command-checks run under bash.** The checklist engine runs `command`-kind checks
 (postconditions/preconditions) under a POSIX shell, so an authored test/verify

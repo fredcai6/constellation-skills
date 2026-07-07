@@ -89,10 +89,10 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
 # audience Venn is enforced by which buckets a skill carries: everyone-global is shared
 # by all; the tier buckets reach only their tier. A role reads its own bucket(s) at the
 # checklist context-read step; the project supplies thin local deltas under docs/agents/.
-_GLOBAL_EVERYONE = ("global-everyone.md",)
-_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md")
-_GLOBAL_CREW = ("global-everyone.md", "global-crew.md")
-_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md")
+_GLOBAL_EVERYONE = ("global-everyone.md", "windows.md")
+_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "windows.md")
+_GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md")
+_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md")
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": _GLOBAL_ORCHESTRATOR,
     "lessons-auditor": _GLOBAL_EVERYONE,

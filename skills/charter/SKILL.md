@@ -18,6 +18,7 @@ docs/agents/ORCHESTRATOR_CONTEXT.md   # project deltas over inherited global-orc
 docs/agents/CREW_CONTEXT.md           # project deltas over inherited global-crew doctrine
 docs/agents/GLOSSARY.md               # shared terms only
 docs/agents/AGENT_GUIDE.md            # single repo-orientation guide (TOC, repo layout, doc map); the shared middle of the two contexts
+docs/agents/PLATFORM_NOTES.md         # verbatim copy of the bundled windows.md; resolvable by general agents that never load a Constellation skill
 AGENTS.md, CLAUDE.md                  # root pointer files that redirect to docs/agents/AGENT_GUIDE.md
 docs/agents/engine-config.json        # rework cap, rigor checkpoints, rules root, repo guidance
 .agent-work/templates/*               # project-specific template versions

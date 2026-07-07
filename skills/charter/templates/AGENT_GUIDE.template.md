@@ -42,6 +42,7 @@ Where the important documents live and what each is the source of truth for.
 | `docs/agents/ORCHESTRATOR_CONTEXT.md` | project planning/authority deltas over inherited global-orchestrator doctrine |
 | `docs/agents/CREW_CONTEXT.md` | project implementation/review deltas over inherited global-crew doctrine |
 | `docs/agents/GLOSSARY.md` | shared terms |
+| `docs/agents/PLATFORM_NOTES.md` | Windows/harness platform hazards (verbatim copy of the bundled `windows.md`) — for any agent, Constellation or not |
 | `docs/architecture/index.md` | current structural map entry point |
 | `docs/architecture/packets/` | per-node structural truth and constraints |
 | `docs/architecture/decisions/` | preserved architecture rationale |
@@ -79,4 +80,5 @@ Universal commands only. Area-specific commands belong in handoffs, not here.
 - Orienting / finding a file or doc → you are in the right place.
 - Planning or shaping work → inherited global-orchestrator doctrine + project deltas in `docs/agents/ORCHESTRATOR_CONTEXT.md`.
 - Implementing or reviewing a bounded change → inherited global-crew doctrine + project deltas in `docs/agents/CREW_CONTEXT.md`.
+- Hitting a Windows/harness platform hazard (shell traps, agent-resume, worktree isolation) → `docs/agents/PLATFORM_NOTES.md`.
 - Understanding current structure before changing it → `docs/architecture/index.md`.
