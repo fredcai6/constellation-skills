@@ -2,7 +2,7 @@
   "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["init", "context", "understand", "plan", "compact", "execute", "reconcile", "triage", "review", "feedback", "archive"],
+  "items": ["init", "context", "understand", "plan", "execute", "reconcile", "triage", "review", "feedback", "archive"],
   "tasks": {
     "init": {
       "id": "init",
@@ -47,24 +47,12 @@
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
-    "compact": {
-      "id": "compact",
-      "title": "Ensure context headroom and reload skills",
-      "imperative": "Ensure context headroom for the execute phase: if your harness exposes a compaction command (e.g. /compact), run it; otherwise rely on harness auto-compaction — either is fine. Then ALWAYS reload the constellation-commander skill into this context and confirm it is active before proceeding to execute. The skill-reload is mandatory regardless of whether a compaction command was available; the compaction itself is best-effort.",
-      "preconditions": [{"id": "p1", "statement": "plan approved", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "context headroom ensured (compaction run if available, else auto-compaction relied on)", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "commander skill reloaded in this context", "check": null, "satisfied": false}
-      ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
-    },
     "execute": {
       "id": "execute",
       "title": "Execute the plan",
-      "imperative": "Before entering this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/<work-id>/STATE_NOTE.md (step · slug · next command · PID · expected artifact) from .agent-work/templates/STATE_NOTE.template.md — the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python <commander-skill-dir>/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python <commander-skill-dir>/scripts/recover_crews.py <work-id> and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
+      "imperative": "Before entering this step: ensure context headroom (run a harness compaction command if one is exposed, else rely on harness auto-compaction — either is fine) and reload the constellation-commander skill into this context, confirming it is active; this satisfies p1. Then, before this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/<work-id>/STATE_NOTE.md (step · slug · next command · PID · expected artifact) from .agent-work/templates/STATE_NOTE.template.md — the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python <commander-skill-dir>/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python <commander-skill-dir>/scripts/recover_crews.py <work-id> and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
       "preconditions": [
-        {"id": "p1", "statement": "commander skill loaded", "check": null, "satisfied": false},
+        {"id": "p1", "statement": "plan approved; context headroom ensured and commander skill reloaded into this context", "check": null, "satisfied": false},
         {"id": "p2", "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/verify_state_note.py <work-id>"}, "satisfied": false}
       ],
       "postconditions": [{"id": "c1", "statement": "every gate closed with integrated evidence", "check": null, "satisfied": false}],

@@ -48,7 +48,8 @@ Agent-facing. Dense by design.
 - Fail visibly rather than emit plausible wrong output; no hidden fallback.
 - One canonical path; no speculative abstraction.
 - Keep Constellation context and architecture docs current when their meaning changes.
-- `/compact` is user-level; if the harness doesn't expose it, skip-with-reason is the sanctioned path
-  (auto-compaction covers context).
+- `/compact` is user-level; most harnesses don't expose it to agents. Treat context headroom as
+  opportunistic (compact if available, else rely on auto-compaction) folded into the step that needs it,
+  not as its own checkable gate — a step whose only sanctioned path is "skip" is ceremony, not gate.
 - Reference bundled scripts and references by their absolute installed path; don't resolve `scripts/` from the
   target repo unless it vendors them.
