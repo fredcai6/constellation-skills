@@ -11,7 +11,7 @@ Mandatory, no exceptions: once loaded, drive the checklist to completion through
 
 Own: `index.md`, `packets/`, `overlays/`, map, `MAP_BUILD.md`.
 
-Track edits/durable judgments in your checklist. Packet-first: reconcile touched node packets before index/overlay ceremony.
+Track edits/durable judgments in your checklist. Packet-first: reconcile touched node packets before index/overlay ceremony. A reconcile that changes the map may leave a published `constellation-docent` explainer site stale — you own the map, not the site, so simply note that it can be regenerated with the docent skill (a soft pointer, never a dependency you must satisfy or edit).
 
 May update wording, status/confidence, dependencies, capability/event/constraint/assumption/claim overlays, decision anchors, and map compliance with clear evidence; decide and record rationale as `claim:` overlays or `decision:` anchors. Ask only when durable ownership, parent, dependency direction, boundary, failure semantics, disputed truth, or ambiguous intent would change. Future work routes to Triage.
 

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="docent-map-stamp" content="a28c107b2fe8be081ece13accf7280406c2e81e1f08c16d58ea28fa455137cd9">
+<meta name="docent-generated" content="2026-07-07">
+<title>Packet: src/evo_predictor — Evo Pipeline — F1Brainz Explainer</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}}
+:root[data-theme="light"]{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+:root[data-theme="dark"]{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 80px}
+header.site{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-bottom:1px solid var(--line);backdrop-filter:saturate(1.2) blur(4px)}
+header.site .wrap{padding:12px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+header.site .brand{font-weight:700;letter-spacing:.02em}
+header.site nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.92rem}
+h1{font-size:1.9rem;line-height:1.2;margin:.6em 0 .2em}
+h2{font-size:1.3rem;margin:1.8em 0 .5em;padding-bottom:.2em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.4em 0 .3em}
+p{margin:.6em 0}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+  font:0.86em/1.4 "SF Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:9px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--chip)}
+blockquote{margin:.8em 0;padding:.2em 1em;border-left:3px solid var(--line);color:var(--muted)}
+.lede{font-size:1.12rem;color:var(--muted);max-width:70ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:.4em 0 1em}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;
+  padding:2px 11px;font-size:.8rem;color:var(--muted)}
+.chip.status-current{color:var(--ok)}
+.chip.status-stale{color:var(--warn)}
+.chip.status-partial{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:1.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.card h3{margin:.1em 0 .3em}
+.card .path{font-size:.8rem;color:var(--muted);font-family:"SF Mono",Consolas,monospace}
+.card p{font-size:.9rem;color:var(--muted);margin:.4em 0 0}
+.section-note{color:var(--muted);font-size:.92rem}
+.adj{margin:1em 0}
+.adj .row{padding:10px 0;border-bottom:1px solid var(--line)}
+.adj .src{font-weight:600}
+.adj .tgt{display:inline-block;background:var(--chip);border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:.85rem}
+.decision{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin:1.1em 0}
+.decision .meta{font-size:.82rem;color:var(--muted);margin:.2em 0 .6em}
+details{margin:.6em 0}
+summary{cursor:pointer;color:var(--accent);font-size:.9rem}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 17px;margin:1.4em 0;font-size:.88rem}
+.badge .dig{font-family:"SF Mono",Consolas,monospace;font-size:.82rem;word-break:break-all;color:var(--muted)}
+.badge .age{color:var(--muted)}
+.stale-banner{display:none;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);
+  border-radius:10px;padding:12px 16px;margin:1em 0;font-weight:600}
+.stale-banner.show{display:block}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:3px 10px;cursor:pointer;font-size:.85rem}
+footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;margin-top:40px}
+footer.site .wrap{padding:20px}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <span class="brand">F1Brainz Explainer</span>
+  <nav><a href="index.html">Overview</a><a href="boundaries.html">Boundaries &amp; Dependencies</a><a href="decisions.html">Decisions</a></nav>
+  <button id="theme-toggle" class="theme-toggle" type="button">light / dark</button>
+</div></header>
+<main class="wrap">
+<div id="stale-banner" class="stale-banner"></div>
+
+<p class="section-note"><a href="index.html">← Overview</a></p>
+<h1>Packet: src/evo_predictor — Evo Pipeline</h1>
+<div class="chips"><span class="chip status-current">status: current</span><span class="chip">level: container</span><span class="chip">src/evo_predictor/</span><span class="chip">confidence: high</span><span class="chip">struct:evo</span></div>
+
+
+<h2>Detail <span class="section-note">(from the Cartographer packet)</span></h2>
+<hr />
+<h2>Responsibility</h2>
+<p>F1-specific side of the live evo path. Owns: database-backed race-weekend feature construction, compound-prior normalization, module-facing PairBatch adapters, gold training cycle orchestration, sampled runtime manifest composition, CLI command surface, and all post-field-solve output (RacePrediction, fantasy scores, serialized reports).</p>
+<p>Does not own: generic solver lifecycle, pairwise training, field solving, or domain-independent Bayesian fusion (those live in <code>src/latent_power</code>).</p>
+<hr />
+<h2>CLI Entry Point</h2>
+<p><code>src/evo_predictor/run.py</code> — all commands dispatched here:</p>
+<table>
+<thead>
+<tr>
+  <th>Command</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>gold-cycle</code></td>
+  <td>Full training cycle via <code>gold_cycle/runner.py</code></td>
+</tr>
+<tr>
+  <td><code>train-latent-power-module</code></td>
+  <td>Train an individual registered latent-power module</td>
+</tr>
+<tr>
+  <td><code>backtest-latent-power-module</code></td>
+  <td>Backtest an individual latent-power module bundle</td>
+</tr>
+<tr>
+  <td><code>assemble-sampled-runtime-manifest</code></td>
+  <td>Compose a v4 sampled runtime manifest from module bundles</td>
+</tr>
+<tr>
+  <td><code>sampled-predict</code></td>
+  <td>Predict a single race via sampled runtime manifest (schema v4)</td>
+</tr>
+<tr>
+  <td><code>sampled-backtest</code></td>
+  <td>Backtest races via sampled runtime manifest (schema v4)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Key Components</h2>
+<p><strong><code>gold_cycle/</code> — Gold Training Cycle</strong>
+Orchestrates training of all latent-power modules in sequence. Reads <code>configs/evo/gold_defaults.toml</code> for defaults and train/eval split. Supervision (ADR 0008): retro-delta only — no <code>target_mode</code> switch (#303). <code>[uncertainty].lambda_sigma_nll</code> (default 1.0) and optional <code>student_t_nu_sigma</code> (default null → same ν as term A) pass into each module <code>LatentPowerConfig</code> for detached sigma Student-t NLL (term B). Post-hoc <code>enable_sigma_calibration</code> (alpha/beta LOSO fit) remains orthogonal. Gold reports are schema v6 (<code>REPORT_SCHEMA_VERSION = 6</code> in <code>gold_cycle/reports.py</code>); <code>run_config</code> records <code>lambda_sigma_nll</code> and <code>pairwise_sigma_nll_enabled</code> but no longer <code>target_mode</code>. Per-module <code>uncertainty_diagnostics</code> carries full-eval <code>r_over_sigma_p50/p90/p95/p99</code> and <code>sigma_mean</code> (#304).</p>
+<p><strong>Per-module eval metric honesty (schema v6; issues #323/#324/#326).</strong> Schema v6 replaced the semantically-broken <code>pairwise_log_loss</code> (BCE over a Student-t location head) and the mislabeled <code>module_rank_mae_delta_vs_grid_or_recent_baseline</code> with honest, chance-anchored metrics, each reported as <code>(raw, blind-chance floor, skill)</code>:</p>
+<ul>
+<li><code>rank_mae_vs_actual</code> — predicted order vs the real on-track finishing/quali/start order (per phase, fetched from DB metadata).</li>
+<li><code>rank_mae_vs_retro_bt</code> — predicted order vs the retro-BT supervised order (the training labels).</li>
+<li><code>pairwise_nll</code> / <code>pairwise_nll_skill</code> — Student-t NLL of the mean head vs a median-predictor floor with the module's own sigma; the <code>nll_skill = floor − raw</code> (nats) is the cross-module-comparable, scale-robust signal that <strong>fusion covariance weighting consumes</strong> (<code>fusion_training/_train.py</code> block scales use <code>exp(-skill)</code>).</li>
+<li><code>pairwise_sign_accuracy</code> — fraction of pairs where <code>sign(mu)</code> matches the winner; floor 0.5.</li>
+</ul>
+<p>The blind-chance floor for the rank MAEs is the expected MAE of a uniform random permutation, <code>(n²−1)/(3n)</code>, computed per event. The old &quot;delta vs grid/recent baseline&quot; competing-predictor concept was deleted, not renamed. <code>baseline_deltas()</code> was rewritten as <code>skill_vs_chance()</code> (<code>gold_module_cycle.py</code>). Canonical field contract: <code>docs/evo/gold_module_training_cycle_report_schema.md</code> and <code>docs/report_schemas/gold_module_training_cycle.md</code>. Promoted production bundles: <code>params/gold/runtime_bundles/gold_cycle_260612_054059_2018thru2024/</code> (#440; supersedes <code>gold_cycle_260608_043414_2018thru2024</code>). After manifest assembly, runs <code>backtest_sampled_runtime</code> for <code>sampled_state</code> and <code>oracle_all_states</code> modes (fail-safe: warning on error, no abort); passes results to <code>build_task_calibration_diagnostics</code> to emit per-task <code>sampled_runtime</code> aggregate metrics in the gold report. Produces module bundles, a sampled runtime manifest, and committed reports under <code>reports/evo/</code>. Entry: <code>gold_cycle/runner.py</code>. Config: <code>gold_cycle/config.py</code>. Calibration: <code>gold_cycle/calibration.py</code>. Task calibration: <code>gold_cycle/task_calibration.py</code>. Fusion diagnostics: <code>gold_cycle/fusion_diagnostics.py</code> (pairwise Pearson-r of mean_absolute_rank_error per fusion task; pure in-memory, no DB access, no fusion contract changes; result stored as <code>fusion_correlation_diagnostics</code> in summary and details). Reports: <code>gold_cycle/reports.py</code>.</p>
+<p><strong>Parallel fan-out (#356).</strong> The three gold-cycle training loops (<code>_train_all_modules</code> — 12 main runs; <code>_collect_loso_fusion_train_rows</code> — LOSO runs; <code>_blocked_calibration_module_rows</code> — calibration runs) and the sampled-backtest phase now fan out through <code>src.utils.utilization.run_jobs</code> under a <code>ResourcePlan</code> resolved once from <code>runtime.utilization</code> (<code>resolve_resource_plan</code>). This is a result-preserving runtime dial only: input-order reassembly plus <code>n_workers == 1</code> in-process short-circuit reproduce the sequential path. <code>gold_cycle/parallel_jobs.py</code> holds the picklable, spawn-safe job contract: the frozen <code>TrainBacktestJob</code> (train <code>Namespace</code> + backtest-template <code>Namespace</code>s without <code>bundle</code>, plus a stable <code>key</code>) and the module-level <code>run_train_backtest</code> worker, which lazily imports <code>cmd_train_latent_power_module</code>/<code>cmd_backtest_latent_power_module</code> from <code>run.py</code> (avoids the heavy/circular import at module load) and returns only picklable primitives/paths. Imported by <code>gold_cycle/runner.py</code> and <code>gold_cycle/runner_support.py</code>; <code>gold_cycle/config.py</code> validates <code>runtime.utilization</code> against <code>UTILIZATION_LEVELS</code>. CLI: <code>run.py</code> exposes <code>--utilization {background,balanced,max}</code> on the <code>gold-cycle</code> subparser, applied directly post-load via <code>_apply_utilization_hint</code> (bypasses <code>apply_cli_overrides</code>, so it never lands in <code>applied_overrides</code>). Default <code>balanced</code> from <code>configs/evo/gold_defaults.toml</code>.</p>
+<p><strong>Module record sidecar (#371).</strong> <code>GoldCycleRuntimeConfig</code> gained optional <code>emit_module_record</code> (bool, default <code>false</code>; validated in <code>gold_cycle/config.py</code>). When true, the three backtest template builders (mains in <code>runner.py</code>, LOSO + calibration in <code>runner_support.py</code>) set <code>--emit-module-record</code> on each <code>backtest-latent-power-module</code> invocation; <code>cmd_backtest_latent_power_module</code> in <code>run.py</code> strips record payloads from the backtest JSON (byte-identical when flag off), then spills <code>{stem}.record.npz</code> + <code>{stem}.record.json</code> sidecars next to <code>--output</code> via <code>module_record.write_module_record</code>. Reuse guard requires sidecars to exist when the flag is on; fails fast if a scored event has no record. <code>emit_module_record</code> is deliberately not echoed into <code>details.json</code>/<code>run_config</code> to preserve byte identity of committed reports. CLI override: <code>run.py</code> gold-cycle subparser exposes <code>--emit-module-record</code> (gold mode rejects — sidecars are non-committed training-run artifacts). Default <code>false</code> in <code>configs/evo/gold_defaults.toml</code>. Sidecar contract: <code>docs/evo/module_backtest_record.md</code>.</p>
+<p><strong><code>data_adapter/</code> — DB-backed RaceFeatures (package)</strong>
+Builds <code>RaceFeatures</code> from the SQLite DB for a given <code>(year, round_num)</code>. Split across <code>_assemble.py</code>, <code>_build.py</code>, <code>_config.py</code>, <code>_helpers.py</code>, <code>_memory.py</code>, and <code>_quality.py</code>; public surface re-exported from <code>data_adapter/__init__.py</code>. Applies compound normalization using the runtime compound prior. Rejects same-season full-year artifacts by default. Contains exact-year circuit lookup (circuits.yaml, no silent fallback). Populates <code>DriverFeatures</code> with FP1/FP2/FP3/quali/race history, compound-regularized lap aggregates, missingness indicators, and race-start data.</p>
+<p><strong><code>pipeline.py</code> — Schema v3 Pipeline</strong>
+Loads a schema v3 <code>pipeline_manifest.json</code>, validates fields, hydrates the latent-power module bundle, builds <code>RaceFeatures</code>, adapts to PairBatch, and produces <code>RacePrediction</code>. Entry for the legacy <code>predict</code> and <code>backtest</code> commands.</p>
+<p><strong><code>sampled_runtime.py</code> — Schema v4 Sampled Runtime</strong>
+Manifest-driven multi-module composition. Loads a <code>sampled_runtime_manifest.json</code>, hydrates all configured modules (quali, race-start, race power), runs each through their adapters and the latent-power solver, and fuses module field results using precision weighting. Powers <code>sampled-predict</code> and <code>sampled-backtest</code>. Runtime consistency seam (#369): <code>_run_stage</code> merges the bundle manifest's <code>feature_schema_version</code> (if present) into <code>config_overrides</code> before calling <code>build_pair_batch_for_module</code>; the adapter derives its encoding from the version string. Manifests without this key skip the merge silently (old bundles remain compatible). Quali head anchor seam (#420/#425): after per-module field solve (and before fusion), <code>_run_stage</code> calls <code>_anchor_quali_field</code> when <code>task==quali + driver_quali_power_from_race_weekend + QualiPaceAnchorConfig.enabled</code>. Anchor reads <code>d.allfp_best_raw</code> directly from <code>DriverFeatures</code> — the all-FP min-sector pace field introduced in #425 as the canonical single source (prior to #425 it was reconstructed inline as <code>_nanmin2(qs_best_raw, lr_best_raw)</code>). <code>sigma_pi</code> is unchanged. Both helpers (<code>_anchor_quali_field</code>, <code>_nanmin2</code>) are defined in <code>sampled_runtime.py</code>; <code>_nanmin2</code> is no longer used for anchor since #425.</p>
+<p><strong><code>fusion.py</code> — Field Fusion</strong>
+Precision-weighted field fusion over ordered module results (<code>fuse_module_fields_ordered</code>). Consumes <code>ModuleFieldResult</code> objects (field solution + uncertainty) from <code>latent_power</code>. Domain-generic fusion logic belongs in <code>latent_power</code>; this file holds the F1 orchestration layer. <code>FusionStepConfig</code> carries per-step <code>covariance_scale</code>, <code>mean_scale</code>, and optional <code>covariance_tension_inflation</code> (additive, default 0.0). Also contains <code>fuse_module_fields_correlated</code> — an OFFLINE-ONLY measurement variant (no production call-site): per-entity GLS fusion with a k×k cross-module error correlation matrix R (Σ_i = D_i R D_i). Production <code>fuse_module_fields_ordered</code> is unchanged. Measured verdict (#373, epic #372): modelling the cross-module error correlation R moves <strong>calibration, not ordering</strong> — the remaining headroom is in module <em>interactions</em> (#374), not redundancy discounting, which is why <code>fuse_module_fields_correlated</code> stayed offline-only.</p>
+<p><strong><code>fusion_training/</code> — Static Hierarchical Fusion Training (package)</strong>
+Fits per-module covariance scales from gold cycle artifacts and produces a trained <code>static_hierarchical_fusion</code> config (JSON, written to <code>params/gold/fusion/</code>). Split across <code>_train.py</code>, <code>_calibration.py</code>, <code>_correction.py</code>, <code>_correlation.py</code>, <code>_helpers.py</code>, <code>_manifest.py</code>, <code>_metrics.py</code>, <code>_types.py</code>. <code>_correlation.py</code> (offline; no production call-site): <code>estimate_cross_module_correlation</code> builds R from standardized residuals pooled over events, shrunk toward I; <code>mask_correlation_to_block</code> constructs the cheap-B constructor↔driver block mask. Policy: OOF scipy optimisation (<code>scipy_oof_lbfgsb_v1</code>) on LOSO rows when available, family-specific conservative floors, per-circuit reliability inflation, and tension-based additive covariance inflation. Block scales and tensions are derived from the per-module <code>pairwise_nll_skill</code> metric (schema v6) via <code>exp(-skill)</code>, not the retired <code>pairwise_log_loss</code>. Config schema version is 1 (no tension inflation) or 2 (nonzero tension inflation). Standalone CLI: <code>scripts/run_static_hierarchical_fusion_training.py</code>. Offline measurement harness: <code>scripts/fusion_replay/</code> (numpy-only package; loads #371 per-event module records, reproduces production fusion, scores baseline vs correlated variants; reads the SQLite DB read-only for constructor↔driver mapping; generated records are gitignored artifacts; no production call-site; scripts are not map nodes).</p>
+<p><strong><code>fusion_conditioned_net.py</code> — Context-conditioned fusion net (#375, G2 build)</strong>
+Context-conditioned fusion network for race-day tasks: an antisymmetric ordering head (OddMLP) that conditions the module-field combination on event context, targeting the module-<em>interaction</em> headroom that the offline correlated-fusion measurement (#373) identified as the remaining lever beyond precision-weighted ordering. Build-stage component; not on the production <code>fuse_module_fields_ordered</code> path.</p>
+<p><strong><code>adapters</code> — PairBatch Builders</strong>
+One adapter per module family. Each adapter reads <code>RaceFeatures</code>, constructs the module-specific feature tensor, builds directed pairs, and returns a validated <code>PairBatch</code> for <code>latent_power</code> internals.</p>
+<table>
+<thead>
+<tr>
+  <th>Module</th>
+  <th>Adapter file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>driver_race_power_from_race_weekend</code></td>
+  <td><code>race_power_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>constructor_race_power_from_race_weekend</code></td>
+  <td><code>constructor_race_power_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_race_start_power_from_race_weekend</code></td>
+  <td><code>race_start_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>constructor_race_start_power_from_race_weekend</code></td>
+  <td><code>constructor_race_start_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_quali_power_from_race_weekend</code></td>
+  <td><code>quali_power_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>constructor_quali_power_from_race_weekend</code></td>
+  <td><code>constructor_quali_power_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_race_power_from_recent_history</code></td>
+  <td><code>recent_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>constructor_race_power_from_recent_history</code></td>
+  <td><code>constructor_race_recent_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_race_start_power_from_recent_history</code></td>
+  <td><code>race_start_recent_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>constructor_race_start_power_from_recent_history</code></td>
+  <td><code>race_start_recent_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_quali_power_from_recent_history</code></td>
+  <td><code>quali_recent_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>constructor_quali_power_from_recent_history</code></td>
+  <td><code>constructor_quali_recent_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_race_power_from_residual_history</code></td>
+  <td><code>driver_residual_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_quali_power_from_residual_history</code></td>
+  <td><code>driver_residual_history_adapter.py</code></td>
+</tr>
+<tr>
+  <td><code>driver_race_start_power_from_residual_history</code></td>
+  <td><code>driver_residual_history_adapter.py</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>compound_adapter.py</code></strong>
+Adapts compound normalizer output into the feature representation expected by race-weekend adapters.</p>
+<p><strong><code>compound_push_regime.py</code> — Push-regime qs_* fresh-pace anchor (#380)</strong>
+F1-specific consumption anchor for the regime-dependent compound effect. Holds the gate-recovered push-regime fresh-pace <code>beta</code> (monotone-down C1→C6, ref C3; provenance <code>docs/evo/compound_crossover_gate_findings.md</code>) and <code>build_push_regime_normalizer(race_artifact)</code>, which returns a <code>CompoundNormalizer</code> over a <code>beta</code>-substituted copy of a race-regime <code>CompoundPriorArtifact</code> (<code>gamma</code> and all other fields untouched — Piece 1 is <code>beta</code>-only). Consumes the <code>compound_prior</code> artifact/normalizer; does <strong>not</strong> modify the <code>compound_prior</code> fitter. Used by <code>data_adapter/_build.py</code> to normalize quali-sim (<code>qs_*</code>) features distinctly from long-run (<code>lr_*</code>) features when the <code>qs_compound_beta_regime</code> config flag is <code>&quot;push&quot;</code>.</p>
+<p><strong>Serving-side plumbing (#413).</strong> Prior to #413 the <code>qs_compound_beta_regime</code> flag existed only in the training path; at runtime it always defaulted silently to <code>&quot;race&quot;</code>. The following changes close the gap: <code>pipeline_manifest_v4.py</code> <code>SampledRuntimeConfig</code> now carries <code>qs_compound_beta_regime: str</code> (loaded from the manifest <code>runtime</code> block; named-constant fallback <code>DEFAULT_QS_COMPOUND_BETA_REGIME = &quot;race&quot;</code>). <code>sampled_runtime_manifest_assembly.py</code> emits the field to the assembled manifest's <code>runtime</code> block. <code>gold_cycle/runner.py</code> threads <code>config.data.qs_compound_beta_regime</code> into manifest assembly. <code>data_adapter/_helpers.py</code> <code>build_sampled_runtime_features</code> accepts the regime argument and forwards it to <code>build_race_features</code>. <code>sampled_runtime.py</code> <code>SampledEvoRuntime</code> stores the regime on construction; <code>predict()</code> passes it through to feature building; <code>sampled_runtime_from_config</code> threads it from the loaded <code>SampledRuntimeConfig</code>. <code>run.py</code> exposes <code>--qs-compound-beta-regime</code> on the <code>assemble-sampled-runtime-manifest</code> subcommand. No new container/component/edge/overlay changes.</p>
+<p><strong><code>practice_preprocessor/</code> (package)</strong>
+Aggregates FP1/FP2/FP3 lap data into compound-regularized short-run and long-run pace aggregates (<code>_compound_helpers.py</code>, <code>_compute.py</code>, <code>_lap_pipeline.py</code>, <code>_types.py</code>). Consumes the <code>src.data.protocols.SessionStore</code> typing seam and <code>src.utils.environment</code> for air-density. Laps are split into quali-sim (push) and long-run (managed) buckets <strong>before</strong> compound normalization; <code>compute_practice_features</code> / <code>compute_constructor_race_features_from_laps</code> take an optional <code>quali_sim_compound_normalizer</code> (#380) routed only to the quali-sim bucket, defaulting to the shared <code>compound_normalizer</code> (byte-identical when unset). Feature normalization is median-relative and unconditional (no config switch): pace-LEVEL features use <code>(value − field_median) / field_median</code>; TIME-MAGNITUDE dispersions/spreads/gaps use <code>value / field_median_lap_time</code>. Missing/degenerate fields fall back to <code>0.0</code> (median-neutral); <code>_missing</code> indicators carry absence. No minmax path exists. <code>NormalizedPracticeFeatures</code> also carries <code>allfp_best_raw: Optional[float]</code> (all-FP min-sector pace in raw seconds, lower=faster) and <code>allfp_best_raw_missing: bool</code>; these are populated by <code>_lap_pipeline._allfp_best_raw(lr_best, qs_best)</code> and are the canonical single-value practice pace signal consumed by the quali anchor (#425). See <code>docs/evo/pace_encoding_change.md</code> and <code>docs/evo/practice_preprocessor.md</code>.</p>
+<p><strong><code>quali_pace_gap_history.py</code> — Quali Pace-Gap History Provider</strong>
+Pure DB-backed provider: given <code>(db, year, round_num)</code>, returns <code>{driver_id: [gap_round1, ...]}</code> for rounds 1..round_num-1. Gap formula (frozen): <code>(t − field_median) / field_median</code> computed from best valid non-pit Q laps per round. Negative gap = faster than median. <code>nan</code> where a driver has no valid lap that round. Uses one batch DB call (<code>get_quali_best_valid_laps_batch</code>). Returns <code>{}</code> when round_num ≤ 1. Used by both <code>data_adapter/_build.py</code> (full-feature path) and <code>module_adapters/_common.py</code> / <code>_runtime_builders.py</code> (recent-history path). Its <code>compute_pace_gaps</code> is also the median-relative de-unitization reused by <code>spread_target.py</code> (below).</p>
+<p><strong><code>race_pace_gap.py</code> — Race Pace-Gap Observable (#387)</strong>
+Pure DB-backed observable over the <code>get_race_lap_times</code> frame (no FastF1). Derives per-driver race pace gaps in fraction-of-median units. PRIMARY observable <code>integrated_pace_gap</code>: per-lap pace delta <code>(lap_time − lap_field_median) / lap_field_median</code> integrated over ACTIONABLE laps (green-flag + completed) and averaged. Actionability is per <code>(driver, lap)</code> via FastF1 <code>track_status</code> (<code>is_green_track_status</code> — pure-green only; composite codes like <code>&quot;12&quot;</code>/<code>&quot;21&quot;</code> excluded), so a caution-transition lap contributes only its genuinely-green driver-laps. <code>field_median_spike_actionable_mask</code> is the tested no-status fallback (a caution shows as the whole field's lap times spiking together). BASELINE observable <code>finishing_gap</code> retained as a diagnostic only. The PRIMARY-vs-BASELINE choice was measured (run package <code>CANDIDATE_SELECTION.md</code>): PRIMARY gives ~13× blowout-vs-packed dynamic range and caution-robustness; BASELINE collapses and is caution-fragile.</p>
+<p><strong><code>spread_target.py</code> — Event-Conditioned Spread Target <code>s_e</code> (#387)</strong>
+DB-side derivation of the per-event spread scale <code>s_e</code> (the magnitude the retro ordering labels structurally cannot carry — see <code>docs/evo/prediction_ceiling_and_priorities.md</code> §1.3/§9). Frame: <code>expected_gap_ij ≈ s_event · (pi_i − pi_j)</code>, <code>s_e</code> dimensionless (fraction-of-median per unit retro power). Estimator (robust-first): <code>s_e = median over driver pairs of (pace_advantage_ij / (pi_i − pi_j))</code>, degenerate <code>|Δpi| &lt; 1e-4</code> pairs dropped; non-positive/non-finite estimates clamped to a positive floor and FLAGGED (<code>clamped</code>), never silently fixed. Companion pace-vs-finish sign-disagreement rate recorded as its OWN field (never blended into <code>s_e</code>) for the σ work. Race/race_start pace from <code>race_pace_gap.integrated_pace_gap</code>; quali pace from <code>quali_pace_gap_history.compute_pace_gaps</code>. Retro <code>pi</code> (raw <code>field.pi</code>) read READ-ONLY via <code>latent_power.retro_loader</code> (lazy import — no import-time torch dep; preserves the existing <code>evo→latent_power</code> edge, no new direction). <code>s_e</code> is a post-event LABEL (sees the event's own laps); as-of discipline applies to the features that later predict it. Consumed by #391 (quali <code>s_e</code> gap scale for the mean head) and #386/#388/#389 (race/race_start <code>s_e</code> + disagreement rate for σ). Generator: <code>scripts/build_spread_target.py</code> (derived, deterministic).</p>
+<p><strong><code>quali_gap_scale.py</code> — Quali Mean Gap-Scale Expression (#391)</strong>
+Pure, additive, default-preserving module that turns the quali mean head's dimensionless ordering <code>pi</code> into a gap MAGNITUDE via the per-event exchange rate: <code>expected_gap_ij(pi_i, pi_j, s) = s·(pi_i − pi_j)</code> (the phase-agnostic <strong>#386 contract function</strong>) plus a field-level <code>expected_gaps(pi_map, s, reference='median')</code>. Because a positive <code>s</code> is monotone in <code>pi</code>-differences, the gap expression CANNOT move any ordering KPI (algebraic decoupling — magnitude here, ordering in <code>pi</code>/#375). Prediction-time <code>s_hat_e</code> providers: <code>carry_forward_scale</code> (CF1, last-prior-event quali <code>s_e</code>), <code>same_circuit_prior_year_scale</code> (CF2, same-GP prior-year <code>s_e</code>), and <code>global_constant_scale</code> (the status-quo-ante baseline). No DB/FastF1/torch; consumes a scale value + a <code>pi</code> map only (<code>spread_target.py</code> is the <code>s_e</code> source and is untouched). #386 (Thrust B) measures &quot;excess flip risk beyond the gap&quot; against this function with the LABEL <code>s_e</code>; the #391 mean head feeds it the prediction-time <code>s_hat_e</code>. Measured OOS-2025 midfield gap-MAE (<code>scripts/diagnose_quali_gap_scale.py</code>): the cheap carry-forward variants do not beat the global-constant baseline (honest null), so the shipped default <code>s_hat_e</code> is the global constant; ordering sign-accuracy is identical across scales (flat-ordering confirmation). A learned feature→<code>s_e</code> head is deferred (#375-shaped). See <code>docs/evo/prediction_ceiling_and_priorities.md</code> §9.6.</p>
+<p><strong><code>quali_pace_anchor.py</code> — Quali Head Cross-Channel Pace Anchor (#420)</strong>
+Pure stdlib+numpy production blend function. Single public entry: <code>blend_quali_pace_anchor(pi, anchor, alpha) -&gt; np.ndarray</code>. Implements within-event z-standardized blend of the race_weekend quali head's latent field with a practice min-sector pace anchor: <code>pi'_i = (1-alpha)*z(pi)_i + alpha*z(-anchor)_i</code>. Sign convention: <code>pi</code> higher = faster; <code>anchor</code> in raw seconds lower = faster, negated before z-standardization so both terms share the same sign. Missingness policy: drivers with <code>NaN</code>/non-finite anchor are EXCLUDED from anchor z-stats and receive no anchor term (output kept, no impute); fewer than 2 valid anchor values skips the anchor entirely and returns pi unchanged. <code>alpha=0</code> is an exact no-op (early return, preserves pi magnitude not just ordering). No domain imports beyond numpy — module-leaf under <code>struct:evo</code>; no new cross-region import. Applied inside <code>sampled_runtime._run_stage</code> on the race_weekend quali head's per-module <code>pi</code> BEFORE fusion (admiral ruling 1), gated on <code>task==quali + driver_quali_power_from_race_weekend + QualiPaceAnchorConfig.enabled</code>. The anchor value read is <code>d.allfp_best_raw</code> directly from <code>DriverFeatures</code> (#425); prior to #425 it was reconstructed inline as <code>_nanmin2(d.qs_best_raw, d.lr_best_raw)</code>. Acceptance on the promoted bundle (2018-2024 LOSO alpha=0.5): overall 0.7765 / EASY 0.9058; OOS-2025 overall 0.7616 / EASY 0.9004; alpha=0 reproduces baseline exactly. ACTIVE in the promoted gold bundle (<code>gold_cycle_260612_054059_2018thru2024</code>, #440) — the gold retrain was run with anchor enabled, so fusion and calibration are fit against the anchored pi scale. See <code>docs/evo/prediction_ceiling_and_priorities.md</code> §7.6.4.</p>
+<p><strong><code>models/</code> — DriverFeatures and related (package)</strong>
+24-parameter vector, <code>DriverFeatures</code> dataclass, parameter arrays/genomes, and other F1 domain models used across adapters. Split across <code>_features.py</code>, <code>_genomes.py</code>, <code>_pack.py</code>, <code>_param_arrays.py</code>, <code>_param_dataclasses.py</code>; re-exported from <code>models/__init__.py</code>. <code>_param_dataclasses.py</code> is now itself a re-export shim (issue #302) over <code>_param_helpers.py</code> (shared coercion helpers, <code>params_to_dict</code>/<code>dict_to_params</code>), <code>_race_params.py</code> (Race* parameter dataclasses + constants), and <code>_quali_params.py</code> (Quali* dataclasses + constants); <code>_pack.py</code>'s <code>pack_race_features</code> was decomposed into per-feature-group helpers producing the identical packed vector. <code>DriverFeatures</code> carries <code>quali_pace_gap_history_full: list | None = None</code> — full-season prior Q pace gaps (relative to field median, nan=missing, calendar order); populated by <code>_inject_quali_pace_gap_history</code> when <code>recent_history_form_encoding == &quot;quali_pace_gap&quot;</code>, otherwise remains <code>None</code>. Also carries practice pace fields: <code>lr_best_raw: float</code> (long-run min-sector pace), <code>qs_best_raw: float</code> (quali-sim min-sector pace), and <code>allfp_best_raw: float = np.nan</code> (all-FP min-sector pace — the minimum across both buckets, canonical source for the quali pace anchor; #425) with companion <code>allfp_best_raw_missing: bool = True</code>. These are wired from <code>NormalizedPracticeFeatures</code> by <code>data_adapter/_assemble.py</code>.</p>
+<p><strong><code>scorer.py</code></strong>
+Scores drivers given features and the 24-parameter vector. Used in legacy path.</p>
+<p><strong><code>sampled_backtest.py</code> / <code>sampled_backtest_scoring.py</code> / <code>sampled_runtime_manifest_assembly.py</code> / <code>sampled_runtime_serialization.py</code></strong>
+Sampled runtime infrastructure: backtest loop, per-race scoring, manifest JSON assembly, serialization contracts. <code>sampled_backtest_scoring.py</code> (#356) holds the pure per-race scorer <code>_score_one_race</code> (the behavior-preservation core), its private sub-helpers, and the two execution strategies — <code>_score_races_sequential</code> and <code>_score_races_parallel</code> (the latter fans out through <code>src.utils.utilization.run_jobs</code> with a module-level, spawn-safe worker). <code>sampled_backtest.backtest_sampled_runtime</code> selects between them on the resolved <code>ResourcePlan</code> and imports both drivers <em>lazily</em> to break an import cycle (this scoring module imports scoring primitives from <code>sampled_backtest</code> at load time, so the reverse edge is deferred). Nothing in either module mutates module-level state. <code>sampled_backtest.py</code> also provides <code>stage_snapshot_metrics(snapshot, actual_results, *, score_intersection=False)</code> — scores a <code>StageSnapshot.pairwise_probability_matrix</code> against truth (pairwise log-loss, Brier); with <code>score_intersection=True</code> it scores only the drivers shared by the snapshot and that stage's actual ordering. <code>SampledBacktestRaceResult</code> carries a <code>per_stage_metrics</code> field with per-task (Q/race_start/R) stage scores; truth collection for all three tasks is wired into <code>backtest_sampled_runtime</code>. <code>_compute_entrant_restriction</code> marginalizes predicted drivers absent from the race classification (e.g. a post-qualifying DNS) out of the final-order samples so the surviving field is still scored rather than the whole race being skipped — exact under the latent-power ranking model since final order is a pure per-driver power rank with no field-interaction term.</p>
+<p><strong><code>module_runtime.py</code> — Runtime Module Execution</strong>
+<code>run_module_field(loaded, pair_batch)</code> executes a loaded module and returns a <code>ModuleFieldResult</code>. Includes <code>_check_feature_schema_consistency</code> (#369): raises <code>RuntimeError</code> when the bundle manifest's <code>feature_schema_version</code> disagrees with the batch's reported schema. Skipped when the manifest lacks the key (old bundles). This is the enforcement seam ensuring a bundle trained with one encoding cannot silently run with a different one. Bug fix (#335): <code>module_adapters/_common.py</code> <code>_config_with_overrides</code> now strips <code>feature_schema_version</code> from the override dict before <code>dataclasses.replace</code> — non-quali configs (<code>RaceStartRecentHistoryConfig</code> et al.) do not declare this field, causing <code>TypeError</code> on any freshly trained bundle; the quali closures consume the key earlier via <code>.get()</code> so v1/v2 selection and the consistency check are unaffected.</p>
+<p><strong><code>covariance_sampling.py</code></strong>
+Covariance sampling from field solutions for uncertainty-aware downstream use.</p>
+<p><strong><code>pipeline_manifest_v4.py</code></strong>
+Schema v4 manifest dataclass and validation. Gained <code>QualiPaceAnchorConfig</code> (#420) — a frozen dataclass on <code>RuntimeStageConfig</code> (fields: <code>enabled: bool</code>, <code>alpha: float</code>). Parsed from the manifest's quali-stage <code>quali_pace_anchor</code> block; absent key → config treated as disabled (OFF by default; old manifests stay compatible).</p>
+<p><strong><code>gold_module_cycle.py</code> / <code>gold_report_schema.py</code></strong>
+Legacy single-module gold cycle entry point and report schema. Largely superseded by <code>gold_cycle/</code>.</p>
+<p><strong><code>module_uncertainty_diagnostics.py</code> — Post-Hoc Uncertainty Sidecar</strong>
+Builds the compact <code>module_uncertainty_diagnostics</code> report (<code>report_type=module_uncertainty_diagnostics</code>) emitted alongside gold-cycle details. Distinct from gold-report <code>modules[].uncertainty_diagnostics</code> (training-time <code>|r/σ|</code> percentiles from <code>latent_power.training</code>). This sidecar carries post-hoc per-module <code>diagnostic_flags</code> (sigma/error correlation, alpha/beta boundary hits, <code>empty_usable_event_set</code>, <code>fully_skipped_usable_event_set</code>) and summary counters. Referenced from gold details via <code>module_uncertainty_diagnostics_json</code>. Consumed by compact validation (<code>scripts/run_pipeline_validation.py</code>); does not change training objectives. Sigma/error-correlation flags are significance-gated (n-aware, via <code>correlation_is_significant</code> from <code>gold_module_cycle.py</code>, <code>alpha=0.05</code>): <code>sigma_error_correlation_wrong_sign</code> fires only on a statistically significant negative correlation; <code>sigma_error_correlation_insignificant</code> is an advisory (non-defect) flag for correlations indistinguishable from zero at the scored event count — the expected, benign state at low n (e.g. race-start at n=24, resolving #306). The gate evaluates the σ (sigma_pi_trace) error-correlation channels the producer (<code>gold_module_cycle.uncertainty_calibration</code>) actually emits — <code>corr_sigma_pi_trace_vs_nll</code> and <code>corr_sigma_pi_trace_vs_rank_mae</code> (the <code>field_std_*</code> correlations are a separate field-spread signal, excluded); consumer (<code>_SIGMA_ERROR_CORR_KEYS</code>) ≡ producer key sets are pinned by a structural test so they cannot drift (#384).</p>
+<p><strong><code>module_record.py</code> — Per-Event Module Record Sidecar IO (#371)</strong>
+Canonical read/write contract for per-event module record sidecars. Public surface: <code>write_module_record</code>, <code>load_module_record</code>, <code>strip_record_from_rows</code>, <code>should_reuse_backtest</code>, <code>collect_record_rows</code>. Writes two files alongside a backtest JSON: <code>{stem}.record.npz</code> (arrays keyed by ordinal-prefixed names, e.g. <code>ev0000__pi</code>) and <code>{stem}.record.json</code> (stdlib-readable index with string metadata, feature schema, and per-event flags/counts). Atomic write (temp-then-rename). Dtype-faithful round-trip. Pure IO: no path knowledge of gold cycle, no domain imports — only stdlib + numpy. Non-committed generated artifacts; not tracked in committed reports. Consumed by <code>cmd_backtest_latent_power_module</code> in <code>run.py</code>. Record payload in <code>evaluate_labeled_batches</code> rows is supplied by the opt-in <code>collect_record=True</code> seam (default off, byte-identical when off) added to <code>module_training_orchestration.py</code>; two pure private helpers (<code>_align_actual_positions</code>, <code>_build_event_record</code>) isolate all tensor→numpy conversion. Sidecar contract: <code>docs/evo/module_backtest_record.md</code>.</p>
+<p><strong><code>walkforward/</code> — Walk-forward 2025 fantasy backtest (#439, package)</strong>
+Leakage-free in-season walk-forward evaluation of the fantasy pipeline across the 2025 season. Modules: <code>periods.py</code> (walk-forward period definitions + prediction-collection helpers), <code>attestation.py</code> (enforced per-race leakage attestation — <code>attest_no_leakage</code>, <code>LeakageError</code>), <code>orchestrator.py</code> (the walk-forward orchestrator producing <code>PeriodPredictions</code>), <code>multiseason.py</code> (multi-season pre-quali scoring), and <code>pipeline.py</code> (real per-period cutoff pipeline via an injected <code>PipelinePort</code>). Scores via <code>src.fantasy_scoring.season</code> (<code>RaceResult</code>, <code>SeasonAggregator</code>) — the sole evo→fantasy_scoring coupling (see index edge). P0 reuses the gold backtest; P1–P3 run per-period cutoffs.</p>
+<p><strong>Pipeline validation scripts (stateless baseline gates)</strong>
+Standalone CLIs under <code>scripts/</code> that produce or verify committed baseline artifacts. They parse committed reports/manifests only in the compact validation path — no training, recursive refinement, or live backtest during validation.</p>
+<table>
+<thead>
+<tr>
+  <th>Script</th>
+  <th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>run_gold_module_training_cycle.py</code></td>
+  <td>Produces gold summary/details, uncertainty calibration, module uncertainty diagnostics sidecar, gold sampled-runtime manifest</td>
+</tr>
+<tr>
+  <td><code>run_static_hierarchical_fusion_training.py</code></td>
+  <td>Produces static fusion summary/details/config and trained sampled-runtime manifest</td>
+</tr>
+<tr>
+  <td><code>run_sampled_runtime_comparison.py</code></td>
+  <td>Produces default-vs-trained sampled-runtime comparison (<code>rt_comparison_*</code> slug under <code>reports/evo/</code>); parallelizable over default/trained × years via <code>src.utils.utilization</code> with its own <code>--utilization</code> flag (#356, result-preserving)</td>
+</tr>
+<tr>
+  <td><code>run_pipeline_validation.py</code></td>
+  <td>Compact profile: discovers latest committed artifacts, cross-checks observability surfaces, writes <code>reports/validation/pipeline_validation_summary.*</code></td>
+</tr>
+<tr>
+  <td><code>accept_quali_anchor_420.py</code></td>
+  <td>Acceptance measurement for #420 anchor: imports production <code>blend_quali_pace_anchor</code> + §7.6.2 <code>diagnose_quali_same_pairs</code> primitives; runs inference-only on a gold bundle; reproduces/validates §7.6.4 improvement on the shared-pair population (no retrain). Args: <code>--bundle-path</code> (default: promoted bundle) and <code>--output-dir</code> (default: run-package dir); default-preserving addition — no-arg run is byte-identical to prior behavior.</td>
+</tr>
+</tbody>
+</table>
+<p>Canonical split constants for compact validation align with <code>configs/evo/gold_defaults.toml</code> (<code>train_years</code> 2018–2024, eval 2025). Gate ownership and field contracts: <code>docs/report_schemas/validation_reports.md</code>.</p>
+<p><strong>Quali pace-gap form encoding (#369).</strong> <code>recent_history_form_encoding</code> flows from <code>gold_defaults.toml → gold_cycle/config.py (GoldCycleDataConfig) → runner_support._module_train_args → train/backtest-latent-power-module CLI → module_training_orchestration → build_labeled_batches_for_module → training closures</code> for all 12 production modules (only the two quali recent-history closures act on the value; all others accept and ignore it). Also available on the <code>train-latent-power-module</code> and <code>backtest-latent-power-module</code> CLI commands as <code>--recent-history-form-encoding</code>. <code>recent_history_adapter.py</code>'s <code>RecentHistoryFeatureConfig</code> validates the value against <code>_VALID_FORM_ENCODINGS = {&quot;position_quality&quot;, &quot;quali_pace_gap&quot;}</code>.</p>
+<hr />
+<h2>Module Registry (registered in latent_power)</h2>
+<p>All 15 names below are registered in <code>module_adapters/_registry.py</code>. The production sampled-runtime manifest (<code>params/gold/sampled_runtime_manifest.json</code>) runs 12 of them — the 6 <code>*_from_race_weekend</code> + 6 <code>*_from_recent_history</code> families.</p>
+<p><strong>Race-weekend feature family</strong> (6 modules — trained on full race-weekend data):</p>
+<ul>
+<li><code>driver_race_power_from_race_weekend</code></li>
+<li><code>constructor_race_power_from_race_weekend</code></li>
+<li><code>driver_race_start_power_from_race_weekend</code></li>
+<li><code>constructor_race_start_power_from_race_weekend</code></li>
+<li><code>driver_quali_power_from_race_weekend</code></li>
+<li><code>constructor_quali_power_from_race_weekend</code></li>
+</ul>
+<p><strong>Recent-history feature family</strong> (6 modules — trained on prior-round session history; real production feature paths):</p>
+<ul>
+<li><code>driver_race_power_from_recent_history</code></li>
+<li><code>constructor_race_power_from_recent_history</code></li>
+<li><code>driver_race_start_power_from_recent_history</code></li>
+<li><code>constructor_race_start_power_from_recent_history</code></li>
+<li><code>driver_quali_power_from_recent_history</code> — supports v1 (position_quality) and v2 (quali_pace_gap) encoding via <code>RecentHistoryFeatureConfig.form_encoding</code>; schema string <code>driver_quali_power_from_recent_history.v1</code> or <code>.v2</code> stamped in bundle manifest</li>
+<li><code>constructor_quali_power_from_recent_history</code> — same v1/v2 encoding flag; schema string <code>constructor_quali_power_from_recent_history.v1</code> or <code>.v2</code></li>
+</ul>
+<p><strong>Residual-history scaffolding</strong> (3 modules — registered for registry completeness; training closures return <code>EventDataUnavailable</code>; not in production manifest):</p>
+<ul>
+<li><code>driver_quali_power_from_residual_history</code></li>
+<li><code>driver_race_start_power_from_residual_history</code></li>
+<li><code>driver_race_power_from_residual_history</code></li>
+</ul>
+<hr />
+<h2>Manifest Contracts</h2>
+<p><strong>Schema v3</strong> (<code>pipeline_manifest.json</code>):</p>
+<ul>
+<li><code>pipeline_kind=&quot;evo_pipeline&quot;</code>, <code>schema_version=3</code></li>
+<li><code>modules=[&quot;driver_race_power_from_race_weekend&quot;]</code></li>
+<li>Required artifacts: <code>model_checkpoint_file</code>, <code>training_config_file</code>, <code>module_diagnostics_file</code></li>
+</ul>
+<p><strong>Schema v4</strong> (<code>sampled_runtime_manifest.json</code>):</p>
+<ul>
+<li>Multi-module composition</li>
+<li>Configured quali, race-start, and race modules</li>
+<li>Powers <code>sampled-predict</code> / <code>sampled-backtest</code></li>
+</ul>
+<hr />
+<h2>Config Files</h2>
+<ul>
+<li><code>src/evo_predictor/circuits.yaml</code> — per-year circuit config; exact year required, no silent fallback</li>
+<li><code>src/evo_predictor/compounds.yaml</code> — per-season compound assignments (C1–C6); 2025 verified from Pirelli</li>
+<li><code>configs/evo/gold_defaults.toml</code> — gold cycle defaults and train/eval split; includes <code>[data].recent_history_form_encoding</code> (default <code>&quot;quali_pace_gap&quot;</code>; activates v2 pace-gap encoding for driver/constructor quali recent-history modules, validated by <code>gold_cycle/config.py</code>; <code>&quot;position_quality&quot;</code> is the v1 legacy value); <code>[runtime].quali_pace_anchor_enabled</code> (default <code>true</code> — active in the promoted gold bundle) and <code>[runtime].quali_pace_anchor_alpha</code> (default <code>0.5</code>) — threaded through <code>gold_cycle/config.py</code> → <code>runner.py</code> → manifest assembly → <code>pipeline_manifest_v4.RuntimeStageConfig.QualiPaceAnchorConfig</code> (#420)</li>
+</ul>
+<hr />
+<h2>Artifact Paths</h2>
+<ul>
+<li>Training output: <code>outputs/evo_runs/&lt;run&gt;/</code></li>
+<li>Gold artifacts: <code>params/gold/</code></li>
+<li>Spread-target labels (#387): <code>params/spread_target/&lt;year&gt;/&lt;round&gt;/&lt;phase&gt;.json</code> (phase ∈ {quali, race, race_start}; mirrors <code>params/retro_truth/</code> layout). Per-event <code>s_e</code>, <code>clamped</code>, <code>disagreement_rate</code>, <code>n_pairs</code>, <code>entity_scope</code>. Derived from the DB + read-only retro <code>pi</code>; regenerate with <code>py scripts/build_spread_target.py</code>.</li>
+<li>Committed reports: <code>reports/evo/</code> (<code>gold_cycle_*</code>, <code>unc_cal_*</code>, <code>unc_diag_*</code>, <code>fusion_*</code>, <code>rt_comparison_*</code>). Current promoted slug: <code>gold_cycle_260612_054059_2018thru2024</code> (#440; supersedes <code>gold_cycle_260608_043414_2018thru2024</code>). Provenance: <code>params/gold/gold_provenance.json</code>.</li>
+<li>Compact validation reports: <code>reports/validation/pipeline_validation_summary.json</code>, <code>.md</code></li>
+</ul>
+<hr />
+<h2>Key Constraints</h2>
+<ul>
+<li>No direct FastF1 calls from any adapter, scorer, or predictor code</li>
+<li>Same-season full-year compound priors rejected by default in eval/predict</li>
+<li><code>src/latent_power</code> must not import <code>src/evo_predictor</code> (rationale in constraints overlay)</li>
+<li>Unknown module names fail at CLI parsing or registry lookup</li>
+<li><code>src/evo_predictor/module_adapters/</code> (package; registration in <code>_registry.py</code>) is the single registration site for all module adapters. <code>build_pair_batch</code> and <code>build_labeled_pair_batch</code> closures on <code>ModuleAdapter</code> own their full wiring — kwargs assembly, position extraction, config resolution, diagnostics — with no central dispatcher.</li>
+<li>Ambiguous sparse feature neutrals (adjustment factors whose missing-data fill value sits inside the real observed distribution) require a companion <code>{feature}_missing</code> binary indicator column. When sparse: <code>(0.0, 1.0)</code>; when present: <code>(real_value, 0.0)</code>. Unambiguous sparse features (support=0.0, share=0.0) do not need indicators — they already sit outside the real distribution.</li>
+<li><code>DNF_POSITION = 30</code>. Value 21 misclassifies P21 as a DNF on a 21-driver grid (2026+). 30 provides headroom beyond any realistic F1 grid size.</li>
+</ul>
+<hr />
+<h2>Decision anchors (the durable &quot;why&quot;)</h2>
+<p><code>docs/architecture/decisions/</code>:</p>
+<ul>
+<li><strong><code>decision:gold_lifecycle_provenance</code></strong> — gold is a single-provenance, slug-free interface (<code>params/gold/</code>, constant names, git history = lineage) with an atomic <code>promote_gold.py</code> lifecycle (<code>gold/</code> ← <code>gold_candidate/</code> → <code>gold_archive/</code>), the <code>eval_year ∉ train_years</code> hard invariant, and a <code>pipeline_validation</code> gate that requires <em>exactly</em> the gold artifact set. Born from the #335 leak (stale <code>per_race_predictions/</code> → leaked &quot;707&quot; fantasy score). Operational how-to: <code>docs/evo/analysis_refresh.md</code>. <em>(explained-by <code>struct:evo.gold_cycle</code>)</em></li>
+</ul>
+
+
+</main>
+<footer class="site"><div class="wrap">
+  Generated by <code>constellation-docent</code> from Cartographer map truth
+  (<code>docs/architecture/</code>). Read-only over the map. The embedded stamp records
+  <em>which map this site was built from</em>; the live gate is
+  <code>docent_freshness.py check</code>.
+</div></footer>
+<script>
+(function(){
+  var GEN="2026-07-07";
+  var banner=document.getElementById("stale-banner");
+  var params=location.search.toLowerCase();
+  var forced=/[?&]stale(=1|=true)?(&|$)/.test(params);
+  var days=Math.floor((Date.now()-Date.parse(GEN))/86400000);
+  var ageEl=document.getElementById("gen-age");
+  if(ageEl){ageEl.textContent="generated "+(isNaN(days)?"":days+" day"+(days===1?"":"s")+" ago")+" ("+GEN+")";}
+  if(forced){
+    banner.textContent="STALE: this explainer was flagged out of date against the current map. Regenerate it with the docent skill.";
+    banner.className="stale-banner show";
+  } else if(days>=30){
+    banner.textContent="This site was generated "+days+" days ago and may be stale. Verify with docent_freshness.py check before trusting it.";
+    banner.className="stale-banner show";
+  }
+  var t=document.getElementById("theme-toggle");
+  if(t){t.addEventListener("click",function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var next=cur==="dark"?"light":(cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark"));
+    document.documentElement.setAttribute("data-theme",next);
+  });}
+})();
+</script>
+</body>
+</html>

@@ -81,6 +81,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "workbench": ("checklist_engine.py",),
     "interrogator": ("checklist_engine.py",),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
+    "docent": ("docent_freshness.py",),
     "implementer": ("checklist_engine.py",),
     "reviewer": ("checklist_engine.py",),
 }
@@ -101,6 +102,7 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "workbench": _GLOBAL_ALL_TIERS,  # generic driver for either tier
     "interrogator": _GLOBAL_EVERYONE,
     "cartographer": _GLOBAL_ORCHESTRATOR,
+    "docent": _GLOBAL_ORCHESTRATOR,
     "scout": _GLOBAL_ORCHESTRATOR,
     "implementer": _GLOBAL_CREW,
     "reviewer": _GLOBAL_CREW,

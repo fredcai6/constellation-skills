@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="docent-map-stamp" content="a28c107b2fe8be081ece13accf7280406c2e81e1f08c16d58ea28fa455137cd9">
+<meta name="docent-generated" content="2026-07-07">
+<title>Packet: src/compound_prior — Tire-Wear Pipeline — F1Brainz Explainer</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}}
+:root[data-theme="light"]{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+:root[data-theme="dark"]{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 80px}
+header.site{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-bottom:1px solid var(--line);backdrop-filter:saturate(1.2) blur(4px)}
+header.site .wrap{padding:12px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+header.site .brand{font-weight:700;letter-spacing:.02em}
+header.site nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.92rem}
+h1{font-size:1.9rem;line-height:1.2;margin:.6em 0 .2em}
+h2{font-size:1.3rem;margin:1.8em 0 .5em;padding-bottom:.2em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.4em 0 .3em}
+p{margin:.6em 0}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+  font:0.86em/1.4 "SF Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:9px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--chip)}
+blockquote{margin:.8em 0;padding:.2em 1em;border-left:3px solid var(--line);color:var(--muted)}
+.lede{font-size:1.12rem;color:var(--muted);max-width:70ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:.4em 0 1em}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;
+  padding:2px 11px;font-size:.8rem;color:var(--muted)}
+.chip.status-current{color:var(--ok)}
+.chip.status-stale{color:var(--warn)}
+.chip.status-partial{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:1.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.card h3{margin:.1em 0 .3em}
+.card .path{font-size:.8rem;color:var(--muted);font-family:"SF Mono",Consolas,monospace}
+.card p{font-size:.9rem;color:var(--muted);margin:.4em 0 0}
+.section-note{color:var(--muted);font-size:.92rem}
+.adj{margin:1em 0}
+.adj .row{padding:10px 0;border-bottom:1px solid var(--line)}
+.adj .src{font-weight:600}
+.adj .tgt{display:inline-block;background:var(--chip);border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:.85rem}
+.decision{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin:1.1em 0}
+.decision .meta{font-size:.82rem;color:var(--muted);margin:.2em 0 .6em}
+details{margin:.6em 0}
+summary{cursor:pointer;color:var(--accent);font-size:.9rem}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 17px;margin:1.4em 0;font-size:.88rem}
+.badge .dig{font-family:"SF Mono",Consolas,monospace;font-size:.82rem;word-break:break-all;color:var(--muted)}
+.badge .age{color:var(--muted)}
+.stale-banner{display:none;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);
+  border-radius:10px;padding:12px 16px;margin:1em 0;font-weight:600}
+.stale-banner.show{display:block}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:3px 10px;cursor:pointer;font-size:.85rem}
+footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;margin-top:40px}
+footer.site .wrap{padding:20px}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <span class="brand">F1Brainz Explainer</span>
+  <nav><a href="index.html">Overview</a><a href="boundaries.html">Boundaries &amp; Dependencies</a><a href="decisions.html">Decisions</a></nav>
+  <button id="theme-toggle" class="theme-toggle" type="button">light / dark</button>
+</div></header>
+<main class="wrap">
+<div id="stale-banner" class="stale-banner"></div>
+
+<p class="section-note"><a href="index.html">← Overview</a></p>
+<h1>Packet: src/compound_prior — Tire-Wear Pipeline</h1>
+<div class="chips"><span class="chip status-current">status: current</span><span class="chip">level: container</span><span class="chip">src/compound_prior/</span><span class="chip">confidence: high</span><span class="chip">struct:compound_prior</span></div>
+
+
+<h2>Detail <span class="section-note">(from the Cartographer packet)</span></h2>
+<hr />
+<h2>Responsibility</h2>
+<p>Infer tire-wear effects from race observations. Produce compact runtime prior artifacts consumed by the evo pipeline during feature construction. The canonical goal is one package-level: infer per-compound beta (intercept) and gamma (wear slope) parameters from observed lap times.</p>
+<hr />
+<h2>Canonical Execution Path</h2>
+<pre><code>1. extract_race_observations  →  raw segment observations (DB → parquet/CSV)
+2. fit_race_baseline          →  race-progress baseline (optional standalone)
+3. fit_tire_wear_model        →  alternating baseline + compound model
+4. write_tire_wear_run_bundle →  full run bundle (run_summary.json, compound_parameters.json, parquets)
+5. promote_runtime_artifact   →  compact runtime prior artifact (compound_prior_summary.json per season)
+6. runtime_normalization      →  CompoundNormalizer (consumed by evo data_adapter)
+</code></pre>
+<p>CLI entry points are in <code>scripts/</code> (not inside this package). Python API entry: <code>fit_tire_wear_model(obs_df, ...)</code>.</p>
+<hr />
+<h2>Key Modules</h2>
+<p><strong><code>extractor.py</code></strong>
+Extracts raw race-segment observations from the SQLite DB. One observation row per driver/lap/segment. Applies cleanliness filtering (VSC, safety car, pit laps). Computes cumulative race progress. Outputs a DataFrame with <code>compound_absolute</code> (C1–C6), <code>laps_on_tire</code>, <code>segment_time_s</code>, <code>race_progress</code>, cleanliness tier flags, and gap-proximity columns.</p>
+<p><strong><code>baseline.py</code> — Race Progress Baseline</strong>
+Constrained parametric fit: <code>segment_time = alpha(race, driver, segment) + beta(race, segment) * race_progress</code>. Per-race/segment slope (<code>beta_segment</code>) pooled toward a global slope. All slopes constrained to be strictly negative. Multi-race pooling occurs in the tire-wear model, not here. Standalone use for debug inspection only.</p>
+<p><strong><code>solver/</code> — Alternating Tire-Wear Solver (package)</strong>
+Split across <code>_core.py</code>, <code>_iterate.py</code>, <code>_ridge.py</code>, <code>_solve.py</code>. Alternates: fit pooled race baseline → stack residuals → fit compound model → repeat. Compound model: absolute C-number identities (C1–C6), per-compound beta (intercept) + gamma (wear slope). Identifiability: weighted sum-zero constraint on intercepts. Non-dimensional normalization: residuals converted to fractional pace before compound fitting, making gamma invariant to sector duration. Optional features: burn-in/tail windowing, residual outlier filtering (MAD-based), race delta gamma block, effective-age modifiers (VSC, close-ahead, close-behind), sparse-prior mode. Physics constraints: gamma non-negative, adjacent C-number slopes monotone.</p>
+<p><strong><code>runtime_normalization.py</code> — CompoundNormalizer</strong>
+Loads a <code>compound_prior_summary.json</code> artifact for a given target year. Applies time-safety rule: selects the latest artifact from a source season strictly before target year; rejects same-season full-year artifacts by default. <code>normalize_lap_time(observed_time, compound, tire_age, baseline_time)</code> adjusts to equivalent C3 at age zero. Emits support counts, DQI factor, warnings, and artifact metadata for downstream diagnostics.</p>
+<p><strong><code>baseline_schema.py</code>, <code>observation_schema.py</code></strong>
+Schema validation for baseline fit results and observation DataFrames.</p>
+<p><strong><code>identifiability.py</code></strong>
+Sum-zero constraint enforcement, identifiability diagnostics, and compound support checks.</p>
+<p><strong><code>cleanliness.py</code></strong>
+Lap/segment cleanliness classification into tiers (A, B, C) based on VSC flags, gap proximity, and pit-lap proximity.</p>
+<p><strong><code>gap_calculator.py</code></strong>
+Gap-to-car-ahead and gap-to-car-behind from race-lap data.</p>
+<p><strong><code>gamma_modifier.py</code></strong>
+Race-delta gamma modifier; fits per-race additive offset on compound wear slope.</p>
+<p><strong><code>diagnostics/</code> (package)</strong>
+Identification diagnostics: <code>compound_identifiability.csv</code>, <code>compound_slope_sensitivity.csv</code>, <code>pit_window_reset_checks.csv</code>. Split across <code>_tables.py</code>, <code>_plots_basic.py</code>, <code>_plots_solver.py</code>, <code>_tire_wear_plots.py</code>, <code>_tire_wear_io.py</code>. Plotting helpers; not on the live prediction path.</p>
+<p><strong><code>rolling_prior.py</code></strong>
+Rolling compound prior construction (sub-season windowed builds).</p>
+<p><strong><code>neural_rate.py</code></strong>
+Experimental neural wear-rate module. Not on the canonical path.</p>
+<hr />
+<h2>Scripts</h2>
+<p><strong><code>scripts/fit_compound_prior.py</code></strong> — exploratory/debug only. Fits compound prior from pre-baselined observations. Not the canonical production path.</p>
+<p><strong><code>scripts/build_pooled_compound_prior.py</code></strong> — builds pooled multi-season gold compound_prior artifacts for target years (#410). Pools all baselined parquets from seasons strictly before the target year (ONLY consumes observations from seasons &lt; Y — time-safe by construction). Writes <code>params/gold/compound_prior/{Y}/compound_prior_summary.json</code> with <code>artifact_id = &quot;pooled-compound-prior-{max_season}-for-{Y}&quot;</code>. Replaces the per-season <code>fit_compound_prior</code> path for identifying the β ladder; multi-season pooling is required because the per-season β is degenerate (§7.7). The 2023/2024/2025 gold artifacts in <code>params/gold/compound_prior/</code> were regenerated via this path (#410); the 2022 artifact predates #410 and uses the old per-season path. Schema unchanged; <code>CompoundNormalizer</code> interface unchanged.</p>
+<p><strong><code>scripts/build_rolling_compound_priors.py</code></strong> — builds rolling per-round compound prior artifacts for a target year (historical full seasons + completed target-year rounds 1..N-1, with sigmoid-downweighted historical observations via <code>rolling_prior.scale_historical_observations</code>). Output under <code>outputs/rolling_compound_priors/{target_year}/before_r{N:02d}/</code>. Parallelizable across rounds via <code>src.utils.utilization</code> (<code>UTILIZATION_LEVELS</code>, <code>resolve_resource_plan</code>, <code>run_jobs</code>) with its own <code>--utilization</code> flag (#356); result-preserving (input-order reassembly, 1-worker in-process short-circuit).</p>
+<p><strong><code>scripts/diagnose_compound_beta_degeneracy.py</code></strong> / <strong><code>scripts/diagnose_compound_gamma_identifiability.py</code></strong> — read-only diagnosis harnesses (#382, exploratory; DB-only, self-contained). Rebuild the crossover gate's pooled fixed-effects design from the per-season DBs and read the committed gold artifacts to measure WHY the per-season gold β is degenerate (identification/pooling-limited — ridge refuted) and to quantify γ identifiability (collinearity/VIF vs the fuel-evolution term, per-γ SE, profile likelihood). Not on any prediction path; write evidence under their run package. Findings recorded in <code>docs/evo/prediction_ceiling_and_priorities.md</code> §7.7.</p>
+<hr />
+<h2>Runtime Artifact Layout</h2>
+<pre><code>&lt;compound-prior-root&gt;/
+  2022/
+    compound_prior_summary.json   (per-season path, pre-#410)
+  2023/
+    compound_prior_summary.json   (pooled-compound-prior-2022-for-2023, #410)
+  2024/
+    compound_prior_summary.json   (pooled-compound-prior-2023-for-2024, #410)
+  2025/
+    compound_prior_summary.json   (pooled-compound-prior-2024-for-2025, #410)
+</code></pre>
+<p>Required <code>compound_prior_summary.json</code> fields: <code>artifact_id</code>, <code>source_season</code>, <code>effect_space=&quot;normalized_fractional&quot;</code>, <code>normalize_residuals=true</code>, <code>accepted_compounds</code>, <code>reference_compound</code>, <code>parameter_means</code>, <code>parameter_sigmas</code>, <code>observation_counts_by_compound</code>, <code>weighted_counts_by_compound</code>, <code>selected_source_races</code>, <code>solver_status</code>, <code>warnings</code>.</p>
+<hr />
+<h2>Run Bundle Contract</h2>
+<p>Each canonical training run writes: <code>run_summary.json</code>, <code>compound_parameters.json</code>, <code>final_observations.parquet</code>, <code>baseline_segment_slopes.parquet</code>, <code>baseline_driver_segment_intercepts.parquet</code>, <code>iteration_trace.parquet</code>, <code>compound_identifiability.parquet</code>, <code>compound_slope_sensitivity.parquet</code>, <code>pit_window_reset_checks.parquet</code>, <code>diagnostics/</code>.</p>
+<hr />
+<h2>Empirical Degradation Sensor (#443)</h2>
+<p><strong><code>empirical_sensor.py</code></strong> — Empirical compound-degradation sensor productionized from the FINDINGS.md survey (git <code>dfd8862a</code>). Reads car telemetry from <code>TelemetryStore</code> (2022+ race sessions) and lap metadata from per-year DBs (<code>f1_data_*.db</code> via raw sqlite3, annotated as deliberate — <code>DatabaseManager</code> does not support cross-year multi-session batch queries). Implements the validated production recipe:</p>
+<ul>
+<li>Feature extraction: per-lap contrast = <code>log(corner_q15 / DRS-off-straight-mean)</code> from car speed/throttle/drs streams; <code>lap_time_s</code> from TelemetryStore laps; per-lap coast-fraction filter.</li>
+<li>Per-(race, compound) OLS slope cells: <code>b_lat</code> (lateral contrast vs tyre age), <code>b_lap</code> (lap time vs tyre age = target), <code>b_long</code> (longitudinal, 0.0 when absent), EB-shrunk race-demeaned target <code>y</code>.</li>
+<li>Relative-rank encoding: compound rank within race (1=hardest).</li>
+<li>Circuit-compound LOO prior (<code>cc_prior</code>): leave-one-race-out mean of demeaned slope.</li>
+<li>Eight-feature ridge model: <code>{relrank, cc_prior, lat, long0, lat_era, lat_deg, long_era, lat_absc}</code>.</li>
+<li>Validated: LOO pairwise P = 0.8032 on 77 races (2022–2024; 2025 EB tau2=0 — noise &gt; signal); permutation z = +5.22σ; ladder monotone-up.</li>
+</ul>
+<p>Public API: <code>EmpiricalDegModel</code> dataclass, <code>load_race_laps()</code>, <code>build_degradation_cells()</code>, <code>fit_empirical_model()</code>, <code>predict_compound_degradation()</code>.</p>
+<p>Data sources introduced (per-issue #443):</p>
+<ul>
+<li><code>src/data/telemetry_store.py</code> (TelemetryStore.read_session, read-only) → new <code>struct:compound_prior → struct:data</code> edge</li>
+<li><code>data/f1_data_*.db</code> (raw sqlite3 per-year lap metadata) → extends existing <code>struct:compound_prior → struct:sqlite_db</code> evidence</li>
+<li><code>src/common/pairwise_ordering.py</code> (validation harness) → new <code>struct:compound_prior → struct:common</code> edge</li>
+</ul>
+<p>Constraint verification: no imports from <code>src/physics/</code> or <code>src/preprocessing/</code> (verified). <code>constraint:physics_region_no_evo_import</code> is NOT violated — physics is the constrained side; <code>empirical_sensor.py</code> is Evo region and CAN import from Data region (<code>common</code>, <code>data</code>).</p>
+<p>Scripts: <code>scripts/validate_empirical_sensor_443.py</code> — standalone validation harness (non-map node).</p>
+<hr />
+<h2>Known Limits</h2>
+<ul>
+<li>Compound model uses absolute C-numbers (C1–C6); no SOFT/MEDIUM/HARD fallback in runtime path</li>
+<li>Same-season full-year artifacts rejected by default (time-safety; see <code>constraint:time_safe_compound_prior</code> in <code>docs/architecture/overlays/constraints.yml</code>, formerly ADR 0002)</li>
+<li>Race-start adapter does not model VSC restarts or anomalies</li>
+<li>Neural wear-rate module (<code>neural_rate.py</code>) is exploratory, not on canonical path</li>
+<li>Gold artifacts for 2023/2024/2025 in <code>params/gold/compound_prior/</code> were regenerated as pooled multi-season fits via <code>build_pooled_compound_prior.py</code> (#410); the 2022 artifact predates #410 and was produced via the old per-season <code>fit_compound_prior</code> path. Full historical regen (2018–2026 unified solver) remains a Triage item.</li>
+<li>Per-season β degeneracy (#382): the gold per-season fits cannot identify the fresh-pace β ladder — 8/8 seasons are non-monotone even at ridge=0; the ordered ~0.7%/step ladder only emerges when seasons are <em>pooled</em> (the <code>build_rolling_compound_priors.py</code> direction). β degeneracy is identification/pooling-limited, not a ridge or solver bug (measured; <code>docs/evo/prediction_ceiling_and_priorities.md</code> §7.7). The race-side γ-up degradation ladder is confounded (not just under-identified) and is not recoverable from race-lap data without a de-confounding design.</li>
+</ul>
+
+
+</main>
+<footer class="site"><div class="wrap">
+  Generated by <code>constellation-docent</code> from Cartographer map truth
+  (<code>docs/architecture/</code>). Read-only over the map. The embedded stamp records
+  <em>which map this site was built from</em>; the live gate is
+  <code>docent_freshness.py check</code>.
+</div></footer>
+<script>
+(function(){
+  var GEN="2026-07-07";
+  var banner=document.getElementById("stale-banner");
+  var params=location.search.toLowerCase();
+  var forced=/[?&]stale(=1|=true)?(&|$)/.test(params);
+  var days=Math.floor((Date.now()-Date.parse(GEN))/86400000);
+  var ageEl=document.getElementById("gen-age");
+  if(ageEl){ageEl.textContent="generated "+(isNaN(days)?"":days+" day"+(days===1?"":"s")+" ago")+" ("+GEN+")";}
+  if(forced){
+    banner.textContent="STALE: this explainer was flagged out of date against the current map. Regenerate it with the docent skill.";
+    banner.className="stale-banner show";
+  } else if(days>=30){
+    banner.textContent="This site was generated "+days+" days ago and may be stale. Verify with docent_freshness.py check before trusting it.";
+    banner.className="stale-banner show";
+  }
+  var t=document.getElementById("theme-toggle");
+  if(t){t.addEventListener("click",function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var next=cur==="dark"?"light":(cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark"));
+    document.documentElement.setAttribute("data-theme",next);
+  });}
+})();
+</script>
+</body>
+</html>
