@@ -139,6 +139,29 @@ _BEHAVIOR = {
     STATE_FAILED: "failed; require explicit --abandon ... --relaunch",
 }
 
+# Backend-specific resume ACTION for a RESUMABLE entry (Decision 6): the
+# CLASSIFICATION is uniform (status + pid-liveness + exists-AND-fresh via
+# `_default_result_present`), but the recoverable action differs by backend and
+# the report says which applies. A `cli` entry relaunches via the wrapper; an
+# externally-dispatched crew is unrecoverable BY THE WRAPPER — it must be resumed
+# out-of-band (SendMessage to its recorded agentId) or abandoned+relaunched.
+_EXTERNAL_RESUME_ACTION = (
+    "not running and no fresh result; an externally-dispatched crew is "
+    "unrecoverable by the wrapper — SendMessage to the crew's recorded agentId to "
+    "resume it in place (skills/_shared/windows.md §2), else --abandon ... --relaunch"
+)
+
+
+def _behavior_for(entry: dict, state: str) -> str:
+    """Human-readable behavior text for one classified entry. Uniform per state,
+    except a RESUMABLE entry's resume ACTION is backend-aware (Decision 6): the
+    `cli` action keeps the stored-session `run_crew.py --resume` text; an
+    `external` entry gets the unrecoverable-by-wrapper guidance instead. The state
+    itself (the classification) is unchanged — only the action text differs."""
+    if state == STATE_RESUMABLE and run_crew.entry_backend(entry) == run_crew.BACKEND_EXTERNAL:
+        return _EXTERNAL_RESUME_ACTION
+    return _BEHAVIOR.get(state, state)
+
 
 def classify_registry(
     entries: list[dict],
@@ -186,7 +209,7 @@ def report(
     unresolved = 0
     for entry, state in entries:
         name = entry.get("session_name", entry.get("crew_id", "<unknown>"))
-        behavior = _BEHAVIOR.get(state, state)
+        behavior = _behavior_for(entry, state)
         out(f"{name}: {state.upper()} — {behavior}")
         if state in UNRESOLVED_STATES:
             unresolved += 1

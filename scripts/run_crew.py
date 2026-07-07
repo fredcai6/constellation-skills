@@ -27,8 +27,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -45,6 +47,21 @@ DEFAULT_LAUNCHER = "claude"
 # a spawned one.
 DISPATCH_SPAWN = "spawn"
 DISPATCH_EXTERNAL = "external"
+
+# Backend names. A durable registry entry records which crew-launch backend
+# produced it (Decision 1: exactly two — `cli` spawns a headless `claude`
+# subprocess; `external` records-only, the crew is dispatched out-of-band). New
+# entries carry `backend`; a legacy entry without one is inferred by
+# `entry_backend` (dispatch == "external" -> external, else cli).
+BACKEND_CLI = "cli"
+BACKEND_EXTERNAL = "external"
+
+# The `--backend auto` token opts into auto-detection (Decision 4): choose `cli`
+# when a headless `claude` CLI is found on PATH, else `external`. `None` (flag
+# omitted, backend derived from legacy `--dispatch`) is treated the same as
+# `auto` by `select_backend`, but the CLI never passes `auto`/`None` unless the
+# operator explicitly asked for `--backend auto` (Decision 5, backward compat).
+BACKEND_AUTO = "auto"
 
 
 class CrewLaunchError(Exception):
@@ -249,6 +266,349 @@ def _relativize(path: str, root: Path) -> str:
     return p.as_posix()
 
 
+def _require_handoff(handoff: str, root: Path, *, action: str) -> Path:
+    """Resolve the handoff path against root and REFUSE if it is missing. `action`
+    ("launch" | "record") shapes the refusal message so the spawn and external
+    paths keep their distinct wording."""
+    handoff_path = Path(handoff)
+    if not handoff_path.is_absolute():
+        handoff_path = root / handoff
+    if not handoff_path.is_file():
+        raise CrewLaunchError(f"refusing to {action}: handoff file is missing: {handoff_path}")
+    return handoff_path
+
+
+def build_entry(
+    *,
+    work_id: str,
+    gate: str,
+    role: str,
+    attempt: int,
+    worktree: str,
+    handoff: str,
+    result: str,
+    root: Path,
+    started: str,
+    backend: str,
+    pid: int | None,
+    dispatch: str | None = None,
+    model: str | None = None,
+) -> dict:
+    """Construct the base `crew-runs.json` entry shared by BOTH backends (the
+    consolidation the wave-1 triage named). One place builds the durable record so
+    the two dispatch paths can never drift in shape.
+
+    Every new entry carries a `backend` field (`"cli"` | `"external"`, Decision 1)
+    and starts `running` so the duplicate-guard/recovery classifier treat it as an
+    in-flight attempt. Backend-specific shape is passed in, not forked here:
+      * `pid`      — the spawning process (cli) or `None` (external, PID-less).
+      * `dispatch` — external keeps its legacy `dispatch: "external"` marker
+                     (Decision 5) so today's tooling and records still parse;
+                     the cli backend passes `None` (no marker, as before).
+      * `model`    — recorded only when the caller stored it (external), matching
+                     the prior per-path shape; the cli path does not store it."""
+    name = session_name(work_id, gate, role, attempt)
+    stdout_path, stderr_path = run_log_paths(work_id, gate, role, attempt, root)
+    entry = {
+        "crew_id": name,
+        "work_id": work_id,
+        "gate": gate,
+        "role": role,
+        "attempt": attempt,
+        "status": "running",
+        "session_name": name,
+        "backend": backend,
+        "pid": pid,
+        "worktree": worktree,
+        "handoff": _relativize(handoff, root),
+        "result": _relativize(result, root),
+        "stdout": _relativize(str(stdout_path), root),
+        "stderr": _relativize(str(stderr_path), root),
+        "started_at": started,
+        "last_heartbeat": started,
+        "completed_at": None,
+        "abandoned": False,
+    }
+    if dispatch is not None:
+        entry["dispatch"] = dispatch
+    if model:
+        entry["model"] = model
+    return entry
+
+
+def finalize_from_exit_code(
+    entry: dict,
+    *,
+    exit_code: int,
+    result: str,
+    root: Path,
+    since: str,
+) -> int:
+    """Finalize a spawned attempt's entry from the child exit code and result
+    freshness since dispatch. The ONE tail both `CliBackend.dispatch` and
+    `CliBackend.resume` call — no copy-paste of the completed/failed rule.
+
+    Sets `completed_at`/`last_heartbeat` (now), `status`, `exit_code`,
+    `result_present`, and `result_fresh`, and returns the process-level exit code
+    to report. Reuses the single canonical `result_fresh` (`since` is the entry's
+    dispatch time): a child that exits 0 but leaves only a STALE prior-attempt
+    result at the path (mtime predates dispatch) is `failed`, not `completed`."""
+    have_result = result_exists(result, root)
+    fresh = result_fresh(result, root, since)
+    now = _now()
+    entry["completed_at"] = now
+    entry["last_heartbeat"] = now
+    if exit_code == 0 and fresh:
+        entry["status"] = "completed"
+        final = 0
+    else:
+        entry["status"] = "failed"
+        final = exit_code if exit_code != 0 else 1
+    entry["exit_code"] = exit_code
+    entry["result_present"] = have_result
+    entry["result_fresh"] = fresh
+    return final
+
+
+def entry_backend(entry: dict) -> str:
+    """The backend that owns a recorded entry. New entries carry `backend`
+    explicitly; a legacy entry without one is inferred — `dispatch == "external"`
+    -> external, else cli (Decision 5, backward compatible)."""
+    backend = entry.get("backend")
+    if backend in (BACKEND_CLI, BACKEND_EXTERNAL):
+        return backend
+    return BACKEND_EXTERNAL if entry.get("dispatch") == DISPATCH_EXTERNAL else BACKEND_CLI
+
+
+@dataclass
+class CrewSpec:
+    """The parameters of one crew launch, passed to a backend's `dispatch`.
+
+    Shared by both backends; `model`/`launcher` are only meaningful to the cli
+    backend (the external backend spawns nothing)."""
+    work_id: str
+    gate: str
+    role: str
+    handoff: str
+    result: str
+    worktree: str
+    attempt: int
+    model: str | None = None
+    launcher: str = DEFAULT_LAUNCHER
+
+
+# --------------------------------------------------------------------------- #
+# crew-launch backends — one result contract, exactly two implementations
+# --------------------------------------------------------------------------- #
+class CrewBackend:
+    """A pluggable crew-launch backend (Decision 1). Exactly two concrete
+    implementations exist — `CliBackend` and `ExternalBackend` — behind ONE
+    result contract (Decision 2): every backend records a durable entry
+    *before/at* dispatch, honors the duplicate-guard, and verifies results
+    exists-AND-fresh against the entry's `started_at` (the single `result_fresh`,
+    never forked). A backend may *dispatch* differently but may never weaken this
+    contract."""
+
+    name: str = ""
+
+    def dispatch(self, spec: CrewSpec, *, root: Path, entries: list[dict], launch=None) -> tuple[int | None, dict]:
+        """Record the durable entry (running) BEFORE work. cli: spawn the
+        subprocess then finalize -> (exit_code, entry). external: record-only, no
+        subprocess -> (None, entry); the caller verifies later."""
+        raise NotImplementedError
+
+    def resume(self, session: str, *, root: Path, entries: list[dict], launch=None) -> tuple[int, dict]:
+        """cli: relaunch the subprocess with the stored session/handoff and
+        finalize. external: unrecoverable-by-wrapper (raise CrewLaunchError)."""
+        raise NotImplementedError
+
+    def verify(self, entries: list[dict], session: str, *, root: Path) -> tuple[bool, dict]:
+        """Uniform across backends: exists-AND-fresh against the entry's
+        `started_at`; finalize to `completed` on fresh, else leave `running`.
+
+        Returns (fresh, entry). Reuses the canonical `result_fresh` — no
+        duplicated freshness logic. Freshness is judged against the entry's
+        `started_at` (its dispatch time), so a stale leftover result from a prior
+        attempt at the same path does NOT clear the hold. Both `result_present`
+        (existence) and `result_fresh` are recorded so the CLI can tell the two
+        failure modes apart (MISSING vs STALE). Only a fresh result finalizes to
+        `completed`; otherwise the entry is left `running` so the duplicate-guard
+        keeps holding. Refuses if the named crew is unknown or abandoned."""
+        entry = find_entry(entries, session)
+        if entry is None:
+            raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
+        if is_abandoned(entry):
+            raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
+
+        present = result_exists(entry["result"], root)
+        fresh = result_fresh(entry["result"], root, entry["started_at"])
+        entry["result_present"] = present
+        entry["result_fresh"] = fresh
+        if fresh:
+            now = _now()
+            entry["status"] = "completed"
+            entry["completed_at"] = now
+            entry["last_heartbeat"] = now
+        save_registry(registry_path(entry["work_id"], root), entries)
+        return fresh, entry
+
+
+class CliBackend(CrewBackend):
+    """Spawn a headless `claude` CLI subprocess via the single `launch_process`
+    seam. Records the durable entry (running) BEFORE the child starts, runs it
+    foreground, then finalizes from the child exit code + result freshness."""
+
+    name = BACKEND_CLI
+
+    def dispatch(self, spec: CrewSpec, *, root: Path, entries: list[dict], launch=None) -> tuple[int, dict]:
+        # Resolve the seam at CALL time so a monkeypatched module-level
+        # `launch_process` (tests, or the CLI) takes effect.
+        launch = launch if launch is not None else launch_process
+        handoff_path = _require_handoff(spec.handoff, root, action="launch")
+
+        started = _now()
+        entry = build_entry(
+            work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
+            worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
+            started=started, backend=self.name, pid=os.getpid(),
+        )
+        # Durable record BEFORE the crew starts (so a parent loss leaves a durable
+        # `running` record).
+        entries.append(entry)
+        reg = registry_path(spec.work_id, root)
+        save_registry(reg, entries)
+
+        stdout_path, stderr_path = run_log_paths(spec.work_id, spec.gate, spec.role, spec.attempt, root)
+        argv = build_crew_argv(
+            spec.launcher, role=spec.role, handoff=str(handoff_path),
+            model=spec.model, session=entry["session_name"],
+        )
+        exit_code = launch(argv, stdin=b"", env=crew_env(), stdout_path=stdout_path, stderr_path=stderr_path)
+
+        final = finalize_from_exit_code(entry, exit_code=exit_code, result=spec.result, root=root, since=started)
+        save_registry(reg, entries)
+        return final, entry
+
+    def resume(self, session: str, *, root: Path, entries: list[dict], launch=None) -> tuple[int, dict]:
+        launch = launch if launch is not None else launch_process
+        entry = find_entry(entries, session)
+        if entry is None:
+            raise CrewLaunchError(f"cannot resume: no crew recorded with session name {session!r}")
+        if is_abandoned(entry):
+            raise CrewLaunchError(f"cannot resume an abandoned crew {session!r}; use --abandon --relaunch instead")
+
+        work_id = entry["work_id"]
+        handoff_path = Path(entry["handoff"])
+        if not handoff_path.is_absolute():
+            handoff_path = root / entry["handoff"]
+        if not handoff_path.is_file():
+            raise CrewLaunchError(f"cannot resume: stored handoff is missing: {handoff_path}")
+
+        stdout_path = Path(entry["stdout"])
+        stderr_path = Path(entry["stderr"])
+        if not stdout_path.is_absolute():
+            stdout_path = root / entry["stdout"]
+        if not stderr_path.is_absolute():
+            stderr_path = root / entry["stderr"]
+
+        # Dispatch time for THIS resume: freshness is judged against the moment we
+        # relaunch the child, not the original launch, so a stale prior-attempt
+        # result left at the path cannot pass this resume as `completed`.
+        resumed_at = _now()
+        entry["status"] = "running"
+        entry["last_heartbeat"] = resumed_at
+        entry["pid"] = os.getpid()
+        reg = registry_path(work_id, root)
+        save_registry(reg, entries)
+
+        argv = build_crew_argv(
+            entry.get("launcher", DEFAULT_LAUNCHER),
+            role=entry["role"],
+            handoff=str(handoff_path),
+            model=entry.get("model"),
+            session=entry["session_name"],
+        )
+        exit_code = launch(argv, stdin=b"", env=crew_env(), stdout_path=stdout_path, stderr_path=stderr_path)
+
+        final = finalize_from_exit_code(entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at)
+        save_registry(reg, entries)
+        return final, entry
+
+
+class ExternalBackend(CrewBackend):
+    """Record-only backend: the crew is dispatched out-of-band (an Agent-tool
+    subagent in the Constellation harness, where no headless `claude` CLI exists).
+    `dispatch` spawns NOTHING — it records the durable entry (running, PID-less,
+    keeping the `dispatch: "external"` marker) and returns `(None, entry)`; the
+    caller verifies the result later. `resume` is unrecoverable-by-wrapper."""
+
+    name = BACKEND_EXTERNAL
+
+    def dispatch(self, spec: CrewSpec, *, root: Path, entries: list[dict], launch=None) -> tuple[None, dict]:
+        # Refuses if the handoff is missing, matching the spawn path's
+        # precondition (with the external path's "record" wording).
+        _require_handoff(spec.handoff, root, action="record")
+
+        started = _now()
+        entry = build_entry(
+            work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
+            worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
+            started=started, backend=self.name, pid=None,
+            dispatch=DISPATCH_EXTERNAL, model=spec.model,
+        )
+        # Durable record — the crew is dispatched by the caller out-of-band, so
+        # unlike the spawn path there is no child to run and no completion to
+        # finalize here (the caller verifies later with `verify`).
+        entries.append(entry)
+        save_registry(registry_path(spec.work_id, root), entries)
+        return None, entry
+
+    def resume(self, session: str, *, root: Path, entries: list[dict], launch=None) -> tuple[int, dict]:
+        # An externally-dispatched crew cannot be resumed by the wrapper: in-process
+        # Agent-tool teammates cannot spawn background subagents, so external
+        # dispatch is synchronous and recovery is out-of-band (Decision 6).
+        raise CrewLaunchError(
+            f"cannot resume external crew {session!r}: an externally-dispatched crew is "
+            f"unrecoverable by the wrapper. SendMessage to the crew's recorded agentId to "
+            f"resume it in place (skills/_shared/windows.md §2), else abandon and "
+            f"relaunch it (--abandon {session} --relaunch)."
+        )
+
+
+# --------------------------------------------------------------------------- #
+# backend selection — explicit override wins, else auto-detect (Decision 4)
+# --------------------------------------------------------------------------- #
+def select_backend(
+    explicit: str | None,
+    *,
+    launcher: str = DEFAULT_LAUNCHER,
+    which=shutil.which,
+) -> CrewBackend:
+    """Choose the crew-launch backend (Decision 4). PURE (given an injectable
+    `which`): explicit override always wins; otherwise auto-detect from whether the
+    headless `claude` CLI is on PATH.
+
+      * `explicit in {"cli","external"}` -> that backend (explicit override wins);
+      * `explicit in {None, "auto"}`     -> auto-detect: `which(launcher)` truthy
+        (the CLI is on PATH) -> `CliBackend`; else `ExternalBackend`.
+
+    `which` is injectable so tests control PATH presence without touching the real
+    PATH. Fails visibly on an unknown token (no hidden fallback)."""
+    if explicit == BACKEND_CLI:
+        return CliBackend()
+    if explicit == BACKEND_EXTERNAL:
+        return ExternalBackend()
+    if explicit not in (None, BACKEND_AUTO):
+        raise CrewLaunchError(
+            f"unknown backend {explicit!r} (expected one of "
+            f"{BACKEND_AUTO!r}, {BACKEND_CLI!r}, {BACKEND_EXTERNAL!r})"
+        )
+    return CliBackend() if which(launcher) else ExternalBackend()
+
+
+# --------------------------------------------------------------------------- #
+# public module functions — thin backward-compatible wrappers over the backends
+# --------------------------------------------------------------------------- #
 def launch_crew(
     *,
     work_id: str,
@@ -265,74 +625,17 @@ def launch_crew(
     launch: "callable | None" = None,
 ) -> tuple[int, dict]:
     """Record the durable entry BEFORE launching, run the crew foreground, then
-    finalize the entry from the child exit code + result-artifact presence.
+    finalize the entry from the child exit code + result-artifact freshness.
 
-    Returns (exit_code, entry). Refuses if the handoff file is missing. The
-    registry is persisted before the launch (so a parent loss leaves a durable
-    `running` record) and again after the child exits. `launch` defaults to the
-    module-level `launch_process` resolved at CALL time, so monkeypatching the
-    seam (in tests) takes effect even through the CLI."""
-    launch = launch if launch is not None else launch_process
-    handoff_path = Path(handoff)
-    if not handoff_path.is_absolute():
-        handoff_path = root / handoff
-    if not handoff_path.is_file():
-        raise CrewLaunchError(f"refusing to launch: handoff file is missing: {handoff_path}")
-
-    name = session_name(work_id, gate, role, attempt)
-    stdout_path, stderr_path = run_log_paths(work_id, gate, role, attempt, root)
-    started = _now()
-
-    entry = {
-        "crew_id": name,
-        "work_id": work_id,
-        "gate": gate,
-        "role": role,
-        "attempt": attempt,
-        "status": "running",
-        "session_name": name,
-        "pid": os.getpid(),
-        "worktree": worktree,
-        "handoff": _relativize(handoff, root),
-        "result": _relativize(result, root),
-        "stdout": _relativize(str(stdout_path), root),
-        "stderr": _relativize(str(stderr_path), root),
-        "started_at": started,
-        "last_heartbeat": started,
-        "completed_at": None,
-        "abandoned": False,
-    }
-    # Durable record BEFORE the crew starts.
-    entries.append(entry)
-    reg = registry_path(work_id, root)
-    save_registry(reg, entries)
-
-    argv = build_crew_argv(launcher, role=role, handoff=str(handoff_path), model=model, session=name)
-    exit_code = launch(
-        argv,
-        stdin=b"",
-        env=crew_env(),
-        stdout_path=stdout_path,
-        stderr_path=stderr_path,
+    Thin wrapper over `CliBackend.dispatch` (signature + observable behavior
+    preserved). Returns (exit_code, entry). Refuses if the handoff file is missing.
+    `launch` defaults to the module-level `launch_process` resolved at CALL time,
+    so monkeypatching the seam (in tests) takes effect even through the CLI."""
+    spec = CrewSpec(
+        work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
+        worktree=worktree, attempt=attempt, model=model, launcher=launcher,
     )
-
-    have_result = result_exists(result, root)
-    fresh = result_fresh(result, root, started)
-    entry["completed_at"] = _now()
-    entry["last_heartbeat"] = entry["completed_at"]
-    # A child that exits 0 but leaves only a STALE prior-attempt result at the
-    # path (mtime predates this dispatch) is `failed`, not `completed`.
-    if exit_code == 0 and fresh:
-        entry["status"] = "completed"
-        final = 0
-    else:
-        entry["status"] = "failed"
-        final = exit_code if exit_code != 0 else 1
-    entry["exit_code"] = exit_code
-    entry["result_present"] = have_result
-    entry["result_fresh"] = fresh
-    save_registry(reg, entries)
-    return final, entry
+    return CliBackend().dispatch(spec, root=root, entries=entries, launch=launch)
 
 
 def resume_crew(
@@ -342,61 +645,23 @@ def resume_crew(
     entries: list[dict],
     launch: "callable | None" = None,
 ) -> tuple[int, dict]:
-    """Continue a recorded crew using its STORED session name and handoff. Refuses
-    if the named crew is unknown or has been abandoned. `launch` defaults to the
-    module-level `launch_process` resolved at CALL time (monkeypatch-friendly)."""
-    launch = launch if launch is not None else launch_process
+    """Continue a recorded crew using its STORED session name and handoff, routing
+    to the RECORDED entry's backend (Decision 6). `entry_backend(entry)` picks the
+    backend: a `cli` entry relaunches the subprocess and finalizes (today's
+    behavior); an `external` entry is unrecoverable-by-wrapper — `ExternalBackend`
+    raises `CrewLaunchError` with the SendMessage-to-agentId / --abandon --relaunch
+    guidance, so recovery NEVER silently spawns for an externally-dispatched crew.
+
+    An unknown session has no entry to route from, so it falls to `CliBackend`,
+    which raises the standard `cannot resume: no crew recorded` refusal (unchanged).
+    `launch` defaults to the module-level `launch_process` resolved at CALL time."""
     entry = find_entry(entries, session)
-    if entry is None:
-        raise CrewLaunchError(f"cannot resume: no crew recorded with session name {session!r}")
-    if is_abandoned(entry):
-        raise CrewLaunchError(f"cannot resume an abandoned crew {session!r}; use --abandon --relaunch instead")
-
-    work_id = entry["work_id"]
-    handoff = entry["handoff"]
-    handoff_path = Path(handoff)
-    if not handoff_path.is_absolute():
-        handoff_path = root / handoff
-    if not handoff_path.is_file():
-        raise CrewLaunchError(f"cannot resume: stored handoff is missing: {handoff_path}")
-
-    stdout_path = Path(entry["stdout"])
-    stderr_path = Path(entry["stderr"])
-    if not stdout_path.is_absolute():
-        stdout_path = root / entry["stdout"]
-    if not stderr_path.is_absolute():
-        stderr_path = root / entry["stderr"]
-
-    # Dispatch time for THIS resume: freshness is judged against the moment we
-    # relaunch the child, not the original launch, so a stale prior-attempt result
-    # left at the path cannot pass this resume as `completed`.
-    resumed_at = _now()
-    entry["status"] = "running"
-    entry["last_heartbeat"] = resumed_at
-    entry["pid"] = os.getpid()
-    reg = registry_path(work_id, root)
-    save_registry(reg, entries)
-
-    argv = build_crew_argv(
-        entry.get("launcher", DEFAULT_LAUNCHER),
-        role=entry["role"],
-        handoff=str(handoff_path),
-        model=entry.get("model"),
-        session=entry["session_name"],
+    backend: CrewBackend = (
+        ExternalBackend()
+        if entry is not None and entry_backend(entry) == BACKEND_EXTERNAL
+        else CliBackend()
     )
-    exit_code = launch(argv, stdin=b"", env=crew_env(), stdout_path=stdout_path, stderr_path=stderr_path)
-
-    have_result = result_exists(entry["result"], root)
-    fresh = result_fresh(entry["result"], root, resumed_at)
-    entry["completed_at"] = _now()
-    entry["last_heartbeat"] = entry["completed_at"]
-    entry["status"] = "completed" if (exit_code == 0 and fresh) else "failed"
-    entry["exit_code"] = exit_code
-    entry["result_present"] = have_result
-    entry["result_fresh"] = fresh
-    save_registry(reg, entries)
-    final = 0 if entry["status"] == "completed" else (exit_code if exit_code != 0 else 1)
-    return final, entry
+    return backend.resume(session, root=root, entries=entries, launch=launch)
 
 
 def record_external_attempt(
@@ -413,91 +678,31 @@ def record_external_attempt(
     entries: list[dict],
 ) -> dict:
     """Record a durable crew-runs.json entry for an EXTERNALLY-dispatched crew
-    WITHOUT spawning a subprocess.
+    WITHOUT spawning a subprocess. Thin wrapper over `ExternalBackend.dispatch`
+    (signature + observable behavior preserved: returns the entry dict).
 
-    This is the first-class form of the hand-improvisation Constellation runs do
-    today: in the Agent-tool harness there is no headless `claude` CLI to spawn,
-    so the implementer/reviewer is dispatched out-of-band (an Agent-tool subagent)
-    and only the wrapper's DURABLE safety properties are wanted — a registry
-    record, the duplicate-guard, and result-artifact verification. It reuses the
-    same pure helpers as `launch_crew` (`session_name`, `run_log_paths`,
-    `_relativize`, `save_registry`) so the registry logic is never forked.
-
-    The entry is marked `dispatch="external"` and is PID-less (`pid=None`) so
-    downstream tooling (recover_crews) can tell it apart from a spawned crew. It
-    starts in `running` status so `active_duplicate`/`next_attempt` and the
-    recovery classifier treat it exactly like a spawned in-flight attempt until
-    its result is verified (see `verify_external_result`). Refuses if the handoff
-    file is missing, matching the spawn path's precondition."""
-    handoff_path = Path(handoff)
-    if not handoff_path.is_absolute():
-        handoff_path = root / handoff
-    if not handoff_path.is_file():
-        raise CrewLaunchError(f"refusing to record: handoff file is missing: {handoff_path}")
-
-    name = session_name(work_id, gate, role, attempt)
-    stdout_path, stderr_path = run_log_paths(work_id, gate, role, attempt, root)
-    started = _now()
-
-    entry = {
-        "crew_id": name,
-        "work_id": work_id,
-        "gate": gate,
-        "role": role,
-        "attempt": attempt,
-        "status": "running",
-        "session_name": name,
-        "dispatch": DISPATCH_EXTERNAL,
-        "pid": None,
-        "worktree": worktree,
-        "handoff": _relativize(handoff, root),
-        "result": _relativize(result, root),
-        "stdout": _relativize(str(stdout_path), root),
-        "stderr": _relativize(str(stderr_path), root),
-        "started_at": started,
-        "last_heartbeat": started,
-        "completed_at": None,
-        "abandoned": False,
-    }
-    if model:
-        entry["model"] = model
-    # Durable record — the crew is dispatched by the caller out-of-band, so unlike
-    # the spawn path there is no child to run and no completion to finalize here.
-    entries.append(entry)
-    save_registry(registry_path(work_id, root), entries)
+    In the Agent-tool harness there is no headless `claude` CLI to spawn, so the
+    implementer/reviewer is dispatched out-of-band and only the wrapper's DURABLE
+    safety properties are wanted — a registry record, the duplicate-guard, and
+    result-artifact verification. The entry is marked `dispatch="external"` and is
+    PID-less (`pid=None`) so downstream tooling (recover_crews) can tell it apart
+    from a spawned crew; it starts `running` so the duplicate-guard/recovery
+    classifier treat it like an in-flight attempt until its result is verified
+    (see `verify_external_result`). Refuses if the handoff file is missing."""
+    spec = CrewSpec(
+        work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
+        worktree=worktree, attempt=attempt, model=model,
+    )
+    _, entry = ExternalBackend().dispatch(spec, root=root, entries=entries)
     return entry
 
 
 def verify_external_result(entries: list[dict], session: str, root: Path) -> tuple[bool, dict]:
     """Verify whether the result artifact is present AND fresh for a recorded
-    attempt and, when fresh, mark it resolved/`completed` in the registry.
-
-    Returns (fresh, entry). Reuses the canonical `result_fresh` helper the spawn
-    path uses — no duplicated freshness logic. Freshness is judged against the
-    entry's `started_at` (its dispatch time), so a stale leftover result from a
-    prior attempt at the same path does NOT clear the hold. Both `result_present`
-    (existence) and `result_fresh` are recorded on the entry so the CLI can tell
-    the two failure modes apart (MISSING vs STALE). Only a fresh result finalizes
-    the entry to `completed` (clearing its hold on the gate/worktree); otherwise
-    the entry is left `running` so the duplicate-guard keeps holding. Refuses if
-    the named crew is unknown or has been abandoned."""
-    entry = find_entry(entries, session)
-    if entry is None:
-        raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
-    if is_abandoned(entry):
-        raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
-
-    present = result_exists(entry["result"], root)
-    fresh = result_fresh(entry["result"], root, entry["started_at"])
-    entry["result_present"] = present
-    entry["result_fresh"] = fresh
-    if fresh:
-        now = _now()
-        entry["status"] = "completed"
-        entry["completed_at"] = now
-        entry["last_heartbeat"] = now
-    save_registry(registry_path(entry["work_id"], root), entries)
-    return fresh, entry
+    attempt and, when fresh, mark it resolved/`completed`. Thin wrapper over the
+    backend-uniform `CrewBackend.verify` (signature + observable behavior
+    preserved). Returns (fresh, entry). Reuses the canonical `result_fresh`."""
+    return ExternalBackend().verify(entries, session, root=root)
 
 
 def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
@@ -531,10 +736,25 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[DISPATCH_SPAWN, DISPATCH_EXTERNAL],
         default=DISPATCH_SPAWN,
         help=(
-            "how to dispatch the crew. 'spawn' (default) launches the agent CLI "
-            "subprocess. 'external' records the durable registry entry + duplicate-"
-            "guard but spawns NOTHING (the crew is dispatched out-of-band, e.g. as "
-            "an Agent-tool subagent); verify its result later with --verify-result."
+            "LEGACY selector, kept backward compatible. 'spawn' (default) launches "
+            "the agent CLI subprocess; 'external' records the durable registry entry "
+            "+ duplicate-guard but spawns NOTHING (the crew is dispatched out-of-band, "
+            "e.g. as an Agent-tool subagent); verify its result later with "
+            "--verify-result. 'spawn' maps to the 'cli' backend, 'external' to the "
+            "'external' backend. Superseded by --backend (which wins when given)."
+        ),
+    )
+    p.add_argument(
+        "--backend",
+        choices=[BACKEND_AUTO, BACKEND_CLI, BACKEND_EXTERNAL],
+        default=None,
+        help=(
+            "canonical crew-launch backend selector (Decisions 4-5). When given it "
+            "wins over --dispatch: 'cli' spawns the agent CLI subprocess, 'external' "
+            "records-only (out-of-band dispatch), 'auto' auto-detects (cli when a "
+            "headless 'claude' CLI is on PATH, else external). When omitted the "
+            "backend is derived from --dispatch (spawn->cli, external->external) with "
+            "NO auto-detection, so existing invocations keep their exact behavior."
         ),
     )
     # recovery flags
@@ -604,6 +824,16 @@ def main(argv: list[str] | None = None) -> int:
         else:
             entries = []
 
+        # Resolve the effective backend (Decisions 4-5). --backend wins when given;
+        # otherwise derive it from the legacy --dispatch (spawn->cli,
+        # external->external) with NO auto-detection, so an invocation with no new
+        # flag resolves to the exact same backend it does today. Only an explicit
+        # `--backend auto` opts into PATH auto-detection.
+        backend_token = args.backend if args.backend is not None else (
+            BACKEND_EXTERNAL if args.dispatch == DISPATCH_EXTERNAL else BACKEND_CLI
+        )
+        backend = select_backend(backend_token, launcher=args.command)
+
         # --- abandon (optionally relaunch) ---------------------------------- #
         if args.abandon:
             abandoned = abandon_crew(entries, args.abandon, root)
@@ -617,18 +847,14 @@ def main(argv: list[str] | None = None) -> int:
             result = args.result or abandoned["result"]
             entries = load_registry(registry_path(work_id, root))
             attempt = next_attempt(entries, work_id, gate, role, worktree)
-            if args.dispatch == DISPATCH_EXTERNAL:
-                entry = record_external_attempt(
-                    work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-                    worktree=worktree, model=args.model, attempt=attempt, root=root, entries=entries,
-                )
+            spec = CrewSpec(
+                work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
+                worktree=worktree, attempt=attempt, model=args.model, launcher=args.command,
+            )
+            exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
+            if backend.name == BACKEND_EXTERNAL:
                 print(f"relaunched {entry['session_name']} -> {entry['status']} (external)")
                 return 0
-            exit_code, entry = launch_crew(
-                work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-                worktree=worktree, model=args.model, launcher=args.command,
-                attempt=attempt, root=root, entries=entries,
-            )
             print(f"relaunched {entry['session_name']} -> {entry['status']}")
             return exit_code
 
@@ -642,21 +868,17 @@ def main(argv: list[str] | None = None) -> int:
                 f"--abandon --relaunch) before launching."
             )
         attempt = next_attempt(entries, args.work_id, args.gate, args.role, args.worktree)
-        if args.dispatch == DISPATCH_EXTERNAL:
-            entry = record_external_attempt(
-                work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
-                result=args.result, worktree=args.worktree, model=args.model,
-                attempt=attempt, root=root, entries=entries,
-            )
+        spec = CrewSpec(
+            work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
+            result=args.result, worktree=args.worktree, attempt=attempt,
+            model=args.model, launcher=args.command,
+        )
+        exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
+        if backend.name == BACKEND_EXTERNAL:
             print(f"crew {entry['session_name']} -> {entry['status']} "
                   f"(external: dispatched out-of-band; verify with "
                   f"--verify-result {entry['session_name']})")
             return 0
-        exit_code, entry = launch_crew(
-            work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
-            result=args.result, worktree=args.worktree, model=args.model, launcher=args.command,
-            attempt=attempt, root=root, entries=entries,
-        )
         print(f"crew {entry['session_name']} -> {entry['status']}")
         return exit_code
     except CrewLaunchError as exc:
