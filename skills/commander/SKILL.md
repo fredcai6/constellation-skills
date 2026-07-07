@@ -98,4 +98,6 @@ Each gate **inherits** the relevant frame anchors: the per-gate `anchors` block 
 
 Architecture is read at the **start** — that read produces the mission frame above — and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
 
+Reconciling at the end dispatches Cartographer whenever a packet map exists — that is the default path. Where the run has no packet map (e.g. a skill-source repo with no `docs/architecture` map), reconcile the structural record directly: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.
+
 Templates: `templates/COMMANDER_SPINE.template.json`, `templates/EXECUTE_PLAN.template.json`, `templates/MISSION_FRAME.template.md`, `templates/IMPLEMENTER_HANDOFF.template.md`, `templates/REVIEWER_HANDOFF.template.md`. Engine: workbench `references/checklist-engine.md`.
