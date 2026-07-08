@@ -1,0 +1,37 @@
+{
+  "work_id": "<work-id>",
+  "cycle": "<N>",
+  "flavor": "<shotgun | compare | refine>",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["c0-frame", "q1", "x1"],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame the cycle",
+      "imperative": "Set the cycle flavor (shotgun | compare | refine) in the top-level flavor field; the human picks, you may recommend. Shotgun: pure divergence, a deliberately challenging idea count (default ~20, human-set) as cheap one-liners, wild entries sanctioned, light excursions only. Compare: 2-5 candidates developed seriously with trade-offs, recommendation-led, excursions per candidate where earned. Refine: harden one direction, chase open threads, test load-bearing assumptions, tighten interfaces in deep-module terms. Seed the FIRST cycle from templates/EXPLORER_STARTING_QUESTIONS.template.md (the itch; for whom; what does done feel like; what already exists; what would make this pointless); later cycles seed from the ideas board's open threads. Record pass when framed.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "<point question for this cycle>",
+      "imperative": "<A point-question that advances the flavor's goal. Ask one at a time with a recommended answer; explore the codebase/web where it can answer; append follow-up questions and new branches as items; skip questions overcome by earlier answers. Record the idea/verdict as the finding; a negative verdict states what was and was NOT tested (scoped nulls).>",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "x1": {
+      "id": "x1",
+      "title": "<excursion dispatch: one named question>",
+      "imperative": "<An excursion answering ONE named question, recorded as an EXCURSION_BRIEF on the ideas board before dispatch (question; type research | prototype | design-it-twice; what 'answered' looks like; budget/stop conditions). Either side may initiate (human 'go look up X' or agent proposal), same brief. Dispatch as a BACKGROUND subagent via run_crew.py; run recover_crews.py before dispatch and before consolidation. On-ramp: the result lands in this cycle's record and the board before consolidation. A slow excursion at consolidation time is the human's call — wait, or consolidate with it logged as an open thread carried into the next cycle; never silently dropped. Skip this item if the cycle needs no excursion. Record the excursion's scoped verdict as the finding.>",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
