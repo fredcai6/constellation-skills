@@ -26,9 +26,14 @@ from pathlib import Path
 
 _CONFIRMATION_HEADING_RE = re.compile(r"^##\s+Confirmation\s*$", re.MULTILINE)
 _ANY_H2_RE = re.compile(r"^##\s+\S", re.MULTILINE)
-_STATUS_RE = re.compile(r"^-\s*\*\*Status:\s*(.*?)\*\*\s*$", re.MULTILINE)
-_CONFIRMED_BY_RE = re.compile(r"^-\s*Confirmed by:\s*(.*)$", re.MULTILINE)
-_DATE_RE = re.compile(r"^-\s*Date:\s*(.*)$", re.MULTILINE)
+# NOTE: the whitespace between each field's colon and its capture group is
+# deliberately [ \t]* (horizontal only), NOT \s* -- \s* matches a newline, so
+# on a blank field it would consume the line break and bleed into capturing
+# the *next* line's text as this field's value, masking a blank field as
+# non-empty (silent false PASS on the hard confirm gate).
+_STATUS_RE = re.compile(r"^-\s*\*\*Status:[ \t]*(.*?)\*\*\s*$", re.MULTILINE)
+_CONFIRMED_BY_RE = re.compile(r"^-[ \t]*Confirmed by:[ \t]*(.*)$", re.MULTILINE)
+_DATE_RE = re.compile(r"^-[ \t]*Date:[ \t]*(.*)$", re.MULTILINE)
 
 # Either em-dash or hyphen variant of the marker.
 _UNCONFIRMED_MARKER_RE = re.compile(r"UNCONFIRMED\s+[—-]\s+DO NOT CUT")

@@ -50,6 +50,25 @@ DRAFT_BLOCK = """
 - Date:
 """
 
+# Regression fixtures for the newline-bleed defect: a blank field's `\s*`
+# must not consume the line break and capture the *next* field's line as
+# its own value (which would mask the blank field as non-empty).
+CONFIRMED_BLANK_CONFIRMED_BY_BLOCK = """
+## Confirmation
+
+- **Status: CONFIRMED**
+- Confirmed by:
+- Date: 2026-07-08
+"""
+
+CONFIRMED_BLANK_DATE_BLOCK = """
+## Confirmation
+
+- **Status: CONFIRMED**
+- Confirmed by: fredcai6 (human)
+- Date:
+"""
+
 
 def spec(confirmation_block: str, table: str, extra: str = "") -> str:
     return f"# Design Spec\n\n{confirmation_block}\n\n## Findings\n{table}\n{extra}\n"
@@ -72,6 +91,26 @@ class VerifySpecConfirmedTests(unittest.TestCase):
         with self.assertRaises(self.m.SpecVerificationError) as ctx:
             self.m.verify_spec_confirmed(spec(DRAFT_BLOCK, FULL_TABLE), "confirm")
         self.assertIn("CONFIRMED", str(ctx.exception))
+
+    def test_confirmed_blank_confirmed_by_fails_confirm_phase(self):
+        # Regression: blank Confirmed-by followed by a filled Date must not
+        # let the Date line bleed into the Confirmed-by capture and mask it
+        # as non-empty.
+        text = spec(CONFIRMED_BLANK_CONFIRMED_BY_BLOCK, FULL_TABLE)
+        fields = self.m.parse_confirmation(text)
+        self.assertEqual(fields["confirmed_by"], "")
+        with self.assertRaises(self.m.SpecVerificationError) as ctx:
+            self.m.verify_spec_confirmed(text, "confirm")
+        self.assertIn("Confirmed by", str(ctx.exception))
+
+    def test_confirmed_blank_date_fails_confirm_phase(self):
+        # Regression: same newline-bleed class, blank Date field this time.
+        text = spec(CONFIRMED_BLANK_DATE_BLOCK, FULL_TABLE)
+        fields = self.m.parse_confirmation(text)
+        self.assertEqual(fields["date"], "")
+        with self.assertRaises(self.m.SpecVerificationError) as ctx:
+            self.m.verify_spec_confirmed(text, "confirm")
+        self.assertIn("Date", str(ctx.exception))
 
     def test_draft_passes_review_phase_when_table_complete(self):
         self.m.verify_spec_confirmed(spec(DRAFT_BLOCK, FULL_TABLE), "review")  # no raise
