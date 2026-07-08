@@ -43,6 +43,34 @@ def write_fixture(d: Path) -> Path:
     return tpl
 
 
+# Fixture carrying the generic <skill-dir> token instead of <commander-skill-dir>,
+# to exercise resolve_spine's generalization independently of the commander token.
+GENERIC_SPINE_FIXTURE = json.dumps(
+    {
+        "work_id": "<work-id>",
+        "tasks": {
+            "init": {
+                "postconditions": [
+                    {
+                        "check": {
+                            "kind": "command",
+                            "command": "python <skill-dir>/scripts/init_work_area.py <work-id>",
+                        }
+                    }
+                ]
+            }
+        },
+    },
+    indent=2,
+)
+
+
+def write_generic_fixture(d: Path) -> Path:
+    tpl = d / "GENERIC_SPINE.template.json"
+    tpl.write_text(GENERIC_SPINE_FIXTURE, encoding="utf-8")
+    return tpl
+
+
 class InitWorkAreaTests(unittest.TestCase):
     def test_creates_structure(self):
         m = load()
@@ -130,6 +158,64 @@ class SpineInstantiationTests(unittest.TestCase):
             self.assertEqual(out, sentinel)
             data = json.loads(sentinel.read_text(encoding="utf-8"))
             self.assertEqual(data["work_id"], "issue-7")
+
+    def test_generic_skill_dir_token_resolves_with_explicit_skill_dir(self):
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            tpl = write_generic_fixture(root)
+            resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "issue-7", "skills/explorer", root)
+            data = json.loads(resolved)
+            self.assertNotIn("<skill-dir>", resolved)
+            self.assertIn(
+                "skills/explorer/scripts/init_work_area.py issue-7",
+                data["tasks"]["init"]["postconditions"][0]["check"]["command"],
+            )
+
+    def test_generic_skill_dir_token_autodetects_without_skill_dir(self):
+        # Same auto-detect rule as the commander token: bundled scripts at
+        # <root>/scripts collapses "<skill-dir>/scripts" -> "scripts".
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()
+            tpl = write_generic_fixture(root)
+            resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "issue-7", None, root)
+            data = json.loads(resolved)
+            self.assertNotIn("<skill-dir>", resolved)
+            self.assertIn(
+                "python scripts/init_work_area.py issue-7",
+                data["tasks"]["init"]["postconditions"][0]["check"]["command"],
+            )
+
+    def test_generic_skill_dir_token_bare_falls_back_to_root_without_scripts_dir(self):
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)  # no <root>/scripts present
+            tpl = write_generic_fixture(root)
+            resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "issue-7", None, root)
+            data = json.loads(resolved)
+            self.assertIn(
+                "python ./scripts/init_work_area.py issue-7",
+                data["tasks"]["init"]["postconditions"][0]["check"]["command"],
+            )
+
+    def test_commander_token_byte_identical_alongside_generic_token(self):
+        # Both tokens can coexist in one template without cross-resolution.
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()
+            mixed = json.dumps(
+                {
+                    "commander_cmd": "python <commander-skill-dir>/scripts/x.py <work-id>",
+                    "generic_cmd": "python <skill-dir>/scripts/x.py <work-id>",
+                }
+            )
+            resolved = m.resolve_spine(mixed, "issue-7", None, root)
+            data = json.loads(resolved)
+            self.assertEqual(data["commander_cmd"], "python scripts/x.py issue-7")
+            self.assertEqual(data["generic_cmd"], "python scripts/x.py issue-7")
 
 
 if __name__ == "__main__":
