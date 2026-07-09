@@ -15,6 +15,10 @@ yours — when an instruction does not fit the work, do the closest compliant th
 workflow's reporting step (closeout, feedback step, or workflow feedback); reporting misfit is compliance, not
 deviation.
 
+How you invoke the engine (the mechanism — controller types, verbs, evidence shape, ordering, the rework and
+consolidation guards) is explained once in workbench `references/checklist-engine.md`; each role skill only names
+its own spine/survey template and drives it, it never re-explains the engine.
+
 ## Engine verbs
 
 - Artifact postconditions (`kind: artifact` — `user-decision`, `review-result`, …): **attach** the evidence
