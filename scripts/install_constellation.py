@@ -92,7 +92,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
 # by all; the tier buckets reach only their tier. A role reads its own bucket(s) at the
 # checklist context-read step; the project supplies thin local deltas under docs/agents/.
 _GLOBAL_EVERYONE = ("global-everyone.md", "windows.md")
-_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "windows.md")
+_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "design-it-twice-brief.md", "windows.md")
 _GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md")
 _GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md")
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
