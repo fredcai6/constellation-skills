@@ -85,3 +85,21 @@ inherited (`global-crew.md`, `global-everyone.md`); the handoff carries only the
   outside latitude, or missing context) to the Admiral.
 - Stop and ask when project context, user instruction, and observed artifacts conflict in a way that affects
   the task. Do not resolve a conflict by picking an authority source by policy.
+
+## Unchanged-tree shortcut
+
+A redundant manual re-verification may be skipped ONLY when the working tree is provably identical to the
+last green run: `git rev-parse HEAD` matches the hash recorded with that green run, AND `git status
+--porcelain` is empty, AND the prior green output is pasted alongside the matched hash. Any tree change — a
+different HEAD or a dirty tree — voids the shortcut and forces a fresh run. This is doctrine and evidence
+shape only; no engine or script change. Tier-specific application (the engine-postcondition boundary at a
+Commander gate, wave-batched re-verify at an Admiral close) rides beside each caller.
+
+## Idle subagent adjudication
+
+An idle subagent (`idle_notification`, `idleReason: available`) that has produced COMPLETE artifacts is
+*done*, not stalled. Judge it from the **artifact set** — result content, files changed, diff — never from
+the idle signal alone: complete artifacts → integrate as if the verdict had arrived; silence plus
+incomplete or missing artifacts → *stalled*, rework or relaunch. This judges the **verdict**, not liveness:
+an idle/"completed" process may still resurrect, so confirm it dead before you reuse, sweep, or launch a
+continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone."

@@ -153,7 +153,12 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
 - **Re-validate after any promotion.** A change that only breaks a committed
   pointer *after* promotion is invisible to reviewers who validated
   pre-promotion; re-run validation post-promotion before declaring done.
-- **Verify an idle commander from artifacts; never block on a dropped verdict.** An Agent-tool commander sometimes ends with only an `idle_notification` (`idleReason: available`) and never emits its verdict text, even with the work complete. Artifacts are ground truth; the verdict message is a convenience it can silently drop. When a dispatched commander returns idle with no verdict, **verify from the artifact set** (branch / commit / PR / changed files) and a **clean-room reviewer subagent** pointed at them, and accept the work on that basis — do not hang waiting for a message. This judges the **verdict**, not liveness: it does **not** weaken the sleeper-hazard rule — an idle/"completed" commander may still resurrect, so **confirm it dead before you reuse, sweep, or launch a continuation into its worktree**. "The verdict is in the artifacts" is not "the process is gone."
+- **Verify an idle commander from artifacts; never block on a dropped verdict.** The general rule — idle
+  plus complete artifacts reads as *done*, judged from the artifact set, and still confirm-dead before reuse —
+  is shared orchestrator doctrine in `global-orchestrator.md` (§idle-subagent-adjudication). The Admiral bite
+  it names: when a dispatched commander returns idle with no verdict, verify from the artifact set (branch /
+  commit / PR / changed files) **and a clean-room reviewer subagent** pointed at them, and accept on that
+  basis rather than hanging on a message it can silently drop.
 
 ## Engine/platform quirks
 
