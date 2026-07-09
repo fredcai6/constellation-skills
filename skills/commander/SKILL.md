@@ -40,6 +40,8 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 | feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md`; distill lesson delta ops and apply via `scripts/apply_lessons_delta.py` (never edit `LESSONS.md` directly) |
 | archive | this context — commit, push, move work area |
 
+**Shaped-design intake (`understand`).** An ask citing a shaped-design spec/issue is verified confirmed — `verify_spec_confirmed.py` passes or the CONFIRMED marker is visible — before any work is cut; a shaped-design issue bearing the loud `UNCONFIRMED — DO NOT CUT` header is never cut into work.
+
 
 ## Executing a gate
 
@@ -94,9 +96,13 @@ Plan **map-first**. Before authoring `execute.json`, produce a **mission frame**
 
 The map is context, not authority over code, and not a tax on trivial work. For a small local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent. When relevant architecture artifacts exist, the frame is required.
 
+A plan at epic weight — one that spawns many gates or touches architecture — gets a **cold critical review before the plan-approved checkpoint**, per the shared critical-spec-review standard in `references/global-orchestrator.md`: an adversarial read of the gate plan and mission frame by a critic with no authoring context, findings triaged by the human before the plan freezes.
+
 Low-confidence, stale, partial, or disputed map areas **alter the plan** — never trust them silently. Flag the area in the frame and either plan a scout/verification step into `execute.json` or surface it to the human as a decision; do not author gates that assume an unverified map.
 
 Each gate **inherits** the relevant frame anchors: the per-gate `anchors` block in `execute.json` carries the structural/capability/constraint/decision/evidence anchors down, and the inbound handoff templates relay them to Implementer and Reviewer so every role plans from the same map context.
+
+Sequence gates so verification stays green at every gate boundary. When the plan creates a new artifact family whose validity a discovery/CI/test layer enforces (e.g. a new `skills/<name>/` directory an installer refuses without its `SKILL.md`), the first gate touching that family ships the minimal validity-establishing artifact — a stub is fine — rather than planning a known-red window bridged by waivers. A deliberately red suite across gates is a plan smell: it costs a human waiver per gate plus a diagnostic detour in every review to prove the red is benign.
 
 ## Architecture bookend
 

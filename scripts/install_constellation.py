@@ -84,6 +84,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "docent": ("docent_freshness.py",),
     "implementer": ("checklist_engine.py",),
     "reviewer": ("checklist_engine.py",),
+    "explorer": ("checklist_engine.py", "init_work_area.py", "run_crew.py", "recover_crews.py", "verify_cycles.py", "verify_spec_confirmed.py"),
 }
 # Global doctrine buckets (single source: skills/_shared/), bundled into each skill's
 # references/ at install exactly as the scripts above are bundled into scripts/. The
@@ -107,6 +108,8 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "implementer": _GLOBAL_CREW,
     "reviewer": _GLOBAL_CREW,
     "triage": _GLOBAL_ORCHESTRATOR,
+    "explorer": _GLOBAL_ORCHESTRATOR,
+    "prototyper": _GLOBAL_CREW,
 }
 REWRITABLE_TEXT_SUFFIXES = {".json", ".md", ".txt"}
 

@@ -4,6 +4,7 @@
 Charter      -> interrogates engineering doctrine and compiles agent-operable context
 Admiral      -> runs an epic as the human's delegate; dispatches Commanders in waves; adjudicates, merges, and harvests at closeout
 Commander    -> runs one bounded issue end to end; owns spine, interrogation, and execute checklists; dispatches crew
+Explorer     -> shapes a raw idea upstream of any issue: exploration cycles, excursions, cold critique, human-confirmed spec; never cuts work
 Workbench    -> manages recoverable workflow state and drives the checklist engine
 Interrogator -> questions request/design ambiguity as a survey probe
 Cartographer -> maintains current-only structural map
@@ -11,6 +12,7 @@ Scout        -> audits map-first architecture pressure
 Implementer  -> implements a bounded change from a handoff
 Reviewer     -> independently verifies a bounded change
 Triage       -> classifies and writes issue-ready recommendations; no checklist
+Prototyper   -> answers one named question with throwaway code (logic/UI/measurement); handoff-driven, no checklist
 Lessons-auditor -> distills scoped, grounded lesson candidates from run artifacts with fresh context (Admiral closeout / Commander feedback subagent)
 Docent       -> generates a stamped static HTML explainer site from Cartographer map truth; read-only map consumer
 ```
@@ -44,6 +46,10 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Implementer / Reviewer | `IMPLEMENTER_RESULT` / `REVIEW_RESULT` | Commander | evidence, blockers, scope drift, assumptions, out-of-scope observations |
 | Commander, Cartographer, Scout, Implementer, Reviewer | Triage candidate | Triage | future work package, not current-scope expansion |
 | Triage | issue-ready recommendation | user / issue tracker | bounded future work with evidence and acceptance criteria |
+| Explorer | `.agent-work/explore-<topic>/DESIGN_SPEC.md` (confirmed) or shaped-design issue | to-issues / Commander, human | hard gate: `verify_spec_confirmed.py` must pass before work is cut; an `UNCONFIRMED — DO NOT CUT` shaped-design issue is never cut |
+| Explorer | `EXCURSION_BRIEF` | Prototyper, research agents, design-it-twice panels | one named question per excursion; prototype section fields identical to `PROTOTYPE_HANDOFF` |
+| Anyone (human, Commander, Explorer) | `PROTOTYPE_HANDOFF` | Prototyper | one named question, branch, host conventions, location, stop conditions |
+| Prototyper | `PROTOTYPE_RESULT` | dispatcher | scoped answer: what was tested AND what was NOT tested; mandatory disposition (deleted / absorbed / parked-with-owner) |
 
 ## Context separation
 
