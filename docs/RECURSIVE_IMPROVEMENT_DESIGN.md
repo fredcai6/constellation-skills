@@ -15,7 +15,7 @@ What exists today:
 | Surface | Where | Captures | Consumed by |
 |---|---|---|---|
 | Run retrospective | spine `feedback` step → `.agent-work/AGENT_FEEDBACK.md` | adherence, friction, what worked, improvement signals | **nothing reads it** (nominal: "Charter refresh", untriggered) |
-| Template Update Candidates | `WORKFLOW_CLOSEOUT.template.md` table | concrete template/interface fixes + disposition | manual; disposition is self-reported |
+| Lesson dispositions | lessons carrying a `target`, settled at the Commander `feedback` step | concrete template/interface + doctrine fixes | `verify_lessons_applied.py` forced apply-or-defer gate; `WORKFLOW_CLOSEOUT.template.md` confirms the gate passed (the retired Template Update Candidates table is superseded by this flow) |
 | Out-of-scope observations | `IMPLEMENTER_RESULT` / `REVIEW_RESULT` | project findings | Commander → Triage |
 | Feedback invariant | `scripts/verify_agent_feedback.py` | file exists, mentions work-id, durable placement | spine postconditions at `feedback` and `archive` |
 
@@ -30,8 +30,9 @@ Gaps, by the four loops:
    prior entries; run N+1 starts as ignorant as run 1. The verifier checks placement,
    not substance — a "went fine" entry passes.
 3. **Project handoff.** "Recurring entries are evidence for a Charter refresh" is
-   stated but nothing counts recurrence or triggers the refresh. Template Update
-   Candidates have no follow-through check.
+   stated but nothing counts recurrence or triggers the refresh. (The follow-through
+   gap has since closed: template/interface fixes are lessons carrying a `target`,
+   force-settled by `verify_lessons_applied.py` at the `feedback` step.)
 4. **Skill-level (cross-project).** No channel at all. Lessons learned in a consuming
    repo never reach this repo. The skills can't improve from field use except when a
    human manually carries the lesson over.
@@ -131,8 +132,11 @@ The `scope` field is the router. Everything below reuses it.
   recommended** user-decision instead of silently continuing. Charter is the only
   role with authority to fold lessons into ORCHESTRATOR_CONTEXT / CREW_CONTEXT /
   engine config; Commander only nominates.
-- Template Update Candidates table gets a follow-through check: closeout verifier
-  fails if any row has disposition left as placeholder.
+- Follow-through is the lesson-dispositions gate (supersedes the retired Template
+  Update Candidates table): a template/interface fix is a lesson carrying a `target`,
+  and `verify_lessons_applied.py` refuses the `feedback` advance while any
+  threshold-ripe lesson is unpaid — each must be applied, exported, or deferred
+  with a reason.
 
 ### Loop 4 — Skill fold-in (cross-project, the recursive part)
 
@@ -397,6 +401,12 @@ emits structured operations — `ADD` / `AMEND <id>` / `RETIRE <id>` with
 justification and grounding citation — and a script (`apply_lessons_delta.py`,
 sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing cap,
 uniqueness, and counter rules. The LLM never writes the playbook directly.
+Shipped hardening: a threshold-ripe `apply` op against a doctrine target additionally
+requires a reproduction-drill record (`drill` field referencing
+`docs/superpowers/drills/<lesson-id>.md`; enforced in `apply_lessons_delta.py`) — the
+process-doc analogue of a regression test. The gate is field-presence only: the script
+never opens the drill or judges its quality (mechanism, not quality), and non-ripe or
+code-target applies are exempt.
 
 ### 5.3 Hard-bounded playbook with dormancy (severity 2)
 
@@ -405,6 +415,13 @@ grounding. Revisions: hard cap (start 15–20, enforced by the apply script);
 retire-before-add beyond the cap; `last_confirmed_run` field; lessons unconfirmed
 for N runs are auto-deleted (no dormant section), except `constellation`-scoped debt, which is pinned until explicitly retired. Selection filter at
 `context`: inject by `scope` overlap with the mission frame.
+Dormancy-clock rekey (issue-87): a "run" for dormancy is a distinct `work_id`, not a
+raw apply invocation — repeat ticks from one work-id age the clock at most once
+(bounded `ticked-work-ids` ring in the playbook-state header) — and a same-epoch
+guard means a lesson whose `added`/`last-confirmed` date equals the tick date can
+age but never auto-delete. Motivation: an 18-commander epic burned ~19 ticks in one
+day and culled a still-useful one-observation lesson; a lesson must not expire
+inside the burst that added it.
 
 ### 5.4 Anti-boilerplate floor on Workflow Feedback (severity 2)
 
@@ -416,11 +433,23 @@ wording in this handoff confused you?") before the open-ended one.
 ### 5.5 Concurrency isolation for learning artifacts (severity 2)
 
 Parallel Commanders under an Admiral share `.agent-work/AGENT_FEEDBACK.md` and
-LESSONS.md with no locking. Revision: each run writes a per-work-id sidecar
-(`AGENT_FEEDBACK.<work-id>.md` or in-work-area staging); consolidation into the
-durable log and any LESSONS delta is serialized at a single point (Admiral closeout
-when fleeted; Commander `feedback` when solo). Also kills cheap counter inflation
-from one run repeating itself.
+LESSONS.md with no locking. The per-work-id sidecar file proposal
+(`AGENT_FEEDBACK.<work-id>.md`) is **superseded** by what shipped:
+
+- **Durable root** (`scripts/agent_work_root.py`, PR #84): `durable_root()` resolves
+  the MAIN-checkout `.agent-work/` shared by every linked worktree, so the learning
+  trio (LESSONS.md, AGENT_FEEDBACK.md, CONSTELLATION_FEEDBACK.md) is one canonical
+  set per repo rather than scattered per-worktree copies.
+- **Under-epic staging** (settled at 20260706-dogfood-audit closeout): while an
+  Admiral launch order is in force, each worktree Commander stages its
+  AGENT_FEEDBACK entry and lessons delta work-id-locally in its work area; the
+  Admiral serializes the harvest into the canonical files at epic closeout. A solo
+  Commander writes through to canonical directly at its `feedback` step. This is
+  the single serialization point the original revision asked for, and it still
+  kills cheap counter inflation from one run repeating itself.
+- **Ordering constraint for any future mechanized write-through:** AGENT_FEEDBACK.md
+  is ordered newest-on-top; an automated append must insert at the top, under the
+  header — a bottom-append breaks the order (observed in issue-73).
 
 ### 5.6 Versioning corrections (severity 2)
 

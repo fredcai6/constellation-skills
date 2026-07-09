@@ -2,6 +2,7 @@
 
 ```text
 Charter      -> interrogates engineering doctrine and compiles agent-operable context
+Admiral      -> runs an epic as the human's delegate; dispatches Commanders in waves; adjudicates, merges, and harvests at closeout
 Commander    -> runs one bounded issue end to end; owns spine, interrogation, and execute checklists; dispatches crew
 Workbench    -> manages recoverable workflow state and drives the checklist engine
 Interrogator -> questions request/design ambiguity as a survey probe
@@ -10,6 +11,8 @@ Scout        -> audits map-first architecture pressure
 Implementer  -> implements a bounded change from a handoff
 Reviewer     -> independently verifies a bounded change
 Triage       -> classifies and writes issue-ready recommendations; no checklist
+Lessons-auditor -> distills scoped, grounded lesson candidates from run artifacts with fresh context (Admiral closeout / Commander feedback subagent)
+Docent       -> generates a stamped static HTML explainer site from Cartographer map truth; read-only map consumer
 ```
 
 The checklist engine (`scripts/checklist_engine.py`, schema `docs/CHECKLIST_SCHEMA.md`, model `docs/CHECKLIST_ENGINE_DESIGN.md`) is the substrate every role drives: a `gated` (execution) or `survey` (verification/inquiry) plan worked one step at a time, with the human as the top tier surfacing decisions at Commander checkpoints.
@@ -33,7 +36,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |
 | Interrogator | `.agent-work/<work-id>/interrogation.json` | Commander, Charter | survey of questions; consolidates to a resolved understanding |
-| Cartographer | `docs/architecture/packets/` + `index.md` | Scout, Commander, Implementer, Reviewer | current structural truth and sparse purpose/constraint/rationale anchors |
+| Cartographer | `docs/architecture/packets/` + `index.md` | Scout, Commander, Implementer, Reviewer, Docent | current structural truth and sparse purpose/constraint/rationale anchors |
 | Cartographer | mismatch/Triage candidate | Commander, Triage | current-vs-future separation with structural anchor |
 | Scout | `SCOUT_REPORT` | user, Commander, Triage | ranked architecture improvement candidates with map/code evidence |
 | Commander | `IMPLEMENTER_HANDOFF` | Implementer | bounded task, authority, scope, exclusions, test mode, evidence requirements, stop conditions |
