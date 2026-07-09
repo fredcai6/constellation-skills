@@ -570,6 +570,13 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         with self.assertRaises(self.m.LessonsDeltaError):
             self.m.load_playbook(self.file)
 
+    def test_work_id_with_comma_or_whitespace_rejected(self):
+        # A comma or whitespace inside a work-id would mis-split the
+        # ticked-work-ids ring on round-trip; reject at the delta boundary.
+        for bad in ("a,b", "a b", "a\tb"):
+            with self.assertRaises(self.m.LessonsDeltaError):
+                self.m.validate_delta({"work_id": bad, "tick": True})
+
 
 if __name__ == "__main__":
     unittest.main()

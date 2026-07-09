@@ -327,6 +327,12 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
     work_id = delta.get("work_id")
     if not work_id or not isinstance(work_id, str):
         raise LessonsDeltaError("delta requires a non-empty string work_id")
+    # The ticked-work-ids header ring stores work-ids comma-joined; a comma or
+    # whitespace inside one would mis-split the ring on round-trip.
+    if re.search(r"[,\s]", work_id):
+        raise LessonsDeltaError(
+            f"work_id {work_id!r} must not contain commas or whitespace"
+        )
     tick = delta.get("tick", False)
     ops = delta.get("ops", [])
     if not isinstance(ops, list):
