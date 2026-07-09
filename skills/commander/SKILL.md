@@ -96,7 +96,7 @@ Plan **map-first**. Before authoring `execute.json`, produce a **mission frame**
 
 The map is context, not authority over code, and not a tax on trivial work. For a small local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent. When relevant architecture artifacts exist, the frame is required.
 
-A plan at epic weight — one that spawns many gates or touches architecture — gets a **cold critical review before the plan-approved checkpoint**, per the shared critical-spec-review standard in `references/global-orchestrator.md`: an adversarial read of the gate plan and mission frame by a critic with no authoring context, findings triaged by the human before the plan freezes.
+Before the plan-approved checkpoint the plan step runs two human-governed rigor mechanisms, both **bias-to-yes** with any skip surfaced as a named untaken road: **plan-alternatives** — parallel gate-plan candidates under distinct constraints converging to one recommendation, per the shared design-it-twice standard in `references/global-orchestrator.md` and the `references/design-it-twice-brief.md` contract; and a **cold plan critic** — an adversarial read of the candidate plan and mission frame by a critic with no authoring context, panel scaled by weight as a surfaced choice, findings triaged by the human, per the shared critical-spec-review standard. Both point at doctrine — the rules live there, not here.
 
 Low-confidence, stale, partial, or disputed map areas **alter the plan** — never trust them silently. Flag the area in the frame and either plan a scout/verification step into `execute.json` or surface it to the human as a decision; do not author gates that assume an unverified map.
 

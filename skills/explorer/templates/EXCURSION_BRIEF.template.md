@@ -33,6 +33,8 @@ Fill exactly ONE of the three type sections below — the one named in **Type**.
 
 ## Design-it-twice excursion
 
+This type is the **design-phase form** of the shared parallel-alternatives standard — the reusable contract lives at `references/design-it-twice-brief.md`, including the not-a-proposal framing block and the untaken-road / panel-vs-single records.
+
 - **Parallel agents:** `<3+ agents design the SAME module's interface, each under a distinct constraint: minimal-interface / max-flexibility / common-caller-first / ports-and-adapters>`
 - **Compared on:** `<depth, locality, seam placement, testability>`
 - **Output:** `<an opinionated recommendation or a named hybrid — not a menu>`

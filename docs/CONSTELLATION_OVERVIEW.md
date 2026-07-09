@@ -26,6 +26,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Producer | Artifact/interface | Consumer | Contract |
 |---|---|---|---|
 | Skills (`_shared`, bundled at install) | `references/global-{everyone,orchestrator,crew}.md` | all roles | inherited approach doctrine read first at each checklist's context step; identical across projects; the home for general-workflow `constellation` lessons |
+| Skills (`_shared`, bundled at install) | `references/design-it-twice-brief.md` | orchestrator tier (explorer excursions, Commander plan step) | shared parallel-alternatives fill-in contract (design-it-twice standard): distinct-constraint candidates, not-a-proposal human framing, untaken-road and panel-vs-single records; norm lives in global-orchestrator doctrine |
 | Commander | `.agent-work/<work-id>/spine.json` (gated) | Cartographer, Interrogator, human | one bounded issue: understand/plan/execute/cleanup; drives interrogation and gate plan; human verifies at checkpoints |
 | Commander | `.agent-work/<work-id>/execute.json` (gated) | Implementer, Reviewer | frozen gate plan authored at plan time; three tasks per gate (implement/review/integrate); not edited mid-run |
 | Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Commander, Cartographer, Scout | project DELTAS over inherited global-orchestrator doctrine: planning, authority, evidence, stop/ask departures |

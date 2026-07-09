@@ -25,14 +25,30 @@ def init_work_area(root: Path, work_id: str) -> Path:
 def _resolve_skill_dir_token(text: str, token: str, skill_dir: str | None, root: Path) -> str:
     """Resolve one ``<token>`` skill-dir placeholder in ``text``.
 
-    - ``<token>`` -> ``skill_dir`` when given. When omitted, auto-detect the
-      source-repo layout (bundled scripts at ``<root>/scripts``) and collapse
-      the token form ``<token>/scripts`` -> ``scripts`` so the init command
-      references the real top-level script path; any remaining bare token
-      resolves to the repo root (``.``).
+    - ``<token>`` -> ``skill_dir`` when given — but fail visibly when the
+      template references ``<token>/scripts`` and ``skill_dir`` carries no
+      ``scripts/`` directory (e.g. an explicit repo-relative ``skills/<name>``
+      in the source repo, where bundled scripts live at ``<root>/scripts``):
+      substituting it verbatim would write a spine whose command checks point
+      at nonexistent script paths. When omitted, auto-detect the source-repo
+      layout (bundled scripts at ``<root>/scripts``) and collapse the token
+      form ``<token>/scripts`` -> ``scripts`` so the init command references
+      the real top-level script path; any remaining bare token resolves to
+      the repo root (``.``).
     """
     placeholder = f"<{token}>"
     if skill_dir is not None:
+        scripts_ref = f"{placeholder}/scripts"
+        if scripts_ref in text:
+            candidate = Path(skill_dir)
+            scripts_dir = (candidate if candidate.is_absolute() else root / candidate) / "scripts"
+            if not scripts_dir.is_dir():
+                raise SystemExit(
+                    f"--skill-dir {skill_dir!r} carries no scripts/ directory ({scripts_dir}) "
+                    f"but the template references {scripts_ref}. Omit --skill-dir in a source "
+                    "repo with top-level bundled scripts (auto-detect), or pass the installed "
+                    "skill directory, which carries scripts/."
+                )
         return text.replace(placeholder, skill_dir)
     if (root / "scripts").is_dir():
         # Bundled scripts live at the repo top level; skill-dir == repo root.

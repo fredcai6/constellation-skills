@@ -42,7 +42,32 @@ extra proof or enforcement. The project overlay carries those deltas.
   exercised and falsified; simplicity/YAGNI — what can be deleted). When in doubt, panel.
 - Findings are **triaged by the human, every one** — edit the artifact / reopen exploration / reject with
   reason — before the artifact is treated as confirmed. Acceptance is human-only; a critic never self-triages.
+- **Competitive-critic** (human opt-in): for a panel, the human may tell the critics they are judged against
+  each other on serious confirmed findings. Competition modulates critic **effort**, never **disposition** —
+  the critics still never **self-triage**, and the human disposes every finding (this is the erosion guard).
+  It sits in explicit tension with never-bias-the-reviewer — a critic told to compete is no longer a neutral
+  cold reader — so it is opt-in per run, never the default.
 - Where the explorer skill is installed, its `CRITIC_HANDOFF` template is the reusable cold-read contract.
+
+## Design-it-twice (standard, not optional)
+
+- **Trigger**: any skill authoring a plan or introducing a load-bearing interface generates alternatives
+  before converging — N≥2 candidates in parallel, each under one named distinct constraint, compared on
+  depth / locality / seam placement / testability, converging to one opinionated recommendation or named
+  hybrid (never a menu).
+- **Bias-to-yes**: run it by default. Skip only a genuinely-trivial case, and a skip is never silent — it is
+  surfaced as a named **untaken road** (its reason stated), visible at the approval checkpoint next to the
+  plan or design it belongs to.
+- **Count/panel scaled by weight, a surfaced choice**: a fairly-easy call may run two candidates or a single
+  with the alternatives named as untaken roads; a load-bearing interface or architecture-touching plan runs a
+  panel. When in doubt, panel. The count and its rationale are surfaced to the human, not chosen silently.
+- **Convergence is human-only**: the agents generate and compare, the human picks the winner or the hybrid.
+  While they run, the orchestrator presents the human a framing block — constraints, dependencies, and an
+  illustrative sketch explicitly marked "not a proposal" — so the human reasons in parallel instead of waiting.
+- The reusable contract is `design-it-twice-brief.md`, the fill-in brief that carries the mechanism (constraint
+  menus, comparison axes, framing block, untaken-road and panel-vs-single records); this section is the norm
+  only. Where the explorer skill is installed, its excursion `design-it-twice` type is the same contract in its
+  design-phase form.
 
 ## Handoff completeness
 
