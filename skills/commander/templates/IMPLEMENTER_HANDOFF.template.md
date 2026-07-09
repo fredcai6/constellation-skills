@@ -49,6 +49,8 @@ Map context this gate inherits from the mission frame, so the implementation lan
 ## Required Evidence
 `<what to produce: test output, command result, inspection note, generated artifact>`
 When the crew must assert a specific return/message string, **quote the EXACT expected string** so the crew asserts equality, not a substring guess; mark any illustrative example string as illustrative.
+A claimed test-failure distribution must be **derived mechanically** (`pytest -q | grep '^FAILED' | sed 's/::.*//' | sort | uniq -c`), never summarized from a glance at the output tail — the reviewer reproduces every figure, and a correct root cause does not excuse a wrong supporting number.
+When the gate expects the suite to be transiently red, state the expectation **by root cause** (the failing mechanism, wherever it surfaces) with the per-file distribution shown — never by file name alone — and make any failure outside that root-cause class a stop condition.
 
 ## Verification Commands
 
