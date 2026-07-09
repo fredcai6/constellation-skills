@@ -3,7 +3,6 @@
   "cycle": "<N>",
   "flavor": "<shotgun | compare | refine>",
   "type": "survey",
-  "config_ref": "docs/agents/engine-config.json",
   "items": ["c0-frame", "q1", "x1"],
   "tasks": {
     "c0-frame": {

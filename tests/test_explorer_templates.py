@@ -206,6 +206,63 @@ class CycleTemplateCrossCheck(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
+# CYCLE.template.json -> checklist_engine.py, driven config-less
+#
+# The cycle survey is instantiated into a work area and driven by the engine in
+# a directory with NO engine-config file. A dangling `config_ref` to an absent
+# engine-config.json (the shape a fresh install has) must never make the engine
+# refuse to load or drive the survey. (Carry-forward tc2 / DESIGN_SPEC "fail
+# visibly; no silent fallback" — a survey needs no config and must say so.)
+# --------------------------------------------------------------------------- #
+class CycleSurveyConfiglessRuntime(unittest.TestCase):
+    def setUp(self):
+        self.tpl = json.loads(CYCLE_TEMPLATE.read_text(encoding="utf-8"))
+
+    def test_template_carries_no_dangling_config_ref(self):
+        # A survey never consults rework_cap (reopen raises for non-gated), so it
+        # needs no config. The key is dropped rather than pointed at a file a
+        # fresh install won't have.
+        self.assertNotIn("config_ref", self.tpl)
+
+    def test_engine_drives_cycle_survey_without_engine_config_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            # No docs/agents/engine-config.json anywhere on the config search
+            # path (neither cwd=root nor the checklist's own dir).
+            self.assertFalse((root / "docs" / "agents" / "engine-config.json").exists())
+            work_area = root / ".agent-work" / "explore-topic"
+            work_area.mkdir(parents=True)
+            cycle = dict(self.tpl)
+            cycle["work_id"] = "explore-topic"
+            cycle["cycle"] = "1"
+            cycle["flavor"] = "shotgun"
+            cycle_path = work_area / "cycle-1.json"
+            cycle_path.write_text(json.dumps(cycle), encoding="utf-8")
+
+            def run(*verb):
+                return subprocess.run(
+                    [sys.executable, str(ENGINE), "--file", str(cycle_path), *verb],
+                    capture_output=True, text=True, cwd=str(root),
+                )
+
+            claim = run("claim", "--session-id", "explore-topic",
+                        "--claimed-by", "explorer", "--worktree", ".")
+            self.assertEqual(claim.returncode, 0, claim.stderr)
+            start = run("start", "c0-frame", "--session-id", "explore-topic")
+            self.assertEqual(start.returncode, 0, start.stderr)
+            record = run("record", "c0-frame", "--result", "pass",
+                         "--session-id", "explore-topic")
+            self.assertEqual(record.returncode, 0, record.stderr)
+            for item in ("q1", "x1"):
+                skip = run("skip", item, "--reason", "config-less drive test",
+                           "--session-id", "explore-topic")
+                self.assertEqual(skip.returncode, 0, skip.stderr)
+            consolidate = run("consolidate", "--verdict", "another cycle",
+                              "--summary", "framed", "--session-id", "explore-topic")
+            self.assertEqual(consolidate.returncode, 0, consolidate.stderr)
+
+
+# --------------------------------------------------------------------------- #
 # EXPLORER_SPINE.template.json -> init_work_area.py --spine + checklist_engine.py
 # --------------------------------------------------------------------------- #
 class ExplorerSpineCrossCheck(unittest.TestCase):
