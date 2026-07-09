@@ -453,6 +453,37 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertIn("DRY RUN", "\n".join(output))
             self.assertIn("constellation-triage", "\n".join(output))
 
+    def test_subset_force_does_not_wipe_unselected_skills(self):
+        # --skills SUBSET with --force must replace only the selected skills;
+        # it wiped the entire constellation-* set until issue-87's follow-up.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            base = ["--agent", "codex", "--scope", "user", "--dest", str(target_root)]
+            self.assertEqual(0, installer.main(base, env={}, out=lambda _: None))
+            installed_before = {p.name for p in target_root.iterdir()}
+            self.assertIn("constellation-workbench", installed_before)
+            self.assertEqual(
+                0,
+                installer.main(base + ["--skills", "commander", "--force"],
+                               env={}, out=lambda _: None))
+            self.assertEqual({p.name for p in target_root.iterdir()}, installed_before)
+
+    def test_full_force_clears_orphaned_constellation_dirs(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            orphan = target_root / "constellation-retired-role"
+            orphan.mkdir(parents=True)
+            (orphan / "SKILL.md").write_text("old", encoding="utf-8")
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--force"],
+                    env={}, out=lambda _: None))
+            self.assertFalse(orphan.exists())
+
     def test_existing_install_requires_force(self):
         installer = load_installer()
 

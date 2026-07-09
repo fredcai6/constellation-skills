@@ -330,13 +330,18 @@ def install_skills(
     *,
     dry_run: bool,
     force: bool,
+    full_set: bool,
     restart_message: str,
     out: Callable[[str], object],
 ) -> None:
     action = "DRY RUN: would install" if dry_run else "Installing"
     out(f"{action} {len(skills)} skill(s) into {target_root}")
 
-    if force and not dry_run:
+    # Set-level wipe only when replacing the FULL set (clears orphaned
+    # constellation-* dirs whose upstream skill no longer exists). A --skills
+    # subset with --force replaces only the selected skills, via the
+    # per-target removal below.
+    if force and full_set and not dry_run:
         remove_existing_constellation_set(target_root)
 
     for skill in skills:
@@ -646,6 +651,7 @@ def main(
                 target_root,
                 dry_run=args.dry_run,
                 force=args.force,
+                full_set=args.skills is None,
                 restart_message=agent.restart_message,
                 out=out,
             )
