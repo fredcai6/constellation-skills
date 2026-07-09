@@ -25,6 +25,8 @@ Check the handoff's Deliverable Path Check note before flagging an expected arti
 `<conditions required for APPROVE; each becomes a review check>`
 - `<criterion>`
 
+When the gate carries an expected transient failure set, scope it **by root cause** (the failing mechanism, wherever it surfaces — e.g. "the installer's discovery refusal, in any test whose setUp runs the installer"), never by file name alone, and reproduce the distribution yourself: a failure matching the named root cause outside the listed file is the waiver working, not a blocker; a failure outside the root-cause class is a BLOCK.
+
 ## Allowed Scope
 `<what the implementation was permitted to touch>`
 

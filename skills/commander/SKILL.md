@@ -100,6 +100,8 @@ Low-confidence, stale, partial, or disputed map areas **alter the plan** — nev
 
 Each gate **inherits** the relevant frame anchors: the per-gate `anchors` block in `execute.json` carries the structural/capability/constraint/decision/evidence anchors down, and the inbound handoff templates relay them to Implementer and Reviewer so every role plans from the same map context.
 
+Sequence gates so verification stays green at every gate boundary. When the plan creates a new artifact family whose validity a discovery/CI/test layer enforces (e.g. a new `skills/<name>/` directory an installer refuses without its `SKILL.md`), the first gate touching that family ships the minimal validity-establishing artifact — a stub is fine — rather than planning a known-red window bridged by waivers. A deliberately red suite across gates is a plan smell: it costs a human waiver per gate plus a diagnostic detour in every review to prove the red is benign.
+
 ## Architecture bookend
 
 Architecture is read at the **start** — that read produces the mission frame above — and reconciled at the **end** (capture changes for the next effort). Between, it is frozen read-only context; a mid-run structural surprise bubbles up as a signal, never a map edit.
