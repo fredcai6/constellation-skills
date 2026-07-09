@@ -202,11 +202,51 @@ def build_crew_argv(launcher: str, *, role: str, handoff: str, model: str | None
 
     Kept separate so tests can assert on the argv without spawning anything. The
     real launcher binary is configurable (`--command`) and defaults sensibly; the
-    handoff is passed by path (the wrapper has already refused a missing one)."""
-    argv: list[str] = [launcher, "--session", session, "--role", role, "--handoff", handoff]
+    handoff is passed by path (the wrapper has already refused a missing one).
+
+    The claude CLI has no `--session`/`--role`/`--handoff` flags (issue #91: the
+    old flag form fails with `unknown option '--session'` on current CLIs), so
+    role, session name, and handoff path travel inside the headless `-p` prompt;
+    the registry — not the CLI — owns crew identity."""
+    prompt = (
+        f"You are the constellation {role} crew for session {session}. "
+        f"Read the handoff at {handoff} and execute it exactly. "
+        "The run is only complete when the result artifact the handoff names exists."
+    )
+    argv: list[str] = [launcher, "-p", prompt]
     if model:
         argv += ["--model", model]
     return argv
+
+
+_CLI_DRIFT_MARKERS = ("unknown option", "unrecognized arguments", "unknown command")
+
+
+def cli_drift_hint(stderr_text: str) -> str | None:
+    """Actionable message when a failed launch looks like agent-CLI flag drift
+    (the launcher rejected our argv) rather than a crew failure. Returns None
+    when the stderr carries no drift marker."""
+    for line in stderr_text.splitlines():
+        lowered = line.lower()
+        if any(marker in lowered for marker in _CLI_DRIFT_MARKERS):
+            return (
+                f"agent CLI rejected the launch arguments ({line.strip()!r}) — the installed "
+                "CLI's flags have likely drifted from what run_crew.py emits. Re-dispatch "
+                "out-of-band with `--backend external` (record-only) and launch the crew "
+                "yourself, or override the launcher with `--command`."
+            )
+    return None
+
+
+def _print_drift_hint_if_any(stderr_path: Path) -> None:
+    """Best-effort drift sniff on a failed launch's captured stderr."""
+    try:
+        text = stderr_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return
+    hint = cli_drift_hint(text)
+    if hint:
+        print(hint, file=sys.stderr)
 
 
 def launch_process(argv: list[str], *, stdin: bytes, env: dict[str, str], stdout_path: Path, stderr_path: Path) -> int:
@@ -487,6 +527,8 @@ class CliBackend(CrewBackend):
 
         final = finalize_from_exit_code(entry, exit_code=exit_code, result=spec.result, root=root, since=started)
         save_registry(reg, entries)
+        if final != 0:
+            _print_drift_hint_if_any(stderr_path)
         return final, entry
 
     def resume(self, session: str, *, root: Path, entries: list[dict], launch=None) -> tuple[int, dict]:
@@ -532,6 +574,8 @@ class CliBackend(CrewBackend):
 
         final = finalize_from_exit_code(entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at)
         save_registry(reg, entries)
+        if final != 0:
+            _print_drift_hint_if_any(stderr_path)
         return final, entry
 
 
