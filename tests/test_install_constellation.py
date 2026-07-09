@@ -1,5 +1,6 @@
 import importlib.util
 import contextlib
+import re
 import io
 import json
 import sys
@@ -601,6 +602,24 @@ class InstallConstellationTests(unittest.TestCase):
             for skill in ("constellation-commander", "constellation-admiral"):
                 self.assertTrue(
                     (target_root / skill / "scripts" / "verify_lessons_applied.py").exists())
+
+    def test_bundled_scripts_carry_their_sibling_imports(self):
+        # Every bundled script that does `from X import ...` on a sibling
+        # scripts/ module must have that module in the same bundle, or the
+        # installed copy crashes with ModuleNotFoundError (agent_work_root
+        # was missing from the commander/admiral bundles until issue-87).
+        installer = load_installer()
+        scripts_dir = Path(installer.__file__).resolve().parent
+        siblings = {p.stem for p in scripts_dir.glob("*.py")}
+        for skill, bundle in installer.SKILL_SCRIPT_BUNDLES.items():
+            names = set(bundle)
+            for script in bundle:
+                text = (scripts_dir / script).read_text(encoding="utf-8")
+                for mod in re.findall(r"^from (\w+) import", text, re.M):
+                    if mod in siblings:
+                        self.assertIn(
+                            f"{mod}.py", names,
+                            f"{skill}: {script} imports {mod} but {mod}.py is not bundled")
 
     def test_worktree_isolation_verifier_bundled_into_commander_and_admiral(self):
         installer = load_installer()
