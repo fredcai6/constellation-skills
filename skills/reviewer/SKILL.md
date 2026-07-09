@@ -21,6 +21,4 @@ Report a proof-of-life as soon as you start and report each check as you record 
 
 Fill the result's `Workflow Feedback` section honestly: name the handoff field, evidence gap, or instruction that was ambiguous, missing, or improvised around. You are the only one who saw that friction — Commander harvests it so future handoffs improve.
 
-**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
-
 Templates: `templates/REVIEW_SURVEY.template.json`, `templates/REVIEW_RESULT.template.md`. Reference: the constellation-workbench skill's bundled `references/checklist-engine.md` (under the installed workbench skill directory).

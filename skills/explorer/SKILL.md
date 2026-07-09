@@ -5,8 +5,6 @@ description: Shape a raw idea into a confirmed, issue-ready design through repea
 
 # Constellation Explorer
 
-**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY.**
-
 Shape a raw idea into a confirmed design, ready to cut into issues — without rushing to conclusions. Explorer is the upstream creative phase Constellation otherwise lacks: the Interrogator resolves ambiguity in an *already-cut* ask; explorer serves the stage before, when a human has an idea and needs to explore what the point is, generate and test alternatives, and harden one direction into a spec **before** any issue or epic exists.
 
 ## Role and tier

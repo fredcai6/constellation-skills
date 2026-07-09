@@ -19,6 +19,4 @@ Fill the result's `Workflow Feedback` section honestly: name the handoff field, 
 
 Fill the result's `Map Impact` notes from the inbound Map Anchors and the actual diff, reusing the anchor vocabulary so Cartographer reconcile inherits durable context instead of rediscovering it. This is conditional: skip it for trivial local edits with no structural, capability, constraint, or decision impact. You are not a durable map owner — record candidates and impact, do not author the map.
 
-**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
-
 Templates: `templates/IMPLEMENTER_PLAN.template.json`, `templates/IMPLEMENTER_RESULT.template.md`. Reference: workbench `references/checklist-engine.md`.
