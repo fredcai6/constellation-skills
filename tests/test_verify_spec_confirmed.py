@@ -159,7 +159,15 @@ class VerifySpecConfirmedTests(unittest.TestCase):
         self.assertIn("no findings table", str(ctx.exception))
 
     def test_live_design_spec_passes_default_phase(self):
-        live = ROOT / ".agent-work" / "issue-58" / "DESIGN_SPEC.md"
+        # .agent-work is untracked local state: the issue-58 spec may still be
+        # live, already archived, or absent entirely (fresh clone) — skip then.
+        candidates = (
+            ROOT / ".agent-work" / "issue-58" / "DESIGN_SPEC.md",
+            ROOT / ".agent-work" / "archive" / "2026-07-08-issue-58" / "DESIGN_SPEC.md",
+        )
+        live = next((p for p in candidates if p.exists()), None)
+        if live is None:
+            self.skipTest("issue-58 DESIGN_SPEC.md not present in this checkout (untracked artifact)")
         text = live.read_text(encoding="utf-8")
         self.m.verify_spec_confirmed(text, "confirm")  # no raise
 

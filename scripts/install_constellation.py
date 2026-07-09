@@ -74,10 +74,10 @@ AGENT_TARGETS: dict[str, AgentTarget] = {
 }
 AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
 SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
-    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py"),
+    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
     "lessons-auditor": ("checklist_engine.py",),
     "charter": ("checklist_engine.py",),
-    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py"),
+    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
     "workbench": ("checklist_engine.py",),
     "interrogator": ("checklist_engine.py",),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
@@ -333,13 +333,18 @@ def install_skills(
     *,
     dry_run: bool,
     force: bool,
+    full_set: bool,
     restart_message: str,
     out: Callable[[str], object],
 ) -> None:
     action = "DRY RUN: would install" if dry_run else "Installing"
     out(f"{action} {len(skills)} skill(s) into {target_root}")
 
-    if force and not dry_run:
+    # Set-level wipe only when replacing the FULL set (clears orphaned
+    # constellation-* dirs whose upstream skill no longer exists). A --skills
+    # subset with --force replaces only the selected skills, via the
+    # per-target removal below.
+    if force and full_set and not dry_run:
         remove_existing_constellation_set(target_root)
 
     for skill in skills:
@@ -649,6 +654,7 @@ def main(
                 target_root,
                 dry_run=args.dry_run,
                 force=args.force,
+                full_set=args.skills is None,
                 restart_message=agent.restart_message,
                 out=out,
             )
