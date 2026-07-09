@@ -16,6 +16,8 @@ Agents organize, interrogate, execute, verify, and preserve recoverable work sta
 | `constellation-admiral` | Run an epic as the human's delegate: latitude contract, Commander waves, adjudication, lessons-and-architecture closeout. |
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, Glossary, and engine config. |
 | `constellation-commander` | Run one bounded issue end to end as the human's rigor scaffold. |
+| `constellation-explorer` | Shape a raw idea into an interrogated, critically reviewed, human-confirmed design spec before any work is cut; convergence is human-only. |
+| `constellation-prototyper` | Build a throwaway prototype that answers one named question (logic / UI / measurement), with a mandatory disposition at closeout. |
 | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey). |
 | `constellation-interrogator` | Run a question survey and consolidate a resolved understanding. |
 | `constellation-cartographer` | Maintain the current-only multidimensional map: structural hierarchy plus sparse capability/event/constraint/assumption/decision/claim overlays. |

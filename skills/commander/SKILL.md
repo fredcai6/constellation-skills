@@ -40,6 +40,8 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 | feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md`; distill lesson delta ops and apply via `scripts/apply_lessons_delta.py` (never edit `LESSONS.md` directly) |
 | archive | this context — commit, push, move work area |
 
+**Shaped-design intake (`understand`).** An ask citing a shaped-design spec/issue is verified confirmed — `verify_spec_confirmed.py` passes or the CONFIRMED marker is visible — before any work is cut; a shaped-design issue bearing the loud `UNCONFIRMED — DO NOT CUT` header is never cut into work.
+
 
 ## Executing a gate
 

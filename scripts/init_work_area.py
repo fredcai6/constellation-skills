@@ -22,25 +22,38 @@ def init_work_area(root: Path, work_id: str) -> Path:
     return base
 
 
-def resolve_spine(template_text: str, work_id: str, skill_dir: str | None, root: Path) -> str:
-    """Resolve commander placeholders in a spine template's text.
+def _resolve_skill_dir_token(text: str, token: str, skill_dir: str | None, root: Path) -> str:
+    """Resolve one ``<token>`` skill-dir placeholder in ``text``.
 
-    - ``<commander-skill-dir>`` -> ``skill_dir`` when given. When omitted,
-      auto-detect the source-repo layout (bundled scripts at ``<root>/scripts``)
-      and collapse the token form ``<commander-skill-dir>/scripts`` -> ``scripts``
-      so the init command references the real top-level script path.
+    - ``<token>`` -> ``skill_dir`` when given. When omitted, auto-detect the
+      source-repo layout (bundled scripts at ``<root>/scripts``) and collapse
+      the token form ``<token>/scripts`` -> ``scripts`` so the init command
+      references the real top-level script path; any remaining bare token
+      resolves to the repo root (``.``).
+    """
+    placeholder = f"<{token}>"
+    if skill_dir is not None:
+        return text.replace(placeholder, skill_dir)
+    if (root / "scripts").is_dir():
+        # Bundled scripts live at the repo top level; skill-dir == repo root.
+        text = text.replace(f"{placeholder}/scripts", "scripts")
+    # Any remaining bare token resolves to the repo root.
+    return text.replace(placeholder, ".")
+
+
+def resolve_spine(template_text: str, work_id: str, skill_dir: str | None, root: Path) -> str:
+    """Resolve spine placeholders in a spine template's text.
+
+    - ``<commander-skill-dir>`` and the generic ``<skill-dir>`` both resolve
+      via ``_resolve_skill_dir_token`` from the same ``skill_dir``/``root``
+      inputs (see that helper); ``<commander-skill-dir>`` behavior is
+      unchanged (byte-identical) by this generalization.
     - ``<commander-session-id>`` -> ``commander-<work-id>`` (the conventional default).
     - ``<work-id>`` -> the work_id argument (all occurrences).
     """
     text = template_text
-    if skill_dir is not None:
-        text = text.replace("<commander-skill-dir>", skill_dir)
-    else:
-        if (root / "scripts").is_dir():
-            # Bundled scripts live at the repo top level; skill-dir == repo root.
-            text = text.replace("<commander-skill-dir>/scripts", "scripts")
-        # Any remaining bare token resolves to the repo root.
-        text = text.replace("<commander-skill-dir>", ".")
+    text = _resolve_skill_dir_token(text, "commander-skill-dir", skill_dir, root)
+    text = _resolve_skill_dir_token(text, "skill-dir", skill_dir, root)
     text = text.replace("<commander-session-id>", f"commander-{work_id}")
     text = text.replace("<work-id>", work_id)
     return text
@@ -75,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("work_id")
     parser.add_argument("--root", default=".")
     parser.add_argument("--spine", help="path to a spine template to instantiate into spine.json")
-    parser.add_argument("--skill-dir", dest="skill_dir", help="value for <commander-skill-dir> (auto-detected if omitted)")
+    parser.add_argument("--skill-dir", dest="skill_dir", help="value for <commander-skill-dir> and <skill-dir> (auto-detected if omitted)")
     parser.add_argument("--force", action="store_true", help="overwrite an existing spine.json")
     args = parser.parse_args(argv)
     root = Path(args.root)

@@ -25,6 +25,8 @@ SKILL_NAMES = [
     "constellation-lessons-auditor",
     "constellation-reviewer",
     "constellation-triage",
+    "constellation-explorer",
+    "constellation-prototyper",
 ]
 
 
@@ -611,6 +613,31 @@ class InstallConstellationTests(unittest.TestCase):
             for skill in ("constellation-commander", "constellation-admiral"):
                 self.assertTrue(
                     (target_root / skill / "scripts" / "verify_worktree_isolation.py").exists())
+
+    def test_explorer_script_bundle_lands_in_installed_skill(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                            "--skills", "explorer"], env={}, out=lambda _: None)
+            scripts_root = target_root / "constellation-explorer" / "scripts"
+            for script in ("checklist_engine.py", "init_work_area.py", "run_crew.py",
+                           "recover_crews.py", "verify_cycles.py", "verify_spec_confirmed.py"):
+                with self.subTest(script=script):
+                    self.assertTrue((scripts_root / script).is_file(), scripts_root / script)
+
+    def test_deep_module_vocabulary_ships_into_installed_skill(self):
+        # The vocabulary lands in the single-source global-everyone.md and rides the
+        # existing reference-bundle mechanism into every installed skill (spec Testing
+        # pathway 3) — assert it on the explorer's bundled copy.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                            "--skills", "explorer"], env={}, out=lambda _: None)
+            vocab = (target_root / "constellation-explorer" / "references"
+                     / "global-everyone.md").read_text(encoding="utf-8")
+            self.assertIn("Deep-module vocabulary", vocab)
 
 
 class TemplateBaselineTests(unittest.TestCase):

@@ -59,3 +59,23 @@ Agent-facing. Dense by design.
   not as its own checkable gate — a step whose only sanctioned path is "skip" is ceremony, not gate.
 - Reference bundled scripts and references by their absolute installed path; don't resolve `scripts/` from the
   target repo unless it vendors them.
+
+## Deep-module vocabulary
+
+Every role names interfaces the same way. Departures-only; scale-agnostic (a function, a file, a service).
+
+- **Module** — an interface plus its implementation.
+- **Interface** — *everything* a caller must know to use the module: invariants, ordering, error modes, config,
+  performance envelope — not just the type/signature surface.
+- **Seam** — where an interface lives. Its placement is its own decision, not a byproduct of the implementation.
+- **Adapter** — a thing satisfying an interface at a seam. **One adapter = a hypothetical seam; two = a real one** —
+  a boundary with a single implementer is a guess until a second proves it.
+- **Depth / leverage** — behavior delivered per unit of interface a caller must learn. Deep = much behind little.
+- **Locality** — change and verification concentrate in one place rather than scattering across callers.
+
+Two working rules:
+
+- **The interface is the test surface.** Test through it, not past it; wanting to reach behind it means the module
+  is the wrong shape.
+- **The deletion test.** Delete the module in imagination: if complexity vanishes it was a pass-through; if it
+  reappears across N callers it was earning its keep.
