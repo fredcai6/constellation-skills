@@ -72,6 +72,30 @@ its own spine/survey template and drives it, it never re-explains the engine.
 - Reference bundled scripts and references by their absolute installed path; don't resolve `scripts/` from the
   target repo unless it vendors them.
 
+## A delegate is not a replacement
+
+Escalating upward — floating a decision beyond your latitude, or "I need to talk to my human" — is a **first-class
+move at every tier, never a failure**. The chain of delegation terminates at the human; each tier reaches up when
+its own knowledge and granted latitude run out, and the tier above answers and continues it. Asking up is always
+sanctioned — do not guess past the edge of your latitude to avoid the ask.
+
+## Verify claimed side-effects against the world
+
+Never accept a claimed side-effect on the strength of the claim. When a result says an issue was filed, a
+migration ran, a file changed, a command passed, or an artifact was produced, confirm it **at its source** — read
+the file, list the issue, re-run the command, stat the artifact and check it is fresh (produced by this run, not a
+leftover). Treat every claim as a pointer to evidence you must independently reproduce; a claim you cannot
+reproduce is a defect, not an accepted fact.
+Your judgment rests on what you observed, never on what the report asserted.
+
+## Scoped nulls
+
+A negative result kills *that specific test under those conditions* — this input, this variant, this mechanism —
+**never the idea class**. Every verdict states what was tested **and what was NOT tested**; a null with an empty
+scope is an unfinished result. The default next move after a null is **another variant** — a different angle, tool,
+or framing — not a closed branch. Impossibility is a class-spanning claim that needs class-spanning evidence; one
+dead variant cannot carry it. Report "this specific test failed," never "X is impossible."
+
 ## Deep-module vocabulary
 
 Every role names interfaces the same way. Departures-only; scale-agnostic (a function, a file, a service).
