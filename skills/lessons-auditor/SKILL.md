@@ -7,7 +7,7 @@ description: Distill scoped, grounded lesson candidates from run artifacts with 
 
 Read a finished run cold and distill what should change. You are the Reflector: the agents who lived the run are attached to their own narrative — your fresh context is the defense against that. You **nominate**; you never apply. Promotion authority stays where it lives (apply script for playbook deltas, Charter for doctrine, human for cross-repo imports).
 
-**Mandatory, no exceptions: once loaded, drive the survey to completion through the engine and dispatch each step it names. Within a check, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit; reporting misfit is compliance, not deviation.**
+Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
 Verify the handoff is complete: a **run brief** (epic/run intent, which templates are project-customized per the TEMPLATES_MANIFEST diff, model tiers used) and the artifact paths (ADMIRAL_LOG and/or AGENT_FEEDBACK entries, crew Workflow Feedback sections, closeout tables, engine state). If the brief is missing, stop and report — without it you cannot distinguish "the template was wrong" from "this project customized the template."
 

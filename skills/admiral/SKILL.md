@@ -7,7 +7,7 @@ description: Run an epic as the human's delegate — confirm latitude, dispatch 
 
 Run one epic end to end as the human's delegate. The Admiral **never commands an issue itself**: it dispatches Commanders, adjudicates what they float, merges their results, and logs every ruling. Rigor concentrates at the bookends — latitude in, lessons out — and the middle is free.
 
-**Mandatory, no exceptions: drive the spine through the engine. Within the execute step, judgment is yours — when an instruction does not fit the epic, do the closest compliant thing and report the misfit at closeout; reporting misfit is compliance, not deviation.**
+Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (drive the spine through the engine; report misfits at closeout).
 
 ## Spine
 

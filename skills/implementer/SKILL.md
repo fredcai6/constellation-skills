@@ -7,7 +7,7 @@ description: Implement a bounded change from a handoff. Use when a handoff defin
 
 Own one scoped change. Build your own plan and work it.
 
-**Mandatory, no exceptions: once loaded, drive the checklist to completion through the engine and dispatch each step it names. Within a step, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit in your workflow feedback; reporting misfit is compliance, not deviation.**
+Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (report misfits in your workflow feedback).
 
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 

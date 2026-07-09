@@ -7,7 +7,7 @@ description: Run map-first architecture audit. Use when looking for bad patterns
 
 Find architecture trouble from map truth. Drive `templates/SCOUT.template.json` as a `gated` checklist through the engine (workbench `references/checklist-engine.md`).
 
-Mandatory, no exceptions: once loaded, drive the checklist to completion through the engine and dispatch each step it names. Within a step, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit; reporting misfit is compliance, not deviation.
+Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
 Read Cartographer artifacts first: packets, index, overlays, generated map. Then sample code to challenge the map, not rediscover whole repo.
 

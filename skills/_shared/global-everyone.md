@@ -7,6 +7,14 @@ Project orientation is the local overlay — read `docs/agents/AGENT_GUIDE.md` (
 
 Agent-facing. Dense by design.
 
+## Engine-drive compliance
+
+Mandatory, no exceptions: once a role skill is loaded, drive its workflow — checklist, spine, or survey — to
+completion through the engine and dispatch each step it names. Within a step (question, check), judgment is
+yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit at your
+workflow's reporting step (closeout, feedback step, or workflow feedback); reporting misfit is compliance, not
+deviation.
+
 ## Engine verbs
 
 - Artifact postconditions (`kind: artifact` — `user-decision`, `review-result`, …): **attach** the evidence

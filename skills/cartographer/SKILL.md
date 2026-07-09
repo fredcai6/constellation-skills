@@ -7,7 +7,7 @@ description: Verify the current-only structural map. Use when architecture basel
 
 Cartographer owns current-only structural map verification and curation. It does not change code, invent future architecture, store history/future plans, or own future work. Read `references/map-model.md`; drive `templates/CARTOGRAPHER.template.json` through the engine as your controller.
 
-Mandatory, no exceptions: once loaded, drive the checklist to completion through the engine and dispatch each step it names. Within a step, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit; reporting misfit is compliance, not deviation.
+Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
 Own: `index.md`, `packets/`, `overlays/`, map, `MAP_BUILD.md`.
 
