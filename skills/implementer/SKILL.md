@@ -7,7 +7,7 @@ description: Implement a bounded change from a handoff. Use when a handoff defin
 
 Own one scoped change. Build your own plan and work it.
 
-**Mandatory, no exceptions: once loaded, drive the checklist to completion through the engine and dispatch each step it names. Within a step, judgment is yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit in your workflow feedback; reporting misfit is compliance, not deviation.**
+Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (report misfits in your workflow feedback).
 
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 
@@ -18,7 +18,5 @@ Report a proof-of-life as soon as you start, and report progress and evidence at
 Fill the result's `Workflow Feedback` section honestly: name the handoff field, anchor, or instruction that was ambiguous, missing, or improvised around. You are the only one who saw that friction — Commander harvests it so future handoffs improve.
 
 Fill the result's `Map Impact` notes from the inbound Map Anchors and the actual diff, reusing the anchor vocabulary so Cartographer reconcile inherits durable context instead of rediscovering it. This is conditional: skip it for trivial local edits with no structural, capability, constraint, or decision impact. You are not a durable map owner — record candidates and impact, do not author the map.
-
-**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**
 
 Templates: `templates/IMPLEMENTER_PLAN.template.json`, `templates/IMPLEMENTER_RESULT.template.md`. Reference: workbench `references/checklist-engine.md`.

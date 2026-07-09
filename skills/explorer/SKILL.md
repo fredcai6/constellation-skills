@@ -5,8 +5,6 @@ description: Shape a raw idea into a confirmed, issue-ready design through repea
 
 # Constellation Explorer
 
-**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY.**
-
 Shape a raw idea into a confirmed design, ready to cut into issues — without rushing to conclusions. Explorer is the upstream creative phase Constellation otherwise lacks: the Interrogator resolves ambiguity in an *already-cut* ask; explorer serves the stage before, when a human has an idea and needs to explore what the point is, generate and test alternatives, and harden one direction into a spec **before** any issue or epic exists.
 
 ## Role and tier
@@ -19,7 +17,7 @@ These three come first because they are why this skill exists. Hold them above c
 
 **1. Premature convergence is THE failure mode this skill exists to prevent.** The agent **never initiates convergence**. Present each cycle's consolidated ideas and open threads; only the human says "converge to spec." You may flag ripeness only as a **standalone message containing nothing else** — never alongside findings, options, a recommendation, or any other content. A ripeness flag carrying anything else is a convergence nudge, and nudging is initiating.
 
-**2. Scoped nulls, optimistic persistence.** A failed excursion kills *that specific test under those conditions*, never the idea class. Every negative verdict states what was and what was **NOT tested**. Impossibility requires evidence spanning the class, not one dead variant. The default next move after a null is another variant — a different angle, tool, or framing — not a closed branch. Report "this specific test failed," never "this approach is impossible."
+**2. Scoped nulls, optimistic persistence.** Inherited doctrine — see `references/global-everyone.md` §"Scoped nulls". Explorer-specific: a failed *excursion* scopes its null, and the default next move is **another excursion variant** — a different angle, tool, or framing, carried into the next cycle — not a closed branch. Optimistic persistence is the posture: keep testing variants; every negative excursion verdict states what was and what was **NOT tested**.
 
 **3. Hard gate — mechanism, not just prose.** No work is cut from an unconfirmed design, and the gate has teeth, not only exhortation:
 - Explorer bundles `verify_spec_confirmed.py`, which refuses unless the Confirmation block is filled (Status CONFIRMED, confirmer, date) and no critic-finding Disposition cell is empty. The `confirm` and `review` gate postconditions run it as a command check.
@@ -67,7 +65,7 @@ An excursion is a dispatched investigation answering **one named question**.
 - **On-ramp**: the result lands in the cycle record and on the board before consolidation.
 - **Slow excursion at consolidation time**: the human decides — wait, or consolidate with the excursion logged as an open thread carried into the next cycle. Never silently dropped.
 - **One brief, no double entry**: for a prototype excursion, the brief's prototype-section fields are identical to `PROTOTYPE_HANDOFF`'s, so nothing is typed twice.
-- Every excursion verdict obeys scoped-nulls doctrine.
+- Every excursion verdict obeys scoped-nulls doctrine (`references/global-everyone.md`).
 
 ## The ideas board — source of truth
 

@@ -7,6 +7,18 @@ Project orientation is the local overlay — read `docs/agents/AGENT_GUIDE.md` (
 
 Agent-facing. Dense by design.
 
+## Engine-drive compliance
+
+Mandatory, no exceptions: once a role skill is loaded, drive its workflow — checklist, spine, or survey — to
+completion through the engine and dispatch each step it names. Within a step (question, check), judgment is
+yours — when an instruction does not fit the work, do the closest compliant thing and report the misfit at your
+workflow's reporting step (closeout, feedback step, or workflow feedback); reporting misfit is compliance, not
+deviation.
+
+How you invoke the engine (the mechanism — controller types, verbs, evidence shape, ordering, the rework and
+consolidation guards) is explained once in workbench `references/checklist-engine.md`; each role skill only names
+its own spine/survey template and drives it, it never re-explains the engine.
+
 ## Engine verbs
 
 - Artifact postconditions (`kind: artifact` — `user-decision`, `review-result`, …): **attach** the evidence
@@ -59,6 +71,30 @@ Agent-facing. Dense by design.
   not as its own checkable gate — a step whose only sanctioned path is "skip" is ceremony, not gate.
 - Reference bundled scripts and references by their absolute installed path; don't resolve `scripts/` from the
   target repo unless it vendors them.
+
+## A delegate is not a replacement
+
+Escalating upward — floating a decision beyond your latitude, or "I need to talk to my human" — is a **first-class
+move at every tier, never a failure**. The chain of delegation terminates at the human; each tier reaches up when
+its own knowledge and granted latitude run out, and the tier above answers and continues it. Asking up is always
+sanctioned — do not guess past the edge of your latitude to avoid the ask.
+
+## Verify claimed side-effects against the world
+
+Never accept a claimed side-effect on the strength of the claim. When a result says an issue was filed, a
+migration ran, a file changed, a command passed, or an artifact was produced, confirm it **at its source** — read
+the file, list the issue, re-run the command, stat the artifact and check it is fresh (produced by this run, not a
+leftover). Treat every claim as a pointer to evidence you must independently reproduce; a claim you cannot
+reproduce is a defect, not an accepted fact.
+Your judgment rests on what you observed, never on what the report asserted.
+
+## Scoped nulls
+
+A negative result kills *that specific test under those conditions* — this input, this variant, this mechanism —
+**never the idea class**. Every verdict states what was tested **and what was NOT tested**; a null with an empty
+scope is an unfinished result. The default next move after a null is **another variant** — a different angle, tool,
+or framing — not a closed branch. Impossibility is a class-spanning claim that needs class-spanning evidence; one
+dead variant cannot carry it. Report "this specific test failed," never "X is impossible."
 
 ## Deep-module vocabulary
 

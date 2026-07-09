@@ -689,6 +689,86 @@ class InstallConstellationTests(unittest.TestCase):
                      / "global-everyone.md").read_text(encoding="utf-8")
             self.assertIn("Deep-module vocabulary", vocab)
 
+    def test_relocated_doctrine_pins_ship_to_installed_destination(self):
+        # issue-102 Move 11 content-pin: every doctrine relocated by moves
+        # 1,2,4,5,6,7,8,9 + the move-10 canonical must ride the reference-bundle
+        # mechanism into its CORRECT installed destination. Destinations differ
+        # by bucket, so each signature is asserted on the file it actually lands
+        # in (everyone -> ANY installed skill's global-everyone.md; orchestrator
+        # -> an orchestrator-tier skill's global-orchestrator.md; move 9's home
+        # is lessons-auditor's own SKILL.md).
+        # Falsification: drop a bucket line in _shared -> the matching assert reds.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                            "--skills", "explorer", "commander", "lessons-auditor"],
+                           env={}, out=lambda _: None)
+
+            # EVERYONE moves -> bundled references/global-everyone.md (rides to all
+            # tiers; explorer stands in for "any installed skill").
+            everyone = (target_root / "constellation-explorer" / "references"
+                        / "global-everyone.md").read_text(encoding="utf-8")
+            for sig in ("reporting misfit is compliance",              # move 1 boilerplate
+                        "checklist-engine.md",                         # move 2 engine pointer
+                        "never the idea class",                        # move 4 scoped-nulls
+                        "Verify claimed side-effects against the world",  # move 5 world-verif
+                        "A delegate is not a replacement"):            # move 8 delegate
+                with self.subTest(bucket="global-everyone", sig=sig):
+                    self.assertIn(sig, everyone)
+
+            # ORCHESTRATOR moves + move-10 canonical -> bundled
+            # references/global-orchestrator.md (commander is orchestrator-tier).
+            orch = (target_root / "constellation-commander" / "references"
+                    / "global-orchestrator.md").read_text(encoding="utf-8")
+            for sig in ("Unchanged-tree shortcut",       # move 6 unchanged-tree
+                        "Idle subagent adjudication",     # move 7 crew-idle
+                        "Design-it-twice"):               # move 10 canonical (guard it still ships)
+                with self.subTest(bucket="global-orchestrator", sig=sig):
+                    self.assertIn(sig, orch)
+
+            # SINGLE-HOME move 9 -> the home keeps the full rule in its own SKILL.md.
+            auditor = (target_root / "constellation-lessons-auditor"
+                       / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("forks its identity", auditor)  # move 9 sibling-ids
+
+    def test_relocated_doctrine_leaves_no_residual_in_carrier_skill_md(self):
+        # issue-102 Move 11 no-residual: each retired inline signature must NOT
+        # reappear in the SKILL.md body it was cut from. Scope is the SOURCE tree
+        # skills/**/SKILL.md ONLY -- every references/ file is EXCLUDED, because
+        # the bundled _shared copies and the deliberately-retained role references
+        # (checklist-engine.md, prototyper measurement/ui.md, admiral
+        # fleet-doctrine.md) legitimately carry these rules now.
+        # Falsification: restore an inline copy into a carrier SKILL.md -> red.
+        source_root = ROOT / "skills"
+        skill_mds = sorted(source_root.glob("**/SKILL.md"))
+        self.assertTrue(skill_mds, "no SKILL.md found under skills/")
+        bodies = {p: p.read_text(encoding="utf-8") for p in skill_mds}
+
+        # Most moves' home is a _shared bucket (a reference, excluded), so the
+        # retired signature must be absent from ALL SKILL.md bodies.
+        retired = (
+            "reporting misfit is compliance",   # move 1 boilerplate
+            "FOLLOW THIS SKILL STRICTLY",        # banner (count 0)
+            "not on what the result claims",     # move 5 world-verif old phrasing
+            "never on what the report asserted", # move 5 world-verif old phrasing
+            "delegate is not a replacement",     # move 8 delegate-not-replacement
+            "Unchanged-tree shortcut",           # move 6 unchanged-tree
+            "idle_notification",                 # move 7 crew-idle
+        )
+        for sig in retired:
+            for path, body in bodies.items():
+                with self.subTest(sig=sig, skill=path.parent.name):
+                    self.assertNotIn(sig, body)
+
+        # EXCEPTION -- move 9's home IS lessons-auditor/SKILL.md (a SKILL.md, not
+        # a bucket), which legitimately KEEPS the full rule. So the sibling-ids
+        # residual is scoped to the admiral CARRIER only: the delegated rationale
+        # must not be restored inline into admiral (present in lessons-auditor is
+        # fine and is NOT asserted here).
+        admiral = (source_root / "admiral" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertNotIn("breaks recurrence counting", admiral)
+
 
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
