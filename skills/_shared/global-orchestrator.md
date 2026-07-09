@@ -31,6 +31,19 @@ extra proof or enforcement. The project overlay carries those deltas.
 - The project's data-flow philosophy and "what order we tackle problems here" are deltas — get them from the
   local overlay.
 
+## Critical spec review (standard, not optional)
+
+- Any design/spec artifact that will govern cut work — a shaped-design spec, a gate plan for an epic-scale
+  change, a doctrine compilation — gets a **cold adversarial critique before confirmation**: the critic reads
+  the artifact only (no exploration record, no author context), nothing is sacred, deliberate decisions are
+  attackable; the human filters relitigation noise.
+- **Panel scaled by weight**: default one critic; an artifact that spawns epics or touches architecture gets a
+  3-lens panel (intent-fit — does the design serve the stated point; testability — can each pathway be
+  exercised and falsified; simplicity/YAGNI — what can be deleted). When in doubt, panel.
+- Findings are **triaged by the human, every one** — edit the artifact / reopen exploration / reject with
+  reason — before the artifact is treated as confirmed. Acceptance is human-only; a critic never self-triages.
+- Where the explorer skill is installed, its `CRITIC_HANDOFF` template is the reusable cold-read contract.
+
 ## Handoff completeness
 
 Every crew handoff carries: assigned task, allowed scope, specific exclusions, success criteria, required
