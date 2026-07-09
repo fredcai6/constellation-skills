@@ -92,25 +92,49 @@ class SessionNameTests(unittest.TestCase):
             RC.session_name("issue-420", "g2", "reviewer", 2),
         )
 
-    def test_build_crew_argv_is_pure_and_includes_model_and_handoff(self):
+    def test_build_crew_argv_is_pure_and_carries_role_handoff_session_in_prompt(self):
         argv = RC.build_crew_argv(
             "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
             model="sonnet", session="constellation/issue-420/g2/reviewer/attempt-1",
         )
         self.assertEqual("claude", argv[0])
-        self.assertIn("--role", argv)
-        self.assertIn("reviewer", argv)
-        self.assertIn("--handoff", argv)
-        self.assertIn("/abs/g2-reviewer.md", argv)
+        self.assertEqual("-p", argv[1])
+        prompt = argv[2]
+        self.assertIn("reviewer", prompt)
+        self.assertIn("/abs/g2-reviewer.md", prompt)
+        self.assertIn("constellation/issue-420/g2/reviewer/attempt-1", prompt)
         self.assertIn("--model", argv)
         self.assertIn("sonnet", argv)
-        self.assertIn("constellation/issue-420/g2/reviewer/attempt-1", argv)
+
+    def test_build_crew_argv_emits_no_legacy_flags(self):
+        # issue #91: the claude CLI has no --session/--role/--handoff flags; the
+        # old form died with `error: unknown option '--session'`.
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="h.md", model="sonnet", session="s",
+        )
+        for legacy in ("--session", "--role", "--handoff"):
+            self.assertNotIn(legacy, argv)
 
     def test_build_crew_argv_omits_model_when_absent(self):
         argv = RC.build_crew_argv(
             "claude", role="implementer", handoff="h.md", model=None, session="s",
         )
         self.assertNotIn("--model", argv)
+
+
+class CliDriftHintTests(unittest.TestCase):
+    def test_unknown_option_stderr_yields_actionable_hint(self):
+        hint = RC.cli_drift_hint("error: unknown option '--session'\n")
+        self.assertIsNotNone(hint)
+        self.assertIn("--backend external", hint)
+        self.assertIn("unknown option '--session'", hint)
+
+    def test_unrecognized_arguments_yields_hint(self):
+        self.assertIsNotNone(RC.cli_drift_hint("usage: x\nerror: unrecognized arguments: --role\n"))
+
+    def test_ordinary_crew_failure_yields_no_hint(self):
+        self.assertIsNone(RC.cli_drift_hint("Traceback (most recent call last):\nRuntimeError: crew died\n"))
+        self.assertIsNone(RC.cli_drift_hint(""))
 
 
 class LaunchTests(unittest.TestCase):
@@ -254,7 +278,7 @@ class LaunchTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main(["--root", str(root), "--resume", session])
             self.assertEqual(0, code)
-            self.assertIn(session, calls[0]["argv"])
+            self.assertIn(session, " ".join(calls[0]["argv"]))
             reg = RC.load_registry(RC.registry_path("issue-1", root))
             self.assertEqual("completed", reg[0]["status"])
 
@@ -708,7 +732,7 @@ class BackendEquivalenceTests(unittest.TestCase):
             self.assertEqual(os.getpid(), entry["pid"])
             # spawned through the single seam with empty stdin + UTF-8 env
             self.assertEqual(b"", calls[0]["stdin"])
-            self.assertIn("constellation/issue-1/g1/reviewer/attempt-1", calls[0]["argv"])
+            self.assertIn("constellation/issue-1/g1/reviewer/attempt-1", " ".join(calls[0]["argv"]))
 
     def test_cli_dispatch_missing_handoff_refuses_with_launch_wording(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -796,7 +820,7 @@ class BackendEquivalenceTests(unittest.TestCase):
                 code, entry = RC.CliBackend().resume(session, root=root, entries=entries)
             self.assertEqual(0, code)
             self.assertEqual("completed", entry["status"])
-            self.assertIn(session, calls[0]["argv"])
+            self.assertIn(session, " ".join(calls[0]["argv"]))
 
     def test_external_resume_is_unrecoverable_by_wrapper(self):
         entries = [{
@@ -1009,7 +1033,7 @@ class ExternalResumeRefusalTests(unittest.TestCase):
                 code, entry = RC.resume_crew(session=session, root=root, entries=entries)
             self.assertEqual(0, code)
             self.assertEqual("completed", entry["status"])
-            self.assertIn(session, calls[0]["argv"])
+            self.assertIn(session, " ".join(calls[0]["argv"]))
 
 
 class BackendInvariantContractTests(unittest.TestCase):
