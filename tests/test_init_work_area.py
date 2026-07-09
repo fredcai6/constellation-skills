@@ -99,6 +99,7 @@ class SpineInstantiationTests(unittest.TestCase):
         m = load()
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
+            (root / "skills" / "commander" / "scripts").mkdir(parents=True)
             tpl = write_fixture(root)
             out = m.instantiate_spine(root, "issue-7", tpl, skill_dir="skills/commander")
             self.assertEqual(out, root / ".agent-work" / "issue-7" / "spine.json")
@@ -149,6 +150,7 @@ class SpineInstantiationTests(unittest.TestCase):
         m = load()
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
+            (root / "skills" / "commander" / "scripts").mkdir(parents=True)
             tpl = write_fixture(root)
             base = root / ".agent-work" / "issue-7"
             base.mkdir(parents=True)
@@ -163,6 +165,7 @@ class SpineInstantiationTests(unittest.TestCase):
         m = load()
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
+            (root / "skills" / "explorer" / "scripts").mkdir(parents=True)
             tpl = write_generic_fixture(root)
             resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "issue-7", "skills/explorer", root)
             data = json.loads(resolved)
@@ -199,6 +202,20 @@ class SpineInstantiationTests(unittest.TestCase):
                 "python ./scripts/init_work_area.py issue-7",
                 data["tasks"]["init"]["postconditions"][0]["check"]["command"],
             )
+
+    def test_explicit_skill_dir_without_scripts_fails_visibly(self):
+        # The issue-99 T2 regression: an explicit --skill-dir whose scripts/
+        # does not exist (source repo, repo-relative skills/<name>) must refuse
+        # loudly instead of writing a spine with broken command-check paths.
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()  # source-repo layout
+            tpl = write_fixture(root)
+            with self.assertRaises(SystemExit) as ctx:
+                m.instantiate_spine(root, "issue-7", tpl, skill_dir="skills/commander")
+            self.assertIn("scripts/", str(ctx.exception))
+            self.assertFalse((root / ".agent-work" / "issue-7" / "spine.json").exists())
 
     def test_commander_token_byte_identical_alongside_generic_token(self):
         # Both tokens can coexist in one template without cross-resolution.
