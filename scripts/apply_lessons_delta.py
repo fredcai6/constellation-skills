@@ -37,10 +37,16 @@ DEFAULT_CAP = 20
 DEFAULT_DORMANCY_RUNS = 10
 DEFAULT_APPLY_RECURRENCES = 1
 DEFAULT_APPLY_CONFIRMED = 3
+# Bound on the seen-work-ids dedup ring stored in the playbook-state header: keep the
+# most recent N ticking work-ids so a burst from one work-id ages the clock only once
+# without letting the header grow unbounded. Old entries fall off; re-ticking a work-id
+# that has aged out simply ages once more, which is harmless.
+TICKED_WORK_ID_RETENTION = 50
 
 STATE_RE = re.compile(
     r"<!--\s*playbook-state:\s*run-tick=(\d+)\s+cap=(\d+)\s+dormancy-runs=(\d+)"
-    r"(?:\s+apply-recurrences=(\d+))?(?:\s+apply-confirmed=(\d+))?\s*-->"
+    r"(?:\s+apply-recurrences=(\d+))?(?:\s+apply-confirmed=(\d+))?"
+    r"(?:\s+ticked-work-ids=(\S*))?\s*-->"
 )
 LESSON_HEADING_RE = re.compile(r"^### lesson:([a-z0-9][a-z0-9-]*)$")
 FIELD_RE = re.compile(r"^- ([a-z-]+): (.*)$")
@@ -113,6 +119,7 @@ class Playbook:
     apply_confirmed: int
     preamble: str
     active: list[Lesson]
+    ticked_work_ids: list[str] = field(default_factory=list)
 
     def find(self, lesson_id: str) -> Lesson | None:
         for lesson in self.active:
@@ -124,7 +131,7 @@ class Playbook:
 def _default_preamble() -> str:
     return (
         "# Lessons Playbook\n\n"
-        "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 -->\n\n"
+        "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids= -->\n\n"
         "Curated, bounded workflow lessons. Read the Active section at the Commander\n"
         "context step. Never edit by hand or by LLM: apply structured deltas via\n"
         "apply_lessons_delta.py, which enforces cap, grounding, and counter rules.\n\n"
@@ -208,6 +215,17 @@ def load_playbook(path: Path) -> Playbook:
     run_tick, cap, dormancy = (int(state.group(i)) for i in (1, 2, 3))
     apply_recurrences = int(state.group(4)) if state.group(4) else DEFAULT_APPLY_RECURRENCES
     apply_confirmed = int(state.group(5)) if state.group(5) else DEFAULT_APPLY_CONFIRMED
+    # Seen-work-ids dedup ring (comma-joined, most-recent-last). Absent field or empty
+    # value -> empty ring; a stray empty entry is corruption, so fail visibly.
+    raw_ticked = state.group(6)
+    if raw_ticked:
+        ticked_work_ids = raw_ticked.split(",")
+        if any(not wid for wid in ticked_work_ids):
+            raise LessonsDeltaError(
+                f"playbook malformed ticked-work-ids header: {raw_ticked!r}"
+            )
+    else:
+        ticked_work_ids = []
 
     active_idx = text.find("\n## Active")
     if active_idx == -1:
@@ -230,6 +248,7 @@ def load_playbook(path: Path) -> Playbook:
         apply_confirmed=apply_confirmed,
         preamble=preamble,
         active=parse_lessons(active_block),
+        ticked_work_ids=ticked_work_ids,
     )
 
 
@@ -237,7 +256,8 @@ def render_playbook(book: Playbook) -> str:
     preamble = STATE_RE.sub(
         f"<!-- playbook-state: run-tick={book.run_tick} cap={book.cap} "
         f"dormancy-runs={book.dormancy_runs} apply-recurrences={book.apply_recurrences} "
-        f"apply-confirmed={book.apply_confirmed} -->",
+        f"apply-confirmed={book.apply_confirmed} "
+        f"ticked-work-ids={','.join(book.ticked_work_ids)} -->",
         book.preamble,
     )
     parts = [preamble, "", "## Active", ""]
@@ -294,6 +314,13 @@ def _is_doctrine_target(target: str) -> bool:
 
 def _stamp(work_id: str) -> str:
     return f"{date.today().isoformat()} ({work_id})"
+
+
+def _stamp_date(stamp: str) -> str:
+    """Extract the ISO date from a "YYYY-MM-DD (work-id)" stamp for same-epoch
+    comparison. A bare token like "none" (unset last-confirmed) returns itself and
+    never matches a real date."""
+    return stamp.split(" (", 1)[0]
 
 
 def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
@@ -489,23 +516,39 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             log.append(f"deferred lesson:{lesson_id} at {count} — {op['reason']}")
 
     if tick:
-        book.run_tick += 1
-        expired: list[Lesson] = []
-        for lesson in book.active:
-            lesson.runs_since_confirmed += 1
-            # Constellation lessons are pinned: shared-machinery debt persists until
-            # fixed upstream and retired by hand — never silently auto-deleted.
-            if lesson.scope == "constellation":
-                continue
-            if lesson.runs_since_confirmed > book.dormancy_runs:
-                expired.append(lesson)
-        for lesson in expired:
-            book.active.remove(lesson)
+        if work_id in book.ticked_work_ids:
+            # Dedup by work-id: a burst of apply invocations from one work-unit ages
+            # the dormancy clock only once, so it cannot expire a lesson on its own.
             log.append(
-                f"auto-deleted lesson:{lesson.lesson_id} "
-                f"(unconfirmed for {book.dormancy_runs} runs)"
+                f"tick skipped: work-id {work_id!r} already aged this playbook "
+                "(no double-aging)"
             )
-        log.append(f"tick -> run {book.run_tick}")
+        else:
+            book.run_tick += 1
+            book.ticked_work_ids = (book.ticked_work_ids + [work_id])[-TICKED_WORK_ID_RETENTION:]
+            tick_date = _stamp_date(stamp)
+            expired: list[Lesson] = []
+            for lesson in book.active:
+                lesson.runs_since_confirmed += 1
+                # Constellation lessons are pinned: shared-machinery debt persists until
+                # fixed upstream and retired by hand — never silently auto-deleted.
+                if lesson.scope == "constellation":
+                    continue
+                if lesson.runs_since_confirmed <= book.dormancy_runs:
+                    continue
+                # Same-epoch guard: a lesson never dies on the same date it was added or
+                # last confirmed, regardless of its count. Aging still incremented above;
+                # only expiry is guarded.
+                if tick_date in (_stamp_date(lesson.added), _stamp_date(lesson.last_confirmed)):
+                    continue
+                expired.append(lesson)
+            for lesson in expired:
+                book.active.remove(lesson)
+                log.append(
+                    f"auto-deleted lesson:{lesson.lesson_id} "
+                    f"(unconfirmed for {book.dormancy_runs} runs)"
+                )
+            log.append(f"tick -> run {book.run_tick}")
 
     return log
 

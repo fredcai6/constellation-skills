@@ -3,9 +3,11 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TODAY = date.today().isoformat()
 
 
 def load():
@@ -45,6 +47,25 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         delta_path.write_text(json.dumps(delta), encoding="utf-8")
         rc = self.m.main([str(delta_path), "--file", str(self.file)])
         self.assertEqual(rc, expect_rc)
+
+    def _seed_lesson(self, *, added, last_confirmed="none", runs=0, scope="project",
+                     lesson_id="handoff-diff-command", header=None):
+        """Write a playbook file directly so a lesson can carry a chosen added /
+        last-confirmed date and dormancy count (dates the add path can't set)."""
+        hdr = header or (
+            "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 "
+            "apply-recurrences=1 apply-confirmed=3 -->"
+        )
+        self.file.write_text(
+            "# Lessons Playbook\n\n" + hdr + "\n\n## Active\n\n"
+            f"### lesson:{lesson_id}\n"
+            f"- scope: {scope}\n- task-class: general-workflow\n"
+            "- statement: seeded\n- grounding: g\n"
+            "- mentions: 1\n- confirmed: 0\n- disconfirmed: 0\n"
+            f"- status: active\n- added: {added}\n"
+            f"- last-confirmed: {last_confirmed}\n- runs-since-confirmed: {runs}\n",
+            encoding="utf-8",
+        )
 
     def test_creates_playbook_and_adds_lesson(self):
         self.run_delta({"work_id": "issue-1", "tick": True, "ops": [add_op()]})
@@ -117,7 +138,10 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertFalse(hasattr(book, "dormant"))
 
     def test_tick_auto_deletes_unconfirmed(self):
-        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        # Seeded with a prior-dated `added`: the same-epoch guard only shields a
+        # same-day birth, so 11 distinct-work-id ticks still push runs_since_confirmed
+        # past the dormancy window and delete it.
+        self._seed_lesson(added="2026-01-01 (seed)", runs=0)
         for i in range(11):
             self.run_delta({"work_id": f"run-{i}", "tick": True})
         book = self.m.load_playbook(self.file)
@@ -459,6 +483,92 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
             "applied_evidence": "spine template edited"}]}, expect_rc=1)
         self.assertEqual([l.lesson_id for l in self.m.load_playbook(self.file).active],
                          ["handoff-diff-command"])
+
+    # --- dormancy rekey: work-id dedup + same-epoch guard (issue-87) ---
+
+    def test_tick_same_work_id_ages_lesson_once(self):
+        # A repeat tick from the same work-id must not double-age the clock.
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        self.run_delta({"work_id": "w1", "tick": True})
+        self.run_delta({"work_id": "w1", "tick": True})
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.runs_since_confirmed, 1)
+
+    def test_tick_distinct_work_ids_age_each(self):
+        # Two distinct work-ids age the clock twice — normal behavior preserved.
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        self.run_delta({"work_id": "w1", "tick": True})
+        self.run_delta({"work_id": "w2", "tick": True})
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.runs_since_confirmed, 2)
+
+    def test_same_work_id_burst_cannot_expire(self):
+        # The dogfood bug: a burst of apply invocations sharing one work-id must not
+        # expire a lesson. Old added date isolates this from the same-epoch guard.
+        self._seed_lesson(added="2026-01-01 (seed)", runs=0)
+        for _ in range(20):
+            self.run_delta({"work_id": "epic-burst", "tick": True})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual([l.lesson_id for l in book.active], ["handoff-diff-command"])
+        self.assertEqual(book.active[0].runs_since_confirmed, 1)  # aged exactly once
+
+    def test_same_epoch_guard_blocks_expiry_when_added_today(self):
+        # Born today: even 11 distinct-work-id ticks today cannot delete it.
+        self._seed_lesson(added=f"{TODAY} (born-today)", runs=0)
+        for i in range(11):
+            self.run_delta({"work_id": f"run-{i}", "tick": True})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual([l.lesson_id for l in book.active], ["handoff-diff-command"])
+        self.assertEqual(book.active[0].runs_since_confirmed, 11)  # aged, not deleted
+
+    def test_same_epoch_guard_blocks_expiry_when_confirmed_today(self):
+        # Added long ago but confirmed today: the last-confirmed branch of the guard
+        # shields it even past the dormancy count.
+        self._seed_lesson(added="2026-01-01 (seed)", last_confirmed=f"{TODAY} (x)", runs=11)
+        self.run_delta({"work_id": "later", "tick": True})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual([l.lesson_id for l in book.active], ["handoff-diff-command"])
+
+    def test_expires_on_later_dated_tick(self):
+        # Added/confirmed on an old date; a tick on a different (later) date expires it.
+        self._seed_lesson(added="2026-01-01 (seed)", last_confirmed="none", runs=10)
+        self.run_delta({"work_id": "today-run", "tick": True})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_ticked_work_ids_migrates_and_round_trips(self):
+        # A legacy header without the field parses; after a tick the field appears
+        # carrying the work-id and reloads.
+        self.run_delta({"work_id": "issue-1", "ops": [add_op()]})
+        self.run_delta({"work_id": "aged-by", "tick": True})
+        self.assertIn("ticked-work-ids=aged-by", self.file.read_text(encoding="utf-8"))
+        self.assertIn("aged-by", self.m.load_playbook(self.file).ticked_work_ids)
+
+    def test_existing_real_header_parses_with_empty_ticked(self):
+        self._seed_lesson(
+            added="2026-01-01 (seed)",
+            header="<!-- playbook-state: run-tick=20 cap=20 dormancy-runs=10 "
+                   "apply-recurrences=1 apply-confirmed=3 -->",
+        )
+        book = self.m.load_playbook(self.file)  # must not raise
+        self.assertEqual(book.ticked_work_ids, [])
+        self.assertEqual(book.run_tick, 20)
+
+    def test_ticked_work_ids_bounded(self):
+        for i in range(60):
+            self.run_delta({"work_id": f"w{i}", "tick": True})
+        ids = self.m.load_playbook(self.file).ticked_work_ids
+        self.assertEqual(len(ids), 50)
+        self.assertIn("w59", ids)
+        self.assertNotIn("w0", ids)
+
+    def test_malformed_ticked_work_ids_raises(self):
+        self._seed_lesson(
+            added="2026-01-01 (seed)",
+            header="<!-- playbook-state: run-tick=1 cap=20 dormancy-runs=10 "
+                   "apply-recurrences=1 apply-confirmed=3 ticked-work-ids=a,,b -->",
+        )
+        with self.assertRaises(self.m.LessonsDeltaError):
+            self.m.load_playbook(self.file)
 
 
 if __name__ == "__main__":
