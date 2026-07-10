@@ -5,7 +5,7 @@ description: Use when work needs local todos, workflow artifacts, evidence, clos
 
 # Constellation Workbench
 
-Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns clear workflow managemetn, not semantic decisions.
+Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns clear workflow management, not semantic decisions.
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (it binds every role whose checklist Workbench drives).
 
