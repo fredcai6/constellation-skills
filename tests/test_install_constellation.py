@@ -67,7 +67,7 @@ class InstallConstellationTests(unittest.TestCase):
             target_root = project / ".codex" / "skills"
             self.assertEqual(
                 sorted(SKILL_NAMES),
-                sorted(path.name for path in target_root.iterdir()),
+                sorted(path.name for path in target_root.iterdir() if path.is_dir()),
             )
             self.assertTrue((target_root / "constellation-charter" / "SKILL.md").exists())
             self.assertTrue(
@@ -118,7 +118,7 @@ class InstallConstellationTests(unittest.TestCase):
             target_root = codex_home / "skills"
             self.assertEqual(
                 ["constellation-charter", "constellation-implementer"],
-                sorted(path.name for path in target_root.iterdir()),
+                sorted(path.name for path in target_root.iterdir() if path.is_dir()),
             )
             self.assertTrue(
                 (target_root / "constellation-charter" / "scripts" / "checklist_engine.py").exists()
@@ -253,7 +253,7 @@ class InstallConstellationTests(unittest.TestCase):
             )
             self.assertEqual(
                 sorted(SKILL_NAMES),
-                sorted(path.name for path in target_root.iterdir()),
+                sorted(path.name for path in target_root.iterdir() if path.is_dir()),
             )
             self.assertFalse((target_root / "_shared").exists())
 
@@ -1108,3 +1108,95 @@ class BaselineOnlyTests(unittest.TestCase):
                     ["--agent", "claude", "--scope", "user", "--baseline-only"],
                     env={}, cwd=Path(tmp), out=lambda _line: None,
                 )
+
+
+class CorpusMarkerTests(unittest.TestCase):
+    """Every real install stamps a CORPUS.json provenance marker (#122)."""
+
+    def _read_marker(self, target_root: Path) -> dict:
+        marker = target_root / "CORPUS.json"
+        self.assertTrue(marker.is_file(), f"missing marker at {marker}")
+        return json.loads(marker.read_text(encoding="utf-8"))
+
+    def _assert_shape(self, marker: dict) -> None:
+        self.assertEqual({"corpus_id", "source_commit", "date"}, set(marker))
+        self.assertTrue(marker["corpus_id"].startswith("sha256:"))
+        self.assertIsInstance(marker["source_commit"], str)
+        self.assertTrue(marker["source_commit"])
+        # date is an ISO calendar date the installer stamped.
+        self.assertRegex(marker["date"], r"^\d{4}-\d{2}-\d{2}$")
+
+    def test_user_scope_install_writes_marker(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root)],
+                env={}, out=lambda _: None,
+            )
+            self._assert_shape(self._read_marker(target_root))
+
+    def test_project_scope_install_writes_marker(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project)],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self._assert_shape(self._read_marker(project / ".claude" / "skills"))
+
+    def test_corpus_id_recomputes_to_the_recorded_value(self):
+        # The stamped id must equal a re-hash of exactly the installed skills, so a
+        # consumer (or the eval harness) can verify the copy it holds.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "charter", "implementer"],
+                env={}, out=lambda _: None,
+            )
+            marker = self._read_marker(target_root)
+            recomputed = installer.compute_corpus_id(
+                target_root, names=["constellation-charter", "constellation-implementer"]
+            )
+            self.assertEqual(marker["corpus_id"], recomputed)
+
+    def test_marker_excludes_foreign_sibling_skills(self):
+        # A user's own skill sitting in a shared root must not perturb the corpus id.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            target_root.mkdir()
+            foreign = target_root / "my-own-skill"
+            foreign.mkdir()
+            (foreign / "SKILL.md").write_text("mine\n", encoding="utf-8")
+            installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "charter"],
+                env={}, out=lambda _: None,
+            )
+            marker = self._read_marker(target_root)
+            scoped = installer.compute_corpus_id(
+                target_root, names=["constellation-charter"]
+            )
+            self.assertEqual(marker["corpus_id"], scoped)
+            # Mutating the foreign skill leaves the constellation corpus id unchanged.
+            (foreign / "SKILL.md").write_text("mine CHANGED\n", encoding="utf-8")
+            self.assertEqual(
+                scoped,
+                installer.compute_corpus_id(target_root, names=["constellation-charter"]),
+            )
+
+    def test_dry_run_writes_no_marker(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--dry-run"],
+                env={}, out=lambda _: None,
+            )
+            self.assertFalse((target_root / "CORPUS.json").exists())

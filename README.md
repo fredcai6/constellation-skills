@@ -113,6 +113,20 @@ Rules:
 - Claude Code picks up changes in existing skill directories during the current session; restart it if the install created a top-level skills directory.
 - Restart Cursor or Gemini CLI if new or updated skills are not listed in the current session.
 
+## Keeping project installs fresh
+
+Every install stamps a `CORPUS.json` provenance marker at the skills root (both user and project scope) recording the corpus content hash, the constellation `source_commit` it was built from, and the build date. A project-scope install is therefore a verifiable build artifact, not an unattributable fork — you can always tell which upstream commit a checked-in copy came from.
+
+Check whether an installed corpus is behind upstream without a local constellation clone:
+
+```powershell
+python scripts/check_corpus_freshness.py --skills-root .claude/skills
+```
+
+It reads the installed `CORPUS.json`, fetches constellation `main` HEAD from GitHub (via `gh api`, falling back to plain HTTPS), and reports `current` / `behind` (with the commit count and subjects when behind). Exit codes: `0` current, `1` behind, `2` cannot-determine (missing marker, unknown commit, or unreachable remote — never a false "current"). This runs inside a cloud session on any consuming repo.
+
+To keep a consuming repo's project install fresh automatically, copy [`examples/sync-constellation-skills.yml`](examples/sync-constellation-skills.yml) into `.github/workflows/`. It runs weekly (and on demand), rebuilds the project-scope skills from `main`, reports template reconciliation status with `check_skill_freshness.py`, and opens a PR only when something changed. It never runs `--update-baseline`: reconciling a customized template stays a human decision made on that PR.
+
 ## Baseline assumptions
 
 Constellation assumes a Git repo, Markdown docs, and file-based workflow state. Charter clarifies issue tracker, structural map generation, CI, and runtime commands.
