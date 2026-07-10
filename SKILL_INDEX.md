@@ -15,6 +15,11 @@ Path: `skills/commander-delegated/SKILL.md`
 
 Runs one bounded issue end to end under a frozen Admiral LAUNCH_ORDER, autonomously — the delegated entry over the same commander core doctrine and templates as `constellation-commander`.
 
+## Constellation Explorer
+Path: `skills/explorer/SKILL.md`
+
+Shapes a raw idea into a human-confirmed, issue-ready design upstream of any issue: exploration cycles, excursion off/on-ramps, a cold critic panel, and a hard confirmation gate before work is cut.
+
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`
 
@@ -35,6 +40,11 @@ Path: `skills/scout/SKILL.md`
 
 Runs map-first architecture audits for bad patterns, inefficient boundaries, and improvement candidates.
 
+## Constellation Docent
+Path: `skills/docent/SKILL.md`
+
+Generates a self-contained, stamped static HTML explainer site from Cartographer map truth so a human can browse the architecture; a read-only map consumer that flags itself stale when the map moves.
+
 ## Constellation Implementer
 Path: `skills/implementer/SKILL.md`
 
@@ -44,6 +54,11 @@ Implements a bounded change from a handoff, driving its own gated plan.
 Path: `skills/reviewer/SKILL.md`
 
 Independently verifies a bounded change as a survey and consolidates a verdict.
+
+## Constellation Prototyper
+Path: `skills/prototyper/SKILL.md`
+
+Builds a throwaway prototype that answers one named design question, then disposes of it. Handoff-driven, no checklist.
 
 ## Constellation Triage
 Path: `skills/triage/SKILL.md`

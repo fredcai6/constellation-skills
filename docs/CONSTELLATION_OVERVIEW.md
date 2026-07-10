@@ -20,6 +20,8 @@ Curator      -> periodically measures the skills corpus (curate_corpus.py), mend
 
 The checklist engine (`scripts/checklist_engine.py`, schema `docs/CHECKLIST_SCHEMA.md`, model `docs/CHECKLIST_ENGINE_DESIGN.md`) is the substrate every role drives: a `gated` (execution) or `survey` (verification/inquiry) plan worked one step at a time, with the human as the top tier surfacing decisions at Commander checkpoints.
 
+An eval harness (`scripts/run_skill_eval.py`, scenarios under `evals/`) runs a candidate corpus through a real workflow and scores it with process checks (Curator's instrument). It is a repo tool, not a role, and nothing in the runtime or CI gates on it.
+
 ## Relationship Contract
 
 Skill.md is trigger, boundary, and resource pointer. Templates are the interface. References hold doctrine/detail.
