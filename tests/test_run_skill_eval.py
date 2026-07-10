@@ -134,27 +134,43 @@ def fenced(status="inconclusive"):
 # --------------------------------------------------------------------------- #
 # build_eval_argv — PURE, mirrors run_crew.build_crew_argv
 # --------------------------------------------------------------------------- #
+EXEC_TAIL = ["--allowedTools", *rse.EXEC_ALLOWED_TOOLS]
+
+
 def test_build_eval_argv_with_model():
     assert rse.build_eval_argv("claude", prompt="do it", model="sonnet") == [
-        "claude", "-p", "do it", "--model", "sonnet",
+        "claude", "-p", "do it", "--model", "sonnet", *EXEC_TAIL,
     ]
 
 
 def test_build_eval_argv_without_model():
-    assert rse.build_eval_argv("claude", prompt="do it", model=None) == ["claude", "-p", "do it"]
+    assert rse.build_eval_argv("claude", prompt="do it", model=None) == [
+        "claude", "-p", "do it", *EXEC_TAIL,
+    ]
 
 
 def test_build_eval_argv_with_permission_mode():
     # issue #115 tc2: the permission mode is plumbed onto the headless command line.
     assert rse.build_eval_argv(
         "claude", prompt="do it", model="sonnet", permission_mode="acceptEdits"
-    ) == ["claude", "-p", "do it", "--model", "sonnet", "--permission-mode", "acceptEdits"]
+    ) == ["claude", "-p", "do it", "--model", "sonnet", "--permission-mode", "acceptEdits",
+          *EXEC_TAIL]
 
 
 def test_build_eval_argv_omits_permission_mode_when_none():
     assert rse.build_eval_argv("claude", prompt="p", model=None, permission_mode=None) == [
-        "claude", "-p", "p",
+        "claude", "-p", "p", *EXEC_TAIL,
     ]
+
+
+def test_exec_allowlist_always_present():
+    # issue #126: a workspace settings.json allowlist is ignored in untrusted dirs,
+    # so execution rights ride the command line — python-family only, nothing broader.
+    argv = rse.build_eval_argv("claude", prompt="p", model=None)
+    assert "--allowedTools" in argv
+    tools = argv[argv.index("--allowedTools") + 1:]
+    assert set(tools) == set(rse.EXEC_ALLOWED_TOOLS)
+    assert all(t.startswith("Bash(py") or t.startswith("Bash(python") for t in tools)
 
 
 def test_default_model_is_pinned_low_and_explicit():

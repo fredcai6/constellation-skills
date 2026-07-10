@@ -229,18 +229,28 @@ def load_scenario(scenario_dir) -> Scenario:
 # --------------------------------------------------------------------------- #
 # build_eval_argv — PURE; mirrors run_crew.build_crew_argv
 # --------------------------------------------------------------------------- #
+# Execution rights every eval workspace needs: the checklist engine, pytest, and
+# the agent's own solution are all `python`-family invocations. Passed as
+# --allowedTools because a workspace-local settings.json allowlist is IGNORED in
+# an untrusted (never interactively opened) directory — the trust dialog cannot
+# be answered headlessly (issue #126 diagnosis). CLI-scoped, host state untouched.
+EXEC_ALLOWED_TOOLS = ("Bash(python:*)", "Bash(python3:*)", "Bash(py:*)", "Bash(pytest:*)")
+
+
 def build_eval_argv(launcher: str, *, prompt: str, model: str | None,
                     permission_mode: str | None = None) -> list[str]:
     """PURE construction of the headless agent command line. Exactly
-    `[launcher, "-p", prompt]`, plus `--model <model>` when a model is set and
-    `--permission-mode <mode>` when a mode is set. Kept separate so tests assert on
-    the argv without spawning anything. The permission mode is what lets a headless
-    agent write files in its own workspace (issue #115 tc2)."""
+    `[launcher, "-p", prompt]`, plus `--model <model>` when a model is set,
+    `--permission-mode <mode>` when a mode is set, and the EXEC_ALLOWED_TOOLS
+    allowlist. Kept separate so tests assert on the argv without spawning
+    anything. The permission mode covers file writes (issue #115 tc2); the
+    allowed-tools list covers non-interactive python/pytest execution (#126)."""
     argv = [launcher, "-p", prompt]
     if model:
         argv += ["--model", model]
     if permission_mode:
         argv += ["--permission-mode", permission_mode]
+    argv += ["--allowedTools", *EXEC_ALLOWED_TOOLS]
     return argv
 
 
@@ -688,19 +698,6 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
     run_skills = workspace / ".claude" / "skills"
     shutil.copytree(skills_dir, run_skills)
 
-    # Grant the headless agent non-interactive execution rights for the tooling the
-    # workflow depends on (the checklist engine, pytest, its own solution). Without
-    # this, every `python ...` invocation hangs on an interactive approval no
-    # headless run can give — acceptEdits covers file writes only (issue #126 opus
-    # diagnostic). Scoped to the throwaway workspace, never the host settings.
-    settings_path = workspace / ".claude" / "settings.json"
-    settings_path.write_text(json.dumps({
-        "permissions": {
-            "allow": [
-                "Bash(python:*)", "Bash(python3:*)", "Bash(py:*)", "Bash(pytest:*)",
-            ]
-        }
-    }, indent=2) + "\n", encoding="utf-8")
 
     started = time.time()
     workspace_unchanged = False
