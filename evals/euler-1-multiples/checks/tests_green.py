@@ -44,7 +44,10 @@ def find_tests(workspace: Path) -> list[Path]:
 
 def run_pytest(workspace: Path, tests: list[Path]) -> int:
     args = [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider"]
-    args += [str(t) for t in tests]
+    # Absolute test paths: pytest runs with cwd=workspace, so a run-dir passed as a
+    # RELATIVE path (e.g. a maintainer invoking the check by hand) would otherwise
+    # resolve the test paths against workspace and mis-report exit 4 (usage error).
+    args += [str(t.resolve()) for t in tests]
     proc = subprocess.run(args, cwd=str(workspace), capture_output=True, text=True)
     return proc.returncode
 
