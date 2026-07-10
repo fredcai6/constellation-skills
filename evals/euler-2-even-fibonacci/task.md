@@ -19,9 +19,13 @@ Solve **Project Euler Problem #2**, with tests, as a bounded issue:
    commander spine template and drive it to a **terminal / complete** state. In
    delegated mode, satisfy the human-decision gates (`understand`, `plan`, `triage`,
    `review`) by attaching user-decision evidence that cites this launch order.
-2. In the **execute** step, dispatch an **implementer** crew to write the solution
-   and a **reviewer** crew to verify it, per the commander's crew-dispatch
-   discipline. Do not hand-launch a crew.
+2. In the **execute** step, produce the solution. Implementation may be **inline**
+   in delegated mode — you may write `solution.py` / `test_solution.py` directly.
+   Dispatching an **implementer** crew to write the solution and a **reviewer** crew
+   to verify it (per the commander's crew-dispatch discipline, never hand-launched)
+   is an **optional, harder** path and is **not graded**. What is mandatory is
+   driving the spine to a **terminal, verdict-carrying** state — the crew dispatch is
+   aspirational, the terminal spine is not.
 3. Produce, in the **workspace root** (not under `.claude/`):
    - `solution.py` — computes and **prints** the answer.
    - `test_solution.py` — a `pytest` test asserting the computed answer equals the

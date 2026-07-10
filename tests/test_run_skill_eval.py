@@ -10,9 +10,11 @@ agent-free guarantee is mechanically enforced rather than trusted.
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import pytest
@@ -39,17 +41,27 @@ rse = load_module("run_skill_eval", RUN_SKILL_EVAL)
 def _no_real_agent(monkeypatch):
     """Fail LOUDLY if any test spawns a real `claude` agent subprocess. Check
     subprocesses (`sys.executable <script> <run-dir>`) are allowed; a launcher
-    whose basename starts with `claude` is not. Wraps the module-global
-    `subprocess.run` that both `run_check` and the (stubbed) live seam would use."""
+    whose basename starts with `claude` is not. Wraps BOTH `subprocess.run` (used by
+    `run_check` and the taskkill tree-kill) and `subprocess.Popen` (used by the live
+    `launch_agent` seam) so every spawn path is intercepted."""
     real_run = subprocess.run
+    real_popen = subprocess.Popen
 
-    def guarded_run(cmd, *args, **kwargs):
+    def _assert_not_claude(cmd):
         argv0 = cmd[0] if isinstance(cmd, (list, tuple)) and cmd else cmd
         base = os.path.basename(str(argv0)).lower()
         assert not base.startswith("claude"), f"blocked real agent subprocess: {cmd!r}"
+
+    def guarded_run(cmd, *args, **kwargs):
+        _assert_not_claude(cmd)
         return real_run(cmd, *args, **kwargs)
 
+    def guarded_popen(cmd, *args, **kwargs):
+        _assert_not_claude(cmd)
+        return real_popen(cmd, *args, **kwargs)
+
     monkeypatch.setattr(subprocess, "run", guarded_run)
+    monkeypatch.setattr(subprocess, "Popen", guarded_popen)
     yield
 
 
@@ -567,6 +579,104 @@ def test_launch_agent_spawn_failure_maps_to_fenced_errored(tmp_path):
     assert rr.status == "errored"
 
 
+# --------------------------------------------------------------------------- #
+# launch_agent deadline enforcement — a hanging child (never-EOF pipes) is
+# tree-killed on the deadline and fenced as timeout. NO real agent, NO real sleep
+# past the sub-second deadline: a fake Popen double stands in for a wedged child.
+# --------------------------------------------------------------------------- #
+class _BlockingPipe:
+    """A pipe double whose read() blocks until the child is 'killed', then EOF.
+    Models a grandchild holding the write-handle so read() never naturally returns —
+    the exact wedge that hung the old subprocess.run(timeout=) wait."""
+
+    def __init__(self, done: threading.Event):
+        self._done = done
+
+    def read(self, _n):
+        self._done.wait()
+        return b""
+
+
+class _HangingPopen:
+    """A subprocess.Popen double that NEVER exits on its own: poll() stays None and
+    its pipes never hit EOF until something kills it. Spawns nothing."""
+
+    def __init__(self):
+        self.pid = 987654
+        self.returncode = None
+        self._done = threading.Event()
+        self.stdout = _BlockingPipe(self._done)
+        self.stderr = _BlockingPipe(self._done)
+
+    def poll(self):
+        return self.returncode
+
+    def wait(self, timeout=None):
+        self._done.wait(timeout)
+        return self.returncode
+
+    def _die(self, code=-9):
+        self.returncode = code
+        self._done.set()
+
+
+def test_launch_agent_deadline_tree_kills_hanging_child_and_fences_timeout(tmp_path, monkeypatch):
+    hanging = _HangingPopen()
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: hanging)
+
+    killed: list[int] = []
+
+    def spy_tree_kill(proc):
+        killed.append(proc.pid)
+        proc._die()  # the tree-kill is what lets poll()/read() finally return
+
+    monkeypatch.setattr(rse, "_tree_kill", spy_tree_kill)
+
+    out = rse.launch_agent(
+        ["dummy-launcher", "-p", "hi"], cwd=str(tmp_path), env=dict(os.environ),
+        stdout_path=str(tmp_path / "o.txt"), stderr_path=str(tmp_path / "e.txt"),
+        timeout=0.3,
+    )
+    # deadline fired -> tree-kill invoked on the hung child -> fenced timeout.
+    assert killed == [hanging.pid]
+    assert out.timed_out is True and out.exit_code is None
+    rr = rse.classify_run(out, completion_present=False, completion_fresh=False, process_results=[])
+    assert rr.status == "inconclusive" and rr.reason == "timeout"
+
+
+def test_meta_json_written_incrementally_launch_then_final(tmp_path):
+    # meta.json is written TWICE: a launch record (status "launched", exit_code null)
+    # visible the moment the launcher is invoked, then the final classification.
+    wt = throwaway_worktree(tmp_path)
+    temp_root = tmp_path / "t"
+    temp_root.mkdir()
+    skills_dir = rse.temp_install(str(wt), temp_root)
+    corpus_id = rse.write_corpus_marker(skills_dir, "abc123")
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+
+    seen: dict = {}
+
+    def checking_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+        meta = Path(cwd).parent / "meta.json"
+        seen["present_at_launch"] = meta.is_file()
+        if meta.is_file():
+            seen["launch_record"] = json.loads(meta.read_text(encoding="utf-8"))
+        return fake_pass_launch(argv, cwd=cwd, env=env, stdout_path=stdout_path,
+                                stderr_path=stderr_path, timeout=timeout)
+
+    rr = rse._run_once(s, 0, temp_root, skills_dir, corpus_id, checking_launch)
+
+    # the launch record existed BEFORE the launcher returned (incremental write).
+    assert seen["present_at_launch"] is True
+    assert seen["launch_record"]["status"] == "launched"
+    assert seen["launch_record"]["exit_code"] is None
+    # the final record overwrote it with the resolved classification.
+    final = json.loads((temp_root / "run-0" / "meta.json").read_text(encoding="utf-8"))
+    assert final["status"] == "completed-pass" == rr.status
+    assert final["exit_code"] == 0
+    assert "finished_at" in final
+
+
 def test_all_fenced_run_scenario_is_inconclusive_not_fail(tmp_path):
     # timeouts across the whole loop -> INCONCLUSIVE, never FAIL a corpus that never ran.
     wt = throwaway_worktree(tmp_path)
@@ -678,7 +788,7 @@ def test_permission_mode_reaches_launcher_argv(tmp_path):
 # the agent-free guard STILL BITES on the live launch_agent (mechanical guarantee)
 # --------------------------------------------------------------------------- #
 def test_agent_free_guard_still_bites_on_launch_agent(tmp_path):
-    # launch_agent is implemented on subprocess.run, which the autouse guard wraps;
+    # launch_agent is implemented on subprocess.Popen, which the autouse guard wraps;
     # a real `claude` argv is blocked before any process is spawned. The guard's
     # AssertionError is neither TimeoutExpired nor OSError, so it propagates out.
     argv = rse.build_eval_argv("claude", prompt="do it", model="sonnet")
