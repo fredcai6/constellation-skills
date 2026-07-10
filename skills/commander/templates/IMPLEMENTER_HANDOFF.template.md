@@ -18,9 +18,15 @@ Concise fragments. Omit filler.
 `<what must be true when done; each item the implementer proves>`
 - `<criterion>`
 
+Never pin a literal artifact count (packets, decisions, modules, pages) recalled from memory into a close criterion — a hard number the evidence must "match" is a trap when it disagrees with map truth. Write "one page per packet file — count from the map at authoring time" or re-derive the number from the live map before freezing the handoff.
+
+For a **meaning-preserving doc / register-diet** gate, carry three explicit lists so the edit is deterministic for the implementer and independently verifiable for the reviewer: the exact BEFORE/AFTER for each edit, a MUST-SURVIVE operative-fact list, and a forbidden-signature list.
+
 ## Allowed Scope
 `<files, modules, regions, or decisions the implementer may touch>`
-When the gate adds or changes a validation, **pre-authorize the test files that already exercise the gated behavior** (their test data/harness, not excluded production code) so a legitimate minimal reconciliation of those tests does not read as an out-of-scope breach.
+When the gate adds or changes a validation, **pre-authorize the test files that already exercise the gated behavior** (their test data/harness, not excluded production code) so a legitimate minimal reconciliation of those tests does not read as an out-of-scope breach. When the behavior change **invalidates an existing test's scenario**, name that test and say so explicitly ("expect to reseed/rewrite test X — its old scenario is what this change now forbids"); otherwise "full suite green (N tests pre-change)" reads as don't-touch-existing-tests and momentarily conflicts with the close criteria.
+
+When the gate asks the implementer to **dogfood a method-in-skill generator** to produce a demo artifact, explicitly sanction a non-shipped generation aid (a throwaway script that mechanizes the method, output-only committed) — otherwise the implementer must reason about whether hand-authoring is required to honor "no large generator shipped."
 
 ## Specific Exclusions
 `<things that look in-scope but are off-limits; omit section if none>`
@@ -45,6 +51,8 @@ Map context this gate inherits from the mission frame, so the implementation lan
 `<required — filled by the commander at gate-planning time, before dispatch. For each of this gate's deliverable artifact path(s), classify it:>`
 - **Committed** — `<path>`; verified via `git check-ignore <path>` exiting 1 (not ignored) before dispatch — record the exact command run and its exit code.
 - **Local-only** — `<path>`; intentionally gitignored (e.g. under `.agent-work/`) — state this explicitly so the reviewer does not expect it in the diff.
+
+When a gate creates a **new** tracked-to-be file, state that it is untracked until staged: "`git diff` shows N-1 files; the new file appears in `git status`." Otherwise a scope claim like "diff touches exactly N files" reads as false against a correct working tree and the reviewer momentarily mistrusts correct evidence.
 
 ## Required Evidence
 `<what to produce: test output, command result, inspection note, generated artifact>`

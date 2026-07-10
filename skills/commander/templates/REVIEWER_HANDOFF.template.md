@@ -25,6 +25,8 @@ Check the handoff's Deliverable Path Check note before flagging an expected arti
 `<conditions required for APPROVE; each becomes a review check>`
 - `<criterion>`
 
+For a **doc-diet or register-rewrite** gate, a structural/JSON test suite does NOT guard prose invariants (pointer-name presence, forbidden-signature absence, meaning preservation). Make each of those an explicit per-gate grep the reviewer runs and the Commander re-runs; never read suite-green as assurance for them.
+
 When the gate carries an expected transient failure set, scope it **by root cause** (the failing mechanism, wherever it surfaces — e.g. "the installer's discovery refusal, in any test whose setUp runs the installer"), never by file name alone, and reproduce the distribution yourself: a failure matching the named root cause outside the listed file is the waiver working, not a blocker; a failure outside the root-cause class is a BLOCK.
 
 ## Allowed Scope

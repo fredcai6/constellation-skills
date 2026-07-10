@@ -12,6 +12,8 @@ When you have loaded a role skill, you **must** drive its checklist through the 
 
 When creating a checklist, prefer the project-specific template at `.agent-work/templates/<name>` if it exists; otherwise use the bundled `skills/<role>/templates/<name>`. A project-scope install seeds an editable working copy of every template there (never clobbering existing edits), so this is the home a project edits and commits; Charter and later runs customize them, and `check_skill_freshness.py` reconciles them against the `.baseline/` when the skill upstream changes. If a project-local copy carries `<…-skill-dir>` tokens, resolve them to the installed skill directory (the path your own SKILL.md already uses).
 
+**Dogfooding on the skill-source repo.** When the repo you are working on *is* the constellation-skills source, instantiate the work area with `--skill-dir <repo-root>` so the spine's `<…-skill-dir>/scripts/` command postconditions resolve to the repo's own **vendored** `./scripts/` rather than a globally-installed copy; template paths still come from `skills/<role>/templates/` by judgment (scripts at the repo root, templates under the skill dir). The globally-installed skill copy and the repo's own source copy of a template or script **can diverge** — drive the engine from the repo's own copy and diff the two when in doubt; nothing in the Skill-tool invocation flags which copy governs.
+
 ## Dispatch: subagent vs your own context
 
 A delegated checklist runs in one of two ways:
