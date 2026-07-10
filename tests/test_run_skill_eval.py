@@ -204,18 +204,26 @@ def test_load_scenario_defaults(tmp_path):
     assert s.task_prompt.strip() == "Solve it."
     assert [p.name for p in s.process_checks] == ["proc_0.py", "proc_1.py"]
     assert [p.name for p in s.answer_checks] == ["ans_0.py"]
-    assert (s.n, s.m, s.timeout_seconds) == (2, 3, 1800)
+    assert (s.n, s.m, s.timeout_seconds) == (2, 3, 2400)
     assert s.model == rse.DEFAULT_MODEL
     assert s.fixture_dir is None
 
 
 def test_load_scenario_toml_overrides(tmp_path):
+    # an above-floor toml timeout is respected verbatim.
     scen = make_scenario(
         tmp_path,
-        toml='id = "euler-1"\nmodel = "haiku"\nn = 3\nm = 4\ntimeout_seconds = 900\n',
+        toml='id = "euler-1"\nmodel = "haiku"\nn = 3\nm = 4\ntimeout_seconds = 3000\n',
     )
     s = rse.load_scenario(scen)
-    assert (s.id, s.model, s.n, s.m, s.timeout_seconds) == ("euler-1", "haiku", 3, 4, 900)
+    assert (s.id, s.model, s.n, s.m, s.timeout_seconds) == ("euler-1", "haiku", 3, 4, 3000)
+
+
+def test_load_scenario_timeout_floor_clamps_below_minimum(tmp_path):
+    # a scenario.toml can never starve an honest run below the floor (issue #126).
+    scen = make_scenario(tmp_path, toml="timeout_seconds = 900\n")
+    s = rse.load_scenario(scen)
+    assert s.timeout_seconds == rse.SCENARIO_TIMEOUT_FLOOR_SECONDS == 2400
 
 
 def test_load_scenario_missing_task_is_config_error(tmp_path):
@@ -343,6 +351,27 @@ def test_classify_timeout_is_inconclusive_fenced():
     out = rse.LaunchOutcome(exit_code=None, timed_out=True)
     rr = rse.classify_run(out, completion_present=False, completion_fresh=False, process_results=[])
     assert rr.status == "inconclusive"
+
+
+def test_classify_timeout_with_all_checks_green_is_pass(tmp_path):
+    # issue #126 verdict refinement: an honest run that finished the deliverable but
+    # was tree-killed before its own process exit passes ALL (monotone) process
+    # checks -> PASS, not fenced. Would have made attempts 9/10 read 1-of-3 each.
+    out = rse.LaunchOutcome(exit_code=None, timed_out=True)
+    rr = rse.classify_run(out, completion_present=True, completion_fresh=True,
+                          process_results=[cr(True), cr(True)])
+    assert rr.status == "completed-pass"
+    assert rr.reason == "timeout-checks-green"
+
+
+def test_classify_timeout_with_a_failing_check_stays_fenced():
+    # a timeout whose workspace does NOT pass every check stays fenced (infra, not
+    # a corpus FAIL) — monotonicity only carries a run that is ALREADY green.
+    out = rse.LaunchOutcome(exit_code=None, timed_out=True)
+    rr = rse.classify_run(out, completion_present=False, completion_fresh=False,
+                          process_results=[cr(True), cr(False)])
+    assert rr.status == "inconclusive"
+    assert rr.reason == "timeout"
 
 
 def test_classify_usage_limit_marker_is_inconclusive_fenced():
