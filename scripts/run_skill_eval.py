@@ -688,6 +688,20 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
     run_skills = workspace / ".claude" / "skills"
     shutil.copytree(skills_dir, run_skills)
 
+    # Grant the headless agent non-interactive execution rights for the tooling the
+    # workflow depends on (the checklist engine, pytest, its own solution). Without
+    # this, every `python ...` invocation hangs on an interactive approval no
+    # headless run can give — acceptEdits covers file writes only (issue #126 opus
+    # diagnostic). Scoped to the throwaway workspace, never the host settings.
+    settings_path = workspace / ".claude" / "settings.json"
+    settings_path.write_text(json.dumps({
+        "permissions": {
+            "allow": [
+                "Bash(python:*)", "Bash(python3:*)", "Bash(py:*)", "Bash(pytest:*)",
+            ]
+        }
+    }, indent=2) + "\n", encoding="utf-8")
+
     started = time.time()
     workspace_unchanged = False
     permission_denied = False
