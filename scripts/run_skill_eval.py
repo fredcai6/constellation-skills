@@ -30,6 +30,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -421,42 +422,132 @@ def _read_text_tail(text_path) -> str:
     return data[-_STDERR_TAIL_BYTES:].decode("utf-8", errors="replace")
 
 
+# Deadline machinery. `subprocess.run(timeout=...)` is NOT enough on Windows: it
+# waits by joining reader threads that block until the stdout/stderr pipes hit EOF,
+# and a grandchild (e.g. a nested `claude -p`) that inherited the pipe write-handle
+# keeps EOF from ever arriving — so the runner hangs for hours AFTER the child
+# already exited (epic-101 live-acceptance, 2026-07-10). We therefore own the wait:
+# poll for exit against a monotonic deadline, HARD-kill the whole process tree on
+# expiry (taskkill /T /F), and drain the pipes on daemon threads we join only for a
+# bounded grace so a lingering grandchild handle can never block the wait.
+_POLL_INTERVAL_SECONDS = 0.1
+_DRAIN_GRACE_SECONDS = 5.0
+_PIPE_CHUNK_BYTES = 65536
+
+
+def _tree_kill(proc: "subprocess.Popen") -> None:
+    """Hard-kill an entire process tree, best-effort, never raising — a kill failure
+    must not mask the timeout it is servicing. On Windows uses
+    `taskkill /PID <pid> /T /F` (the /T flag is what reaches grandchildren the plain
+    Popen.kill() TerminateProcess would leave orphaned); elsewhere falls back to
+    Popen.kill()."""
+    if os.name == "nt":
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError):
+            pass
+    else:  # pragma: no cover - repo is Windows; kept so the module is portable.
+        try:
+            proc.kill()
+        except OSError:
+            pass
+
+
+def _drain_pipe(pipe, file_obj) -> None:
+    """Copy a child pipe to its capture file until EOF. Swallows OSError/ValueError
+    so an abandoned daemon drainer (grandchild still holding the write-handle, file
+    already closed) dies quietly instead of surfacing a spurious error."""
+    try:
+        for chunk in iter(lambda: pipe.read(_PIPE_CHUNK_BYTES), b""):
+            file_obj.write(chunk)
+            file_obj.flush()
+    except (OSError, ValueError):
+        pass
+
+
 def launch_agent(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> LaunchOutcome:
     """The ONE real seam — spawn `claude -p ...` (argv built by build_eval_argv)
     with `cwd=<run>/workspace`, capturing stdout/stderr to the given paths and
-    honoring `timeout`. Implemented on `subprocess.run` (mirroring
-    run_crew.launch_process) so the tests' autouse agent-free guard — which wraps
-    `subprocess.run` — still intercepts every launch.
+    ENFORCING `timeout` with a hard process-tree kill. Uses `subprocess.Popen` (which
+    the tests' autouse agent-free guard also wraps) so no `claude` is ever spawned
+    under test.
 
     Populates LaunchOutcome fully so the pure classify_run infra-fence fires:
-      - normal return -> exit_code + stderr tail (for usage/rate-limit sniffing);
-      - subprocess.TimeoutExpired -> timed_out=True (fenced inconclusive);
+      - normal exit  -> exit_code + stderr tail (for usage/rate-limit sniffing);
+      - deadline hit -> tree-killed, timed_out=True (fenced inconclusive);
       - spawn failure (FileNotFoundError / OSError, e.g. no `claude` on PATH)
         -> launch_error=True (fenced errored).
-    Corpus-mismatch is asserted upstream in _run_once, never here."""
+    Corpus-mismatch is asserted upstream in _run_once, never here.
+
+    The wait can never hang on a lingering grandchild pipe handle: we poll for exit
+    against a monotonic deadline, tree-kill on expiry, and join the daemon drain
+    threads only for `_DRAIN_GRACE_SECONDS` before abandoning them."""
     stdout_path = Path(stdout_path)
     stderr_path = Path(stderr_path)
     stdout_path.parent.mkdir(parents=True, exist_ok=True)
     stderr_path.parent.mkdir(parents=True, exist_ok=True)
+
     try:
-        with stdout_path.open("wb") as out, stderr_path.open("wb") as err:
-            proc = subprocess.run(
+        out = stdout_path.open("wb")
+        err = stderr_path.open("wb")
+    except OSError as exc:
+        return LaunchOutcome(exit_code=None, launch_error=True, stderr_text=str(exc))
+
+    try:
+        try:
+            proc = subprocess.Popen(
                 argv,
                 cwd=str(cwd),
                 env=env,
                 stdin=subprocess.DEVNULL,
-                stdout=out,
-                stderr=err,
-                timeout=timeout,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
-    except subprocess.TimeoutExpired:
-        # The child is killed; whatever it wrote to the stderr file is still there.
+        except (FileNotFoundError, OSError) as exc:
+            # Launcher not found / could not spawn — a launch failure, not a corpus
+            # verdict. Fenced as errored.
+            return LaunchOutcome(exit_code=None, launch_error=True, stderr_text=str(exc))
+
+        drainers = [
+            threading.Thread(target=_drain_pipe, args=(proc.stdout, out), daemon=True),
+            threading.Thread(target=_drain_pipe, args=(proc.stderr, err), daemon=True),
+        ]
+        for t in drainers:
+            t.start()
+
+        deadline = None if timeout is None else time.monotonic() + timeout
+        timed_out = False
+        while proc.poll() is None:
+            if deadline is not None and time.monotonic() >= deadline:
+                timed_out = True
+                _tree_kill(proc)
+                # Give the tree a moment to fall over, then stop waiting regardless —
+                # never an unbounded wait.
+                try:
+                    proc.wait(timeout=_DRAIN_GRACE_SECONDS)
+                except subprocess.TimeoutExpired:
+                    pass
+                break
+            time.sleep(_POLL_INTERVAL_SECONDS)
+
+        # Join drainers for a bounded grace only. A grandchild still holding the pipe
+        # write-handle keeps read() from hitting EOF, so an unbounded join is the very
+        # hang we are fixing — abandon the daemon threads after the grace.
+        for t in drainers:
+            t.join(_DRAIN_GRACE_SECONDS)
+    finally:
+        out.close()
+        err.close()
+
+    if timed_out:
         return LaunchOutcome(exit_code=None, timed_out=True,
                              stderr_text=_read_text_tail(stderr_path))
-    except (FileNotFoundError, OSError) as exc:
-        # Launcher not found / could not spawn — a launch failure, not a corpus
-        # verdict. Fenced as errored.
-        return LaunchOutcome(exit_code=None, launch_error=True, stderr_text=str(exc))
     return LaunchOutcome(exit_code=proc.returncode,
                          stderr_text=_read_text_tail(stderr_path))
 
@@ -567,6 +658,14 @@ def _probe_completion(run_dir: Path, since: float) -> tuple[bool, bool]:
     return True, artifact.stat().st_mtime >= floor
 
 
+def _write_meta(run_dir: Path, payload: dict) -> None:
+    """Write `<run-dir>/meta.json`. Called twice per run (a launch record at spawn,
+    the final classification at end) so a run that is tree-killed mid-flight still
+    leaves a diagnosable meta.json instead of nothing."""
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "meta.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
 def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
               corpus_id: str, launch, permission_mode: str | None = None) -> RunResult:
     """Execute (and score) ONE attempt into `run-<index>/`. Fabricates the run-dir
@@ -604,6 +703,16 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
         prompt = wrap_prompt(scenario.task_prompt)
         argv = build_eval_argv(DEFAULT_LAUNCHER, prompt=prompt, model=scenario.model,
                                permission_mode=permission_mode)
+        # Incremental meta.json: a launch record written BEFORE the (possibly
+        # hang-then-tree-killed) launch, so a killed run is still diagnosable.
+        _write_meta(run_dir, {
+            "corpus_id": corpus_id,
+            "scenario_id": scenario.id,
+            "status": "launched",
+            "exit_code": None,
+            "launched_at": started,
+            "timeout_seconds": scenario.timeout_seconds,
+        })
         outcome = launch(
             argv,
             cwd=str(workspace),
@@ -627,19 +736,16 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
     # Answer checks are executed and RECORDED on the per-run record but never gate.
     rr.check_results = list(rr.check_results) + answer_results
 
-    (run_dir / "meta.json").write_text(
-        json.dumps(
-            {
-                "corpus_id": corpus_id,
-                "scenario_id": scenario.id,
-                "exit_code": outcome.exit_code,
-                "status": rr.status,
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    # Final meta.json: overwrites the launch record with the resolved classification.
+    _write_meta(run_dir, {
+        "corpus_id": corpus_id,
+        "scenario_id": scenario.id,
+        "status": rr.status,
+        "reason": rr.reason,
+        "exit_code": outcome.exit_code,
+        "launched_at": started,
+        "finished_at": time.time(),
+    })
     return rr
 
 
