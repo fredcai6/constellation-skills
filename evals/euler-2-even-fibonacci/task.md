@@ -16,9 +16,19 @@ Solve **Project Euler Problem #2**, with tests, as a bounded issue:
 1. Load the **constellation-commander** skill and drive its gated engine spine for
    this bounded issue: `init → context → understand → plan → execute → reconcile →
    triage → review → feedback → archive`. Instantiate `spine.json` from the
-   commander spine template and drive it to a **terminal / complete** state. In
-   delegated mode, satisfy the human-decision gates (`understand`, `plan`, `triage`,
-   `review`) by attaching user-decision evidence that cites this launch order.
+   commander spine template and drive it to a **terminal / complete** state
+   **through the checklist engine** — the grader parses the spine's per-step
+   engine state, so a spine that was copied but never driven reads as not done.
+   The engine ships with the installed skills; every mutating call goes through it:
+
+   ```
+   python .claude/skills/constellation-workbench/scripts/checklist_engine.py      --file .agent-work/<work-id>/spine.json <verb> <step> [--session-id <id>]
+   ```
+
+   (verbs: `claim`, `start`, `advance`, `attest`, `attach`, `record`, `release` —
+   run `-h` for grammar). In delegated mode, satisfy the human-decision gates
+   (`understand`, `plan`, `triage`, `review`) by attaching user-decision evidence
+   that cites this launch order.
 2. In the **execute** step, produce the solution. Implementation may be **inline**
    in delegated mode — you may write `solution.py` / `test_solution.py` directly.
    Dispatching an **implementer** crew to write the solution and a **reviewer** crew
