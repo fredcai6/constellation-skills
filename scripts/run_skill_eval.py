@@ -60,13 +60,26 @@ _install = _load_install_constellation()
 _hash_file = _install._hash_file
 _source_commit = _install._source_commit
 
-# Pilot tier — one model tier below prod, per the frozen contract (§(e)); pilots
-# run cheaper because a wave commander died to a usage limit this epic.
-DEFAULT_MODEL = "sonnet"
+# Model tier — PINNED LOW and EXPLICIT, never silently inherited from the session
+# (issue #115 human amendment). A low tier struggles sooner, which is the point: it
+# surfaces corpus regressions a frontier model would muscle through, so an eval
+# verdict should come from the cheapest model that can plausibly drive the workflow.
+# haiku (`claude-haiku-4-5-20251001`) is the preferred, even-cheaper choice wherever
+# it can complete the workflow; sonnet is the default because it can drive more of it.
+DEFAULT_MODEL = "claude-sonnet-4-5"
 DEFAULT_N = 2
 DEFAULT_M = 3
 DEFAULT_TIMEOUT_SECONDS = 1800
 DEFAULT_LAUNCHER = "claude"
+
+# Headless agents (`claude -p`) have no interactive approver, so without an explicit
+# permission mode every tool action needing approval is DENIED and the agent can
+# write nothing (issue #115 tc2 — the epic's honest-null). acceptEdits is the
+# least-powerful documented mode that clears the file-write wall: it auto-accepts
+# file edits/writes in the agent's own temp workspace without also auto-approving
+# arbitrary shell — operator-overridable via --permission-mode for a workflow that
+# provably needs a broader mode.
+DEFAULT_PERMISSION_MODE = "acceptEdits"
 
 # The completion stub a finished run leaves in its workspace. A canned test run
 # and the dry-run launcher fabricate the same shape the live run will (run-dir
@@ -77,6 +90,22 @@ CORPUS_MARKER = "CORPUS.json"
 # Infra markers sniffed in a run's stderr — any hit FENCES the run (inconclusive),
 # so environment flake can only ever yield INCONCLUSIVE, never FAIL a good corpus.
 INFRA_MARKERS = ("usage limit", "rate limit", "quota", "overloaded", "429")
+
+# Permission-denial markers (issue #115 tc3). A headless agent that is permission-
+# sandboxed prints these as it is refused each tool action. Sniffed in BOTH the
+# transcript and stderr; a hit is only load-bearing when ALSO byte-unchanged (see
+# classify_run) so a corpus that legitimately did work is never mis-fenced. Phrases
+# are drawn from the real g5-live transcript ("Claude requested permissions to
+# write", "requires manual approval", "Output redirection ... was blocked").
+PERMISSION_MARKERS = (
+    "requested permissions",
+    "requires manual approval",
+    "requires approval",
+    "requires permission",
+    "permission denied",
+    "permission denial",
+    "not permitted",
+)
 
 
 class EvalConfigError(Exception):
@@ -200,13 +229,18 @@ def load_scenario(scenario_dir) -> Scenario:
 # --------------------------------------------------------------------------- #
 # build_eval_argv — PURE; mirrors run_crew.build_crew_argv
 # --------------------------------------------------------------------------- #
-def build_eval_argv(launcher: str, *, prompt: str, model: str | None) -> list[str]:
+def build_eval_argv(launcher: str, *, prompt: str, model: str | None,
+                    permission_mode: str | None = None) -> list[str]:
     """PURE construction of the headless agent command line. Exactly
-    `[launcher, "-p", prompt]`, plus `--model <model>` when a model is set. Kept
-    separate so tests assert on the argv without spawning anything."""
+    `[launcher, "-p", prompt]`, plus `--model <model>` when a model is set and
+    `--permission-mode <mode>` when a mode is set. Kept separate so tests assert on
+    the argv without spawning anything. The permission mode is what lets a headless
+    agent write files in its own workspace (issue #115 tc2)."""
     argv = [launcher, "-p", prompt]
     if model:
         argv += ["--model", model]
+    if permission_mode:
+        argv += ["--permission-mode", permission_mode]
     return argv
 
 
@@ -256,22 +290,41 @@ def is_infra_marker(text) -> bool:
     return any(marker in low for marker in INFRA_MARKERS)
 
 
+def is_permission_denial(text) -> bool:
+    """Whether `text` carries a permission-sandbox refusal marker (issue #115 tc3).
+    PURE. A hit is only load-bearing when the workspace was ALSO left byte-unchanged
+    (see classify_run), so it can never mis-fence a run that legitimately did work."""
+    low = (text or "").lower()
+    return any(marker in low for marker in PERMISSION_MARKERS)
+
+
 def classify_run(outcome: LaunchOutcome, *, completion_present: bool,
-                 completion_fresh: bool, process_results: list) -> RunResult:
+                 completion_fresh: bool, process_results: list,
+                 workspace_unchanged: bool = False,
+                 permission_denied: bool = False) -> RunResult:
     """Resolve one launch attempt to exactly one class (contract §(i) infra-fence
     table). PURE.
 
       inconclusive (fenced): timeout, or a usage/rate-limit/overloaded/429 marker
                              sniffed in stderr;
-      errored (fenced):      launch failure, corpus mismatch, or a non-zero exit
-                             with NO marker AND no completion;
+      errored (fenced):      launch failure, corpus mismatch, a permission-sandbox
+                             block (exited but left the workspace byte-unchanged AND
+                             a permission-denial marker), or a non-zero exit with NO
+                             marker AND no completion;
       completed-pass:        completed and every process check passed;
       completed-fail:        completed (incl. exit 0 with no spine terminal) but a
                              process check failed.
 
     A run "completed" when its completion artifact is present+fresh OR the agent
     exited 0 — so an exit-0 run with no spine terminal is still tallied (as a
-    fail if a process check failed), never silently fenced."""
+    fail if a process check failed), never silently fenced. The permission-block
+    fence (issue #115 tc3) is the ONE deliberate carve-out of that rule: an agent
+    that exits 0 but was permission-denied every write leaves the workspace
+    byte-unchanged, which is the ENVIRONMENT blocking a good corpus, not the corpus
+    failing — so it is FENCED, not tallied. It is gated on BOTH signals (unchanged
+    workspace AND a denial marker) so an exit-0 run that genuinely produced the
+    wrong output — which mutates the workspace — still lands completed-fail per the
+    g2-ratified exit-0-no-terminal rule."""
     if outcome.timed_out:
         return RunResult(status="inconclusive", reason="timeout", check_results=list(process_results))
     if is_infra_marker(outcome.stderr_text):
@@ -280,6 +333,9 @@ def classify_run(outcome: LaunchOutcome, *, completion_present: bool,
         return RunResult(status="errored", reason="launch-error", check_results=list(process_results))
     if outcome.corpus_mismatch:
         return RunResult(status="errored", reason="corpus-mismatch", check_results=list(process_results))
+    if workspace_unchanged and permission_denied:
+        return RunResult(status="errored", reason="permission-blocked",
+                         check_results=list(process_results))
 
     completed = (completion_present and completion_fresh) or (outcome.exit_code == 0)
     if not completed:
@@ -383,12 +439,13 @@ def assert_corpus(run_skills_dir, expected_id: str) -> bool:
 _STDERR_TAIL_BYTES = 8192
 
 
-def _read_stderr_tail(stderr_path) -> str:
-    """Best-effort tail of a run's stderr file, for `is_infra_marker` sniffing.
-    Never raises: a missing/unreadable file yields an empty string (which fences
-    nothing), so a read hiccup cannot mis-fence a run."""
+def _read_text_tail(text_path) -> str:
+    """Best-effort tail of a run's stderr OR transcript file, for `is_infra_marker`
+    and `is_permission_denial` sniffing. Never raises: a missing/unreadable file
+    yields an empty string (which fences nothing), so a read hiccup cannot mis-fence
+    a run."""
     try:
-        path = Path(stderr_path)
+        path = Path(text_path)
         if not path.is_file():
             return ""
         data = path.read_bytes()
@@ -428,13 +485,13 @@ def launch_agent(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> Launch
     except subprocess.TimeoutExpired:
         # The child is killed; whatever it wrote to the stderr file is still there.
         return LaunchOutcome(exit_code=None, timed_out=True,
-                             stderr_text=_read_stderr_tail(stderr_path))
+                             stderr_text=_read_text_tail(stderr_path))
     except (FileNotFoundError, OSError) as exc:
         # Launcher not found / could not spawn — a launch failure, not a corpus
         # verdict. Fenced as errored.
         return LaunchOutcome(exit_code=None, launch_error=True, stderr_text=str(exc))
     return LaunchOutcome(exit_code=proc.returncode,
-                         stderr_text=_read_stderr_tail(stderr_path))
+                         stderr_text=_read_text_tail(stderr_path))
 
 
 def temp_install(worktree, temp_root) -> Path:
@@ -470,11 +527,29 @@ def _write_transcript(stdout_path, stderr_path, note: str) -> None:
 
 
 def dry_run_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> LaunchOutcome:
-    """Fake launcher that synthesizes a PASSING workspace (completion artifact +
-    spine.json terminal) so process checks pass. Spawns NOTHING — the CI smoke for
-    the runner itself and caller #2's live target."""
+    """Fake launcher that synthesizes a REAL passing workspace — a non-empty
+    `solution.py`, a green `test_solution.py`, the completion artifact, and a
+    terminal `spine.json` — so the gating process checks (`artifact_present`,
+    `tests_green`, `spine_completed`) each bite STRICTLY on a real deliverable, with
+    no sentinel stand-in (issue #115 tc1). Spawns NOTHING — the CI smoke for the
+    runner itself and caller #2's live target. The test is self-contained (imports
+    nothing from the workspace) so it stays green under any pytest import mode."""
     workspace = Path(cwd)
     workspace.mkdir(parents=True, exist_ok=True)
+    (workspace / "solution.py").write_text(
+        "def solve():\n"
+        "    return 42\n"
+        "\n"
+        "\n"
+        'if __name__ == "__main__":\n'
+        "    print(solve())\n",
+        encoding="utf-8",
+    )
+    (workspace / "test_solution.py").write_text(
+        "def test_dry_run_solution():\n"
+        "    assert 42 == 42\n",
+        encoding="utf-8",
+    )
     (workspace / COMPLETION_ARTIFACT).write_text("dry-run complete\n", encoding="utf-8")
     (workspace.parent / "spine.json").write_text(
         json.dumps({"status": "done"}) + "\n", encoding="utf-8"
@@ -526,11 +601,17 @@ def _probe_completion(run_dir: Path, since: float) -> tuple[bool, bool]:
 
 
 def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
-              corpus_id: str, launch) -> RunResult:
+              corpus_id: str, launch, permission_mode: str | None = None) -> RunResult:
     """Execute (and score) ONE attempt into `run-<index>/`. Fabricates the run-dir
     shape, copies the corpus into an isolated `workspace/.claude/skills` and
     asserts its id, launches via the injected seam, probes completion, then runs
-    the process (gating) and answer (advisory, recorded-not-gating) checks."""
+    the process (gating) and answer (advisory, recorded-not-gating) checks.
+
+    Also computes the two signals the permission-block fence (issue #115 tc3)
+    consumes: a content fingerprint of the seeded workspace taken BEFORE the launch
+    vs. AFTER (byte-unchanged?), and whether a permission-denial marker appears in
+    the transcript or stderr. Both true ⇒ the environment blocked the agent, fenced
+    rather than tallied."""
     run_dir = temp_root / f"run-{index}"
     workspace = run_dir / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -542,14 +623,20 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
     shutil.copytree(skills_dir, run_skills)
 
     started = time.time()
+    workspace_unchanged = False
+    permission_denied = False
     if not assert_corpus(run_skills, corpus_id):
         outcome = LaunchOutcome(exit_code=None, corpus_mismatch=True)
         present = fresh = False
         process_results: list = []
         answer_results: list = []
     else:
+        # Fingerprint the seeded workspace (corpus + fixture) BEFORE the launch, so a
+        # run that writes nothing can be recognised as byte-unchanged afterwards.
+        pre_fingerprint = compute_corpus_id(workspace)
         prompt = wrap_prompt(scenario.task_prompt)
-        argv = build_eval_argv(DEFAULT_LAUNCHER, prompt=prompt, model=scenario.model)
+        argv = build_eval_argv(DEFAULT_LAUNCHER, prompt=prompt, model=scenario.model,
+                               permission_mode=permission_mode)
         outcome = launch(
             argv,
             cwd=str(workspace),
@@ -558,12 +645,18 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
             stderr_path=str(run_dir / "stderr.txt"),
             timeout=scenario.timeout_seconds,
         )
+        workspace_unchanged = compute_corpus_id(workspace) == pre_fingerprint
+        transcript_text = _read_text_tail(run_dir / "transcript.txt")
+        permission_denied = (is_permission_denial(outcome.stderr_text)
+                             or is_permission_denial(transcript_text))
         present, fresh = _probe_completion(run_dir, started)
         process_results = [run_check(c, run_dir) for c in scenario.process_checks]
         answer_results = [run_check(c, run_dir, is_answer=True) for c in scenario.answer_checks]
 
     rr = classify_run(outcome, completion_present=present, completion_fresh=fresh,
-                      process_results=process_results)
+                      process_results=process_results,
+                      workspace_unchanged=workspace_unchanged,
+                      permission_denied=permission_denied)
     # Answer checks are executed and RECORDED on the per-run record but never gate.
     rr.check_results = list(rr.check_results) + answer_results
 
@@ -584,11 +677,14 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
 
 
 def run_scenario(scenario: Scenario, *, temp_root, worktree=None, launch=None,
-                 installer=None, max_attempts: int | None = None) -> Verdict:
+                 installer=None, max_attempts: int | None = None,
+                 permission_mode: str | None = DEFAULT_PERMISSION_MODE) -> Verdict:
     """Install the corpus once, then run the completion-seeking M-run loop and
     return the Verdict. The `launch`/`installer` seams default to the module-level
     `launch_agent`/`temp_install` resolved at CALL time (run_crew's pattern), so a
-    monkeypatched or CLI-selected seam takes effect.
+    monkeypatched or CLI-selected seam takes effect. `permission_mode` is passed to
+    the launcher so a live headless agent can write files (issue #115 tc2); it
+    defaults to the pinned, operator-visible DEFAULT_PERMISSION_MODE.
 
     Loop is completion-seeking: launch until `completed == m` or
     `attempts == max_attempts` (default m+2). Fenced attempts (inconclusive/
@@ -612,7 +708,8 @@ def run_scenario(scenario: Scenario, *, temp_root, worktree=None, launch=None,
     completed = 0
     attempt = 0
     while completed < m and attempt < max_attempts:
-        rr = _run_once(scenario, attempt, temp_root, skills_dir, corpus_id, launch)
+        rr = _run_once(scenario, attempt, temp_root, skills_dir, corpus_id, launch,
+                       permission_mode=permission_mode)
         run_results.append(rr)
         if rr.status in ("completed-pass", "completed-fail"):
             completed += 1
@@ -632,9 +729,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--worktree", default=None, help="source worktree to install the corpus from (g3)")
     p.add_argument("--n", type=int, default=None, help="passes required (default from scenario / 2)")
     p.add_argument("--m", type=int, default=None, help="completion target (default from scenario / 3)")
-    p.add_argument("--model", default=None, help="override the scenario model")
+    p.add_argument("--model", default=None,
+                   help=f"override the scenario model (pinned default: {DEFAULT_MODEL})")
     p.add_argument("--timeout", type=int, default=None, help="per-run timeout seconds")
     p.add_argument("--command", default=DEFAULT_LAUNCHER, help="agent launcher binary")
+    p.add_argument("--permission-mode", default=DEFAULT_PERMISSION_MODE,
+                   help=f"headless agent permission mode passed to `claude -p` "
+                        f"(default: {DEFAULT_PERMISSION_MODE}; a live run needs one "
+                        f"or the agent is denied all file writes)")
     p.add_argument("--dry-run", action="store_true",
                    help="run the whole pipeline with a fake PASSING launcher (no agent)")
     p.add_argument("--dry-run-fail", action="store_true",
@@ -705,13 +807,15 @@ def main(argv: list[str] | None = None) -> int:
         temp_root = Path(tempfile.mkdtemp(prefix="constellation-eval-"))
         try:
             v = run_scenario(scenario, temp_root=temp_root, worktree=args.worktree,
-                             launch=launch, installer=installer)
+                             launch=launch, installer=installer,
+                             permission_mode=args.permission_mode)
         finally:
             print(f"kept temp dir: {temp_root}", file=sys.stderr)
     else:
         with tempfile.TemporaryDirectory(prefix="constellation-eval-") as td:
             v = run_scenario(scenario, temp_root=Path(td), worktree=args.worktree,
-                             launch=launch, installer=installer)
+                             launch=launch, installer=installer,
+                             permission_mode=args.permission_mode)
 
     _print_verdict(v, as_json=args.json)
     return v.exit_code
