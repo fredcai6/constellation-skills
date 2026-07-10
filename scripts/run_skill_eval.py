@@ -594,14 +594,80 @@ def _write_transcript(stdout_path, stderr_path, note: str) -> None:
         Path(stderr_path).write_text("", encoding="utf-8")
 
 
+def _dry_run_engine_spine() -> dict:
+    """A minimal ENGINE-SHAPED terminal spine for the dry-run smoke: the gated
+    `tasks` form with every task complete, a plausible `engine_session` lease
+    (monotonic claim -> heartbeat -> release), and one engine-produced
+    `command-output` evidence item backing its command postcondition. Since #127
+    hardened `spine_completed` to demand engine provenance (a bare
+    `{"status": "done"}` no longer passes), the runner's own falsification-floor
+    smoke must synthesize the same engine fingerprints a real driven spine leaves —
+    otherwise the dry-run would fail the very check it exists to exercise."""
+    from datetime import datetime, timedelta, timezone
+
+    t0 = datetime.now(timezone.utc)
+    iso = lambda dt: dt.isoformat()
+    return {
+        "work_id": "dry-run",
+        "type": "gated",
+        "items": ["init"],
+        "tasks": {
+            "init": {
+                "id": "init",
+                "title": "dry-run",
+                "imperative": "dry-run synthesized gate",
+                "preconditions": [],
+                "postconditions": [{
+                    "id": "c1",
+                    "statement": "dry-run engine command check",
+                    "check": {"kind": "command", "command": "true"},
+                    "satisfied": True,
+                    "satisfied_by": "e-init-1",
+                }],
+                "constraints": [],
+                "directives": None,
+                "child_checklist": None,
+                "status": "complete",
+                "status_detail": {},
+                "result": None,
+                "finding": None,
+                "evidence": [{
+                    "id": "e-init-1",
+                    "type": "command-output",
+                    "payload": {"cmd": "true", "exit": 0, "shell": "posix"},
+                    "produced_by": "engine",
+                    "ts": "",
+                }],
+                "rework_count": 0,
+            }
+        },
+        "consolidation": None,
+        "triage_candidates": [],
+        "blockers": [],
+        "engine_session": {
+            "session_id": "dry-run-smoke",
+            "status": "released",
+            "claimed_at": iso(t0),
+            "last_heartbeat": iso(t0 + timedelta(seconds=1)),
+            "claimed_by": "commander",
+            "worktree": ".",
+            "previous_session_id": None,
+            "takeover_reason": None,
+            "released_at": iso(t0 + timedelta(seconds=2)),
+        },
+    }
+
+
 def dry_run_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> LaunchOutcome:
     """Fake launcher that synthesizes a REAL passing workspace — a non-empty
-    `solution.py`, a green `test_solution.py`, the completion artifact, and a
-    terminal `spine.json` — so the gating process checks (`artifact_present`,
-    `tests_green`, `spine_completed`) each bite STRICTLY on a real deliverable, with
-    no sentinel stand-in (issue #115 tc1). Spawns NOTHING — the CI smoke for the
-    runner itself and caller #2's live target. The test is self-contained (imports
-    nothing from the workspace) so it stays green under any pytest import mode."""
+    `solution.py`, a green `test_solution.py`, the completion artifact, and an
+    engine-shaped terminal `spine.json` — so the gating process checks
+    (`artifact_present`, `tests_green`, `spine_completed`) each bite STRICTLY on a
+    real deliverable, with no sentinel stand-in (issue #115 tc1) and with the engine
+    provenance `spine_completed` now demands (issue #127). Spawns NOTHING — the CI
+    smoke for the runner itself and caller #2's live target. The test is
+    self-contained (imports nothing from the workspace) so it stays green under any
+    pytest import mode."""
     workspace = Path(cwd)
     workspace.mkdir(parents=True, exist_ok=True)
     (workspace / "solution.py").write_text(
@@ -620,7 +686,7 @@ def dry_run_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> Laun
     )
     (workspace / COMPLETION_ARTIFACT).write_text("dry-run complete\n", encoding="utf-8")
     (workspace.parent / "spine.json").write_text(
-        json.dumps({"status": "done"}) + "\n", encoding="utf-8"
+        json.dumps(_dry_run_engine_spine(), indent=2) + "\n", encoding="utf-8"
     )
     _write_transcript(stdout_path, stderr_path, "dry-run: synthesized passing workspace")
     return LaunchOutcome(exit_code=0)
