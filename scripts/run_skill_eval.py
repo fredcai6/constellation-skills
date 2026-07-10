@@ -696,7 +696,8 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
         shutil.copytree(scenario.fixture_dir, workspace, dirs_exist_ok=True)
 
     run_skills = workspace / ".claude" / "skills"
-    shutil.copytree(skills_dir, run_skills)
+    shutil.copytree(skills_dir, run_skills,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
 
 
     started = time.time()
