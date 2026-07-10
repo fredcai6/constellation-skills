@@ -97,6 +97,7 @@ _GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md")
 _GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md")
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": _GLOBAL_ORCHESTRATOR,
+    "commander-delegated": _GLOBAL_ORCHESTRATOR,
     "lessons-auditor": _GLOBAL_EVERYONE,
     "charter": _GLOBAL_ALL_TIERS,  # the baseline Charter elicits project deltas from
     "commander": _GLOBAL_ORCHESTRATOR,

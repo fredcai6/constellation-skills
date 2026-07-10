@@ -1,6 +1,6 @@
 ---
 name: constellation-admiral
-description: Run an epic as the human's delegate — confirm latitude, dispatch Commanders in waves, adjudicate and merge, close with lessons and architecture audits. Use when handed work spanning multiple issues.
+description: Run an epic as the human's delegate — confirm latitude, dispatch Commanders in waves, adjudicate and merge, close with lessons and architecture audits. Use when handed work spanning multiple issues; for ONE issue under a launch order use constellation-commander-delegated, not this skill.
 ---
 
 # Constellation Admiral
