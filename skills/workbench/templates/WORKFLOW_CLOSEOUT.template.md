@@ -23,8 +23,8 @@
 
 ## Lesson dispositions
 
-Template/interface and doctrine fixes are now lessons carrying a `target`, settled at the
-Commander `feedback` step by the forced apply-or-defer gate (`verify_lessons_applied.py`) — not
+Template/interface and doctrine fixes are lessons carrying a `target`, settled at the
+Commander `feedback` step by the forced apply-or-defer gate (`verify_lessons_applied.py`), not
 a separate advisory table. Confirm here only that the gate passed: every ripe lesson was
 applied, exported, or deferred with a reason.
 
