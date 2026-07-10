@@ -294,6 +294,8 @@ The delta file is JSON `{"ops": [...]}` with a non-empty `ops` list. Every op to
 
 Every **mutating** verb above (`start`/`advance`/`record`/`consolidate`/`skip`/`block`/`reopen`/`append`/`amend`/`attest`/`waive`/`attach`/`flag-candidate`) accepts an optional `--session-id`; it is required, and checked against the active lease, **only once a lease has been claimed** (see *Engine session*).
 
+`advance <id> --from-child <path>` reads the child checklist's `consolidation`, attaches it as the gate's `review-result`, then advances. A **non-absolute** `<path>` resolves against the **parent checklist's directory** (the dirname of `--file`), not the current working directory — so a path written relative to cwd double-joins to a nonexistent file. Pass an absolute path, or one relative to the parent checklist's directory. `--from-child` only closes the gate when the child is a `survey` carrying a `consolidation`; a `gated` child (e.g. an `execute.json`) has none, so its parent postcondition is closed by a direct `attest` citing the child's per-gate evidence instead.
+
 ## Example: two linked checklists
 
 Mid-run. A `gated` Commander execute.json; gate `g1` delegated its review to a `survey`, which found a problem and sent `g1` back. See `examples/` for the full JSON.

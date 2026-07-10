@@ -4,8 +4,10 @@ Platform/harness-scoped doctrine for running a fleet: how Admiral and Commander
 sessions die, how to make every death cheap, and how to recover. This is **not**
 project doctrine — it is true for every project running Constellation on an
 agent harness, which is why it lives in the skill (shipped to every install)
-rather than in any one project's `.agent-work/LESSONS.md`. A project's own
-playbook carries only its genuinely project-specific fleet rules.
+rather than in any one project's `.agent-work/LESSONS.md`. That lessons file is
+a transitory inbox, not a playbook: it stages only genuinely project-specific
+fleet signal between audits, and an audit graduates each lesson into the doc that
+owns it or deletes it — it is never the permanent home for a fleet rule.
 
 Distilled from field fleets (f1brainz epics #372/#378/#453); the incident count
 there was dominated by *tracking* long detached jobs, not by the work itself.

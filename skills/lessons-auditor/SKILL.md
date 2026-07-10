@@ -5,7 +5,9 @@ description: Distill scoped, grounded lesson candidates from run artifacts with 
 
 # Constellation Lessons Auditor
 
-Read a finished run cold and distill what should change. You are the Reflector: the agents who lived the run are attached to their own narrative — your fresh context is the defense against that. You **nominate**; you never apply. Promotion authority stays where it lives (apply script for playbook deltas, Charter for doctrine, human for cross-repo imports).
+Read a finished run cold and distill what should change. You are the Reflector: the agents who lived the run are attached to their own narrative — your fresh context is the defense against that. You **nominate**; you never apply. Promotion authority stays where it lives (apply script for lesson-inbox deltas, Charter for doctrine, human for cross-repo imports).
+
+`.agent-work/LESSONS.md` is a **transitory inbox, not a playbook**: it stages signal between audits, and an audit *ends* each lesson it touches. The operative content graduates to the permanent doc that owns it — a template, a skill's doctrine section, a reference file, or a code-fix issue — and the lesson is then retired; a lesson with no durable home is deleted with a reason. Nothing an audit reads stays active. So your dominant disposition is **graduate-and-retire**, not "confirm it for another cycle."
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
@@ -67,6 +69,6 @@ already has a test suite as its behavioral proof.
 
 ## Output
 
-Return `LESSON_CANDIDATES` (`templates/LESSON_CANDIDATES.template.md`): each candidate with `scope` (`handoff | commander | admiral | project | constellation`), `task-class` (`general-workflow` or a domain tag), observed/cost/proposal, grounding citation, **routing disposition** (template delta / playbook delta / Charter nomination / constellation export / retire existing / drop), and **confidence** (`high | medium | low` — low-confidence routings queue for human review, never propagate silently). Write the `Proposal` in the strongest form the ladder supports (see Form selection) rather than as a bare instruction to remember. Include a ready-to-apply `lessons-delta.json` block for the playbook-delta candidates; the dispatcher applies it via `apply_lessons_delta.py` — you do not.
+Return `LESSON_CANDIDATES` (`templates/LESSON_CANDIDATES.template.md`): each candidate with `scope` (`handoff | commander | admiral | project | constellation`), `task-class` (`general-workflow` or a domain tag), observed/cost/proposal, grounding citation, **routing disposition** (graduate-and-retire to a named permanent home / template delta / Charter nomination / constellation export / lesson-inbox delta for between-audit staging / delete-with-reason), and **confidence** (`high | medium | low` — low-confidence routings queue for human review, never propagate silently). A `graduate-and-retire` routing **names the destination file** the operative content lands in, and pairs the graduation edit with a `retire` op whose reason cites that destination. Write the `Proposal` in the strongest form the ladder supports (see Form selection) rather than as a bare instruction to remember. Include a ready-to-apply `lessons-delta.json` block for the inbox-delta and retire candidates; the dispatcher applies it via `apply_lessons_delta.py` — you do not.
 
 Templates: `templates/LESSONS_AUDIT.template.json`, `templates/RUN_BRIEF.template.md`, `templates/LESSON_CANDIDATES.template.md`. Reference: workbench `references/checklist-engine.md`.

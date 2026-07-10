@@ -37,10 +37,10 @@ Origin: 2026-07-09 epic-101 hygiene pass (#105).
 
 Origin: 2026-07-10 epic-101 closeout (human direction, superseding the earlier "aggressive clearing" phrasing). Characterizing LESSONS.md as a "playbook" was the mistake: it implies long-term residence, so lessons hang around as a quasi-permanent doc. Lessons are transitory by nature — an audited lesson should be ENDED: anything useful is categorized and moved into the permanent doc that owns it (a template, a skill's doctrine section, a reference, or a code-fix issue); everything else is deleted with a reason. The cap and dormancy clock become largely moot once residence is short by design.
 
-- Reframe LESSONS.md's header + the lessons-auditor and admiral closeout doctrine from "playbook" to "inbox/staging": audit = graduate-or-delete, never leave-active.
-- First graduation pass over the current 20 active lessons is immediate work (issue filed at closeout).
+- Reframe LESSONS.md's header + the lessons-auditor and admiral closeout doctrine from "playbook" to "inbox/staging": audit = graduate-or-delete, never leave-active. **Done (#119):** lessons-auditor SKILL.md, admiral SKILL.md + ADMIRAL_SPINE closeout imperative, and fleet-doctrine.md now carry the inbox / graduate-and-retire framing; the live LESSONS.md header is reframed by the Admiral at delta-apply time.
+- First graduation pass over the current 20 active lessons is immediate work (issue filed at closeout). **Done (#119):** all 20 graduated to their permanent homes (commander-core, the handoff/reviewer/launch-order/admiral-spine templates, checklist-engine.md, CHECKLIST_SCHEMA.md) or cited to a code-fix issue (#118); the ready-to-apply retire delta is staged for the Admiral to apply post-merge.
 - Standing feedback-log grooming (AGENT_FEEDBACK / CONSTELLATION_FEEDBACK) moves to the curator's periodic run — the learning logs are corpus too.
-- Ties into the queued dormancy-mechanism note (tick-burst culling); that machinery may shrink or disappear under this model.
+- Ties into the queued dormancy-mechanism note (tick-burst culling); that machinery may shrink or disappear under this model. **Assessment (#119):** under short-by-design residence the active cap (20) is rarely approached and the tick-based dormancy auto-delete mostly never fires — audits retire lessons well before the dormancy horizon, and the tick clock already caused one false-cull (the re-added `verify-launch-order-baseline-vs-code`). Keep the `retire` op (it *is* the deletion path) and the grounding/counter enforcement; the tick-based auto-delete is now vestigial and can be removed in a follow-up rather than here.
 
 ## Plain-language register — rein in the project sub-dialect
 
