@@ -378,18 +378,86 @@ def assert_corpus(run_skills_dir, expected_id: str) -> bool:
 # --------------------------------------------------------------------------- #
 # the ONE real seam (inert until g3) + fake launchers for --dry-run
 # --------------------------------------------------------------------------- #
+# Bytes of stderr tail kept for infra-marker sniffing — enough to catch a
+# usage/rate-limit banner without slurping a giant transcript into memory.
+_STDERR_TAIL_BYTES = 8192
+
+
+def _read_stderr_tail(stderr_path) -> str:
+    """Best-effort tail of a run's stderr file, for `is_infra_marker` sniffing.
+    Never raises: a missing/unreadable file yields an empty string (which fences
+    nothing), so a read hiccup cannot mis-fence a run."""
+    try:
+        path = Path(stderr_path)
+        if not path.is_file():
+            return ""
+        data = path.read_bytes()
+    except OSError:
+        return ""
+    return data[-_STDERR_TAIL_BYTES:].decode("utf-8", errors="replace")
+
+
 def launch_agent(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> LaunchOutcome:
-    """The ONLY place a real agent subprocess would be spawned. Inert stub at g2 —
-    the live wiring lands at g3. Being inert, no unit path can ever reach a real
-    `claude` through the default seam."""
-    raise NotImplementedError("launch_agent is wired at g3 (#106)")
+    """The ONE real seam — spawn `claude -p ...` (argv built by build_eval_argv)
+    with `cwd=<run>/workspace`, capturing stdout/stderr to the given paths and
+    honoring `timeout`. Implemented on `subprocess.run` (mirroring
+    run_crew.launch_process) so the tests' autouse agent-free guard — which wraps
+    `subprocess.run` — still intercepts every launch.
+
+    Populates LaunchOutcome fully so the pure classify_run infra-fence fires:
+      - normal return -> exit_code + stderr tail (for usage/rate-limit sniffing);
+      - subprocess.TimeoutExpired -> timed_out=True (fenced inconclusive);
+      - spawn failure (FileNotFoundError / OSError, e.g. no `claude` on PATH)
+        -> launch_error=True (fenced errored).
+    Corpus-mismatch is asserted upstream in _run_once, never here."""
+    stdout_path = Path(stdout_path)
+    stderr_path = Path(stderr_path)
+    stdout_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with stdout_path.open("wb") as out, stderr_path.open("wb") as err:
+            proc = subprocess.run(
+                argv,
+                cwd=str(cwd),
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=out,
+                stderr=err,
+                timeout=timeout,
+            )
+    except subprocess.TimeoutExpired:
+        # The child is killed; whatever it wrote to the stderr file is still there.
+        return LaunchOutcome(exit_code=None, timed_out=True,
+                             stderr_text=_read_stderr_tail(stderr_path))
+    except (FileNotFoundError, OSError) as exc:
+        # Launcher not found / could not spawn — a launch failure, not a corpus
+        # verdict. Fenced as errored.
+        return LaunchOutcome(exit_code=None, launch_error=True, stderr_text=str(exc))
+    return LaunchOutcome(exit_code=proc.returncode,
+                         stderr_text=_read_stderr_tail(stderr_path))
 
 
 def temp_install(worktree, temp_root) -> Path:
-    """Install the candidate corpus once under a system-temp dir and return its
-    skills path. Inert stub at g2 — the live wiring (reusing
-    install_constellation.install_skills) lands at g3."""
-    raise NotImplementedError("temp_install is wired at g3 (#106)")
+    """Install the candidate corpus ONCE into `<temp_root>/skills` and return that
+    dir. Reuses install_constellation.discover_skills + install_skills (token
+    rewrite + bundle copy), never reinventing install. `worktree` selects the
+    source skill root: `<worktree>/skills` when given, else this worktree's
+    `skills/` (install_constellation.SOURCE_ROOT). Full-set, non-dry, non-force
+    into a fresh temp target; never edits install_constellation or the source
+    skills."""
+    source_root = (Path(worktree) / "skills") if worktree is not None else _install.SOURCE_ROOT
+    skills = _install.discover_skills(source_root=source_root)
+    target_root = Path(temp_root) / "skills"
+    _install.install_skills(
+        skills,
+        target_root,
+        dry_run=False,
+        force=False,
+        full_set=True,
+        restart_message="",
+        out=lambda _msg: None,
+    )
+    return target_root
 
 
 def _write_transcript(stdout_path, stderr_path, note: str) -> None:
@@ -434,7 +502,8 @@ def _dry_installer(worktree, temp_root) -> Path:
     """Fake installer for --dry-run/--dry-run-fail: materializes a minimal, valid
     skill tree under temp_root so corpus provenance (id + marker + assert) runs
     end-to-end with zero agent cost. This is dry-run scaffolding, NOT temp_install
-    (which stays an inert stub until g3)."""
+    (the real installer) — it deliberately avoids installing the full corpus so a
+    dry run stays instant and agent-free."""
     skills = Path(temp_root) / "skills"
     stub = skills / "constellation-dry-run"
     stub.mkdir(parents=True, exist_ok=True)

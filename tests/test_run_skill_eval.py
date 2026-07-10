@@ -357,18 +357,153 @@ def test_answer_only_failure_still_passes(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# the inert live seams — proof they launch nothing until g3
+# g3 live layer — launch_agent + temp_install, still agent-free
 # --------------------------------------------------------------------------- #
-def test_launch_agent_is_inert_stub():
-    with pytest.raises(NotImplementedError) as e:
-        rse.launch_agent(["claude"], cwd=".", env={}, stdout_path="o", stderr_path="e", timeout=1)
-    assert "g3" in str(e.value)
+# A throwaway source skill tree so the REAL temp_install (discover_skills +
+# install_skills) runs end-to-end without depending on (or mutating) the real
+# skills/ corpus. constellation-foo is not in any script/reference bundle, so
+# install copies exactly this dir — fast and hermetic.
+FOO_SKILL_MD = (
+    "---\n"
+    "name: constellation-foo\n"
+    "description: throwaway eval-runner fixture skill\n"
+    "---\n"
+    "# foo\n"
+    "A minimal skill body for the g3 e2e tests.\n"
+)
 
 
-def test_temp_install_is_inert_stub(tmp_path):
-    with pytest.raises(NotImplementedError) as e:
-        rse.temp_install(None, tmp_path)
-    assert "g3" in str(e.value)
+def throwaway_worktree(tmp_path: Path) -> Path:
+    """A worktree whose `skills/` holds one valid throwaway skill — the source
+    the REAL temp_install installs from."""
+    wt = tmp_path / "wt"
+    skill = wt / "skills" / "constellation-foo"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text(FOO_SKILL_MD, encoding="utf-8")
+    return wt
+
+
+def fake_pass_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+    """Agent-free fake: writes the completion artifact a finished run leaves, so
+    the process check bites and the run classifies completed-pass. Spawns nothing."""
+    ws = Path(cwd)
+    ws.mkdir(parents=True, exist_ok=True)
+    (ws / rse.COMPLETION_ARTIFACT).write_text("fake agent: complete\n", encoding="utf-8")
+    Path(stdout_path).write_text("fake agent transcript\n", encoding="utf-8")
+    Path(stderr_path).write_text("", encoding="utf-8")
+    return rse.LaunchOutcome(exit_code=0)
+
+
+def fake_fail_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+    """Agent-free fake: exits 0 (so the run COMPLETED) but leaves a broken
+    workspace with no completion artifact, so the process check fails -> completed
+    -fail (tallied, never fenced). Spawns nothing."""
+    ws = Path(cwd)
+    ws.mkdir(parents=True, exist_ok=True)
+    (ws / "BROKEN.txt").write_text("fake agent: no completion\n", encoding="utf-8")
+    Path(stdout_path).write_text("fake agent transcript (broken)\n", encoding="utf-8")
+    Path(stderr_path).write_text("", encoding="utf-8")
+    return rse.LaunchOutcome(exit_code=0)
+
+
+def test_temp_install_real_installs_corpus(tmp_path):
+    # REAL temp_install (install_constellation.install_skills) into system-style temp.
+    wt = throwaway_worktree(tmp_path)
+    skills_dir = rse.temp_install(str(wt), tmp_path / "temp")
+    assert skills_dir == tmp_path / "temp" / "skills"
+    assert (skills_dir / "constellation-foo" / "SKILL.md").is_file()
+    # the source tree is never mutated by the install.
+    assert (wt / "skills" / "constellation-foo" / "SKILL.md").is_file()
+
+
+def test_end_to_end_pass_with_real_temp_install_and_fake_launch(tmp_path):
+    # WHOLE pipeline: real temp-install -> corpus id+marker+per-run assert ->
+    # launch seam (fake) -> transcript -> checks -> classify -> N-of-M -> PASS.
+    wt = throwaway_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,), answer=(ANSWER_CHECK,))
+    s = rse.load_scenario(scen)
+    v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt), launch=fake_pass_launch)
+    assert (v.status, v.exit_code) == ("PASS", 0)
+    assert v.completed_count == 3 and v.passed_count >= 2 and v.fenced_count == 0
+    assert v.corpus_id and v.corpus_id.startswith("sha256:")
+    # every run asserted its copy against the installed corpus id (no mismatch).
+    assert all(rr.status == "completed-pass" for rr in v.per_run)
+    # answer check ran and is recorded but never moved the verdict.
+    answer_records = [c for rr in v.per_run for c in rr.check_results if c.is_answer]
+    assert answer_records and all(not c.passed for c in answer_records)
+
+
+def test_end_to_end_fail_with_real_temp_install_and_fake_launch(tmp_path):
+    # Same real pipeline, broken transcript -> completed-fail -> FAIL (never fenced).
+    wt = throwaway_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    s = rse.load_scenario(scen)
+    v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt), launch=fake_fail_launch)
+    assert (v.status, v.exit_code) == ("FAIL", 1)
+    assert all(rr.status == "completed-fail" for rr in v.per_run)
+    assert v.fenced_count == 0
+
+
+# --------------------------------------------------------------------------- #
+# launch_agent's real mapping feeds the infra-fence (agent-free: python/no binary)
+# --------------------------------------------------------------------------- #
+def test_launch_agent_timeout_maps_to_fenced_inconclusive(tmp_path):
+    # A real subprocess (python, not claude) that outlives the timeout -> timed_out
+    # -> classify_run fences it as inconclusive. Proves the mapping feeds the fence.
+    argv = [sys.executable, "-c", "import time; time.sleep(30)"]
+    out = rse.launch_agent(
+        argv, cwd=str(tmp_path), env=dict(os.environ),
+        stdout_path=str(tmp_path / "o.txt"), stderr_path=str(tmp_path / "e.txt"),
+        timeout=0.5,
+    )
+    assert out.timed_out is True and out.exit_code is None
+    rr = rse.classify_run(out, completion_present=False, completion_fresh=False, process_results=[])
+    assert rr.status == "inconclusive"
+
+
+def test_launch_agent_spawn_failure_maps_to_fenced_errored(tmp_path):
+    # A binary that does not exist -> FileNotFoundError -> launch_error -> classify
+    # fences as errored. Not a claude binary, so the guard permits the real spawn
+    # attempt; it fails to spawn, which is exactly the mapping under test.
+    argv = ["this-binary-does-not-exist-xyz-106", "-p", "hi"]
+    out = rse.launch_agent(
+        argv, cwd=str(tmp_path), env=dict(os.environ),
+        stdout_path=str(tmp_path / "o.txt"), stderr_path=str(tmp_path / "e.txt"),
+        timeout=10,
+    )
+    assert out.launch_error is True and out.exit_code is None
+    rr = rse.classify_run(out, completion_present=False, completion_fresh=False, process_results=[])
+    assert rr.status == "errored"
+
+
+def test_all_fenced_run_scenario_is_inconclusive_not_fail(tmp_path):
+    # timeouts across the whole loop -> INCONCLUSIVE, never FAIL a corpus that never ran.
+    wt = throwaway_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    s = rse.load_scenario(scen)
+
+    def fake_timeout_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+        return rse.LaunchOutcome(exit_code=None, timed_out=True)
+
+    v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt), launch=fake_timeout_launch)
+    assert (v.status, v.exit_code) == ("INCONCLUSIVE", 2)
+    assert v.completed_count == 0 and v.fenced_count >= 1
+
+
+# --------------------------------------------------------------------------- #
+# the agent-free guard STILL BITES on the live launch_agent (mechanical guarantee)
+# --------------------------------------------------------------------------- #
+def test_agent_free_guard_still_bites_on_launch_agent(tmp_path):
+    # launch_agent is implemented on subprocess.run, which the autouse guard wraps;
+    # a real `claude` argv is blocked before any process is spawned. The guard's
+    # AssertionError is neither TimeoutExpired nor OSError, so it propagates out.
+    argv = rse.build_eval_argv("claude", prompt="do it", model="sonnet")
+    with pytest.raises(AssertionError, match="blocked real agent subprocess"):
+        rse.launch_agent(
+            argv, cwd=str(tmp_path), env=dict(os.environ),
+            stdout_path=str(tmp_path / "o.txt"), stderr_path=str(tmp_path / "e.txt"),
+            timeout=10,
+        )
 
 
 # --------------------------------------------------------------------------- #
