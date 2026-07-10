@@ -23,7 +23,6 @@ CLI-selected) seam takes effect.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import importlib.util
 import json
 import os
@@ -85,7 +84,7 @@ DEFAULT_PERMISSION_MODE = "acceptEdits"
 # and the dry-run launcher fabricate the same shape the live run will (run-dir
 # contract): workspace/<COMPLETION_ARTIFACT> + a spine.json terminal.
 COMPLETION_ARTIFACT = "eval-complete.txt"
-CORPUS_MARKER = "CORPUS.json"
+CORPUS_MARKER = _install.CORPUS_MARKER
 
 # Infra markers sniffed in a run's stderr — any hit FENCES the run (inconclusive),
 # so environment flake can only ever yield INCONCLUSIVE, never FAIL a good corpus.
@@ -389,46 +388,14 @@ def verdict(run_results: list, *, n: int, m: int,
 
 
 # --------------------------------------------------------------------------- #
-# corpus provenance — sha256 id, marker, assert (PURE over a tree)
+# corpus provenance — sha256 id, marker, assert (owned by install_constellation)
 # --------------------------------------------------------------------------- #
-def compute_corpus_id(skills_dir) -> str:
-    """Content id of an installed skill tree: `"sha256:" + sha256(sorted
-    (rel_posix_path, _hash_file(p)) over files)`. PURE. Reuses
-    install_constellation._hash_file. The corpus marker (CORPUS.json) is excluded
-    so writing the marker cannot perturb the id it records."""
-    skills_dir = Path(skills_dir)
-    pairs: list[tuple[str, str]] = []
-    for path in sorted(skills_dir.rglob("*")):
-        if not path.is_file():
-            continue
-        if path.name == CORPUS_MARKER:
-            continue
-        rel = path.relative_to(skills_dir).as_posix()
-        pairs.append((rel, _hash_file(path)))
-    digest = hashlib.sha256()
-    for rel, file_hash in sorted(pairs):
-        digest.update(rel.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(file_hash.encode("utf-8"))
-        digest.update(b"\n")
-    return "sha256:" + digest.hexdigest()
-
-
-def write_corpus_marker(skills_dir, source_commit: str) -> str:
-    """Compute the corpus id and write `<skills_dir>/CORPUS.json`. Returns the id.
-    A silent install bug cannot green a corpus that was never loaded: each run
-    re-hashes its copy and asserts equality against this id (assert_corpus)."""
-    skills_dir = Path(skills_dir)
-    corpus_id = compute_corpus_id(skills_dir)
-    marker = {"corpus_id": corpus_id, "source_commit": source_commit}
-    (skills_dir / CORPUS_MARKER).write_text(json.dumps(marker, indent=2) + "\n", encoding="utf-8")
-    return corpus_id
-
-
-def assert_corpus(run_skills_dir, expected_id: str) -> bool:
-    """Whether a run's copied skill tree hashes to `expected_id`. A mismatch
-    fences the run (corpus_mismatch), never silently counts."""
-    return compute_corpus_id(run_skills_dir) == expected_id
+# These primitives now live in install_constellation (the installer stamps the
+# same CORPUS.json into every real install, #122). The eval harness reuses them
+# unchanged so an eval fingerprints a corpus exactly as a live install does.
+compute_corpus_id = _install.compute_corpus_id
+write_corpus_marker = _install.write_corpus_marker
+assert_corpus = _install.assert_corpus
 
 
 # --------------------------------------------------------------------------- #

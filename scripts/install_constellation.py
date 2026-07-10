@@ -380,6 +380,16 @@ def install_skills(
             shutil.copy2(SHARED_REFERENCE_ROOT / reference, reference_target)
 
     if not dry_run:
+        # Stamp the installed root with a CORPUS.json provenance marker, scoped to
+        # the skills this run wrote so foreign siblings in a shared root never enter
+        # the id. This makes every install (user + project scope) a verifiable build
+        # artifact that check_corpus_freshness.py can later date against upstream.
+        corpus_id = write_corpus_marker(
+            target_root,
+            _source_commit(),
+            names=[skill.install_name for skill in skills],
+        )
+        out(f"- {CORPUS_MARKER}: {corpus_id}")
         out(restart_message)
 
 
@@ -399,6 +409,88 @@ def _source_commit() -> str:
     except (OSError, subprocess.TimeoutExpired):
         return "unknown"
     return result.stdout.strip() if result.returncode == 0 else "unknown"
+
+
+# --------------------------------------------------------------------------- #
+# corpus provenance — sha256 id + source_commit + date (the install lockfile)
+# --------------------------------------------------------------------------- #
+# One CORPUS.json per installed skills root stamps *which* corpus a project (or
+# user) is carrying: a content hash for integrity, the constellation commit it was
+# built from for staleness checks (check_corpus_freshness.py), and the build date.
+# The eval harness imports these same primitives so an eval run and a real install
+# fingerprint a corpus identically. Provenance travels with the copy; a project
+# install is a verifiable build artifact, not an unattributable fork.
+CORPUS_MARKER = "CORPUS.json"
+
+
+def compute_corpus_id(skills_dir, names: Iterable[str] | None = None) -> str:
+    """Content id of an installed skill tree: ``"sha256:" + sha256`` over the
+    sorted ``(rel_posix_path, _hash_file(p))`` pairs of every file. PURE.
+
+    ``names`` restricts the hash to those top-level subdirectories (the skills a
+    given install actually wrote), so foreign siblings already present in a shared
+    skills root — a user's own skills under ``~/.claude/skills`` — never perturb
+    the constellation corpus id. ``None`` hashes the whole tree, which is what the
+    eval harness wants for its clean temp_install. The marker file itself is always
+    excluded so writing it cannot change the id it records.
+    """
+    skills_dir = Path(skills_dir)
+    roots = (
+        [skills_dir / n for n in names]
+        if names is not None
+        else [skills_dir]
+    )
+    pairs: list[tuple[str, str]] = []
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            if path.name == CORPUS_MARKER:
+                continue
+            rel = path.relative_to(skills_dir).as_posix()
+            pairs.append((rel, _hash_file(path)))
+    digest = hashlib.sha256()
+    for rel, file_hash in sorted(pairs):
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(file_hash.encode("utf-8"))
+        digest.update(b"\n")
+    return "sha256:" + digest.hexdigest()
+
+
+def write_corpus_marker(
+    skills_dir,
+    source_commit: str,
+    *,
+    names: Iterable[str] | None = None,
+    build_date: str | None = None,
+) -> str:
+    """Compute the corpus id and write ``<skills_dir>/CORPUS.json``. Returns the id.
+
+    The marker carries ``corpus_id`` (content hash), ``source_commit`` (the
+    constellation commit this corpus was built from) and ``date`` (UTC build date).
+    ``build_date`` is injectable for deterministic tests; it defaults to today.
+    ``names`` is forwarded to :func:`compute_corpus_id`.
+    """
+    skills_dir = Path(skills_dir)
+    corpus_id = compute_corpus_id(skills_dir, names)
+    marker = {
+        "corpus_id": corpus_id,
+        "source_commit": source_commit,
+        "date": build_date if build_date is not None else date.today().isoformat(),
+    }
+    (skills_dir / CORPUS_MARKER).write_text(
+        json.dumps(marker, indent=2) + "\n", encoding="utf-8"
+    )
+    return corpus_id
+
+
+def assert_corpus(run_skills_dir, expected_id: str) -> bool:
+    """Whether a copied skill tree hashes to ``expected_id`` (whole-tree). A
+    mismatch fences an eval run (corpus_mismatch), never silently counts."""
+    return compute_corpus_id(run_skills_dir) == expected_id
 
 
 def write_template_baselines(
