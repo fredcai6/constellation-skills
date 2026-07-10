@@ -29,6 +29,7 @@ SKILL_NAMES = [
     "constellation-triage",
     "constellation-explorer",
     "constellation-prototyper",
+    "constellation-curator",
 ]
 
 
