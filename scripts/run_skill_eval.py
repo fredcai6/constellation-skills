@@ -84,7 +84,7 @@ DEFAULT_PERMISSION_MODE = "acceptEdits"
 # The completion stub a finished run leaves in its workspace. A canned test run
 # and the dry-run launcher fabricate the same shape the live run will (run-dir
 # contract): workspace/<COMPLETION_ARTIFACT> + a spine.json terminal.
-COMPLETION_ARTIFACT = "eval-complete.txt"
+COMPLETION_ARTIFACT = "work-complete.txt"
 CORPUS_MARKER = _install.CORPUS_MARKER
 
 # Infra markers sniffed in a run's stderr — any hit FENCES the run (inconclusive),

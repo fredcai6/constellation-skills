@@ -110,7 +110,7 @@ FAILs on the process checks.
 Each drives a **delegated commander** solving "Project Euler #N with tests" as a
 bounded issue: run the engine spine to a terminal state, dispatch implementer/reviewer
 crew, write a solution file and a passing `pytest` test, and write the completion
-sentinel `eval-complete.txt` as the final step. Every scenario carries three biting
+sentinel `work-complete.txt` as the final step. Every scenario carries three biting
 process checks: `spine_completed` (parses a spine JSON and asserts a terminal status),
 `artifact_present` (a non-empty solution deliverable exists), and `tests_green` (a
 test file was written and `pytest` passes) — plus the advisory `answer_matches`.

@@ -17,9 +17,10 @@ Solve **Project Euler Problem #2**, with tests, as a bounded issue:
    this bounded issue: `init → context → understand → plan → execute → reconcile →
    triage → review → feedback → archive`. Instantiate `spine.json` from the
    commander spine template and drive it to a **terminal / complete** state
-   **through the checklist engine** — the grader parses the spine's per-step
-   engine state, so a spine that was copied but never driven reads as not done.
-   The engine ships with the installed skills; every mutating call goes through it:
+   **through the checklist engine** — this is mandatory, not advisory: every
+   step is claimed, started, evidenced, and advanced via engine calls, and a step
+   the engine never advanced didn't happen. The engine ships with the installed
+   skills; every mutating call goes through it:
 
    ```
    python .claude/skills/constellation-workbench/scripts/checklist_engine.py      --file .agent-work/<work-id>/spine.json <verb> <step> [--session-id <id>]
@@ -33,9 +34,9 @@ Solve **Project Euler Problem #2**, with tests, as a bounded issue:
    in delegated mode — you may write `solution.py` / `test_solution.py` directly.
    Dispatching an **implementer** crew to write the solution and a **reviewer** crew
    to verify it (per the commander's crew-dispatch discipline, never hand-launched)
-   is an **optional, harder** path and is **not graded**. What is mandatory is
-   driving the spine to a **terminal, verdict-carrying** state — the crew dispatch is
-   aspirational, the terminal spine is not.
+   is **optional in this dispatch** — inline implementation is sanctioned by this
+   launch order. Driving the spine to a **terminal / complete** state through the
+   engine is not optional.
 3. Produce, in the **workspace root** (not under `.claude/`):
    - `solution.py` — computes and **prints** the answer.
    - `test_solution.py` — a `pytest` test asserting the computed answer equals the
@@ -47,13 +48,6 @@ Solve **Project Euler Problem #2**, with tests, as a bounded issue:
 ## Completion
 
 As the **final step**, after the spine is terminal and the tests are green, write
-the completion sentinel `eval-complete.txt` in the workspace root (any content).
+the completion sentinel `work-complete.txt` in the workspace root (any content).
 The run is complete only when that file exists.
 
-## How this run is graded (process checks carry the verdict)
-
-- `spine_completed` — the engine spine reached a terminal/complete state.
-- `artifact_present` — a non-empty solution deliverable exists.
-- `tests_green` — a test file was written and `pytest` passes.
-- `answer_matches` (advisory only) — records whether the computed answer is 4613732;
-  it can never move the verdict.

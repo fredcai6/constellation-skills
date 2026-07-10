@@ -71,7 +71,7 @@ def _no_real_agent(monkeypatch):
 PASS_CHECK = (
     "import sys, pathlib\n"
     "run_dir = pathlib.Path(sys.argv[1])\n"
-    "art = run_dir / 'workspace' / 'eval-complete.txt'\n"
+    "art = run_dir / 'workspace' / 'work-complete.txt'\n"
     "if art.is_file():\n"
     "    print('artifact present')\n"
     "    sys.exit(0)\n"
@@ -111,7 +111,7 @@ def canned_run_dir(tmp_path: Path, *, artifact: bool) -> Path:
     ws = run_dir / "workspace"
     ws.mkdir(parents=True)
     if artifact:
-        (ws / "eval-complete.txt").write_text("done\n", encoding="utf-8")
+        (ws / "work-complete.txt").write_text("done\n", encoding="utf-8")
     return run_dir
 
 
@@ -732,7 +732,7 @@ def _canned_workspace_run_dir(tmp_path: Path, files: dict) -> Path:
 def test_sentinel_only_workspace_now_fails_strict_checks(tmp_path):
     # The old sentinel-hole: a workspace with ONLY the completion sentinel (no real
     # solution, no test). Post-removal, the REAL shipped checks FAIL it.
-    run_dir = _canned_workspace_run_dir(tmp_path, {"eval-complete.txt": "done\n"})
+    run_dir = _canned_workspace_run_dir(tmp_path, {"work-complete.txt": "done\n"})
     ap = rse.run_check(REAL_CHECKS_DIR / "artifact_present.py", run_dir)
     tg = rse.run_check(REAL_CHECKS_DIR / "tests_green.py", run_dir)
     assert ap.passed is False, ap.evidence
