@@ -17,6 +17,7 @@ SKILL_NAMES = [
     "constellation-admiral",
     "constellation-charter",
     "constellation-commander",
+    "constellation-commander-delegated",
     "constellation-workbench",
     "constellation-interrogator",
     "constellation-cartographer",
@@ -768,6 +769,61 @@ class InstallConstellationTests(unittest.TestCase):
         # fine and is NOT asserted here).
         admiral = (source_root / "admiral" / "SKILL.md").read_text(encoding="utf-8")
         self.assertNotIn("breaks recurrence counting", admiral)
+
+    def test_commander_delegated_installs_with_orchestrator_bucket(self):
+        # issue-107 g2: the delegated entry is a real installable skill (dir +
+        # SKILL.md) and carries the orchestrator reference bucket (global-everyone,
+        # global-orchestrator, design-it-twice-brief) plus windows.md — the same
+        # _GLOBAL_ORCHESTRATOR audience as constellation-commander.
+        # Falsification: drop the "commander-delegated" line from
+        # SKILL_REFERENCE_BUNDLES -> the bucket asserts red; delete the source
+        # SKILL.md -> the install/discover asserts red.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "commander-delegated"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+            skill_root = target_root / "constellation-commander-delegated"
+            self.assertTrue(skill_root.is_dir())
+            self.assertTrue((skill_root / "SKILL.md").is_file())
+            refs = skill_root / "references"
+            for ref in ("global-everyone.md", "global-orchestrator.md",
+                        "design-it-twice-brief.md", "windows.md"):
+                with self.subTest(ref=ref):
+                    self.assertTrue((refs / ref).is_file(), refs / ref)
+
+    def test_commander_delegated_points_at_installed_commander_core(self):
+        # issue-107 g2: the delegated skill borrows commander's core doctrine by a
+        # PROSE POINTER (not a skill-dir token). Two-part contract, existence +
+        # path-literal only (NOT behavioral resolution):
+        #  (a) the delegated SKILL.md carries the literal relative path string
+        #      "references/commander-core.md"; and
+        #  (b) a full install of both skills yields an existing
+        #      constellation-commander/references/commander-core.md file for it to
+        #      point at.
+        # Falsification: change the pointer string in the delegated SKILL.md ->
+        # (a) reds; remove commander's commander-core.md -> (b) reds.
+        delegated_src = (ROOT / "skills" / "commander-delegated"
+                         / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("references/commander-core.md", delegated_src)
+
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "commander-delegated", "commander"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+            self.assertTrue(
+                (target_root / "constellation-commander" / "references"
+                 / "commander-core.md").is_file()
+            )
 
 
 class TemplateBaselineTests(unittest.TestCase):

@@ -10,6 +10,11 @@ Path: `skills/commander/SKILL.md`
 
 Runs one bounded issue end to end as the human's rigor scaffold. Owns and drives three checklists (spine, interrogation, execute plan) and dispatches implementer and reviewer subagents per gate.
 
+## Constellation Commander (delegated)
+Path: `skills/commander-delegated/SKILL.md`
+
+Runs one bounded issue end to end under a frozen Admiral LAUNCH_ORDER, autonomously — the delegated entry over the same commander core doctrine and templates as `constellation-commander`.
+
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`
 
