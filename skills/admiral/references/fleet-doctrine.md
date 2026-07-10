@@ -35,7 +35,7 @@ note FIRST: **step · slug · next command · process PID · expected output
 artifact**. When honored, every recovery was a clean resume from the note; the
 one time it was skipped, ~3h vanished to forensics.
 
-This is now **mechanical, not advisory**: the spine `execute` step carries a
+This is **mechanical, not advisory**: the spine `execute` step carries a
 `command` precondition (`scripts/verify_state_note.py <work-id>`) that refuses to
 enter the detach-heavy phase until `.agent-work/<work-id>/STATE_NOTE.md` is filled
 (step, slug, next command, pid, expected artifact — `pid: none — foreground` is a
@@ -115,14 +115,8 @@ its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. Just
 as you confirm a Commander dead before touching its worktree, you harvest that
 trio into the shared durable `.agent-work/` at the main checkout **before**
 `git worktree remove` — removal is not permitted until it is collected, because a
-swept worktree's learning is unrecoverable. Live grounding: this epic
-(`20260706-dogfood-audit`) kept its learning only because the Admiral
-hand-harvested every worktree — 12+ manual reconciliations across the run — and
-issue-54 had to improvise a snapshot-then-delta dance (copy the canonical
-`LESSONS.md` into its worktree before applying a delta, so the apply would not run
-against a vacuous empty playbook) for exactly the reason g1's git-common-dir
-resolution now removes: it points the durable trio at one shared root, so the
-harvest is **mostly automatic** and the improvisation is unnecessary. The manual
+swept worktree's learning is unrecoverable. Git-common-dir resolution points the
+durable trio at one shared root, so the harvest is **mostly automatic**; the manual
 harvest above remains the fallback for consuming projects on older scripts, or any
 hand reconciliation.
 
@@ -162,14 +156,12 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
 
 ## Engine/platform quirks
 
-- The Commander spine has no dedicated `compact` step (removed — it was permanent
-  skip-with-reason ceremony, since `/compact` is user-level and most harnesses
-  don't expose it to agents). Context headroom and the **mandatory** commander
-  skill reload now open `execute`'s imperative directly: compaction is best-effort
-  (run it if the harness exposes it, else rely on auto-compaction), the reload is
-  not. Spines instantiated before this change keep their own `compact` step in
-  their instantiated JSON and still run it to completion; only new instantiations
-  from the template drop it.
+- The Commander spine has no dedicated `compact` step: `/compact` is user-level and
+  most harnesses don't expose it to agents, so context headroom and the
+  **mandatory** commander skill reload open `execute`'s imperative directly —
+  compaction is best-effort (run it if the harness exposes it, else rely on
+  auto-compaction), the reload is not. A spine instantiated with its own `compact`
+  step still runs it to completion.
 - The engine owns utf-8 stdio internally, but still set `PYTHONIOENCODING=utf-8`
   in the child env of any *other* subprocess whose output you capture — cp1252
   pipes corrupt captured output silently.
