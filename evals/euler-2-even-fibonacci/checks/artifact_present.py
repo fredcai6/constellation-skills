@@ -1,18 +1,15 @@
 #!/usr/bin/env python
 """PROCESS check (gating): the workflow produced a non-empty solution deliverable.
 
-This check BITES. It walks the agent's ``workspace/`` -- EXCLUDING the corpus copy
-under ``.claude/`` and the engine's ``.agent-work/`` -- for a non-empty Python
-solution file, and, as the run's minimal deliverable-of-record, the completion
-sentinel ``eval-complete.txt`` the workflow writes ONLY as its final step. It FAILs
-(non-zero) if neither exists non-empty. The runner's ``--dry-run-fail`` broken
-workspace has neither (only a ``BROKEN.txt`` marker), so this check FAILs it.
-
-Contract note (scripts/run_skill_eval.py): ``--dry-run`` synthesizes the sentinel as
-the "stub artifact" but no solution file, so the sentinel is the accepted stand-in at
-the agent-free FLOOR; a live run's real ``solution.py`` is validated by the primary
-branch below. The residual "sentinel written without a real solution" hole is exactly
-what the g5 live broken-variant CEILING covers -- not this floor.
+This check BITES STRICTLY. It walks the agent's ``workspace/`` -- EXCLUDING the
+corpus copy under ``.claude/`` and the engine's ``.agent-work/`` -- for a non-empty
+Python solution file, and FAILs (non-zero) if none exists. There is NO completion-
+sentinel fallback (issue #115 tc1): the sentinel is written as the workflow's LAST
+step and could be present with no real solution behind it, so accepting it as a
+stand-in was the "sentinel written without a real solution" hole. A run must now
+produce a real ``solution.py`` to pass, not merely stamp the sentinel. The runner's
+``--dry-run`` synthesizes a real ``solution.py`` (so this bites on it); ``--dry-run
+-fail`` (only a ``BROKEN.txt`` marker) FAILs.
 
 Usage: ``python artifact_present.py <run-dir>``  ->  exit 0 pass / non-zero fail.
 """
@@ -22,7 +19,6 @@ import sys
 from pathlib import Path
 
 EXCLUDED_PARTS = {".claude", ".git", ".agent-work"}
-SENTINEL = "eval-complete.txt"
 
 
 def _is_test_file(rel: Path) -> bool:
@@ -55,14 +51,7 @@ def main(run_dir_arg: str) -> int:
     if sol is not None:
         print(f"PASS artifact_present: non-empty solution file {sol.relative_to(workspace)}")
         return 0
-    sentinel = workspace / SENTINEL
-    if sentinel.is_file() and sentinel.stat().st_size > 0:
-        print(
-            f"PASS artifact_present: completion sentinel {SENTINEL} present "
-            f"(final-step deliverable-of-record / dry-run stub)"
-        )
-        return 0
-    print("FAIL artifact_present: no non-empty solution .py and no completion sentinel in workspace")
+    print("FAIL artifact_present: no non-empty solution .py in workspace")
     return 1
 
 

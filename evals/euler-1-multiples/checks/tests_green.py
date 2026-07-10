@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 """PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-This check BITES. It finds test files in the agent's ``workspace/`` -- EXCLUDING the
-corpus copy under ``.claude/`` -- and, when any exist, RUNS pytest against exactly
-those files (never the corpus) and requires green. When no test file exists it falls
-back to the completion sentinel ``eval-complete.txt`` (the workflow writes it only
-after its tests are green), so the agent-free ``--dry-run`` (sentinel present, no
-tests) PASSes while ``--dry-run-fail`` (no sentinel, no tests) FAILs.
+This check BITES STRICTLY. It finds test files in the agent's ``workspace/`` --
+EXCLUDING the corpus copy under ``.claude/`` -- and requires that at least one exist
+and that pytest run GREEN over exactly those files (never the corpus). There is NO
+completion-sentinel fallback (issue #115 tc1): a run must actually write a passing
+test to pass, not merely stamp the sentinel. So the agent-free ``--dry-run`` (which
+now synthesizes a real green ``test_solution.py``) PASSes, while ``--dry-run-fail``
+(no test, no solution) FAILs.
 
 pytest is invoked with the discovered test paths ONLY, so a live run cannot
 accidentally collect the bundled corpus tests under ``.claude/``.
@@ -20,7 +21,6 @@ import sys
 from pathlib import Path
 
 EXCLUDED_PARTS = {".claude", ".git", ".agent-work"}
-SENTINEL = "eval-complete.txt"
 
 
 def find_tests(workspace: Path) -> list[Path]:
@@ -58,21 +58,14 @@ def main(run_dir_arg: str) -> int:
         print("FAIL tests_green: no workspace/ under <run-dir>")
         return 1
     tests = find_tests(workspace)
-    if tests:
-        rc = run_pytest(workspace, tests)
-        if rc == 0:
-            print(f"PASS tests_green: pytest green over {len(tests)} test file(s)")
-            return 0
-        print(f"FAIL tests_green: pytest exit {rc} over {len(tests)} test file(s)")
+    if not tests:
+        print("FAIL tests_green: no test file written in workspace")
         return 1
-    sentinel = workspace / SENTINEL
-    if sentinel.is_file() and sentinel.stat().st_size > 0:
-        print(
-            f"PASS tests_green: no test file collected; completion sentinel "
-            f"{SENTINEL} present (tests-green-then-sentinel convention / dry-run floor)"
-        )
+    rc = run_pytest(workspace, tests)
+    if rc == 0:
+        print(f"PASS tests_green: pytest green over {len(tests)} test file(s)")
         return 0
-    print("FAIL tests_green: no test file written and no completion sentinel")
+    print(f"FAIL tests_green: pytest exit {rc} over {len(tests)} test file(s)")
     return 1
 
 

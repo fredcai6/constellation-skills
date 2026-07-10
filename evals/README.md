@@ -18,9 +18,35 @@ Evals are a curator instrument, not a merge gate. Nothing in CI blocks on them.
 python scripts/run_skill_eval.py evals/<name>
 ```
 
-Useful flags: `--n N` / `--m M` (override N-of-M), `--model MODEL`, `--timeout SEC`,
-`--keep-temp` (preserve + print the temp run tree), `--json`, and the two agent-free
-modes below.
+Useful flags: `--n N` / `--m M` (override N-of-M), `--model MODEL`, `--permission-mode
+MODE`, `--timeout SEC`, `--keep-temp` (preserve + print the temp run tree), `--json`,
+and the two agent-free modes below.
+
+### Live-run prerequisite: permission mode (do not skip)
+
+A headless `claude -p` agent has **no interactive approver**, so unless it is launched
+with an explicit permission mode every tool action needing approval is **denied** and
+the agent can write *nothing* — `solution.py`, the test, the spine, the sentinel all
+fail to appear regardless of corpus quality. (This was the epic-101 honest-null: the
+harness was proven to the permission wall but could not pass a live pilot.)
+
+The runner therefore passes `--permission-mode` through to the launcher, defaulting to
+**`acceptEdits`** — the least-powerful documented mode that clears the file-write wall:
+it auto-accepts file edits/writes **in the agent's own isolated temp workspace**
+without also auto-approving arbitrary shell. Override with `--permission-mode MODE`
+only if a scenario's workflow provably needs a broader mode (e.g. `bypassPermissions`
+when the workflow must run non-edit tools headlessly); the default stays minimal and is
+operator-visible on every run, never a silent bypass.
+
+### Model tier: pinned LOW and explicit
+
+`--model` defaults to a **pinned low tier (`claude-sonnet-4-5`)** and is *never*
+inherited from the session. This is deliberate: a lower tier struggles sooner, which is
+the point — it surfaces corpus regressions a frontier model would muscle through. An
+eval verdict should come from the **cheapest model that can plausibly drive the
+workflow**; `claude-haiku-4-5-20251001` is the preferred, even-cheaper choice wherever
+it can complete the workflow. `--model` stays overridable, but the default is pinned,
+not silently inherited.
 
 **Exit codes:**
 
@@ -39,13 +65,16 @@ is its pass-rate?" No confidence interval, no tail-reliability claim.
 
 ### Agent-free validation modes
 
-- `--dry-run` runs the whole pipeline with a fake **passing** launcher (synthesizes a
-  completion sentinel + terminal spine). Zero agent cost; the CI smoke for the runner
-  and the scenarios. Every scenario here exits `0` under `--dry-run`.
-- `--dry-run-fail` runs it with a fake **broken** launcher (no sentinel, in-progress
-  spine) — the **agent-free falsification floor**. Every scenario here exits `1`
-  under `--dry-run-fail`, which is the proof its process checks genuinely bite: a
-  present-but-non-biting check would silently PASS the broken workspace.
+- `--dry-run` runs the whole pipeline with a fake **passing** launcher that
+  synthesizes a **real** deliverable set — a non-empty `solution.py`, a green
+  `test_solution.py`, the completion artifact, and a terminal spine — so the gating
+  checks (`artifact_present`, `tests_green`, `spine_completed`) each bite **strictly**
+  on a real artifact, with no sentinel stand-in. Zero agent cost; the CI smoke for the
+  runner and the scenarios. Every scenario here exits `0` under `--dry-run`.
+- `--dry-run-fail` runs it with a fake **broken** launcher (no solution, no test,
+  in-progress spine) — the **agent-free falsification floor**. Every scenario here
+  exits `1` under `--dry-run-fail`, which is the proof its process checks genuinely
+  bite: a present-but-non-biting check would silently PASS the broken workspace.
 
 ## Scenario schema (directory-is-schema, per contract §(a))
 
@@ -88,11 +117,7 @@ test file was written and `pytest` passes) — plus the advisory `answer_matches
 
 ## Stated limitations
 
-1. **The broken-variant falsification is a FLOOR, not a ceiling.** `--dry-run-fail`
-   catches gross breakage; a subtly-regressed corpus that still completes the spine
-   can still pass. Subtle-regression sensitivity is curator portfolio-growth work.
-   (The g5 live broken-variant run is the ceiling that `--dry-run-fail` cannot reach.)
-2. **Project Euler exercises workflow machinery** (spines, handoffs, evidence
+1. **Project Euler exercises workflow machinery** (spines, handoffs, evidence
    discipline), **NOT architecture judgment.** The portfolio MUST diversify beyond
    Euler to test what the corpus is actually for.
 
@@ -101,7 +126,7 @@ test file was written and `pytest` passes) — plus the advisory `answer_matches
 The **delegated-commander selection scenario** — cluster F's first non-Euler pilot —
 is the named next portfolio addition. It exercises whether a delegated commander
 correctly *selects* and sequences work (a judgment surface Euler does not touch),
-directly answering stated limitation 2. It is named here, not built.
+directly answering stated limitation 1. It is named here, not built.
 
 ## Transcripts
 

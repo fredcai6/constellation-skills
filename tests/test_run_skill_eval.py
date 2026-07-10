@@ -132,6 +132,40 @@ def test_build_eval_argv_without_model():
     assert rse.build_eval_argv("claude", prompt="do it", model=None) == ["claude", "-p", "do it"]
 
 
+def test_build_eval_argv_with_permission_mode():
+    # issue #115 tc2: the permission mode is plumbed onto the headless command line.
+    assert rse.build_eval_argv(
+        "claude", prompt="do it", model="sonnet", permission_mode="acceptEdits"
+    ) == ["claude", "-p", "do it", "--model", "sonnet", "--permission-mode", "acceptEdits"]
+
+
+def test_build_eval_argv_omits_permission_mode_when_none():
+    assert rse.build_eval_argv("claude", prompt="p", model=None, permission_mode=None) == [
+        "claude", "-p", "p",
+    ]
+
+
+def test_default_model_is_pinned_low_and_explicit():
+    # issue #115 item 4: the default model is PINNED and explicit, never inherited
+    # from the session — a low tier surfaces regressions a frontier model muscles through.
+    assert rse.DEFAULT_MODEL == "claude-sonnet-4-5"
+
+
+def test_default_permission_mode_is_least_powerful_write_mode():
+    # issue #115 tc2: acceptEdits is the pinned, operator-visible default.
+    assert rse.DEFAULT_PERMISSION_MODE == "acceptEdits"
+
+
+def test_cli_permission_mode_defaults_to_pinned(tmp_path):
+    args = rse.build_parser().parse_args([str(tmp_path)])
+    assert args.permission_mode == rse.DEFAULT_PERMISSION_MODE
+
+
+def test_cli_permission_mode_overridable(tmp_path):
+    args = rse.build_parser().parse_args(["--permission-mode", "bypassPermissions", str(tmp_path)])
+    assert args.permission_mode == "bypassPermissions"
+
+
 # --------------------------------------------------------------------------- #
 # load_scenario — directory-is-schema, structural T3
 # --------------------------------------------------------------------------- #
@@ -234,6 +268,28 @@ def test_is_infra_marker_false(text):
 
 
 # --------------------------------------------------------------------------- #
+# is_permission_denial — pure sniff (issue #115 tc3)
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Claude requested permissions to write",  # verbatim g5-live marker
+        "this action requires manual approval",
+        "requires approval before running",
+        "Permission denied",
+        "operation not permitted",
+    ],
+)
+def test_is_permission_denial_true(text):
+    assert rse.is_permission_denial(text) is True
+
+
+@pytest.mark.parametrize("text", ["", None, "wrote solution.py", "all tests passed"])
+def test_is_permission_denial_false(text):
+    assert rse.is_permission_denial(text) is False
+
+
+# --------------------------------------------------------------------------- #
 # classify_run — the infra-fence + pass/fail table (pure)
 # --------------------------------------------------------------------------- #
 def test_classify_completed_pass():
@@ -283,6 +339,41 @@ def test_classify_nonzero_exit_no_marker_no_completion_is_errored():
     out = rse.LaunchOutcome(exit_code=7, stderr_text="segfault")
     rr = rse.classify_run(out, completion_present=False, completion_fresh=False, process_results=[])
     assert rr.status == "errored"
+
+
+def test_classify_permission_blocked_is_errored_fenced():
+    # issue #115 tc3: exit 0 but the workspace is byte-unchanged AND a permission-
+    # denial marker fired -> the ENVIRONMENT blocked a good corpus, so FENCED (errored),
+    # never tallied as a corpus FAIL.
+    out = rse.LaunchOutcome(exit_code=0, stderr_text="Claude requested permissions to write")
+    rr = rse.classify_run(
+        out, completion_present=False, completion_fresh=False, process_results=[cr(False)],
+        workspace_unchanged=True, permission_denied=True,
+    )
+    assert rr.status == "errored"
+    assert rr.reason == "permission-blocked"
+
+
+def test_classify_exit_zero_unchanged_without_denial_marker_stays_completed_fail():
+    # The permission fence needs BOTH signals: with no denial marker the g2-ratified
+    # exit-0-no-terminal rule still holds — completed-fail, NOT fenced.
+    out = rse.LaunchOutcome(exit_code=0)
+    rr = rse.classify_run(
+        out, completion_present=False, completion_fresh=False, process_results=[cr(False)],
+        workspace_unchanged=True, permission_denied=False,
+    )
+    assert rr.status == "completed-fail"
+
+
+def test_classify_denial_marker_but_workspace_changed_stays_completed_fail():
+    # The agent DID mutate the workspace (it did work) but its output mentions a
+    # permission — a stray marker must not fence a run that produced output: tallied.
+    out = rse.LaunchOutcome(exit_code=0)
+    rr = rse.classify_run(
+        out, completion_present=False, completion_fresh=False, process_results=[cr(False)],
+        workspace_unchanged=False, permission_denied=True,
+    )
+    assert rr.status == "completed-fail"
 
 
 # --------------------------------------------------------------------------- #
@@ -488,6 +579,99 @@ def test_all_fenced_run_scenario_is_inconclusive_not_fail(tmp_path):
     v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt), launch=fake_timeout_launch)
     assert (v.status, v.exit_code) == ("INCONCLUSIVE", 2)
     assert v.completed_count == 0 and v.fenced_count >= 1
+
+
+def test_permission_blocked_run_scenario_is_inconclusive_not_fail(tmp_path):
+    # issue #115 tc3, end-to-end: a launcher that writes NOTHING into the workspace
+    # and emits a permission-denial marker leaves the workspace byte-unchanged -> the
+    # permission-block fence fires -> INCONCLUSIVE, never a FAIL of a good corpus.
+    wt = throwaway_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    s = rse.load_scenario(scen)
+
+    def fake_permission_denied_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+        # Write ONLY the transcript (outside the workspace); touch nothing under cwd,
+        # so the seeded workspace is byte-unchanged. Exit 0 (the false-red shape).
+        Path(stdout_path).write_text("Claude requested permissions to write\n", encoding="utf-8")
+        Path(stderr_path).write_text("", encoding="utf-8")
+        return rse.LaunchOutcome(exit_code=0)
+
+    v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt),
+                         launch=fake_permission_denied_launch)
+    assert (v.status, v.exit_code) == ("INCONCLUSIVE", 2)
+    assert v.completed_count == 0 and v.fenced_count >= 1
+    assert all(rr.status == "errored" and rr.reason == "permission-blocked" for rr in v.per_run)
+
+
+# --------------------------------------------------------------------------- #
+# strict process checks post-sentinel-removal (issue #115 tc1) — against the REAL
+# shipped scenario checks, so the sentinel-hole is proven closed on what ships.
+# --------------------------------------------------------------------------- #
+REAL_CHECKS_DIR = ROOT / "evals" / "euler-1-multiples" / "checks"
+
+
+def _canned_workspace_run_dir(tmp_path: Path, files: dict) -> Path:
+    run_dir = tmp_path / "run-0"
+    ws = run_dir / "workspace"
+    ws.mkdir(parents=True)
+    for name, body in files.items():
+        (ws / name).write_text(body, encoding="utf-8")
+    return run_dir
+
+
+def test_sentinel_only_workspace_now_fails_strict_checks(tmp_path):
+    # The old sentinel-hole: a workspace with ONLY the completion sentinel (no real
+    # solution, no test). Post-removal, the REAL shipped checks FAIL it.
+    run_dir = _canned_workspace_run_dir(tmp_path, {"eval-complete.txt": "done\n"})
+    ap = rse.run_check(REAL_CHECKS_DIR / "artifact_present.py", run_dir)
+    tg = rse.run_check(REAL_CHECKS_DIR / "tests_green.py", run_dir)
+    assert ap.passed is False, ap.evidence
+    assert tg.passed is False, tg.evidence
+
+
+def test_real_solution_and_green_test_pass_strict_checks(tmp_path):
+    # The positive: a real solution.py + a green test_solution.py PASS the shipped checks.
+    run_dir = _canned_workspace_run_dir(tmp_path, {
+        "solution.py": "def solve():\n    return 42\n",
+        "test_solution.py": "def test_ok():\n    assert 42 == 42\n",
+    })
+    ap = rse.run_check(REAL_CHECKS_DIR / "artifact_present.py", run_dir)
+    tg = rse.run_check(REAL_CHECKS_DIR / "tests_green.py", run_dir)
+    assert ap.passed is True, ap.evidence
+    assert tg.passed is True, tg.evidence
+
+
+def test_dry_run_passes_real_scenario_checks_strictly(tmp_path):
+    # The runner's --dry-run now synthesizes real deliverables, so it PASSes the REAL
+    # euler-1 scenario (strict checks, no sentinel fallback) end-to-end.
+    scenario_dir = ROOT / "evals" / "euler-1-multiples"
+    assert rse.main(["--dry-run", str(scenario_dir)]) == 0
+
+
+def test_dry_run_fail_fails_real_scenario_checks_strictly(tmp_path):
+    scenario_dir = ROOT / "evals" / "euler-1-multiples"
+    assert rse.main(["--dry-run-fail", str(scenario_dir)]) == 1
+
+
+def test_permission_mode_reaches_launcher_argv(tmp_path):
+    # issue #115 tc2, full plumbing: run_scenario -> _run_once -> build_eval_argv puts
+    # the requested --permission-mode on the argv the launcher actually receives.
+    wt = throwaway_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    s = rse.load_scenario(scen)
+    seen: list[list[str]] = []
+
+    def recording_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+        seen.append(list(argv))
+        return fake_pass_launch(argv, cwd=cwd, env=env, stdout_path=stdout_path,
+                                stderr_path=stderr_path, timeout=timeout)
+
+    rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt),
+                     launch=recording_launch, permission_mode="acceptEdits")
+    assert seen, "launcher was never invoked"
+    for argv in seen:
+        assert "--permission-mode" in argv
+        assert argv[argv.index("--permission-mode") + 1] == "acceptEdits"
 
 
 # --------------------------------------------------------------------------- #
