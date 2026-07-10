@@ -15,6 +15,7 @@ Triage       -> classifies and writes issue-ready recommendations; no checklist
 Prototyper   -> answers one named question with throwaway code (logic/UI/measurement); handoff-driven, no checklist
 Lessons-auditor -> distills scoped, grounded lesson candidates from run artifacts with fresh context (Admiral closeout / Commander feedback subagent)
 Docent       -> generates a stamped static HTML explainer site from Cartographer map truth; read-only map consumer
+Curator      -> periodically measures the skills corpus (curate_corpus.py), mends mechanical drift in place, routes design decisions to Triage; human-invoked, no checklist
 ```
 
 The checklist engine (`scripts/checklist_engine.py`, schema `docs/CHECKLIST_SCHEMA.md`, model `docs/CHECKLIST_ENGINE_DESIGN.md`) is the substrate every role drives: a `gated` (execution) or `survey` (verification/inquiry) plan worked one step at a time, with the human as the top tier surfacing decisions at Commander checkpoints.
@@ -45,8 +46,9 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Commander | `IMPLEMENTER_HANDOFF` | Implementer | bounded task, authority, scope, exclusions, test mode, evidence requirements, stop conditions |
 | Commander | `REVIEWER_HANDOFF` | Reviewer | task statement, diff access, close criteria, constraints, implementer evidence |
 | Implementer / Reviewer | `IMPLEMENTER_RESULT` / `REVIEW_RESULT` | Commander | evidence, blockers, scope drift, assumptions, out-of-scope observations |
-| Commander, Cartographer, Scout, Implementer, Reviewer | Triage candidate | Triage | future work package, not current-scope expansion |
+| Commander, Cartographer, Scout, Implementer, Reviewer, Curator | Triage candidate | Triage | future work package, not current-scope expansion |
 | Triage | issue-ready recommendation | user / issue tracker | bounded future work with evidence and acceptance criteria |
+| Curator | `CURATOR_REPORT` + `--json` record | human, Triage | periodic corpus-health pass: mechanical measurement (`curate_corpus.py`, flags-never-gates), in-place mechanical mends reviewed by git diff; design decisions routed to Triage, never silently applied |
 | Explorer | `.agent-work/explore-<topic>/DESIGN_SPEC.md` (confirmed) or shaped-design issue | to-issues / Commander, human | hard gate: `verify_spec_confirmed.py` must pass before work is cut; an `UNCONFIRMED — DO NOT CUT` shaped-design issue is never cut |
 | Explorer | `EXCURSION_BRIEF` | Prototyper, research agents, design-it-twice panels | one named question per excursion; prototype section fields identical to `PROTOTYPE_HANDOFF` |
 | Anyone (human, Commander, Explorer) | `PROTOTYPE_HANDOFF` | Prototyper | one named question, branch, host conventions, location, stop conditions |
