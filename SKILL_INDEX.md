@@ -59,3 +59,8 @@ Runs an epic as the human's delegate: confirms a latitude contract, dispatches C
 Path: `skills/lessons-auditor/SKILL.md`
 
 Fresh-context Reflector dispatched at closeout: distills scoped, grounded lesson candidates from run artifacts and routes them as nominations, never applying them itself.
+
+## Constellation Curator
+Path: `skills/curator/SKILL.md`
+
+Runs a mechanical measurement pass over the skill corpus (`curate_corpus.py`) and turns the findings into scoped, grounded consolidation candidates — a solo, human-invoked role that dispatches no crew and drives no engine checklist.

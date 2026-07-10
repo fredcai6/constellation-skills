@@ -826,6 +826,66 @@ class InstallConstellationTests(unittest.TestCase):
                  / "commander-core.md").is_file()
             )
 
+    def test_curator_script_bundle_lands_in_installed_skill(self):
+        # issue-104 G4: curate_corpus.py (G1) rides SKILL_SCRIPT_BUNDLES["curator"]
+        # into the installed skill's scripts/, same mechanism as explorer above.
+        # Falsification: delete the SKILL_SCRIPT_BUNDLES["curator"] line -> this
+        # asserts red (the file never lands).
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "curator"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+            self.assertTrue(
+                (target_root / "constellation-curator" / "scripts"
+                 / "curate_corpus.py").is_file()
+            )
+
+    def test_curator_carries_global_everyone_bucket(self):
+        # issue-104 G4: curator is a solo, non-orchestrating, human-invoked role
+        # (same audience as interrogator/lessons-auditor) so it carries
+        # _GLOBAL_EVERYONE only: global-everyone.md + windows.md, no
+        # global-orchestrator.md or global-crew.md.
+        # Falsification: delete the SKILL_REFERENCE_BUNDLES["curator"] line ->
+        # this reds (neither file lands, references/ has no global-*.md at all).
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "curator"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+            refs = target_root / "constellation-curator" / "references"
+            for ref in ("global-everyone.md", "windows.md"):
+                with self.subTest(ref=ref):
+                    self.assertTrue((refs / ref).is_file(), refs / ref)
+            self.assertEqual({"global-everyone.md"}, {p.name for p in refs.glob("global-*.md")})
+
+    def test_curator_installs_and_discovers_as_a_skill(self):
+        # issue-104 G4: curator is a real installable/discoverable skill (dir +
+        # SKILL.md), not just present in SKILL_NAMES for other tests.
+        # Falsification: rename/remove skills/curator/SKILL.md (or drop curator
+        # from discover_skills' source tree) -> install exit_code != 0 / the
+        # SKILL.md assertion reds.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", "curator"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+            self.assertTrue(
+                (target_root / "constellation-curator" / "SKILL.md").is_file()
+            )
+
 
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
