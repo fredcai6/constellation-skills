@@ -33,13 +33,14 @@ Origin: 2026-07-09 epic-101 hygiene pass (#105).
 - Add an explicit human sign-off step confirming constellation-interrogator's questioning is actually complete, not just that the loop terminated.
 - Fold this gate into the Pocock 1.1-release evaluation rather than shipping it as a standalone mechanism.
 
-## Aggressive playbook clearing, feedback maintenance to the curator
+## LESSONS.md is an inbox, not a playbook — graduate-and-delete
 
-Origin: 2026-07-10 epic-101 closeout (human direction at acceptance). The playbook sits at its 20-active cap and the epic's lessons audit had to route good candidates off-playbook; meanwhile dormancy ticks are the only clearing mechanism and they cull by clock, not by judgment.
+Origin: 2026-07-10 epic-101 closeout (human direction, superseding the earlier "aggressive clearing" phrasing). Characterizing LESSONS.md as a "playbook" was the mistake: it implies long-term residence, so lessons hang around as a quasi-permanent doc. Lessons are transitory by nature — an audited lesson should be ENDED: anything useful is categorized and moved into the permanent doc that owns it (a template, a skill's doctrine section, a reference, or a code-fix issue); everything else is deleted with a reason. The cap and dormancy clock become largely moot once residence is short by design.
 
-- Clear the playbook more aggressively: raise the bar for staying active (recurrence or a named consumer), and make retire-on-audit the norm rather than waiting out dormancy.
-- Move standing feedback maintenance (AGENT_FEEDBACK / CONSTELLATION_FEEDBACK grooming, playbook pruning proposals) into the curator's periodic run — it already owns measure-then-mend for the corpus; the learning logs are corpus too.
-- Ties into the queued dormancy-mechanism note (tick-burst culling) and the epic-101 audit's withheld tick.
+- Reframe LESSONS.md's header + the lessons-auditor and admiral closeout doctrine from "playbook" to "inbox/staging": audit = graduate-or-delete, never leave-active.
+- First graduation pass over the current 20 active lessons is immediate work (issue filed at closeout).
+- Standing feedback-log grooming (AGENT_FEEDBACK / CONSTELLATION_FEEDBACK) moves to the curator's periodic run — the learning logs are corpus too.
+- Ties into the queued dormancy-mechanism note (tick-burst culling); that machinery may shrink or disappear under this model.
 
 ## Plain-language register — rein in the project sub-dialect
 
