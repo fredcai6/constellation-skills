@@ -32,3 +32,27 @@ Origin: 2026-07-09 epic-101 hygiene pass (#105).
 
 - Add an explicit human sign-off step confirming constellation-interrogator's questioning is actually complete, not just that the loop terminated.
 - Fold this gate into the Pocock 1.1-release evaluation rather than shipping it as a standalone mechanism.
+
+## Aggressive playbook clearing, feedback maintenance to the curator
+
+Origin: 2026-07-10 epic-101 closeout (human direction at acceptance). The playbook sits at its 20-active cap and the epic's lessons audit had to route good candidates off-playbook; meanwhile dormancy ticks are the only clearing mechanism and they cull by clock, not by judgment.
+
+- Clear the playbook more aggressively: raise the bar for staying active (recurrence or a named consumer), and make retire-on-audit the norm rather than waiting out dormancy.
+- Move standing feedback maintenance (AGENT_FEEDBACK / CONSTELLATION_FEEDBACK grooming, playbook pruning proposals) into the curator's periodic run — it already owns measure-then-mend for the corpus; the learning logs are corpus too.
+- Ties into the queued dormancy-mechanism note (tick-burst culling) and the epic-101 audit's withheld tick.
+
+## Plain-language register — rein in the project sub-dialect
+
+Origin: 2026-07-10 epic-101 closeout (human direction). Sessions have grown jargony: a technical human reports the project-specific sub-dialect (spines, gates, waves, harvests, durable trios, honest nulls...) is blowing past them. The vocabulary is load-bearing for agents but must not price the human out of their own project.
+
+- Human-facing surfaces (checkpoint summaries, reports, epic summaries, interrogator/commander human entries) should default to plain language, with the term of art in parentheses on first use at most.
+- Consider a small glossary the docent/curator maintains, and a register rule: project dialect is for agent-to-agent artifacts; human-facing text explains itself.
+- Curator lint candidate: flag doc surfaces tagged human-facing whose density of coined terms exceeds a heuristic.
+
+## Cross-harness compatibility: Codex as well as Claude
+
+Origin: 2026-07-10 epic-101 closeout (human direction). Skills today assume the Claude Code harness (Skill tool, Agent-tool subagents, `claude -p` headless, permission classifier behaviors). Constellation should be loadable from Codex-family agents too.
+
+- Audit hard Claude-isms: harness-specific tool names in doctrine, `claude` CLI invocations in scripts (run_crew backends, run_skill_eval launch seam), permission-model assumptions.
+- The eval runner's injectable launch seam is the right shape — extend the backend pattern (cli/external) to a codex backend where dispatch is needed.
+- Keep SKILL.md bodies harness-neutral; isolate harness bindings in per-harness reference files (precedent: `_shared/windows.md` for platform quirks).
