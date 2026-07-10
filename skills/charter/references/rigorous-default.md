@@ -1,7 +1,7 @@
 # Rigorous Default
 
-The rigorous default posture is now **inherited runtime doctrine**, not a Charter-only reference. It is
-authored once in the global buckets bundled with every skill at install:
+The rigorous default posture is **inherited runtime doctrine**, authored once in the global buckets
+bundled with every skill at install:
 
 - `references/global-everyone.md` — platform/engine doctrine plus the fail-visible / one-canonical-path posture.
 - `references/global-orchestrator.md` — the default planning/shaping/evidence posture (correctness over

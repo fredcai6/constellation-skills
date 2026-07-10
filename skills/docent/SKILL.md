@@ -70,20 +70,13 @@ Multiple pages linked by **relative** paths (preferred over one giant scroll):
   the choice, the rationale, and which subsystems it governs (link back to their
   pages via the decision's structural anchors).
 
-## Self-contained HTML — hard constraints
+## Self-contained HTML
 
-- **No external resource loads.** Inline all CSS in a `<style>` and all JS in a
-  `<script>`; no CDN, no external fonts, no remote images, no `fetch`/`XHR`/
-  WebSocket. The site must open from `file://` under a CSP-locked browser.
-  "Self-contained" means no external *resource loads*, not one physical file —
-  relative links between local pages are fine.
-- **Restrained, readable, dark/light aware.** A docs artifact, not a landing
-  page. Use `prefers-color-scheme`, system fonts, generous line-height, a
-  max-width column. If you draw the dependency graph, prefer inline SVG or a CSS
-  adjacency grid — no graph library.
-- Keep the CSS in a small shared block you paste into each page's `<head>` (or a
-  single inlined `styles` string you emit into every page) so the pages read as
-  one system.
+The site must open from `file://` under a CSP-locked browser: **no external
+resource loads** (inline all CSS/JS, no CDN/fonts/remote images/`fetch`/`XHR`),
+restrained dark/light-aware styling, and a shared inline CSS block so pages read
+as one system. Full hard constraints + the self-containment grep check:
+`references/self-contained-html.md`.
 
 ## Freshness stamp + STALE banner
 
@@ -131,9 +124,7 @@ The bundled `scripts/docent_freshness.py` (installed under this skill's
    ```
 
    must exit 0 (fresh) immediately after generation. Then confirm no external
-   resource loads, e.g. grep the site for `http(s)://`, protocol-relative
-   `src="//"`/`href="//"`, `<script src=`, `<link … href="http`, `fetch(`,
-   `XMLHttpRequest` — there must be none.
+   resource loads per `references/self-contained-html.md`.
 
 ## Output location
 

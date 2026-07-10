@@ -36,7 +36,7 @@ A `delegated` disposition above settles who decides, not what the harness permis
 |---|---|---|
 | `<delegated class from above>` | `<e.g. merge, issue create/comment, push, cross-repo write>` | `<allowlist entry pre-cleared | fallback: <ruling to make when vetoed>>` |
 
-**Worked example (this epic).** The classifier refused a delegated `gh pr merge` mid-run; nothing here had recorded that this could happen. The human ruled live: "approve now; batch the rest" — logged in ADMIRAL_LOG. Absent a pre-clearance, that is the default fallback shape: one human approval in the moment, remaining equivalent actions batched to the next checkpoint instead of re-litigated one at a time.
+**Worked example.** The classifier refused a delegated `gh pr merge` mid-run; nothing here had recorded that this could happen. The human ruled live: "approve now; batch the rest" — logged in ADMIRAL_LOG. Absent a pre-clearance, that is the default fallback shape: one human approval in the moment, remaining equivalent actions batched to the next checkpoint instead of re-litigated one at a time.
 
 ## Float-Up Routing
 When a Commander floats — a `user-decision` **or a context query**: for a decision, adjudicate inside delegated classes and log a RULING, escalate surfaced classes and out-of-taxonomy to the human. For a **context query** (the Commander needs a fact or clarification it lacks), answer from epic knowledge and continue it; reach the human out-of-band when the answer is beyond your knowledge or latitude — a delegate is not a replacement, so "I need to talk to my human" is always available. `<any per-class nuance>`
