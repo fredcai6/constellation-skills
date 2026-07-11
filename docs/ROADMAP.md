@@ -66,3 +66,12 @@ Origin: 2026-07-11, #126/#129 wording arc (human direction: "use the engine resp
 - Candidate: terminal-distance in every mutating response ("3 steps from archive") — cheap progress pressure.
 - Measure with the #129 harness: wording-only vs wording+engine-nudges at the low tier.
 - See also #134 (fold into the same engine design pass if cut together).
+
+## Morale doctrine — single source, machine-delivered
+
+Origin: 2026-07-11 (human direction). The catalogued cheap-exit failures — skip, quit-early, give-up-after-one-null, fabricate — are one family; the counter-doctrine must live in ONE canonical text ("pep talk"), not scatter across skills. A "don't give up" SKILL is the wrong container: an agent won't voluntarily load discipline at its weakest moment — delivery must be machinery.
+
+- One canonical block: process defines done; a failed variant is a scoped null (try another); asking up is ALWAYS legitimate; the two forbidden exits are quiet abandonment and fabrication. (Perseverance without the ask-up clause breeds fabrication.)
+- Delivery channels: (1) engine responses — advance carries next-step + why + distance-to-done; check-failure responses carry the scoped-null/ask-up line (the give-up moment interceptor); (2) re-injection on compaction — mid-run "you are mid-spine, N steps remain" + pep talk (the epic-101 diet stripped load-time clamping from skill bodies; it returns machine-delivered, not as boilerplate); (3) skills keep one-line pointers (single-sourcing pattern).
+- Measure per channel with the #129 harness: wording-only vs +engine-nudges vs +compact-reinjection.
+- See also: "Engine-carried guidance" section above, #134.
