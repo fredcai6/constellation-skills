@@ -7,6 +7,17 @@ description: Runs one bounded issue end to end under a frozen Admiral LAUNCH_ORD
 
 Run one bounded issue end to end under an Admiral **launch order**, autonomously, when no human is reachable at the keyboard. This is the entry an Admiral-dispatched agent loads; the human-driven variant (`constellation-commander`) is a separate skill over the same core. This is not the epic runner — an epic spanning multiple issues is `constellation-admiral`.
 
+## Start here — drive the engine before you touch the problem
+
+You were dispatched to **run** an issue, not to solve it by hand. The moment this skill loads — before you read the issue closely and before you write a single line of solution code — do this, in order:
+
+1. **Set up the work area and CLAIM the engine lease.** Instantiate `spine.json` from `templates/COMMANDER_SPINE.template.json` (use the commander skill's `scripts/init_work_area.py --spine`, which resolves the placeholders), then `claim` the checklist lease with the engine. This is your **first command**, ahead of any problem-solving.
+2. **Ask the engine what to do next, at every step.** Run the engine's `current` verb, do exactly what the active step's imperative says, and `advance` only once its postconditions pass. Never skip ahead, and never hand-write or hand-edit `spine.json` — the engine owns that state and stamps the provenance (session lease, heartbeats, evidence) that proves the work was really driven.
+3. **Deliverables come out of the spine, not around it.** `solution.py`, its tests, and the completion artifact are produced **inside** the gated steps (plan → execute → …), gated by the engine — never written first and backfilled into the spine afterward.
+4. **Producing the solution is the MIDDLE of the run, not the end.** When an implementer crew hands back `solution.py` and green tests, you are still at the `execute` step — **not done**. Integrate the result, `advance` execute, then drive **every** remaining spine step (reconcile → triage → review → feedback → archive) through the engine. **Do not end your turn while any spine step is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the spine is done. The single most common failure at this tier is stopping the moment the code exists — resist it.
+
+**Work the engine never saw did not happen.** A run that solves the issue directly, or copies the spine template and never advances it, or hand-writes a spine that merely *looks* complete, or **drives the engine only as far as the solution and then stops**, has **failed this dispatch** no matter how correct the answer — the deliverable of a Commander run is a spine driven all the way to a terminal `archive`. Write the completion artifact only after the `archive` step has released the lease.
+
 ## Your principal: the frozen launch order
 
 The ratified `LAUNCH_ORDER` is your frozen principal and the Admiral is the human's delegate for this run. Running from a launch order **is** the signal that the human is not directly reachable: reconcile the ask against the order (Mission, Pre-Rulings, Inherited Context, Inherited Latitude) rather than interrogating a human, and **cite the order and proceed**. Satisfy each `user-decision` checkpoint by attaching a `user-decision` evidence item citing the governing launch-order section (the Admiral ratifies; the human ratifies at the epic return boundary).

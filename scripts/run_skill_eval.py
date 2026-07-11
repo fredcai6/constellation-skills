@@ -69,7 +69,13 @@ _source_commit = _install._source_commit
 DEFAULT_MODEL = "claude-sonnet-4-5"
 DEFAULT_N = 2
 DEFAULT_M = 3
-DEFAULT_TIMEOUT_SECONDS = 1800
+# An honest engine-driven run at the pinned low tier takes 13.5–30+ min of real
+# wall-clock (issue #126, attempts 9/10 measured both honest passes fenced by the
+# old 900s/1800s deadlines). The default and the per-scenario floor are set so a
+# scenario cannot silently starve an honest run below the observed ceiling; a
+# diagnostic --timeout CLI override still applies freely after the floor.
+DEFAULT_TIMEOUT_SECONDS = 2400
+SCENARIO_TIMEOUT_FLOOR_SECONDS = 2400
 DEFAULT_LAUNCHER = "claude"
 
 # Headless agents (`claude -p`) have no interactive approver, so without an explicit
@@ -222,7 +228,14 @@ def load_scenario(scenario_dir) -> Scenario:
         n=int(overrides.get("n", DEFAULT_N)),
         m=int(overrides.get("m", DEFAULT_M)),
         model=overrides.get("model", DEFAULT_MODEL),
-        timeout_seconds=int(overrides.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)),
+        # Clamp the scenario-configured timeout UP to the floor so a scenario.toml
+        # can never starve an honest run below the observed ceiling; a diagnostic
+        # --timeout CLI override (applied later in _apply_overrides) is free to go
+        # lower.
+        timeout_seconds=max(
+            SCENARIO_TIMEOUT_FLOOR_SECONDS,
+            int(overrides.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)),
+        ),
     )
 
 
@@ -315,8 +328,12 @@ def classify_run(outcome: LaunchOutcome, *, completion_present: bool,
     """Resolve one launch attempt to exactly one class (contract §(i) infra-fence
     table). PURE.
 
-      inconclusive (fenced): timeout, or a usage/rate-limit/overloaded/429 marker
-                             sniffed in stderr;
+      completed-pass (timeout carve-out): a timed-out run whose workspace ALREADY
+                             passes every process check — the checks are monotone,
+                             so a finished deliverable is a PASS even though the
+                             process was killed before its own exit (issue #126);
+      inconclusive (fenced): a timeout with any failing/absent process check, or a
+                             usage/rate-limit/overloaded/429 marker sniffed in stderr;
       errored (fenced):      launch failure, corpus mismatch, a permission-sandbox
                              block (exited but left the workspace byte-unchanged AND
                              a permission-denial marker), or a non-zero exit with NO
@@ -336,6 +353,18 @@ def classify_run(outcome: LaunchOutcome, *, completion_present: bool,
     wrong output — which mutates the workspace — still lands completed-fail per the
     g2-ratified exit-0-no-terminal rule."""
     if outcome.timed_out:
+        # A timeout is normally fenced (inconclusive) — the process outlived its
+        # deadline, inconclusive about the corpus. But if the workspace ALREADY
+        # passes every process check, the run is a PASS, not a fence: the process
+        # checks are MONOTONE (a spine already terminal, a solution already written,
+        # tests already green cannot be un-passed by more wall-clock), so all the
+        # timeout cost was the agent's own process exit, not the deliverable. This
+        # is exactly the honest run that finished the work but not the exit and got
+        # fenced by the old 900s/1800s deadlines (issue #126, attempts 9/10). A
+        # timeout with any failing/absent check stays fenced (infra, never a FAIL).
+        if process_results and all(c.passed for c in process_results):
+            return RunResult(status="completed-pass", reason="timeout-checks-green",
+                             check_results=list(process_results))
         return RunResult(status="inconclusive", reason="timeout", check_results=list(process_results))
     if is_infra_marker(outcome.stderr_text):
         return RunResult(status="inconclusive", reason="infra-marker", check_results=list(process_results))
@@ -594,14 +623,80 @@ def _write_transcript(stdout_path, stderr_path, note: str) -> None:
         Path(stderr_path).write_text("", encoding="utf-8")
 
 
+def _dry_run_engine_spine() -> dict:
+    """A minimal ENGINE-SHAPED terminal spine for the dry-run smoke: the gated
+    `tasks` form with every task complete, a plausible `engine_session` lease
+    (monotonic claim -> heartbeat -> release), and one engine-produced
+    `command-output` evidence item backing its command postcondition. Since #127
+    hardened `spine_completed` to demand engine provenance (a bare
+    `{"status": "done"}` no longer passes), the runner's own falsification-floor
+    smoke must synthesize the same engine fingerprints a real driven spine leaves —
+    otherwise the dry-run would fail the very check it exists to exercise."""
+    from datetime import datetime, timedelta, timezone
+
+    t0 = datetime.now(timezone.utc)
+    iso = lambda dt: dt.isoformat()
+    return {
+        "work_id": "dry-run",
+        "type": "gated",
+        "items": ["init"],
+        "tasks": {
+            "init": {
+                "id": "init",
+                "title": "dry-run",
+                "imperative": "dry-run synthesized gate",
+                "preconditions": [],
+                "postconditions": [{
+                    "id": "c1",
+                    "statement": "dry-run engine command check",
+                    "check": {"kind": "command", "command": "true"},
+                    "satisfied": True,
+                    "satisfied_by": "e-init-1",
+                }],
+                "constraints": [],
+                "directives": None,
+                "child_checklist": None,
+                "status": "complete",
+                "status_detail": {},
+                "result": None,
+                "finding": None,
+                "evidence": [{
+                    "id": "e-init-1",
+                    "type": "command-output",
+                    "payload": {"cmd": "true", "exit": 0, "shell": "posix"},
+                    "produced_by": "engine",
+                    "ts": "",
+                }],
+                "rework_count": 0,
+            }
+        },
+        "consolidation": None,
+        "triage_candidates": [],
+        "blockers": [],
+        "engine_session": {
+            "session_id": "dry-run-smoke",
+            "status": "released",
+            "claimed_at": iso(t0),
+            "last_heartbeat": iso(t0 + timedelta(seconds=1)),
+            "claimed_by": "commander",
+            "worktree": ".",
+            "previous_session_id": None,
+            "takeover_reason": None,
+            "released_at": iso(t0 + timedelta(seconds=2)),
+        },
+    }
+
+
 def dry_run_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> LaunchOutcome:
     """Fake launcher that synthesizes a REAL passing workspace — a non-empty
-    `solution.py`, a green `test_solution.py`, the completion artifact, and a
-    terminal `spine.json` — so the gating process checks (`artifact_present`,
-    `tests_green`, `spine_completed`) each bite STRICTLY on a real deliverable, with
-    no sentinel stand-in (issue #115 tc1). Spawns NOTHING — the CI smoke for the
-    runner itself and caller #2's live target. The test is self-contained (imports
-    nothing from the workspace) so it stays green under any pytest import mode."""
+    `solution.py`, a green `test_solution.py`, the completion artifact, and an
+    engine-shaped terminal `spine.json` — so the gating process checks
+    (`artifact_present`, `tests_green`, `spine_completed`) each bite STRICTLY on a
+    real deliverable, with no sentinel stand-in (issue #115 tc1) and with the engine
+    provenance `spine_completed` now demands (issue #127). Spawns NOTHING — the CI
+    smoke for the runner itself and caller #2's live target. The test is
+    self-contained (imports nothing from the workspace) so it stays green under any
+    pytest import mode."""
     workspace = Path(cwd)
     workspace.mkdir(parents=True, exist_ok=True)
     (workspace / "solution.py").write_text(
@@ -620,7 +715,7 @@ def dry_run_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> Laun
     )
     (workspace / COMPLETION_ARTIFACT).write_text("dry-run complete\n", encoding="utf-8")
     (workspace.parent / "spine.json").write_text(
-        json.dumps({"status": "done"}) + "\n", encoding="utf-8"
+        json.dumps(_dry_run_engine_spine(), indent=2) + "\n", encoding="utf-8"
     )
     _write_transcript(stdout_path, stderr_path, "dry-run: synthesized passing workspace")
     return LaunchOutcome(exit_code=0)
