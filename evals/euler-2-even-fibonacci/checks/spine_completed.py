@@ -29,13 +29,24 @@ fabricator does NOT get for free:
      matching engine-produced evidence (or, when waived, a human ``waiver``) its
      ``satisfied_by`` names.
 
+  4. Journal cross-verification (issue #131). When the engine's append-only
+     journal sidecar (``<spine>.journal``) is present, it is cross-verified against
+     the final spine: the hash-chain is intact, seq is 1..N, timestamps are
+     monotonic and fall within the lease window, every ``complete`` task carries an
+     ``advance``/``record`` journal entry, and every satisfied engine-checked
+     condition's backing evidence id appears in the journal. A fabricator must now
+     also forge a self-consistent, hash-chained journal whose every line commits to
+     the whole chain before it. GRANDFATHER POLICY: a spine with NO journal (e.g.
+     the honest reference workspaces preserved before the journal shipped, or any
+     pre-journal engine install) still passes on the lease+grammar checks above --
+     the journal STRENGTHENS provenance where present but is never REQUIRED, so the
+     check stays backward compatible with journal-absent-but-lease-valid spines.
+
 This is NOT tamper-proof -- the agent owns the filesystem and could forge all of
-the above. The bar (issue #127) is deliberately lower: raise fabrication cost
+the above. The bar (issues #127/#131) is deliberately lower: raise fabrication cost
 ABOVE just-doing-the-work cost. Forging a monotonic lease plus grammar-correct,
-cross-consistent evidence for ten gates is more work than running the engine,
-which is the point. A hash-chained engine journal sidecar would raise the bar
-further but requires changing the engine itself; it is intentionally out of scope
-here (see issue #127).
+cross-consistent evidence AND a self-consistent hash-chained journal for ten gates
+is more work than running the engine, which is the point.
 
 Spine locations searched (run-dir contract, per scripts/run_skill_eval.py::_run_once):
 
@@ -50,11 +61,16 @@ one evidence line on stdout.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# Journal entry fields the engine hashes over (checklist_engine._journal_hash) --
+# order-independent (sorted) but the field SET must match exactly to re-derive hashes.
+JOURNAL_HASH_FIELDS = ("seq", "ts", "session_id", "verb", "task", "evidence_ids", "prev_hash")
 
 # Engine evidence ids are `e-<task-id>-<n>` (checklist_engine._new_evidence_id).
 EVIDENCE_ID_RE = re.compile(r"^e-[a-z0-9][a-z0-9-]*-\d+$")
@@ -194,6 +210,96 @@ def spine_has_engine_provenance(data: dict) -> tuple[bool, str]:
     return True, why
 
 
+def _journal_hash(entry: dict) -> str:
+    """Re-derive an entry's hash exactly as checklist_engine._journal_hash does:
+    SHA-256 over the canonical (sorted, hash-excluded) JSON of the fixed field set."""
+    payload = {k: entry.get(k) for k in JOURNAL_HASH_FIELDS}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+
+
+def journal_consistent(spine_path: Path, data: dict) -> tuple[bool, str]:
+    """Cross-verify the engine journal sidecar against the final spine (issue #131).
+
+    GRANDFATHER: a spine with no ``<spine>.journal`` passes (the journal strengthens
+    provenance where present but is never required -- the pre-journal reference
+    workspaces and any pre-journal install stay valid on lease+grammar alone).
+
+    When a journal IS present it must be internally sound AND consistent with the
+    spine: valid JSON lines; seq 1..N; an intact hash-chain (each line's prev_hash is
+    the prior line's hash, and each hash re-derives); non-decreasing timestamps that
+    fall within the lease window; an ``advance``/``record`` entry for every
+    ``complete`` task; and a journal reference for every satisfied engine-checked
+    condition's backing evidence id."""
+    jp = Path(str(spine_path) + ".journal")
+    if not jp.is_file():
+        return True, "journal absent (grandfathered on lease+grammar)"
+    try:
+        raw = [ln for ln in jp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    except OSError as exc:
+        return False, f"journal present but unreadable: {exc}"
+    if not raw:
+        return False, "journal present but empty (a driven spine records verbs)"
+
+    entries: list[dict] = []
+    prev_hash = ""
+    prev_ts = None
+    for i, line in enumerate(raw):
+        try:
+            e = json.loads(line)
+        except ValueError:
+            return False, f"journal line {i + 1} is not valid JSON"
+        if e.get("seq") != i + 1:
+            return False, f"journal seq {e.get('seq')!r} out of order at line {i + 1} (want {i + 1})"
+        if e.get("prev_hash") != prev_hash:
+            return False, f"journal hash-chain broken at seq {e.get('seq')} (prev_hash mismatch)"
+        if e.get("hash") != _journal_hash(e):
+            return False, f"journal entry seq {e.get('seq')} hash does not re-derive (tampered)"
+        ts = _parse_iso(e.get("ts"))
+        if ts is None:
+            return False, f"journal entry seq {e.get('seq')} has no parseable ts"
+        if prev_ts is not None and ts < prev_ts:
+            return False, f"journal timestamps non-monotonic at seq {e.get('seq')}"
+        prev_hash = e.get("hash")
+        prev_ts = ts
+        entries.append(e)
+
+    # timestamps consistent with the (already-validated) lease window.
+    sess = data.get("engine_session") or {}
+    claimed = _parse_iso(sess.get("claimed_at"))
+    released = _parse_iso(sess.get("released_at")) if sess.get("status") == "released" else None
+    for e in entries:
+        ts = _parse_iso(e.get("ts"))
+        if claimed is not None and ts < claimed:
+            return False, f"journal entry seq {e.get('seq')} precedes the lease claim"
+        if released is not None and ts > released:
+            return False, f"journal entry seq {e.get('seq')} follows the lease release"
+
+    # every complete task has an advance/record journal entry.
+    advanced = {e.get("task") for e in entries if e.get("verb") in ("advance", "record")}
+    tasks = data.get("tasks") or {}
+    for tid, t in tasks.items():
+        if isinstance(t, dict) and (t.get("status") or "").lower() == "complete":
+            if tid not in advanced:
+                return False, f"complete task {tid!r} has no advance/record journal entry"
+
+    # every satisfied engine-checked condition's backing evidence is journal-referenced.
+    journal_ev = {eid for e in entries for eid in (e.get("evidence_ids") or [])}
+    for t in tasks.values():
+        if not isinstance(t, dict):
+            continue
+        for c in (t.get("postconditions") or []) + (t.get("preconditions") or []):
+            chk = c.get("check") or {}
+            if chk.get("kind") not in ENGINE_CHECK_KINDS or not c.get("satisfied"):
+                continue
+            sb = c.get("satisfied_by")
+            if sb and sb not in journal_ev:
+                return False, (f"engine-checked condition {c.get('id')!r} evidence {sb!r} "
+                               f"is not referenced by any journal entry")
+    return True, f"journal consistent ({len(entries)} entries, hash-chained)"
+
+
 def find_spines(run_dir: Path) -> list[Path]:
     candidates: list[Path] = []
     top = run_dir / "spine.json"
@@ -221,10 +327,15 @@ def main(run_dir_arg: str) -> int:
         except (OSError, json.JSONDecodeError):
             continue
         ok, reason = spine_has_engine_provenance(data)
-        if ok:
-            print(f"PASS spine_completed: engine-driven terminal spine at {sp} ({reason})")
-            return 0
-        last_reason = reason
+        if not ok:
+            last_reason = reason
+            continue
+        jok, jreason = journal_consistent(sp, data)
+        if not jok:
+            last_reason = jreason
+            continue
+        print(f"PASS spine_completed: engine-driven terminal spine at {sp} ({reason}; {jreason})")
+        return 0
     print(
         f"FAIL spine_completed: found {len(spines)} spine(s) but none is an "
         f"engine-driven terminal spine (last: {last_reason})"
