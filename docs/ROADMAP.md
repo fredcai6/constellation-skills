@@ -57,3 +57,12 @@ Origin: 2026-07-10 epic-101 closeout (human direction). Skills today assume the 
 - Audit hard Claude-isms: harness-specific tool names in doctrine, `claude` CLI invocations in scripts (run_crew backends, run_skill_eval launch seam), permission-model assumptions.
 - The eval runner's injectable launch seam is the right shape — extend the backend pattern (cli/external) to a codex backend where dispatch is needed.
 - Keep SKILL.md bodies harness-neutral; isolate harness bindings in per-harness reference files (precedent: `_shared/windows.md` for platform quirks).
+
+## Engine-carried guidance — the rail reminds, not just the skill
+
+Origin: 2026-07-11, #126/#129 wording arc (human direction: "use the engine response itself to remind the agent what the next step is and why it's important... keep pulling that thread"). Round-1/round-2 wording clamps the START hard, but mid-run wander and quit-early remain exposures: skill-load-time text decays over a long run, while engine output arrives exactly at each decision point.
+
+- Candidate: `advance`/`current` responses carry the next step's imperative plus a one-line WHY (completion stakes), e.g. "execute advanced. NEXT: reconcile — a run that stops here has failed; N steps remain to terminal archive."
+- Candidate: terminal-distance in every mutating response ("3 steps from archive") — cheap progress pressure.
+- Measure with the #129 harness: wording-only vs wording+engine-nudges at the low tier.
+- See also #134 (fold into the same engine design pass if cut together).
