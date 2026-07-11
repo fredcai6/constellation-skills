@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 import re
@@ -1319,10 +1320,92 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
     raise EngineError(f"unknown verb {v!r}")
 
 
+# --------------------------------------------------------------------------- #
+# append-only journal sidecar (#131) — one line per SUCCESSFUL mutating verb
+#
+# The spine is a single mutable JSON file: a careful agent could study genuine
+# engine output and forge the whole terminal shape. The journal raises that cost.
+# It is written ONLY by main() (the CLI boundary), append-only, one JSON line per
+# successful mutating verb, each line hash-chained to the previous. The engine
+# NEVER reads it back for its own operation, so it is fully backward compatible:
+# a journal-absent spine keeps working everywhere. Only the eval provenance check
+# cross-verifies it (journal-absent spines are grandfathered there).
+# --------------------------------------------------------------------------- #
+def journal_path(spine_path: Path) -> Path:
+    """The journal sidecar for a spine file: ``<spine>.journal`` (so
+    ``spine.json`` -> ``spine.json.journal``, and a child ``review.json`` gets its
+    own ``review.json.journal``)."""
+    return Path(str(spine_path) + ".journal")
+
+
+def _all_evidence_ids(cl: dict) -> set[str]:
+    ids: set[str] = set()
+    for t in cl.get("tasks", {}).values():
+        if isinstance(t, dict):
+            for ev in t.get("evidence", []) or []:
+                if isinstance(ev, dict) and ev.get("id"):
+                    ids.add(ev["id"])
+    return ids
+
+
+def _journal_hash(entry: dict) -> str:
+    """SHA-256 over the entry's canonical (sorted, hash-excluded) JSON. The
+    ``prev_hash`` field is part of that payload, so each line commits to the whole
+    chain before it — tampering with any earlier line invalidates every hash after."""
+    payload = {k: entry[k] for k in
+               ("seq", "ts", "session_id", "verb", "task", "evidence_ids", "prev_hash")}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+
+
+def _read_journal_tail(jp: Path) -> tuple[int, str]:
+    """(next seq, last hash) for an existing journal, or (1, "") when absent/empty.
+    Never raises — a corrupt/unreadable journal degrades to a fresh chain rather
+    than blocking the engine (the sidecar must never break a mutation)."""
+    try:
+        lines = [ln for ln in jp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    except OSError:
+        return 1, ""
+    if not lines:
+        return 1, ""
+    try:
+        last = json.loads(lines[-1])
+        return len(lines) + 1, last.get("hash", "")
+    except ValueError:
+        return len(lines) + 1, ""
+
+
+def append_journal_entry(spine_path: Path, verb: str, task_id: str | None,
+                         session_id: str | None, evidence_ids: list[str]) -> None:
+    """Append one hash-chained line to the spine's journal for a successful
+    mutating verb. Best-effort and non-fatal: a journal write failure must never
+    fail the mutation it records (the spine is already the source of truth), so any
+    OSError is swallowed."""
+    jp = journal_path(spine_path)
+    seq, prev = _read_journal_tail(jp)
+    entry = {
+        "seq": seq,
+        "ts": _now(),
+        "session_id": session_id,
+        "verb": verb,
+        "task": task_id,
+        "evidence_ids": sorted(evidence_ids),
+        "prev_hash": prev,
+    }
+    entry["hash"] = _journal_hash(entry)
+    try:
+        with jp.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     path = Path(args.file)
     cl = load(path)
+    ev_before = _all_evidence_ids(cl)
     try:
         message = dispatch(cl, args, base_dir=path.parent)
     except EngineError as exc:
@@ -1333,6 +1416,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if not args.dry_run and args.verb != "current":
         save(path, cl)
+        # Journal AFTER the spine is persisted, only on the SUCCESS path, only for
+        # verbs that actually mutate canonical state. New evidence produced by this
+        # verb is captured by diffing the evidence-id set across the dispatch.
+        if args.verb in MUTATING_VERBS:
+            new_ev = sorted(_all_evidence_ids(cl) - ev_before)
+            append_journal_entry(
+                path, args.verb, getattr(args, "id", None),
+                getattr(args, "session_id", None), new_ev,
+            )
     print(message)
     return 0
 

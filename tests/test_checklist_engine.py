@@ -1384,3 +1384,84 @@ class ReopenCascade(unittest.TestCase):
         with self.assertRaises(E.EngineError) as ctx:
             E.attest(cl, "g2", "c1", "postconditions", None, evidence_id="e-g1-1")
         self.assertIn("superseded", str(ctx.exception))
+
+
+class JournalEmission(unittest.TestCase):
+    """The append-only journal sidecar (#131): one hash-chained line per SUCCESSFUL
+    mutating verb, written only by main(), never read back by the engine (backward
+    compatible)."""
+
+    def _save(self, d, cl):
+        f = Path(d) / "spine.json"
+        E.save(f, cl)
+        return f
+
+    def _journal_lines(self, f):
+        jp = Path(str(f) + ".journal")
+        if not jp.is_file():
+            return []
+        return [json.loads(ln) for ln in jp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+
+    def test_mutating_verb_appends_one_journal_line(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            self.assertEqual(E.main(["--file", str(f), "start", "g1"]), 0)
+            lines = self._journal_lines(f)
+            self.assertEqual(len(lines), 1)
+            self.assertEqual(lines[0]["verb"], "start")
+            self.assertEqual(lines[0]["task"], "g1")
+            self.assertEqual(lines[0]["seq"], 1)
+            self.assertEqual(lines[0]["prev_hash"], "")
+            self.assertTrue(lines[0]["hash"])
+
+    def test_non_mutating_verb_does_not_journal(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            self.assertEqual(E.main(["--file", str(f), "current"]), 0)
+            self.assertEqual(self._journal_lines(f), [])
+
+    def test_dry_run_does_not_journal(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            self.assertEqual(E.main(["--file", str(f), "--dry-run", "start", "g1"]), 0)
+            self.assertEqual(self._journal_lines(f), [])
+
+    def test_refused_verb_does_not_journal(self):
+        # advancing a failing gate refuses (exit 1) -> no journal line for it.
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 1)
+            self.assertEqual(self._journal_lines(f), [])
+
+    def test_hash_chain_links_successive_verbs(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            E.main(["--file", str(f), "start", "g1"])
+            E.main(["--file", str(f), "advance", "g1"])
+            lines = self._journal_lines(f)
+            self.assertEqual([l["seq"] for l in lines], [1, 2])
+            self.assertEqual(lines[1]["prev_hash"], lines[0]["hash"])
+
+    def test_journal_captures_new_evidence_ids(self):
+        # advancing a command gate produces e-g1-1; the journal records it.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            E.main(["--file", str(f), "advance", "g1"])
+            lines = self._journal_lines(f)
+            self.assertIn("e-g1-1", lines[-1]["evidence_ids"])
+
+    def test_engine_never_reads_journal_backward_compatible(self):
+        # A pre-existing junk journal must not perturb engine operation: verbs still
+        # succeed and the engine appends, proving it never reads the sidecar back.
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = self._save(d, cl)
+            Path(str(f) + ".journal").write_text("not json at all\n", encoding="utf-8")
+            self.assertEqual(E.main(["--file", str(f), "start", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")

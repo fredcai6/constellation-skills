@@ -13,6 +13,7 @@ The check ships identically in every eval scenario; we exercise the euler-1 copy
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import sys
@@ -251,3 +252,137 @@ def test_waived_engine_check_without_waiver_record_fails():
     }]
     ok, why = chk.spine_has_engine_provenance(spine)
     assert not ok and "waiver" in why
+
+
+# --------------------------------------------------------------------------- #
+# journal cross-verification (issue #131) — the journal STRENGTHENS provenance
+# where present and is GRANDFATHERED where absent (backward compatible).
+# --------------------------------------------------------------------------- #
+_T0 = datetime(2026, 7, 10, 18, 15, 17, tzinfo=timezone.utc)
+
+
+def _jhash(entry: dict) -> str:
+    """Re-derive an entry hash exactly as the engine + check do."""
+    payload = {k: entry.get(k) for k in
+               ("seq", "ts", "session_id", "verb", "task", "evidence_ids", "prev_hash")}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+
+
+def chain_journal(rows, session_id="cmd-pe1") -> str:
+    """Build a valid hash-chained journal from (ts, verb, task, evidence_ids) rows."""
+    out, prev = [], ""
+    for i, (ts, verb, task, ev) in enumerate(rows):
+        e = {"seq": i + 1, "ts": ts, "session_id": session_id, "verb": verb,
+             "task": task, "evidence_ids": ev, "prev_hash": prev}
+        e["hash"] = _jhash(e)
+        prev = e["hash"]
+        out.append(json.dumps(e))
+    return "\n".join(out) + "\n"
+
+
+def genuine_rows():
+    iso = lambda m: (_T0 + timedelta(minutes=m)).isoformat()
+    return [
+        (iso(1), "start", "init", []),
+        (iso(2), "advance", "init", ["e-init-1"]),   # backs init's command condition
+        (iso(3), "start", "execute", []),
+        (iso(4), "advance", "execute", []),          # execute is complete too
+    ]
+
+
+def write_spine_and_journal(tmp_path: Path, spine: dict, journal_text: str | None):
+    sp = tmp_path / "spine.json"
+    sp.write_text(json.dumps(spine), encoding="utf-8")
+    if journal_text is not None:
+        (tmp_path / "spine.json.journal").write_text(journal_text, encoding="utf-8")
+    return sp
+
+
+def test_journal_absent_is_grandfathered(tmp_path):
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), None)
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert ok and "grandfather" in why.lower()
+
+
+def test_genuine_journal_passes(tmp_path):
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), chain_journal(genuine_rows()))
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert ok, why
+
+
+def test_genuine_journal_passes_end_to_end(tmp_path):
+    run_dir = write_run_dir(tmp_path, genuine_spine())
+    sp = run_dir / "workspace" / ".agent-work" / "spine.json"
+    (run_dir / "workspace" / ".agent-work" / "spine.json.journal").write_text(
+        chain_journal(genuine_rows()), encoding="utf-8")
+    assert chk.main(str(run_dir)) == 0
+
+
+def test_journal_present_but_empty_fails(tmp_path):
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), "")
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "empty" in why
+
+
+def test_journal_tampered_hash_fails(tmp_path):
+    text = chain_journal(genuine_rows())
+    lines = text.strip().splitlines()
+    e = json.loads(lines[1]); e["verb"] = "record"  # change a field, leave stale hash
+    lines[1] = json.dumps(e)
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), "\n".join(lines) + "\n")
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "re-derive" in why
+
+
+def test_journal_broken_chain_fails(tmp_path):
+    text = chain_journal(genuine_rows())
+    lines = text.strip().splitlines()
+    e = json.loads(lines[1]); e["prev_hash"] = "0" * 64; e["hash"] = _jhash(e)
+    lines[1] = json.dumps(e)
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), "\n".join(lines) + "\n")
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "hash-chain" in why
+
+
+def test_journal_seq_out_of_order_fails(tmp_path):
+    text = chain_journal(genuine_rows())
+    lines = text.strip().splitlines()
+    e = json.loads(lines[1]); e["seq"] = 5; e["hash"] = _jhash(e)
+    lines[1] = json.dumps(e)
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), "\n".join(lines) + "\n")
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "seq" in why
+
+
+def test_journal_non_monotonic_ts_fails(tmp_path):
+    rows = genuine_rows()
+    rows[3] = (_T0.isoformat(), "advance", "execute", [])  # earlier than prior rows
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), chain_journal(rows))
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "monotonic" in why
+
+
+def test_journal_ts_outside_lease_fails(tmp_path):
+    rows = genuine_rows()
+    # push the last advance PAST the lease release (t0 + 13m3s)
+    rows[3] = ((_T0 + timedelta(minutes=30)).isoformat(), "advance", "execute", [])
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), chain_journal(rows))
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "release" in why
+
+
+def test_journal_missing_advance_for_complete_task_fails(tmp_path):
+    rows = [r for r in genuine_rows() if not (r[1] == "advance" and r[2] == "execute")]
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), chain_journal(rows))
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "no advance/record" in why
+
+
+def test_journal_unreferenced_engine_evidence_fails(tmp_path):
+    rows = genuine_rows()
+    rows[1] = (rows[1][0], "advance", "init", [])  # drop e-init-1 reference
+    sp = write_spine_and_journal(tmp_path, genuine_spine(), chain_journal(rows))
+    ok, why = chk.journal_consistent(sp, genuine_spine())
+    assert not ok and "not referenced by any journal entry" in why
