@@ -871,3 +871,170 @@ def test_dry_run_fail_is_completed_fail_not_fenced(tmp_path):
 def test_zero_process_checks_via_cli_is_schema_error(tmp_path):
     scen = make_scenario(tmp_path, process=(), answer=(ANSWER_CHECK,))
     assert rse.main(["--dry-run", str(scen)]) == 3
+
+
+# --------------------------------------------------------------------------- #
+# issue #130 — runner durability: heartbeats, orphan watchdog, resume, isolation
+# --------------------------------------------------------------------------- #
+def _seed_run_dir(temp_root: Path, index: int, *, meta: dict, artifact: bool) -> Path:
+    """Seed a run-<index>/ with a meta.json and (optionally) a passing workspace,
+    modelling the on-disk state a prior invocation left behind."""
+    run_dir = temp_root / f"run-{index}"
+    ws = run_dir / "workspace"
+    ws.mkdir(parents=True)
+    if artifact:
+        (ws / rse.COMPLETION_ARTIFACT).write_text("done\n", encoding="utf-8")
+    (run_dir / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+    return run_dir
+
+
+def test_stamp_meta_heartbeat_updates_only_launched_meta(tmp_path):
+    run_dir = tmp_path / "run-0"
+    run_dir.mkdir()
+    (run_dir / "meta.json").write_text(
+        json.dumps({"status": "launched", "launched_at": 1000.0}), encoding="utf-8")
+    rse._stamp_meta_heartbeat(run_dir)
+    meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+    assert "heartbeat_at" in meta and "elapsed_seconds" in meta
+    # a terminal meta is never re-stamped (a heartbeat cannot un-finalize a run).
+    (run_dir / "meta.json").write_text(
+        json.dumps({"status": "completed-pass"}), encoding="utf-8")
+    rse._stamp_meta_heartbeat(run_dir)
+    assert "heartbeat_at" not in json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+
+
+class _BrieflyAlivePopen:
+    """A Popen double that reports alive for a few polls then exits 0, with pipes
+    already at EOF so drain threads finish immediately. Spawns nothing. Lets the
+    heartbeat stamp fire inside launch_agent's poll loop without a real subject."""
+
+    def __init__(self, alive_polls: int = 3):
+        import io
+        self.pid = 555
+        self.returncode = None
+        self._polls = 0
+        self._alive = alive_polls
+        self.stdout = io.BytesIO(b"")
+        self.stderr = io.BytesIO(b"")
+
+    def poll(self):
+        self._polls += 1
+        if self._polls > self._alive:
+            self.returncode = 0
+        return self.returncode
+
+    def wait(self, timeout=None):
+        self.returncode = 0
+        return 0
+
+
+def test_launch_agent_stamps_heartbeat_into_launch_meta(tmp_path, monkeypatch):
+    # A live-but-slow subject: launch_agent must stamp a liveness heartbeat into the
+    # run's launch meta while it polls, so a watcher can see the runner is alive.
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: _BrieflyAlivePopen())
+    monkeypatch.setattr(rse, "_HEARTBEAT_INTERVAL_SECONDS", 0.0)  # stamp every poll
+    run_dir = tmp_path / "run-0"
+    run_dir.mkdir()
+    (run_dir / "meta.json").write_text(
+        json.dumps({"status": "launched", "launched_at": 1.0}), encoding="utf-8")
+    out = rse.launch_agent(
+        ["dummy-launcher", "-p", "hi"], cwd=str(run_dir / "workspace"),
+        env=dict(os.environ), stdout_path=str(run_dir / "transcript.txt"),
+        stderr_path=str(run_dir / "stderr.txt"), timeout=10,
+    )
+    assert out.exit_code == 0
+    assert "heartbeat_at" in json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+
+
+def test_adjudicate_orphan_green_workspace_is_completed_pass(tmp_path):
+    # A run the runner died mid-flight on, but whose workspace ALREADY passes every
+    # process check: the deliverable is real (checks are monotone) -> completed-pass.
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+    temp_root = tmp_path / "t"; temp_root.mkdir()
+    run_dir = _seed_run_dir(temp_root, 0, artifact=True,
+                            meta={"status": "launched", "corpus_id": "sha256:x",
+                                  "launched_at": 1.0, "scenario_id": s.id})
+    rr = rse._adjudicate_orphan(s, run_dir)
+    assert rr.status == "completed-pass" and rr.reason == "orphan-checks-green"
+    meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+    # rewritten to a terminal, adjudicable record that preserves the launch fields.
+    assert meta["status"] == "completed-pass" and meta["adjudicated_orphan"] is True
+    assert meta["corpus_id"] == "sha256:x" and "finished_at" in meta
+
+
+def test_adjudicate_orphan_broken_workspace_is_fenced_inconclusive(tmp_path):
+    # A run the runner died on before the work finished: fenced (never a corpus FAIL).
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+    temp_root = tmp_path / "t"; temp_root.mkdir()
+    run_dir = _seed_run_dir(temp_root, 0, artifact=False,
+                            meta={"status": "launched", "launched_at": 1.0, "scenario_id": s.id})
+    rr = rse._adjudicate_orphan(s, run_dir)
+    assert rr.status == "inconclusive" and rr.reason == "orphaned-runner-died"
+
+
+def test_adopt_existing_runs_counts_terminal_and_adjudicates_orphan(tmp_path):
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+    temp_root = tmp_path / "t"; temp_root.mkdir()
+    _seed_run_dir(temp_root, 0, artifact=False,
+                  meta={"status": "completed-fail", "reason": "process-check-failed"})
+    _seed_run_dir(temp_root, 1, artifact=True,   # a green orphan -> completed-pass
+                  meta={"status": "launched", "launched_at": 1.0, "scenario_id": s.id})
+    run_results, completed, next_index = rse._adopt_existing_runs(s, temp_root)
+    assert next_index == 2  # resume launches from run-2
+    assert completed == 2   # one adopted completed-fail + one adjudicated completed-pass
+    assert [r.status for r in run_results] == ["completed-fail", "completed-pass"]
+
+
+def test_resume_recovers_killed_runner_mid_measurement(tmp_path):
+    # THE regression bar (issue #130): a kill-9 of the runner mid-measurement leaves
+    # run-0 finalized + run-1 stuck "launched". Re-invoking with resume=True must
+    # adjudicate the orphan, launch ONLY the remaining run, and reach a verdict —
+    # WITHOUT reinstalling the corpus (proven by an installer that refuses to run).
+    wt = throwaway_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    s = rse.load_scenario(scen)
+    temp_root = tmp_path / "t"; temp_root.mkdir()
+    skills_dir = rse.temp_install(str(wt), temp_root)
+    rse.write_corpus_marker(skills_dir, "abc123")
+    # kill-simulation: run-0 finalized completed-pass; run-1 orphaned "launched"
+    # (its workspace already carries the deliverable -> adjudicates completed-pass).
+    _seed_run_dir(temp_root, 0, artifact=False, meta={"status": "completed-pass"})
+    _seed_run_dir(temp_root, 1, artifact=True,
+                  meta={"status": "launched", "launched_at": 1.0, "scenario_id": s.id})
+
+    def _refuse_installer(worktree, tr):
+        raise AssertionError("resume must NOT reinstall the corpus")
+
+    v = rse.run_scenario(s, temp_root=temp_root, launch=fake_pass_launch,
+                         installer=_refuse_installer, resume=True)
+    assert (v.status, v.exit_code) == ("PASS", 0)
+    assert v.completed_count == 3 and v.passed_count >= 2
+    # run-2 is the only newly-launched run; run-0/1 were resumed from disk.
+    assert (temp_root / "run-2" / "meta.json").is_file()
+    assert not (temp_root / "run-3").exists()
+
+
+def test_per_run_isolation_one_run_exception_does_not_sink_the_loop(tmp_path):
+    # An unexpected fault in ONE run is fenced (errored) and the loop continues to
+    # siblings, instead of the whole measurement dying (issue #130).
+    wt = throwaway_worktree(tmp_path)
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+    calls = {"n": 0}
+
+    def flaky_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("simulated mid-run fault")
+        return fake_pass_launch(argv, cwd=cwd, env=env, stdout_path=stdout_path,
+                                stderr_path=stderr_path, timeout=timeout)
+
+    v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt), launch=flaky_launch)
+    assert (v.status, v.exit_code) == ("PASS", 0)
+    statuses = [r.status for r in v.per_run]
+    assert "errored" in statuses and statuses.count("completed-pass") >= 2
+    # the errored run left a diagnosable terminal meta, not a bare "launched".
+    errored_metas = [
+        json.loads((tmp_path / "t" / f"run-{i}" / "meta.json").read_text(encoding="utf-8"))
+        for i in range(len(statuses))
+    ]
+    assert any(m["status"] == "errored" for m in errored_metas)
