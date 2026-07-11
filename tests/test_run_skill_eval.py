@@ -1014,6 +1014,70 @@ def test_resume_recovers_killed_runner_mid_measurement(tmp_path):
     assert not (temp_root / "run-3").exists()
 
 
+def test_max_new_runs_caps_new_launches_this_invocation(tmp_path):
+    # issue #130 reap mitigation: a single invocation launches at most N new subjects,
+    # so the commander drives one short-lived run per --resume rather than a long loop.
+    wt = throwaway_worktree(tmp_path)
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))  # m=3
+    v = rse.run_scenario(s, temp_root=tmp_path / "t", worktree=str(wt),
+                         launch=fake_pass_launch, max_new_runs=1)
+    assert len(v.per_run) == 1  # exactly ONE new run this invocation
+    assert (tmp_path / "t" / "run-0").exists() and not (tmp_path / "t" / "run-1").exists()
+    assert v.status == "INCONCLUSIVE"  # 1 completed < m=3 -> commander re-invokes
+
+
+def test_sequential_one_run_resumes_accumulate_to_pass(tmp_path):
+    # The reap-safe drive pattern: one run per invocation, resumed, accumulates to a
+    # PASS across invocations — each invocation short-lived (issue #130).
+    wt = throwaway_worktree(tmp_path)
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+    tr = tmp_path / "t"
+    rse.run_scenario(s, temp_root=tr, worktree=str(wt), launch=fake_pass_launch, max_new_runs=1)
+    rse.run_scenario(s, temp_root=tr, launch=fake_pass_launch, resume=True, max_new_runs=1)
+    v = rse.run_scenario(s, temp_root=tr, launch=fake_pass_launch, resume=True, max_new_runs=1)
+    assert v.status == "PASS" and v.completed_count == 3
+    assert (tr / "run-2").exists() and not (tr / "run-3").exists()
+
+
+def test_final_meta_preserves_launch_liveness_fields(tmp_path):
+    # issue #130: the finalized meta must RETAIN the liveness history the launcher
+    # stamped (heartbeat_at, subject_pid, timeout_seconds) instead of dropping it —
+    # a finalized run with no heartbeat looked (falsely) like the path never fired.
+    wt = throwaway_worktree(tmp_path)
+    tr = tmp_path / "t"; tr.mkdir()
+    skills = rse.temp_install(str(wt), tr)
+    cid = rse.write_corpus_marker(skills, "abc")
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+
+    def hb_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
+        rd = Path(stdout_path).parent
+        rse._stamp_meta_field(rd, subject_pid=4242)
+        rse._stamp_meta_heartbeat(rd)
+        return fake_pass_launch(argv, cwd=cwd, env=env, stdout_path=stdout_path,
+                                stderr_path=stderr_path, timeout=timeout)
+
+    rse._run_once(s, 0, tr, skills, cid, hb_launch)
+    final = json.loads((tr / "run-0" / "meta.json").read_text(encoding="utf-8"))
+    assert final["status"] == "completed-pass"
+    assert "heartbeat_at" in final and final["subject_pid"] == 4242
+    assert final["timeout_seconds"] == s.timeout_seconds
+
+
+def test_launch_agent_records_subject_pid(tmp_path, monkeypatch):
+    # The subject PID is recorded at spawn so an external reaper can tree-kill an
+    # orphaned subject after a runner death (issue #130).
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: _BrieflyAlivePopen())
+    monkeypatch.setattr(rse, "_HEARTBEAT_INTERVAL_SECONDS", 0.0)
+    run_dir = tmp_path / "run-0"; run_dir.mkdir()
+    (run_dir / "meta.json").write_text(
+        json.dumps({"status": "launched", "launched_at": 1.0}), encoding="utf-8")
+    rse.launch_agent(["dummy", "-p", "hi"], cwd=str(run_dir / "workspace"),
+                     env=dict(os.environ), stdout_path=str(run_dir / "transcript.txt"),
+                     stderr_path=str(run_dir / "stderr.txt"), timeout=10)
+    meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+    assert meta["subject_pid"] == 555
+
+
 def test_per_run_isolation_one_run_exception_does_not_sink_the_loop(tmp_path):
     # An unexpected fault in ONE run is fenced (errored) and the loop continues to
     # siblings, instead of the whole measurement dying (issue #130).

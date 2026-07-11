@@ -516,6 +516,23 @@ def _drain_pipe(pipe, file_obj) -> None:
         pass
 
 
+def _stamp_meta_field(run_dir, **fields) -> None:
+    """Best-effort merge of `fields` into a run's launch meta.json (only while it is
+    still `launched`). Used to record the subject PID at spawn so an external reaper
+    can tree-kill an orphaned subject after a runner death. Never raises."""
+    try:
+        meta_path = Path(run_dir) / "meta.json"
+        if not meta_path.is_file():
+            return
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        if meta.get("status") != "launched":
+            return
+        meta.update(fields)
+        meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    except (OSError, ValueError):
+        pass
+
+
 def _stamp_meta_heartbeat(run_dir) -> None:
     """Best-effort liveness stamp into a run's launch meta.json while its subject
     is in flight. Records `heartbeat_at` (wall-clock now) and `elapsed_seconds`
@@ -585,6 +602,12 @@ def launch_agent(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> Launch
             # verdict. Fenced as errored.
             return LaunchOutcome(exit_code=None, launch_error=True, stderr_text=str(exc))
 
+        run_dir = Path(stdout_path).parent
+        # Record the subject PID into the launch meta the moment it spawns, so an
+        # external reaper (a resuming re-invocation) can tree-kill an orphaned
+        # subject after a runner death, and a post-hoc inspector can see it (#130).
+        _stamp_meta_field(run_dir, subject_pid=proc.pid)
+
         drainers = [
             threading.Thread(target=_drain_pipe, args=(proc.stdout, out), daemon=True),
             threading.Thread(target=_drain_pipe, args=(proc.stderr, err), daemon=True),
@@ -592,7 +615,6 @@ def launch_agent(argv, *, cwd, env, stdout_path, stderr_path, timeout) -> Launch
         for t in drainers:
             t.start()
 
-        run_dir = Path(stdout_path).parent
         deadline = None if timeout is None else time.monotonic() + timeout
         next_heartbeat = time.monotonic() + _HEARTBEAT_INTERVAL_SECONDS
         timed_out = False
@@ -809,7 +831,8 @@ def _write_meta(run_dir: Path, payload: dict) -> None:
 
 
 def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
-              corpus_id: str, launch, permission_mode: str | None = None) -> RunResult:
+              corpus_id: str, launch, permission_mode: str | None = None,
+              launcher: str = DEFAULT_LAUNCHER) -> RunResult:
     """Execute (and score) ONE attempt into `run-<index>/`. Fabricates the run-dir
     shape, copies the corpus into an isolated `workspace/.claude/skills` and
     asserts its id, launches via the injected seam, probes completion, then runs
@@ -845,7 +868,7 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
         # run that writes nothing can be recognised as byte-unchanged afterwards.
         pre_fingerprint = compute_corpus_id(workspace)
         prompt = wrap_prompt(scenario.task_prompt)
-        argv = build_eval_argv(DEFAULT_LAUNCHER, prompt=prompt, model=scenario.model,
+        argv = build_eval_argv(launcher, prompt=prompt, model=scenario.model,
                                permission_mode=permission_mode)
         # Incremental meta.json: a launch record written BEFORE the (possibly
         # hang-then-tree-killed) launch, so a killed run is still diagnosable.
@@ -880,16 +903,23 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
     # Answer checks are executed and RECORDED on the per-run record but never gate.
     rr.check_results = list(rr.check_results) + answer_results
 
-    # Final meta.json: overwrites the launch record with the resolved classification.
-    _write_meta(run_dir, {
-        "corpus_id": corpus_id,
-        "scenario_id": scenario.id,
+    # Final meta.json: MERGE the resolved classification ONTO the launch record so
+    # the liveness history the launcher stamped (heartbeat_at, elapsed_seconds,
+    # subject_pid, timeout_seconds) survives into the finalized record. Overwriting
+    # with a fresh dict silently dropped that history, which made a finalized run
+    # look like it never had a heartbeat (issue #130 round-1 diagnosis confusion).
+    try:
+        final_meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        final_meta = {"corpus_id": corpus_id, "scenario_id": scenario.id,
+                      "launched_at": started}
+    final_meta.update({
         "status": rr.status,
         "reason": rr.reason,
         "exit_code": outcome.exit_code,
-        "launched_at": started,
         "finished_at": time.time(),
     })
+    _write_meta(run_dir, final_meta)
     return rr
 
 
@@ -978,7 +1008,8 @@ def _read_corpus_marker(skills_dir: Path) -> tuple[str, str | None]:
 def run_scenario(scenario: Scenario, *, temp_root, worktree=None, launch=None,
                  installer=None, max_attempts: int | None = None,
                  permission_mode: str | None = DEFAULT_PERMISSION_MODE,
-                 resume: bool = False) -> Verdict:
+                 resume: bool = False, launcher: str = DEFAULT_LAUNCHER,
+                 max_new_runs: int | None = None) -> Verdict:
     """Install the corpus once, then run the completion-seeking M-run loop and
     return the Verdict. The `launch`/`installer` seams default to the module-level
     `launch_agent`/`temp_install` resolved at CALL time (run_crew's pattern), so a
@@ -1019,10 +1050,16 @@ def run_scenario(scenario: Scenario, *, temp_root, worktree=None, launch=None,
         run_results, completed, attempt = _adopt_existing_runs(scenario, temp_root)
     else:
         run_results, completed, attempt = [], 0, 0
-    while completed < m and attempt < max_attempts:
+    # `max_new_runs` caps how many NEW subjects this single invocation launches
+    # (issue #130): the round-1 runner was reaped by the environment at ~60 min of
+    # total lifetime, mid-run. Driving ONE run per short-lived invocation (the
+    # commander re-invoking `--resume` between them) keeps each invocation well
+    # under that window, so the runner lives long enough to enforce its own deadline.
+    launch_ceiling = max_attempts if max_new_runs is None else min(max_attempts, attempt + max_new_runs)
+    while completed < m and attempt < launch_ceiling:
         try:
             rr = _run_once(scenario, attempt, temp_root, skills_dir, corpus_id, launch,
-                           permission_mode=permission_mode)
+                           permission_mode=permission_mode, launcher=launcher)
         except Exception as exc:  # noqa: BLE001 — one run's crash must not sink siblings
             # Per-run isolation: an unexpected fault in one run is fenced (errored,
             # never a corpus FAIL) and the loop continues, instead of one bad run
@@ -1071,6 +1108,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="RESUME an earlier (possibly killed) run: re-adopt the run-<n>/ "
                         "dirs in DIR, adjudicate any orphaned by a dead runner, and launch "
                         "only the remaining runs (issue #130). Implies --keep-temp.")
+    p.add_argument("--max-new-runs", type=int, default=None,
+                   help="launch at most N NEW subjects this invocation, then return (issue "
+                        "#130). Drive ONE run per short-lived --resume invocation so the "
+                        "runner never outlives the environment's background-task reap window.")
     p.add_argument("--json", action="store_true", help="emit the verdict as JSON")
     return p
 
@@ -1132,30 +1173,27 @@ def main(argv: list[str] | None = None) -> int:
     else:
         launch, installer = launch_agent, temp_install
 
+    common = dict(worktree=args.worktree, launch=launch, installer=installer,
+                  permission_mode=args.permission_mode, launcher=args.command,
+                  max_new_runs=args.max_new_runs)
     if args.resume:
         temp_root = Path(args.resume)
         if not temp_root.is_dir():
             print(f"error: --resume dir does not exist: {temp_root}", file=sys.stderr)
             return 3
         try:
-            v = run_scenario(scenario, temp_root=temp_root, worktree=args.worktree,
-                             launch=launch, installer=installer,
-                             permission_mode=args.permission_mode, resume=True)
+            v = run_scenario(scenario, temp_root=temp_root, resume=True, **common)
         finally:
             print(f"resumed temp dir: {temp_root}", file=sys.stderr)
     elif args.keep_temp:
         temp_root = Path(tempfile.mkdtemp(prefix="constellation-eval-"))
         try:
-            v = run_scenario(scenario, temp_root=temp_root, worktree=args.worktree,
-                             launch=launch, installer=installer,
-                             permission_mode=args.permission_mode)
+            v = run_scenario(scenario, temp_root=temp_root, **common)
         finally:
             print(f"kept temp dir: {temp_root}", file=sys.stderr)
     else:
         with tempfile.TemporaryDirectory(prefix="constellation-eval-") as td:
-            v = run_scenario(scenario, temp_root=Path(td), worktree=args.worktree,
-                             launch=launch, installer=installer,
-                             permission_mode=args.permission_mode)
+            v = run_scenario(scenario, temp_root=Path(td), **common)
 
     _print_verdict(v, as_json=args.json)
     return v.exit_code
