@@ -123,7 +123,12 @@ touch its worktree" rule the recovery drill already applies.
 
 **Harvest before you sweep — a required precondition of removal.** A worktree
 carries durable learning the shared root does not yet hold: its lessons-delta,
-its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. Just
+its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. A
+**fenced** Commander stages that trio worktree-locally under
+`.agent-work/staged-feedback/<work-id>/` with a `FENCE.md` launch-order citation
+(the shape `verify_agent_feedback.py` accepts in lieu of the durable-root write,
+so the Commander closes out without waiving); that staging dir is your harvest
+source. Just
 as you confirm a Commander dead before touching its worktree, you harvest that
 trio into the shared durable `.agent-work/` at the main checkout **before**
 `git worktree remove` — removal is not permitted until it is collected, because a
