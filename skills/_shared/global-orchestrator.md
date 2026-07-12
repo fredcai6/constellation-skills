@@ -104,6 +104,14 @@ incomplete or missing artifacts → *stalled*, rework or relaunch. This judges t
 an idle/"completed" process may still resurrect, so confirm it dead before you reuse, sweep, or launch a
 continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone."
 
+Adjudication ends with a shutdown, not an idle. Once an agent's work is accepted, merged, and harvested,
+send it a `shutdown_request` and confirm the termination — accepted-but-idle agents accumulate as clutter
+and ambiguity about what is still live. An agent that answers a shutdown request with another idle
+notification usually isn't refusing; it didn't parse the protocol — re-send as a plain message quoting the
+pending `request_id` and the exact `shutdown_response` call to make. Never shut down an agent whose work
+you have not yet adjudicated and harvested; the shutdown is the last step of closeout, not a cleanup
+reflex.
+
 ## Arm a watchdog on everything you dispatch
 
 Completion signals are not guaranteed to arrive: subagents die silently, background runners get reaped,
