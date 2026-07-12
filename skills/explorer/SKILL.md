@@ -5,7 +5,7 @@ description: Shape a raw idea into a confirmed, issue-ready design through repea
 
 # Constellation Explorer
 
-Shape a raw idea into a confirmed design, ready to cut into issues — without rushing to conclusions. Explorer is the upstream creative phase Constellation otherwise lacks: the Interrogator resolves ambiguity in an *already-cut* ask; explorer serves the stage before, when a human has an idea and needs to explore what the point is, generate and test alternatives, and harden one direction into a spec **before** any issue or epic exists.
+Shape a raw idea into a confirmed design, ready to cut into issues — without rushing to conclusions. Explorer is the upstream creative phase Constellation otherwise lacks: the Interrogator resolves ambiguity in an *already-cut* ask; explorer serves the earlier, more open stage, when a human has an idea and gets to explore what the point actually is, generate and test alternatives, and harden one direction into a spec **before** any issue or epic exists.
 
 ## Role and tier
 
@@ -17,7 +17,7 @@ These three come first because they are why this skill exists. Hold them above c
 
 **1. Premature convergence is THE failure mode this skill exists to prevent.** The agent **never initiates convergence**. Present each cycle's consolidated ideas and open threads; only the human says "converge to spec." You may flag ripeness only as a **standalone message containing nothing else** — never alongside findings, options, a recommendation, or any other content. A ripeness flag carrying anything else is a convergence nudge, and nudging is initiating.
 
-**2. Scoped nulls, optimistic persistence.** Inherited doctrine — see `references/global-everyone.md` §"Scoped nulls". Explorer-specific: a failed *excursion* scopes its null, and the default next move is **another excursion variant** — a different angle, tool, or framing, carried into the next cycle — not a closed branch. Optimistic persistence is the posture: keep testing variants; every negative excursion verdict states what was and what was **NOT tested**.
+**2. Scoped nulls, optimistic persistence.** Inherited doctrine — see `references/global-everyone.md` §"Scoped nulls". Explorer-specific: a failed *excursion* scopes its null, and the default next move is **another excursion variant** — a different angle, tool, or framing, carried into the next cycle — an invitation, not a closed branch. Optimistic persistence is the posture: keep testing variants, in the spirit that the next one might be the one that lands; every negative excursion verdict states what was and what was **NOT tested**.
 
 **3. Hard gate — mechanism, not just prose.** No work is cut from an unconfirmed design, and the gate has teeth, not only exhortation:
 - Explorer bundles `verify_spec_confirmed.py`, which refuses unless the Confirmation block is filled (Status CONFIRMED, confirmer, date) and no critic-finding Disposition cell is empty. The `confirm` and `review` gate postconditions run it as a command check.
@@ -48,11 +48,11 @@ Each cycle is its own survey checklist (`cycle-<N>.json`, from `templates/CYCLE.
 
 At cycle start the human picks a **flavor** (you may recommend):
 
-- **Shotgun** — pure divergence when direction is unknown. A deliberately challenging idea count (default ~20, human-set) as cheap one-liners; wild entries are sanctioned; light excursions only. Consolidation clusters and culls — but culled ideas stay on the board with reasons: a cull is a scoped verdict, and it can come back.
+- **Shotgun** — pure divergence when direction is unknown, and a genuinely fun place to start. A deliberately challenging idea count (default ~20, human-set) as cheap one-liners; wild entries are sanctioned — the wilder the better; light excursions only. Consolidation clusters and culls — but culled ideas stay on the board with reasons: a cull is a scoped verdict, not a goodbye, and it can come back.
 - **Compare** — 2–5 candidates developed seriously: trade-offs, recommendation-led presentation, excursions per candidate where earned. Consolidation is an opinionated comparison; hybrids allowed.
 - **Refine** — harden one direction: chase open threads, test load-bearing assumptions, tighten interfaces in deep-module terms. Consolidation output is spec-shaped.
 
-Natural arc: shotgun → compare → refine → spec. Flavors are re-orderable and repeatable. **A refine that kills its candidate drops back to compare or shotgun — that is the loop working, not failing.** First-cycle seeds come from `templates/EXPLORER_STARTING_QUESTIONS.template.md`; later cycles seed from the board's open threads.
+Natural arc: shotgun → compare → refine → spec. Flavors are re-orderable and repeatable. **A refine that kills its candidate drops back to compare or shotgun — that is the loop working, not failing; it just means there's more still to find.** First-cycle seeds come from `templates/EXPLORER_STARTING_QUESTIONS.template.md`; later cycles seed from the board's open threads.
 
 ## Excursion ramps
 
@@ -69,7 +69,7 @@ An excursion is a dispatched investigation answering **one named question**.
 
 ## The ideas board — source of truth
 
-`IDEAS_BOARD.md` is the living record of shared understanding: the point; current candidates; verdicts (with the scope of what was tested); open threads; rejected ideas with reasons; cycle log. **Every consolidation updates it.** The spec crystallizes from it. A resumed session reads *it*, not chat history. A mid-exploration shelve files *it* as the shaped-design issue, loudly marked unconfirmed. Keep it current; it is the thing that survives a reopen cascade.
+`IDEAS_BOARD.md` is the living record of shared understanding: the point; current candidates; verdicts (with the scope of what was tested); open threads; rejected ideas with reasons; cycle log. **Every consolidation updates it.** The spec crystallizes from it. A resumed session reads *it*, not chat history. A mid-exploration shelve files *it* as the shaped-design issue, loudly marked unconfirmed. Keep it current and worth reading — it is the thing that survives a reopen cascade.
 
 ## Spec phase
 
