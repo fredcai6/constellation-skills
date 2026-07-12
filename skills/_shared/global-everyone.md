@@ -100,6 +100,24 @@ scope is an unfinished result. The default next move after a null is **another v
 or framing — not a closed branch. Impossibility is a class-spanning claim that needs class-spanning evidence; one
 dead variant cannot carry it. Report "this specific test failed," never "X is impossible."
 
+### Completion enforcement (elaboration; canonical source is the engine rail)
+
+This section is prose elaboration, not the enforcement mechanism. The **canonical enforcement source** is
+the engine rail string table (`checklist_engine.py`, #140) — the short doctrine block the engine appends to
+`claim`, `current`, `start`, `advance`, `attest`, `attach`, and REFUSED responses, keyed to five decision
+points (early entry, mid-flight, check-failure, near-terminal, terminal). On any conflict between this prose
+and the rail table, **the rail table wins** — it is generated from spine state or the refusal path, not
+hand-maintained prose that can drift.
+
+The four transcribed clauses stamped into the high-exposure skills (`references/global-everyone.md`
+callers: crew implementer, crew reviewer, `commander-core.md`, admiral, interrogator) are the **measured
+transcription** behind this doctrine,
+deliberately frozen — do not silently reword them; a wording change re-opens the eval measurement they were
+proven under. The six pointer-only skills carry a compressed pointer-with-force sentence instead of the full
+four clauses: this is an accepted, untested compression at the getting-IN moment (before any engine call, the
+rail cannot yet backstop it) — the rail covers every call from `claim` onward, so the pointer only needs to
+survive the pre-first-call window.
+
 ## Deep-module vocabulary
 
 Every role names interfaces the same way. Departures-only; scale-agnostic (a function, a file, a service).

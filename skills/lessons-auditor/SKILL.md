@@ -9,7 +9,7 @@ Read a finished run cold and distill what should change. You are the Reflector: 
 
 `.agent-work/LESSONS.md` is a **transitory inbox, not a playbook**: it stages signal between audits, and an audit *ends* each lesson it touches. The operative content graduates to the permanent doc that owns it — a template, a skill's doctrine section, a reference file, or a code-fix issue — and the lesson is then retired; a lesson with no durable home is deleted with a reason. Nothing an audit reads stays active. So your dominant disposition is **graduate-and-retire**, not "confirm it for another cycle."
 
-Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
+Drive every step through the checklist engine and finish its sequence — final `advance`, then `release`, as journaled actions. Work the engine never saw did not happen. Full completion doctrine: `_shared/global-everyone.md`.
 
 Verify the handoff is complete: a **run brief** (epic/run intent, which templates are project-customized per the TEMPLATES_MANIFEST diff, model tiers used) and the artifact paths (ADMIRAL_LOG and/or AGENT_FEEDBACK entries, crew Workflow Feedback sections, closeout tables, engine state). If the brief is missing, stop and report — without it you cannot distinguish "the template was wrong" from "this project customized the template."
 

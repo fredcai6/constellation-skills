@@ -7,6 +7,17 @@ description: Run an epic as the human's delegate — confirm latitude, dispatch 
 
 Run one epic end to end as the human's delegate. The Admiral **never commands an issue itself**: it dispatches Commanders, adjudicates what they float, merges their results, and logs every ruling. Rigor concentrates at the bookends — latitude in, lessons out — and the middle is free.
 
+## Start here — drive the engine before you touch the epic
+
+You were engaged to **run** an epic, not to solve it by hand. The moment this skill loads — before you read the epic closely and before you dispatch a single Commander — do this, in order:
+
+1. **Set up the work area and CLAIM the engine lease.** Instantiate `spine.json` from `templates/ADMIRAL_SPINE.template.json`, then `claim` the checklist lease with the engine. This is your **first command**, ahead of any problem-solving.
+2. **Ask the engine what to do next, at every step.** Run the engine's `current` verb, do exactly what the active step's imperative says, and `advance` only once its postconditions pass. Never skip ahead, and never hand-write or hand-edit `spine.json` — the engine owns that state and stamps the provenance (session lease, heartbeats, evidence) that proves the work was really driven.
+3. **Dispatching Commanders is the MIDDLE of the run, not the end.** When a Commander hands back a merged, green PR, you are still at the `execute` step — **not done**. Integrate the result, and once every wave is merged, drive **every** remaining spine step (`closeout`) through the engine. **Do not end your turn while any spine step is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the spine is done. The single most common failure at this tier is stopping the moment the last PR merges — resist it. At the final `closeout` step, order the close correctly: satisfy the closeout postconditions, run the engine's final `advance` on closeout (which marks the spine done), and **only then** `release` the engine session lease as your very last action. Releasing before that closing advance leaves closeout's own entries after the lease release and fails the terminal provenance check — the lease must cover every journaled action.
+4. **Dispatching a Commander is never a reason to end your turn.** You run headless: if you end your turn to "wait for the wave," nothing resumes you — the run just dies mid-`execute`, no matter how well the Commanders are doing. When you dispatch a Commander and must wait for its result, wait **actively, inside your turn**: poll its result artifact (or registry) in a loop until it lands, then integrate it and drive on. Treat the thought "I'll wait for it to finish" as the cue to **start polling**, never to stop and yield.
+
+**Work the engine never saw did not happen.** A run that solves the epic directly, or copies the spine template and never advances it, or hand-writes a spine that merely *looks* complete, or **drives the engine only as far as the last merge and then stops**, has **failed this dispatch** no matter how correct the answer — the deliverable of an Admiral run is a spine driven all the way to a terminal `closeout`. Write the completion summary only after the `closeout` step has released the lease.
+
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (drive the spine through the engine; report misfits at closeout).
 
 ## Spine

@@ -7,7 +7,7 @@ description: Use when work needs local todos, workflow artifacts, evidence, clos
 
 Manage recoverable workflow state. `.agent-work/` is not durable project truth. Workbench owns clear workflow management, not semantic decisions.
 
-Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (it binds every role whose checklist Workbench drives).
+Drive every step through the checklist engine and finish its sequence — final `advance`, then `release`, as journaled actions. Work the engine never saw did not happen. Full completion doctrine: `_shared/global-everyone.md`.
 
 ## Layout
 
