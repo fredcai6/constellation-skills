@@ -23,7 +23,7 @@ A prototype is **throwaway code that answers one named question — the question
 
 ## Scoped nulls
 
-Inherited doctrine — see `references/global-everyone.md` §"Scoped nulls". A prototype that says "no" has **scoped** its no. Prototype-specific: "State machines don't work here" is never a prototype's verdict; "this reducer shape thrashed on concurrent edits, tested single-threaded only" is. The `NOT tested` line in the result is **mandatory**, not a courtesy — a null with an empty scope is an unfinished result. When you are tempted to write "this can't work," write "this variant failed; here is the next variant to try" instead, and say so in the result.
+Inherited doctrine — see `references/global-everyone.md` §"Scoped nulls". A prototype that says "no" has **scoped** its no. Prototype-specific: "State machines don't work here" is never a prototype's verdict; "this reducer shape thrashed on concurrent edits, tested single-threaded only" is. The `NOT tested` line in the result is **mandatory**, not a courtesy — a null with an empty scope is an unfinished result. When you are tempted to write "this can't work," write "this variant failed; here's the next variant worth trying" instead, and say so in the result — a good null is progress, not a dead end.
 
 ## Pick the branch
 
