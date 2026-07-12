@@ -121,6 +121,51 @@ class VerifyAgentFeedbackTests(unittest.TestCase):
         archive.mkdir(parents=True)
         self.verify(phase="archive")
 
+    def stage_trio(
+        self,
+        fence=True,
+        feedback=REAL_ENTRY,
+        lessons='{"tick": true}',
+        constellation="# Constellation Feedback\n",
+        fence_text="LAUNCH_ORDER commander-143: File Ownership / harvest-at-closeout",
+        work_id="issue-9",
+    ):
+        staged = self.root / ".agent-work" / "staged-feedback" / work_id
+        staged.mkdir(parents=True, exist_ok=True)
+        if feedback is not None:
+            (staged / "AGENT_FEEDBACK.md").write_text(feedback, encoding="utf-8")
+        if lessons is not None:
+            (staged / "lessons-delta.json").write_text(lessons, encoding="utf-8")
+        if constellation is not None:
+            (staged / "CONSTELLATION_FEEDBACK.md").write_text(constellation, encoding="utf-8")
+        if fence and fence_text is not None:
+            (staged / "FENCE.md").write_text(fence_text, encoding="utf-8")
+
+    def test_fenced_staged_trio_passes(self):
+        self.stage_trio()
+        self.verify(phase="feedback")
+
+        archive = self.root / ".agent-work" / "archive" / "2026-06-10-issue-9"
+        archive.mkdir(parents=True)
+        self.verify(phase="archive")
+
+    def test_fence_citation_without_trio_fails(self):
+        self.stage_trio(lessons=None, constellation=None)
+        with self.assertRaises(self.m.FeedbackVerificationError) as ctx:
+            self.verify()
+        self.assertIn("learning cannot be silently dropped", str(ctx.exception))
+
+    def test_unfenced_missing_log_unchanged(self):
+        with self.assertRaises(self.m.FeedbackVerificationError) as ctx:
+            self.verify()
+        self.assertIn("missing durable feedback log", str(ctx.exception))
+        self.assertIn("AGENT_FEEDBACK.md", str(ctx.exception))
+
+    def test_unfenced_durable_still_passes_ignores_staged(self):
+        self.write_log(REAL_ENTRY)
+        self.stage_trio(fence=False, lessons=None, constellation=None)
+        self.verify()
+
 
 if __name__ == "__main__":
     unittest.main()
