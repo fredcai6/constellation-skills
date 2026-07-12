@@ -128,6 +128,80 @@ def active_id(cl: dict) -> str | None:
     return None
 
 
+# --------------------------------------------------------------------------- #
+# doctrine rail (#138, channel A) — engine-carried doctrine at every decision
+# point. `dispatch()` appends the position-derived rail to the success output of
+# the railed verbs; `main()` appends the check-failure rail to the REFUSED path.
+# The verb functions themselves stay PURE (their return values are unchanged) so
+# existing exact-equality tests keep passing — the rail rides only the CLI
+# boundary chokepoints. No new mechanism, verb, schema, or per-step authored text.
+#
+# CANONICALITY: This table is the canonical enforcement source;
+# `_shared/global-everyone.md` elaborates and cites it; on conflict the table
+# wins. The five strings are FROZEN and verbatim (measurement precondition for
+# #145) — do not paraphrase; token placeholders {id}/{n}/{imperative} are the
+# only substituted parts.
+# --------------------------------------------------------------------------- #
+RAIL_VERBS = {"claim", "current", "start", "advance", "attest", "attach"}
+
+_RAIL_STRINGS = {
+    "early": "Work the engine never saw did not happen. Run the step's checks, "
+             "then `attest` and `advance {id}`.",
+    "mid-flight": "A working solution is the MIDDLE of this run — you are {n} "
+                  "steps from done. Next: {imperative}. Run it.",
+    "check-failure": "This check failed; that verdict is scoped to this check, "
+                     "not the approach. Do the missing work and `attest`/`attach` "
+                     "the evidence, or escalate with `block`/`waive` and a reason. "
+                     "Report 'this check failed', never 'this step is impossible'. "
+                     "Quiet abandonment and fabricated evidence are the two "
+                     "forbidden exits.",
+    "near-terminal": "The finish is a sequence, not an announcement. Final "
+                     "`advance` first, then `release` — the journal, not your "
+                     "prose, is the proof.",
+    "terminal": "Release is your last journaled action. Run `release`; do not "
+                "claim it.",
+}
+
+
+def _rail_position(cl: dict) -> tuple[str, dict]:
+    """Derive the decision-point position for a gated checklist and the tokens its
+    rail string needs. ``remaining`` is the ordered list of not-yet-terminal items;
+    its head (``remaining[0]``) is the active gate.
+
+    - ``n == 0`` -> ``terminal`` (only ``release`` remains).
+    - ``n == 1`` -> ``near-terminal`` (active step is the last before release).
+    - active gate is the first item -> ``early``.
+    - otherwise -> ``mid-flight``.
+    """
+    remaining = [iid for iid in cl["items"] if cl["tasks"][iid]["status"] not in TERMINAL]
+    n = len(remaining)
+    if n == 0:
+        return "terminal", {}
+    active = remaining[0]
+    if n == 1:
+        return "near-terminal", {}
+    if active == cl["items"][0]:
+        return "early", {"id": active}
+    return "mid-flight", {"n": n, "imperative": cl["tasks"][active].get("imperative", "")}
+
+
+def _rail(point: str, cl: dict) -> str:
+    """Return the doctrine block to append at a decision point, or ``""`` when no
+    rail applies. Non-gated (survey) checklists get NO rail. ``point`` is either
+    ``"check-failure"`` (the REFUSED path, no token substitution) or any railed verb
+    name, in which case the position is derived from ``items`` state."""
+    if cl.get("type") != GATED:
+        return ""
+    if point == "check-failure":
+        text = _RAIL_STRINGS["check-failure"]
+    else:
+        pos, tokens = _rail_position(cl)
+        text = _RAIL_STRINGS[pos]
+        for key, value in tokens.items():
+            text = text.replace("{" + key + "}", str(value))
+    return f"\n\nRAIL: {text}"
+
+
 def _new_evidence_id(t: dict) -> str:
     return f"e-{t['id']}-{len(t.get('evidence', [])) + 1}"
 
@@ -1253,13 +1327,8 @@ def build_payload(args: argparse.Namespace) -> dict:
 def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -> str:
     v = args.verb
     config = load_config(cl, base_dir)
-    if v == "current":
-        return current(cl)
-    if v == "claim":
-        return claim(
-            cl, args.session_id, args.claimed_by, args.worktree, config,
-            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
-        )
+    # heartbeat/release manage the lease only and are NOT railed — keep their pure
+    # early returns. current/claim ARE railed, so they fall through to the append.
     if v == "heartbeat":
         return heartbeat(cl, args.session_id)
     if v == "release":
@@ -1267,19 +1336,32 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
             cl, args.session_id,
             force=getattr(args, "force", False), reason=getattr(args, "reason", None),
         )
-    # Actor-authority gate: once an active lease exists, a mutating verb must
-    # carry the owning --session-id. No lease -> legacy behavior (no session).
-    session_id = getattr(args, "session_id", None)
-    require_session(cl, v, session_id, config)
-    # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
-    # so it never refreshes the lease even though main() persists on the error
-    # path. Only a verb that returns successfully reaches the stamp below.
-    message = _run_verb(cl, args, base_dir)
-    # Owner activity = liveness: a SUCCESSFUL mutating verb by the owner refreshes
-    # the lease, so an actively-working session never goes stale and an idle gap
-    # self-heals. A refused verb never gets here.
-    if v in MUTATING_VERBS:
-        _refresh_owner_heartbeat(cl, session_id)
+    if v == "current":
+        message = current(cl)
+    elif v == "claim":
+        message = claim(
+            cl, args.session_id, args.claimed_by, args.worktree, config,
+            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+        )
+    else:
+        # Actor-authority gate: once an active lease exists, a mutating verb must
+        # carry the owning --session-id. No lease -> legacy behavior (no session).
+        session_id = getattr(args, "session_id", None)
+        require_session(cl, v, session_id, config)
+        # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
+        # so it never refreshes the lease even though main() persists on the error
+        # path. Only a verb that returns successfully reaches the stamp below.
+        message = _run_verb(cl, args, base_dir)
+        # Owner activity = liveness: a SUCCESSFUL mutating verb by the owner refreshes
+        # the lease, so an actively-working session never goes stale and an idle gap
+        # self-heals. A refused verb never gets here.
+        if v in MUTATING_VERBS:
+            _refresh_owner_heartbeat(cl, session_id)
+    # Doctrine rail (#138 channel A): append the position-derived doctrine block to
+    # the railed verbs' success output. The verb functions above stay pure; the rail
+    # rides only this CLI-boundary chokepoint. `_rail` returns "" for non-gated cls.
+    if v in RAIL_VERBS:
+        message += _rail(v, cl)
     return message
 
 
@@ -1412,7 +1494,9 @@ def main(argv: list[str] | None = None) -> int:
         # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
         if not args.dry_run and args.verb != "current":
             save(path, cl)
-        print(f"REFUSED: {exc}", file=sys.stderr)
+        # Doctrine rail (#138 channel A): a refusal is a check-failure decision point.
+        # Append the check-failure rail (gated checklists only; "" for surveys).
+        print(f"REFUSED: {exc}{_rail('check-failure', cl)}", file=sys.stderr)
         return 1
     if not args.dry_run and args.verb != "current":
         save(path, cl)
