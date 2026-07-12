@@ -60,6 +60,16 @@ completion-notification (fires on output-exists OR process-death) or **bounded
 foreground polls** (≤10 min each) — never a per-progress-line monitor. Short
 steps run foreground; never background-and-wait a >10-min step.
 
+**Idle sessions do not receive notifications.** Field-measured (four incidents,
+2026-07-11): a correctly-armed completion notification can fire on time and be
+DELIVERED hours late, because the platform suspends an idle session and holds
+its notifications until something external wakes it. A watcher that "worked"
+still stalls the fleet. Two proven counters, use at least one on every dispatch:
+(1) **stay active** — bounded in-turn poll loops instead of idling on the
+signal; (2) **self-scheduled wake-up** keyed to the work's own deadline (an
+external wake by construction) — on firing, adjudicate from artifacts, never
+from the missing signal. The deadline, not the notification, is the backstop.
+
 ## The sleeper hazard ("completed" is ambiguous)
 
 An agent that ended its turn waiting on a watched event reports
