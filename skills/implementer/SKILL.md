@@ -7,6 +7,17 @@ description: Implement a bounded change from a handoff. Use when a handoff defin
 
 Own one scoped change. Build your own plan and work it.
 
+## Start here — drive the engine before you touch the task
+
+You were handed a bounded task, not a licence to solve it by hand. The moment this skill loads — before you read the handoff closely and before you write a single line of solution code — do this, in order:
+
+1. **Build the plan and CLAIM the engine lease.** Instantiate your `gated` plan from `templates/IMPLEMENTER_PLAN.template.json`, then `claim` the checklist lease with the engine. This is your **first command**, ahead of any problem-solving.
+2. **Ask the engine what to do next, at every step.** Run the engine's `current` verb, do exactly what the active step's imperative says, and `advance` only once its postconditions pass. Never skip ahead, and never hand-write or hand-edit the plan file — the engine owns that state and stamps the provenance (session lease, heartbeats, evidence) that proves the work was really driven.
+3. **Making the change is the MIDDLE of the run, not the end.** When your change is in and tests pass, you are still not done — integrate the evidence, `advance` that item, then drive every remaining plan item through the engine. **Do not end your turn while any item is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the plan is done. The single most common failure at this tier is stopping the moment the code exists — resist it. Run the engine's final `advance` first, and **only then** `release` the engine session lease as your very last action. Releasing before that closing advance fails the terminal provenance check — the lease must cover every journaled action.
+4. **Running a long check is never a reason to end your turn.** If you must wait on a long verification, build, or test command, wait **actively, inside your turn**: poll for its output in a loop until it lands, then integrate it and drive on. Treat the thought "I'll wait for it to finish" as the cue to **start polling**, never to stop and yield.
+
+**Work the engine never saw did not happen.** A run that solves the task directly, or copies the plan template and never advances it, or hand-writes a plan that merely *looks* complete, or **drives the engine only as far as the code change and then stops**, has **failed this dispatch** no matter how correct the answer — the deliverable of an Implementer run is a plan driven all the way to done. Report a proof-of-life as soon as you start.
+
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (report misfits in your workflow feedback).
 
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
