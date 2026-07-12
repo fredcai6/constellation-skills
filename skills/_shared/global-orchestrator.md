@@ -103,3 +103,13 @@ the idle signal alone: complete artifacts → integrate as if the verdict had ar
 incomplete or missing artifacts → *stalled*, rework or relaunch. This judges the **verdict**, not liveness:
 an idle/"completed" process may still resurrect, so confirm it dead before you reuse, sweep, or launch a
 continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone."
+
+## Arm a watchdog on everything you dispatch
+
+Completion signals are not guaranteed to arrive: subagents die silently, background runners get reaped,
+and a watcher keyed to "the EXITCODE line appears" waits forever when the process dies without writing it.
+After dispatching background work, **arm an independent wall-clock watchdog** keyed to the work's own
+deadline (a scheduled wake-up where the harness offers one, otherwise a polling loop): when the deadline
+passes without a result, wake, inspect the artifacts, and adjudicate — do not keep waiting on a signal
+that may never fire. Every watch-failure incident in the field followed the same shape: the watcher
+trusted a completion signal and slept through the death. The deadline, not the signal, is the backstop.

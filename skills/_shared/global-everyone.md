@@ -57,6 +57,10 @@ its own spine/survey template and drives it, it never re-explains the engine.
 - The result/deliverable file IS the task. Run verification and sweeps to completion **in-context** (poll,
   don't idle); an idle turn-end with the result unwritten strands the gate with no error signal — finish,
   then rest.
+- **Never end your turn to "wait."** In a headless or dispatched run, ending your turn ends the process —
+  "the crew is running in the background, I'll wait for it" followed by silence IS the death of the run
+  (observed failure shade: *wait-by-ending-turn*). Waiting is an activity: poll the crew registry or the
+  expected result artifact in a loop inside your turn, and proceed only when the result has landed.
 - Detach genuinely long jobs at the OS level (e.g. `Start-Process -WindowStyle Hidden`). Write the
   crash-resume state note (step / slug / next-cmd / PID / expected-artifact) BEFORE detaching; arm ONE
   completion notify (output-exists OR process-death), never a per-progress-line watcher.
