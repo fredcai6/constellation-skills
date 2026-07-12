@@ -1465,3 +1465,126 @@ class JournalEmission(unittest.TestCase):
             Path(str(f) + ".journal").write_text("not json at all\n", encoding="utf-8")
             self.assertEqual(E.main(["--file", str(f), "start", "g1"]), 0)
             self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
+
+
+class DoctrineRail(unittest.TestCase):
+    """#138 channel A: the engine appends position-derived doctrine to railed verbs'
+    success output and the check-failure rail to the REFUSED path. The five strings
+    are frozen/verbatim; these tests pin the exact asserted substrings."""
+
+    def test_rail_verbs_set_is_exact(self):
+        # Only these six verbs are railed; heartbeat/release/record/skip are not.
+        self.assertEqual(
+            E.RAIL_VERBS,
+            {"claim", "current", "start", "advance", "attest", "attach"},
+        )
+        for unrailed in ("heartbeat", "release", "record", "skip", "consolidate"):
+            self.assertNotIn(unrailed, E.RAIL_VERBS)
+
+    def test_rail_marker_and_leading_newlines(self):
+        cl = gated(g1=gate("g1", "in-progress"), g2=gate("g2"), g3=gate("g3"))
+        rail = E._rail("current", cl)
+        self.assertTrue(rail.startswith("\n\nRAIL: "))
+
+    def test_rail_early(self):
+        # active gate is the first item (n == 3) -> early, {id} = g1
+        cl = gated(g1=gate("g1", "in-progress"), g2=gate("g2"), g3=gate("g3"))
+        rail = E._rail("current", cl)
+        self.assertIn(
+            "Work the engine never saw did not happen. Run the step's checks, "
+            "then `attest` and `advance g1`.",
+            rail,
+        )
+
+    def test_rail_mid_flight(self):
+        # g1 done, g2 active (not first), n == 2 -> mid-flight, {n}=2 {imperative}=do g2
+        cl = gated(g1=gate("g1", "complete"),
+                   g2=gate("g2", "in-progress"), g3=gate("g3"))
+        rail = E._rail("current", cl)
+        self.assertIn(
+            "A working solution is the MIDDLE of this run — you are 2 steps "
+            "from done. Next: do g2. Run it.",
+            rail,
+        )
+
+    def test_rail_near_terminal(self):
+        # one non-terminal item remains (n == 1) -> near-terminal
+        cl = gated(g1=gate("g1", "complete"), g2=gate("g2", "in-progress"))
+        rail = E._rail("current", cl)
+        self.assertIn(
+            "The finish is a sequence, not an announcement. Final `advance` "
+            "first, then `release` — the journal, not your prose, is the proof.",
+            rail,
+        )
+
+    def test_rail_terminal(self):
+        # no non-terminal items (n == 0) -> terminal
+        cl = gated(g1=gate("g1", "complete"), g2=gate("g2", "complete"))
+        rail = E._rail("current", cl)
+        self.assertIn(
+            "Release is your last journaled action. Run `release`; do not claim it.",
+            rail,
+        )
+
+    def test_rail_only_on_gated(self):
+        # survey checklists get NO rail, ever.
+        s = survey(v1=survey_item("v1", "in-progress"))
+        self.assertEqual(E._rail("current", s), "")
+        self.assertEqual(E._rail("check-failure", s), "")
+
+    def test_dispatch_appends_rail_to_success_output(self):
+        # A successful advance moves g1 -> complete; active becomes g2 (n == 1),
+        # so the appended rail is the near-terminal string. Proves dispatch wiring.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND),
+                   g2=gate("g2"))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            import contextlib, io
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            printed = out.getvalue()
+            self.assertIn("RAIL: ", printed)
+            self.assertIn(
+                "The finish is a sequence, not an announcement. Final `advance` "
+                "first, then `release` — the journal, not your prose, is the proof.",
+                printed,
+            )
+
+    def test_main_refused_path_appends_check_failure_rail(self):
+        # A failing command gate refuses advance (exit 1); the REFUSED stderr line
+        # carries the check-failure rail verbatim.
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 1)
+            printed = err.getvalue()
+            self.assertIn("REFUSED:", printed)
+            self.assertIn(
+                "This check failed; that verdict is scoped to this check, not the "
+                "approach. Do the missing work and `attest`/`attach` the evidence, "
+                "or escalate with `block`/`waive` and a reason. Report 'this check "
+                "failed', never 'this step is impossible'. Quiet abandonment and "
+                "fabricated evidence are the two forbidden exits.",
+                printed,
+            )
+
+    def test_refused_rail_suppressed_on_survey(self):
+        # A survey refusal must NOT carry a rail.
+        s = survey(v1=survey_item("v1", "pending"))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "s.json"
+            E.save(f, s)
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                # advance is invalid for a survey -> REFUSED, but no rail.
+                self.assertEqual(E.main(["--file", str(f), "advance", "v1"]), 1)
+            printed = err.getvalue()
+            self.assertIn("REFUSED:", printed)
+            self.assertNotIn("RAIL:", printed)
