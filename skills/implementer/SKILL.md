@@ -1,6 +1,7 @@
 ---
 name: constellation-implementer
 description: Implement a bounded change from a handoff. Use when a handoff defines task, scope, evidence, and stop conditions.
+invoker: both
 ---
 
 # Constellation Implementer
@@ -23,6 +24,8 @@ Compliance/engine-drive rule: inherited — see `references/global-everyone.md` 
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 
 Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive it through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): one item per implementation step, each with a real test or evidence postcondition. Make the minimal change. TDD when the test mode requires it: red, green, refactor.
+
+Cut each plan item as a **vertical slice**, not a horizontal layer. A vertical slice is a bite-sized chunk that runs end to end — it delivers one thin sliver of observable behavior with its own test or evidence, rather than building a whole layer (all the data, then all the logic, then all the surface) before anything works. Prefer the thinnest slice that a real check can exercise; add the next slice on top once the last one is green. (This is vocabulary for how you already size items — it adds no new step or machinery.) For a wide refactor where a clean vertical cut isn't available, expand then contract: add the new path alongside the old, migrate onto it, then remove the old.
 
 Report a proof-of-life as soon as you start, and report progress and evidence at each step, so Commander can see you are working. Return evidence in `IMPLEMENTER_RESULT`. Raise a blocker when scope or authority is exceeded; flag out-of-scope finds as triage candidates.
 

@@ -83,7 +83,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
     "docent": ("docent_freshness.py",),
     "implementer": ("checklist_engine.py",),
-    "reviewer": ("checklist_engine.py",),
+    "reviewer": ("checklist_engine.py", "verify_fowler_pass.py"),
     "explorer": ("checklist_engine.py", "init_work_area.py", "run_crew.py", "recover_crews.py", "verify_cycles.py", "verify_spec_confirmed.py"),
     "curator": ("curate_corpus.py",),
     "to-issues": ("verify_spec_confirmed.py", "verify_issue_set.py", "file_issue_set.py"),

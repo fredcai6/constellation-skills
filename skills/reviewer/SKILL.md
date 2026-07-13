@@ -1,6 +1,7 @@
 ---
 name: constellation-reviewer
 description: Independently verify a bounded change. Use when a handoff provides a diff, evidence, and review criteria.
+invoker: both
 ---
 
 # Constellation Reviewer
@@ -28,8 +29,20 @@ Verify the implementer's `Map Impact` notes against the diff and evidence: evide
 
 Verify claimed side-effects against the world, not against the report, per inherited doctrine (`references/global-everyone.md` §"Verify claimed side-effects against the world"): confirm each claim at its source and independently reproduce it. Reviewer-specific: a claim you cannot reproduce is a **BLOCK finding**, not an accepted fact — the verdict cannot rest on an unreproduced assertion.
 
+## Refactoring pass — Fowler code smells, subordinate to the repo's standards
+
+One survey check is a **refactoring / code-smell pass** in the sense of Martin Fowler's *Refactoring*: read the diff for the smells that signal a design problem, and judge whether each one is worth raising. This is what makes constellation's native review cover what an external `code-review` skill did — it validates the change's **intent and its implementation**, not just that the tests pass. Walk Fowler's baseline catalog and render a verdict on each smell: **long method / long function**, **large class**, **duplicated code**, **feature envy**, **data clumps**, **primitive obsession**, **long parameter list**, **shotgun surgery**, **divergent change**, **message chains**, **speculative generality**, and **comments-as-deodorant**. The survey item `r6-fowler` makes this pass a **required, visit-every-item check** — it cannot be silently skipped.
+
+These smells are **judgment calls, never hard violations.** They are **always subordinate to the repo's documented standards** (its glossary, CREW_CONTEXT, engineering rubric, and the inherited doctrine). A smell that a documented standard sanctions is not a defect. So each smell gets exactly one verdict:
+
+- **`flagged`** — the smell is present and worth raising; record the finding (a blocker or an observation, your call).
+- **`overridden`** — the smell is present, but a **documented repo standard makes it acceptable**, so you do NOT flag it. An override is a real decision, not a shrug: it must carry a **logged reason** — the specific standard that wins **and** why it subordinates the smell. "Repo standard wins" is never a silent, unexplained dismissal.
+- **`absent`** — the smell is not present in the diff.
+
+Record the pass to `templates/FOWLER_PASS.template.json`, then run `scripts/verify_fowler_pass.py <record>`: it **refuses** (non-zero exit) a record that skips any baseline smell or that marks a smell `overridden` with no logged standard + reason. Only once it exits 0 may `r6-fowler` record pass. Skipping the whole pass (e.g. a docs-only diff with no code to smell-test) is itself an override that needs the **independent reviewer's** co-sign + a log entry in the record's `rail_exception` — you may not self-grant it. Semantic quality — whether the pass genuinely sharpened the review — is the independent reviewer's judgment, not fixture-proven.
+
 Report a proof-of-life as soon as you start and report each check as you record it. Return the verdict in `REVIEW_RESULT`.
 
 Fill the result's `Workflow Feedback` section honestly: name the handoff field, evidence gap, or instruction that was ambiguous, missing, or improvised around. You are the only one who saw that friction — Commander harvests it so future handoffs improve.
 
-Templates: `templates/REVIEW_SURVEY.template.json`, `templates/REVIEW_RESULT.template.md`. Reference: the constellation-workbench skill's bundled `references/checklist-engine.md` (under the installed workbench skill directory).
+Templates: `templates/REVIEW_SURVEY.template.json`, `templates/REVIEW_RESULT.template.md`, `templates/FOWLER_PASS.template.json`. Rail: `scripts/verify_fowler_pass.py`. Reference: the constellation-workbench skill's bundled `references/checklist-engine.md` (under the installed workbench skill directory).
