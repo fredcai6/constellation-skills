@@ -30,6 +30,7 @@ SKILL_NAMES = [
     "constellation-explorer",
     "constellation-prototyper",
     "constellation-curator",
+    "constellation-to-issues",
 ]
 
 
