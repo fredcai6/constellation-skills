@@ -2,7 +2,7 @@
   "work_id": "<work-id>",
   "type": "survey",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["i0-context", "q1"],
+  "items": ["i0-context", "q1", "zc-consolidate"],
   "tasks": {
     "i0-context": {
       "id": "i0-context",
@@ -15,7 +15,16 @@
     "q1": {
       "id": "q1",
       "title": "<starting question: what capability is being added or changed?>",
-      "imperative": "<frame from behavior first: what capability is being added/changed (present tense), concrete examples/use cases incl. edge cases, architecturally meaningful events, governing rules/constraints/assumptions. Ask one question at a time with a recommended answer; explore the codebase if it can answer; append follow-ups and new branches; skip questions overcome by earlier answers>",
+      "kind": "<fact = resolve by exploring code | decision = block on the counterpart, never self-answer>",
+      "imperative": "<frame from behavior first: what capability is being added/changed (present tense), concrete examples/use cases incl. edge cases, architecturally meaningful events, governing rules/constraints/assumptions. Type the question fact|decision: a fact you resolve from the code/docs (record the evidence); a decision you take to your counterpart (never self-answer). Ask one question at a time with a recommended answer; append follow-ups and new branches; skip questions overcome by earlier answers>",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "zc-consolidate": {
+      "id": "zc-consolidate",
+      "title": "Consolidate behind the finish gate",
+      "imperative": "Do NOT record this until joint understanding is reached. Write the interrogation record from templates/INTERROGATION_RECORD.template.json (each question typed fact|decision; each resolved decision carrying its human_answer; each resolved fact its code_evidence) and capture the counterpart's explicit sign-off. Run `py scripts/verify_interrogation.py <record>` — it MUST exit 0 (it refuses consolidation without the joint-understanding sign-off, and refuses any self-answered decision). Record pass only after exit 0, then `consolidate`.",
       "preconditions": [], "postconditions": [],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0

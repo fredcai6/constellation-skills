@@ -1,0 +1,24 @@
+{
+  "goal": "<the handed-in goal being resolved to a common understanding>",
+  "mode": "delegated | interactive",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact | decision",
+      "question": "<the question asked>",
+      "status": "resolved | open | skipped",
+      "resolution": "<the settled answer>",
+      "code_evidence": "<fact + resolved only: the code/docs path or finding that answers it (e.g. net/backoff.py:42); a resolved fact is grounded here, not asserted>",
+      "human_answer": "<decision + resolved only: the human/counterpart's ACTUAL answer — a decision is never self-answered by the agent>"
+    }
+  ],
+  "signoff": {
+    "by": "<the human/counterpart who signed off — the joint-understanding finish gate; required to consolidate>",
+    "statement": "<their explicit confirmation that questioning is complete and the understanding is shared; not a token>"
+  },
+  "consolidated": false,
+  "rail_exception": {
+    "reviewer_cosign": "<INDEPENDENT reviewer name/id — never the author; the only way a consolidated record skips the sign-off (e.g. async counterpart)>",
+    "log": "<why the sign-off could not be captured live and the reviewer co-signed the recorded understanding instead>"
+  }
+}
