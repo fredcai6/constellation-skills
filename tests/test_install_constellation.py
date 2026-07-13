@@ -32,6 +32,7 @@ SKILL_NAMES = [
     "constellation-curator",
     "constellation-to-issues",
     "constellation-diagnose",
+    "constellation-write-a-skill",
 ]
 
 

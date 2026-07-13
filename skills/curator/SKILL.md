@@ -8,6 +8,8 @@ invoker: human
 
 Keep the skills corpus healthy on a human cadence: **measure -> mend -> route** — mend mechanical drift in place, route judgment onward.
 
+The standard for what "healthy" means is shared with the authoring skill: `_shared/skill-goodness.md`. Curator maintains against the same criteria `write-a-skill` mints against — `curate_corpus.py` measures its mechanical subset (below); its semantic subset is what Route hands to Triage rather than silently mending.
+
 Drive every step through the checklist engine and finish its sequence — final `advance`, then `release`, as journaled actions. Work the engine never saw did not happen. Full completion doctrine: `_shared/global-everyone.md`.
 
 ## Trigger
