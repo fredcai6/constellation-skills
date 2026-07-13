@@ -88,6 +88,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "curator": ("curate_corpus.py",),
     "to-issues": ("verify_spec_confirmed.py", "verify_issue_set.py", "file_issue_set.py"),
     "diagnose": ("verify_diagnosis.py",),
+    "write-a-skill": ("verify_skill_registered.py", "curate_corpus.py", "install_constellation.py"),
 }
 # Global doctrine buckets (single source: skills/_shared/), bundled into each skill's
 # references/ at install exactly as the scripts above are bundled into scripts/. The
@@ -117,6 +118,10 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "curator": _GLOBAL_EVERYONE,
     "to-issues": _GLOBAL_ORCHESTRATOR,
     "diagnose": _GLOBAL_ORCHESTRATOR,
+    # write-a-skill authors against the shared skill-goodness criteria, so the
+    # reference travels with the installed skill alongside the everyone-global
+    # doctrine (mirrors curator's tier; skill-goodness.md is its own bucket).
+    "write-a-skill": _GLOBAL_EVERYONE + ("skill-goodness.md",),
 }
 REWRITABLE_TEXT_SUFFIXES = {".json", ".md", ".txt"}
 
