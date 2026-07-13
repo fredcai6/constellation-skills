@@ -27,11 +27,11 @@ Drive the question list as a `survey` from `templates/INTERROGATION.template.jso
 
 ## Facts vs. decisions — resolve one, block on the other
 
-Type every question **`fact`** or **`decision`**, and let the type decide who answers it. This is the code-answers-over-questions doctrine made explicit and enforced — not a new rule, a sharpened one.
-- A **fact** is answerable by exploring the codebase: resolve it yourself from the code/docs and record the evidence (a path, a finding). Do not spend your counterpart's attention on what the code already says.
-- A **decision** is a genuine choice your counterpart owns: **never self-answer it.** Block and take it to them — a delegated float when it exceeds your inherited latitude, a direct question when a human is at the keyboard. Racing ahead to self-answer a decision is the failure this split exists to stop.
+Type every question **`fact`** or **`decision`** — this sharpens the code-answers-over-questions doctrine, it does not add a rule.
+- A **fact** is answerable from the codebase: resolve it yourself and record the code evidence.
+- A **decision** is a choice your counterpart owns: **never self-answer it** — block and take it to them (a delegated float beyond your latitude, a direct question to a live human).
 
-The rail (`scripts/verify_interrogation.py`) refuses a resolved `decision` carrying no human answer and a resolved `fact` carrying no code evidence, so the split cannot be quietly collapsed.
+The rail (`scripts/verify_interrogation.py`) refuses a resolved `decision` with no human answer and a resolved `fact` with no code evidence, so the split can't be quietly collapsed.
 
 **Where the answer comes from (two modes).** *Delegated* (the common case — no reachable human): your counterpart is the **frozen launch order / dispatching delegate**. Answer each question from it, `skip` questions it already settles, and when it neither answers nor lets you safely proceed, take it **to the delegate** — a missing fact as a **context query**, a choice outside inherited latitude as a **float** — rather than blocking on an absent human. *Interactive* (a human is at the keyboard — e.g. the Admiral's own latitude interrogation): ask the human directly and **wait for the answer**.
 
@@ -43,7 +43,7 @@ The rail (`scripts/verify_interrogation.py`) refuses a resolved `decision` carry
 
 ## Finish gate — joint understanding, not a terminated loop
 
-The loop running out of questions is **not** the end; **joint understanding** is. Before you consolidate, capture an explicit **sign-off** from your counterpart — a real exchange confirming the questioning is complete and the understanding is shared, not a token you stamp for yourself. Record the run to `templates/INTERROGATION_RECORD.template.json` (each question typed, each decision carrying its human answer) and run `scripts/verify_interrogation.py <record>`: it refuses consolidation without the sign-off. For a genuinely async counterpart, a defended exception needs an **independent reviewer's** co-sign + a log entry (never your own assertion). Only `consolidate` once the rail exits 0.
+The loop running out of questions is **not** the end; **joint understanding** is. Before you consolidate, capture an explicit **sign-off** from your counterpart that questioning is complete and the understanding is shared — not a token you stamp yourself. Record the run to `templates/INTERROGATION_RECORD.template.json`, run `scripts/verify_interrogation.py <record>` (it refuses consolidation without the sign-off), and `consolidate` only once it exits 0. An async counterpart's exception needs an **independent reviewer's** co-sign + log, never your own.
 
 Keep going until joint understanding is signed off or your counterpart says enough, then consolidate the result for the invoker.
 
