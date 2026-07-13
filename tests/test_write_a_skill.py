@@ -148,6 +148,16 @@ class SharedSeamTests(unittest.TestCase):
         self.assertIn("skill-goodness", author, "write-a-skill must reference the shared criteria")
         self.assertIn("skill-goodness", curator, "curator must reference the shared criteria")
 
+    def test_installed_curator_carries_the_criteria_reference(self):
+        # Both consumers must be able to CONSUME the reference once installed, not
+        # just point at it: curator's pointer dangles unless skill-goodness.md is
+        # bundled into its installed references/. Assert the reference bundle carries it.
+        installer = load("install_constellation")
+        self.assertIn(
+            "skill-goodness.md", installer.SKILL_REFERENCE_BUNDLES.get("curator", ()),
+            "installed curator must bundle skill-goodness.md or its pointer dangles",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

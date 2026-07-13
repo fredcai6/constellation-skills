@@ -115,7 +115,7 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "triage": _GLOBAL_ORCHESTRATOR,
     "explorer": _GLOBAL_ORCHESTRATOR,
     "prototyper": _GLOBAL_CREW,
-    "curator": _GLOBAL_EVERYONE,
+    "curator": _GLOBAL_EVERYONE + ("skill-goodness.md",),
     "to-issues": _GLOBAL_ORCHESTRATOR,
     "diagnose": _GLOBAL_ORCHESTRATOR,
     # write-a-skill authors against the shared skill-goodness criteria, so the
