@@ -1,6 +1,7 @@
 ---
 name: constellation-interrogator
-description: Resolve request or design ambiguity by relentless one-question interrogation. Use when handed a goal and the questions to settle.
+description: Resolve request or design ambiguity by relentless one-question interrogation. Use when handed a goal and the questions to settle; not open-ended discovery — for shaping a raw idea from scratch use the explorer.
+invoker: both
 ---
 
 # Constellation Interrogator
@@ -22,7 +23,15 @@ You were handed a goal to resolve, not to answer from assumption. The moment thi
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
-Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and resolve its answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding. If a question can be answered from the code, explore the code instead of asking.
+Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and resolve its answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding.
+
+## Facts vs. decisions — resolve one, block on the other
+
+Type every question **`fact`** or **`decision`**, and let the type decide who answers it. This is the code-answers-over-questions doctrine made explicit and enforced — not a new rule, a sharpened one.
+- A **fact** is answerable by exploring the codebase: resolve it yourself from the code/docs and record the evidence (a path, a finding). Do not spend your counterpart's attention on what the code already says.
+- A **decision** is a genuine choice your counterpart owns: **never self-answer it.** Block and take it to them — a delegated float when it exceeds your inherited latitude, a direct question when a human is at the keyboard. Racing ahead to self-answer a decision is the failure this split exists to stop.
+
+The rail (`scripts/verify_interrogation.py`) refuses a resolved `decision` carrying no human answer and a resolved `fact` carrying no code evidence, so the split cannot be quietly collapsed.
 
 **Where the answer comes from (two modes).** *Delegated* (the common case — no reachable human): your counterpart is the **frozen launch order / dispatching delegate**. Answer each question from it, `skip` questions it already settles, and when it neither answers nor lets you safely proceed, take it **to the delegate** — a missing fact as a **context query**, a choice outside inherited latitude as a **float** — rather than blocking on an absent human. *Interactive* (a human is at the keyboard — e.g. the Admiral's own latitude interrogation): ask the human directly and **wait for the answer**.
 
@@ -32,6 +41,10 @@ Drive the question list as a `survey` from `templates/INTERROGATION.template.jso
 - Stress-test domain relationships with concrete edge-case scenarios.
 - Cross-check claims against the code and surface contradictions.
 
-Keep going until the goal is resolved or your counterpart says enough, then consolidate the result for the invoker.
+## Finish gate — joint understanding, not a terminated loop
 
-Template: `templates/INTERROGATION.template.json`. Reference: workbench `references/checklist-engine.md`.
+The loop running out of questions is **not** the end; **joint understanding** is. Before you consolidate, capture an explicit **sign-off** from your counterpart — a real exchange confirming the questioning is complete and the understanding is shared, not a token you stamp for yourself. Record the run to `templates/INTERROGATION_RECORD.template.json` (each question typed, each decision carrying its human answer) and run `scripts/verify_interrogation.py <record>`: it refuses consolidation without the sign-off. For a genuinely async counterpart, a defended exception needs an **independent reviewer's** co-sign + a log entry (never your own assertion). Only `consolidate` once the rail exits 0.
+
+Keep going until joint understanding is signed off or your counterpart says enough, then consolidate the result for the invoker.
+
+Templates: `templates/INTERROGATION.template.json`, `templates/INTERROGATION_RECORD.template.json`. Rail: `scripts/verify_interrogation.py`. Reference: workbench `references/checklist-engine.md`.
