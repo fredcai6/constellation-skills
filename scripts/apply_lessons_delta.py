@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """Deterministically apply structured lesson delta operations to a LESSONS.md playbook.
 
-The LLM proposes operations (add/amend/confirm/disconfirm/mention/retire) in a JSON delta
-file; this script validates and applies them mechanically. The LLM never writes the
-playbook directly. All-or-nothing: any invalid op rejects the whole delta.
+The LLM proposes operations (add/amend/confirm/disconfirm/mention/retire/defer/apply/
+export/resolve) in a JSON delta file; this script validates and applies them mechanically.
+The LLM never writes the playbook directly. All-or-nothing: any invalid op rejects the
+whole delta.
 """
 
 from __future__ import annotations
@@ -139,8 +140,11 @@ def _default_preamble() -> str:
         "(the lesson held again). For a constellation-scoped lesson it is the\n"
         "opposite — a recurrence of an unfixed shared-machinery defect, so it\n"
         "accrues recurrences (debt) and flags recurrence-debt. Pay the debt by\n"
-        "exporting to CONSTELLATION_FEEDBACK and fixing upstream, then retire it;\n"
-        "do not keep confirming it into a permanent workaround.\n"
+        "exporting to CONSTELLATION_FEEDBACK and fixing upstream. Once the fix\n"
+        "ships, `resolve` the lesson (cite the shipping PR): it goes terminal\n"
+        "(fixed-upstream) — never ripe again, a later confirm is ignored rather\n"
+        "than re-exported, and it ages out of the playbook on its own. Do not keep\n"
+        "confirming a constellation defect into a permanent workaround.\n"
     )
 
 
@@ -274,9 +278,12 @@ def ripe_lessons(book: Playbook) -> list[Lesson]:
         if lesson.status == "charter-review":
             continue
         if lesson.scope == "constellation":
-            if lesson.recurrences < book.apply_recurrences:
+            # exported = queued upstream (awaiting the fix); fixed-upstream = the fix
+            # shipped. Neither is ripe: the first is already settled by its export, the
+            # second is terminal.
+            if lesson.status in ("exported", "fixed-upstream"):
                 continue
-            if lesson.status == "exported":
+            if lesson.recurrences < book.apply_recurrences:
                 continue
             count = lesson.recurrences
         else:
@@ -343,7 +350,7 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
     for op in ops:
         kind = op.get("op")
         lesson_id = op.get("id", "")
-        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply", "export"):
+        if kind not in ("add", "amend", "confirm", "disconfirm", "mention", "retire", "defer", "apply", "export", "resolve"):
             raise LessonsDeltaError(f"unknown op {kind!r}")
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", lesson_id or ""):
             raise LessonsDeltaError(f"op {kind}: invalid lesson id {lesson_id!r} (kebab-case)")
@@ -380,6 +387,11 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
             raise LessonsDeltaError(f"apply {lesson_id}: applied_evidence citation is required")
         if kind == "export" and not str(op.get("grounding", "")).strip():
             raise LessonsDeltaError(f"export {lesson_id}: grounding (CONSTELLATION_FEEDBACK citation) required")
+        if kind == "resolve" and not str(op.get("resolution", "")).strip():
+            raise LessonsDeltaError(
+                f"resolve {lesson_id}: resolution citation is required "
+                "(the shipping PR / commit / issue that fixed it upstream)"
+            )
     return work_id, bool(tick), ops
 
 
@@ -434,6 +446,18 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             continue
 
         if kind == "confirm":
+            # Terminal state: a constellation lesson already fixed upstream must not be
+            # resurrected. Ignore the confirm outright — no debt, no dormancy reset, no
+            # status flip — so the tombstone keeps aging toward GC while the fleet's
+            # install-lagged re-observations can no longer re-ripen it into another export.
+            # This is the core of the anti-churn contract.
+            if lesson.scope == "constellation" and lesson.status == "fixed-upstream":
+                lesson.history.append(f"confirm ignored {stamp}: fixed upstream — {op['grounding']}")
+                log.append(
+                    f"confirm skipped lesson:{lesson_id} — fixed upstream; not re-counted "
+                    "(retire locally once your install carries the fix)"
+                )
+                continue
             lesson.mentions += 1
             lesson.last_confirmed = stamp
             lesson.runs_since_confirmed = 0
@@ -514,6 +538,24 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                 f"exported lesson:{lesson_id} to CONSTELLATION_FEEDBACK "
                 f"(pinned until upstream ships) — {op['grounding']}"
             )
+        elif kind == "resolve":
+            # The upstream fix has shipped. Mark the constellation lesson terminal:
+            # never ripe again, immune to confirm-resurrection, and — unlike an unpaid
+            # constellation lesson, which is pinned from auto-delete — now eligible for
+            # ordinary dormancy GC so the tombstone self-cleans once the fleet stops
+            # re-observing it. Ends the export-every-run churn a shipped fix would
+            # otherwise keep generating across install-lagged projects.
+            if lesson.scope != "constellation":
+                raise LessonsDeltaError(
+                    f"resolve {lesson_id}: only constellation-scoped lessons are fixed upstream "
+                    "(project/doctrine lessons are paid by apply, or deleted by retire)"
+                )
+            lesson.status = "fixed-upstream"
+            lesson.history.append(f"resolved {stamp} — {op['resolution']}")
+            log.append(
+                f"resolved lesson:{lesson_id} — fixed upstream ({op['resolution']}); "
+                "no longer ripe, no longer re-exported, ages out of the playbook"
+            )
         elif kind == "defer":
             count = lesson.recurrences if lesson.scope == "constellation" else lesson.confirmed
             lesson.status = "deferred"
@@ -536,9 +578,10 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             expired: list[Lesson] = []
             for lesson in book.active:
                 lesson.runs_since_confirmed += 1
-                # Constellation lessons are pinned: shared-machinery debt persists until
-                # fixed upstream and retired by hand — never silently auto-deleted.
-                if lesson.scope == "constellation":
+                # Unpaid constellation lessons are pinned: shared-machinery debt persists
+                # until fixed upstream — never silently auto-deleted. Once resolved
+                # (fixed-upstream), the pin lifts and the tombstone ages out normally.
+                if lesson.scope == "constellation" and lesson.status != "fixed-upstream":
                     continue
                 if lesson.runs_since_confirmed <= book.dormancy_runs:
                     continue
@@ -601,7 +644,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"playbook: {len(book.active)} active (cap {book.cap}, run {book.run_tick})"
     )
-    debt = [l for l in book.active if l.scope == "constellation" and l.recurrences > 0]
+    debt = [l for l in book.active if l.scope == "constellation" and l.recurrences > 0
+            and l.status != "fixed-upstream"]
     if debt:
         total = sum(l.recurrences for l in debt)
         print(
