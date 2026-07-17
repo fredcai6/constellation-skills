@@ -12,6 +12,17 @@ owns it or deletes it — it is never the permanent home for a fleet rule.
 Distilled from field fleets (f1brainz epics #372/#378/#453); the incident count
 there was dominated by *tracking* long detached jobs, not by the work itself.
 
+## Contents
+- [The three kill vectors](#the-three-kill-vectors)
+- [State-note-before-detach (makes every recovery trivial)](#state-note-before-detach-makes-every-recovery-trivial)
+- [Watcher-sleep is the dominant Commander kill](#watcher-sleep-is-the-dominant-commander-kill)
+- [The sleeper hazard ("completed" is ambiguous)](#the-sleeper-hazard-completed-is-ambiguous)
+- [Recovery drill](#recovery-drill)
+- [Worktree isolation is a harness no-op on Windows — provision it yourself](#worktree-isolation-is-a-harness-no-op-on-windows--provision-it-yourself)
+- [Windows shell hazards (command-checks)](#windows-shell-hazards-command-checks)
+- [Adjudication invariants (Admiral errors that bit)](#adjudication-invariants-admiral-errors-that-bit)
+- [Engine/platform quirks](#engineplatform-quirks)
+
 ## The three kill vectors
 
 A multi-hour ship dies to all three; budget for them:

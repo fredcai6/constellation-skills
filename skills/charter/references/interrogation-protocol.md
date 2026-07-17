@@ -2,6 +2,16 @@
 
 Charter exists to turn engineering doctrine into usable Orchestrator, Crew, and Glossary context. Invoke the `constellation-interrogator` skill for this relentless interrogation pass; Charter is not a setup wizard.
 
+## Contents
+- [Core rule](#core-rule)
+- [First action](#first-action)
+- [Decision pattern](#decision-pattern)
+- [Follow-up ladder](#follow-up-ladder)
+- [Shallow answer triggers](#shallow-answer-triggers)
+- [Gate pressure](#gate-pressure)
+- [Compile modes](#compile-modes)
+- [Completion test](#completion-test)
+
 ## Core rule
 
 Do not accept a material rule until it has been tested against cost and a concrete scenario.

@@ -2,6 +2,19 @@
 
 Cartographer maintains a current-only, multidimensional map of how the system works now. It is a sparse graph: a structural hierarchy plus capability, event, constraint, assumption, decision, and claim overlays. Architecture and code are one hierarchy; the other dimensions hang off it so Commander can plan from the map before spelunking code.
 
+## Contents
+- [Doctrine](#doctrine)
+- [Inclusion Rule](#inclusion-rule)
+- [Node Kinds](#node-kinds)
+- [Edge Types](#edge-types)
+- [Overlay Schema](#overlay-schema)
+- [Capability Model](#capability-model)
+- [Migration From Prior Ontology](#migration-from-prior-ontology)
+- [Packet Role](#packet-role)
+- [Decision Anchors](#decision-anchors)
+- [Generated Map Contract](#generated-map-contract)
+- [Out Of Scope](#out-of-scope)
+
 ## Doctrine
 
 - Architecture and code are one hierarchy; everything else anchors to it.
