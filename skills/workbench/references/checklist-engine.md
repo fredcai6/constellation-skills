@@ -4,6 +4,21 @@ The engine is the deterministic state machine an agent transacts with **one step
 
 Tool: `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <verb>`. Installed copies rewrite that command to an absolute path; run that absolute path and do not resolve `scripts/` from the target repo unless that repo vendors the script. In this source repo, the same script lives at `scripts/checklist_engine.py`. Schema: `docs/CHECKLIST_SCHEMA.md`. Model: `docs/CHECKLIST_ENGINE_DESIGN.md`.
 
+## Contents
+- [This is mandatory, not advisory](#this-is-mandatory-not-advisory)
+- [Instantiate from the project template](#instantiate-from-the-project-template)
+- [Dispatch: subagent vs your own context](#dispatch-subagent-vs-your-own-context)
+- [One agent, one plan](#one-agent-one-plan)
+- [Two types](#two-types)
+- [Verb loop](#verb-loop)
+- [Session lease: who owns the checklist state](#session-lease-who-owns-the-checklist-state)
+- [Obey refusals](#obey-refusals)
+- [Waive: human override of a check](#waive-human-override-of-a-check)
+- [Mechanism the engine guarantees](#mechanism-the-engine-guarantees)
+- [Bubble-up channels](#bubble-up-channels)
+- [Context-read step](#context-read-step)
+- [Template set](#template-set)
+
 ## This is mandatory, not advisory
 
 When you have loaded a role skill, you **must** drive its checklist through the engine to completion. The checklist *is* the workflow. Run every step in order, close each gate through the engine, and do not improvise, skip, or do the work outside the checklist. If a step needs another role, dispatch it (below) — do not just describe it.

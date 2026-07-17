@@ -20,6 +20,23 @@ Use execution contexts separately:
 - exploratory
 - generated artifact pipeline
 
+## Contents
+- [1. Correctness posture](#1-correctness-posture)
+- [2. Canonical inputs and data sources](#2-canonical-inputs-and-data-sources)
+- [3. Evidence and verification](#3-evidence-and-verification)
+- [4. Simplicity, abstraction, and unit shape](#4-simplicity-abstraction-and-unit-shape)
+- [5. Interface and contract strictness](#5-interface-and-contract-strictness)
+- [6. Data semantics and identity](#6-data-semantics-and-identity)
+- [7. Architecture boundaries](#7-architecture-boundaries)
+- [8. Failure behavior](#8-failure-behavior)
+- [9. State and side effects](#9-state-and-side-effects)
+- [10. Performance and resource posture](#10-performance-and-resource-posture)
+- [11. Documentation posture](#11-documentation-posture)
+- [12. Dependency and tooling posture](#12-dependency-and-tooling-posture)
+- [13. Security, privacy, and publicness](#13-security-privacy-and-publicness)
+- [14. Generated artifacts and derived outputs](#14-generated-artifacts-and-derived-outputs)
+- [15. Compromise and debt policy](#15-compromise-and-debt-policy)
+
 ## 1. Correctness posture
 
 A. Best effort acceptable for exploratory work.  

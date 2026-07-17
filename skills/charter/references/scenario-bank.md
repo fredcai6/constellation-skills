@@ -2,6 +2,24 @@
 
 Use these as seeds. Adapt them to the user's project; do not read them verbatim.
 
+## Contents
+- [Pattern](#pattern)
+- [Operating context](#operating-context)
+- [Correctness](#correctness)
+- [Canonical inputs and data sources](#canonical-inputs-and-data-sources)
+- [Evidence and verification](#evidence-and-verification)
+- [Simplicity and unit shape](#simplicity-and-unit-shape)
+- [Interface contracts](#interface-contracts)
+- [Architecture boundaries](#architecture-boundaries)
+- [Failure behavior](#failure-behavior)
+- [State and side effects](#state-and-side-effects)
+- [Performance and resources](#performance-and-resources)
+- [Documentation](#documentation)
+- [Dependencies](#dependencies)
+- [Security, privacy, and publicness](#security-privacy-and-publicness)
+- [Generated artifacts](#generated-artifacts)
+- [Compromises](#compromises)
+
 ## Pattern
 
 ```text
