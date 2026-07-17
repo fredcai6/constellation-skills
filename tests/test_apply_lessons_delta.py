@@ -268,17 +268,19 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.assertEqual([l.lesson_id for l in book.active], ["worktree-isolation"])
 
     def test_constellation_debt_paid_by_retire(self):
+        # (lesson id kept distinct from the `fixed-upstream` status token, which now
+        # appears in the playbook preamble prose.)
         self.run_delta(
-            {"work_id": "issue-1", "ops": [add_op("fixed-upstream", scope="constellation")]}
+            {"work_id": "issue-1", "ops": [add_op("engine-attest-debt", scope="constellation")]}
         )
-        self._confirm("fixed-upstream", "issue-2")
+        self._confirm("engine-attest-debt", "issue-2")
         self.run_delta(
             {"work_id": "issue-3",
-             "ops": [{"op": "retire", "id": "fixed-upstream", "reason": "fixed upstream in PR #99"}]}
+             "ops": [{"op": "retire", "id": "engine-attest-debt", "reason": "fixed upstream in PR #99"}]}
         )
         book = self.m.load_playbook(self.file)
         self.assertEqual(book.active, [])        # deleted once paid
-        self.assertNotIn("fixed-upstream", self.file.read_text(encoding="utf-8"))
+        self.assertNotIn("### lesson:engine-attest-debt", self.file.read_text(encoding="utf-8"))
 
     def test_rejects_noop_delta(self):
         self.run_delta({"work_id": "issue-1", "ops": []}, expect_rc=1)
@@ -576,6 +578,111 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         for bad in ("a,b", "a b", "a\tb"):
             with self.assertRaises(self.m.LessonsDeltaError):
                 self.m.validate_delta({"work_id": bad, "tick": True})
+
+
+class ResolveDispositionTests(unittest.TestCase):
+    """The `resolve` op → terminal `fixed-upstream` status. Ends the export-every-run
+    churn a shipped upstream fix would otherwise keep generating across install-lagged
+    projects that keep re-observing an already-fixed defect."""
+
+    def setUp(self):
+        self.m = load()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.file = Path(self.tmp.name) / "LESSONS.md"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_delta(self, delta, expect_rc=0):
+        p = Path(self.tmp.name) / "delta.json"
+        p.write_text(json.dumps(delta), encoding="utf-8")
+        self.assertEqual(self.m.main([str(p), "--file", str(self.file)]), expect_rc)
+
+    def _add_constellation(self, lid="engine-attest"):
+        self.run_delta({"work_id": "i1", "ops": [add_op(lid, scope="constellation")]})
+
+    def _confirm(self, lid="engine-attest", work_id="i-c"):
+        self.run_delta({"work_id": work_id, "ops": [{"op": "confirm", "id": lid, "grounding": "g"}]})
+
+    def _resolve(self, lid="engine-attest", resolution="PR #44 shipped attest --evidence"):
+        self.run_delta({"work_id": "i-r", "ops": [{"op": "resolve", "id": lid, "resolution": resolution}]})
+
+    def test_resolve_requires_resolution(self):
+        self._add_constellation()
+        self.run_delta({"work_id": "i2", "ops": [{"op": "resolve", "id": "engine-attest"}]}, expect_rc=1)
+
+    def test_resolve_refuses_non_constellation(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op()]})  # handoff scope
+        self.run_delta({"work_id": "i2", "ops": [
+            {"op": "resolve", "id": "handoff-diff-command", "resolution": "x"}]}, expect_rc=1)
+
+    def test_resolve_sets_fixed_upstream_and_round_trips(self):
+        self._add_constellation()
+        self._confirm()
+        self._resolve()
+        book = self.m.load_playbook(self.file)
+        lesson = book.active[0]
+        self.assertEqual(lesson.status, "fixed-upstream")
+        self.assertTrue(any("resolved" in h and "PR #44" in h for h in lesson.history))
+        # renders and reloads identically
+        self.assertIn("- status: fixed-upstream", self.m.render_playbook(book))
+
+    def test_resolved_lesson_not_ripe(self):
+        self._add_constellation()
+        self._confirm()  # recurrences=1 -> would be ripe
+        self.assertTrue(self.m.ripe_lessons(self.m.load_playbook(self.file)))
+        self._resolve()
+        self.assertEqual(self.m.ripe_lessons(self.m.load_playbook(self.file)), [])
+
+    def test_confirm_after_resolve_is_ignored_no_churn(self):
+        # THE anti-churn guarantee: an install-lagged project that keeps observing a
+        # fixed defect cannot resurrect it into another recurrence / export.
+        self._add_constellation()
+        self._confirm()
+        self._resolve()
+        self._confirm(work_id="i-late-1")
+        self._confirm(work_id="i-late-2")
+        lesson = self.m.load_playbook(self.file).active[0]
+        self.assertEqual(lesson.status, "fixed-upstream")  # never flips back to recurrence-debt
+        self.assertEqual(lesson.recurrences, 1)            # frozen at the pre-resolve count
+        self.assertEqual(self.m.ripe_lessons(self.m.load_playbook(self.file)), [])
+        self.assertTrue(any("confirm ignored" in h for h in lesson.history))
+
+    def test_resolve_from_exported_state(self):
+        # Normal lifecycle: export (queued) then resolve (fix shipped).
+        self._add_constellation()
+        self._confirm()
+        self.run_delta({"work_id": "i-e", "ops": [
+            {"op": "export", "id": "engine-attest", "grounding": "CONSTELLATION_FEEDBACK.md ..."}]})
+        self.assertEqual(self.m.load_playbook(self.file).active[0].status, "exported")
+        self._resolve()
+        self.assertEqual(self.m.load_playbook(self.file).active[0].status, "fixed-upstream")
+
+    def test_resolved_lesson_ages_out_while_unpaid_stays_pinned(self):
+        # A fixed-upstream tombstone loses the constellation pin and GCs after
+        # dormancy_runs; an unresolved (recurrence-debt) sibling stays pinned.
+        self.file.write_text(
+            "# Lessons Playbook\n\n"
+            "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 "
+            "apply-recurrences=1 apply-confirmed=3 -->\n\n## Active\n\n"
+            "### lesson:resolved-one\n"
+            "- scope: constellation\n- task-class: general-workflow\n"
+            "- statement: fixed\n- grounding: g\n- mentions: 1\n- confirmed: 0\n"
+            "- disconfirmed: 0\n- recurrences: 3\n- status: fixed-upstream\n"
+            "- added: 2026-06-01 (x)\n- last-confirmed: 2026-06-01 (x)\n"
+            "- runs-since-confirmed: 10\n"
+            "### lesson:unpaid-one\n"
+            "- scope: constellation\n- task-class: general-workflow\n"
+            "- statement: still broken\n- grounding: g\n- mentions: 1\n- confirmed: 0\n"
+            "- disconfirmed: 0\n- recurrences: 3\n- status: recurrence-debt\n"
+            "- added: 2026-06-01 (x)\n- last-confirmed: 2026-06-01 (x)\n"
+            "- runs-since-confirmed: 10\n",
+            encoding="utf-8",
+        )
+        self.run_delta({"work_id": "tick-1", "tick": True})  # runs 10 -> 11 > 10, past epoch
+        ids = [l.lesson_id for l in self.m.load_playbook(self.file).active]
+        self.assertNotIn("resolved-one", ids)   # aged out
+        self.assertIn("unpaid-one", ids)        # still pinned
 
 
 if __name__ == "__main__":
