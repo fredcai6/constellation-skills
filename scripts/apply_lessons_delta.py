@@ -64,6 +64,7 @@ class Lesson:
     task_class: str
     statement: str
     grounding: str
+    bank_reason: str = ""  # why this is carried in the bank to re-observe, not fixed now
     mentions: int = 1
     confirmed: int = 0
     disconfirmed: int = 0
@@ -85,6 +86,10 @@ class Lesson:
             f"- statement: {self.statement}",
             f"- grounding: {self.grounding}",
         ]
+        # Rendered only when set, so legacy lessons without it round-trip identically
+        # (parse defaults it to ""). Every lesson added going forward carries one.
+        if self.bank_reason:
+            lines.append(f"- bank-reason: {self.bank_reason}")
         if self.target:
             lines.append(f"- target: {self.target}")
         lines += [
@@ -133,7 +138,12 @@ def _default_preamble() -> str:
     return (
         "# Lessons Playbook\n\n"
         "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids= -->\n\n"
-        "Curated, bounded workflow lessons. Read the Active section at the Commander\n"
+        "Open problems carried forward — NOT a log of everything learned. If a lesson is\n"
+        "understood and fixable, apply the fix and record it in AGENT_FEEDBACK; do not\n"
+        "bank it here. A lesson lives here only because it needs to be re-observed to be\n"
+        "understood, so every `add` states a bank-reason (what re-observation will\n"
+        "clarify). Reaching the cap is a failure mode — it means the bank is being used\n"
+        "to accumulate instead of to adjudicate. Read the Active section at the Commander\n"
         "context step. Never edit by hand or by LLM: apply structured deltas via\n"
         "apply_lessons_delta.py, which enforces cap, grounding, and counter rules.\n\n"
         "Counter semantics split by scope: for most scopes a confirm is trust\n"
@@ -170,6 +180,7 @@ def parse_lessons(block: str) -> list[Lesson]:
                 task_class=current["task-class"],
                 statement=current["statement"],
                 grounding=current["grounding"],
+                bank_reason=current.get("bank-reason", ""),
                 mentions=int(current.get("mentions", "1")),
                 confirmed=int(current.get("confirmed", "0")),
                 disconfirmed=int(current.get("disconfirmed", "0")),
@@ -362,6 +373,17 @@ def validate_delta(delta: dict) -> tuple[str, bool, list[dict]]:
             for required in ("statement", "grounding", "task_class"):
                 if not str(op.get(required, "")).strip():
                     raise LessonsDeltaError(f"add {lesson_id}: {required} is required")
+            # The playbook holds open problems carried forward to re-observe — not a log
+            # of everything learned. Banking a lesson must justify the lingering: if you
+            # can fix it this run, apply the fix and record it in AGENT_FEEDBACK instead
+            # of adding a lesson. So every add states why it is banked, not fixed.
+            if not str(op.get("bank_reason", "")).strip():
+                raise LessonsDeltaError(
+                    f"add {lesson_id}: bank_reason is required — say what re-observation "
+                    "will clarify (why this is banked to watch again rather than fixed now). "
+                    "If it is understood and fixable, apply the fix + note it in "
+                    "AGENT_FEEDBACK; do not bank it."
+                )
         if kind in ("confirm", "disconfirm") and not str(op.get("grounding", "")).strip():
             raise LessonsDeltaError(
                 f"{kind} {lesson_id}: grounding citation is required (no citation, no count)"
@@ -421,6 +443,7 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                     task_class=str(op["task_class"]).strip(),
                     statement=str(op["statement"]).strip(),
                     grounding=str(op["grounding"]).strip(),
+                    bank_reason=str(op["bank_reason"]).strip(),
                     target=str(op.get("target", "")).strip(),
                     added=stamp,
                 )
@@ -513,8 +536,23 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
             # its quality (same doctrine as the engine — mechanism, not quality). Non-ripe
             # applies and code-target applies are exempt.
             drill = str(op.get("drill", "")).strip()
-            if _apply_threshold_ripe(book, lesson) and _is_doctrine_target(effective_target):
-                if not drill:
+            if _is_doctrine_target(effective_target):
+                # Reshaping doctrine (an .md / .template.* an agent reads) is a human call,
+                # ripe or not. A delegated/autonomous run cannot self-authorize it: with no
+                # human present it cannot honestly cite human authority, so it must surface
+                # the apply (defer 'needs human'), which is where the human can also rule
+                # "wait, observe it again". Code targets are exempt — their test suite is the
+                # behavioral check.
+                if str(op.get("authority", "")).strip().lower() != "human":
+                    raise LessonsDeltaError(
+                        f"apply {lesson_id}: doctrine target {effective_target!r} requires "
+                        "human authorization (authority=\"human\") — reshaping doctrine is a "
+                        "human call. In a delegated/autonomous run, surface the apply instead "
+                        "of self-applying: defer it with reason 'needs human'."
+                    )
+                # A ripe doctrine apply additionally needs a reproduction drill — the
+                # process-doc analogue of a regression test (dead doctrine reads as progress).
+                if _apply_threshold_ripe(book, lesson) and not drill:
                     raise LessonsDeltaError(
                         f"apply {lesson_id}: ripe doctrine target {effective_target!r} requires "
                         "a reproduction drill — add a 'drill' field referencing "
@@ -522,9 +560,11 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
                         "first; see lessons-auditor SKILL)"
                     )
             book.active.remove(lesson)
+            authority = str(op.get("authority", "")).strip()
             log.append(
                 f"applied lesson:{lesson_id} -> {effective_target} (paid; deleted) "
                 f"— {op['applied_evidence']}"
+                + (f" authority={authority}" if authority else "")
                 + (f" drill={drill}" if drill else "")
             )
         elif kind == "export":
