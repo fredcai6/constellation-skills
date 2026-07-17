@@ -1,5 +1,5 @@
 {
-  "work_id": "<epic-id>",
+  "work_id": "<work-id>",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
   "items": ["init", "latitude", "execute", "closeout"],
@@ -7,7 +7,7 @@
     "init": {
       "id": "init",
       "title": "Set up epic work area",
-      "imperative": "Run: python <admiral-skill-dir>/scripts/init_work_area.py <epic-id>. Claim the engine session lease on this spine: <engine> claim --session-id <admiral-session-id> --claimed-by admiral --worktree . From here on, pass --session-id on every mutating engine call against this spine. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/<epic-id>/ADMIRAL_LOG.md.",
+      "imperative": "Run: python <admiral-skill-dir>/scripts/init_work_area.py <work-id>. Claim the engine session lease on this spine: <engine> claim --session-id <admiral-session-id> --claimed-by admiral --worktree . From here on, pass --session-id on every mutating engine call against this spine. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/<work-id>/ADMIRAL_LOG.md.",
       "preconditions": [],
       "postconditions": [
         {"id": "c1", "statement": "work area scaffolded and ADMIRAL_LOG created", "check": null, "satisfied": false},
@@ -19,7 +19,7 @@
     "latitude": {
       "id": "latitude",
       "title": "Confirm authorization and latitude with the human",
-      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md and the Active section of .agent-work/LESSONS.md if present. In this context, load constellation-interrogator and settle the latitude contract with the human: epic intent and success shape (honest-null acceptability), checkpoint protocol (stop-and-present vs cleared-through), decision classes delegated vs surfaced, float-up routing for Commander user-decisions, comms style, budget/model parameters, pre-rulings, and contract expiry (time or event). Fill templates/LATITUDE_CONTRACT.template.md into .agent-work/<epic-id>/LATITUDE_CONTRACT.md. Decisions fitting no listed class are out-of-taxonomy and always escalate. Get explicit human confirmation of the contract.",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md and the Active section of .agent-work/LESSONS.md if present. In this context, load constellation-interrogator and settle the latitude contract with the human: epic intent and success shape (honest-null acceptability), checkpoint protocol (stop-and-present vs cleared-through), decision classes delegated vs surfaced, float-up routing for Commander user-decisions, comms style, budget/model parameters, pre-rulings, and contract expiry (time or event). Fill templates/LATITUDE_CONTRACT.template.md into .agent-work/<work-id>/LATITUDE_CONTRACT.md. Decisions fitting no listed class are out-of-taxonomy and always escalate. Get explicit human confirmation of the contract.",
       "preconditions": [{"id": "p1", "statement": "work area ready", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "latitude contract written with decision classes, float-up routing, and expiry", "check": null, "satisfied": false},
@@ -31,10 +31,10 @@
     "execute": {
       "id": "execute",
       "title": "Run the epic",
-      "imperative": "Before entering this step and before EACH detached wave launch, (re)write the crash-resume state note at .agent-work/<epic-id>/STATE_NOTE.md (step · slug · next command · PID · expected artifact) from .agent-work/templates/STATE_NOTE.template.md — a wave dies to all three kill vectors, and the engine refuses to start execute until it is filled (precondition p2). Then do what the epic needs within the latitude contract: plan waves, dispatch one Commander per issue (each in an isolated worktree, each with a completed templates/LAUNCH_ORDER.template.md carrying pasted prior-wave verdicts, pre-rulings, honest-null clause, findings-file assignment, stop conditions, and inherited latitude), adjudicate what Commanders float (inside delegated classes as logged RULINGs, otherwise escalate), merge green reviewed PRs sequentially gated on check exit codes, and stop at wave checkpoints per the contract. Log every ruling, incident, wave launch, merge, and owned error in the ADMIRAL_LOG as it happens — an unlogged ruling didn't happen. Never run a Commander's issue yourself; never put two Commanders in one worktree. If the contract expires or the ground shifts under it, surface a contract-refresh decision before continuing.",
+      "imperative": "Before entering this step and before EACH detached wave launch, (re)write the crash-resume state note at .agent-work/<work-id>/STATE_NOTE.md (step · slug · next command · PID · expected artifact) from .agent-work/templates/STATE_NOTE.template.md — a wave dies to all three kill vectors, and the engine refuses to start execute until it is filled (precondition p2). Then do what the epic needs within the latitude contract: plan waves, dispatch one Commander per issue (each in an isolated worktree, each with a completed templates/LAUNCH_ORDER.template.md carrying pasted prior-wave verdicts, pre-rulings, honest-null clause, findings-file assignment, stop conditions, and inherited latitude), adjudicate what Commanders float (inside delegated classes as logged RULINGs, otherwise escalate), merge green reviewed PRs sequentially gated on check exit codes, and stop at wave checkpoints per the contract. Log every ruling, incident, wave launch, merge, and owned error in the ADMIRAL_LOG as it happens — an unlogged ruling didn't happen. Never run a Commander's issue yourself; never put two Commanders in one worktree. If the contract expires or the ground shifts under it, surface a contract-refresh decision before continuing.",
       "preconditions": [
         {"id": "p1", "statement": "latitude contract confirmed", "check": null, "satisfied": false},
-        {"id": "p2", "statement": "crash-resume state note written before any detached wave launch (step, slug, next command, pid, expected artifact)", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_state_note.py <epic-id>"}, "satisfied": false}
+        {"id": "p2", "statement": "crash-resume state note written before any detached wave launch (step, slug, next command, pid, expected artifact)", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_state_note.py <work-id>"}, "satisfied": false}
       ],
       "postconditions": [
         {"id": "c1", "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)", "check": null, "satisfied": false},
@@ -50,7 +50,7 @@
       "preconditions": [{"id": "p1", "statement": "execute complete", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "lessons audit ran with fresh context; every candidate has a routed disposition (graduate-and-retire, template delta, Charter, export, inbox delta, or drop); lesson-inbox deltas applied via apply_lessons_delta.py only", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "epic retrospective recorded and feedback invariant passes", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_agent_feedback.py <epic-id> --phase feedback"}, "satisfied": false},
+        {"id": "c2", "statement": "epic retrospective recorded and feedback invariant passes", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_agent_feedback.py <work-id> --phase feedback"}, "satisfied": false},
         {"id": "c3", "statement": "architecture reconciled for the epic's net change", "check": null, "satisfied": false},
         {"id": "c4", "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived", "check": null, "satisfied": false},
         {"id": "c5", "statement": "epic summary accepted by the human", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false},

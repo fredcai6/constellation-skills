@@ -235,5 +235,43 @@ class SpineInstantiationTests(unittest.TestCase):
             self.assertEqual(data["generic_cmd"], "python scripts/x.py issue-7")
 
 
+class ShippedSpineTemplatesTests(unittest.TestCase):
+    """Every shipped spine template must materialize with no residual work-id
+    placeholder the resolver is responsible for. Regression guard for the
+    ADMIRAL_SPINE `<epic-id>` bug: the resolver substitutes `<work-id>` only, so
+    an admiral spine authored with `<epic-id>` left literal placeholders in the
+    execute.p2 / closeout.c2 command checks and refused `start`."""
+
+    def _materialize(self, m, rel_template):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()  # source-repo layout: bundled scripts at root
+            tpl = ROOT / rel_template
+            resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "epic-42", None, root)
+            data = json.loads(resolved)  # must stay valid JSON
+            return resolved, data
+
+    def test_admiral_spine_resolves_work_id_cleanly(self):
+        m = load()
+        resolved, data = self._materialize(m, "skills/admiral/templates/ADMIRAL_SPINE.template.json")
+        self.assertNotIn("<epic-id>", resolved)
+        self.assertNotIn("<work-id>", resolved)
+        self.assertEqual(data["work_id"], "epic-42")
+        # The two command-check preconditions that previously carried the literal
+        # placeholder now reference the real work id.
+        blob = json.dumps(data)
+        self.assertIn("epic-42", blob)
+
+    def test_commander_and_explorer_spines_resolve_work_id_cleanly(self):
+        m = load()
+        for rel in (
+            "skills/commander/templates/COMMANDER_SPINE.template.json",
+            "skills/explorer/templates/EXPLORER_SPINE.template.json",
+        ):
+            resolved, data = self._materialize(m, rel)
+            self.assertNotIn("<work-id>", resolved, rel)
+            self.assertEqual(data["work_id"], "epic-42", rel)
+
+
 if __name__ == "__main__":
     unittest.main()
