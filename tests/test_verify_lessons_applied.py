@@ -34,7 +34,8 @@ class VerifyLessonsAppliedTests(unittest.TestCase):
     def _add(self, **ov):
         op = {"op": "add", "id": "handoff-diff-command", "scope": "handoff",
               "task_class": "general-workflow", "statement": "s",
-              "grounding": "AGENT_FEEDBACK.md i1"}
+              "grounding": "AGENT_FEEDBACK.md i1",
+              "bank_reason": "re-observe before fixing"}
         op.update(ov)
         return op
 
@@ -59,5 +60,6 @@ class VerifyLessonsAppliedTests(unittest.TestCase):
                 {"op": "confirm", "id": "handoff-diff-command", "grounding": "g"}]})
         self._apply({"work_id": "x2", "ops": [
             {"op": "apply", "id": "handoff-diff-command", "applied_evidence": "edited CREW_CONTEXT",
+             "authority": "human",
              "drill": "docs/superpowers/drills/handoff-diff-command.md"}]})
         self.assertEqual(0, self.verify.main(["--file", str(self.file)]))

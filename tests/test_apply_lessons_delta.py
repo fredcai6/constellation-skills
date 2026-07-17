@@ -28,6 +28,7 @@ def add_op(lesson_id="handoff-diff-command", scope="handoff", **overrides):
         "task_class": "general-workflow",
         "statement": "Reviewer handoffs must carry the exact diff command.",
         "grounding": "AGENT_FEEDBACK.md 2026-06-10 issue-1 — reviewer rediscovered diff range",
+        "bank_reason": "watch whether it recurs outside the reviewer gate before fixing",
     }
     op.update(overrides)
     return op
@@ -372,7 +373,8 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
     def test_apply_deletes_non_constellation_lesson(self):
         self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
         self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
-            "applied_evidence": "docs/agents/CREW_CONTEXT.md §Implementation Rules"}]})
+            "applied_evidence": "docs/agents/CREW_CONTEXT.md §Implementation Rules",
+            "authority": "human"}]})
         self.assertEqual(self.m.load_playbook(self.file).active, [])
 
     def test_apply_requires_a_target(self):
@@ -444,8 +446,11 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
         self._confirm(3)  # confirmed==3 == apply-confirmed default => ripe
         before = self.file.read_text(encoding="utf-8")
+        # authority present so the refusal is specifically the DRILL gate, not the
+        # human-authority gate (which fires first when authority is absent).
         self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
-            "applied_evidence": "skills/commander/SKILL.md edited"}]}, expect_rc=1)
+            "applied_evidence": "skills/commander/SKILL.md edited", "authority": "human"}]},
+            expect_rc=1)
         # refused, nothing changed: the lesson is still present
         self.assertEqual(self.file.read_text(encoding="utf-8"), before)
         self.assertEqual([l.lesson_id for l in self.m.load_playbook(self.file).active],
@@ -455,17 +460,18 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
         self._confirm(3)
         self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
-            "applied_evidence": "skills/commander/SKILL.md edited",
+            "applied_evidence": "skills/commander/SKILL.md edited", "authority": "human",
             "drill": "docs/superpowers/drills/handoff-diff-command.md"}]})
         # paid and deleted
         self.assertEqual(self.m.load_playbook(self.file).active, [])
 
     def test_apply_non_ripe_doctrine_exempt_from_drill(self):
-        # Below the apply-confirmed threshold => not ripe => no drill needed.
+        # Below the apply-confirmed threshold => not ripe => no drill needed (still needs
+        # human authority — doctrine is a human call ripe or not).
         self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
         self._confirm(1)  # confirmed==1 < 3 => not ripe
         self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
-            "applied_evidence": "skills/commander/SKILL.md edited"}]})
+            "applied_evidence": "skills/commander/SKILL.md edited", "authority": "human"}]})
         self.assertEqual(self.m.load_playbook(self.file).active, [])
 
     def test_apply_ripe_code_target_exempt_from_drill(self):
@@ -482,7 +488,7 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
             add_op(target="skills/commander/templates/COMMANDER_SPINE.template.json")]})
         self._confirm(3)
         self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
-            "applied_evidence": "spine template edited"}]}, expect_rc=1)
+            "applied_evidence": "spine template edited", "authority": "human"}]}, expect_rc=1)
         self.assertEqual([l.lesson_id for l in self.m.load_playbook(self.file).active],
                          ["handoff-diff-command"])
 
@@ -578,6 +584,112 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         for bad in ("a,b", "a b", "a\tb"):
             with self.assertRaises(self.m.LessonsDeltaError):
                 self.m.validate_delta({"work_id": bad, "tick": True})
+
+
+class BankReasonTests(unittest.TestCase):
+    """`add` must state why the lesson is banked to re-observe (not fixed now). The
+    playbook holds open problems, not a log of everything learned."""
+
+    def setUp(self):
+        self.m = load()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.file = Path(self.tmp.name) / "LESSONS.md"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_delta(self, delta, expect_rc=0):
+        p = Path(self.tmp.name) / "delta.json"
+        p.write_text(json.dumps(delta), encoding="utf-8")
+        self.assertEqual(self.m.main([str(p), "--file", str(self.file)]), expect_rc)
+
+    def test_add_without_bank_reason_refused(self):
+        op = add_op()
+        del op["bank_reason"]
+        self.run_delta({"work_id": "i1", "ops": [op]}, expect_rc=1)
+        self.assertFalse(self.file.exists())
+
+    def test_add_with_blank_bank_reason_refused(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(bank_reason="   ")]}, expect_rc=1)
+
+    def test_bank_reason_renders_and_round_trips(self):
+        self.run_delta({"work_id": "i1", "ops": [
+            add_op(bank_reason="need to see if it fires outside the reviewer gate")]})
+        self.assertIn("- bank-reason: need to see if it fires outside the reviewer gate",
+                      self.file.read_text(encoding="utf-8"))
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.active[0].bank_reason,
+                         "need to see if it fires outside the reviewer gate")
+        self.assertIn("- bank-reason:", self.m.render_playbook(book))
+
+    def test_legacy_lesson_without_bank_reason_still_parses(self):
+        # Back-compat: the field is required only on the add OP, not in the parser, so a
+        # pre-existing lesson without it loads and round-trips clean.
+        self.file.write_text(
+            "# Lessons Playbook\n\n"
+            "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 "
+            "apply-recurrences=1 apply-confirmed=3 -->\n\n## Active\n\n"
+            "### lesson:legacy\n- scope: project\n- task-class: general-workflow\n"
+            "- statement: seeded\n- grounding: g\n- mentions: 1\n- confirmed: 0\n"
+            "- disconfirmed: 0\n- status: active\n- added: 2026-06-01 (x)\n"
+            "- last-confirmed: none\n- runs-since-confirmed: 0\n",
+            encoding="utf-8",
+        )
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(book.active[0].bank_reason, "")
+        self.assertNotIn("- bank-reason:", self.m.render_playbook(book))
+
+
+class DoctrineApplyAuthorityTests(unittest.TestCase):
+    """Reshaping doctrine (.md / .template.*) is a human call — apply requires
+    authority=human, ripe or not. A delegated run can't self-authorize, so it surfaces
+    (defers). Code targets keep autonomous apply — their tests are the check."""
+
+    def setUp(self):
+        self.m = load()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.file = Path(self.tmp.name) / "LESSONS.md"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_delta(self, delta, expect_rc=0):
+        p = Path(self.tmp.name) / "delta.json"
+        p.write_text(json.dumps(delta), encoding="utf-8")
+        self.assertEqual(self.m.main([str(p), "--file", str(self.file)]), expect_rc)
+
+    def test_doctrine_apply_without_authority_refused(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "e"}]}, expect_rc=1)
+        self.assertEqual([l.lesson_id for l in self.m.load_playbook(self.file).active],
+                         ["handoff-diff-command"])
+
+    def test_doctrine_apply_non_human_authority_refused(self):
+        # A delegated agent naming itself is not human authority.
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "e", "authority": "admiral"}]}, expect_rc=1)
+
+    def test_doctrine_apply_with_human_authority_paid(self):
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="docs/agents/CREW_CONTEXT.md")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "e", "authority": "human"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_code_target_apply_needs_no_authority(self):
+        # Code target (.py) is exempt — autonomous apply stands, test suite is the proof.
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="scripts/run_crew.py")]})
+        self.run_delta({"work_id": "i2", "ops": [{"op": "apply", "id": "handoff-diff-command",
+            "applied_evidence": "patched + tests green"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active, [])
+
+    def test_delegated_surface_path_defers_instead_of_applying(self):
+        # The sanctioned delegated outcome: rather than self-apply doctrine, defer it.
+        self.run_delta({"work_id": "i1", "ops": [add_op(target="skills/commander/SKILL.md")]})
+        self.run_delta({"work_id": "i2", "ops": [
+            {"op": "defer", "id": "handoff-diff-command", "reason": "needs human — doctrine apply"}]})
+        self.assertEqual(self.m.load_playbook(self.file).active[0].status, "deferred")
 
 
 class ResolveDispositionTests(unittest.TestCase):
