@@ -104,6 +104,16 @@ incomplete or missing artifacts → *stalled*, rework or relaunch. This judges t
 an idle/"completed" process may still resurrect, so confirm it dead before you reuse, sweep, or launch a
 continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone."
 
+A third read, distinct from both *done* and *stalled*: an idle subagent whose `current` carries a
+`REFRESH REQUESTED:` line (the uniform reach-up primitive — `global-everyone.md` §reach-up) tripped correctly,
+filed the pointer, and stopped exactly as designed. Relaunch immediately: a **fresh** agent, pointed at the
+**same job file** (job-file-not-agent-file — the file is never copied or replaced), that cold-starts from
+`current` alone (`DIGEST:` + `ACTIVE <gate> — <imperative>`). Do not write it a handoff document and do not
+re-brief it from your own memory of the run — the digest is the brief. This is distinct from a **query
+round-trip** (the same agent continues after you answer a context question it lacked — no cold start, no
+agent swap) and from the **dead-agent recovery drill** (host-process exit, no id left to message): a refresh
+is a *live, correctly-idled* agent whose replacement is a deliberate act, not a resurrection.
+
 Adjudication ends with a shutdown, not an idle. Once an agent's work is accepted, merged, and harvested,
 send it a `shutdown_request` and confirm the termination — accepted-but-idle agents accumulate as clutter
 and ambiguity about what is still live. An agent that answers a shutdown request with another idle

@@ -21,6 +21,8 @@ You were handed a bounded task, not a licence to solve it by hand. The moment th
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md` (report misfits in your workflow feedback).
 
+If a trip fires against your active plan item (soft-accepted or hard-forced), do not push through and do not write Commander a handoff document — write a `refresh-request` into your own plan file and go idle; Commander relaunches a fresh implementer that cold-starts from your plan's `current` alone (inherited reach-up mechanism — `references/global-everyone.md` §reach-up).
+
 Verify the handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. If anything is missing, stop and report.
 
 Build a `gated` plan from `templates/IMPLEMENTER_PLAN.template.json` and drive it through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): one item per implementation step, each with a real test or evidence postcondition. Make the minimal change. TDD when the test mode requires it: red, green, refactor.
