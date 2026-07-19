@@ -1148,6 +1148,100 @@ class PosixShellRoutingTests(unittest.TestCase):
         self.assertEqual(ev["payload"]["shell"], "posix")
 
 
+class ResumeVerb(unittest.TestCase):
+    def test_block_records_prior_status(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.block(cl, "g1", "waiting on human", "human", "resolve it")
+        self.assertEqual(cl["tasks"]["g1"]["status_detail"]["prior_status"], "in-progress")
+        # the bubbled blockers entry stays byte-identical to today: no prior_status leak
+        self.assertNotIn("prior_status", cl["blockers"][0])
+        self.assertEqual(
+            set(cl["blockers"][0].keys()),
+            {"item", "blocker", "authority_needed", "next_action"},
+        )
+
+    def test_resume_after_resolved_block_restores_and_advances(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.block(cl, "g1", "b", "human", "n")
+        msg = E.resume(cl, "g1", "blocker resolved")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        self.assertIn("resumed", msg)
+        self.assertEqual(cl["tasks"]["g1"]["status_detail"]["resume_reason"], "blocker resolved")
+        self.assertNotIn("prior_status", cl["tasks"]["g1"]["status_detail"])
+        # a resumed in-progress gate advances normally (why_exempt fixture)
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+
+    def test_resume_restores_pending_prior(self):
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        E.block(cl, "g1", "b", "human", "n")
+        E.resume(cl, "g1", "fixed")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "pending")
+
+    def test_resume_refuses_non_blocked(self):
+        for st in ("pending", "in-progress", "complete"):
+            cl = gated(g1=gate("g1", st, command=PASS_COMMAND))
+            with self.assertRaises(E.EngineError):
+                E.resume(cl, "g1", "r")
+
+    def test_resume_requires_reason(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.block(cl, "g1", "b", "human", "n")
+        with self.assertRaises(E.EngineError):
+            E.resume(cl, "g1", "   ")
+
+    def test_resume_refuses_cap_escalated_block(self):
+        # Drive a reopen past the rework cap so the gate ends up blocked WITHOUT a
+        # recorded prior_status (cap escalation). resume must refuse it (cap integrity).
+        cl = gated(cap=1, g1=gate("g1", "complete", command=PASS_COMMAND))
+        E.reopen(cl, "g1", "first")                 # rework 1/1 -> in-progress
+        cl["tasks"]["g1"]["status"] = "complete"    # simulate re-completion
+        msg = E.reopen(cl, "g1", "second")          # 2 > 1 -> ESCALATED (blocked, no prior)
+        self.assertIn("ESCALATED", msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "blocked")
+        self.assertNotIn("prior_status", cl["tasks"]["g1"]["status_detail"])
+        with self.assertRaises(E.EngineError):
+            E.resume(cl, "g1", "resolved")
+
+    def test_resume_clears_blocker_from_bubble_list(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.block(cl, "g1", "b", "human", "n")
+        self.assertTrue(any(b["item"] == "g1" for b in cl["blockers"]))
+        E.resume(cl, "g1", "fixed")
+        self.assertFalse(any(b.get("item") == "g1" for b in cl["blockers"]))
+
+    def test_resume_in_mutating_verbs(self):
+        self.assertIn("resume", E.MUTATING_VERBS)
+
+    def test_resume_cli_round_trip(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "block", "g1", "--blocker", "b", "--next", "n"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "blocked")
+            self.assertEqual(
+                E.main(["--file", str(f), "resume", "g1", "--reason", "resolved"]), 0)
+            reloaded = E.load(f)
+        self.assertEqual(reloaded["tasks"]["g1"]["status"], "in-progress")
+
+    def test_resume_refreshes_owner_heartbeat(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        E.block(cl, "g1", "b", "human", "n")            # in-progress -> blocked
+        cl["engine_session"]["last_heartbeat"] = _old_ts(60)  # old but not stale
+        before = cl["engine_session"]["last_heartbeat"]
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "resume", "g1", "--reason", "r",
+                        "--session-id", "s1"]), 0)
+            reloaded = E.load(f)
+        self.assertEqual(reloaded["tasks"]["g1"]["status"], "in-progress")
+        self.assertNotEqual(reloaded["engine_session"]["last_heartbeat"], before)
+
+
 def _add_op(nid, after=None, posts=None, **extra):
     """An `amend` add op with the required minimum fields, plus overrides."""
     op = {
@@ -1320,6 +1414,116 @@ class AmendVerb(unittest.TestCase):
             rc = E.main(["--file", str(f), "amend", "--delta", str(Path(d) / "nope.json"),
                          "--reason", "r", "--authority", "human"])
             self.assertEqual(rc, 1)
+
+
+class AmendRetextCheck(unittest.TestCase):
+    def _retext(self, tid="g1", cond="c1", **extra):
+        op = {"op": "retext-check", "id": tid, "cond": cond}
+        op.update(extra)
+        return {"ops": [op]}
+
+    def test_amend_retext_check_on_in_progress_fixes_command_without_satisfying(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        cond["satisfied"] = True            # a stale (wrong-check) pass
+        cond["satisfied_by"] = "old-run"
+        E.amend(cl, self._retext(command=PASS_COMMAND), "path relocated", "human")
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertEqual(cond["check"]["command"], PASS_COMMAND)
+        self.assertFalse(cond["satisfied"])
+        self.assertNotIn("satisfied_by", cond)
+        # correcting text never satisfies — gate stays in-progress
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        self.assertEqual(len(cl["amendments"]), 1)
+
+    def test_amend_retext_check_corrected_command_lets_advance(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        E.amend(cl, self._retext(command=PASS_COMMAND), "fix check", "human")
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+
+    def test_amend_retext_check_drops_waived_and_attested(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        cond["satisfied"] = True
+        cond["satisfied_by"] = "y"
+        cond["waived"] = {"authority": "human", "reason": "x"}
+        cond["attested"] = {"note": "z"}
+        E.amend(cl, self._retext(command=PASS_COMMAND), "fix", "human")
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertFalse(cond["satisfied"])
+        self.assertNotIn("waived", cond)
+        self.assertNotIn("attested", cond)
+        self.assertNotIn("satisfied_by", cond)
+
+    def test_amend_retext_check_refuses_complete_gate(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, self._retext(command=PASS_COMMAND), "r", "human")
+        self.assertIn("reopen", str(ctx.exception))
+
+    def test_amend_retext_check_refuses_null_check(self):
+        cl = gated(g1=gate("g1", "in-progress"))
+        cl["tasks"]["g1"]["postconditions"] = [
+            {"id": "c1", "statement": "s", "check": None, "satisfied": False}]
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, self._retext(command=PASS_COMMAND), "r", "human")
+
+    def test_amend_retext_check_refuses_command_on_non_command(self):
+        cl = gated(g1=_artifact_gate("g1", "in-progress"))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, self._retext(command=PASS_COMMAND), "r", "human")
+
+    def test_amend_retext_check_refuses_kind_change(self):
+        # check-object replacement with a different kind -> refused
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, self._retext(
+                check={"kind": "artifact", "evidence_type": "review-result"}), "r", "human")
+        # a check:null swap is not a check-text correction -> refused
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, self._retext(check=None), "r", "human")
+        # an object with a null kind -> refused
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, self._retext(check={"kind": None}), "r", "human")
+
+    def test_amend_retext_check_requires_command_or_check(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, self._retext(), "r", "human")
+
+    def test_amend_retext_check_all_or_nothing(self):
+        # 1st op valid (retext g1), 2nd op invalid (unknown cond on g2). The whole
+        # delta aborts: g1's check text is left UNCHANGED and no amendment recorded.
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND),
+                   g2=gate("g2", "pending", command=PASS_COMMAND))
+        before = copy.deepcopy(cl)
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [
+                {"op": "retext-check", "id": "g1", "cond": "c1", "command": PASS_COMMAND},
+                {"op": "retext-check", "id": "g2", "cond": "nope", "command": PASS_COMMAND},
+            ]}, "r", "human")
+        self.assertEqual(cl["tasks"]["g1"]["postconditions"][0]["check"]["command"], FAIL_COMMAND)
+        self.assertEqual(cl["tasks"], before["tasks"])
+        self.assertNotIn("amendments", cl)
+
+    def test_amend_retext_check_cli_round_trip(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "delta.json"
+            delta.write_text(json.dumps({"ops": [
+                {"op": "retext-check", "id": "g1", "cond": "c1", "command": PASS_COMMAND}]}),
+                encoding="utf-8")
+            rc = E.main(["--file", str(f), "amend", "--delta", str(delta),
+                         "--reason", "fix path", "--authority", "human"])
+            self.assertEqual(rc, 0)
+            reloaded = E.load(f)
+        cond = reloaded["tasks"]["g1"]["postconditions"][0]
+        self.assertEqual(cond["check"]["command"], PASS_COMMAND)
+        self.assertFalse(cond["satisfied"])
 
 
 class ReopenCascade(unittest.TestCase):
