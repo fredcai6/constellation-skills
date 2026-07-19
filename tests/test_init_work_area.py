@@ -2,6 +2,7 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -262,6 +263,20 @@ class ShippedSpineTemplatesTests(unittest.TestCase):
         blob = json.dumps(data)
         self.assertIn("epic-42", blob)
 
+    def test_admiral_spine_resolves_admiral_skill_dir_and_session_id_cleanly(self):
+        # The epic-101/epic-138 recurrence (#114/#154): ADMIRAL_SPINE's own
+        # <admiral-skill-dir>/<admiral-session-id> tokens (distinct from the
+        # commander's <commander-skill-dir>/<commander-session-id>) were never
+        # in the resolver's hardcoded vocabulary, so they survived resolution
+        # literally inside the execute.p2 / feedback.c2 / feedback.c6 command
+        # checks -- exactly the "9 unresolved placeholders" epic-138 hit.
+        m = load()
+        resolved, _data = self._materialize(m, "skills/admiral/templates/ADMIRAL_SPINE.template.json")
+        self.assertNotIn("<admiral-skill-dir>", resolved)
+        self.assertNotIn("<admiral-session-id>", resolved)
+        # The post-init assertion must not fire on the real, correctly-resolved template.
+        m._assert_no_resolver_placeholders(resolved)
+
     def test_commander_and_explorer_spines_resolve_work_id_cleanly(self):
         m = load()
         for rel in (
@@ -271,6 +286,132 @@ class ShippedSpineTemplatesTests(unittest.TestCase):
             resolved, data = self._materialize(m, rel)
             self.assertNotIn("<work-id>", resolved, rel)
             self.assertEqual(data["work_id"], "epic-42", rel)
+            # Neither shipped template trips the post-init assertion: their
+            # remaining literals (<engine>, <date>, <N>, <path>, <file>,
+            # <spine-template>) are prose placeholders, not resolver-owned tokens.
+            m._assert_no_resolver_placeholders(resolved)
+
+
+class GenericRoleTokenTests(unittest.TestCase):
+    """resolve_spine discovers <role-skill-dir>/<role-session-id> tokens by
+    pattern rather than a hardcoded per-role list, so a role invented after
+    this fix (or one whose skill directory name itself carries a hyphen, e.g.
+    a hypothetical lessons-auditor) does not recur the #114/#154 defect."""
+
+    def test_admiral_role_tokens_resolve_with_explicit_skill_dir(self):
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "skills" / "admiral" / "scripts").mkdir(parents=True)
+            tpl = root / "SPINE.template.json"
+            tpl.write_text(
+                json.dumps(
+                    {
+                        "work_id": "<work-id>",
+                        "session_id": "<admiral-session-id>",
+                        "cmd": "python <admiral-skill-dir>/scripts/x.py <work-id>",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "issue-7", "skills/admiral", root)
+            data = json.loads(resolved)
+            self.assertNotIn("<admiral-skill-dir>", resolved)
+            self.assertNotIn("<admiral-session-id>", resolved)
+            self.assertEqual(data["session_id"], "admiral-issue-7")
+            self.assertIn("skills/admiral/scripts/x.py issue-7", data["cmd"])
+
+    def test_hyphenated_role_name_skill_dir_token_resolves(self):
+        # A role name that itself contains a hyphen (e.g. a future
+        # lessons-auditor spine) must still be discovered as one token, not
+        # mis-parsed at the first internal hyphen.
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()  # source-repo layout: auto-detect collapse
+            tpl = root / "SPINE.template.json"
+            tpl.write_text(
+                '{"cmd": "python <lessons-auditor-skill-dir>/scripts/x.py <work-id>", '
+                '"session_id": "<lessons-auditor-session-id>"}',
+                encoding="utf-8",
+            )
+            resolved = m.resolve_spine(tpl.read_text(encoding="utf-8"), "issue-7", None, root)
+            data = json.loads(resolved)
+            self.assertIn("python scripts/x.py issue-7", data["cmd"])
+            self.assertEqual(data["session_id"], "lessons-auditor-issue-7")
+            m._assert_no_resolver_placeholders(resolved)
+
+
+class ResolverPlaceholderAssertionTests(unittest.TestCase):
+    """Direct unit coverage of the post-init hard check, independent of
+    resolve_spine, since under the generalized resolver every real role token
+    it discovers is (by construction) fully substituted -- this is the
+    defense-in-depth guard for a future resolver regression or an
+    out-of-pattern token (e.g. a role name with characters outside
+    [a-zA-Z0-9-])."""
+
+    def test_raises_on_leftover_work_id(self):
+        m = load()
+        with self.assertRaises(SystemExit) as ctx:
+            m._assert_no_resolver_placeholders('{"work_id": "<work-id>"}')
+        self.assertIn("<work-id>", str(ctx.exception))
+
+    def test_raises_on_leftover_role_skill_dir(self):
+        m = load()
+        with self.assertRaises(SystemExit) as ctx:
+            m._assert_no_resolver_placeholders('{"cmd": "python <admiral-skill-dir>/x.py"}')
+        self.assertIn("<admiral-skill-dir>", str(ctx.exception))
+
+    def test_raises_on_leftover_role_session_id(self):
+        m = load()
+        with self.assertRaises(SystemExit) as ctx:
+            m._assert_no_resolver_placeholders('{"session_id": "<admiral-session-id>"}')
+        self.assertIn("<admiral-session-id>", str(ctx.exception))
+
+    def test_does_not_raise_on_benign_prose_placeholders(self):
+        # <engine>, <date>, <N>, <path>, <file>, <spine-template> are documentation
+        # placeholders this script never resolves -- they must not false-positive.
+        m = load()
+        m._assert_no_resolver_placeholders(
+            "<engine> claim ...; archive/<date>-<work>; cycle-<N>.json; "
+            "check <path>; see <file>; --spine <spine-template>"
+        )
+
+    def test_instantiate_spine_leaves_non_resolver_placeholders_alone(self):
+        # A template placeholder outside the <role-skill-dir>/<role-session-id>/
+        # <work-id> families (an operator-filled field, matching <engine>/<date>/<N>
+        # convention) is not the resolver's job and must not trip the guard or
+        # block the write -- confirms the guard is scoped to resolver-owned
+        # families only, not a blanket "no <...> anywhere" rule.
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()
+            tpl = root / "SPINE.template.json"
+            tpl.write_text('{"work_id": "<work-id>", "note": "<operator-fills-this-in>"}', encoding="utf-8")
+            out = m.instantiate_spine(root, "issue-7", tpl)
+            self.assertTrue(out.exists())
+            self.assertIn("<operator-fills-this-in>", out.read_text(encoding="utf-8"))
+
+    def test_instantiate_spine_raises_when_a_resolver_owned_token_cannot_resolve(self):
+        # Wires the guard into instantiate_spine itself: given a resolve_spine that
+        # regresses (returns text with a resolver-owned placeholder still literal --
+        # the exact epic-101/epic-138 failure mode, simulated here since the real
+        # resolve_spine cannot itself leave one behind by construction), instantiate_spine
+        # must refuse to write the broken spine to disk rather than stranding the engine
+        # on it later.
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            tpl = root / "SPINE.template.json"
+            tpl.write_text('{"work_id": "<work-id>"}', encoding="utf-8")
+            dest = root / ".agent-work" / "issue-7" / "spine.json"
+            with unittest.mock.patch.object(
+                m, "resolve_spine", return_value='{"cmd": "python <admiral-skill-dir>/x.py issue-7"}'
+            ):
+                with self.assertRaises(SystemExit):
+                    m.instantiate_spine(root, "issue-7", tpl)
+            self.assertFalse(dest.exists())
 
 
 if __name__ == "__main__":
