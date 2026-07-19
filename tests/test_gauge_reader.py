@@ -134,10 +134,50 @@ class ThresholdsForTests(unittest.TestCase):
         self.assertEqual(self.m.thresholds_for("some-unlisted-model"), self.m.DEFAULT_THRESHOLDS)
 
     def test_known_model_returns_its_keyed_pair(self):
-        # Seed a known model in the table for this test, independent of
-        # whatever real entries the module ships with.
-        self.m._THRESHOLDS["test-model"] = (0.5, 0.8)
+        # Seed a known model in the NEW absolute-cap table for this test,
+        # independent of whatever real entries the module ships with. The
+        # profile is (window, soft_cap, hard_cap); thresholds_for divides to
+        # (soft_cap/window, hard_cap/window) == (0.5, 0.8) here.
+        self.m._PROFILES["test-model"] = (100_000, 50_000, 80_000)
         self.assertEqual(self.m.thresholds_for("test-model"), (0.5, 0.8))
+
+    def test_equivalence_to_prior_fraction_literals(self):
+        # The refactor from (soft,hard) fractions to absolute-token caps must
+        # move NO trip point. Assert thresholds_for reproduces the PRIOR shipped
+        # fractions, written here as INDEPENDENT hardcoded literals (NOT read
+        # back off the new table -- that would be circular and prove nothing).
+        expected = {
+            "claude-opus-4-8": (0.08, 0.15),
+            "claude-sonnet-5": (0.08, 0.15),
+            "claude-fable-5": (0.08, 0.15),
+            "claude-haiku-4-5-20251001": (0.45, 0.70),
+        }
+        for model, pair in expected.items():
+            self.assertEqual(self.m.thresholds_for(model), pair)
+        # unknown model -> the prior default fraction pair, also a literal.
+        self.assertEqual(self.m.thresholds_for("some-unlisted-model"), (0.40, 0.65))
+
+    def test_trip_points_unchanged_at_boundary(self):
+        # Prove the SOFT/HARD bands are entered at exactly the same fills as
+        # before. For each model, at a fill EQUAL to the literal soft (resp.
+        # hard) fraction the band is entered (Trip uses fill >= soft / >= hard),
+        # and just below it is not. Boundary values are the independent literals.
+        literals = {
+            "claude-opus-4-8": (0.08, 0.15),
+            "claude-sonnet-5": (0.08, 0.15),
+            "claude-fable-5": (0.08, 0.15),
+            "claude-haiku-4-5-20251001": (0.45, 0.70),
+            "some-unlisted-model": (0.40, 0.65),
+        }
+        eps = 1e-9
+        for model, (soft, hard) in literals.items():
+            got_soft, got_hard = self.m.thresholds_for(model)
+            # SOFT band: entered at fill == soft, not at fill just below.
+            self.assertTrue(soft >= got_soft)
+            self.assertFalse((soft - eps) >= got_soft)
+            # HARD band: entered at fill == hard, not at fill just below.
+            self.assertTrue(hard >= got_hard)
+            self.assertFalse((hard - eps) >= got_hard)
 
     def test_calibrated_shipped_thresholds(self):
         # Lock the human-approved calibration (context-rot research, 2026-07-19).
