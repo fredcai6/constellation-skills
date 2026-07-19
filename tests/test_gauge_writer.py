@@ -29,8 +29,15 @@ sr = _load("spine_rail", _HOOKS_DIR / "spine_rail.py")
 gw = _load("gauge_writer_hook", _HOOKS_DIR / "gauge_writer_hook.py")
 
 # Hand-computed expectation for tests/fixtures/golden_transcript.jsonl's
-# latest MAIN-CHAIN (non-sidechain) assistant usage record (see the fixture's
-# line 5): 3 + 1200 + 158000 = 159203 tokens, over a 200_000 window.
+# latest MAIN-CHAIN (non-sidechain) assistant usage record (line 4):
+# 3 + 1200 + 158000 = 159203 tokens, over a 200_000 window. Lines 5-6 are
+# TWO trailing sidechain (subagent) turns -- LATER in the file AND in time,
+# with BIGGER usage totals than line 4 -- that the reverse tail-scan
+# encounters first and must skip past to reach this answer. That ordering
+# (not the earlier draft's, where the true answer was already the last line)
+# is what actually forces gauge_writer_hook.find_latest_usage's
+# isSidechain-continue branch to run; see
+# test_golden_fixture_picks_latest_main_chain_usage_not_sidechain below.
 EXPECTED_MODEL = "claude-opus-4-8"
 EXPECTED_FILL = (3 + 1200 + 158000) / 200_000
 
@@ -73,10 +80,14 @@ def test_golden_fixture_produces_well_formed_record(proj):
 
 
 def test_golden_fixture_picks_latest_main_chain_usage_not_sidechain(proj):
-    """The fixture's sidechain line (a subagent's own context) has a bigger
-    and chronologically-later usage total than the real latest main-chain
-    line -- if the writer picked it up by mistake, model/fill would differ
-    from the hand-computed expectation below."""
+    """The fixture's trailing lines 5-6 (a subagent's own context, isSidechain:
+    true) are LATER in the file AND in time than the real main-chain answer
+    on line 4, and carry BIGGER usage totals. Because
+    _iter_tail_lines_reverse scans from the end of the file, it hits both
+    sidechain lines FIRST and must skip both (find_latest_usage's
+    isSidechain-continue branch) before it reaches line 4's answer -- so a
+    correct result here is only possible if that skip actually ran, not an
+    artifact of the true answer already being the last line."""
     work = proj / ".agent-work" / "run1"
     work.mkdir(parents=True)
     spine_path = work / "spine.json"
@@ -89,6 +100,11 @@ def test_golden_fixture_picks_latest_main_chain_usage_not_sidechain(proj):
     assert record["model"] == EXPECTED_MODEL
     assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
     assert record["observed_at"] == "2026-07-18T12:00:00.000Z"
+    # Sanity-check the premise itself: if the skip branch were a no-op (bug),
+    # the sidechain turns' bigger totals would produce a fill above this
+    # bound instead of matching EXPECTED_FILL above.
+    sidechain_fill = (5 + 2000 + 190000) / 200_000
+    assert record["fill_fraction"] < sidechain_fill
 
 
 # --- skip-on-uncertainty: parse failure leaves prior file untouched ----------
