@@ -52,6 +52,25 @@ def _init_repo(path: Path) -> None:
     )
 
 
+def _write_lease(main: Path, epic: str, *, status: str, claimed_by: str) -> Path:
+    """Simulate an epic lease: `<main>/.agent-work/<epic>/spine.json` carrying an
+    `engine_session` dict with the given status/claimed_by."""
+    d = main / ".agent-work" / epic
+    d.mkdir(parents=True, exist_ok=True)
+    spine = d / "spine.json"
+    spine.write_text(
+        json.dumps(
+            {
+                "work_id": epic,
+                "type": "gated",
+                "engine_session": {"status": status, "claimed_by": claimed_by},
+            }
+        ),
+        encoding="utf-8",
+    )
+    return spine
+
+
 @unittest.skipUnless(GIT, "git not available on PATH")
 class DurableRootGitTests(unittest.TestCase):
     def setUp(self):
@@ -80,6 +99,77 @@ class DurableRootGitTests(unittest.TestCase):
     def test_plain_checkout_unchanged(self):
         resolved = self.mod.durable_root(self.main)
         self.assertEqual(_norm(resolved), _norm(self.main))
+
+
+@unittest.skipUnless(GIT, "git not available on PATH")
+class DurableRootEpicLeaseTests(unittest.TestCase):
+    """Under an ACTIVE Admiral epic lease in the main checkout, `durable_root`
+    honors the linked worktree (its normal fallback) instead of redirecting to the
+    fenced main checkout. Any other lease state leaves the redirect unchanged, and
+    the lease scan never raises."""
+
+    def setUp(self):
+        self.mod = _load("agent_work_root")
+        self.tmp = tempfile.TemporaryDirectory()
+        self.main = Path(self.tmp.name) / "main"
+        self.main.mkdir()
+        _init_repo(self.main)
+        self.linked = Path(self.tmp.name) / "linked"
+        _git(self.main, "worktree", "add", "-q", str(self.linked))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_active_admiral_lease_resolves_to_worktree(self):
+        _write_lease(self.main, "epic-198-burndown", status="active", claimed_by="admiral")
+        resolved = self.mod.durable_root(self.linked)
+        self.assertEqual(_norm(resolved), _norm(self.linked))
+
+    def test_active_explorer_lease_resolves_to_main(self):
+        # claimed_by filter: an active EXPLORER lease is not an epic lease.
+        _write_lease(self.main, "explore-shared-understanding", status="active", claimed_by="explorer")
+        resolved = self.mod.durable_root(self.linked)
+        self.assertEqual(_norm(resolved), _norm(self.main))
+
+    def test_released_admiral_lease_resolves_to_main(self):
+        # status filter: a released admiral lease is not active.
+        _write_lease(self.main, "epic-old", status="released", claimed_by="admiral")
+        resolved = self.mod.durable_root(self.linked)
+        self.assertEqual(_norm(resolved), _norm(self.main))
+
+    def test_no_lease_resolves_to_main(self):
+        # `.agent-work` present but holding no spine lease -> unchanged (main).
+        (self.main / ".agent-work").mkdir()
+        resolved = self.mod.durable_root(self.linked)
+        self.assertEqual(_norm(resolved), _norm(self.main))
+
+    def test_malformed_spine_does_not_raise_and_resolves_to_main(self):
+        bad = self.main / ".agent-work" / "epic-bad"
+        bad.mkdir(parents=True)
+        (bad / "spine.json").write_text("{ not valid json", encoding="utf-8")
+        resolved = self.mod.durable_root(self.linked)  # must NOT raise
+        self.assertEqual(_norm(resolved), _norm(self.main))
+
+    def test_verify_agent_feedback_resolves_to_worktree_under_lease(self):
+        # The pre-ruling's explicit ask: under an active admiral lease the durable
+        # feedback check resolves to the WRITABLE worktree, so a worktree-local
+        # AGENT_FEEDBACK.md satisfies the gate (exit 0) despite the fenced main.
+        vaf = _load("verify_agent_feedback")
+        _write_lease(self.main, "epic-198-burndown", status="active", claimed_by="admiral")
+        work_id = "wid-118"
+        worktree_aw = self.linked / ".agent-work"
+        worktree_aw.mkdir(parents=True)
+        (worktree_aw / "AGENT_FEEDBACK.md").write_text(
+            f"## {work_id}\n**Friction / unclear:**\n- something concrete happened\n",
+            encoding="utf-8",
+        )
+        old = os.getcwd()
+        os.chdir(self.linked)
+        try:
+            rc = vaf.main([work_id, "--phase", "feedback"])
+        finally:
+            os.chdir(old)
+        self.assertEqual(0, rc)
 
 
 class DurableRootFallbackTests(unittest.TestCase):
