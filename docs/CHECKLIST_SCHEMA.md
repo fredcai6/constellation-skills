@@ -1,6 +1,6 @@
 # Checklist Schema (HTN-derived)
 
-Status: **draft / pre-build.** Companion to `CHECKLIST_ENGINE_DESIGN.md`. Expect practical implementation to move things.
+Status: **built / shipped.** Companion to `CHECKLIST_ENGINE_DESIGN.md`. The engine (`scripts/checklist_engine.py`) is built and in use; this schema tracks the shipped behavior, including the epic-#178 Context-Governor additions (`why_trail`, `why_exempt`, why-capture `advance`, the `DIGEST:` / `REFRESH REQUESTED:` display, the `refresh-request` evidence type, and the Trip two-band gate policy).
 
 ## Scope: one agent, one plan
 
@@ -41,11 +41,12 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "triage_candidates": [],          // out-of-scope discoveries, bubbled to the parent agent
   "blockers": [],                   // stuck items, bubbled to the parent agent
   "amendments": [],                 // gated only: audit log of `amend` deltas (see Amend delta)
+  "why_trail": [],                  // optional, append-only: the running-understanding trail (see Why-capture)
   "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
 ```
 
-`triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up. `amendments` is a separate append-only audit log: each `amend` verb (gated only) appends one entry `{ts, reason, authority, ops:[...]}` recording an intentional mid-run re-plan (see *Amend delta — intentional mid-run re-planning*). The field is created lazily on the first amendment.
+`triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up. `amendments` is a separate append-only audit log: each `amend` verb (gated only) appends one entry `{ts, reason, authority, ops:[...]}` recording an intentional mid-run re-plan (see *Amend delta — intentional mid-run re-planning*). The field is created lazily on the first amendment. `why_trail` is a separate append-only trail of running-understanding records, one appended per non-exempt `advance` (see *Why-capture — the running-understanding trail*); it too is created lazily on the first write.
 
 ## Engine session — actor authority over the state
 
@@ -106,6 +107,7 @@ A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**.
 | `constraints` | `[string]` | rules; inherited down a delegated child; forced specifics |
 | `directives` | `[string]` \| null | forced primitive specifics handed down |
 | `child_checklist` | work-id \| null | a **delegating** gate: the sub-plan this gate waits on |
+| `why_exempt` | bool | *optional*; **opt-out, default NOT exempt.** A gate WITHOUT `why_exempt: true` (missing key included) must supply a running understanding on `advance` — see *Why-capture*. A missing key is treated as not-exempt (**fail-closed**), so a legacy gate refuses a why-less advance cleanly rather than skipping capture |
 | `status` | enum | `pending \| in-progress \| blocked \| complete \| skipped` |
 | `status_detail` | object | per-status required fields (see Status) |
 | `result` | `pass`\|`fail`\| null | **survey only**: the check's outcome |
@@ -202,8 +204,8 @@ Most conditions, especially **preconditions**, are qualitative. The engine recor
 | field | type | notes |
 |---|---|---|
 | `id` | string | |
-| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy` |
-| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `no-posix-shell` (a bash-less Windows box, where the engine refuses to run POSIX-form text through cmd.exe and records a visible failure — returncode 127 — instead); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed) |
+| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy \| refresh-request` |
+| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `no-posix-shell` (a bash-less Windows box, where the engine refuses to run POSIX-form text through cmd.exe and records a visible failure — returncode 127 — instead); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed); for `refresh-request`: **POINTERS ONLY** `{seam: <gate/item id it concerns>, why_ref: <why-record id it was raised against>}` — never copies of state (see *Refresh requests*) |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
 | `superseded` | object \| null | *optional, additive*; set by the `reopen` cascade to `{by, reason, ts}` (`by` is `reopen:<gate-id>`). The evidence is **retained** (the audit trail is never deleted) but rendered **inert for satisfaction**: the `_check_condition` artifact branch skips a superseded item, and `attest --evidence` refuses to satisfy a condition from one. So a reopened gate cannot re-pass an artifact postcondition from the stale approval the reopen just invalidated — fresh evidence is required. |
@@ -270,6 +272,61 @@ The delta file is JSON `{"ops": [...]}` with a non-empty `ops` list. Every op to
 
 **All-or-nothing.** The whole delta is validated and built on **copies**; canonical state is touched only once *every* op passes. Any invalid op refuses the entire amendment and leaves the checklist **unmutated** — important, because the engine persists state even on the error path, so a partially-applied delta could otherwise leak. On success the engine appends one audit entry to the top-level `amendments` list: `{ts, reason, authority, ops:[…]}` (the `ops` are human-readable summaries such as `"added g3"`, `"dropped g4"`, `"rescoped g2"`). `amend` is a mutating verb: once a lease exists it needs the owning `--session-id`, and a successful amend refreshes the lease.
 
+## Why-capture — the running-understanding trail (`why_trail`)
+
+Part of the Context Governor (epic-#178). As an agent advances gates it accumulates a **running understanding** of the work; that understanding is captured at each gate boundary so a fresh agent can cold-start from it (the reach-up / refresh flow). The capture is the optional top-level, **append-only** `why_trail`.
+
+```json
+"why_trail": [
+  { "id": "w-1", "gate": "g1", "why": "chose staged-diff mode so closeout catches only what's committed", "mechanical": false, "ts": "<iso8601>" },
+  { "id": "w-2", "gate": "g2", "why": null, "mechanical": true, "ts": "<iso8601>" }
+]
+```
+
+- **Appended per non-exempt `advance`.** One record is appended each time a **non-exempt** gate advances (`_append_why`). Ids are sequential `w-1`, `w-2`, … (`w-<n>` for the n-th record). A record carries `{id, gate, why, mechanical, ts}`: `why` is the running-understanding text (or `null` for a mechanical step), `mechanical` a bool.
+- **Append-only.** Earlier records are **never mutated or deleted**; the trail is created lazily on first write (`setdefault`), so a spine with no `why_trail` drives unchanged and gets one on its first non-exempt advance.
+- **DIGEST = the live understanding.** The **digest** is the `why` of the latest **non-mechanical, non-superseded** record (`_latest_why_record` / `_digest`). A `--mechanical` marker (`why: null`, `mechanical: true`) carries no understanding and **never** becomes the digest.
+- **`reopen` freshens the digest by appending, not editing.** The `reopen` cascade appends a **reopen-marker** record for each gate it resets. A prior `why` for a gate is treated as **superseded** once a later reopen-marker names that gate, so `_latest_why_record` skips past it — the reopened tail's digest freshens **without editing any prior row** (the append-only invariant holds).
+
+### The `--why` / `--mechanical` advance interface (fail-closed)
+
+A **non-exempt** gate's `advance` (a gate without `why_exempt: true` — see the Task table) is **REFUSED** unless it carries either a running `--why "<understanding>"` **or** an explicit `--mechanical` marker. **Silence fails closed** — an advance with neither is refused, never silently skipped. `--mechanical` is a distinct flag (not a magic `--why` string) that records a marker which never becomes the digest.
+
+- **Postconditions are proven BEFORE the why is solicited.** `advance` checks all postconditions first; a **failing postcondition yields the postcondition refusal, not the why prompt** — there is no buying past unfinished work with a why string.
+- **Reference, don't duplicate.** The `--why` text is meant to reference the task state (the running understanding), not re-copy the postcondition evidence.
+- **Backward compatible.** An existing-shape spine (no `why_trail`, no `why_exempt`) still drives: a missing `why_exempt` ⇒ not exempt (so the gate asks for a why), and `why_trail` is created on the first write.
+
+### The `DIGEST:` / `REFRESH REQUESTED:` lines on `current`
+
+The read-only `current` verb appends up to two why-capture lines to its output (`_why_suffix`) — a new verb was **not** added; these ride `current`:
+
+- **`DIGEST:`** — the latest running understanding (the live digest, above). Appended whenever a live digest exists.
+- **`REFRESH REQUESTED:`** — appended while a refresh-request is **pending for the active gate/item**, naming the gate and the why-record it was raised against (`REFRESH REQUESTED: <gate> (why_ref <w-id>)`).
+
+**These render for BOTH `gated` AND `survey` checklists (#189).** This was gated-only before #189; it is now current behavior for both. A **survey never accumulates a `why_trail`** (`_append_why` only fires on `advance`, which surveys refuse), so `_digest` is `None` and **no `DIGEST:` line appears for a survey** — only the `REFRESH REQUESTED:` line does. That line is the **reach-up cold-start surface for survey roles** (e.g. the reviewer), which is why the parity matters.
+
+### Refresh requests — `has_pending_refresh_request` (why_ref-aware, #190)
+
+A **`refresh-request`** is a `refresh-request`-typed evidence item (attached via the ordinary `attach` verb, e.g. `attach <gate> --type refresh-request --field seam=<gate> --field why_ref=<why-id>`) whose payload is **pointers only** (`{seam, why_ref}`, above) — never copies of state. A `superseded` marker (set by the `reopen` cascade) makes a refresh-request **inert**, exactly as it does for any other evidence.
+
+```
+has_pending_refresh_request(cl, gate, why_ref=None) -> bool
+```
+
+A **pure predicate** (no side effects): **true** while a non-superseded `refresh-request` targets `gate`. Its optional **`why_ref` identity filter** (#190) is the subtle part:
+
+- **`why_ref=None` (default)** — the **DISPLAY semantic** used by `current`: *any* pending request for this gate matches. Unchanged from the pre-#190 gate-only behavior.
+- **`why_ref` given** — an **identity check**: the pending request must **also** carry the matching `payload.why_ref`. The **HARD band keys its release on the current-digest why-record id** (`_latest_why_record`), so a **distinct new trip on a still-open gate cannot ride an earlier/stale request's coattails**. A `None` current-why-id (no `why_trail` — e.g. a `why_exempt` gate) **degrades to the gate-only match**, preserving all prior behavior.
+
+### Trip — two-band context-gauge gate policy (SOFT advisory / HARD refuse-advance)
+
+Part of the Context Governor (epic-#178, Module 3). At each **gate boundary** the engine reads the context-fullness **gauge** at `.agent-work/<work_id>/gauge.json` — a **sibling of the spine** (`Path(spine).parent / "gauge.json"`, the `base_dir`) — and applies **model-keyed thresholds**. Two bands, both **fail-safe on a missing/stale reading** (a stale/absent/corrupt reading collapses to `None` inside the reader, yielding no advice and never forcing):
+
+- **SOFT (`fill >= soft`)** — an **advisory** stop-by-default suffix on the read-only `current` (`_trip_advisory`): "you've used most of your context; unless you're basically done, hand off here at this seam." SOFT **never forces** — the agent may decline (any reason accepted in v1) simply by advancing, which SOFT never blocks.
+- **HARD (`fill >= hard`)** — the engine **REFUSES** to `advance` (`_trip_hard_gate`) until a `refresh-request` exists for the gate, **keyed to the current understanding** (per #190 — the pending request's `why_ref` must match the current-digest why-record id). The refusal points at the exact `attach` command. HARD **always forces**.
+
+Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** — SOFT is a suffix on `current`'s dispatch output, HARD a pre-`advance` guard — so the verb functions stay **pure** (their return values are unchanged, so existing exact-equality tests keep passing). The mid-gate runaway is a deliberately accepted limit: there is **no mid-gate check**. (A rollout-ordering caveat about enabling the HARD band lives as a code comment, not in this schema.)
+
 ## Engine verbs ↔ schema
 
 | verb | applies | reads/writes |
@@ -280,7 +337,7 @@ The delta file is JSON `{"ops": [...]}` with a non-empty `ops` list. Every op to
 | `release --session-id <id> [--force --reason …]` | both | close the lease (`status: released`); owner only unless forced |
 | `criteria <id>` | gated | emit `postconditions` + implied evidence types |
 | `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress` |
-| `advance <id> --evidence …` | gated | check all `postconditions`; `→ complete` |
+| `advance <id> [--why "…" \| --mechanical] --evidence …` | gated | check all `postconditions`; then, for a **non-exempt** gate, require a running `--why` **or** an explicit `--mechanical` marker (silence **fails closed**) and append a `why_trail` record; `→ complete` (see *Why-capture*) |
 | `record <id> --result pass\|fail [--finding …]` | survey | record the check outcome; `→ complete`; never blocks |
 | `append <id> …` | survey | add an item from context |
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |

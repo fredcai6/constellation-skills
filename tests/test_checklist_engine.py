@@ -1860,6 +1860,107 @@ class RefreshPrimitives(unittest.TestCase):
             self.assertIn("REFRESH REQUESTED:", out.getvalue())
 
 
+class FromChildAttachIdempotent(unittest.TestCase):
+    """#191 — the `advance --from-child` seam is dedup-idempotent: a refused advance
+    (which `main()` persists) followed by a retry must NOT double-attach the child
+    consolidation. The attach stays BEFORE the postcondition/why guards; the fix is
+    a dedup, not a reorder."""
+
+    def _review_gate(self):
+        # non-exempt gate whose artifact postcondition is satisfied by the from-child
+        # review-result — so the refusal that fires is the why-capture one, AFTER the
+        # attach (the double-attach window this fix closes).
+        t = gate("g1", "in-progress", why_exempt=False)
+        t["postconditions"] = [{
+            "id": "c2", "statement": "approved",
+            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+            "satisfied": False,
+        }]
+        t["child_checklist"] = "child"
+        return gated(g1=t)
+
+    def _write_child(self, d):
+        cons = {"verdict": "APPROVE", "findings": []}
+        child = survey(v1=survey_item("v1", "complete"))
+        child["consolidation"] = cons
+        p = Path(d) / "child.json"
+        E.save(p, child)
+        return p
+
+    def _review_results(self, cl):
+        return [e for e in cl["tasks"]["g1"]["evidence"] if e["type"] == "review-result"]
+
+    def test_refuse_then_retry_attaches_exactly_one(self):
+        with tempfile.TemporaryDirectory() as d:
+            child = self._write_child(d)
+            cl = self._review_gate()
+            # first attempt: no --why -> refuses AFTER the from-child attach
+            with self.assertRaises(E.EngineError):
+                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
+            self.assertEqual(len(self._review_results(cl)), 1)
+            # retry, still no --why -> dedup, STILL exactly one
+            with self.assertRaises(E.EngineError):
+                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
+            self.assertEqual(len(self._review_results(cl)), 1)
+            # finally with --why -> completes, STILL exactly one
+            msg = E.advance(cl, "g1", from_child=str(child), base_dir=Path(d), why="ok")
+            self.assertEqual(msg, "g1 -> complete")
+            self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+            self.assertEqual(len(self._review_results(cl)), 1)
+
+    def test_cli_refuse_then_retry_persists_exactly_one(self):
+        # CLI round-trip: main() actually SAVES on the refused advance, so this
+        # exercises the real double-attach path the dedup closes.
+        with tempfile.TemporaryDirectory() as d:
+            child = self._write_child(d)
+            cl = self._review_gate()
+            spine = Path(d) / "spine.json"
+            E.save(spine, cl)
+            self.assertEqual(
+                E.main(["--file", str(spine), "advance", "g1", "--from-child", str(child)]), 1)
+            self.assertEqual(len(self._review_results(E.load(spine))), 1)
+            self.assertEqual(
+                E.main(["--file", str(spine), "advance", "g1", "--from-child", str(child)]), 1)
+            self.assertEqual(len(self._review_results(E.load(spine))), 1)
+            self.assertEqual(
+                E.main(["--file", str(spine), "advance", "g1", "--from-child", str(child),
+                        "--why", "ok"]), 0)
+            reloaded = E.load(spine)
+            self.assertEqual(reloaded["tasks"]["g1"]["status"], "complete")
+            self.assertEqual(len(self._review_results(reloaded)), 1)
+
+
+class SurveyWhySuffixReachUp(unittest.TestCase):
+    """#189 — `_why_suffix` is extended to surveys so a survey role (reviewer) can
+    cold-start from `current` alone. A survey never accumulates a `why_trail`, so no
+    `DIGEST:` line appears — only the `REFRESH REQUESTED:` line, the reach-up target."""
+
+    def test_survey_shows_no_refresh_line_before_attach(self):
+        sv = survey(v1=survey_item("v1", "in-progress"))
+        out = E.current(sv)
+        self.assertNotIn("REFRESH REQUESTED", out)
+        self.assertNotIn("DIGEST:", out)
+
+    def test_survey_refresh_request_renders_on_current(self):
+        sv = survey(v1=survey_item("v1", "in-progress"))
+        self.assertNotIn("REFRESH REQUESTED", E.current(sv))
+        # predicate already worked on surveys; only the display was gated-only.
+        E.attach(sv, "v1", "refresh-request", {"seam": "v1", "why_ref": "w-1"})
+        self.assertTrue(E.has_pending_refresh_request(sv, "v1"))
+        out = E.current(sv)
+        self.assertIn("REFRESH REQUESTED:", out)
+        self.assertIn("v1", out)  # the active item/seam names the line
+        # a survey has no why_trail -> no live digest -> no DIGEST line
+        self.assertNotIn("DIGEST:", out)
+
+    def test_survey_all_visited_renders_no_suffix(self):
+        # aid is None (all items visited) -> no refresh line, no crash.
+        sv = survey(v1=survey_item("v1", "complete"))
+        out = E.current(sv)
+        self.assertNotIn("REFRESH REQUESTED", out)
+        self.assertNotIn("DIGEST:", out)
+
+
 import types
 from datetime import datetime, timedelta, timezone
 
@@ -1999,6 +2100,68 @@ class TripTwoBandGatePolicy(unittest.TestCase):
         self.assertIsNone(E._read_gauge(None))
         self.assertEqual(E._trip_advisory(self.cl, None), "")
         E._trip_hard_gate(self.cl, "g1", None)  # no raise
+
+
+class RefreshRequestIdentity(unittest.TestCase):
+    """#190 — `has_pending_refresh_request` gains an optional `why_ref` identity
+    filter (default = existing gate-only), and the HARD-band callers key on the
+    current-digest why-record so a distinct new trip cannot ride a stale request's
+    coattails through HARD."""
+
+    def _g2_active(self):
+        # g1 advanced (why -> w-1); g2 is now the active gate, latest why = w-1.
+        cl = gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    def test_predicate_identity_filter(self):
+        cl = self._g2_active()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        # default (gate-only) form: any pending request for the gate
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
+        # identity form: matches only the request keyed to the given why-record
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2", why_ref="w-1"))
+        self.assertFalse(E.has_pending_refresh_request(cl, "g2", why_ref="w-2"))
+
+    def test_identity_filter_stays_pure(self):
+        cl = self._g2_active()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        before = copy.deepcopy(cl)
+        E.has_pending_refresh_request(cl, "g2", why_ref="w-2")
+        self.assertEqual(cl, before)  # no side effects with the new param
+
+    def test_hard_coattails_fixed_stale_why_ref_refused_then_fresh_releases(self):
+        # A STALE refresh-request (keyed to an earlier understanding) must NOT wave a
+        # distinct new trip through HARD on the same still-open gate; a FRESH request
+        # keyed to the current digest releases it.
+        _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        cl = gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+        E.advance(cl, "g1", why="u1")                 # -> w-1
+        E.start(cl, "g2"); E.advance(cl, "g2", why="u2")  # -> w-2; g3 active, latest why w-2
+        E.start(cl, "g3")
+        # stale request keyed to w-1 (an earlier trip's understanding)
+        E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-1"})
+        adv = types.SimpleNamespace(verb="advance", id="g3", from_child=None,
+                                    why="u3", mechanical=False, session_id=None)
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, adv, base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g3"]["status"], "in-progress")  # unmutated
+        self.assertEqual(cl, before)
+        # a FRESH request keyed to the current digest (w-2) releases HARD
+        E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-2"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
+            msg = E.dispatch(cl, adv, base_dir=Path("."))
+        self.assertIn("g3 -> complete", msg)
+        self.assertEqual(cl["tasks"]["g3"]["status"], "complete")
 
 
 class TripRealGaugeFileWiring(unittest.TestCase):

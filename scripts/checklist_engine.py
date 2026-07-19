@@ -816,7 +816,7 @@ def _digest(cl: dict) -> str | None:
     return rec.get("why") if rec else None
 
 
-def has_pending_refresh_request(cl: dict, gate: str) -> bool:
+def has_pending_refresh_request(cl: dict, gate: str, why_ref: str | None = None) -> bool:
     """Pure predicate: True iff a pending `refresh-request` targets `gate`.
 
     A refresh-request is a `refresh-request`-typed evidence item (attached via the
@@ -824,7 +824,14 @@ def has_pending_refresh_request(cl: dict, gate: str) -> bool:
     it concerns, `why_ref` = the why-record id it was raised against — never copies
     of state. It is pending while present and not superseded (the reopen cascade
     supersedes evidence; the flow that consumes/fulfils it is #183). No shared
-    mutable state, no side effects."""
+    mutable state, no side effects.
+
+    `why_ref` (#190) is an OPTIONAL identity filter. When None (the default — the
+    DISPLAY semantic: "a refresh is pending for this gate"), any pending request for
+    the gate matches, UNCHANGED. When given, a pending request ALSO has to carry the
+    matching `payload.why_ref` — an identity match, so a NEW trip on a still-open
+    gate cannot ride a stale/earlier request's coattails (HARD-band callers pass the
+    current-digest why-record id; a None id degrades to the gate-only match)."""
     for t in cl.get("tasks", {}).values():
         if not isinstance(t, dict):
             continue
@@ -833,18 +840,24 @@ def has_pending_refresh_request(cl: dict, gate: str) -> bool:
                 continue
             if ev.get("superseded"):
                 continue
-            if (ev.get("payload") or {}).get("seam") == gate:
-                return True
+            payload = ev.get("payload") or {}
+            if payload.get("seam") != gate:
+                continue
+            if why_ref is not None and payload.get("why_ref") != why_ref:
+                continue
+            return True
     return False
 
 
 def _why_suffix(cl: dict, aid: str | None) -> str:
-    """The why-capture lines appended to `current` (gated checklists only): a
-    `DIGEST:` line carrying the live understanding, and a `REFRESH REQUESTED:` line
-    when a pending refresh-request targets the active gate. Empty for surveys or
-    when neither applies. No new verb — these ride the read-only `current`."""
-    if cl.get("type") != GATED:
-        return ""
+    """The why-capture lines appended to `current`: a `DIGEST:` line carrying the
+    live understanding, and a `REFRESH REQUESTED:` line when a pending
+    refresh-request targets the active gate/item. Empty when neither applies. No new
+    verb — these ride the read-only `current`. Renders for BOTH gated and survey
+    checklists (#189): a survey never accumulates a `why_trail` (`_append_why` only
+    fires on `advance`, which refuses surveys), so `_digest` is None and NO `DIGEST:`
+    line appears — only the `REFRESH REQUESTED:` line, which is the reach-up target
+    for survey roles (reviewer). Gated output is unchanged."""
     out = ""
     digest = _digest(cl)
     if digest is not None:
@@ -936,7 +949,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     soft, hard = _gauge_reader.thresholds_for(reading.model)
     fill = reading.fill_fraction
     if fill >= hard:
-        if has_pending_refresh_request(cl, gate):
+        # Identity-aware (#190): a NEW trip must carry its OWN fresh refresh-request
+        # raised against the CURRENT understanding, not ride an earlier one's
+        # coattails. `wid is None` (no why_trail — e.g. why_exempt gates) degrades to
+        # the gate-only match, preserving all existing behavior.
+        rec = _latest_why_record(cl)
+        wid = rec["id"] if rec else None
+        if has_pending_refresh_request(cl, gate, why_ref=wid):
             return (f"\nCONTEXT {fill:.0%} (>= hard): refresh already requested for "
                     f"{gate} — hand off now; do not keep working.")
         return (f"\nCONTEXT {fill:.0%} (>= hard): `advance` is BLOCKED until you "
@@ -962,7 +981,14 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
     _, hard = _gauge_reader.thresholds_for(reading.model)
     if reading.fill_fraction < hard:
         return
-    if has_pending_refresh_request(cl, iid):
+    # Identity-aware release (#190): the pending refresh-request must be keyed to the
+    # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
+    # still-open gate cannot be waved through on a stale request's coattails. A None
+    # why-record id (no why_trail — why_exempt gates) degrades to the gate-only match,
+    # keeping every existing Trip test green.
+    rec = _latest_why_record(cl)
+    wid = rec["id"] if rec else None
+    if has_pending_refresh_request(cl, iid, why_ref=wid):
         return  # the agent already requested a refresh; the backstop is satisfied
     raise EngineError(
         f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
@@ -1025,7 +1051,17 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
         cons = json.loads(child_path.read_text(encoding="utf-8")).get("consolidation")
         if not cons:
             raise EngineError(f"child {from_child} has no consolidation yet")
-        attach(cl, iid, "review-result", cons)
+        # Idempotent seam (#191): keep the attach BEFORE the guards (an artifact
+        # postcondition may legitimately consume this from-child review-result), but
+        # skip a duplicate. `main()` persists state even on a refused advance (missing
+        # --why / unmet postcondition), so a refuse-then-retry would otherwise
+        # double-attach the same consolidation — `attach` appends unconditionally.
+        already = any(
+            e.get("type") == "review-result" and e.get("payload") == cons
+            for e in t.get("evidence", []) or []
+        )
+        if not already:
+            attach(cl, iid, "review-result", cons)
     posts = t.get("postconditions", [])
     if not posts:
         raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
