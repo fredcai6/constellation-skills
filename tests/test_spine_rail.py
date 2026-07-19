@@ -120,6 +120,35 @@ def test_reconstruct_current_no_lease_line_when_released():
     assert "ACTIVE g1" in out
 
 
+# --- worktree attribution helpers (_same_path / _foreign_worktree) -----------
+
+def test_same_path_fail_safe_returns_true_on_bad_input():
+    # (d) a comparison error must NEVER relax the rail: default True.
+    assert sr._same_path(None, "x") is True
+    assert sr._same_path("x", 123) is True
+
+
+def test_same_path_windows_normcase_sep_equivalence():
+    # (f) case + separator normalize to equal -> no spurious relaxation.
+    assert sr._same_path("C:\\Foo", "c:/foo") is True
+
+
+def test_same_path_distinct_paths_differ():
+    assert sr._same_path("C:/a/wtParent", "C:/a/wtChild") is False
+
+
+def test_foreign_worktree_requires_both_present():
+    # (e) only one of cwd / worktree present -> no positive mismatch -> False.
+    assert sr._foreign_worktree({"cwd": "X"}, {}) is False
+    assert sr._foreign_worktree({}, {"worktree": "Y"}) is False
+    assert sr._foreign_worktree({}, {}) is False
+
+
+def test_foreign_worktree_true_only_on_positive_mismatch():
+    assert sr._foreign_worktree({"cwd": "C:/a/parent"}, {"worktree": "C:/a/child"}) is True
+    assert sr._foreign_worktree({"cwd": "C:/a/same"}, {"worktree": "C:/a/same"}) is False
+
+
 # --- decide_stop -------------------------------------------------------------
 
 def test_stop_no_binding_allows(proj):
@@ -160,6 +189,40 @@ def test_stop_mid_flight_blocks_with_substrings(proj):
     assert hso["hookEventName"] == "Stop"
     assert hso["additionalContext"].startswith("ENGINE current ->")
     assert "ACTIVE g1" in hso["additionalContext"]
+
+
+def test_stop_foreign_worktree_parent_not_blocked(proj):
+    # (a) Production-shaped: a subagent SHARING the parent's session_id claims a
+    # spine in ITS OWN worktree; the real PostToolUse path writes the single-slot
+    # binding pointing at the subagent's worktree/spine. The PARENT then ends its
+    # turn (Stop) from the PARENT worktree while that bound spine is mid-flight.
+    # The worktree mismatch must let the parent stop (parent is not this driver).
+    sub = proj / "subwt"
+    subspine = write_spine(sub, make_spine([("g1", "in-progress")]), journal_lines=1)
+    cmd = ('py scripts/checklist_engine.py --file .agent-work/run1/spine.json '
+           'claim --session-id eng-9 --claimed-by commander')
+    sr.handle_post_tool_use(_bash(cmd, session_id="shared", cwd=str(sub)), proj)
+    entry = sr.load_binding(proj)["shared"]
+    assert entry["worktree"] == str(sub)            # binding wrote subagent wt
+    assert sr._same_path(entry["spine"], subspine)  # via the real code path
+    # PARENT stops from the PARENT worktree -> foreign -> NOT blocked.
+    out = sr.decide_stop({"session_id": "shared", "cwd": str(proj)}, proj)
+    assert out == {}
+    # And no nudge was recorded for the parent (guard fired before nudge logic).
+    assert "shared" not in sr.load_nudges(proj)
+
+
+def test_stop_same_worktree_and_no_cwd_still_block(proj):
+    # (b) The single-agent case must NOT be weakened. Same-worktree mid-flight
+    # Stop still blocks; and a Stop with NO cwd (foreign guard cannot fire) still
+    # blocks -- proving the guard only relaxes on positive mismatch evidence.
+    spine = make_spine([("g1", "in-progress")], imperatives={"g1": "finish it"})
+    sp = write_spine(proj, spine, journal_lines=1)
+    bind(proj, "s1", sp)  # bind() records worktree == str(proj)
+    out_same = sr.decide_stop({"session_id": "s1", "cwd": str(proj)}, proj)
+    assert out_same["decision"] == "block"
+    out_nocwd = sr.decide_stop({"session_id": "s1"}, proj)
+    assert out_nocwd["decision"] == "block"
 
 
 def test_stop_aid_none_lease_active_release_nudge(proj):
@@ -231,6 +294,30 @@ def test_session_start_fallback_scan_finds_active(proj):
     out = sr.decide_session_start({"session_id": "unbound"}, proj)
     assert out["hookSpecificOutput"]["hookEventName"] == "SessionStart"
     assert "RESUMING" in out["hookSpecificOutput"]["additionalContext"]
+
+
+def test_session_start_foreign_skip_same_reinject_fallback_reinject(proj):
+    # (c) three-way: a FOREIGN-worktree binding is skipped (no re-inject), a
+    # SAME-worktree binding re-injects, and with no binding the _scan_active_spine
+    # fallback still re-injects.
+    # -- foreign: bound spine lives in the subagent worktree (outside proj/.agent-work)
+    sub = proj / "subwt"
+    subspine = write_spine(sub, make_spine([("g2", "in-progress")]))
+    sr.save_binding(proj, {
+        "shared": {"spine": subspine, "engine_session": "eng-1", "worktree": str(sub)}
+    })
+    out_foreign = sr.decide_session_start({"session_id": "shared", "cwd": str(proj)}, proj)
+    assert out_foreign == {}  # foreign -> bound spine skipped, fallback finds none
+    # -- same worktree: re-injects
+    sp = write_spine(proj, make_spine([("g3", "in-progress")], imperatives={"g3": "keep going"}))
+    sr.save_binding(proj, {
+        "s1": {"spine": sp, "engine_session": "eng-1", "worktree": str(proj)}
+    })
+    out_same = sr.decide_session_start({"session_id": "s1", "cwd": str(proj)}, proj)
+    assert "RESUMING" in out_same["hookSpecificOutput"]["additionalContext"]
+    # -- no binding: fallback scan under proj/.agent-work still re-injects
+    out_fallback = sr.decide_session_start({"session_id": "unbound", "cwd": str(proj)}, proj)
+    assert "RESUMING" in out_fallback["hookSpecificOutput"]["additionalContext"]
 
 
 def test_session_start_no_active_spine_returns_empty(proj):

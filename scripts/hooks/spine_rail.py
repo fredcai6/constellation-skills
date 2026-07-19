@@ -177,6 +177,43 @@ def reconstruct_current(spine: dict) -> str:
     return "\n".join(lines)
 
 
+# --- worktree attribution (subagent session-sharing guard) -------------------
+
+def _same_path(a, b) -> bool:
+    """True if a and b name the same path after normcase+normpath.
+
+    Fail-SAFE: on ANY exception return True. A comparison failure must never
+    spuriously relax the rail into treating a driving session as foreign.
+    """
+    try:
+        if not isinstance(a, str) or not isinstance(b, str):
+            return True  # un-comparable input -> fail safe, do not relax
+        na = os.path.normcase(os.path.normpath(a))
+        nb = os.path.normcase(os.path.normpath(b))
+        return na == nb
+    except Exception:
+        return True
+
+
+def _foreign_worktree(data: dict, b: dict) -> bool:
+    """True only when the stopping session's cwd is positively a DIFFERENT
+    worktree than the binding's recorded worktree.
+
+    Returns True iff both `data["cwd"]` and `b["worktree"]` are truthy AND
+    `_same_path` says they differ. Absent either -> False: no positive mismatch
+    evidence, so the rail does not relax (and `_same_path`'s fail-safe True keeps
+    an errored comparison from reading as foreign).
+    """
+    try:
+        cwd = data.get("cwd")
+        worktree = b.get("worktree")
+        if not cwd or not worktree:
+            return False
+        return not _same_path(cwd, worktree)
+    except Exception:
+        return False
+
+
 # --- PostToolUse: command-token parsing --------------------------------------
 
 def _tokenize(command: str) -> list:
@@ -309,6 +346,9 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
         spine_path = b.get("spine")
         if not spine_path:
             return {}
+        if _foreign_worktree(data, b):
+            return {}  # stopping session is not this spine's driver (subagent
+            # sharing the parent's session_id repointed the single-slot binding)
         spine = load_spine(spine_path)
         if spine is None:
             return {}  # unreadable -> allow
@@ -372,7 +412,7 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
         binding = load_binding(project_dir)
         b = binding.get(sid) if sid else None
         spine = None
-        if b and b.get("spine"):
+        if b and b.get("spine") and not _foreign_worktree(data, b):
             spine = load_spine(b.get("spine"))
         if spine is None:
             spine = _scan_active_spine(project_dir)  # best-effort fallback
