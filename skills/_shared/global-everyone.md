@@ -65,6 +65,47 @@ its own spine/survey template and drives it, it never re-explains the engine.
   crash-resume state note (step / slug / next-cmd / PID / expected-artifact) BEFORE detaching; arm ONE
   completion notify (output-exists OR process-death), never a per-progress-line watcher.
 
+## Reach-up: refresh, not re-derive
+
+The engine's why-capture and refresh primitives (`checklist_engine.py`, #179) make "a delegate is not a
+replacement" (above) mechanical, not just a message you send. When a trip fires against your active gate — a
+gauge's judgment that continuing risks running past your own understanding, soft-accepted or hard-forced
+(Trip, #182) — do not push through, and do not author a handoff document. Write a `refresh-request` into
+**your own** engine work file via the ordinary `attach` verb, pointers only, never a copy of state:
+
+    attach <active-gate> --type refresh-request --field seam=<active-gate> --field why_ref=<latest why-record id>
+
+...then go idle. This is a *deliberate, governed* idle, not the "wait-by-ending-turn" failure above: there
+you would be idling on a signal you could instead poll for; here there is nothing to poll, because the next
+actor is a **different, fresh agent** your invoker will launch — not a background job you are waiting on
+yourself.
+
+Your invoker sees the request by reading your `current`, nothing else. On a gated checklist, `current` already
+carries a `DIGEST:` line (the latest running understanding, append-only since #179) and, while your
+refresh-request is pending, a `REFRESH REQUESTED:` line naming the gate and the why-record it was raised
+against. The invoker relaunches a fresh agent that cold-starts from **that text alone** — `DIGEST:` +
+`ACTIVE <gate> — <imperative>` — no separate handoff document is ever written or read for this (the invoker's
+side — recognizing the line, relaunching rather than treating it as a stall — is `global-orchestrator.md`
+§idle-subagent-adjudication).
+
+**Job-file-not-agent-file.** The engine work file you claimed (`spine.json`, a plan, the `why_trail` it
+carries) belongs to the **job**, not to the agent process driving it. A relaunched agent reuses the exact same
+file — same lease target, same append-only `why_trail`, same evidence; it is never copied or recreated.
+Agents are ephemeral and interchangeable; the file is what persists across the swap. This is why the
+`why_trail` is append-only in the first place — it must read correctly no matter how many agent changeovers
+have happened underneath it.
+
+This mechanism is **uniform at every tier**: crew reaching up to Commander, Commander reaching up to Admiral,
+Admiral reaching up to the human — the same write-then-idle on the way up, the same `current`-alone cold start
+into a fresh agent on the way down. A crash reads identically: `current` shows the same `DIGEST:` with the
+`REFRESH REQUESTED:` line simply absent, because no one got the chance to file it — see
+`skills/admiral/references/fleet-doctrine.md` for how that plays out at the recovery-drill tier.
+
+The `current`-alone cold start above is proven for a **`gated`** work file (a spine, a plan); a **`survey`**
+work file's own trip (e.g. a reviewer mid-check) still writes the `refresh-request`, but its `current` does
+not yet display it — a built engine gap, not a doctrine choice. Role doctrine names the workaround where it
+bites (`skills/reviewer/SKILL.md`); don't assume survey parity elsewhere.
+
 ## Universal posture
 
 - Fail visibly rather than emit plausible wrong output; no hidden fallback.

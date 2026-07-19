@@ -104,6 +104,16 @@ session resume, sweep task notifications, inspect each affected worktree
 (commits, workbench state, orphan processes), and relaunch continuations with
 verified inheritance.
 
+**Symmetric with intentional refresh (#179/#183).** A live agent's `current` already carries the run's
+`DIGEST:` (running understanding) and, when applicable, `REFRESH REQUESTED:` (`global-everyone.md`
+§reach-up). Resuming a confirmed-dead Commander from its on-disk spine above, and relaunching a live one
+that filed a refresh-request, read the **identical** `current` — a crash is just a refresh-request that
+never got filed. This does not replace the state note below: its PID and expected-artifact fields track
+OS-process survival that the engine JSON knows nothing about, and it remains mandatory before any detach.
+But for "what step was I on and what do I already understand," `current`'s `DIGEST:` is now the canonical
+answer at every tier including this one — read it before reasoning from the state note's `step`/`slug`
+fields alone.
+
 ## Worktree isolation is a harness no-op on Windows — provision it yourself
 
 See `windows.md` (hazard #3) for the base fact, its grounding, and why a

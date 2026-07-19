@@ -12,6 +12,7 @@ Tool: `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <v
 - [Two types](#two-types)
 - [Verb loop](#verb-loop)
 - [Session lease: who owns the checklist state](#session-lease-who-owns-the-checklist-state)
+- [Refresh: reach-up without a handoff doc](#refresh-reach-up-without-a-handoff-doc)
 - [Obey refusals](#obey-refusals)
 - [Waive: human override of a check](#waive-human-override-of-a-check)
 - [Mechanism the engine guarantees](#mechanism-the-engine-guarantees)
@@ -75,6 +76,40 @@ release   --session-id <id>
 - **Once a lease exists, every mutating verb needs `--session-id <id>` matching the active lease** (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `amend`, `attest`, `waive`, `attach`, `flag-candidate`). Pass it on each call. Read-only `current` needs no session and shows the active lease.
 - A lease goes **stale** if its heartbeat lapses (config `lease_stale_seconds`, default 1800s). Staleness gates **non-owners only**: as the **owner** you are never blocked by your own staleness — every mutating verb you issue refreshes the heartbeat, so a long step or idle gap self-heals on your next verb (no re-claim, no takeover record). A **different** session must `claim` the stale lease (same id, or `--force --reason`) before mutating — the engine refuses it and tells it to claim.
 - A checklist with **no lease** behaves exactly as before: mutating verbs work without `--session-id`. Only claim a lease when your workflow wires it (the Commander spine claims at `init`, releases at `archive`).
+
+## Refresh: reach-up without a handoff doc
+
+A `refresh-request` (#179) is an ordinary evidence item — `attach <gate> --type refresh-request --field
+seam=<gate> --field why_ref=<why-record id>` — pointers only, never a copy of state.
+`has_pending_refresh_request(cl, gate)` is a pure predicate: true while a non-superseded `refresh-request`
+targets that gate. `current` surfaces both halves of this for a cold-starting agent: a `DIGEST:` line (the
+latest running understanding — the latest non-mechanical, non-superseded `why`) and, when one is pending, a
+`REFRESH REQUESTED:` line naming the gate and the why-record it was raised against. Together these **are**
+the handoff (`global-everyone.md` §reach-up) — no separate document is written or read.
+
+**Fulfilment (#183).** Nothing marks a refresh-request's evidence item superseded on its own path — only
+`reopen`'s cascade supersedes evidence, and that resets the gate for rework, the wrong tool here. Instead,
+fulfilment falls out of the predicate's own shape: both `has_pending_refresh_request` and the `current`
+display are always evaluated against the checklist's **current** active gate, never a historical one. Once
+the fresh agent advances the gate the request named, `active_id(cl)` moves past it, and the request's `seam`
+no longer matches anything being asked about — `REFRESH REQUESTED:` simply stops appearing. No new verb, no
+evidence mutation, no hand-edited JSON: completing the gate the request named is what clears it.
+
+**Known gaps, flagged not fixed here** (both are `checklist_engine.py` changes, out of #183's doctrine-only
+scope — see the file fence in its launch order):
+
+- The predicate is boolean-per-gate with no `why_ref` comparison: if a *second*, unrelated trip lands on the
+  *same still-open* gate before the first request clears, the predicate is already true and silently waves
+  the second trip through on the first request's coattails. Flagged for the Admiral and for #182's HARD
+  band, the caller that would actually hit it.
+- **The `DIGEST:`/`REFRESH REQUESTED:` display is `gated`-only** (`_why_suffix` returns empty for any other
+  checklist type) — verified: `attach`ing a `refresh-request` to a `survey` checklist (e.g. a reviewer's
+  `REVIEW_SURVEY.json`) leaves `current` unchanged; the predicate itself still works on a survey (it doesn't
+  check type), only the human/agent-readable surfacing does not. The reach-up chain in #183's spec explicitly
+  names reviewer (a survey-driving role) as a reach-up participant, so a survey-type checklist's own trip
+  cannot use the `current`-alone cold start as built — the workaround until this is extended is to read the
+  survey JSON's `evidence` array directly for a `refresh-request` item, not `current`. Flagged for the
+  Admiral as a #179 fast-follow (extend `_why_suffix` to surveys).
 
 ## Obey refusals
 
