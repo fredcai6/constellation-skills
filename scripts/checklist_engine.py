@@ -727,6 +727,109 @@ def _lease_line(cl: dict) -> str | None:
 
 
 # --------------------------------------------------------------------------- #
+# why-capture + refresh primitives (#179) — Modules 1 & 4.
+#
+# A top-level append-only `why_trail` records the running understanding at each
+# non-exempt `advance`. Entries are NEVER mutated or deleted; a `reopen` freshens
+# the digest by APPENDING a reopen-marker for each gate it resets, so a reopened
+# gate's stale understanding stops being "latest" without editing any prior row.
+# The live DIGEST is the latest non-mechanical, non-superseded `why`. All of this
+# is backward compatible: a spine with no `why_trail` gets one on first write
+# (setdefault), and a task with no `why_exempt` is treated as NOT exempt (opt-out
+# default) — so a legacy gate REFUSES cleanly on a why-less advance, never crashes.
+# --------------------------------------------------------------------------- #
+def _append_why(cl: dict, gate: str, why: str | None, mechanical: bool) -> str:
+    """Append one why-record to the top-level append-only `why_trail` and return
+    its id. `why` is the running-understanding text (None for a mechanical step).
+    `setdefault` creates `why_trail` on first write so legacy spines drive
+    unchanged. Never mutates or removes a prior entry."""
+    trail = cl.setdefault("why_trail", [])
+    wid = f"w-{len(trail) + 1}"
+    trail.append({
+        "id": wid, "gate": gate, "why": why,
+        "mechanical": bool(mechanical), "ts": _now(),
+    })
+    return wid
+
+
+def _append_reopen_marker(cl: dict, gate: str, reason: str) -> None:
+    """Append a reopen-marker to `why_trail`: the append-only way a `reopen`
+    FRESHENS the digest. A why-record for `gate` is stale once a later reopen-marker
+    names that gate, so `_latest_why_record` skips past it — no prior row edited."""
+    trail = cl.setdefault("why_trail", [])
+    wid = f"w-{len(trail) + 1}"
+    trail.append({
+        "id": wid, "gate": gate, "reopen": True,
+        "reason": reason, "ts": _now(),
+    })
+
+
+def _latest_why_record(cl: dict) -> dict | None:
+    """The live why-record: the newest `why_trail` entry that is a real (non-
+    mechanical) understanding AND has not been superseded by a later reopen of its
+    own gate. Returns the entry dict, or None when no live understanding exists.
+    A mechanical marker is never live (it carries no understanding)."""
+    trail = cl.get("why_trail", []) or []
+    for i in range(len(trail) - 1, -1, -1):
+        e = trail[i]
+        if e.get("reopen") or e.get("mechanical") or e.get("why") is None:
+            continue
+        gate = e.get("gate")
+        if any(trail[j].get("reopen") and trail[j].get("gate") == gate
+               for j in range(i + 1, len(trail))):
+            continue  # a later reopen of this gate freshened past this understanding
+        return e
+    return None
+
+
+def _digest(cl: dict) -> str | None:
+    """The live digest text: the latest non-mechanical, non-superseded `why`, or
+    None when no live understanding exists."""
+    rec = _latest_why_record(cl)
+    return rec.get("why") if rec else None
+
+
+def has_pending_refresh_request(cl: dict, gate: str) -> bool:
+    """Pure predicate: True iff a pending `refresh-request` targets `gate`.
+
+    A refresh-request is a `refresh-request`-typed evidence item (attached via the
+    ordinary `attach` verb) whose payload carries POINTERS ONLY: `seam` = the gate
+    it concerns, `why_ref` = the why-record id it was raised against — never copies
+    of state. It is pending while present and not superseded (the reopen cascade
+    supersedes evidence; the flow that consumes/fulfils it is #183). No shared
+    mutable state, no side effects."""
+    for t in cl.get("tasks", {}).values():
+        if not isinstance(t, dict):
+            continue
+        for ev in t.get("evidence", []) or []:
+            if not isinstance(ev, dict) or ev.get("type") != "refresh-request":
+                continue
+            if ev.get("superseded"):
+                continue
+            if (ev.get("payload") or {}).get("seam") == gate:
+                return True
+    return False
+
+
+def _why_suffix(cl: dict, aid: str | None) -> str:
+    """The why-capture lines appended to `current` (gated checklists only): a
+    `DIGEST:` line carrying the live understanding, and a `REFRESH REQUESTED:` line
+    when a pending refresh-request targets the active gate. Empty for surveys or
+    when neither applies. No new verb — these ride the read-only `current`."""
+    if cl.get("type") != GATED:
+        return ""
+    out = ""
+    digest = _digest(cl)
+    if digest is not None:
+        out += f"\nDIGEST: {digest}"
+    if aid is not None and has_pending_refresh_request(cl, aid):
+        rec = _latest_why_record(cl)
+        ref = f" (why_ref {rec['id']})" if rec else ""
+        out += f"\nREFRESH REQUESTED: {aid}{ref}"
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # verbs (each returns a human/agent-readable message; refusals raise)
 # --------------------------------------------------------------------------- #
 def current(cl: dict) -> str:
@@ -735,18 +838,20 @@ def current(cl: dict) -> str:
     aid = active_id(cl)
     if aid is None:
         if cl["type"] == SURVEY and cl.get("consolidation") is None:
-            return prefix + "ALL ITEMS VISITED. Next: consolidate"
-        waived = []
-        for iid in cl.get("items", []):
-            t = cl["tasks"][iid]
-            for c in t.get("postconditions", []):
-                if c.get("waived"):
-                    waived.append(f"{iid}.{c['id']}")
-        if waived:
-            return prefix + f"DONE: no open items. WAIVED: {waived}"
-        return prefix + "DONE: no open items."
-    t = task(cl, aid)
-    return prefix + f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
+            body = "ALL ITEMS VISITED. Next: consolidate"
+        else:
+            waived = []
+            for iid in cl.get("items", []):
+                t = cl["tasks"][iid]
+                for c in t.get("postconditions", []):
+                    if c.get("waived"):
+                        waived.append(f"{iid}.{c['id']}")
+            body = (f"DONE: no open items. WAIVED: {waived}" if waived
+                    else "DONE: no open items.")
+    else:
+        t = task(cl, aid)
+        body = f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
+    return prefix + body + _why_suffix(cl, aid)
 
 
 def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
@@ -762,7 +867,8 @@ def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
     return f"{iid} -> in-progress"
 
 
-def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None) -> str:
+def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None,
+            why: str | None = None, mechanical: bool = False) -> str:
     if cl["type"] != GATED:
         raise EngineError("advance is for gated checklists; use record")
     t = task(cl, iid)
@@ -784,6 +890,23 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
     unmet = [c["id"] for c in posts if not _check_condition(c, t, base_dir)]
     if unmet:
         raise EngineError(f"{iid}: postconditions unmet {unmet}")
+    # Why-capture (#179): postconditions are proven ABOVE, before we ever solicit
+    # the why (no buying past unfinished work — a failed postcondition yields the
+    # postcondition refusal, not the why prompt). A non-exempt gate must then carry
+    # either a running --why or an explicit --mechanical marker; SILENCE FAILS CLOSED.
+    # A missing `why_exempt` is treated as NOT exempt (opt-out default). The record
+    # lands on the append-only why_trail; a mechanical marker never becomes the digest.
+    if not bool(t.get("why_exempt")):
+        if mechanical:
+            _append_why(cl, iid, why=None, mechanical=True)
+        elif (why or "").strip():
+            _append_why(cl, iid, why=why.strip(), mechanical=False)
+        else:
+            raise EngineError(
+                f"{iid}: advancing a non-exempt gate requires a running understanding — "
+                f"pass --why \"<understanding>\" (reference the task state, don't duplicate "
+                f"it) or --mechanical for a step that carries no new understanding"
+            )
     t["status"] = "complete"
     waived = [c["id"] for c in posts if c.get("waived")]
     if waived:
@@ -911,6 +1034,12 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
             _supersede_evidence(dt, iid, reason)
             dt.setdefault("status_detail", {})["superseded_by_reopen"] = iid
             cascaded.append(did)
+    # Freshen the digest (#179): append a reopen-marker for the target and every
+    # cascaded gate, so their now-stale understanding stops being the latest `why`
+    # (append-only — prior why-records are never mutated). See `_latest_why_record`.
+    _append_reopen_marker(cl, iid, reason)
+    for did in cascaded:
+        _append_reopen_marker(cl, did, reason)
     msg = f"{iid} reopened (rework {t['rework_count']}/{cap})"
     if cascaded:
         msg += f"; cascade-reset downstream {cascaded} (evidence superseded, retained)"
@@ -1246,6 +1375,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s = sub.add_parser("advance")
     s.add_argument("id")
     s.add_argument("--from-child", dest="from_child", help="child checklist file; attach its consolidation as review-result first")
+    s.add_argument("--why", help="the running understanding justifying this advance; required on a non-exempt gate unless --mechanical (reference the task state, do not duplicate it)")
+    s.add_argument("--mechanical", action="store_true", help="discharge the why prompt: this advance carries no new understanding (a distinct flag, not a magic string)")
     add_session(s)
     s = sub.add_parser("record")
     s.add_argument("id")
@@ -1372,7 +1503,9 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
     if v == "start":
         return start(cl, args.id, base_dir=base_dir)
     if v == "advance":
-        return advance(cl, args.id, from_child=getattr(args, "from_child", None), base_dir=base_dir)
+        return advance(cl, args.id, from_child=getattr(args, "from_child", None),
+                       base_dir=base_dir, why=getattr(args, "why", None),
+                       mechanical=getattr(args, "mechanical", False))
     if v == "record":
         return record(cl, args.id, args.result, args.finding)
     if v == "consolidate":
