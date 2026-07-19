@@ -15,6 +15,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -1156,3 +1157,158 @@ def test_per_run_isolation_one_run_exception_does_not_sink_the_loop(tmp_path):
         for i in range(len(statuses))
     ]
     assert any(m["status"] == "errored" for m in errored_metas)
+
+
+# --------------------------------------------------------------------------- #
+# issue #130 — REAL runner-process death (not hand-seeded): kill a live runner
+# subprocess mid-measurement and prove the death left resumable/adjudicable state.
+# --------------------------------------------------------------------------- #
+def _write_hang_cmd(dir_path: Path) -> Path:
+    """A `.cmd` shim whose subject sleeps 600s, so a runner that spawns it as its
+    `--command` launcher blocks in launch_agent's poll loop (poll() stays None) until
+    something kills it — the empirically-verified hang primitive for this Windows box.
+    Popen(shell=False) spawns it; taskkill /T reaps the cmd.exe + `py` grandchild."""
+    hang = dir_path / "hang.cmd"
+    hang.write_text("@echo off\r\npy -c \"import time; time.sleep(600)\"\r\n", encoding="utf-8")
+    return hang
+
+
+def _confirm_hang_primitive(hang_cmd: Path) -> None:
+    """Handoff stop-condition guard: independently re-confirm the `.cmd` subject
+    spawns AND hangs under `Popen(shell=False)` here before relying on it. If it does
+    not, fail loudly — do NOT silently switch to a POSIX mechanism. Self-contained
+    try/finally so this probe can never leak its own process."""
+    p = subprocess.Popen([str(hang_cmd)], stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        time.sleep(0.5)
+        assert p.poll() is None, (
+            ".cmd hang subject did not stay alive under Popen(shell=False) — STOP "
+            "(do not switch to a POSIX kill mechanism)")
+    finally:
+        rse._tree_kill(p)
+        try:
+            p.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
+
+
+def _await_launched_runner(child_tmp: Path, proc: "subprocess.Popen", *, deadline_s: float):
+    """Bounded poll: discover the runner's `--keep-temp` temp dir (created under the
+    child-scoped TMP/TEMP as `constellation-eval-*`) and wait until its `run-0/meta.json`
+    reaches `status=="launched"` with `subject_pid` stamped. The `kept temp dir:` stderr
+    line is unusable for discovery here — the runner prints it only in a `finally` AFTER
+    run_scenario returns, which never happens while the subject hangs (and not at all
+    under a hard tree-kill) — so the temp dir is located via the redirected temp root.
+    Raises a clear assertion (never hangs) if the subject fails to hang or the runner
+    dies before reaching `launched`."""
+    deadline = time.monotonic() + deadline_s
+    temp_root = None
+    while time.monotonic() < deadline:
+        if temp_root is None:
+            cands = sorted(child_tmp.glob("constellation-eval-*"))
+            if cands:
+                temp_root = cands[0]
+        if temp_root is not None:
+            meta_path = temp_root / "run-0" / "meta.json"
+            if meta_path.is_file():
+                try:
+                    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    meta = None  # half-written; retry
+                if meta is not None:
+                    status = meta.get("status")
+                    if status == "launched" and "subject_pid" in meta:
+                        return temp_root, meta
+                    if status is not None and status != "launched":
+                        raise AssertionError(
+                            f".cmd subject did not hang: run-0 finalized to {status!r} "
+                            f"(reason={meta.get('reason')!r}) — STOP per handoff")
+        if proc.poll() is not None:
+            raise AssertionError(
+                f"runner exited early (rc={proc.returncode}) before run-0 reached 'launched'")
+        time.sleep(0.2)
+    raise AssertionError(
+        "runner did not reach 'launched' with subject_pid within the bounded poll window")
+
+
+def test_real_runner_process_death_leaves_resumable_state(tmp_path):
+    # THE real-death regression bar (issue #130): launch an ACTUAL run_skill_eval.py
+    # runner subprocess whose `--command` subject HANGS, tree-KILL the live runner
+    # mid-measurement via the module's own Windows `_tree_kill` (taskkill /T /F), and
+    # prove the real death left the resumable contract on disk — then that an
+    # in-process `--resume` re-adopts the orphan to a verdict WITHOUT reinstalling.
+    # Unlike test_resume_recovers_killed_runner_mid_measurement (which hand-seeds the
+    # post-death disk state), this test actually kills a real runner process.
+    wt = throwaway_worktree(tmp_path)                 # tiny corpus to install (fast)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    hang_cmd = _write_hang_cmd(tmp_path)
+
+    # Re-confirm the hang primitive on this box before depending on it (handoff).
+    _confirm_hang_primitive(hang_cmd)
+
+    # Redirect the child's temp root to a known dir so `--keep-temp`'s mkdtemp lands
+    # somewhere we can discover without the (unreachable-while-hung) stderr line.
+    child_tmp = tmp_path / "child-tmp"
+    child_tmp.mkdir()
+    env = dict(os.environ)
+    env["TMP"] = str(child_tmp)
+    env["TEMP"] = str(child_tmp)
+
+    argv = [sys.executable, str(RUN_SKILL_EVAL), str(scen),
+            "--keep-temp", "--worktree", str(wt),
+            "--command", str(hang_cmd), "--max-new-runs", "1"]
+    out_f = (tmp_path / "runner.out.txt").open("wb")
+    err_f = (tmp_path / "runner.err.txt").open("wb")
+    # File-redirected stdio (no pipe reader threads, so nothing can hang on a
+    # grandchild still holding a pipe write-handle).
+    proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL,
+                            stdout=out_f, stderr=err_f, env=env)
+    try:
+        temp_root, meta = _await_launched_runner(child_tmp, proc, deadline_s=45)
+        # Pre-kill sanity: the real runner really did spawn a live subject.
+        assert meta["status"] == "launched"
+        assert isinstance(meta.get("subject_pid"), int)
+        # KILL the real runner tree via the module's OWN Windows tree-kill — the
+        # production reaper (taskkill /PID <pid> /T /F), NOT a POSIX kill -9.
+        rse._tree_kill(proc)
+        try:
+            proc.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            pass
+    finally:
+        # test-harness-concurrency-failsafe: ALWAYS reap the runner tree, so a failed
+        # assertion or timeout above can never leave an orphaned runner/subject hanging
+        # pytest. Idempotent — a second tree-kill of a dead pid is a harmless no-op.
+        rse._tree_kill(proc)
+        try:
+            proc.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            pass
+        out_f.close()
+        err_f.close()
+
+    # The REAL death left the resumable contract, unfinalized (never a silent hang):
+    run0_meta = json.loads((temp_root / "run-0" / "meta.json").read_text(encoding="utf-8"))
+    assert run0_meta["status"] == "launched"          # runner died BEFORE finalizing
+    assert "subject_pid" in run0_meta                 # reaper target was recorded
+    assert (temp_root / "skills" / rse.CORPUS_MARKER).is_file()   # corpus install survived
+
+    # Seed the completion deliverable so the monotone process checks pass -> the orphan
+    # adjudicates completed-pass on resume (run-0's workspace already exists from _run_once).
+    (temp_root / "run-0" / "workspace").mkdir(parents=True, exist_ok=True)
+    (temp_root / "run-0" / "workspace" / rse.COMPLETION_ARTIFACT).write_text(
+        "seeded deliverable\n", encoding="utf-8")
+
+    def _refuse_installer(worktree, tr):
+        raise AssertionError("resume must NOT reinstall the corpus")
+
+    s = rse.load_scenario(scen)
+    v = rse.run_scenario(s, temp_root=temp_root, resume=True,
+                         launch=fake_pass_launch, installer=_refuse_installer)
+    # Resume re-adopted the real orphan and reached a verdict without reinstalling.
+    assert v.status in ("PASS", "INCONCLUSIVE")
+    adjudicated = json.loads((temp_root / "run-0" / "meta.json").read_text(encoding="utf-8"))
+    assert adjudicated["status"] == "completed-pass"          # orphan finalized (no longer launched)
+    assert adjudicated.get("adjudicated_orphan") is True
+    assert v.completed_count >= 1
