@@ -33,6 +33,7 @@ _Draft state. This spec has not passed the confirm gate. `verify_spec_confirmed.
 <The design itself. Describe every interface in deep-module terms — interface = everything a caller must know (invariants, ordering, error modes, config, performance), not just the type surface. Present in complexity-scaled sections; mark per-section approval. For every load-bearing interface, record the design-it-twice outcome (constraints compared, recommendation or hybrid) or the stated reason it was skipped as trivial.>
 
 - **Per-section approval:** <mark each load-bearing section approved, and by whom>
+- **Transcription-grade restoration:** <if this design restores one body of role-specific doctrine verbatim (transcription-grade) into structurally different roles under a no-paraphrase constraint, pre-name the adapted per-role wording HERE — spell out each divergent target's clause, not just a role-noun swap — since the constraint forbids the implementer from inventing the structural substitution. See the explorer "Spec phase" doctrine.>
 
 ## Testing pathways
 

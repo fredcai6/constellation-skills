@@ -37,6 +37,8 @@ Before anything launches, settle how much rope you have. Load `constellation-int
 
 A decision that fits no listed class is **out-of-taxonomy and always escalates** with one line on why it didn't fit. When the contract expires or the ground shifts under it, surface a contract-refresh decision; do not keep sailing on a stale contract.
 
+**Eval and measurement missions: pre-clear the mission's own mechanics at contract time.** For an **eval or measurement mission** specifically, the Permission Prerequisites table must pre-clear, at contract time, the mechanics the delegated commander's core loop depends on: the **harness invocations** it must run (the eval/benchmark harness command itself) and any sanctioned **corpus-surgery** edits its measurement requires (adding, removing, or mutating the corpus fixtures the run measures against). Leave these unlisted and the harness's auto-mode permission classifier vetoes the mission's core loop at execute time — the commander cannot run the very thing it was dispatched to run, and the veto surfaces only after dispatch. Grounded: **#145** — the auto-mode classifier vetoed a delegated commander's core mechanics; the resolution cost a blocked-return round-trip and forced human-in-the-loop execution.
+
 ## Execute (free middle)
 
 Do what the epic needs. Two hard requirements only:
