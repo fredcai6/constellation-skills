@@ -46,6 +46,7 @@ When a Commander floats — a `user-decision` **or a context query**: for a deci
 
 ## Budget / Model Parameters
 `<commander model tier(s), crew model tier(s), compute/time budgets per issue, session-window awareness>`
+**Usage-limit budget.** Treat the account session pool (the shared usage-limit window) as a **wave-sizing input**, not merely a per-issue budget: size each wave to what the pool can carry, and when a limit **reset** is near, **defer the next wave's dispatch past the reset rather than launching into it** — a wave that trips the limit mid-flight strands its Commanders worse than one that waited.
 
 ## Pre-Rulings
 Foreseeable ambiguities ruled in advance; each is overridable by the human at any checkpoint.

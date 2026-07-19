@@ -20,7 +20,7 @@ Concise fragments. Omit filler.
 
 Never pin a literal artifact count (packets, decisions, modules, pages) recalled from memory into a close criterion — a hard number the evidence must "match" is a trap when it disagrees with map truth. Write "one page per packet file — count from the map at authoring time" or re-derive the number from the live map before freezing the handoff.
 
-For a **meaning-preserving doc / register-diet** gate, carry three explicit lists so the edit is deterministic for the implementer and independently verifiable for the reviewer: the exact BEFORE/AFTER for each edit, a MUST-SURVIVE operative-fact list, and a forbidden-signature list.
+For a **meaning-preserving doc / register-diet** gate, carry three explicit lists so the edit is deterministic for the implementer and independently verifiable for the reviewer: the exact BEFORE/AFTER for each edit, a MUST-SURVIVE operative-fact list, and a forbidden-signature list. When any of that edit's prose is lifted **verbatim from a SKILL.md**, dry-run it against the residual-guard signature list — the retired/relocated signatures a no-residual guard asserts must not reappear inline (e.g. the `retired` tuple in `tests/test_install_constellation.py`) — **before dispatch**, so the handoff never asks the implementer to re-introduce a signature the guard will later reject.
 
 ## Allowed Scope
 `<files, modules, regions, or decisions the implementer may touch>`
@@ -59,6 +59,7 @@ When a gate creates a **new** tracked-to-be file, state that it is untracked unt
 When the crew must assert a specific return/message string, **quote the EXACT expected string** so the crew asserts equality, not a substring guess; mark any illustrative example string as illustrative.
 A claimed test-failure distribution must be **derived mechanically** (`pytest -q | grep '^FAILED' | sed 's/::.*//' | sort | uniq -c`), never summarized from a glance at the output tail — the reviewer reproduces every figure, and a correct root cause does not excuse a wrong supporting number.
 When the gate expects the suite to be transiently red, state the expectation **by root cause** (the failing mechanism, wherever it surfaces) with the per-file distribution shown — never by file name alone — and make any failure outside that root-cause class a stop condition.
+A handoff spends the implementer's finite **self-check budget**: every additional fact the Required Evidence asks it to *prove* divides that attention further, so an over-stuffed evidence list buys **content coverage** on paper and shallow checking in practice. Name which evidence items are load-bearing (prove rigorously) versus confirmatory (a spot-check suffices), rather than letting every item compete equally for the same self-check budget.
 
 ## Verification Commands
 
