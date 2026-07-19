@@ -38,12 +38,33 @@ CLOCK_SKEW_TOLERANCE = timedelta(minutes=2)
 
 # Model-keyed fill thresholds (soft, hard), each in 0..1. Engine-side and
 # central -- the writer never sees this table; Trip (#182) calls
-# thresholds_for() to key policy off the model in the record. Numbers are
-# placeholders; first-run-calibration TBD.
+# thresholds_for() to key policy off the model in the record.
+#
+# These are ABSOLUTE-token caps expressed as per-model fractions (fraction =
+# cap / that model's real context window -- see gauge_writer_hook.MODEL_WINDOWS).
+# Context-rot research (2026-07-19, see .agent-work/epic-178/crew-handoffs/
+# context-rot-research.md) found degradation is driven by ABSOLUTE token count,
+# not window fraction: onset clusters ~32-100K tokens regardless of advertised
+# window, and agentic/reasoning work degrades earliest. So a 1M model is usable
+# to a LOWER fraction than a 200K one, and the caps collapse to small fractions
+# on 1M models. Caps: SOFT ~= min(0.5*window, ~80-100K); HARD ~= min(0.7*window,
+# ~150K), agentic-shaded. Human-approved starting points (Fred, 2026-07-19);
+# v1-experimental -- tune from observed gauge fill. A v2 could store the literal
+# absolute cap + convert by window so a new model needs no hand-recomputed
+# fraction (follow-up).
 _THRESHOLDS: dict[str, tuple[float, float]] = {
-    # "claude-opus-4-8": (0.75, 0.90),  # first-run-calibration TBD
+    # 1M-window models: ~80K soft / ~150K hard, as a fraction of 1_000_000.
+    "claude-opus-4-8": (0.08, 0.15),
+    "claude-sonnet-5": (0.08, 0.15),
+    "claude-fable-5": (0.08, 0.15),
+    # 200K-window model: ~90K soft / ~140K hard, as a fraction of 200_000
+    # (here the classic ~0.5/0.75 fraction guess roughly survives).
+    "claude-haiku-4-5-20251001": (0.45, 0.70),
 }
-DEFAULT_THRESHOLDS: tuple[float, float] = (0.75, 0.90)  # first-run-calibration TBD
+# Unknown model -> conservative pair. gauge_writer's DEFAULT_WINDOW assumes 200K
+# for an unknown model, so read the default against that profile but slightly
+# tighter (hand off a touch earlier when we don't know the model).
+DEFAULT_THRESHOLDS: tuple[float, float] = (0.40, 0.65)
 
 
 @dataclass(frozen=True)

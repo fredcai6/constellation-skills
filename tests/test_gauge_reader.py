@@ -139,6 +139,21 @@ class ThresholdsForTests(unittest.TestCase):
         self.m._THRESHOLDS["test-model"] = (0.5, 0.8)
         self.assertEqual(self.m.thresholds_for("test-model"), (0.5, 0.8))
 
+    def test_calibrated_shipped_thresholds(self):
+        # Lock the human-approved calibration (context-rot research, 2026-07-19).
+        # 1M-window models trip at small fractions (absolute cap dominates);
+        # the 200K model keeps the classic ~0.5/0.75-ish fractions.
+        self.assertEqual(self.m.thresholds_for("claude-opus-4-8"), (0.08, 0.15))
+        self.assertEqual(self.m.thresholds_for("claude-sonnet-5"), (0.08, 0.15))
+        self.assertEqual(self.m.thresholds_for("claude-fable-5"), (0.08, 0.15))
+        self.assertEqual(self.m.thresholds_for("claude-haiku-4-5-20251001"), (0.45, 0.70))
+        self.assertEqual(self.m.DEFAULT_THRESHOLDS, (0.40, 0.65))
+        # soft strictly below hard for every shipped model (invariant).
+        for model in ("claude-opus-4-8", "claude-sonnet-5", "claude-fable-5",
+                      "claude-haiku-4-5-20251001"):
+            soft, hard = self.m.thresholds_for(model)
+            self.assertLess(soft, hard)
+
 
 if __name__ == "__main__":
     unittest.main()
