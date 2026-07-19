@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -50,6 +51,32 @@ MUTATING_VERBS = {
     "reopen", "append", "attest", "waive", "attach", "flag-candidate",
     "amend",
 }
+
+
+# --------------------------------------------------------------------------- #
+# gauge reader binding (#181) — loaded by file path so the engine drives whether
+# it is run as a script or imported by a test via spec_from_file_location (both
+# set __file__ to scripts/checklist_engine.py, so the sibling resolves). The load
+# is fail-safe: if gauge_reader.py is missing or fails to import, `_gauge_reader`
+# is None and the Trip policy (#182) simply does nothing — no reading, no advice,
+# never forces, consistent with the whole governor's skip-on-uncertainty posture.
+# --------------------------------------------------------------------------- #
+def _load_gauge_reader():
+    try:
+        path = Path(__file__).resolve().parent / "gauge_reader.py"
+        spec = importlib.util.spec_from_file_location("gauge_reader", path)
+        mod = importlib.util.module_from_spec(spec)
+        # Register BEFORE exec: gauge_reader's frozen @dataclass with a
+        # `from __future__ import annotations` field resolves its own module via
+        # sys.modules during class creation, which crashes if we exec unregistered.
+        sys.modules[spec.name] = mod
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+_gauge_reader = _load_gauge_reader()
 
 
 class EngineError(Exception):
@@ -830,6 +857,121 @@ def _why_suffix(cl: dict, aid: str | None) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Trip — two-band gate policy (#182), Module 3 of the Context Governor (epic-178).
+#
+# At each GATE BOUNDARY the engine reads the context-fullness gauge (#181's reader)
+# and applies model-keyed thresholds (#181's `thresholds_for`). Two bands, both
+# fail-safe on a missing/stale reading (`read()` collapses stale -> None inside):
+#
+#   SOFT (fill >= soft): an ADVISORY stop-by-default question rides the read-only
+#     `current` output — "you've used most of your context; unless you're basically
+#     done, hand off here at this seam." SOFT NEVER forces; the agent may decline
+#     (any reason accepted in v1 — we do not police reason quality; declining is
+#     simply choosing to `advance`, which SOFT never blocks).
+#   HARD (fill >= hard): the engine REFUSES to `advance` until a `refresh-request`
+#     exists for the gate (#179's `has_pending_refresh_request`), pointing at the
+#     exact `attach` command. HARD ALWAYS forces.
+#
+# CHECKS AT GATE BOUNDARIES ONLY — the mid-gate runaway is a deliberately accepted
+# limit; there is no mid-gate check. Like the doctrine rail, this policy rides the
+# CLI-boundary chokepoints in `dispatch` so the verb functions stay PURE (their
+# return values are unchanged, so existing exact-equality tests keep passing): SOFT
+# is a suffix on `current`'s dispatch output; HARD is a pre-`advance` guard.
+#
+# The agent NEVER introspects fill: the engine supplies the fill fact, the agent
+# supplies the stop-point judgment.
+#
+# ROLLOUT CAVEAT: do NOT enable/exercise the HARD band in production until #183's
+# tier-skill wiring lands — an agent hitting HARD writes a refresh-request with no
+# invoker watching and can strand. Both bands are built and tested here; this is a
+# rollout-ordering constraint, not a build dependency.
+# --------------------------------------------------------------------------- #
+def _gauge_path(base_dir: Path | None) -> Path | None:
+    """The gauge file for this checklist: `.agent-work/<work_id>/gauge.json`, a
+    SIBLING of the spine — #180's writer drops it at `Path(spine).parent /
+    "gauge.json"`, and `base_dir` IS that spine directory. Returns None when the
+    location is unresolvable (no `base_dir`, e.g. a checklist processed without a
+    file path): an unresolvable work_id yields no reading and no advice."""
+    if base_dir is None:
+        return None
+    return Path(base_dir) / "gauge.json"
+
+
+def _read_gauge(base_dir: Path | None):
+    """Read a fresh `Reading` for this checklist, or None. Fail-safe: an absent
+    reader binding or unresolvable path collapses to None, and the reader itself
+    never raises (every failure mode — absent/corrupt/malformed/stale/clock-skew —
+    is already collapsed to None inside `read()`). A None reading must produce
+    neither a SOFT question nor a HARD refusal."""
+    if _gauge_reader is None:
+        return None
+    path = _gauge_path(base_dir)
+    if path is None:
+        return None
+    return _gauge_reader.read(path)
+
+
+def _refresh_attach_hint(gate: str) -> str:
+    """The exact `attach` command that raises a refresh-request for `gate` — the
+    remedy both bands point the agent at (payload is pointers only: seam + why_ref,
+    per #179). `<why-id>` is a placeholder the agent fills from the live DIGEST."""
+    return (f"attach {gate} --type refresh-request "
+            f"--field seam={gate} --field why_ref=<why-id>")
+
+
+def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
+    """The Trip advisory suffix for the read-only `current` at a gate boundary
+    (gated checklists only). Empty for surveys, a missing/stale reading, or when
+    below `soft`. SOFT band: a stop-by-default question (advisory — never forces).
+    HARD band: the same escalated to the exact remedy; the refusal itself is
+    enforced on `advance` by `_trip_hard_gate`."""
+    if cl.get("type") != GATED:
+        return ""
+    gate = active_id(cl)
+    if gate is None:
+        return ""
+    reading = _read_gauge(base_dir)
+    if reading is None:
+        return ""
+    soft, hard = _gauge_reader.thresholds_for(reading.model)
+    fill = reading.fill_fraction
+    if fill >= hard:
+        if has_pending_refresh_request(cl, gate):
+            return (f"\nCONTEXT {fill:.0%} (>= hard): refresh already requested for "
+                    f"{gate} — hand off now; do not keep working.")
+        return (f"\nCONTEXT {fill:.0%} (>= hard): `advance` is BLOCKED until you "
+                f"request a refresh. Run: {_refresh_attach_hint(gate)}  — then hand off.")
+    if fill >= soft:
+        return (f"\nCONTEXT {fill:.0%} (>= soft): you've used most of your context. "
+                f"Unless you're basically done, hand off here at {gate} rather than "
+                f"pushing through (advisory — decline with a reason if you're nearly done).")
+    return ""
+
+
+def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
+    """Trip HARD backstop at the `advance` gate boundary: REFUSE to advance when
+    the gauge reads `fill >= hard` and no `refresh-request` is pending for the
+    gate. No-op for surveys, a missing/stale reading (None), or below `hard` — HARD
+    never forces on an absent reading. Called BEFORE `advance` mutates state, so a
+    refusal leaves the gate exactly `in-progress`."""
+    if cl.get("type") != GATED or not iid:
+        return
+    reading = _read_gauge(base_dir)
+    if reading is None:
+        return
+    _, hard = _gauge_reader.thresholds_for(reading.model)
+    if reading.fill_fraction < hard:
+        return
+    if has_pending_refresh_request(cl, iid):
+        return  # the agent already requested a refresh; the backstop is satisfied
+    raise EngineError(
+        f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
+        f"advancing is blocked until you request a refresh, so work is handed off at "
+        f"a seam rather than lost to a runaway. Run: {_refresh_attach_hint(iid)}"
+    )
+
+
+# --------------------------------------------------------------------------- #
 # verbs (each returns a human/agent-readable message; refusals raise)
 # --------------------------------------------------------------------------- #
 def current(cl: dict) -> str:
@@ -1468,7 +1610,10 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
             force=getattr(args, "force", False), reason=getattr(args, "reason", None),
         )
     if v == "current":
-        message = current(cl)
+        # Trip SOFT/HARD advisory (#182) rides the read-only `current` at the gate
+        # boundary — like the doctrine rail, it hangs off this CLI chokepoint so
+        # `current` itself stays pure. Empty for surveys / missing reading / below soft.
+        message = current(cl) + _trip_advisory(cl, base_dir)
     elif v == "claim":
         message = claim(
             cl, args.session_id, args.claimed_by, args.worktree, config,
@@ -1479,6 +1624,11 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # carry the owning --session-id. No lease -> legacy behavior (no session).
         session_id = getattr(args, "session_id", None)
         require_session(cl, v, session_id, config)
+        # Trip HARD backstop (#182): at the `advance` gate boundary, refuse when the
+        # gauge reads >= hard and no refresh-request exists yet. Checked BEFORE the
+        # verb runs so a refusal never mutates state. No-op on a missing reading.
+        if v == "advance":
+            _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
         # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
         # so it never refreshes the lease even though main() persists on the error
         # path. Only a verb that returns successfully reaches the stamp below.

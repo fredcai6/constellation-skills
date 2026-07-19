@@ -1858,3 +1858,217 @@ class RefreshPrimitives(unittest.TestCase):
             with contextlib.redirect_stdout(out):
                 self.assertEqual(E.main(["--file", str(f), "current"]), 0)
             self.assertIn("REFRESH REQUESTED:", out.getvalue())
+
+
+import types
+from datetime import datetime, timedelta, timezone
+
+
+def _reading(fill, model="claude-opus-4-8"):
+    """A fresh, well-formed gauge Reading with the given fill — constructed
+    directly so band-structure tests are decoupled from the reader's file I/O
+    and clock. `observed_at` is aware `now` (the field is unused by the policy)."""
+    return E._gauge_reader.Reading(
+        schema_version=1, fill_fraction=fill, model=model,
+        observed_at=datetime.now(timezone.utc),
+    )
+
+
+def _advance_ns(iid="g1"):
+    return types.SimpleNamespace(
+        verb="advance", id=iid, from_child=None, why=None,
+        mechanical=False, session_id=None,
+    )
+
+
+class TripTwoBandGatePolicy(unittest.TestCase):
+    """#182 Module 3 — the Trip two-band gate policy. Thresholds are model-keyed
+    via #181's `thresholds_for`; NUMBERS are deferred to first-run calibration, so
+    every assertion is structural — pinned to the ACTUAL (soft, hard) the table
+    returns, never to a hardcoded 0.75/0.90. Both bands are exercised through the
+    `dispatch` CLI boundary (where the policy actually rides), with the gauge read
+    patched to a controlled Reading. Real-file wiring is covered separately below."""
+
+    def setUp(self):
+        # The table ships empty (every model -> DEFAULT_THRESHOLDS); read the pair
+        # the policy will actually see rather than assuming the numbers.
+        self.soft, self.hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        # gates are why_exempt so a clean advance needs no --why: this isolates the
+        # Trip bands from #179's why-capture. HARD is checked BEFORE the verb, so
+        # exemption never lets a HARD-tripped advance through.
+        self.cl = gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=True),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+        )
+
+    # --- SOFT band (advisory, on `current`) --------------------------------- #
+    def test_soft_fires_at_and_above_soft(self):
+        # Acceptance 1: SOFT fires at/above soft. At exactly soft, and above it.
+        for fill in (self.soft, (self.soft + self.hard) / 2):
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                out = E.dispatch(self.cl, types.SimpleNamespace(verb="current"),
+                                 base_dir=Path("."))
+            self.assertIn("CONTEXT", out)
+            self.assertIn(">= soft", out)
+
+    def test_soft_never_below_soft(self):
+        # Acceptance 1 (falsifiable half): below soft -> no advisory at all.
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.soft - 0.01)):
+            out = E.dispatch(self.cl, types.SimpleNamespace(verb="current"),
+                             base_dir=Path("."))
+        self.assertNotIn("CONTEXT", out)
+
+    def test_soft_never_forces_advance(self):
+        # Acceptance 3/4 (falsifiable: does SOFT ever force? -> NO): in the SOFT
+        # band `advance` still succeeds; SOFT is advisory only.
+        fill = (self.soft + self.hard) / 2  # strictly between soft and hard
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+            msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertIn("g1 -> complete", msg)
+        self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
+
+    # --- HARD band (refusal, on `advance`) ---------------------------------- #
+    def test_hard_refuses_at_and_above_hard_without_refresh(self):
+        # Acceptance 2/4 (falsifiable: does HARD ever let you pass without a
+        # refresh-request? -> NO): at/above hard with no refresh-request, advance
+        # REFUSES and the gate stays in-progress.
+        for fill in (self.hard, min(self.hard + 0.05, 1.0)):
+            cl = copy.deepcopy(self.cl)
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                with self.assertRaises(E.EngineError) as ctx:
+                    E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+            self.assertIn("refresh", str(ctx.exception).lower())
+            self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
+
+    def test_hard_never_refuses_below_hard(self):
+        # Acceptance 2: just below hard, HARD does not fire — advance passes.
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard - 0.001)):
+            msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertIn("g1 -> complete", msg)
+
+    def test_hard_passes_once_refresh_request_exists(self):
+        # HARD forces UNTIL a refresh-request exists for the gate; with one present,
+        # advance is allowed through (the agent has already requested the refresh).
+        E.attach(self.cl, "g1", "refresh-request", {"seam": "g1", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertIn("g1 -> complete", msg)
+        self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
+
+    def test_hard_refusal_leaves_state_unmutated(self):
+        # A HARD refusal is raised BEFORE the verb runs: no why_trail, no status flip.
+        before = copy.deepcopy(self.cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertEqual(self.cl, before)
+
+    def test_hard_advisory_on_current_points_at_attach(self):
+        # On the read-only `current`, the HARD band escalates the advisory to the
+        # exact remedy (the attach command) and flags that advance is blocked.
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            out = E.dispatch(self.cl, types.SimpleNamespace(verb="current"),
+                             base_dir=Path("."))
+        self.assertIn(">= hard", out)
+        self.assertIn("BLOCKED", out)
+        self.assertIn("attach g1 --type refresh-request", out)
+
+    # --- missing/stale reading (None) --------------------------------------- #
+    def test_none_reading_never_forces_and_gives_no_advice(self):
+        # Acceptance 3: a missing/stale reading (None) -> no advice on current, and
+        # never forces a handoff (advance passes).
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            out = E.dispatch(self.cl, types.SimpleNamespace(verb="current"),
+                             base_dir=Path("."))
+            self.assertNotIn("CONTEXT", out)
+            msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertIn("g1 -> complete", msg)
+
+    def test_survey_checklist_gets_no_trip_policy(self):
+        # Trip is gated-only; a survey never sees an advisory (and has no advance).
+        sv = survey(v1=survey_item("v1", "in-progress"))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            out = E.dispatch(sv, types.SimpleNamespace(verb="current"), base_dir=Path("."))
+        self.assertNotIn("CONTEXT", out)
+
+    def test_unresolvable_work_id_no_base_dir_no_reading(self):
+        # No base_dir -> the gauge location is unresolvable -> no reading, no advice,
+        # never forces (the real _read_gauge/_gauge_path returns None on base_dir None).
+        self.assertIsNone(E._gauge_path(None))
+        self.assertIsNone(E._read_gauge(None))
+        self.assertEqual(E._trip_advisory(self.cl, None), "")
+        E._trip_hard_gate(self.cl, "g1", None)  # no raise
+
+
+class TripRealGaugeFileWiring(unittest.TestCase):
+    """#182 — end-to-end through `main()` with a REAL gauge.json written where
+    #180's writer drops it (a SIBLING of the spine: `base_dir/gauge.json`), read by
+    #181's real `read()`. Proves the path pairing and the reader wiring, not just
+    the band logic. Fresh fill >= hard refuses; a stale/absent gauge never forces."""
+
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": "claude-opus-4-8", "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def _spine(self):
+        # why_exempt so advance needs no --why; HARD is orthogonal to why-capture.
+        return gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=True))
+
+    def test_fresh_hard_gauge_sibling_of_spine_refuses_then_passes_with_refresh(self):
+        soft, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            # gauge sibling of the spine, fresh (observed_at == now), fill >= hard
+            self._write_gauge(d, min(hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "advance", "g1"])
+            self.assertEqual(rc, 1)  # HARD refuses
+            self.assertIn("REFUSED:", err.getvalue())
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
+            # request a refresh, then the same advance is allowed through
+            self.assertEqual(
+                E.main(["--file", str(f), "attach", "g1", "--type", "refresh-request",
+                        "--field", "seam=g1", "--field", "why_ref=w-1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    def test_stale_gauge_reads_none_and_never_forces(self):
+        _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            # fill >= hard but observed_at is well beyond max_age -> reader -> None
+            stale = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+            self._write_gauge(d, min(hard + 0.05, 1.0), stale)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    def test_absent_gauge_file_never_forces(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())  # no gauge.json written
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    def test_fresh_soft_gauge_advises_on_current_but_advance_passes(self):
+        soft, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_gauge(d, (soft + hard) / 2,
+                              datetime.now(timezone.utc).isoformat())
+            import contextlib, io
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(E.main(["--file", str(f), "current"]), 0)
+            self.assertIn("CONTEXT", out.getvalue())
+            self.assertIn(">= soft", out.getvalue())
+            # SOFT never forces: advance still succeeds
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
