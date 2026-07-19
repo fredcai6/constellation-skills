@@ -138,6 +138,12 @@ def read(
     """
     if now is None:
         now = datetime.now(timezone.utc)
+    elif now.tzinfo is None:
+        # A caller-supplied naive `now` (e.g. `datetime.now()`) must not
+        # reach the subtraction in _parse_record -- that would raise on
+        # every well-formed record, exactly the crash this reader exists to
+        # avoid. Assume UTC, same as a naive `observed_at`.
+        now = now.replace(tzinfo=timezone.utc)
 
     try:
         raw = Path(path).read_text(encoding="utf-8")

@@ -114,6 +114,17 @@ class ReadTests(unittest.TestCase):
         self._write(record)
         self.assertIsNotNone(self._read())
 
+    def test_naive_now_does_not_raise(self):
+        # A caller passing a naive `now` (e.g. `datetime.now()` instead of
+        # `datetime.now(timezone.utc)`) must never crash the subtraction
+        # against the tz-aware `observed_at` -- that would violate the
+        # reader's never-raises contract on every well-formed record.
+        self._write(FRESH_RECORD)
+        naive_now = NOW.replace(tzinfo=None)
+        reading = self.m.read(self.path, now=naive_now, max_age=MAX_AGE)
+        self.assertIsNotNone(reading)
+        self.assertEqual(reading.fill_fraction, 0.42)
+
 
 class ThresholdsForTests(unittest.TestCase):
     def setUp(self):
