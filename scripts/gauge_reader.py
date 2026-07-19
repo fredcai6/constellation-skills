@@ -36,35 +36,63 @@ DEFAULT_MAX_AGE = timedelta(minutes=30)
 # clock skew without letting a bad clock manufacture a reading.
 CLOCK_SKEW_TOLERANCE = timedelta(minutes=2)
 
-# Model-keyed fill thresholds (soft, hard), each in 0..1. Engine-side and
-# central -- the writer never sees this table; Trip (#182) calls
-# thresholds_for() to key policy off the model in the record.
+# Model-keyed fill thresholds. Engine-side and central -- the writer never sees
+# this table; Trip (#182) calls thresholds_for() to key policy off the model in
+# the record.
 #
-# These are ABSOLUTE-token caps expressed as per-model fractions (fraction =
-# cap / that model's real context window -- see gauge_writer_hook.MODEL_WINDOWS).
-# Context-rot research (2026-07-19, see .agent-work/epic-178/crew-handoffs/
-# context-rot-research.md) found degradation is driven by ABSOLUTE token count,
-# not window fraction: onset clusters ~32-100K tokens regardless of advertised
-# window, and agentic/reasoning work degrades earliest. So a 1M model is usable
-# to a LOWER fraction than a 200K one, and the caps collapse to small fractions
-# on 1M models. Caps: SOFT ~= min(0.5*window, ~80-100K); HARD ~= min(0.7*window,
-# ~150K), agentic-shaded. Human-approved starting points (Fred, 2026-07-19);
-# v1-experimental -- tune from observed gauge fill. A v2 could store the literal
-# absolute cap + convert by window so a new model needs no hand-recomputed
-# fraction (follow-up).
-_THRESHOLDS: dict[str, tuple[float, float]] = {
-    # 1M-window models: ~80K soft / ~150K hard, as a fraction of 1_000_000.
-    "claude-opus-4-8": (0.08, 0.15),
-    "claude-sonnet-5": (0.08, 0.15),
-    "claude-fable-5": (0.08, 0.15),
-    # 200K-window model: ~90K soft / ~140K hard, as a fraction of 200_000
+# Representation is INTENT-FIRST: each model carries its own ABSOLUTE-token caps
+# alongside the single source of that model's real context window --
+# `(window, soft_cap, hard_cap)`, all ints in tokens. thresholds_for() divides
+# the caps by the window to hand Trip the same `(soft, hard)` FRACTIONS it always
+# consumed, so this is a pure representation refactor: no trip point moves.
+#
+# Why absolute caps are the real knob: context-rot research (2026-07-19, see
+# .agent-work/epic-178/crew-handoffs/context-rot-research.md) found degradation
+# is driven by ABSOLUTE token count, not window fraction -- onset clusters
+# ~32-100K tokens regardless of advertised window, and agentic/reasoning work
+# degrades earliest. So a 1M model is usable to a LOWER fraction than a 200K one,
+# and the caps collapse to small fractions on 1M models. Storing the cap + window
+# (not a hand-recomputed fraction) means a new model needs only its real window
+# and caps -- the fraction falls out by division, with the window stated once.
+# The reader carries its OWN window column and never imports the writer hook, so
+# the read side stays writer-agnostic.
+#
+# Caps below are human-approved starting points (Fred, 2026-07-19), agentic-shaded
+# (SOFT ~= min(~0.5*window, ~80-100K); HARD ~= min(~0.7*window, ~150K)); v1-
+# experimental -- tune from observed gauge fill.
+#
+# FUTURE MEASUREMENT (open questions to resolve from first-run gauge data, per the
+# context-rot research): (1) does the absolute degradation band shift up for the
+# newest 1M frontier models or stay pinned ~32-100K? (2) the real agentic handoff
+# curve (tool-call chains, scratchpad state) is unmeasured; (3) does context
+# hygiene (relevant working state vs. stale tool output) push the usable fraction
+# higher? (4) should HARD trigger on a degradation SIGNAL (self-consistency / probe
+# drop) rather than a static token count? -- prose pointer only; no measurement
+# machinery lives here.
+_PROFILES: dict[str, tuple[int, int, int]] = {
+    # model: (window, soft_cap, hard_cap), all in tokens.
+    # 1M-window models: 80K soft / 150K hard of 1_000_000 -> 0.08 / 0.15.
+    "claude-opus-4-8": (1_000_000, 80_000, 150_000),
+    "claude-sonnet-5": (1_000_000, 80_000, 150_000),
+    "claude-fable-5": (1_000_000, 80_000, 150_000),
+    # 200K-window model: 90K soft / 140K hard of 200_000 -> 0.45 / 0.70
     # (here the classic ~0.5/0.75 fraction guess roughly survives).
-    "claude-haiku-4-5-20251001": (0.45, 0.70),
+    "claude-haiku-4-5-20251001": (200_000, 90_000, 140_000),
 }
-# Unknown model -> conservative pair. gauge_writer's DEFAULT_WINDOW assumes 200K
-# for an unknown model, so read the default against that profile but slightly
-# tighter (hand off a touch earlier when we don't know the model).
-DEFAULT_THRESHOLDS: tuple[float, float] = (0.40, 0.65)
+# Unknown model -> conservative profile. gauge_writer's DEFAULT_WINDOW assumes
+# 200K for an unknown model, so read the default against that window but slightly
+# tighter (hand off a touch earlier when we don't know the model): 80K soft /
+# 130K hard of 200_000 -> 0.40 / 0.65.
+_DEFAULT_PROFILE: tuple[int, int, int] = (200_000, 80_000, 130_000)
+
+# Public fraction pair for the default profile, kept under its historical name so
+# callers, tests, and the thresholds_for docstring can reference it directly.
+# Computed once from _DEFAULT_PROFILE == (0.40, 0.65) -- do NOT repurpose this
+# name to hold absolute caps.
+DEFAULT_THRESHOLDS: tuple[float, float] = (
+    _DEFAULT_PROFILE[1] / _DEFAULT_PROFILE[0],
+    _DEFAULT_PROFILE[2] / _DEFAULT_PROFILE[0],
+)
 
 
 @dataclass(frozen=True)
@@ -82,12 +110,16 @@ class Reading:
 
 
 def thresholds_for(model: str) -> tuple[float, float]:
-    """Return the (soft, hard) fill thresholds for `model`.
+    """Return the (soft, hard) fill FRACTIONS for `model`.
 
-    An unknown model falls back to DEFAULT_THRESHOLDS -- the caller always
+    Converts the model's intent-first absolute caps to fractions against its own
+    window (`soft_cap/window`, `hard_cap/window`) -- the same `(float, float)`
+    shape Trip has always consumed. An unknown model falls back to
+    `_DEFAULT_PROFILE` (fractions == DEFAULT_THRESHOLDS), so the caller always
     gets a usable pair, never a lookup failure.
     """
-    return _THRESHOLDS.get(model, DEFAULT_THRESHOLDS)
+    window, soft_cap, hard_cap = _PROFILES.get(model, _DEFAULT_PROFILE)
+    return (soft_cap / window, hard_cap / window)
 
 
 def _parse_record(record: dict, now: datetime, max_age: timedelta) -> Reading | None:
