@@ -48,7 +48,7 @@ DEFAULT_LEASE_STALE_SECONDS = 1800
 # manage the lease itself and are handled separately.
 MUTATING_VERBS = {
     "start", "advance", "record", "consolidate", "skip", "block",
-    "reopen", "append", "attest", "waive", "attach", "flag-candidate",
+    "resume", "reopen", "append", "attest", "waive", "attach", "flag-candidate",
     "amend",
 }
 
@@ -1137,10 +1137,57 @@ def skip(cl: dict, iid: str, reason: str) -> str:
 def block(cl: dict, iid: str, blocker: str, authority: str, next_action: str) -> str:
     t = task(cl, iid)
     detail = {"blocker": blocker, "authority_needed": authority, "next_action": next_action}
+    # Record the pre-block status so `resume` can restore it (status_detail only —
+    # NOT the bubbled blockers entry). On a re-block of an already-blocked gate keep
+    # the ORIGINAL prior_status; a `blocked` status with no recorded prior (e.g. a
+    # reopen cap-escalation) deliberately records none, so `resume` refuses it.
+    prior = t["status"]
+    existing = t.get("status_detail") or {}
+    if prior != "blocked":
+        detail["prior_status"] = prior
+    elif "prior_status" in existing:
+        detail["prior_status"] = existing["prior_status"]
     t["status"] = "blocked"
     t["status_detail"] = detail
-    cl.setdefault("blockers", []).append({"item": iid, **detail})
+    cl.setdefault("blockers", []).append({"item": iid, "blocker": blocker,
+                                          "authority_needed": authority, "next_action": next_action})
     return f"{iid} -> blocked (bubbled to parent)"
+
+
+def resume(cl: dict, iid: str, reason: str, note: str | None = None) -> str:
+    """Move a resolved `block` forward: return a blocked gate to the status it held
+    BEFORE it was blocked (recorded by `block` as status_detail.prior_status), so the
+    delegate float-then-resume pattern has a sanctioned path — before this, the only
+    exit from a block was `skip` (OBE). Clears the blocked markers, records the
+    resolution, and drops the gate's entry from the bubbled `blockers` list.
+
+    Restores ONLY a `pending`/`in-progress` prior status. A blocked gate with no
+    restorable prior (a reopen rework-cap escalation, or a legacy block predating
+    this verb) is REFUSED — resuming a cap-escalated gate would bypass the rework cap.
+    Refuses a gate that is not `blocked` and an empty reason."""
+    t = task(cl, iid)
+    if t["status"] != "blocked":
+        raise EngineError(f"can only resume a blocked gate; {iid} is {t['status']!r}")
+    if not (reason or "").strip():
+        raise EngineError("resume requires a non-empty --reason (how the blocker was resolved)")
+    detail = t.get("status_detail") or {}
+    prior = detail.get("prior_status")
+    if prior not in ("pending", "in-progress"):
+        raise EngineError(
+            f"{iid} has no restorable pre-block status (it was rework-cap escalated or "
+            f"blocked before `resume` existed, not blocked via `block`); use `reopen`/"
+            f"`skip` or a human decision, not `resume`"
+        )
+    t["status"] = prior
+    detail.pop("prior_status", None)
+    detail["resume_reason"] = reason
+    if note:
+        detail["resume_note"] = note
+    t["status_detail"] = detail
+    blockers = cl.get("blockers")
+    if isinstance(blockers, list):
+        cl["blockers"] = [b for b in blockers if b.get("item") != iid]
+    return f"{iid} resumed -> {prior} (blocker resolved: {reason})"
 
 
 def _reset_conditions(conds: list[dict]) -> None:
@@ -1252,8 +1299,10 @@ def _build_amend_task(op: dict) -> dict:
 
 def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | None = None) -> str:
     """Intentional mid-stream re-planning of a GATED checklist. Apply a delta of
-    `add`/`drop`/`rescope` ops that touch PENDING gates only — completed and
-    in-progress gates are never edited. The whole delta is ALL-OR-NOTHING: it is
+    `add`/`drop`/`rescope` ops that touch PENDING gates only, plus a `retext-check`
+    op that corrects the check TEXT of a PENDING or IN-PROGRESS gate without
+    satisfying its condition — completed/blocked/skipped gates are never edited, and
+    no op ever marks a condition satisfied. The whole delta is ALL-OR-NOTHING: it is
     validated and built on COPIES, and only committed to `cl` once every op passes,
     so a refusal leaves `cl` unmutated (important: `main()` persists `cl` even on
     the error path). Records an audit entry to `cl["amendments"]`.
@@ -1265,6 +1314,11 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
     - `drop`: remove a pending gate.
     - `rescope`: overwrite provided fields (title/imperative/pre/postconditions/
       constraints/directives) on a pending gate; postconditions if given stay >=1.
+    - `retext-check`: correct the check TEXT of one condition on a pending or
+      in-progress gate (`command` for a command check, or a same-kind `check`
+      object), then reset that condition to unsatisfied — an authoring fix that
+      never marks the condition satisfied (that stays `waive`'s job) and never
+      changes the check's kind.
     Requires non-empty `--reason` and `--authority` (human ratification), same as
     `waive`."""
     if cl.get("type") != GATED:
@@ -1355,6 +1409,64 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 updated[key] = copy.deepcopy(value)
             new_tasks[tid] = updated
             summaries.append(f"rescoped {tid}")
+        elif kind == "retext-check":
+            tid = op.get("id")
+            if tid not in new_tasks:
+                raise EngineError(f"retext-check {tid}: no such gate")
+            status = new_tasks[tid]["status"]
+            if status not in ("pending", "in-progress"):
+                raise EngineError(
+                    f"retext-check {tid}: only a pending or in-progress gate's check text "
+                    f"may be corrected (is {status!r}); reopen a complete gate instead"
+                )
+            which = op.get("which", "postconditions")
+            if which not in ("preconditions", "postconditions"):
+                raise EngineError(f"retext-check {tid}: which must be 'preconditions' or 'postconditions'")
+            cond_id = op.get("cond")
+            # Deep-copy before mutating so canonical state is untouched until commit.
+            updated = copy.deepcopy(new_tasks[tid])
+            target = next((c for c in updated.get(which, []) if c.get("id") == cond_id), None)
+            if target is None:
+                raise EngineError(f"retext-check {tid}: no {which} condition {cond_id!r}")
+            old_check = target.get("check")
+            if not isinstance(old_check, dict):
+                raise EngineError(
+                    f"retext-check {tid}.{cond_id}: only an engine-checked condition has check "
+                    f"text to correct (this is check:null — satisfy via attest or accept risk via waive)"
+                )
+            if "command" in op:
+                if old_check.get("kind") != "command":
+                    raise EngineError(
+                        f"retext-check {tid}.{cond_id}: 'command' corrects a command check, but "
+                        f"this check is kind {old_check.get('kind')!r}"
+                    )
+                new_command = op["command"]
+                if not isinstance(new_command, str) or not new_command.strip():
+                    raise EngineError(f"retext-check {tid}.{cond_id}: 'command' must be a non-empty string")
+                old_check["command"] = new_command
+            elif "check" in op:
+                new_check = op["check"]
+                if not isinstance(new_check, dict) or new_check.get("kind") is None:
+                    raise EngineError(
+                        f"retext-check {tid}.{cond_id}: a replacement 'check' must be an object with "
+                        f"a non-null kind (a check:null swap is not a check-text correction)"
+                    )
+                if new_check.get("kind") != old_check.get("kind"):
+                    raise EngineError(
+                        f"retext-check {tid}.{cond_id}: cannot change check kind "
+                        f"{old_check.get('kind')!r} -> {new_check.get('kind')!r}; correct the text, "
+                        f"not the condition's nature"
+                    )
+                target["check"] = copy.deepcopy(new_check)
+            else:
+                raise EngineError(f"retext-check {tid}.{cond_id}: provide 'command' or a 'check' object")
+            # Correcting the check invalidates any prior (wrong-check) verdict: force a
+            # fresh re-evaluation but NEVER satisfy (that stays waive's job). Clears
+            # satisfied/satisfied_by AND waived/attested so _check_condition cannot
+            # short-circuit past the corrected check on a stale approval.
+            _reset_conditions([target])
+            new_tasks[tid] = updated
+            summaries.append(f"retext-check {tid}.{cond_id}")
         else:
             raise EngineError(f"amend: unknown op kind {kind!r}")
 
@@ -1576,6 +1688,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     s.add_argument("--authority", default="parent agent")
     s.add_argument("--next", dest="next_action", default="")
     add_session(s)
+    s = sub.add_parser("resume")
+    s.add_argument("id")
+    s.add_argument("--reason", required=True)
+    s.add_argument("--note")
+    add_session(s)
     s = sub.add_parser("reopen")
     s.add_argument("id")
     s.add_argument("--reason", required=True)
@@ -1700,6 +1817,8 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
         return skip(cl, args.id, args.reason)
     if v == "block":
         return block(cl, args.id, args.blocker, args.authority, args.next_action)
+    if v == "resume":
+        return resume(cl, args.id, args.reason, getattr(args, "note", None))
     if v == "reopen":
         return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)))
     if v == "append":
