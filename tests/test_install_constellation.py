@@ -13,27 +13,6 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install_constellation.py"
 VERIFIER = ROOT / "scripts" / "verify_agent_feedback.py"
-SKILL_NAMES = [
-    "constellation-admiral",
-    "constellation-charter",
-    "constellation-commander",
-    "constellation-commander-delegated",
-    "constellation-workbench",
-    "constellation-interrogator",
-    "constellation-cartographer",
-    "constellation-docent",
-    "constellation-scout",
-    "constellation-implementer",
-    "constellation-lessons-auditor",
-    "constellation-reviewer",
-    "constellation-triage",
-    "constellation-explorer",
-    "constellation-prototyper",
-    "constellation-curator",
-    "constellation-to-issues",
-    "constellation-diagnose",
-    "constellation-write-a-skill",
-]
 
 
 def load_module(name: str, path: Path):
@@ -50,6 +29,12 @@ def load_installer():
 
 def load_verifier():
     return load_module("verify_agent_feedback", VERIFIER)
+
+
+# issue-116: derived from the installer's OWN enumeration (discover_skills()),
+# never a second hand-maintained roster -- a skill added/renamed under skills/
+# now shows up here automatically instead of silently drifting out of sync.
+SKILL_NAMES = sorted(skill.install_name for skill in load_installer().discover_skills())
 
 
 class InstallConstellationTests(unittest.TestCase):
@@ -888,6 +873,64 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertTrue(
                 (target_root / "constellation-curator" / "SKILL.md").is_file()
             )
+
+    def test_every_discovered_skill_is_pinned_in_skill_index(self):
+        # issue-116: SKILL_INDEX.md is a hand-maintained roster; this pins it
+        # against the SAME enumeration install_constellation.py itself uses
+        # (discover_skills()), never a second hardcoded list -- a silently
+        # stale index (a skill added to skills/ but never documented) would
+        # otherwise go unnoticed.
+        # Falsification: add/rename a skill under skills/ without a matching
+        # `skills/<source_name>/SKILL.md` path landing in SKILL_INDEX.md's text
+        # -> this reds, naming exactly the missing skill(s).
+        installer = load_installer()
+        skills = installer.discover_skills()
+        index_text = (ROOT / "SKILL_INDEX.md").read_text(encoding="utf-8")
+
+        missing = sorted(
+            skill.install_name
+            for skill in skills
+            if f"skills/{skill.source_name}/SKILL.md" not in index_text
+        )
+        self.assertEqual(
+            [], missing,
+            f"SKILL_INDEX.md is missing entries for: {missing}",
+        )
+
+    def test_shared_sync_integrity_installed_references_match_source_bytes(self):
+        # issue-116: every skill that bundles skills/_shared/* files must receive
+        # an installed copy that is byte-identical to the source -- a hand-edited
+        # installed copy or a stale bundling step would otherwise drift silently.
+        # Enumeration is the installer's own SKILL_REFERENCE_BUNDLES (via
+        # discover_skills()'s required_references), never a second hardcoded list.
+        # Falsification: change a bundled reference's bytes between source and
+        # install (or corrupt the copy step) -> the byte comparison reds.
+        installer = load_installer()
+        skills = installer.discover_skills()
+        consuming = [skill for skill in skills if skill.required_references]
+        self.assertTrue(
+            consuming, "expected at least one skill to consume skills/_shared/* files"
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                [
+                    "--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                    "--skills", *(skill.source_name for skill in consuming),
+                ],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+
+            shared_root = ROOT / "skills" / "_shared"
+            for skill in consuming:
+                installed_refs = target_root / skill.install_name / "references"
+                for ref in skill.required_references:
+                    with self.subTest(skill=skill.install_name, reference=ref):
+                        source_bytes = (shared_root / ref).read_bytes()
+                        installed_bytes = (installed_refs / ref).read_bytes()
+                        self.assertEqual(source_bytes, installed_bytes)
 
 
 class TemplateBaselineTests(unittest.TestCase):
