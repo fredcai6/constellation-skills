@@ -30,7 +30,8 @@ gw = _load("gauge_writer_hook", _HOOKS_DIR / "gauge_writer_hook.py")
 
 # Hand-computed expectation for tests/fixtures/golden_transcript.jsonl's
 # latest MAIN-CHAIN (non-sidechain) assistant usage record (line 4):
-# 3 + 1200 + 158000 = 159203 tokens, over a 200_000 window. Lines 5-6 are
+# 3 + 1200 + 158000 = 159203 tokens, against claude-opus-4-8's 1_000_000
+# window (the real default window — see gauge_writer_hook.MODEL_WINDOWS). Lines 5-6 are
 # TWO trailing sidechain (subagent) turns -- LATER in the file AND in time,
 # with BIGGER usage totals than line 4 -- that the reverse tail-scan
 # encounters first and must skip past to reach this answer. That ordering
@@ -39,7 +40,7 @@ gw = _load("gauge_writer_hook", _HOOKS_DIR / "gauge_writer_hook.py")
 # isSidechain-continue branch to run; see
 # test_golden_fixture_picks_latest_main_chain_usage_not_sidechain below.
 EXPECTED_MODEL = "claude-opus-4-8"
-EXPECTED_FILL = (3 + 1200 + 158000) / 200_000
+EXPECTED_FILL = (3 + 1200 + 158000) / 1_000_000
 
 
 @pytest.fixture
@@ -103,7 +104,7 @@ def test_golden_fixture_picks_latest_main_chain_usage_not_sidechain(proj):
     # Sanity-check the premise itself: if the skip branch were a no-op (bug),
     # the sidechain turns' bigger totals would produce a fill above this
     # bound instead of matching EXPECTED_FILL above.
-    sidechain_fill = (5 + 2000 + 190000) / 200_000
+    sidechain_fill = (5 + 2000 + 190000) / 1_000_000
     assert record["fill_fraction"] < sidechain_fill
 
 
