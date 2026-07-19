@@ -130,7 +130,7 @@ class DuplicationDetectorTests(unittest.TestCase):
             self.assertEqual(len(dups), 2,
                              f"expected two clusters, got {[d.detail for d in dups]}")
             for d in dups:
-                self.assertEqual(d.status, "flagged")
+                self.assertEqual(d.status, cc.STATUS_FLAGGED)
 
             by_skills = {tuple(d.extra["skills"]): d for d in dups}
             self.assertIn(("alpha", "beta"), by_skills)
@@ -163,7 +163,7 @@ class DuplicationDetectorTests(unittest.TestCase):
                         EMPHATIC_BANNER + "\nZeta closes on an unrelated singular note now.")
             dups = find(cc.curate(root), check="duplication")
             self.assertEqual(len(dups), 1)
-            self.assertEqual(dups[0].status, "flagged")
+            self.assertEqual(dups[0].status, cc.STATUS_FLAGGED)
             self.assertEqual(tuple(dups[0].extra["skills"]), ("eps", "zeta"))
 
 
@@ -174,7 +174,7 @@ class SizeDetectorTests(unittest.TestCase):
             big_body = " ".join(["word"] * (cc.SKILL_WORD_TARGET + 25))
             write_skill(root, "bloated", clean_frontmatter("bloated"), big_body)
             sizes = find(cc.curate(root), skill="bloated", check="size")
-            self.assertTrue(any(f.status == "flagged" for f in sizes),
+            self.assertTrue(any(f.status == cc.STATUS_FLAGGED for f in sizes),
                             f"size did not flag: {[(f.status, f.detail) for f in sizes]}")
 
     def test_within_budget_body_ok(self):
@@ -183,7 +183,7 @@ class SizeDetectorTests(unittest.TestCase):
             write_skill(root, "tight", clean_frontmatter("tight"),
                         "A tight one-screen body well under the word budget.")
             sizes = find(cc.curate(root), skill="tight", check="size")
-            self.assertEqual([f.status for f in sizes], ["ok"])
+            self.assertEqual([f.status for f in sizes], [cc.STATUS_OK])
 
 
 class InvokerDetectorTests(unittest.TestCase):
@@ -194,7 +194,7 @@ class InvokerDetectorTests(unittest.TestCase):
             del fm["invoker"]
             write_skill(root, "noinv", fm, "Body without any invoker frontmatter key at all.")
             inv = find(cc.curate(root), skill="noinv", check="invoker")
-            self.assertEqual([f.status for f in inv], ["flagged"])
+            self.assertEqual([f.status for f in inv], [cc.STATUS_FLAGGED])
 
     def test_present_invoker_ok(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -202,7 +202,7 @@ class InvokerDetectorTests(unittest.TestCase):
             write_skill(root, "withinv", clean_frontmatter("withinv", invoker="human"),
                         "Body carrying a valid invoker tag on the frontmatter.")
             inv = find(cc.curate(root), skill="withinv", check="invoker")
-            self.assertEqual([f.status for f in inv], ["ok"])
+            self.assertEqual([f.status for f in inv], [cc.STATUS_OK])
             self.assertEqual(inv[0].extra["invoker"], "human")
 
 
@@ -215,7 +215,7 @@ class DescriptionDetectorTests(unittest.TestCase):
                                           description="Use when you want your logs compressed for us."),
                         "Body text.")
             person = find(cc.curate(root), skill="persony", check="description-person")
-            self.assertEqual([f.status for f in person], ["shortlist"])
+            self.assertEqual([f.status for f in person], [cc.STATUS_SHORTLIST])
 
     def test_missing_when_to_use_marker_flagged(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -225,7 +225,7 @@ class DescriptionDetectorTests(unittest.TestCase):
                                           description="Compresses scattered run records into one archive."),
                         "Body text.")
             wtu = find(cc.curate(root), skill="nowhen", check="description-when-to-use")
-            self.assertEqual([f.status for f in wtu], ["flagged"])
+            self.assertEqual([f.status for f in wtu], [cc.STATUS_FLAGGED])
 
     def test_confusable_skill_without_exclusion_flagged(self):
         """A skill named in curate_corpus's CONFUSABLE set whose description has
@@ -238,7 +238,7 @@ class DescriptionDetectorTests(unittest.TestCase):
                                           description="Audit architecture. Use when hunting bad patterns."),
                         "Body text.")
             excl = find(cc.curate(root), skill="scout", check="description-exclusion")
-            self.assertEqual([f.status for f in excl], ["flagged"])
+            self.assertEqual([f.status for f in excl], [cc.STATUS_FLAGGED])
 
     def test_confusable_skill_with_exclusion_info(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -249,7 +249,7 @@ class DescriptionDetectorTests(unittest.TestCase):
                                                       "not auditing patterns."),
                         "Body text.")
             excl = find(cc.curate(root), skill="cartographer", check="description-exclusion")
-            self.assertEqual([f.status for f in excl], ["info"])
+            self.assertEqual([f.status for f in excl], [cc.STATUS_INFO])
 
     def test_nonconfusable_skill_gets_no_exclusion_finding(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -267,7 +267,7 @@ class ReferenceTocDetectorTests(unittest.TestCase):
             write_skill(root, "reffed", clean_frontmatter("reffed"), "Body text.",
                         references={"big.md": long_ref})
             toc = find(cc.curate(root), skill="reffed", check="reference-toc")
-            self.assertEqual([f.status for f in toc], ["flagged"])
+            self.assertEqual([f.status for f in toc], [cc.STATUS_FLAGGED])
             self.assertEqual(toc[0].extra["reference"], "big.md")
 
     def test_short_reference_and_toc_reference_not_flagged(self):
@@ -281,6 +281,57 @@ class ReferenceTocDetectorTests(unittest.TestCase):
             self.assertEqual(find(cc.curate(root), skill="okrefs", check="reference-toc"), [])
 
 
+class MatcherFalsePositiveTests(unittest.TestCase):
+    """Regression tests for two over-firing matcher bugs in check_description's
+    detectors: _exclusion_present treating 'not '/'never ' as bare
+    substring-anywhere (false-positives inside 'cannot'/'whenever'), and
+    _person_tokens colliding the 'us' pronoun with the 'US' abbreviation."""
+
+    # --- Bug A: word-boundary for not/never in _exclusion_present ----------
+
+    def test_exclusion_present_no_false_positive_on_cannot(self):
+        """'cannot' contains the bare substring 'not ' but carries no genuine
+        exclusion clause; _exclusion_present must not fire on it."""
+        self.assertFalse(cc._exclusion_present("You cannot skip this step."))
+
+    def test_exclusion_present_no_false_positive_on_whenever(self):
+        """'whenever' contains the bare substring 'never ' but carries no
+        genuine exclusion clause; _exclusion_present must not fire on it."""
+        self.assertFalse(cc._exclusion_present("Whenever logs need compressing."))
+
+    def test_exclusion_present_true_positive_standalone_not_never(self):
+        """Genuine standalone 'not'/'never' usage must still fire."""
+        self.assertTrue(cc._exclusion_present("This is not that skill."))
+        self.assertTrue(cc._exclusion_present("Never use this for compression."))
+
+    def test_exclusion_present_true_positive_phrasal_markers(self):
+        """The phrasal markers are untouched by the word-boundary fix and
+        must keep firing as substring checks."""
+        self.assertTrue(cc._exclusion_present("Do not confuse with the other skill."))
+        self.assertTrue(cc._exclusion_present("Use this instead of the other skill."))
+        self.assertTrue(cc._exclusion_present("Use this rather than the other skill."))
+        self.assertTrue(cc._exclusion_present("Don't confuse with the other skill."))
+
+    # --- Bug B: 'us' pronoun vs 'US' abbreviation in _person_tokens --------
+
+    def test_person_tokens_capitalized_us_abbreviation_not_flagged(self):
+        """A capitalized 'US' (United States) must not be read as the 'us'
+        pronoun once lowercased for tokenizing."""
+        self.assertNotIn(
+            "us", cc._person_tokens("Track compliance across US and EU regions."))
+
+    def test_person_tokens_lowercase_us_pronoun_still_flagged(self):
+        """A genuine lowercase 'us' pronoun usage must still shortlist."""
+        self.assertIn("us", cc._person_tokens("Logs compressed for us."))
+
+    def test_person_tokens_other_pronouns_unaffected_by_us_fix(self):
+        """The case-sensitive carve-out is specific to 'us'; the other
+        pronouns keep their existing case-insensitive whole-word check."""
+        found = cc._person_tokens("You should tell Your team We compressed Our logs.")
+        for pronoun in ("you", "your", "we", "our"):
+            self.assertIn(pronoun, found)
+
+
 class ParseAndCrashTests(unittest.TestCase):
     def test_malformed_and_missing_skill_md_become_parse_rows_no_crash(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -291,7 +342,7 @@ class ParseAndCrashTests(unittest.TestCase):
             findings = cc.curate(root)
             for name in ("badfm", "nomd"):
                 rows = find(findings, skill=name, check="parse")
-                self.assertEqual([f.status for f in rows], ["flagged"],
+                self.assertEqual([f.status for f in rows], [cc.STATUS_FLAGGED],
                                  f"{name} did not produce a flagged parse row")
 
     def test_main_exits_zero_even_with_unparseable_skill(self):
@@ -334,13 +385,13 @@ class FlagsNeverGatesTests(unittest.TestCase):
             # Sanity: prove the fixture really is maximally flagged before we
             # assert the invariant — every detector's flag is present.
             findings = cc.curate(root)
-            flagged_checks = {f.check for f in findings if f.status == "flagged"}
+            flagged_checks = {f.check for f in findings if f.status == cc.STATUS_FLAGGED}
             for expected in ("size", "invoker", "description-length",
                              "description-when-to-use", "description-exclusion",
                              "reference-toc", "duplication", "parse"):
                 self.assertIn(expected, flagged_checks,
                               f"fixture did not flag {expected}; flags={sorted(flagged_checks)}")
-            self.assertTrue(any(f.status == "shortlist" for f in findings))
+            self.assertTrue(any(f.status == cc.STATUS_SHORTLIST for f in findings))
 
             # THE FALSIFICATION: a maximally-flagged corpus must still exit 0.
             self.assertEqual(cc.main([str(root)]), 0)

@@ -71,6 +71,12 @@ WHEN_TO_USE_MARKERS = ("use when", "use to", "use for", "use during")
 # clause. These detect its PRESENCE mechanically. Absence is only FLAGGED for
 # the known confusable-pair skills below; for every other skill absence is fine.
 EXCLUSION_MARKERS = ("not ", "do not", "don't", "instead of", "rather than", "never ")
+# "not "/"never " above are legacy substring forms kept for documentation of
+# intent; _exclusion_present does NOT substring-match them directly (that
+# over-fires inside ordinary words like "cannot"/"whenever") -- it matches
+# them as whole words via this compiled regex instead, while every other
+# marker in the tuple stays a plain substring check.
+EXCLUSION_NOT_NEVER_RE = re.compile(r"\bnot\b|\bnever\b", re.IGNORECASE)
 # ...plus the "for <other-thing> use <X>" redirect pattern:
 EXCLUSION_REDIRECT_RE = re.compile(r"\bfor\b.*?\buse\b", re.IGNORECASE)
 
@@ -202,12 +208,30 @@ def check_size(skill: str, body: str) -> list[Finding]:
 
 def _person_tokens(desc: str) -> list[str]:
     tokens = set(_words(desc))
-    return [p for p in PERSON_PRONOUNS if p in tokens]
+    found = [p for p in PERSON_PRONOUNS if p in tokens]
+    if "us" in found:
+        # "us" collides with the "US"/"U.S." (United States) abbreviation once
+        # lowercased -- only count it as the pronoun when the ORIGINAL text
+        # actually carries a lowercase "us" token (an all-caps "US" is read as
+        # the abbreviation, not the pronoun). All other pronouns keep the
+        # plain case-insensitive check; no such abbreviation collision exists
+        # for them.
+        raw_tokens = set(re.findall(r"[A-Za-z0-9]+", desc))
+        if "us" not in raw_tokens:
+            found.remove("us")
+    return found
 
 
 def _exclusion_present(desc: str) -> bool:
     low = desc.lower()
-    if any(marker in low for marker in EXCLUSION_MARKERS):
+    # "not "/"never " are whole-word matched (EXCLUSION_NOT_NEVER_RE), not
+    # substring-anywhere -- substring containment over-fires inside ordinary
+    # words ("cannot", "whenever"). The remaining phrasal markers are specific
+    # multi-word phrases with no such collision, so they stay substring checks.
+    phrasal_markers = (m for m in EXCLUSION_MARKERS if m not in ("not ", "never "))
+    if any(marker in low for marker in phrasal_markers):
+        return True
+    if EXCLUSION_NOT_NEVER_RE.search(desc):
         return True
     return bool(EXCLUSION_REDIRECT_RE.search(desc))
 
