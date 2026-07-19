@@ -97,6 +97,39 @@ A "completed" leaf is therefore not frozen until the invoker **accepts** the ret
 
 The bounce-back has a weak-model failure mode the strong models hide: **rework ping-pong** — invoker rejects, weak executor "fixes," still wrong, repeat, forever. So the engine enforces a **rework cap per node**. On the Nth rejection it **stops re-dispatching and escalates up a tier** (or to the user) instead of looping. The cap is a project setting established at **Charter** (user setup) time and read by the engine; it is not the weak invoker's judgment call, precisely because the weak invoker is the one that would otherwise loop forever.
 
+## The rail: engine-carried doctrine at decision points (`_rail()`, #140)
+
+The engine doesn't just enforce ordering — it appends a short doctrine block, the **rail**,
+to its own output at every decision point, so the enforcement text lives with the mechanism
+that decides, not in prose an agent might skip or misremember.
+
+- **Surface.** `_rail(point, cl)` in `checklist_engine.py` appends `\n\nRAIL: <text>` to the
+  successful output of the six railed verbs (`RAIL_VERBS = {claim, current, start, advance,
+  attest, attach}`) and to the REFUSED path in `main()`. The verb functions themselves stay
+  pure — their return values are unchanged; the rail rides only the CLI output boundary, so
+  existing exact-equality tests keep passing. `gated` checklists only: a `survey` checklist
+  (`cl["type"] != GATED`) gets no rail at all.
+- **Five decision-point strings**, keyed by position, held verbatim in `_RAIL_STRINGS`:
+  `early` (first gate, not yet worked), `mid-flight` (mid-run, `{n}` gates from done, names
+  the next `{imperative}`), `near-terminal` (one gate left before release-eligibility),
+  `terminal` (only `release` remains), and `check-failure` (a verb was REFUSED). The first
+  four are derived from spine state (`_rail_position`); `check-failure` is the one point NOT
+  derived from `items` state.
+- **The refusal-path trigger.** `check-failure` cannot be read off `items` state — a failed
+  `advance` leaves the spine looking identical to ordinary mid-flight (nothing recorded the
+  attempt). Its only deterministic trigger is the `EngineError` raised on the REFUSED path in
+  `main()`; that raise, not any state predicate, is what selects the `check-failure` string.
+- **Position derivation (`_rail_position`).** `remaining` is the ordered list of not-yet-
+  terminal items; `n = len(remaining)`. `n == 0` → `terminal`; `n == 1` → `near-terminal`;
+  active gate (`remaining[0]`) is the checklist's first item → `early` (substitutes `{id}`);
+  otherwise → `mid-flight` (substitutes `{n}` and `{imperative}`).
+- **Canonicality.** This table is the **single canonical enforcement source**; `_shared/
+  global-everyone.md` §Completion enforcement elaborates and cites it in prose, but on any
+  conflict between the two, the table wins — it is generated from spine/refusal state, not
+  hand-maintained prose that can drift. The five strings are **frozen, verbatim** (a
+  measurement precondition for #145): do not paraphrase them; `{id}`/`{n}`/`{imperative}` are
+  the only substituted tokens.
+
 ## Evidence: gate on type/shape, not quality
 
 The engine does **not** judge whether work is good. A gate declares the **evidence types** required before it can close, and the engine checks **presence and minimal shape** only:

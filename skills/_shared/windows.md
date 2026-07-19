@@ -77,3 +77,22 @@ flakiness, which no merge-class fallback covers.
 
 Grounded: epic #178 — hit `gh pr create` (impl #180) and the Admiral's own
 `git reset --hard`; identical retry/fallback succeeded both times.
+
+## 6. Headless hook-probe: verifying a `settings.json` hook actually fires
+
+**Works:** `claude -p "<probe prompt>" --allowedTools "Bash"` — an explicit, non-bypass tool
+allowlist. This is a real permission mode, so a tool call genuinely executes: PreToolUse/
+PostToolUse fire around it, and SessionStart/Stop fire the same as any other run. This is
+the form that live-proves a hook registration headlessly.
+
+**Fails, two different ways:**
+- `--dangerously-skip-permissions` (`bypassPermissions`) is refused by the classifier on a
+  headless (`claude -p`) invocation — the process never launches, so **no** hook fires, not
+  even SessionStart/Stop. Do not read this as "the hook is broken"; the run never started.
+- A bare `claude -p "<prompt>"` with no permission flag DOES launch and fires SessionStart/
+  Stop, but every tool action needing approval is silently denied (no interactive approver
+  headless) — so it can never exercise a PostToolUse hook. Reading that silence as "the
+  hook doesn't fire" misdiagnoses a permission gap as a hook defect.
+
+Grounded: lesson `headless-hook-probe-allowedtools` — the spine_rail hook suite's live
+probes (#141, PR #150).
