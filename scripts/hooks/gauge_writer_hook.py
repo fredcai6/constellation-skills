@@ -48,17 +48,25 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 
-# Context-window token capacity per model (standard tier). Calibration TBD:
-# every model shipped today shares 200k; kept as a table (not one constant)
-# because #181's gauge_reader already keys SOFT/HARD thresholds per model,
-# and a future model with a different window only needs a new row here.
+# Context-window token capacity per model, the fill_fraction DENOMINATOR.
+# These are the real per-model windows (source: Claude API model catalog):
+# Opus 4.8 / Sonnet 5 / Fable 5 ship a 1M window BY DEFAULT (standard tier, no
+# beta header); Haiku 4.5 is 200k. Getting this right is load-bearing — a wrong
+# (too-small) denominator makes fill read high and trips SOFT/HARD far too early
+# (e.g. 200k here vs a real 1M window reads 5x high). Kept per-model (not one
+# constant) because the windows genuinely differ and gauge_reader keys thresholds
+# per model too; a new model just adds a row.
 MODEL_WINDOWS = {
-    "claude-opus-4-8": 200_000,
-    "claude-sonnet-5": 200_000,
+    "claude-opus-4-8": 1_000_000,
+    "claude-sonnet-5": 1_000_000,
+    "claude-fable-5": 1_000_000,
     "claude-haiku-4-5-20251001": 200_000,
-    "claude-fable-5": 200_000,
 }
-DEFAULT_WINDOW = 200_000  # unknown model -> standard-tier default, not a guess of 0
+# Unknown model -> conservative SMALL window on purpose: an unknown model reads
+# as more-full, so the governor errs toward handing off early rather than late
+# (fail-safe direction). Not a guess of 0 (which would divide-by-zero-guard to
+# no-reading); 200k is the smallest window we actually ship.
+DEFAULT_WINDOW = 200_000
 
 # Bounded reverse-scan window (bytes) -- see docs/GAUGE_WRITER_HOOK.md. Real
 # transcripts run into the tens of MB; a full forward parse every tool call
