@@ -25,17 +25,25 @@ PASS_COMMAND = f'"{sys.executable}" -c "import sys; sys.exit(0)"'
 FAIL_COMMAND = f'"{sys.executable}" -c "import sys; sys.exit(1)"'
 
 
-def gate(iid, status="pending", command=None, preconds=None):
+def gate(iid, status="pending", command=None, preconds=None, why_exempt=True):
+    # why_exempt defaults to True here so the legacy fixtures below (written before
+    # #179 why-capture, and orthogonal to it) keep advancing silently. The ENGINE's
+    # real default is NOT exempt (a missing key => not exempt); pass why_exempt=False
+    # to build an explicitly non-exempt gate, or why_exempt=None to omit the key
+    # entirely (an existing-shape/legacy gate). See WhyCapture / RefreshPrimitives.
     post = []
     if command is not None:
         post = [{"id": "c1", "statement": "tests pass", "check": {"kind": "command", "command": command}, "satisfied": False}]
-    return {
+    t = {
         "id": iid, "title": iid, "imperative": f"do {iid}",
         "preconditions": preconds or [], "postconditions": post,
         "constraints": [], "directives": None, "child_checklist": None,
         "status": status, "status_detail": {}, "result": None, "finding": None,
         "evidence": [], "rework_count": 0,
     }
+    if why_exempt is not None:
+        t["why_exempt"] = why_exempt
+    return t
 
 
 def gated(cap=3, **tasks):
@@ -1588,3 +1596,265 @@ class DoctrineRail(unittest.TestCase):
             printed = err.getvalue()
             self.assertIn("REFUSED:", printed)
             self.assertNotIn("RAIL:", printed)
+
+
+class WhyCapture(unittest.TestCase):
+    """#179 Module 1 — the why-capture invariant: a non-exempt advance solicits a
+    single running `why`, silence fails closed, the digest is the latest
+    non-mechanical `why`, and a reopen freshens it."""
+
+    def _two_open(self):
+        # g1 in-progress (non-exempt), g2 pending (non-exempt): advancing g1 leaves
+        # g2 as the active gate so `current` still has an ACTIVE line to carry DIGEST.
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def test_non_exempt_advance_without_why_is_refused(self):
+        # Acceptance 1 (load-bearing): no why, no --mechanical -> REFUSED, fails closed.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        self.assertNotIn("why_trail", cl)  # nothing recorded on the refused path
+
+    def test_exempt_gate_advances_with_no_why_prompt(self):
+        # Acceptance 2: an explicitly exempt gate advances silently, records no why.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=True))
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+        self.assertNotIn("why_trail", cl)
+
+    def test_mechanical_discharges_and_is_not_the_digest(self):
+        # Acceptance 3: --mechanical advances a non-exempt gate; the trail records a
+        # mechanical marker but that entry never becomes the digest.
+        cl = self._two_open()
+        E.advance(cl, "g1", why="the real understanding")
+        E.start(cl, "g2")
+        self.assertEqual(E.advance(cl, "g2", mechanical=True), "g2 -> complete")
+        trail = cl["why_trail"]
+        mech = [e for e in trail if e.get("mechanical")]
+        self.assertEqual(len(mech), 1)
+        self.assertEqual(mech[0]["gate"], "g2")
+        self.assertIsNone(mech[0]["why"])
+        # digest is still the last *non-mechanical* why, not the mechanical marker
+        self.assertEqual(E._digest(cl), "the real understanding")
+        self.assertIn("DIGEST: the real understanding", E.current(cl))
+
+    def test_latest_non_mechanical_why_is_the_digest_line(self):
+        # Acceptance 4: the latest non-mechanical why is retrievable as DIGEST: via current.
+        cl = self._two_open()
+        E.advance(cl, "g1", why="first understanding")
+        # g2 is now active; DIGEST rides the ACTIVE line
+        out = E.current(cl)
+        self.assertIn("ACTIVE g2", out)
+        self.assertIn("DIGEST: first understanding", out)
+        # a second non-mechanical why supersedes it as the latest
+        E.start(cl, "g2")
+        E.advance(cl, "g2", why="second understanding")
+        self.assertEqual(E._digest(cl), "second understanding")
+        self.assertIn("DIGEST: second understanding", E.current(cl))
+
+    def test_reopen_freshens_digest(self):
+        # Acceptance 5: after a reopen, the reopened gate's understanding stops being
+        # the digest (the superseded understanding is no longer "latest").
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        E.advance(cl, "g1", why="stale understanding")
+        self.assertEqual(E._digest(cl), "stale understanding")
+        E.reopen(cl, "g1", "needs rework")
+        # the reopen appended a marker (append-only); the prior why-record is intact
+        self.assertTrue(any(e.get("reopen") for e in cl["why_trail"]))
+        self.assertEqual(cl["why_trail"][0]["why"], "stale understanding")
+        # but it is no longer the live digest
+        self.assertIsNone(E._digest(cl))
+        self.assertNotIn("DIGEST:", E.current(cl))
+        # re-advancing with a fresh why restores a live digest
+        E.advance(cl, "g1", why="fresh understanding")
+        self.assertEqual(E._digest(cl), "fresh understanding")
+
+    def test_reopen_cascade_freshens_downstream_why(self):
+        # A cascade reopen resets downstream gates; their why must be freshened too.
+        cl = gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+        E.advance(cl, "g1", why="g1 understanding")
+        E.start(cl, "g2")
+        E.advance(cl, "g2", why="g2 understanding")
+        self.assertEqual(E._digest(cl), "g2 understanding")
+        # reopen g1 cascades to g2; both understandings are now stale
+        E.reopen(cl, "g1", "upstream rework")
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+        self.assertIsNone(E._digest(cl))
+
+    def test_mechanical_takes_precedence_when_both_given(self):
+        # --mechanical is a distinct discharge flag: passing it records a mechanical
+        # marker even if a --why string is also present (crisp, predictable).
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        E.advance(cl, "g1", why="ignored", mechanical=True)
+        self.assertTrue(cl["why_trail"][-1]["mechanical"])
+        self.assertIsNone(cl["why_trail"][-1]["why"])
+
+    def test_blank_why_still_fails_closed(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1", why="   ")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+
+    def test_postconditions_checked_before_why(self):
+        # A failing postcondition yields the postcondition refusal, not the why prompt
+        # (no buying past unfinished work).
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False))
+        with self.assertRaises(E.EngineError) as ctx:
+            E.advance(cl, "g1")  # no why supplied, but postcondition fails first
+        self.assertIn("postconditions unmet", str(ctx.exception))
+        self.assertNotIn("why_trail", cl)
+
+    def test_why_trail_is_append_only_across_advances(self):
+        cl = self._two_open()
+        E.advance(cl, "g1", why="one")
+        first = copy.deepcopy(cl["why_trail"][0])
+        E.start(cl, "g2")
+        E.advance(cl, "g2", why="two")
+        # the earlier record is byte-identical (never mutated); a new one was appended
+        self.assertEqual(cl["why_trail"][0], first)
+        self.assertEqual([e["id"] for e in cl["why_trail"]], ["w-1", "w-2"])
+
+    def test_cli_non_exempt_refused_then_advances_with_why(self):
+        # Through main(): a why-less advance REFUSES cleanly (exit 1, no crash) and
+        # persists no completion; with --why it succeeds and creates the why_trail.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 1)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
+            self.assertEqual(
+                E.main(["--file", str(f), "advance", "g1", "--why", "understood the seam"]), 0)
+            reloaded = E.load(f)
+            self.assertEqual(reloaded["tasks"]["g1"]["status"], "complete")
+            self.assertEqual(reloaded["why_trail"][-1]["why"], "understood the seam")
+
+    def test_cli_mechanical_flag_advances(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "advance", "g1", "--mechanical"]), 0)
+            self.assertTrue(E.load(f)["why_trail"][-1]["mechanical"])
+
+
+class WhyCaptureBackwardCompat(unittest.TestCase):
+    """Pre-ruling: the new engine must drive existing-shape spines (NO `why_trail`
+    key, NO `why_exempt` on tasks) — missing why_exempt => not exempt; a why-less
+    advance REFUSES cleanly (never throws); why_trail is created on first write."""
+
+    def test_existing_shape_non_exempt_refused_then_passes_with_why(self):
+        raw = gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=None)
+        self.assertNotIn("why_exempt", raw)  # genuinely legacy-shaped task
+        cl = gated(g1=raw)
+        self.assertNotIn("why_trail", cl)    # genuinely legacy-shaped spine
+        # missing why_exempt is treated as NOT exempt -> refused, fails closed
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        # ... then passes with a why, and why_trail is created on first write
+        self.assertEqual(E.advance(cl, "g1", why="post-hoc understanding"), "g1 -> complete")
+        self.assertIn("why_trail", cl)
+        self.assertEqual(cl["why_trail"][-1]["why"], "post-hoc understanding")
+
+    def test_existing_shape_exempt_task_advances_silently(self):
+        # An existing-shape spine that opts a task OUT (why_exempt: true) advances with
+        # no why prompt and records nothing.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=True))
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+        self.assertNotIn("why_trail", cl)
+
+    def test_cli_legacy_spine_refuses_cleanly_never_crashes(self):
+        # The clean-refusal guarantee through the CLI boundary: exit 1 (REFUSED),
+        # not an uncaught exception, and the spine is left drivable.
+        raw = gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=None)
+        cl = gated(g1=raw)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "advance", "g1"])
+            self.assertEqual(rc, 1)
+            self.assertIn("REFUSED:", err.getvalue())
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
+
+
+class RefreshPrimitives(unittest.TestCase):
+    """#179 Module 4 — the refresh PRIMITIVES only (flow wiring is #183): a
+    `refresh-request` evidence type carried by the ordinary `attach` verb, the pure
+    `has_pending_refresh_request` predicate, and a `REFRESH REQUESTED:` line on
+    `current`."""
+
+    def _one_active_after_advance(self):
+        cl = gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+        E.advance(cl, "g1", why="upstream understanding")  # g2 becomes active
+        return cl
+
+    def test_refresh_request_round_trip(self):
+        # Acceptance 6: attach a refresh-request; predicate true + current shows the
+        # line. Absent one: false + no line.
+        cl = self._one_active_after_advance()
+        # absent: predicate false, no line
+        self.assertFalse(E.has_pending_refresh_request(cl, "g2"))
+        self.assertNotIn("REFRESH REQUESTED", E.current(cl))
+        # attach a refresh-request (pointers only) against the active gate g2
+        why_ref = cl["why_trail"][-1]["id"]
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": why_ref})
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
+        out = E.current(cl)
+        self.assertIn("REFRESH REQUESTED:", out)
+        self.assertIn(why_ref, out)  # the why_ref pointer surfaces on the line
+
+    def test_refresh_request_is_seam_specific(self):
+        cl = self._one_active_after_advance()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
+        self.assertFalse(E.has_pending_refresh_request(cl, "g1"))  # different seam
+
+    def test_superseded_refresh_request_is_not_pending(self):
+        # The reopen cascade supersedes evidence; a superseded refresh-request must
+        # stop counting as pending (the predicate honors the supersession marker).
+        cl = self._one_active_after_advance()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        ev = cl["tasks"]["g2"]["evidence"][-1]
+        ev["superseded"] = {"by": "reopen:g1", "reason": "x", "ts": "t"}
+        self.assertFalse(E.has_pending_refresh_request(cl, "g2"))
+
+    def test_predicate_is_pure_no_mutation(self):
+        cl = self._one_active_after_advance()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        before = copy.deepcopy(cl)
+        E.has_pending_refresh_request(cl, "g2")
+        E.has_pending_refresh_request(cl, "g1")
+        self.assertEqual(cl, before)  # no side effects
+
+    def test_predicate_on_legacy_spine_no_refresh_type(self):
+        # A spine that never attached a refresh-request: predicate false, no crash.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        self.assertFalse(E.has_pending_refresh_request(cl, "g1"))
+
+    def test_cli_attach_refresh_request_then_current_shows_line(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            self.assertEqual(
+                E.main(["--file", str(f), "attach", "g1", "--type", "refresh-request",
+                        "--field", "seam=g1", "--field", "why_ref=w-1"]), 0)
+            import contextlib, io
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(E.main(["--file", str(f), "current"]), 0)
+            self.assertIn("REFRESH REQUESTED:", out.getvalue())
