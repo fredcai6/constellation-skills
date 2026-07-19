@@ -9,10 +9,45 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 SUBDIRS = ["crew-handoffs", "evidence", "triage-candidates"]
+
+# Placeholder families the resolver owns: <work-id> plus role-specific
+# "<role>-skill-dir" / "<role>-session-id" tokens (<commander-skill-dir>,
+# <admiral-skill-dir>, ...; role names may themselves carry hyphens, e.g. a
+# hypothetical <lessons-auditor-skill-dir>). A token in one of these families
+# left unresolved in a materialized spine is always a resolver bug, never an
+# intentional literal — unlike prose placeholders such as <engine>, <date>,
+# <N>, <path>, which this script never resolves and are fine to survive.
+_ROLE_SKILL_DIR_RE = re.compile(r"<([a-zA-Z0-9-]+)-skill-dir>")
+_ROLE_SESSION_ID_RE = re.compile(r"<([a-zA-Z0-9-]+)-session-id>")
+_RESOLVER_OWNED_TOKEN_RE = re.compile(
+    r"<(work-id|[a-zA-Z0-9-]+-skill-dir|[a-zA-Z0-9-]+-session-id)>"
+)
+
+
+def _assert_no_resolver_placeholders(text: str) -> None:
+    """Fail loudly if a resolver-owned placeholder survives resolution.
+
+    This is the epic-101/epic-138 class of defect (#114, #154): a role's spine
+    template introduces its own placeholder (e.g. ``<admiral-skill-dir>``,
+    ``<admiral-session-id>``) that the resolver did not know how to substitute,
+    and it is left literal inside an engine check-command string — the engine
+    then refuses to ``advance`` many steps into a run, with a confusing
+    "file not found" pointing at the literal placeholder, instead of failing
+    here at instantiation where the cause is obvious.
+    """
+    leftover = sorted(set(_RESOLVER_OWNED_TOKEN_RE.findall(text)))
+    if leftover:
+        raise SystemExit(
+            "spine.json still carries unresolved placeholder(s) after resolution: "
+            + ", ".join(f"<{token}>" for token in leftover)
+            + " -- add the token to resolve_spine rather than shipping a spine "
+            "with a literal placeholder in a check command."
+        )
 
 
 def init_work_area(root: Path, work_id: str) -> Path:
@@ -60,17 +95,24 @@ def _resolve_skill_dir_token(text: str, token: str, skill_dir: str | None, root:
 def resolve_spine(template_text: str, work_id: str, skill_dir: str | None, root: Path) -> str:
     """Resolve spine placeholders in a spine template's text.
 
-    - ``<commander-skill-dir>`` and the generic ``<skill-dir>`` both resolve
-      via ``_resolve_skill_dir_token`` from the same ``skill_dir``/``root``
-      inputs (see that helper); ``<commander-skill-dir>`` behavior is
-      unchanged (byte-identical) by this generalization.
-    - ``<commander-session-id>`` -> ``commander-<work-id>`` (the conventional default).
+    - Every role-specific ``<role-skill-dir>`` token present (``<commander-skill-dir>``,
+      ``<admiral-skill-dir>``, and any future role's) resolves via
+      ``_resolve_skill_dir_token`` from the same ``skill_dir``/``root`` inputs (see that
+      helper), discovered by pattern rather than hardcoded per role so a new role's spine
+      template does not recur this defect under a fresh token name (#114/#154). The
+      generic ``<skill-dir>`` token resolves the same way; ``<commander-skill-dir>``
+      behavior is unchanged (byte-identical) by this generalization.
+    - Every role-specific ``<role-session-id>`` token (``<commander-session-id>``,
+      ``<admiral-session-id>``, ...) -> ``<role>-<work-id>`` (the conventional default),
+      likewise discovered by pattern.
     - ``<work-id>`` -> the work_id argument (all occurrences).
     """
     text = template_text
-    text = _resolve_skill_dir_token(text, "commander-skill-dir", skill_dir, root)
+    for token in sorted({f"{role}-skill-dir" for role in _ROLE_SKILL_DIR_RE.findall(text)}):
+        text = _resolve_skill_dir_token(text, token, skill_dir, root)
     text = _resolve_skill_dir_token(text, "skill-dir", skill_dir, root)
-    text = text.replace("<commander-session-id>", f"commander-{work_id}")
+    for role in sorted(set(_ROLE_SESSION_ID_RE.findall(text))):
+        text = text.replace(f"<{role}-session-id>", f"{role}-{work_id}")
     text = text.replace("<work-id>", work_id)
     return text
 
@@ -95,6 +137,10 @@ def instantiate_spine(
     resolved = resolve_spine(template.read_text(encoding="utf-8"), work_id, skill_dir, root)
     # Fail visibly if resolution produced invalid JSON rather than writing a broken spine.
     json.loads(resolved)
+    # Fail visibly if any resolver-owned placeholder survived resolution (#114/#154),
+    # rather than writing a spine that will strand the engine on a literal placeholder
+    # many steps into a run.
+    _assert_no_resolver_placeholders(resolved)
     dest.write_text(resolved, encoding="utf-8")
     return dest
 
