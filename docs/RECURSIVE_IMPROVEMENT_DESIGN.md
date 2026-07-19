@@ -439,7 +439,13 @@ LESSONS.md with no locking. The per-work-id sidecar file proposal
 - **Durable root** (`scripts/agent_work_root.py`, PR #84): `durable_root()` resolves
   the MAIN-checkout `.agent-work/` shared by every linked worktree, so the learning
   trio (LESSONS.md, AGENT_FEEDBACK.md, CONSTELLATION_FEEDBACK.md) is one canonical
-  set per repo rather than scattered per-worktree copies.
+  set per repo rather than scattered per-worktree copies. Under an **active Admiral
+  epic lease**, `durable_root()` instead honors the worktree — the fenced main
+  checkout is unwritable, so redirecting durability there would strand the
+  feedback/archive gate; resolving worktree-local lets that gate pass without the
+  staging dance, and the Admiral's harvest-before-sweep collects the worktree-local
+  trio into the canonical root (#118). Absent an epic lease, resolution is unchanged
+  (linked worktree → main checkout).
 - **Under-epic staging** (settled at 20260706-dogfood-audit closeout; gate-formalized
   in #143, fixes #134): while an Admiral launch order fences a Commander off the main
   checkout, it stages the worktree-local trio — the `AGENT_FEEDBACK.md` entry,
@@ -452,7 +458,11 @@ LESSONS.md with no locking. The per-work-id sidecar file proposal
   A solo Commander writes through to canonical directly at its `feedback` step (no
   fence marker → the durable-write path is byte-for-byte unchanged). This is the single
   serialization point the original revision asked for, and it still kills cheap counter
-  inflation from one run repeating itself.
+  inflation from one run repeating itself. This four-file staging is mechanized by
+  **`scripts/stage_feedback.py`** (#154): it writes the `AGENT_FEEDBACK.md` entry,
+  `lessons-delta.json`, `CONSTELLATION_FEEDBACK.md`, and the `FENCE.md` citation in the
+  exact layout `verify_agent_feedback.py` accepts, so a fenced Commander no longer
+  hand-rolls the trio.
 - **Ordering constraint for any future mechanized write-through:** AGENT_FEEDBACK.md
   is ordered newest-on-top; an automated append must insert at the top, under the
   header — a bottom-append breaks the order (observed in issue-73).

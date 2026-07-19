@@ -22,6 +22,8 @@ Every invocation begins by running `py scripts/curate_corpus.py --root skills`. 
 
 Decidability honesty (T7): the script measures mechanical facts and shortlists candidates; it never renders a semantic verdict. Whether a flagged clause is really a procedure is the **human mend pass's** job — not the script's.
 
+**Two-sided acceptance (detector-self-confirmation guard).** A corpus finding is accepted only when it survives *both* sides: the detector's own run (`curate_corpus.py`) **and** an independent fresh-context sweep by a reader who did not run the detector. The script shortlists mechanical candidates; the semantic verdict is the fresh reader's — the detector never confirms itself.
+
 ## Invariant #2 — flags never gate
 
 The script always exits 0. Findings are rows, not failures; soft budgets say where to look and must never harden into a gate. Distribution claims come from a row count, never an impression.
@@ -29,6 +31,8 @@ The script always exits 0. Findings are rows, not failures; soft budgets say whe
 ## Mend
 
 Apply mechanical, verifiable-by-inspection fixes in place: tighten a description, add a TOC, normalize terminology, cut re-accreted boilerplate. **No engine checklist — a fixed linear pass** (the triage precedent): work the flagged rows directly. **The git diff is the review gate**; a fix not obviously correct from the diff is a route, not a mend.
+
+**Broad-first dedup-move sequencing.** When clearing a duplication-signature cluster, make the **broad move first** — lift the shared doctrine to its single `_shared/` home (a Route) — and only **then** cut the now-redundant inline copies (a Mend); cutting the narrow copies first leaves the broad move re-touching the same rows and re-opening closed diffs.
 
 ## Route
 
