@@ -95,21 +95,19 @@ the fresh agent advances the gate the request named, `active_id(cl)` moves past 
 no longer matches anything being asked about — `REFRESH REQUESTED:` simply stops appearing. No new verb, no
 evidence mutation, no hand-edited JSON: completing the gate the request named is what clears it.
 
-**Known gaps, flagged not fixed here** (both are `checklist_engine.py` changes, out of #183's doctrine-only
-scope — see the file fence in its launch order):
+**Both gaps below were flagged not-fixed under #183's doctrine-only scope and have since been RESOLVED in
+PR #199 (#190, #189).** The description is retained for context; the workaround is no longer needed.
 
-- The predicate is boolean-per-gate with no `why_ref` comparison: if a *second*, unrelated trip lands on the
-  *same still-open* gate before the first request clears, the predicate is already true and silently waves
-  the second trip through on the first request's coattails. Flagged for the Admiral and for #182's HARD
-  band, the caller that would actually hit it.
-- **The `DIGEST:`/`REFRESH REQUESTED:` display is `gated`-only** (`_why_suffix` returns empty for any other
-  checklist type) — verified: `attach`ing a `refresh-request` to a `survey` checklist (e.g. a reviewer's
-  `REVIEW_SURVEY.json`) leaves `current` unchanged; the predicate itself still works on a survey (it doesn't
-  check type), only the human/agent-readable surfacing does not. The reach-up chain in #183's spec explicitly
-  names reviewer (a survey-driving role) as a reach-up participant, so a survey-type checklist's own trip
-  cannot use the `current`-alone cold start as built — the workaround until this is extended is to read the
-  survey JSON's `evidence` array directly for a `refresh-request` item, not `current`. Flagged for the
-  Admiral as a #179 fast-follow (extend `_why_suffix` to surveys).
+- ~~The predicate is boolean-per-gate with no `why_ref` comparison~~ — **fixed (#190).**
+  `has_pending_refresh_request` now takes an optional `why_ref` identity filter, and the HARD-band callers
+  (`_trip_advisory` HARD branch, `_trip_hard_gate`) key release on the current-digest why-record, so a
+  second unrelated trip on the same still-open gate no longer rides the first request's coattails — it
+  requires its own fresh `refresh-request`.
+- ~~The `DIGEST:`/`REFRESH REQUESTED:` display is `gated`-only~~ — **fixed (#189).** `_why_suffix` no longer
+  early-returns on non-gated types, so a `refresh-request` attached to a `survey` checklist (e.g. a
+  reviewer's `REVIEW_SURVEY.json`) now surfaces on `current`. The reach-up `current`-alone cold start holds
+  for survey-driving roles (reviewer, interrogator); reading the survey JSON's `evidence` array directly is
+  no longer required.
 
 ## Obey refusals
 
