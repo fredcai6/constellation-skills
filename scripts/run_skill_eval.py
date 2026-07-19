@@ -18,11 +18,21 @@ through the same seams the unit layer uses, so no path here ever reaches a real
 Seam pattern mirrors run_crew.py: the module-level default launcher/installer are
 resolved INSIDE the orchestration function at CALL time, so a monkeypatched (or
 CLI-selected) seam takes effect.
+
+Arm construction (load-bearing, #153): an installed skill is TWO trees welded
+together. The skill SOURCE tree is `<worktree>/skills` — `--worktree` only selects
+that source. The bundled engine (the `scripts/` + `references/` copied into each
+installed skill) does NOT come from `--worktree`; it comes from `REPO_ROOT/scripts`
+of the checkout that INVOKES `run_skill_eval.py` (the invoking checkout). So the
+corpus a run fingerprints is source-tree bytes plus invoking-checkout engine bytes;
+hashing the source tree alone would omit the bundled engine, which is why the
+corpus id is taken over the INSTALLED tree (and normalized for install path — below).
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
@@ -33,6 +43,7 @@ import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -436,6 +447,108 @@ def verdict(run_results: list, *, n: int, m: int,
 compute_corpus_id = _install.compute_corpus_id
 write_corpus_marker = _install.write_corpus_marker
 assert_corpus = _install.assert_corpus
+
+
+# --------------------------------------------------------------------------- #
+# install-path-invariant corpus id (#153)
+# --------------------------------------------------------------------------- #
+# `install_constellation.rewrite_installed_skill_paths` bakes the ABSOLUTE install
+# path (`target.as_posix()`, where target = <skills_dir>/<skill>) into every
+# installed skill file — it replaces the `<skill-dir>` / `<name>-skill-dir>` tokens.
+# Raw `compute_corpus_id` then hashes those bytes, so the id depends on WHERE the
+# corpus was installed. The eval harness installs into a fresh `tempfile.mkdtemp`
+# per invocation, so a byte-identical corpus gets a different id every run — that is
+# #153, and it breaks same-corpus-hash grouping for rolling certification.
+#
+# The fix hashes a path-NORMALIZED copy of each file's text: the original install
+# root's posix string is replaced with a fixed sentinel before hashing, so two
+# byte-identical corpora at different install paths hash identically. Only the EVAL
+# harness's hashing changes; real-install path rewriting/hashing is untouched.
+#
+# ANCHOR RULE (load-bearing — getting it wrong false-fences every run): the baked
+# pollution is ALWAYS the ORIGINAL install root's posix string, and it survives
+# verbatim when the installed tree is COPIED elsewhere (`_run_once` copies
+# `skills_dir` -> `workspace/.claude/skills` and then asserts the copy). So the
+# install root to strip is passed as an EXPLICIT anchor, SEPARATE from the tree being
+# hashed — at the assert site the tree is the copy but the anchor is the ORIGINAL
+# `skills_dir`. Stripping "the directory I am hashing" would no-op on the copy (whose
+# own path is not what its bytes contain) and false-fence every run as corpus_mismatch.
+CORPUS_ROOT_SENTINEL = "<CORPUS_ROOT>"
+
+
+def _hash_normalized_file(path: Path, needle: str) -> str:
+    """sha256 hexdigest of a file's TEXT with `needle` (the install root's posix
+    string) replaced by a fixed sentinel, so the baked absolute install path does not
+    perturb the digest. Undecodable/binary files (which carry no baked text path) fall
+    back to the raw-bytes `_hash_file`, keeping them stable and format-identical."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        return _hash_file(path)
+    normalized = text.replace(needle, CORPUS_ROOT_SENTINEL)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def stable_corpus_id(skills_dir, install_root, names=None) -> str:
+    """Install-path-invariant corpus id. Mirrors `_install.compute_corpus_id`'s file
+    selection (sorted `rglob`, skip `CORPUS_MARKER` / `.pyc` / `__pycache__`) and its
+    `"sha256:" + sha256` over sorted `(rel_posix, file_hash)` pairs EXACTLY — only the
+    per-file bytes are normalized, so the id FORMAT is unchanged.
+
+    `skills_dir` is the tree to hash; `install_root` is the ORIGINAL install root whose
+    posix string was baked into the files (the ANCHOR). The two DIFFER at the assert
+    site, where the tree is a COPY of an `install_root`-rooted corpus — see the ANCHOR
+    RULE above. The needle is built from `install_root.as_posix()` (forward slashes,
+    matching how the installer baked it via `target.as_posix()`); `str(install_root)`
+    would use backslashes on Windows and silently no-op.
+    """
+    skills_dir = Path(skills_dir)
+    needle = Path(install_root).as_posix()
+    roots = (
+        [skills_dir / n for n in names]
+        if names is not None
+        else [skills_dir]
+    )
+    pairs: list[tuple[str, str]] = []
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            if path.name == CORPUS_MARKER:
+                continue
+            if path.suffix == ".pyc" or "__pycache__" in path.parts:
+                continue
+            rel = path.relative_to(skills_dir).as_posix()
+            pairs.append((rel, _hash_normalized_file(path, needle)))
+    digest = hashlib.sha256()
+    for rel, file_hash in sorted(pairs):
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(file_hash.encode("utf-8"))
+        digest.update(b"\n")
+    return "sha256:" + digest.hexdigest()
+
+
+def write_stable_corpus_marker(skills_dir, source_commit, *, build_date=None) -> str:
+    """Compute the STABLE (install-path-invariant) corpus id for `skills_dir` and write
+    `<skills_dir>/CORPUS.json` with it. Mirrors `_install.write_corpus_marker`'s marker
+    shape (`{corpus_id, source_commit, date}`) — it differs ONLY in recording the stable
+    id instead of the raw path-dependent one, so the id the resume path reads back equals
+    the id the assert site checks the per-run copy against. `write_corpus_marker` itself
+    recomputes via raw `compute_corpus_id`, so it cannot be reused for the eval id here."""
+    skills_dir = Path(skills_dir)
+    corpus_id = stable_corpus_id(skills_dir, skills_dir)
+    marker = {
+        "corpus_id": corpus_id,
+        "source_commit": source_commit,
+        "date": build_date if build_date is not None else date.today().isoformat(),
+    }
+    (skills_dir / CORPUS_MARKER).write_text(
+        json.dumps(marker, indent=2) + "\n", encoding="utf-8"
+    )
+    return corpus_id
 
 
 # --------------------------------------------------------------------------- #
@@ -858,7 +971,10 @@ def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
     started = time.time()
     workspace_unchanged = False
     permission_denied = False
-    if not assert_corpus(run_skills, corpus_id):
+    # Install-path-invariant check (#153): hash the COPY (`run_skills`) but normalize
+    # using the ORIGINAL `skills_dir` as the anchor — the copy's bytes still carry the
+    # original install path, so anchoring on the copy's own path would false-fence.
+    if stable_corpus_id(run_skills, skills_dir) != corpus_id:
         outcome = LaunchOutcome(exit_code=None, corpus_mismatch=True)
         present = fresh = False
         process_results: list = []
@@ -1002,7 +1118,9 @@ def _read_corpus_marker(skills_dir: Path) -> tuple[str, str | None]:
         data = json.loads(marker.read_text(encoding="utf-8"))
         return data["corpus_id"], data.get("source_commit")
     except (OSError, ValueError, KeyError):
-        return compute_corpus_id(skills_dir), _source_commit()
+        # Fallback recompute uses the STABLE id (#153) with skills_dir as its own anchor,
+        # so a recomputed id matches the stable id written into CORPUS.json at install.
+        return stable_corpus_id(skills_dir, skills_dir), _source_commit()
 
 
 def run_scenario(scenario: Scenario, *, temp_root, worktree=None, launch=None,
@@ -1039,7 +1157,9 @@ def run_scenario(scenario: Scenario, *, temp_root, worktree=None, launch=None,
     else:
         skills_dir = installer(worktree, temp_root)
         source_commit = _source_commit()
-        corpus_id = write_corpus_marker(skills_dir, source_commit)
+        # Record the STABLE, install-path-invariant id in CORPUS.json (#153) so a
+        # byte-identical corpus installed at a different temp root fingerprints the same.
+        corpus_id = write_stable_corpus_marker(skills_dir, source_commit)
 
     m = scenario.m
     n = scenario.n

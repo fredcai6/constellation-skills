@@ -581,6 +581,56 @@ def test_end_to_end_pass_with_real_temp_install_and_fake_launch(tmp_path):
     assert answer_records and all(not c.passed for c in answer_records)
 
 
+def _tokened_worktree(tmp_path: Path) -> Path:
+    """Like `throwaway_worktree` but the skill body carries a `<skill-dir>` token, so
+    the installer's `rewrite_installed_skill_paths` bakes the ABSOLUTE install path
+    (`target.as_posix()`) into the installed SKILL.md. That reproduces the #153
+    pollution the stable corpus id must normalize out; without a rewritable token the
+    two installs are byte-identical and the RAW-differs canary below is a false green."""
+    wt = tmp_path / "wt"
+    skill = wt / "skills" / "constellation-foo"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text(
+        FOO_SKILL_MD + "Run `python <skill-dir>/scripts/foo.py` from <skill-dir>.\n",
+        encoding="utf-8",
+    )
+    return wt
+
+
+def test_corpus_id_install_path_invariant(tmp_path):
+    """#153: two byte-identical corpora installed at DIFFERENT absolute temp roots must
+    hash to the SAME corpus_id. Driven through the REAL copy path — `run_scenario` ->
+    `_run_once` copies the installed tree into `workspace/.claude/skills` and asserts it
+    against the recorded id — so a naive "strip the dir I am hashing" fix (which no-ops
+    on the copy) would false-fence and be caught here, not pass. The RAW `compute_corpus_id`
+    of the two installed trees DIFFERS (the installer baked the absolute install path in);
+    that canary proves the equality below is the fix normalizing real pollution out, not
+    two trivially-identical trees."""
+    wt = _tokened_worktree(tmp_path)
+    scen = make_scenario(tmp_path, process=(PASS_CHECK,))
+    s = rse.load_scenario(scen)
+
+    root1 = tmp_path / "install-A"
+    root2 = tmp_path / "install-B"
+    v1 = rse.run_scenario(s, temp_root=root1, worktree=str(wt), launch=fake_pass_launch)
+    v2 = rse.run_scenario(s, temp_root=root2, worktree=str(wt), launch=fake_pass_launch)
+
+    # Install-path invariance: same content, different absolute install path, same id.
+    assert v1.corpus_id == v2.corpus_id
+    assert v1.corpus_id.startswith("sha256:")
+    # No run false-fenced as corpus_mismatch through the assert site (~861): every copy
+    # normalized back to the recorded stable id.
+    assert v1.fenced_count == 0 and v2.fenced_count == 0
+    assert all(rr.status == "completed-pass" for rr in v1.per_run)
+    assert all(rr.status == "completed-pass" for rr in v2.per_run)
+
+    # Canary: the RAW (path-dependent) ids of the two installed trees DIFFER, proving the
+    # baked absolute path really is present and the equality above is the fix at work.
+    raw1 = rse.compute_corpus_id(root1 / "skills")
+    raw2 = rse.compute_corpus_id(root2 / "skills")
+    assert raw1 != raw2
+
+
 def test_end_to_end_fail_with_real_temp_install_and_fake_launch(tmp_path):
     # Same real pipeline, broken transcript -> completed-fail -> FAIL (never fenced).
     wt = throwaway_worktree(tmp_path)
@@ -696,7 +746,9 @@ def test_meta_json_written_incrementally_launch_then_final(tmp_path):
     temp_root = tmp_path / "t"
     temp_root.mkdir()
     skills_dir = rse.temp_install(str(wt), temp_root)
-    corpus_id = rse.write_corpus_marker(skills_dir, "abc123")
+    # Seed the STABLE id the way run_scenario now does (#153): _run_once's assert
+    # site normalizes the copy against skills_dir, so it must receive the stable id.
+    corpus_id = rse.write_stable_corpus_marker(skills_dir, "abc123")
     s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
 
     seen: dict = {}
@@ -995,7 +1047,9 @@ def test_resume_recovers_killed_runner_mid_measurement(tmp_path):
     s = rse.load_scenario(scen)
     temp_root = tmp_path / "t"; temp_root.mkdir()
     skills_dir = rse.temp_install(str(wt), temp_root)
-    rse.write_corpus_marker(skills_dir, "abc123")
+    # Stable marker (#153): resume reads this id back and _run_once asserts the copy
+    # against it, so it must be the same install-path-invariant id run_scenario writes.
+    rse.write_stable_corpus_marker(skills_dir, "abc123")
     # kill-simulation: run-0 finalized completed-pass; run-1 orphaned "launched"
     # (its workspace already carries the deliverable -> adjudicates completed-pass).
     _seed_run_dir(temp_root, 0, artifact=False, meta={"status": "completed-pass"})
@@ -1046,7 +1100,7 @@ def test_final_meta_preserves_launch_liveness_fields(tmp_path):
     wt = throwaway_worktree(tmp_path)
     tr = tmp_path / "t"; tr.mkdir()
     skills = rse.temp_install(str(wt), tr)
-    cid = rse.write_corpus_marker(skills, "abc")
+    cid = rse.write_stable_corpus_marker(skills, "abc")  # stable id (#153); see _run_once assert
     s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
 
     def hb_launch(argv, *, cwd, env, stdout_path, stderr_path, timeout):
