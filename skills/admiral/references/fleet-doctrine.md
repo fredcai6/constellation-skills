@@ -191,6 +191,14 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
   it names: when a dispatched commander returns idle with no verdict, verify from the artifact set (branch /
   commit / PR / changed files) **and a clean-room reviewer subagent** pointed at them, and accept on that
   basis rather than hanging on a message it can silently drop.
+- **Advancing local `main` mid-run without a normal checkout leaves the working tree stale.** A bare
+  `git update-ref refs/heads/main <sha>` (used to fast-forward local main without disturbing an in-flight
+  working tree) moves the ref but NOT the working tree — so a file that changed between old and new HEAD shows
+  as a false local modification/**deletion**, risking an accidental revert of merged work at the next
+  commit/merge. Sync the working tree too (`git status`, then `git restore`/checkout the affected paths — or
+  `git merge --ff-only origin/main` which moves ref and tree together), not just the ref. Tag a genuine
+  self-inflicted near-miss as an **`ADMIRAL ERROR`** entry even when caught and fixed inline — the dedicated
+  tag is what makes it greppable at the next lessons audit; folding it into a `MERGE` entry's prose hides it.
 
 ## Engine/platform quirks
 
@@ -208,3 +216,11 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
   never refused for your own staleness — every mutating verb refreshes the lease,
   so a long crew/compute step or idle gap self-heals on your next verb. A re-claim
   is only needed to take over a *different* session's lease.
+- **Self-hosting an engine edit mid-run** (an epic that rewrites `checklist_engine.py` — the very engine
+  driving your own spine): pre-rule the hazard in the latitude contract before wave 1. Implement/review the
+  change in an isolated worktree. **Before merging**, verify the new engine still drives your **live** spine:
+  a read-only `current` on the live spine (exit 0), and a mutating verb (`advance`) run against a **copy** of
+  the spine (never the live file) to confirm it refuses/succeeds sanely rather than crashing. Only then merge,
+  sync your local checkout to the new engine, and continue driving remaining advances on it — that is how the
+  feature gets proven in production, not just in its own test suite (the governor epic #178 dogfed its own
+  `--why` capture onto this Admiral's closing advances this way, zero incident).
