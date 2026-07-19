@@ -20,6 +20,11 @@ Path: `skills/explorer/SKILL.md`
 
 Shapes a raw idea into a human-confirmed, issue-ready design upstream of any issue: exploration cycles, excursion off/on-ramps, a cold critic panel, and a hard confirmation gate before work is cut.
 
+## Constellation To-Issues
+Path: `skills/to-issues/SKILL.md`
+
+Cuts a confirmed `DESIGN_SPEC` into a dependency-ordered, wave-ready issue set an Admiral can run, once an explorer agent or a human has a confirmed spec ready to decompose into typed, edge-ordered issues.
+
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`
 
@@ -60,6 +65,11 @@ Path: `skills/prototyper/SKILL.md`
 
 Builds a throwaway prototype that answers one named design question, then disposes of it. Handoff-driven, no checklist.
 
+## Constellation Diagnose
+Path: `skills/diagnose/SKILL.md`
+
+Investigates a break — a runtime bug or an intent-vs-execution disconnect — by running one evidence loop until the cause is reproduced, then routes it out; never fixes it itself.
+
 ## Constellation Triage
 Path: `skills/triage/SKILL.md`
 
@@ -74,6 +84,11 @@ Runs an epic as the human's delegate: confirms a latitude contract, dispatches C
 Path: `skills/lessons-auditor/SKILL.md`
 
 Fresh-context Reflector dispatched at closeout: distills scoped, grounded lesson candidates from run artifacts and routes them as nominations, never applying them itself.
+
+## Constellation Write-a-Skill
+Path: `skills/write-a-skill/SKILL.md`
+
+Mints a new constellation skill from a described capability: classifies it, scaffolds from an archetype, drafts the `skills/<name>/` tree, then hands it to an independent reviewer. For a human authoring a brand-new skill, not for maintaining an existing one.
 
 ## Constellation Curator
 Path: `skills/curator/SKILL.md`
