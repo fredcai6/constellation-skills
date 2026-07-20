@@ -81,6 +81,13 @@ A drill is the lesson's failure scenario run against a **throwaway** subagent tw
 
 Keep it lightweight: one scenario, combined pressures where they are load-bearing,
 verbatim capture in the before-arm. The auditor (not the editor) writes the drill record.
+
+**Decontaminate the scenario.** State the drill scenario positively / by-outcome; never
+pre-itemize or alarm-flag the failure trigger — a scenario that names what the doctrine is
+supposed to make the author notice makes the *before*-arm pass too, collapsing the variable
+under test and proving nothing. Describe the roles/mission the subagent occupies, not the
+divergent clauses or harness/fixtures the fix is meant to surface; the failure trigger must
+stay latent for the before-arm to have a chance to fail on its own.
 The scenario + record are committed under `docs/superpowers/drills/<lesson-id>.md` so a
 corpus accumulates (future evals seed).
 
