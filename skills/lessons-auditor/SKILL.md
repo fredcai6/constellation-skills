@@ -59,8 +59,12 @@ failure scenario run against a **throwaway** subagent twice:
   observe the failure no longer fire.
 
 Keep it lightweight: one scenario, combined pressures only where they are load-bearing,
-verbatim capture in the before-arm. **You** — the fresh-context auditor, not the editor who
-made the edit — write the drill record; the editor must not grade its own fix (the same
+verbatim capture in the before-arm. **Decontaminate the scenario:** state it positively /
+by-outcome; never pre-itemize or alarm-flag the failure trigger — a scenario that names what
+the doctrine is supposed to make the author notice makes the *before*-arm pass too, collapsing
+the variable under test and proving nothing. Describe the roles/mission, not the divergent
+clauses or the harness/fixtures the fix is meant to surface. **You** — the fresh-context
+auditor, not the editor who made the edit — write the drill record; the editor must not grade its own fix (the same
 separation by which you nominate and never apply). Commit the scenario + record under
 `docs/superpowers/drills/<lesson-id>.md` so a corpus accumulates (future evals seed);
 that path is the apply op's `drill` value. **Honest-null:** a before-arm that will not

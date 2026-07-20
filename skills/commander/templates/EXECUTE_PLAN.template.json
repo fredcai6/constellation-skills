@@ -7,7 +7,7 @@
     "e0-context": {
       "id": "e0-context",
       "title": "Load execution context",
-      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant Cartographer packet(s) for the bounded problem. This checklist's config_ref (docs/agents/engine-config.json) is absent-by-design in repos that vendor their own scripts; the engine degrades it gracefully to built-in defaults (rework cap, lease-stale seconds), so a missing engine-config is a sanctioned degradation, not a gap to fix. Confirm the frozen plan's intent and scope, then attest c1.",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant Cartographer packet(s) for the bounded problem. This checklist's config_ref (docs/agents/engine-config.json) is absent-by-design in repos that vendor their own scripts (a skill-source repo has no docs/agents/ overlay at all); the engine degrades it gracefully to built-in defaults (rework cap, lease-stale seconds), so a missing engine-config is a sanctioned degradation, not a gap to fix — do NOT create the overlay file. If a run in such a repo needs non-default engine settings, inline a `config` object on the checklist (the engine prefers an inline `config` over `config_ref`) rather than chasing the dead path. Confirm the frozen plan's intent and scope, then attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
@@ -45,7 +45,7 @@
     "g1-integrate": {
       "id": "g1-integrate",
       "title": "<gate name>: integrate",
-      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions pass, advance this gate. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate — a command-kind postcondition (like this gate's test command) is satisfied by `advance`, which re-runs the check, NOT by `attest`, which the engine refuses for command checks (only null-check and artifact conditions are attestable ahead of advance). BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
       "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
       "postconditions": [
         {"id": "c1", "statement": "<observable behavior>; tests pass", "check": {"kind": "command", "command": "<exact test command>"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
