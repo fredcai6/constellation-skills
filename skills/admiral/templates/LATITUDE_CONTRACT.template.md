@@ -50,7 +50,16 @@ When a Commander floats — a `user-decision` **or a context query**: for a deci
 
 ## Pre-Rulings
 Foreseeable ambiguities ruled in advance; each is overridable by the human at any checkpoint.
+Grade each pre-ruling with an `@grade` child line so a Commander inheriting it knows whether it may
+revisit it freely or must float back (see `references/global-everyone.md`, "Decision fixedness"):
+```
+- decision:wave-0-is-five-wide — launch all five wave-0 issues concurrently.
+  @grade: settled/human · leans wave-0
+- decision:coverage-floor — the engine coverage floor is 85%.
+  @grade: guess · leans c-ci · settle: measure current coverage once, set the floor just under it
+```
 - `<pre-ruling>`
+  `@grade: <tier>[/provenance][ · leans <ids>][ · settle: <experiment>]`
 
 ## Expiry
 `<time (e.g. 48h) or event (e.g. "after wave 2 merge") — crossing it forces a contract-refresh decision before further dispatch>`

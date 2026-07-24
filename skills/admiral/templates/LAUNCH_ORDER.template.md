@@ -10,7 +10,16 @@ Commanders start cold. Paste, don't point — this covers **external finding ids
 
 ## Pre-Rulings
 Ruled in advance, each overridable if evidence contradicts it — say so when overriding.
+Grade each ruling with an `@grade` child line so the Commander knows which it may revisit freely and
+which it must float back (see `references/global-everyone.md`, "Decision fixedness"):
+```
+- decision:no-new-ledger — the guess ledger is a grep over inline tags, never a stored file.
+  @grade: settled/human · leans g1-implement
+- decision:parse-strategy — locate decisions first, then ask which block they sit in.
+  @grade: guess · leans g1-implement · settle: run both parsers over the shipped templates, compare false positives
+```
 - `<ruling>`
+  `@grade: <tier>[/provenance][ · leans <ids>][ · settle: <experiment>]`
 
 ## Honest-Null Clause
 A measured negative on the stated question is a complete, successful deliverable. Report it with the same rigor as a win.

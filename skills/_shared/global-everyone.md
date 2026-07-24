@@ -159,6 +159,59 @@ four clauses: this is an accepted, untested compression at the getting-IN moment
 rail cannot yet backstop it) — the rail covers every call from `claim` onward, so the pointer only needs to
 survive the pre-first-call window.
 
+## Decision fixedness: the `@grade:` tag
+
+A recorded decision does not say how *fixed* it is, so every decision reads as equally settled and an executor
+that meets reality contradicting one has no way to tell "revise this freely" from "stop, this is not yours to
+unsettle." One inline tag, welded to the decision's own line, carries that property:
+
+```
+@grade: <tier>[/provenance][ · leans <ids>][ · settle: <experiment>]
+```
+
+`tier` is `settled`, `guess`, or `placeholder`, and is always required. `provenance` (`/human`, `/measured`,
+`/inherited`) is required on `settled`. `leans` names the gate/item ids in this plan that depend on the decision.
+`settle:` is one line naming the cheapest experiment that would settle it, and is required on `guess`.
+
+**The tag lives on the decision, never in a second place.** There is no ledger file — the guess ledger is a view
+`scripts/grade_lint.py` regenerates from these tags every time it is asked for. A decision and its grade cannot
+drift apart because they cannot be separated: in Markdown the tag is the decision bullet's own child line, and in
+JSON it is appended inside the decision string itself.
+
+```
+- decision:dedup-wal — dedup writes reuse the existing WAL, not a new journal.
+  @grade: guess · leans g1-implement · settle: 20-line spike appends 2 records, assert ordering survives a crash
+- decision:error-envelope — public error shape is {code,msg,retriable}.
+  @grade: settled/human · leans g1-implement,g1-review
+```
+
+### Tier is an index into an action at a reality-contradiction
+
+When execution meets evidence contradicting a recorded decision, the tier tells you what you are allowed to do —
+this is the whole point of grading, and it is what you consult *instead of* guessing or re-opening the question:
+
+- **`settled/human`** — STOP and float to the tier that ruled it. Only the ruling tier unsettles it.
+- **`settled/inherited`** — a constraint from outside this run; you cannot unsettle it locally. Float to the tier
+  that owns it.
+- **`settled/measured`** — you may re-measure. A contradicting new measurement is evidence: revisit, and log the
+  new measurement as the new provenance.
+- **`guess`** — revisit **freely**. If the current slice leans on it, run the `settle:` experiment (or something
+  cheaper that answers the same question), log the ruling, and regrade to `settled/measured`. No reopen, no float.
+- **`placeholder`** — if the current slice leans on it, decide within your latitude, log it, and regrade to
+  `settled`; float only if the decision is beyond your latitude. If nothing leans on it, leave it for a later slice.
+
+### Lint loud, execute safe
+
+The two halves are deliberately asymmetric, and the asymmetry is the safety property:
+
+- **Lint loud.** Pre-flight, an ungraded decision in a recognized block **fails** — new plans cannot ship ungraded.
+- **Execute safe.** At execution time, an ungraded decision reads as **`settled`** — the most conservative tier.
+
+So a plan written before grading existed behaves exactly as it does today, and the tag only ever *buys* freedom;
+it can never silently take any away. Nothing enforces the execution-time half in code — `checklist_engine.py` does
+not parse these tags. It is doctrine you follow by reading the decision. `grade_lint.py --mode execute` previews
+that lenient reading as a **diagnostic**; passing it certifies nothing about runtime behavior.
+
 ## Deep-module vocabulary
 
 Every role names interfaces the same way. Departures-only; scale-agnostic (a function, a file, a service).
