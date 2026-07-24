@@ -64,6 +64,8 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 
 **Feasibility probe (`understand`).** When a run's acceptance depends on launching **headless agents** (e.g. `claude -p`) that must *do* work — write files, drive a spine — probe the headless **permission model** here, not just CLI presence or auth. Run a trivial headless file-write ("create hello.txt and stop") and confirm the file appears: a headless agent has no interactive approver, so tool actions needing approval are silently denied and it produces nothing, which otherwise surfaces only as a false-red at the acceptance gate. A passing `--version`/`say ok` probe does not exercise the write-permission block.
 
+**Prototyper escape hatch (`understand`).** When a load-bearing unknown surfaces here and is answerable by cheap code, hand it to `constellation-prototyper` via the existing `PROTOTYPE_HANDOFF` → `PROTOTYPE_RESULT` contract rather than guessing past it or building heavyweight excursion machinery — the human explicitly rejected the latter for commander. No new fields, no new spine step: fill `PROTOTYPE_HANDOFF` with the one named question, dispatch through the mechanics in `references/crew-dispatch.md`, and integrate the returned `PROTOTYPE_RESULT` (verdict, disposition, and scope) back into the problem statement before continuing.
+
 ## Executing a gate
 
 Each **crew gate** in `execute.json` has three tasks in order (a *reasoning gate* has none — see "Crew gate vs reasoning gate" below):

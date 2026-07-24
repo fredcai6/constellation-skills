@@ -46,11 +46,12 @@ In-repo prototypes carry a rot risk the clear naming and the mandatory dispositi
 
 ## Closeout: disposition is mandatory
 
-Every prototype records a **disposition** at closeout — one of exactly three, no silent rot:
+Every prototype records a **disposition** at closeout — one of exactly four, no silent rot:
 
 - **deleted** — the answer is captured in the result; the code is gone.
 - **absorbed** — a surviving piece (usually the pure logic module) was lifted into real code; record the **commit ref**.
 - **parked-with-owner** — kept alive deliberately; name the owner and why. Parking without a named owner is not a disposition, it is rot.
+- **captured-to-worktree** — kept as a worktree/branch reference, with a pointer from the owning issue, until the human disposes it (human ruling: keep until done — this is not a park-forever). Captured worktrees accumulate, so they carry a cap: they are swept at epic close, where each one is either re-affirmed or disposed. No new sweep automation exists for this — the cap is enforced by that closeout review, not a script.
 
 The result is not complete until its disposition field names one of these. A prototype with no recorded disposition is the failure mode this rule exists to prevent.
 
