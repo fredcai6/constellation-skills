@@ -9,11 +9,12 @@ errored runs are FENCED and excluded from the N-of-M tally (infra-fence).
 
 This module is built test-first and is fully agent-free except the single
 `launch_agent` seam (the ONLY place a real agent subprocess would be spawned).
-`launch_agent` and `temp_install` are inert stubs here (raising NotImplementedError
-with a "wired at g3" message); the live wiring lands at g3. `--dry-run` and
-`--dry-run-fail` work end-to-end NOW by injecting a fake launcher + a dry installer
-through the same seams the unit layer uses, so no path here ever reaches a real
-`claude`.
+`launch_agent` and `temp_install` are the real, live implementations (g3 wiring
+shipped) — `subprocess.Popen`/`install_constellation.install_skills` under the
+hood — so a `claude` process IS reachable through them. `--dry-run` and
+`--dry-run-fail` instead inject a fake launcher + a dry installer through the
+same seams the unit layer uses, so no path taken under `--dry-run(-fail)` ever
+reaches a real `claude`.
 
 Seam pattern mirrors run_crew.py: the module-level default launcher/installer are
 resolved INSIDE the orchestration function at CALL time, so a monkeypatched (or
@@ -552,7 +553,7 @@ def write_stable_corpus_marker(skills_dir, source_commit, *, build_date=None) ->
 
 
 # --------------------------------------------------------------------------- #
-# the ONE real seam (inert until g3) + fake launchers for --dry-run
+# the ONE real seam (live, wired) + fake launchers for --dry-run
 # --------------------------------------------------------------------------- #
 # Bytes of stderr tail kept for infra-marker sniffing — enough to catch a
 # usage/rate-limit banner without slurping a giant transcript into memory.
@@ -938,9 +939,25 @@ def _probe_completion(run_dir: Path, since: float) -> tuple[bool, bool]:
 def _write_meta(run_dir: Path, payload: dict) -> None:
     """Write `<run-dir>/meta.json`. Called twice per run (a launch record at spawn,
     the final classification at end) so a run that is tree-killed mid-flight still
-    leaves a diagnosable meta.json instead of nothing."""
+    leaves a diagnosable meta.json instead of nothing.
+
+    Written ATOMICALLY (#205): a direct write_text can be killed mid-write/flush
+    and leave a truncated/corrupt meta.json behind. Instead, write to a temp file
+    in the SAME directory as meta.json (so os.replace is an atomic same-filesystem
+    rename on both POSIX and Windows), then replace the real path in one step. On
+    any write failure, clean up the temp file so a failed attempt leaves no stray
+    `.tmp` file behind."""
     run_dir.mkdir(parents=True, exist_ok=True)
-    (run_dir / "meta.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    final_path = run_dir / "meta.json"
+    fd, tmp_name = tempfile.mkstemp(dir=run_dir, prefix="meta.", suffix=".json.tmp")
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(payload, indent=2) + "\n")
+        os.replace(tmp_path, final_path)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
@@ -1083,6 +1100,11 @@ def _adopt_existing_runs(scenario: Scenario, temp_root: Path) -> tuple[list, int
     run-0, run-1, … in order until the first index with no meta.json (the next
     free slot). For each existing meta: a terminal status is reconstructed as-is
     and counted; a still-`launched` orphan is adjudicated by the watchdog above.
+    A corrupt/truncated meta.json (#205 — a kill mid-write) is routed through the
+    SAME watchdog rather than stopping the scan: it is not distinguishable from a
+    `launched` orphan (the process died before finalizing either way), so
+    `_adjudicate_orphan` adjudicates it from the workspace and the scan continues
+    past it, exactly like the `"launched"` branch below.
     Returns (run_results, completed_count, next_index)."""
     run_results: list = []
     completed = 0
@@ -1095,7 +1117,12 @@ def _adopt_existing_runs(scenario: Scenario, temp_root: Path) -> tuple[list, int
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            break
+            rr = _adjudicate_orphan(scenario, run_dir)
+            run_results.append(rr)
+            if rr.status in ("completed-pass", "completed-fail"):
+                completed += 1
+            idx += 1
+            continue
         if meta.get("status") == "launched":
             rr = _adjudicate_orphan(scenario, run_dir)
         else:
@@ -1284,8 +1311,8 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     _apply_overrides(scenario, args)
 
-    # Seam selection. Only --dry-run/--dry-run-fail run at g2; the real
-    # launch_agent + temp_install are inert stubs until g3.
+    # Seam selection. --dry-run/--dry-run-fail inject a fake launcher/installer;
+    # otherwise the real launch_agent + temp_install run (live, wired since g3).
     if args.dry_run:
         launch, installer = dry_run_launch, _dry_installer
     elif args.dry_run_fail:

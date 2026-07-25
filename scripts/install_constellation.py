@@ -528,9 +528,13 @@ def _source_commit() -> str:
 # One CORPUS.json per installed skills root stamps *which* corpus a project (or
 # user) is carrying: a content hash for integrity, the constellation commit it was
 # built from for staleness checks (check_corpus_freshness.py), and the build date.
-# The eval harness imports these same primitives so an eval run and a real install
-# fingerprint a corpus identically. Provenance travels with the copy; a project
-# install is a verifiable build artifact, not an unattributable fork.
+# The eval harness imports these same primitives, but its own stable_corpus_id()
+# (run_skill_eval.py) path-normalizes the id (#153) so a byte-identical corpus
+# hashes the same across install paths -- an eval run's id and a real install's
+# compute_corpus_id() are therefore DELIBERATELY not identical when install paths
+# differ; only the FORMAT and file-selection rules are shared. Provenance travels
+# with the copy; a project install is a verifiable build artifact, not an
+# unattributable fork.
 CORPUS_MARKER = "CORPUS.json"
 
 
