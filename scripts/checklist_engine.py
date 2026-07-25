@@ -998,28 +998,225 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
 
 
 # --------------------------------------------------------------------------- #
+# state projection (ports-and-adapters port; #227 gate g2) — the single
+# sanctioned answer to "what is true right now and what may I legally do next,"
+# so an agent never has to fall through to reading spine.json or the engine
+# source to find a condition id or a recovery verb. Ratified design:
+# .agent-work/archive/2026-07-24-explore-design-thrust/dit-I1-ports-RESULT.md
+# (constellation-skills repo, read-only). DELIBERATE DEVIATION from that panel
+# (g2 handoff): NO public --json flag, NO render_json adapter, NO explain/show
+# verb — the projection below is INTERNAL STRUCTURE ONLY, consumed solely by
+# render_human() to build current()'s text. `contract` is still carried so a
+# future consumer can pin a shape version, but nothing exposes it yet.
+#
+# INV-2 (purity): state() reads STORED condition flags ONLY. It must NEVER call
+# _check_condition / _run_check_command / subprocess for a command/git-change-
+# policy check — reading state must never be a probe. Sharp edge, made
+# explicit: a condition's `satisfied: false` in the view means "not yet
+# recorded as passing," NEVER "would fail if run now" — only start()/advance()
+# actually run a check.
+# --------------------------------------------------------------------------- #
+_STATE_CONTRACT_VERSION = 1
+
+
+def _condition_kind(c: dict) -> str:
+    """The condition's check kind for display: the literal `check.kind`, or
+    "null" for a qualitative (`check: null`) condition. Never runs the check."""
+    chk = c.get("check")
+    if not isinstance(chk, dict):
+        return "null"
+    return chk.get("kind") or "null"
+
+
+def _condition_open(c: dict) -> bool:
+    """True iff the condition is NOT (yet) recorded as satisfied. Reads the
+    stored `satisfied` flag only — see the INV-2 sharp edge above; this is
+    never a live re-check."""
+    return not bool(c.get("satisfied"))
+
+
+def _condition_view(c: dict) -> dict:
+    return {
+        "id": c.get("id"),
+        "statement": c.get("statement", ""),
+        "kind": _condition_kind(c),
+        "satisfied": bool(c.get("satisfied")),
+        "waived": bool(c.get("waived")),
+        "attested": bool(c.get("attested")),
+    }
+
+
+def _attestable(kind: str) -> bool:
+    """`attest` accepts a qualitative (`check: null`) condition unconditionally,
+    or an `artifact` condition by reference (`--evidence`). `command`/
+    `git-change-policy` conditions are engine-checked and refuse attest (see
+    `attest()`), so they never get an attest hint."""
+    return kind in ("null", "artifact")
+
+
+def _blocking_conditions(conds: list[dict]) -> list[dict]:
+    """The subset of `conds` that WILL make `start()`/`advance()` refuse right
+    now, from state() alone -- i.e. the conditions a `next:` hint must actually
+    account for before suggesting the terminal verb (rework 1, g2 review BLOCK:
+    the pre-fix `_next_verbs()` ignored this and suggested a verb that refused
+    immediately).
+
+    Only `null`/`artifact`-kind conditions qualify: `_check_condition()` never
+    re-runs them (their `satisfied` flag only moves via `attest`/`waive`), so an
+    open one here is a GUARANTEED refusal. `command`/`git-change-policy`
+    conditions are the opposite case: they are engine-checked LIVE inside
+    `start()`/`advance()` itself, so state() cannot know whether they'd pass
+    right now without probing them -- and INV-2 forbids that probe. So a
+    command/git-change-policy condition showing `[unmet]` must NOT suppress the
+    hint; it may well pass when the suggested verb actually runs."""
+    return [c for c in conds if _condition_open(c) and _attestable(_condition_kind(c))]
+
+
+def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
+    """Legal-from-here move templates for the active task, hand-derived from
+    the RUNTIME contract of each verb's body — NOT from argparse. Two traps
+    this must not reintroduce:
+
+    INV-1 (g2 handoff): `advance --why` is optional at `parse_args()` but
+    required at runtime unless `--mechanical` or the gate is `why_exempt` (see
+    `advance()`); `attest --evidence` is optional at `parse_args()` but
+    required at runtime whenever the condition's `check.kind == "artifact"`
+    (see `attest()`). Walking `parser._actions` for `required=True` would
+    silently omit exactly those two.
+
+    Rework 1 (g2 review BLOCK): the TERMINAL verb (`start` for a pending task,
+    `advance` for an in-progress one) must only appear once every blocking
+    null/artifact condition for it is resolved — see `_blocking_conditions()`.
+    The gate is ASYMMETRIC: `start()` refuses on unmet PREconditions, `advance()`
+    on unmet POSTconditions, so each is checked against its own list only.
+    `resume`/`record` carry no precondition/postcondition gate at all (see
+    `resume()`/`record()`), so they are never suppressed.
+
+    Placeholders (`<...>`) mark free text only the agent can supply; every
+    other token is a real id read off THIS task."""
+    status = t.get("status")
+    if status == "blocked":
+        return [f'resume {aid} --reason "<why the blocker cleared>"']
+    if status not in ("pending", "in-progress"):
+        return []
+    preconds = t.get("preconditions") or []
+    postconds = t.get("postconditions") or []
+    verbs: list[str] = []
+    sections = [("preconditions", preconds)]
+    if status == "in-progress":
+        sections.append(("postconditions", postconds))
+    for which, conds in sections:
+        for c in conds:
+            if not _condition_open(c):
+                continue
+            ckind = _condition_kind(c)
+            if not _attestable(ckind):
+                continue
+            hint = f"attest {aid} --cond {c.get('id')} --which {which}"
+            if ckind == "artifact":
+                hint += " --evidence <evidence-id>"
+            verbs.append(hint)
+    if status == "pending":
+        if not _blocking_conditions(preconds):
+            verbs.append(f"start {aid}")
+    elif kind == SURVEY:
+        # record() carries no precondition/postcondition gate at all (see
+        # record()) -- unlike advance(), it is ALWAYS legal from in-progress,
+        # so it is never suppressed by open conditions.
+        verbs.append(f'record {aid} --result <pass|fail> [--finding "<text>"]')
+    elif not _blocking_conditions(postconds):
+        if t.get("why_exempt"):
+            verbs.append(f"advance {aid}")
+        else:
+            verbs.append(f'advance {aid} --why "<understanding>" (or --mechanical)')
+    return verbs
+
+
+def state(cl: dict) -> dict:
+    """Pure state projection: `cl -> StateView`. Read-only — see the INV-2
+    purity note above. `current()` is `render_human(state(cl))`; the whole
+    completeness upgrade (#227 items 1+3) lives here, not in the adapter."""
+    kind = cl.get("type", GATED)
+    aid = active_id(cl)
+    active = None
+    if aid is not None:
+        t = task(cl, aid)
+        active = {
+            "id": aid,
+            "status": t.get("status"),
+            "imperative": t.get("imperative", ""),
+            "preconditions": [_condition_view(c) for c in (t.get("preconditions") or [])],
+            "postconditions": [_condition_view(c) for c in (t.get("postconditions") or [])],
+            "next_verbs": _next_verbs(aid, t, kind),
+        }
+    waived_postconditions: list[str] = []
+    consolidation_pending = False
+    if aid is None:
+        if kind == SURVEY and cl.get("consolidation") is None:
+            consolidation_pending = True
+        else:
+            for iid in cl.get("items", []):
+                wt = cl["tasks"][iid]
+                for c in wt.get("postconditions", []) or []:
+                    if c.get("waived"):
+                        waived_postconditions.append(f"{iid}.{c['id']}")
+    return {
+        "kind": kind,
+        "active": active,
+        "lease_line": _lease_line(cl),
+        "why_text": _why_suffix(cl, aid),
+        "consolidation_pending": consolidation_pending,
+        "waived_postconditions": waived_postconditions,
+        "contract": _STATE_CONTRACT_VERSION,
+    }
+
+
+def render_human(view: dict) -> str:
+    """Human adapter: format a StateView as the text agents read from
+    `current`. Pure presentation — every fact comes from `view`; this function
+    adds none of its own. The FIRST line of the active branch stays exactly
+    `ACTIVE {id} [{status}] — {imperative}` (tests/test_checklist_engine.py:818
+    pins this across every shipped template); the conditions block, `n/m met`
+    summary and `next:` hint are appended AFTER it. The why/refresh suffix
+    (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
+    `state()`) rides last, same relative order as before this change; the Trip
+    `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
+    entirely and is untouched."""
+    prefix = f"{view['lease_line']}\n" if view.get("lease_line") else ""
+    active = view.get("active")
+    if active is None:
+        if view.get("consolidation_pending"):
+            body = "ALL ITEMS VISITED. Next: consolidate"
+        else:
+            waived = view.get("waived_postconditions") or []
+            body = (f"DONE: no open items. WAIVED: {waived}" if waived
+                    else "DONE: no open items.")
+        return prefix + body + view.get("why_text", "")
+
+    lines = [f"ACTIVE {active['id']} [{active['status']}] — {active['imperative']}"]
+    open_pre = [c for c in active["preconditions"] if not c["satisfied"]]
+    open_post = [c for c in active["postconditions"] if not c["satisfied"]]
+    # (rework 1, non-blocking Fowler note) share the label+lines shape with
+    # _next_verbs()'s sections pattern instead of repeating it per list.
+    for which, open_conds in (("preconditions", open_pre), ("postconditions", open_post)):
+        if open_conds:
+            lines.append(f"{which}:")
+            lines.extend(f"  {c['id']} [unmet] {c['kind']} — {c['statement']}" for c in open_conds)
+    total = len(active["preconditions"]) + len(active["postconditions"])
+    if total:
+        met = total - len(open_pre) - len(open_post)
+        lines.append(f"{met}/{total} met")
+    if active.get("next_verbs"):
+        lines.append("next: " + " | ".join(active["next_verbs"]))
+    body = "\n".join(lines)
+    return prefix + body + view.get("why_text", "")
+
+
+# --------------------------------------------------------------------------- #
 # verbs (each returns a human/agent-readable message; refusals raise)
 # --------------------------------------------------------------------------- #
 def current(cl: dict) -> str:
-    lease = _lease_line(cl)
-    prefix = f"{lease}\n" if lease else ""
-    aid = active_id(cl)
-    if aid is None:
-        if cl["type"] == SURVEY and cl.get("consolidation") is None:
-            body = "ALL ITEMS VISITED. Next: consolidate"
-        else:
-            waived = []
-            for iid in cl.get("items", []):
-                t = cl["tasks"][iid]
-                for c in t.get("postconditions", []):
-                    if c.get("waived"):
-                        waived.append(f"{iid}.{c['id']}")
-            body = (f"DONE: no open items. WAIVED: {waived}" if waived
-                    else "DONE: no open items.")
-    else:
-        t = task(cl, aid)
-        body = f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
-    return prefix + body + _why_suffix(cl, aid)
+    return render_human(state(cl))
 
 
 def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
