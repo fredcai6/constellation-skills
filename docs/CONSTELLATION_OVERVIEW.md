@@ -54,7 +54,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Explorer | `.agent-work/explore-<topic>/DESIGN_SPEC.md` (confirmed) or shaped-design issue | to-issues / Commander, human | hard gate: `verify_spec_confirmed.py` must pass before work is cut; an `UNCONFIRMED — DO NOT CUT` shaped-design issue is never cut |
 | Explorer | `EXCURSION_BRIEF` | Prototyper, research agents, design-it-twice panels | one named question per excursion; prototype section fields identical to `PROTOTYPE_HANDOFF` |
 | Anyone (human, Commander, Explorer) | `PROTOTYPE_HANDOFF` | Prototyper | one named question, branch, host conventions, location, stop conditions |
-| Prototyper | `PROTOTYPE_RESULT` | dispatcher | scoped answer: what was tested AND what was NOT tested; mandatory disposition (deleted / absorbed / parked-with-owner) |
+| Prototyper | `PROTOTYPE_RESULT` | dispatcher | scoped answer: what was tested AND what was NOT tested; mandatory disposition (deleted / absorbed / parked-with-owner / captured-to-worktree) |
 
 ## Context separation
 
