@@ -1,6 +1,7 @@
 import copy
 import importlib.util
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -3767,3 +3768,100 @@ class NextVerbsAreLegalFromHere(unittest.TestCase):
         verbs = self._next(cl, "v1")
         self.assertTrue(any(v.startswith("record ") for v in verbs), f"record missing: {verbs}")
         self.assertEqual(E.record(copy.deepcopy(cl), "v1", "pass", None), "v1 recorded pass")  # no raise
+
+
+class TestGlobToRegex(unittest.TestCase):
+    """Direct tests of `_glob_to_regex` (scripts/checklist_engine.py:449), which
+    had zero direct coverage before this class (only reached indirectly through
+    `_glob_match`, which layers a different concern -- basename fallback -- on
+    top). `_glob_to_regex` itself is frozen this run; every assertion here
+    exercises the returned regex string's *matching behavior* via `re.match`
+    against representative subjects, not a string-diff against a hand-derived
+    regex literal (which would be brittle to harmless reformatting of the
+    implementation's regex-building)."""
+
+    # Dimension: literal chars -- non-special characters pass through
+    # `re.escape`'d, so regex-meta characters in the pattern (`.`, `+`) match
+    # only themselves, not their regex meta-meaning.
+    def test_glob_to_regex_literal_chars_are_escaped(self):
+        regex = E._glob_to_regex("a.b")
+        self.assertIsNotNone(re.match(regex, "a.b"))
+        # Unescaped, "." would also match any single char -- confirm it doesn't.
+        self.assertIsNone(re.match(regex, "axb"))
+
+        regex = E._glob_to_regex("a+b")
+        self.assertIsNotNone(re.match(regex, "a+b"))
+        # Unescaped, "+" would mean one-or-more of the preceding char.
+        self.assertIsNone(re.match(regex, "aaab"))
+
+    # Dimension: single `*` -- matches within one path segment only
+    # ([^/]*); must NOT cross a `/`.
+    def test_glob_to_regex_single_star_matches_within_segment_only(self):
+        regex = E._glob_to_regex("a*b")
+        self.assertIsNotNone(re.match(regex, "ab"))     # zero chars
+        self.assertIsNotNone(re.match(regex, "axxb"))   # several chars
+        self.assertIsNone(re.match(regex, "a/xb"))      # does not cross '/'
+        self.assertIsNone(re.match(regex, "ax/b"))
+
+    # Dimension: `**` -- crosses segments (`.*`) when not immediately
+    # followed by `/`.
+    def test_glob_to_regex_double_star_crosses_segments(self):
+        regex = E._glob_to_regex("x**y")
+        self.assertIsNotNone(re.match(regex, "xy"))       # zero chars
+        self.assertIsNotNone(re.match(regex, "xay"))      # one char
+        self.assertIsNotNone(re.match(regex, "xa/by"))    # crosses a separator
+
+    # Dimension: `**` -- leading `**/` form: zero-or-more leading segments
+    # ((?:.*/)?).
+    def test_glob_to_regex_leading_double_star_slash_matches_zero_or_more_leading_segments(self):
+        regex = E._glob_to_regex("**/b")
+        self.assertIsNotNone(re.match(regex, "b"))        # zero leading segments
+        self.assertIsNotNone(re.match(regex, "a/b"))      # one leading segment
+        self.assertIsNotNone(re.match(regex, "a/c/b"))    # two leading segments
+        self.assertIsNone(re.match(regex, "ab"))          # not a segment boundary
+
+    # Dimension: `**` -- trailing `/**` form also matches the directory
+    # itself ((?:/.*)?): `records/**` must cover `records/x` AND
+    # `records/a/b`, per the function's own docstring.
+    def test_glob_to_regex_trailing_slash_double_star_also_matches_directory_itself(self):
+        regex = E._glob_to_regex("records/**")
+        self.assertIsNotNone(re.match(regex, "records"))       # the dir itself
+        self.assertIsNotNone(re.match(regex, "records/x"))     # one level deep
+        self.assertIsNotNone(re.match(regex, "records/a/b"))   # nested
+        self.assertIsNone(re.match(regex, "recordsX"))         # not a sibling
+
+    # Dimension: `?` -- matches exactly one non-separator char ([^/]); must
+    # NOT match `/` and must NOT match zero or two chars.
+    def test_glob_to_regex_question_mark_matches_exactly_one_non_separator_char(self):
+        regex = E._glob_to_regex("a?b")
+        self.assertIsNotNone(re.match(regex, "axb"))   # exactly one char
+        self.assertIsNone(re.match(regex, "ab"))       # zero chars
+        self.assertIsNone(re.match(regex, "axyb"))     # two chars
+        self.assertIsNone(re.match(regex, "a/b"))      # separator doesn't count
+
+    # Dimension: empty pattern -- `""` produces `"^$"`, matching only the
+    # empty string.
+    def test_glob_to_regex_empty_pattern_matches_only_empty_string(self):
+        regex = E._glob_to_regex("")
+        self.assertEqual(regex, "^$")
+        self.assertIsNotNone(re.match(regex, ""))
+        self.assertIsNone(re.match(regex, "a"))
+
+    # Dimension: anchoring -- the returned regex is always `^...$` (full
+    # string match); it must not match as a substring of a longer string it
+    # is not equal to.
+    def test_glob_to_regex_anchoring_requires_full_string_match(self):
+        regex = E._glob_to_regex("abc")
+        self.assertIsNotNone(re.match(regex, "abc"))
+        self.assertIsNone(re.match(regex, "abcx"))   # trailing extra chars
+        self.assertIsNone(re.match(regex, "xabc"))   # leading extra chars
+        self.assertIsNone(re.match(regex, "xabcx"))  # substring in the middle
+
+    # Dimension: path-separator handling -- `/` in the pattern is a literal
+    # `/` in the output (outside the `/**` trailing-suffix special case
+    # covered separately above).
+    def test_glob_to_regex_path_separator_is_literal(self):
+        regex = E._glob_to_regex("a/b")
+        self.assertIsNotNone(re.match(regex, "a/b"))
+        self.assertIsNone(re.match(regex, "ab"))    # separator is required
+        self.assertIsNone(re.match(regex, "aXb"))   # not interchangeable with any char
