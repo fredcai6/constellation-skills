@@ -46,6 +46,21 @@ ALLOWED_SKIPS: frozenset[tuple[str, str, str]] = frozenset(
             "test_symlink_or_junction_resolved",
             "symlink creation not permitted on this platform",
         ),
+        # Added 2026-07-25: this test shadows PATH to a python-but-no-py
+        # directory to prove the probe falls through past `py`. That premise is
+        # host-dependent -- Windows CreateProcess also searches the Windows and
+        # System32 directories, and an all-users Python launcher lives in
+        # C:\Windows, so on the GitHub Actions windows runner `py` still
+        # resolves and the fall-through cannot be induced at all. The test now
+        # verifies its own premise and skips when it fails, rather than
+        # asserting the opposite of the state it set up (which is what made CI
+        # red on every run from the moment the gate landed).
+        (
+            "tests.test_install_constellation.InterpreterProbeTests",
+            "test_probe_falls_through_to_next_candidate_when_py_is_unresolvable",
+            "py resolves outside PATH on this host, so py-unresolvable cannot "
+            "be genuinely induced",
+        ),
     }
 )
 

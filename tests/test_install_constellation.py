@@ -1000,6 +1000,18 @@ class InterpreterProbeTests(unittest.TestCase):
         # `py` resolving via the untouched ambient PATH, while mutating
         # os.environ["PATH"] itself made `py` genuinely unresolvable. This is why
         # the shadow below patches os.environ directly.
+        #
+        # ...but "genuinely unresolvable" is a HOST-DEPENDENT claim, not a
+        # universal one, and the empirical verification above was done on a
+        # single box. Windows CreateProcess also searches the Windows and
+        # System32 directories, which PATH cannot shadow -- and an all-users
+        # Python launcher installs `py.exe` into C:\Windows. On such a host
+        # (the GitHub Actions windows runner is one) `py` still resolves with
+        # PATH restricted, and this test would assert the exact opposite of the
+        # state it just set up. So VERIFY the premise inside the shadowed
+        # environment before asserting on it, and skip when it does not hold --
+        # the same "skip rather than fake it" rule the py_free_dir guard above
+        # already follows.
         installer = load_installer()
         py_free_dir = _find_py_free_interpreter_dir(installer)
         if py_free_dir is None:
@@ -1008,6 +1020,17 @@ class InterpreterProbeTests(unittest.TestCase):
                 "carrying a py launcher; cannot genuinely induce py-unresolvable"
             )
         with mock.patch.dict(os.environ, {"PATH": str(py_free_dir)}):
+            # Probe `py` the same way probe_host_interpreter does, so the guard
+            # measures the real resolution path rather than a PATH-only proxy
+            # like shutil.which (which would report "not found" here even on a
+            # host where CreateProcess still finds py.exe outside PATH).
+            py_still_resolves = installer._probe_interpreter_candidate(
+                "py", timeout=installer.DEFAULT_INTERPRETER_PROBE_TIMEOUT)
+            if py_still_resolves:
+                self.skipTest(
+                    "py resolves outside PATH on this host, so py-unresolvable "
+                    "cannot be genuinely induced"
+                )
             resolved = installer.probe_host_interpreter()
         self.assertIn(resolved, ("python3", "python"))
         self.assertNotEqual("py", resolved)
