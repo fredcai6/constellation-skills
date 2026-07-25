@@ -24,7 +24,9 @@ Agent-facing. Dense by design.
   the result/evidence file BEFORE you rest — an idle turn-end with verification backgrounded and the result
   unwritten strands the gate with no error signal. (`global-everyone.md` covers OS-detached long jobs.)
 - Required evidence by change type: behavior change → test/check output; bug fix → regression evidence;
-  interface/contract change → contract + caller evidence; generated artifact → regenerate/check evidence.
+  interface/contract change → contract + caller evidence; generated artifact → regenerate/check evidence;
+  **generated advice/hint/recovery text → EXECUTE the advice and assert it does not refuse, over fixtures
+  parameterized on every dimension the advice depends on — string-matching the rendered text is not evidence.**
 
 ## Review, block, stop
 

@@ -137,6 +137,13 @@ that decides, not in prose an agent might skip or misremember.
 
 ## Answerability: `current` as a complete briefing, refusals that carry their exit (#227)
 
+The motivating measurement lives in `scripts/measure_overread.py` — a transcript scanner counting
+structural reads (spine/cycle JSON, engine source) per run, with its committed fixture corpus and
+that corpus's stated limits under `tests/fixtures/overread_corpus/README.md`. It is the instrument
+this section's changes were built to move; read it before re-litigating them. Note its scope
+honestly: it counts read *events*, not tokens, and a fixed historical corpus cannot move after a
+code change — it proves the instrument is deterministic, not that behavior changed.
+
 Agents driving a spine were falling through to reading `spine.json` and the engine source,
 because `current` printed the imperative and nothing else and a refusal named no way out. Both
 are now answered from engine output, so reading the raw file is unnecessary (and, per
