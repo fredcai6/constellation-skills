@@ -365,5 +365,70 @@ class GradeLintPlaceholderChildGradeTests(unittest.TestCase):
         self.assertIn("GL010", out)
 
 
+class GradeLintReviewerRegressionTests(unittest.TestCase):
+    """Two correctness bugs found by adversarial probing at review, fixed in
+    lane. Both are in the Markdown decision-detection heuristic, and neither is
+    reachable from the shipped templates — which is exactly why they needed
+    their own tests."""
+
+    def setUp(self):
+        self.gl = _load("grade_lint")
+        self.tmp = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_two_bracket_spans_are_not_scaffolding(self):
+        """A line starting with one angle-bracket span and ending with another
+        is REAL ungraded decision text, not a template placeholder. The greedy
+        `^<.*>$` read silently PASSED it — a false clean on an invalid plan."""
+        path = _write(self.tmp.name, "greedy.md", "\n".join([
+            "## Pre-Rulings",
+            "- <decision:dedup-wal> dedup writes reuse the WAL not a new journal <needs review>",
+            "",
+        ]))
+        rc, out = _run(self.gl, [path, "--format", "json"])
+        self.assertEqual(1, rc, out)
+        self.assertIn("GL001", out)
+
+    def test_true_placeholder_still_skipped(self):
+        """The narrower rule must not break the placeholder skip the template
+        round-trip depends on."""
+        path = _write(self.tmp.name, "ph.md", "\n".join([
+            "## Pre-Rulings",
+            "- `<ruling>`",
+            "",
+        ]))
+        rc, out = _run(self.gl, [path, "--strict-warnings", "--format", "json"])
+        self.assertEqual(0, rc, out)
+
+    def test_nested_sub_bullet_is_elaboration_not_a_decision(self):
+        """A bullet indented under a graded decision elaborates it. Treating it
+        as its own decision was a false FAIL on a valid plan."""
+        path = _write(self.tmp.name, "nested.md", "\n".join([
+            "## Pre-Rulings",
+            "- decision:dedup-wal — dedup writes reuse the existing WAL, not a new journal.",
+            "  @grade: settled/human",
+            "    - clarifying note: applies to the primary shard, not replicas.",
+            "",
+        ]))
+        rc, out = _run(self.gl, [path, "--strict-warnings", "--format", "json"])
+        self.assertEqual(0, rc, out)
+
+    def test_sibling_bullet_at_same_indent_is_still_its_own_decision(self):
+        """The nesting rule keys on indentation, so a SIBLING bullet must still
+        be graded on its own — otherwise the fix would swallow real decisions."""
+        path = _write(self.tmp.name, "sibling.md", "\n".join([
+            "## Pre-Rulings",
+            "- decision:dedup-wal — reuse the existing WAL.",
+            "  @grade: settled/human",
+            "- decision:cache-ttl — entries expire on a fixed 300s TTL.",
+            "",
+        ]))
+        rc, out = _run(self.gl, [path, "--format", "json"])
+        self.assertEqual(1, rc, out)
+        self.assertIn("GL001", out)
+
+
 if __name__ == "__main__":
     unittest.main()

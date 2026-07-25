@@ -88,7 +88,12 @@ FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 RECOGNIZED_RE = re.compile(r"pre-rulings|decision anchors", re.IGNORECASE)
 LIST_ITEM_RE = re.compile(r"^\s*[-*+]\s+")
-PLACEHOLDER_RE = re.compile(r"^<.*>$", re.DOTALL)
+# A placeholder is ONE angle-bracket span and nothing else. The inner class
+# excludes angle brackets so a line that merely STARTS with a placeholder and
+# ends with another — `<decision:x> real decision text <needs review>` — is not
+# swallowed as scaffolding. That greedy reading silently PASSED a real ungraded
+# decision, which is the worst failure mode a linter has.
+PLACEHOLDER_RE = re.compile(r"^<[^<>]*>$", re.DOTALL)
 DECISION_ID_RE = re.compile(r"\bdecision:([A-Za-z0-9_.\-]+)")
 TBD_RE = re.compile(r"\b(TBD|TODO|CONTRADICTION)\b", re.IGNORECASE)
 GRADE_MARKER = "@grade:"
@@ -228,6 +233,9 @@ def scan_block(file: str, block_lines: list[tuple[int, str]]) -> tuple[list[Deci
     n = len(block_lines)
     consumed_as_child: set[int] = set()
 
+    def indent_of(text: str) -> int:
+        return len(text) - len(text.lstrip())
+
     def child_grade_bodies(idx: int) -> list[str]:
         """Grade bodies on the decision's child line, if any, marking that line
         consumed so it is not later mistaken for an orphan grade."""
@@ -244,12 +252,29 @@ def scan_block(file: str, block_lines: list[tuple[int, str]]) -> tuple[list[Deci
             consumed_as_child.add(k)
         return bodies
 
+    def consume_nested_bullets(idx: int) -> None:
+        """A bullet indented deeper than this decision's own bullet is
+        elaboration ON the decision, not a second decision. Without this, a
+        clarifying sub-bullet under a properly graded decision reports as an
+        ungraded decision — a false FAIL on a valid plan."""
+        own_indent = indent_of(block_lines[idx][1])
+        for k in range(idx + 1, n):
+            k_text = block_lines[k][1]
+            if k_text.strip() == "":
+                continue
+            if not LIST_ITEM_RE.match(k_text):
+                continue
+            if indent_of(k_text) <= own_indent:
+                return
+            consumed_as_child.add(k)
+
     for idx in range(n):
         if idx in consumed_as_child:
             continue
         lineno, text = block_lines[idx]
         m = LIST_ITEM_RE.match(text)
         if m:
+            consume_nested_bullets(idx)
             payload_raw = text[m.end():].rstrip()
             payload = strip_wrapping_backticks(payload_raw)
             if is_placeholder(payload):
