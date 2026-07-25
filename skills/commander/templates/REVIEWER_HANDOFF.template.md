@@ -42,10 +42,12 @@ An exclusion that references a path **outside the reviewer's own worktree** is *
 
 ## Map Anchors (inbound)
 Map context this gate inherits from the mission frame; review the change against these so it lands on the right structure and honors recorded rules. Omit a line when the gate carries nothing for it.
+Carry each decision anchor's `@grade` tag across from the mission frame on its own child line — the tier is what tells you whether a contradiction you find is the implementer's to have revised in place or a decision candidate to float back (see `references/global-everyone.md`, "Decision fixedness").
 - **Structural:** `<struct:id — path/symbol, level — where the work lands or depends>`
 - **Capability:** `<capability:id — behavior this gate changes or relies on>`
 - **Constraints/assumptions:** `<constraint:id | assumption:id — verify it was not silently violated>`
 - **Decision anchors:** `<decision:id — governs this structure; flag any contradiction as a decision candidate>`
+  `@grade: <tier>[/provenance][ · leans <ids>][ · settle: <experiment>]`
 - **Evidence expectations:** `<claim:id or check this gate must re-confirm>`
 - **Map confidence flags:** `<node id — low-confidence/stale/disputed area; confirm rather than trust; omit if none>`
 

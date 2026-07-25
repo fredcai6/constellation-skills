@@ -25,6 +25,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# The shipped plan-authoring templates that carry `@grade` slots inside a block
+# grade_lint actually recognizes ('## Pre-Rulings' / '## Decision Anchors...').
+# Single source of truth: four separate tests across two classes lint this exact
+# set, and adding a fifth template should not mean editing four literals.
+# NOTE: the two crew handoff templates also carry a `@grade` slot, but under a
+# '## Map Anchors (inbound)' heading, which RECOGNIZED_RE does not match — the
+# linter never scans them, so listing them here would assert a vacuous pass.
+SHIPPED_TEMPLATES = [
+    ROOT / "skills" / "admiral" / "templates" / "LATITUDE_CONTRACT.template.md",
+    ROOT / "skills" / "admiral" / "templates" / "LAUNCH_ORDER.template.md",
+    ROOT / "skills" / "commander" / "templates" / "MISSION_FRAME.template.md",
+    ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json",
+]
+
 
 def _load(name):
     spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
@@ -291,38 +305,20 @@ class GradeLintTemplateRoundTripTests(unittest.TestCase):
         self.gl = _load("grade_lint")
 
     def test_shipped_templates_lint_clean(self):
-        paths = [
-            ROOT / "skills" / "admiral" / "templates" / "LATITUDE_CONTRACT.template.md",
-            ROOT / "skills" / "admiral" / "templates" / "LAUNCH_ORDER.template.md",
-            ROOT / "skills" / "commander" / "templates" / "MISSION_FRAME.template.md",
-            ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json",
-        ]
-        for p in paths:
+        for p in SHIPPED_TEMPLATES:
             self.assertTrue(p.is_file(), f"missing shipped template: {p}")
             rc, out = _run(self.gl, [str(p), "--format", "json"])
             self.assertEqual(0, rc, f"{p} did not lint clean:\n{out}")
 
     def test_shipped_templates_lint_clean_combined(self):
-        paths = [
-            ROOT / "skills" / "admiral" / "templates" / "LATITUDE_CONTRACT.template.md",
-            ROOT / "skills" / "admiral" / "templates" / "LAUNCH_ORDER.template.md",
-            ROOT / "skills" / "commander" / "templates" / "MISSION_FRAME.template.md",
-            ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json",
-        ]
-        rc, out = _run(self.gl, [str(p) for p in paths])
+        rc, out = _run(self.gl, [str(p) for p in SHIPPED_TEMPLATES])
         self.assertEqual(0, rc, out)
 
     def test_shipped_templates_clean_under_strict_warnings(self):
         """The templates carry a grade slot on their own placeholder bullets, so
         they must be clean at WARN level too — not merely FAIL-free. This is what
         caught the placeholder-child-grade orphan below."""
-        paths = [
-            ROOT / "skills" / "admiral" / "templates" / "LATITUDE_CONTRACT.template.md",
-            ROOT / "skills" / "admiral" / "templates" / "LAUNCH_ORDER.template.md",
-            ROOT / "skills" / "commander" / "templates" / "MISSION_FRAME.template.md",
-            ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json",
-        ]
-        rc, out = _run(self.gl, [str(p) for p in paths] + ["--strict-warnings"])
+        rc, out = _run(self.gl, [str(p) for p in SHIPPED_TEMPLATES] + ["--strict-warnings"])
         self.assertEqual(0, rc, out)
 
 
@@ -505,13 +501,7 @@ class GradeLintWrappedBulletTests(unittest.TestCase):
     def test_shipped_templates_lint_clean_under_strict_warnings(self):
         """Regression guard named by the handoff: the wrapped-bullet diagnostic
         must not false-positive on any of the four shipped templates."""
-        paths = [
-            ROOT / "skills" / "admiral" / "templates" / "LATITUDE_CONTRACT.template.md",
-            ROOT / "skills" / "admiral" / "templates" / "LAUNCH_ORDER.template.md",
-            ROOT / "skills" / "commander" / "templates" / "MISSION_FRAME.template.md",
-            ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json",
-        ]
-        rc, out = _run(self.gl, [str(p) for p in paths] + ["--strict-warnings"])
+        rc, out = _run(self.gl, [str(p) for p in SHIPPED_TEMPLATES] + ["--strict-warnings"])
         self.assertEqual(0, rc, out)
 
 

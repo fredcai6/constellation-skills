@@ -181,6 +181,63 @@ def test_no_binding_skips_no_write(proj):
     assert not (proj / ".agent-work").exists() or list((proj / ".agent-work").rglob("gauge.json")) == []
 
 
+# --- containment: never write outside .agent-work/<work_id>/ -----------------
+
+
+def test_spine_outside_agent_work_skips_no_write(proj):
+    """A binding whose spine path resolved to a CHECKOUT ROOT rather than a
+    work dir (observed live: an untracked gauge.json in the repo root) must
+    produce NO write at all. Only `.agent-work/` is gitignored, so a gauge
+    record dropped beside it is untracked debris in the user's tree.
+
+    Drives the real handler against a real transcript with a real binding --
+    the only thing wrong is the spine location -- so a regression that removes
+    the containment check fails here rather than passing on a mocked path."""
+    spine_path = proj / "spine.json"       # root-level: NOT under .agent-work/
+    spine_path.write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", spine_path)
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+    assert not (proj / "gauge.json").exists()
+    # and it did not silently redirect somewhere else either
+    assert list(proj.rglob("gauge.json")) == []
+
+
+def test_spine_directly_in_agent_work_root_skips_no_write(proj):
+    """`.agent-work/spine.json` (no <work_id> dir) is also outside the
+    contract -- writing there would collide across every run that made the
+    same mistake, so it skips rather than guessing a work_id."""
+    work = proj / ".agent-work"
+    work.mkdir(parents=True)
+    spine_path = work / "spine.json"
+    spine_path.write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", spine_path)
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert not (work / "gauge.json").exists()
+
+
+def test_worktree_local_agent_work_outside_project_dir_still_writes(proj, tmp_path):
+    """Containment checks the `.agent-work/<work_id>/` SHAPE, not containment
+    within project_dir. Under an active Admiral epic lease `durable_root()`
+    resolves to the worktree root, so a legitimate spine can sit in a
+    different checkout entirely -- that must still be written, or the governor
+    goes blind for exactly the epic runs it matters most in."""
+    worktree = tmp_path / "wt-epic-1"
+    work = worktree / ".agent-work" / "epic-1"
+    work.mkdir(parents=True)
+    spine_path = work / "spine.json"
+    spine_path.write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", spine_path)
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+
+    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
+    assert record["model"] == EXPECTED_MODEL
+    assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
+
+
 # --- unknown model falls back to the default window, not a crash ------------
 
 def test_unknown_model_uses_default_window(proj, tmp_path):

@@ -694,6 +694,57 @@ def render_text(violations: list[Violation], ledger: dict, quiet: bool) -> None:
     print("Proceed despite the above, or fix the grades first?")
 
 
+class LintToolingError(Exception):
+    """A tooling/usage failure (unreadable file, invalid JSON) -- exit code 2.
+
+    Carries the exact operator-facing message so `main()` stays the single place
+    that writes to stderr and decides the exit code; `lint_one_file` never
+    prints. Distinct from a Violation, which is a finding ABOUT the plan rather
+    than a failure to read it."""
+
+
+def lint_one_file(raw_path: str, global_ids: set[str], ids_provided_globally: bool,
+                   mode: str) -> tuple[list[DecisionRecord], list[Violation]]:
+    """Scan and validate one plan file, Markdown or JSON.
+
+    Returns its decisions and every violation attributable to it (per-decision
+    validation, the GL011 no-id-source note, and this file's cross-occurrence
+    findings). Raises LintToolingError if the file cannot be read or parsed."""
+    path = Path(raw_path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise LintToolingError(f"grade_lint: cannot read {raw_path}: {exc}") from exc
+
+    if path.suffix.lower() == ".json":
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise LintToolingError(
+                f"grade_lint: invalid JSON in {raw_path}: {exc}") from exc
+        known_ids = extract_plan_ids(data) | global_ids
+        ids_provided = True
+        decisions, violations = scan_json(raw_path, data)
+    else:
+        known_ids = global_ids
+        ids_provided = ids_provided_globally
+        decisions, violations = scan_markdown(raw_path, text)
+
+    any_leans_without_ids = False
+    for dec in decisions:
+        violations.extend(validate_decision(dec, known_ids, ids_provided, mode))
+        if dec.tag and dec.tag.leans and not ids_provided:
+            any_leans_without_ids = True
+    if any_leans_without_ids:
+        violations.append(make_violation(
+            "GL011", raw_path, "-",
+            "leans present but no --ids-from/--known-id supplied; "
+            "GL005 skipped for this file"))
+
+    violations.extend(cross_occurrence_violations(raw_path, decisions))
+    return decisions, violations
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
@@ -712,40 +763,12 @@ def main(argv: list[str] | None = None) -> int:
     all_violations: list[Violation] = []
 
     for raw_path in args.paths:
-        path = Path(raw_path)
         try:
-            text = path.read_text(encoding="utf-8")
-        except OSError as exc:
-            print(f"grade_lint: cannot read {raw_path}: {exc}", file=sys.stderr)
+            decisions, violations = lint_one_file(
+                raw_path, global_ids, ids_provided_globally, args.mode)
+        except LintToolingError as exc:
+            print(exc, file=sys.stderr)
             return 2
-
-        if path.suffix.lower() == ".json":
-            try:
-                data = json.loads(text)
-            except json.JSONDecodeError as exc:
-                print(f"grade_lint: invalid JSON in {raw_path}: {exc}", file=sys.stderr)
-                return 2
-            known_ids = extract_plan_ids(data) | global_ids
-            ids_provided = True
-            decisions, violations = scan_json(str(raw_path), data)
-        else:
-            known_ids = global_ids
-            ids_provided = ids_provided_globally
-            decisions, violations = scan_markdown(str(raw_path), text)
-
-        any_leans_without_ids = False
-        for dec in decisions:
-            violations.extend(validate_decision(dec, known_ids, ids_provided, args.mode))
-            if dec.tag and dec.tag.leans and not ids_provided:
-                any_leans_without_ids = True
-        if any_leans_without_ids:
-            violations.append(make_violation(
-                "GL011", str(raw_path), "-",
-                "leans present but no --ids-from/--known-id supplied; "
-                "GL005 skipped for this file"))
-
-        violations.extend(cross_occurrence_violations(str(raw_path), decisions))
-
         all_decisions.extend(decisions)
         all_violations.extend(violations)
 
