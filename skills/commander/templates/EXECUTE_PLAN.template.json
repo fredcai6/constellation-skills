@@ -24,7 +24,7 @@
         "structural": ["<struct:id — path/symbol, level — this gate lands in or depends on>"],
         "capability": ["<capability:id — behavior this gate changes or relies on>"],
         "constraint": ["<constraint:id | assumption:id — must not be silently violated>"],
-        "decision": ["<decision:id — governs this structure>", "<decision pressure: choice this gate may force as a candidate>"],
+        "decision": ["<decision:id — governs this structure; append an @grade: tag INSIDE this string so grade and decision cannot separate — e.g. 'decision:dedup-wal — reuse WAL not new journal @grade: guess · leans g1-implement · settle: 20-line spike, assert ordering'>", "<decision pressure: choice this gate may force as a candidate; carries no grade — it is not yet a decision>"],
         "evidence": ["<claim:id or check the gate must re-confirm>"],
         "confidence_flags": ["<node id — low-confidence/stale/disputed area touched, and the scout/verify or decision it triggers; omit if none>"]
       },
