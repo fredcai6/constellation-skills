@@ -1125,6 +1125,35 @@ def _refresh_attach_hint(gate: str) -> str:
             f"--field seam={gate} --field why_ref=<why-id>")
 
 
+def _uncalibrated_advisory(base_dir: Path | None) -> str:
+    """A visible notice that the context governor is OFF for this run because
+    the running model has no calibration entry.
+
+    Deliberately not a refusal and not a nudge to hand off: with no window we
+    cannot claim the context is either full or empty, so the honest report is
+    that the instrument is unavailable, plus the one-line fix. Fail-safe like
+    everything else on this path -- an absent reader or unresolvable location
+    yields the empty string."""
+    if _gauge_reader is None:
+        return ""
+    path = _gauge_path(base_dir)
+    if path is None:
+        return ""
+    try:
+        model = _gauge_reader.uncalibrated_model(path)
+    except Exception:
+        return ""
+    if not model:
+        return ""
+    return (f"\nCONTEXT GAUGE OFF: no calibration entry for model {model!r}, so "
+            f"context fullness is NOT being measured this run — no soft/hard "
+            f"trip will fire, however long the run gets. Watch your own context "
+            f"and hand off on judgement. To fix: add {model!r} to both "
+            f"MODEL_WINDOWS (scripts/hooks/gauge_writer_hook.py) and _PROFILES "
+            f"(scripts/gauge_reader.py), using the window from the published "
+            f"model catalog — never an inferred one.")
+
+
 def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     """The Trip advisory suffix for the read-only `current` at a gate boundary
     (gated checklists only). Empty for surveys, a missing/stale reading, or when
@@ -1138,7 +1167,12 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         return ""
     reading = _read_gauge(base_dir)
     if reading is None:
-        return ""
+        # No reading is normally silent (absent/stale gauge is routine). One
+        # cause is NOT routine and must be said out loud: a model with no
+        # calibration entry. Silence there means the governor is blind for the
+        # whole run with nothing to show for it -- which is how an uncalibrated
+        # claude-opus-5 went unnoticed through epic-226 (#252).
+        return _uncalibrated_advisory(base_dir)
     soft, hard = _gauge_reader.thresholds_for(reading.model)
     fill = reading.fill_fraction
     if fill >= hard:

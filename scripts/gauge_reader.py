@@ -71,7 +71,11 @@ CLOCK_SKEW_TOLERANCE = timedelta(minutes=2)
 # machinery lives here.
 _PROFILES: dict[str, tuple[int, int, int]] = {
     # model: (window, soft_cap, hard_cap), all in tokens.
+    # Windows verified against platform.claude.com "Models overview", 2026-07-25.
+    # Adding a model here means adding it to gauge_writer_hook.MODEL_WINDOWS in
+    # the same change; a test pins the two key sets equal.
     # 1M-window models: 80K soft / 150K hard of 1_000_000 -> 0.08 / 0.15.
+    "claude-opus-5": (1_000_000, 80_000, 150_000),
     "claude-opus-4-8": (1_000_000, 80_000, 150_000),
     "claude-sonnet-5": (1_000_000, 80_000, 150_000),
     "claude-fable-5": (1_000_000, 80_000, 150_000),
@@ -79,10 +83,14 @@ _PROFILES: dict[str, tuple[int, int, int]] = {
     # (here the classic ~0.5/0.75 fraction guess roughly survives).
     "claude-haiku-4-5-20251001": (200_000, 90_000, 140_000),
 }
-# Unknown model -> conservative profile. gauge_writer's DEFAULT_WINDOW assumes
-# 200K for an unknown model, so read the default against that window but slightly
-# tighter (hand off a touch earlier when we don't know the model): 80K soft /
-# 130K hard of 200_000 -> 0.40 / 0.65.
+# Unknown-model profile. NOTE: this is no longer reachable from a real reading --
+# `read()` rejects a record whose model has no profile, and the writer no longer
+# fabricates one either (both changed in #252, after an uncalibrated
+# claude-opus-5 read ~5x high and tripped the governor at ~14% of its real
+# window). It survives only to keep `thresholds_for` a TOTAL function, so a
+# caller that asks about an arbitrary model string still gets a usable pair
+# rather than a lookup failure. Do NOT reintroduce it as a fallback on the
+# reading path: an uncertain model must yield no reading, not a wrong one.
 _DEFAULT_PROFILE: tuple[int, int, int] = (200_000, 80_000, 130_000)
 
 # Public fraction pair for the default profile, kept under its historical name so
@@ -163,6 +171,16 @@ def _parse_record(record: dict, now: datetime, max_age: timedelta) -> Reading | 
     if age < -CLOCK_SKEW_TOLERANCE:
         return None  # observed_at too far in the future -- clock skew
 
+    # UNCALIBRATED -> no reading. A fill_fraction is only meaningful against the
+    # window it was divided by, and this module's thresholds are what supply
+    # that meaning. A model with no profile here means we cannot interpret the
+    # number, so we must not hand Trip a Reading it will judge against the
+    # wrong scale. The current writer never emits such a record, so in practice
+    # this catches a stale file written before a model was added, or one copied
+    # in from another machine -- defense in depth, not the primary guard.
+    if model not in _PROFILES:
+        return None
+
     return Reading(
         schema_version=schema_version,
         fill_fraction=float(fill_fraction),
@@ -181,8 +199,10 @@ def read(
 
     Collapses every failure to None and never raises: an absent file, corrupt
     JSON, a malformed/missing-field record, a stale record (by `observed_at`),
-    and clock-skew (observed_at in the future beyond tolerance) all return
-    None.
+    clock-skew (observed_at in the future beyond tolerance), and a record for a
+    model with no entry in `_PROFILES` all return None. A Reading that reaches
+    the caller is therefore fresh, well-formed, AND calibrated -- so the
+    thresholds it is judged against are the real ones for its model.
 
     `now` and `max_age` are injectable so callers -- and tests -- never touch
     the real wall clock: `now` defaults to `datetime.now(timezone.utc)` when
@@ -208,3 +228,37 @@ def read(
         return None
 
     return _parse_record(record, now, max_age)
+
+
+# Sidecar written by the harness hook when it sees a model it has no window for
+# (gauge_writer_hook.UNCALIBRATED_FILENAME). Kept as a literal rather than an
+# import: this module stays writer-agnostic by design and must not depend on a
+# harness-specific hook. The filename is the seam.
+UNCALIBRATED_FILENAME = "gauge-uncalibrated.json"
+
+
+def uncalibrated_model(gauge_path: str | Path) -> str | None:
+    """The model name the writer could not calibrate, or None.
+
+    Answers "why is there no reading?" so a caller can say so out loud instead
+    of going silently quiet -- an unexplained silent governor is how a
+    miscalibration survives unnoticed. Never raises; any problem is None.
+
+    Deliberately NOT staleness-checked: an uncalibrated model is a defect in
+    this repo's tables, not a perishable observation, and it stays true until
+    someone adds the row. Staleness would let the warning expire while the bug
+    it reports is still live."""
+    try:
+        path = Path(gauge_path).with_name(UNCALIBRATED_FILENAME)
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(record, dict):
+        return None
+    model = record.get("model")
+    if not isinstance(model, str) or not model.strip():
+        return None
+    # A row added since the flag was written makes it obsolete; don't nag.
+    if model in _PROFILES:
+        return None
+    return model

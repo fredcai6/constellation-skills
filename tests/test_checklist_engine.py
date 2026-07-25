@@ -3358,6 +3358,57 @@ class TripRealGaugeFileWiring(unittest.TestCase):
             self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
             self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
 
+    def _write_uncalibrated_flag(self, d, model):
+        (Path(d) / E._gauge_reader.UNCALIBRATED_FILENAME).write_text(json.dumps({
+            "schema_version": 1, "model": model,
+            "observed_at": datetime.now(timezone.utc).isoformat(),
+        }), encoding="utf-8")
+
+    def test_uncalibrated_model_is_announced_on_current(self):
+        """#252 — a blind governor must SAY it is blind. Silence is how an
+        uncalibrated claude-opus-5 went unnoticed for a whole epic."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_uncalibrated_flag(d, "claude-future-9")
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertEqual(rc, 0)
+            self.assertIn("CONTEXT GAUGE OFF", out)
+            self.assertIn("claude-future-9", out)
+            # names both tables so the fix is actionable without hunting
+            self.assertIn("MODEL_WINDOWS", out)
+            self.assertIn("_PROFILES", out)
+
+    def test_uncalibrated_model_never_forces_or_refuses(self):
+        """It is a missing instrument, not a full context — with no window we
+        cannot claim the context is either full or empty, so advance passes."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_uncalibrated_flag(d, "claude-future-9")
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    def test_a_real_reading_wins_over_a_stale_flag(self):
+        """A leftover flag must not shout over a live gauge — the reading is
+        the better signal whenever one exists."""
+        soft, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_uncalibrated_flag(d, "claude-future-9")
+            self._write_gauge(d, max(soft - 0.02, 0.0),
+                              datetime.now(timezone.utc).isoformat())
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                E.main(["--file", str(f), "current"])
+            self.assertNotIn("CONTEXT GAUGE OFF", buf.getvalue())
+
     def test_fresh_soft_gauge_advises_on_current_but_advance_passes(self):
         soft, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
         with tempfile.TemporaryDirectory() as d:
