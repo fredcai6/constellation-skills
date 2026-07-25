@@ -237,15 +237,100 @@ def _platform_interpreter() -> str:
     `python3` elsewhere. Installed spine imperatives ship the literal `python <…>`
     prefix; rewriting it here spares Windows users the recurring `python`->`py`
     hand-patch (the source templates keep `python <…>` to preserve the authoring
-    contract)."""
+    contract). This is the os.name-based FALLBACK used only when
+    `probe_host_interpreter` cannot find any working candidate on the host --
+    see `resolve_interpreter`."""
     return "py" if os.name == "nt" else "python3"
 
 
-def rewrite_installed_skill_paths(target: Path, skill: Skill) -> None:
+INTERPRETER_CANDIDATES: tuple[str, ...] = ("py", "python3", "python")
+DEFAULT_INTERPRETER_PROBE_TIMEOUT = 5.0  # seconds; bounds a hung/misregistered `py` launcher
+
+
+@dataclass(frozen=True)
+class InterpreterResolution:
+    """The interpreter resolved for ONE install run, plus how it was resolved --
+    carried into both the text-rewrite and the per-skill sidecar so a consumer can
+    tell a genuinely-probed host from the os.name guess."""
+
+    interpreter: str
+    candidates: tuple[str, ...]
+    resolved_via: str  # "probe" | "os-default-fallback"
+
+    def as_sidecar(self) -> dict:
+        return {
+            "interpreter": self.interpreter,
+            "candidates": list(self.candidates),
+            "resolved_via": self.resolved_via,
+        }
+
+
+def _probe_interpreter_candidate(candidate: str, *, timeout: float) -> bool:
+    """Whether `<candidate> --version` exits 0 within `timeout`. A missing
+    candidate, a non-zero exit, and a timeout are ALL treated as this candidate
+    failing -- never a raise, never a hang past `timeout`."""
+    env = dict(os.environ)
+    env["PYTHONIOENCODING"] = "utf-8"  # cp1252 pipes can silently corrupt captured output
+    try:
+        result = subprocess.run(
+            [candidate, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
+
+
+def probe_host_interpreter(
+    *,
+    candidates: Sequence[str] = INTERPRETER_CANDIDATES,
+    timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT,
+) -> str | None:
+    """Try each candidate in order via a REAL `<candidate> --version` subprocess
+    call, accepting the first that exits 0 within `timeout`. Returns `None` if
+    every candidate fails. A hung/misregistered `py` launcher is a real, observed
+    Windows failure mode -- the per-candidate timeout is what keeps that from
+    hanging the whole install run where before a bad guess was harmless."""
+    for candidate in candidates:
+        # NOTE(windows-store-alias): a bare `python` can resolve to the Microsoft
+        # Store's app-execution-alias stub when no real interpreter is installed --
+        # it behaves inconsistently rather than like a real interpreter; the
+        # timeout above still bounds it, and a failure here is just treated as
+        # this candidate failing, same as any other.
+        if _probe_interpreter_candidate(candidate, timeout=timeout):
+            return candidate
+    return None
+
+
+def resolve_interpreter(
+    *,
+    candidates: Sequence[str] = INTERPRETER_CANDIDATES,
+    timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT,
+) -> InterpreterResolution:
+    """Resolve the interpreter to stamp into installed skill bodies for ONE
+    install run: probe the host once, falling back to `_platform_interpreter`'s
+    os.name guess only if every candidate fails (never raises). Call this ONCE
+    per run and thread the result through -- never re-probe per skill. Caching
+    prevents INTRA-run drift only; cross-run determinism (#197's
+    `stable_corpus_id`, which compares two separate install invocations) rests on
+    the probe being naturally stable given a static host PATH, the same basis
+    today's pure os.name read relies on."""
+    probed = probe_host_interpreter(candidates=candidates, timeout=timeout)
+    if probed is not None:
+        return InterpreterResolution(probed, tuple(candidates), "probe")
+    return InterpreterResolution(_platform_interpreter(), tuple(candidates), "os-default-fallback")
+
+
+def rewrite_installed_skill_paths(
+    target: Path, skill: Skill, interpreter: InterpreterResolution
+) -> None:
     # Rewrite the interpreter prefix FIRST, before the skill-dir tokens consume the
     # trailing `<`: the replacement preserves the `<` so `<…-skill-dir>` still resolves.
     replacements = {
-        "python <": f"{_platform_interpreter()} <",
+        "python <": f"{interpreter.interpreter} <",
         "<skill-dir>": target.as_posix(),
         f"<{skill.source_name}-skill-dir>": target.as_posix(),
     }
@@ -258,6 +343,13 @@ def rewrite_installed_skill_paths(target: Path, skill: Skill) -> None:
             rewritten = rewritten.replace(token, replacement)
         if rewritten != text:
             path.write_text(rewritten, encoding="utf-8")
+    # Per-skill sidecar: any engine-invoking command string living inside this
+    # skill's own installed tree finds its interpreter resolution as a sibling,
+    # matching the installer's existing per-skill copy convention (required_scripts,
+    # required_references) rather than a single shared install-root file.
+    (target / "interpreter.json").write_text(
+        json.dumps(interpreter.as_sidecar(), indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def home_from_env(env: Mapping[str, str]) -> Path:
@@ -348,6 +440,7 @@ def install_skills(
     full_set: bool,
     restart_message: str,
     out: Callable[[str], object],
+    interpreter: InterpreterResolution | None = None,
 ) -> None:
     action = "DRY RUN: would install" if dry_run else "Installing"
     out(f"{action} {len(skills)} skill(s) into {target_root}")
@@ -358,6 +451,13 @@ def install_skills(
     # per-target removal below.
     if force and full_set and not dry_run:
         remove_existing_constellation_set(target_root)
+
+    # Resolved lazily, at most once, and reused for every skill in THIS call --
+    # never a module-level global (a hidden global risks one pytest-process test
+    # reading a stale value left by an earlier test). A caller installing across
+    # multiple target roots in one run (e.g. `--agent all`) should resolve once
+    # itself and pass `interpreter` explicitly so the whole run shares one probe.
+    resolved_interpreter = interpreter
 
     for skill in skills:
         target = target_root / skill.install_name
@@ -378,7 +478,9 @@ def install_skills(
             else:
                 target.unlink()
         shutil.copytree(skill.source_path, target)
-        rewrite_installed_skill_paths(target, skill)
+        if resolved_interpreter is None:
+            resolved_interpreter = resolve_interpreter()
+        rewrite_installed_skill_paths(target, skill, resolved_interpreter)
         for script in skill.required_scripts:
             script_target = target / "scripts" / script
             script_target.parent.mkdir(parents=True, exist_ok=True)
@@ -756,6 +858,10 @@ def main(
             return 0
 
         target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
+        # Resolve ONCE for the whole process here (not per target root / agent) so
+        # a `--agent all` run still probes the host exactly once, not once per
+        # agent target.
+        interpreter = None if args.dry_run else resolve_interpreter()
         for agent, target_root in target_roots:
             out(f"{agent.name}:")
             install_skills(
@@ -766,6 +872,7 @@ def main(
                 full_set=args.skills is None,
                 restart_message=agent.restart_message,
                 out=out,
+                interpreter=interpreter,
             )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
