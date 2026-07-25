@@ -430,5 +430,90 @@ class GradeLintReviewerRegressionTests(unittest.TestCase):
         self.assertIn("GL001", out)
 
 
+class GradeLintWrappedBulletTests(unittest.TestCase):
+    """Human ruling, issue #239 item 3: "wrapped bullets should be invalid and
+    we should mechanically test for them." The weld rule stays strictly
+    same-line-or-next-non-blank (not extended); a decision bullet that wraps
+    onto a continuation line before its @grade tag is INVALID and must report
+    ONE actionable GL013 naming the real cause, not the confusing GL001+GL010
+    pair a naive same-shape check would otherwise emit."""
+
+    def setUp(self):
+        self.gl = _load("grade_lint")
+        self.tmp = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_wrapped_bullet_reports_gl013_not_gl001_gl010(self):
+        text = (
+            "## Pre-Rulings\n\n"
+            "- decision:wrapped-bad — this decision bullet is long enough that "
+            "the author\n"
+            "  wrapped it onto a second line before tagging it.\n"
+            "  @grade: settled/human · leans g1\n"
+        )
+        path = _write(self.tmp.name, "wrapped.md", text)
+        rc, out = _run(self.gl, [path, "--known-id", "g1", "--format", "json"])
+        self.assertEqual(1, rc, out)
+        data = json.loads(out)
+        codes = [v["code"] for v in data["violations"]]
+        self.assertEqual(["GL013"], codes)
+        self.assertNotIn("GL001", codes)
+        self.assertNotIn("GL010", codes)
+        # invalid: the tag never counted, so the decision still lands in the
+        # ungraded bucket -- the guess-ledger stays coherent, not silently
+        # short a decision.
+        self.assertEqual(1, len(data["ledger"]["ungraded"]))
+        self.assertEqual(0, len(data["ledger"]["settled"]))
+
+    def test_normal_welded_bullet_still_passes_clean(self):
+        text = (
+            "## Pre-Rulings\n\n"
+            "- decision:welded-ok — this one fits on a single line.\n"
+            "  @grade: settled/human · leans g1\n"
+        )
+        path = _write(self.tmp.name, "welded.md", text)
+        rc, out = _run(self.gl, [path, "--known-id", "g1"])
+        self.assertEqual(0, rc, out)
+
+    def test_truly_ungraded_decision_still_gives_gl001(self):
+        """A decision with no @grade anywhere nearby is the plain GL001 case,
+        not the wrapped shape -- the fix must not swallow it."""
+        text = "## Pre-Rulings\n\n- decision:no-tag-at-all — never graded.\n"
+        path = _write(self.tmp.name, "ungraded.md", text)
+        rc, out = _run(self.gl, [path, "--format", "json"])
+        self.assertEqual(1, rc, out)
+        codes = [v["code"] for v in json.loads(out)["violations"]]
+        self.assertEqual(["GL001"], codes)
+
+    def test_truly_orphaned_tag_still_gives_gl010(self):
+        """A @grade tag with no decision bullet anywhere near it (only prose)
+        is the plain GL010 case, not the wrapped shape -- the fix must not
+        swallow it either."""
+        text = (
+            "## Pre-Rulings\n\n"
+            "Some narrative prose that is not a decision.\n"
+            "  @grade: settled/human\n"
+        )
+        path = _write(self.tmp.name, "orphan.md", text)
+        rc, out = _run(self.gl, [path, "--strict-warnings", "--format", "json"])
+        self.assertEqual(1, rc, out)
+        codes = [v["code"] for v in json.loads(out)["violations"]]
+        self.assertEqual(["GL010"], codes)
+
+    def test_shipped_templates_lint_clean_under_strict_warnings(self):
+        """Regression guard named by the handoff: the wrapped-bullet diagnostic
+        must not false-positive on any of the four shipped templates."""
+        paths = [
+            ROOT / "skills" / "admiral" / "templates" / "LATITUDE_CONTRACT.template.md",
+            ROOT / "skills" / "admiral" / "templates" / "LAUNCH_ORDER.template.md",
+            ROOT / "skills" / "commander" / "templates" / "MISSION_FRAME.template.md",
+            ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json",
+        ]
+        rc, out = _run(self.gl, [str(p) for p in paths] + ["--strict-warnings"])
+        self.assertEqual(0, rc, out)
+
+
 if __name__ == "__main__":
     unittest.main()

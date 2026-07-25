@@ -36,6 +36,12 @@ issue #230, epic-226):
      list marker and any wrapping backticks) is template scaffolding, not a
      decision, and is skipped everywhere — no ``--include-templates`` flag,
      no filename-based skipping.
+  4. `decision:wrapped-bullets-are-invalid` (human ruling, issue #239 item 3)
+     — the weld rule above stays exactly same-line-or-next-non-blank; it is
+     NOT extended to scan past a decision bullet's own wrapped continuation
+     lines. A bullet that wraps before its tag is INVALID and reports GL013
+     WRAPPED_DECISION_GRADE (one FAIL naming the real cause) instead of the
+     GL001+GL010 pair a naive same-shape check would otherwise emit.
 
 THE FORK — `--mode preflight` (default) treats an ungraded decision in a
 recognized block as GL001 UNGRADED_DECISION, a FAIL. `--mode execute` reads an
@@ -82,6 +88,7 @@ CODE_INFO = {
     "GL010": ("ORPHAN_GRADE", WARN),
     "GL011": ("NO_ID_SOURCE", WARN),
     "GL012": ("CONTRADICTORY_GRADE", FAIL),
+    "GL013": ("WRAPPED_DECISION_GRADE", FAIL),
 }
 
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
@@ -131,6 +138,12 @@ class DecisionRecord:
     location: str
     decision_id: str | None
     tag: GradeTag | None
+    # Line number of an @grade tag this decision's bullet WRAPPED past (see
+    # detect_wrapped_grade) -- None for every ordinary decision. Set only when
+    # tag is also None; validate_decision() reports GL013 instead of GL001 for
+    # these so the author gets the real cause, not two unrelated-looking
+    # objections.
+    invalid_wrap: str | None = None
 
 
 @dataclass
@@ -252,6 +265,32 @@ def scan_block(file: str, block_lines: list[tuple[int, str]]) -> tuple[list[Deci
             consumed_as_child.add(k)
         return bodies
 
+    def detect_wrapped_grade(idx: int) -> int | None:
+        """The wrapped-bullet shape: this decision failed to weld (no same-line
+        or next-non-blank tag), because its own text runs onto one or more
+        CONTINUATION lines first -- non-blank, not a list item, not itself
+        carrying '@grade:' -- before a line that finally carries the tag. The
+        weld rule itself stays exactly same-line-or-next-non-blank (do not
+        extend it: that would erode the locality guarantee); this is a
+        diagnostic-only lookahead that renames the failure, it never makes the
+        tag count. Stops at the first blank line or list-item line -- either
+        means the decision's own paragraph is over, so any grade beyond it
+        belongs to something else, not this decision -- and returns None
+        (not a wrap) in that case, or if the block ends first."""
+        k = idx + 1
+        saw_continuation = False
+        while k < n:
+            k_text = block_lines[k][1]
+            if k_text.strip() == "":
+                return None
+            if LIST_ITEM_RE.match(k_text):
+                return None
+            if find_grade_occurrences(k_text):
+                return k if saw_continuation else None
+            saw_continuation = True
+            k += 1
+        return None
+
     def consume_nested_bullets(idx: int) -> None:
         """A bullet indented deeper than this decision's own bullet is
         elaboration ON the decision, not a second decision. Without this, a
@@ -289,6 +328,7 @@ def scan_block(file: str, block_lines: list[tuple[int, str]]) -> tuple[list[Deci
             next_bodies = child_grade_bodies(idx)
 
             all_bodies = same_bodies + next_bodies
+            wrapped_grade_idx = None
             if all_bodies:
                 if len(all_bodies) > 1:
                     violations.append(make_violation(
@@ -297,9 +337,19 @@ def scan_block(file: str, block_lines: list[tuple[int, str]]) -> tuple[list[Deci
                 tag = parse_grade_body(all_bodies[0])
             else:
                 tag = None
+                wrapped_grade_idx = detect_wrapped_grade(idx)
+                if wrapped_grade_idx is not None:
+                    # The tag exists, but only reachable by walking past this
+                    # bullet's own continuation lines -- consume it here so
+                    # the main loop below never reports it a second time as an
+                    # orphan; GL013 (via validate_decision) is its one report.
+                    consumed_as_child.add(wrapped_grade_idx)
 
-            decisions.append(DecisionRecord(file=file, location=str(lineno),
-                                             decision_id=decision_id, tag=tag))
+            decisions.append(DecisionRecord(
+                file=file, location=str(lineno), decision_id=decision_id,
+                tag=tag,
+                invalid_wrap=(str(block_lines[wrapped_grade_idx][0])
+                              if wrapped_grade_idx is not None else None)))
         else:
             bodies = find_grade_occurrences(text)
             if bodies:
@@ -436,8 +486,18 @@ def validate_decision(dec: DecisionRecord, known_ids: set[str], ids_provided: bo
 
     if tag is None:
         if mode == "preflight":
-            violations.append(make_violation(
-                "GL001", dec.file, dec.location, "decision has no @grade tag"))
+            if dec.invalid_wrap:
+                violations.append(make_violation(
+                    "GL013", dec.file, dec.location,
+                    f"decision bullet wraps onto a continuation line before "
+                    f"its @grade tag (found at line {dec.invalid_wrap}) -- "
+                    f"the weld rule is same-line-or-next-non-blank only, and "
+                    f"does not scan past wrapped continuation text; move the "
+                    f"tag onto the line directly under the decision, or "
+                    f"unwrap the bullet onto one line"))
+            else:
+                violations.append(make_violation(
+                    "GL001", dec.file, dec.location, "decision has no @grade tag"))
         return violations  # execute mode: ungraded reads as settled, nothing else to check
 
     if tag.tier not in TIERS:

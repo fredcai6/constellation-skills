@@ -186,7 +186,9 @@ unsettle." One inline tag, welded to the decision's own line, carries that prope
 **The tag lives on the decision, never in a second place.** There is no ledger file — the guess ledger is a view
 `scripts/grade_lint.py` regenerates from these tags every time it is asked for. A decision and its grade cannot
 drift apart because they cannot be separated: in Markdown the tag is the decision bullet's own child line, and in
-JSON it is appended inside the decision string itself.
+JSON it is appended inside the decision string itself. The weld is same-line-or-next-non-blank only — a decision
+bullet that **wraps** onto a second line before its tag is invalid; unwrap it onto one line or move the tag onto
+the line directly under the bullet, not past the wrap.
 
 ```
 - decision:dedup-wal — dedup writes reuse the existing WAL, not a new journal.
