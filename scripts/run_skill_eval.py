@@ -938,9 +938,25 @@ def _probe_completion(run_dir: Path, since: float) -> tuple[bool, bool]:
 def _write_meta(run_dir: Path, payload: dict) -> None:
     """Write `<run-dir>/meta.json`. Called twice per run (a launch record at spawn,
     the final classification at end) so a run that is tree-killed mid-flight still
-    leaves a diagnosable meta.json instead of nothing."""
+    leaves a diagnosable meta.json instead of nothing.
+
+    Written ATOMICALLY (#205): a direct write_text can be killed mid-write/flush
+    and leave a truncated/corrupt meta.json behind. Instead, write to a temp file
+    in the SAME directory as meta.json (so os.replace is an atomic same-filesystem
+    rename on both POSIX and Windows), then replace the real path in one step. On
+    any write failure, clean up the temp file so a failed attempt leaves no stray
+    `.tmp` file behind."""
     run_dir.mkdir(parents=True, exist_ok=True)
-    (run_dir / "meta.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    final_path = run_dir / "meta.json"
+    fd, tmp_name = tempfile.mkstemp(dir=run_dir, prefix="meta.", suffix=".json.tmp")
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(payload, indent=2) + "\n")
+        os.replace(tmp_path, final_path)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def _run_once(scenario: Scenario, index: int, temp_root: Path, skills_dir: Path,
@@ -1083,6 +1099,11 @@ def _adopt_existing_runs(scenario: Scenario, temp_root: Path) -> tuple[list, int
     run-0, run-1, … in order until the first index with no meta.json (the next
     free slot). For each existing meta: a terminal status is reconstructed as-is
     and counted; a still-`launched` orphan is adjudicated by the watchdog above.
+    A corrupt/truncated meta.json (#205 — a kill mid-write) is routed through the
+    SAME watchdog rather than stopping the scan: it is not distinguishable from a
+    `launched` orphan (the process died before finalizing either way), so
+    `_adjudicate_orphan` adjudicates it from the workspace and the scan continues
+    past it, exactly like the `"launched"` branch below.
     Returns (run_results, completed_count, next_index)."""
     run_results: list = []
     completed = 0
@@ -1095,7 +1116,12 @@ def _adopt_existing_runs(scenario: Scenario, temp_root: Path) -> tuple[list, int
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            break
+            rr = _adjudicate_orphan(scenario, run_dir)
+            run_results.append(rr)
+            if rr.status in ("completed-pass", "completed-fail"):
+                completed += 1
+            idx += 1
+            continue
         if meta.get("status") == "launched":
             rr = _adjudicate_orphan(scenario, run_dir)
         else:

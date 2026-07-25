@@ -1038,6 +1038,42 @@ def test_adopt_existing_runs_counts_terminal_and_adjudicates_orphan(tmp_path):
     assert [r.status for r in run_results] == ["completed-fail", "completed-pass"]
 
 
+def test_adopt_existing_runs_routes_corrupt_meta_through_adjudicate_orphan_and_continues(tmp_path):
+    # issue #205: a corrupt/truncated meta.json (a kill mid-write) must be routed
+    # through _adjudicate_orphan -- exactly like the sibling "launched" branch --
+    # and the scan must CONTINUE past it, not `break` and silently strand every
+    # slot after it as unaccounted-for.
+    s = rse.load_scenario(make_scenario(tmp_path, process=(PASS_CHECK,)))
+    temp_root = tmp_path / "t"; temp_root.mkdir()
+
+    # run-0: corrupt the REAL bytes the real _write_meta produced (not a
+    # hand-authored json.dumps fixture) -- write a valid meta.json via the real
+    # writer, then truncate it mid-object to simulate a process killed mid-flush.
+    run_dir_0 = temp_root / "run-0"
+    (run_dir_0 / "workspace").mkdir(parents=True)
+    (run_dir_0 / "workspace" / rse.COMPLETION_ARTIFACT).write_text("done\n", encoding="utf-8")
+    rse._write_meta(run_dir_0, {"status": "launched", "launched_at": 1.0,
+                                "scenario_id": s.id, "corpus_id": "sha256:x"})
+    real_bytes = (run_dir_0 / "meta.json").read_bytes()
+    (run_dir_0 / "meta.json").write_bytes(real_bytes[: len(real_bytes) // 2])  # truncate mid-write
+
+    # run-1: a normal terminal record AFTER the corrupt slot -- proves the scan
+    # continued past run-0 rather than stopping there.
+    _seed_run_dir(temp_root, 1, artifact=False,
+                  meta={"status": "completed-fail", "reason": "process-check-failed"})
+
+    run_results, completed, next_index = rse._adopt_existing_runs(s, temp_root)
+
+    # run-0's workspace already carries the completion artifact -> _adjudicate_orphan
+    # (checks monotone) resolves it completed-pass, exactly like a green "launched" orphan.
+    assert [r.status for r in run_results] == ["completed-pass", "completed-fail"]
+    assert completed == 2
+    assert next_index == 2  # scan continued past the corrupt slot to run-1's free index
+    # _adjudicate_orphan rewrote the corrupt record to an adjudicable terminal one.
+    meta0 = json.loads((run_dir_0 / "meta.json").read_text(encoding="utf-8"))
+    assert meta0["status"] == "completed-pass" and meta0["adjudicated_orphan"] is True
+
+
 def test_resume_recovers_killed_runner_mid_measurement(tmp_path):
     # THE regression bar (issue #130): a kill-9 of the runner mid-measurement leaves
     # run-0 finalized + run-1 stuck "launched". Re-invoking with resume=True must
