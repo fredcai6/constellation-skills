@@ -115,6 +115,8 @@ The spine is identical in both modes; only who your principal is, and how the fo
 
 Surface a decision candidate the moment a choice would govern current structure, capabilities, constraints, or future planning behavior — i.e. when an agent could later rediscover or violate it. Force such choices to your principal as a `user-decision`; do not bury them. Record the resolution as a candidate for the reconcile step, where Cartographer decides whether it becomes a durable decision anchor. Decision pressure or evidence returned by Implementer/Reviewer feeds the same candidate pool. Do not raise candidates for choices obvious from current structure.
 
+A candidate that resolves into a recorded decision carries a fixedness tier — the `@grade:` tag, welded to the decision's own line. The tier is what tells a downstream gate whether a reality-contradiction is theirs to revise in place or must come back to you as a new candidate, so grade anchors as you record them rather than leaving every decision reading as equally settled. The grammar, the tier-to-action mapping, and the weld rule live in `references/global-everyone.md`, "Decision fixedness" (lint them with `scripts/grade_lint.py`).
+
 ## Mission frame
 
 Plan **map-first**. Before authoring `execute.json`, produce a **mission frame** from the current map (`templates/MISSION_FRAME.template.md`): intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope. The frame is how the durable map feeds planning before any code spelunking, and the source the gate anchors are cut from.

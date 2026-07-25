@@ -40,10 +40,12 @@ When the task passes an object/dataclass-typed parameter, **name its fields expl
 
 ## Map Anchors (inbound)
 Map context this gate inherits from the mission frame, so the implementation lands on the right structure and honors recorded rules. Omit a line when the gate carries nothing for it.
+Carry each decision anchor's `@grade` tag across from the mission frame on its own child line — an anchor without its tier reads as equally settled as every other, leaving this gate no way to tell "revise this freely" from "stop, this is not yours to unsettle" when the implementation meets reality contradicting it (see `references/global-everyone.md`, "Decision fixedness").
 - **Structural:** `<struct:id — path/symbol, level — where the work lands or depends>`
 - **Capability:** `<capability:id — behavior this gate changes or relies on>`
 - **Constraints/assumptions:** `<constraint:id | assumption:id — must not be silently violated>`
 - **Decision anchors:** `<decision:id — governs this structure; do not contradict without surfacing a candidate>`
+  `@grade: <tier>[/provenance][ · leans <ids>][ · settle: <experiment>]`
 - **Evidence expectations:** `<claim:id or check this gate must re-confirm>`
 - **Map confidence flags:** `<node id — low-confidence/stale/disputed area; verify rather than trust; omit if none>`
 

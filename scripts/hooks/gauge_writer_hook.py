@@ -30,6 +30,10 @@ Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
   exists for this session (e.g. no `checklist_engine.py claim` has run
   yet), the work_id is unresolvable and the hook skips -- this is a
   documented coupling, not a new mechanism (see docs/GAUGE_WRITER_HOOK.md).
+  Because that binding records an unvalidated `--file` argument, the
+  resolved target is CONTAINED to the documented
+  `.agent-work/<work_id>/gauge.json` shape before any write (_is_contained);
+  anything else skips rather than littering an arbitrary directory.
 - The X2 "strategic-compact" technique: the transcript is JSONL; each
   top-level (non-sidechain) assistant message carries a `usage` block.
   Because Claude Code resends the full conversation on every turn, the
@@ -99,10 +103,34 @@ def _load_spine_rail():
 _spine_rail = _load_spine_rail()
 
 
+def _is_contained(gauge_path: Path) -> bool:
+    """True only for the documented shape `<root>/.agent-work/<work_id>/gauge.json`.
+
+    The binding is maintained by a sibling hook from whatever `--file` an engine
+    `claim` command carried, so the spine path it records is UNVALIDATED input as
+    far as this module is concerned. A claim whose `--file` resolved outside a
+    work dir (e.g. a bare `spine.json` run from a checkout root) would otherwise
+    make this hook drop a `gauge.json` into that directory -- untracked repo-root
+    debris that nothing gitignores, since only `.agent-work/` is ignored.
+
+    `<root>` is deliberately unconstrained: under an active Admiral epic lease
+    `durable_root()` resolves to the WORKTREE root rather than the main checkout
+    (see scripts/agent_work_root.py), so a legitimate gauge path may sit outside
+    `project_dir` entirely. What is invariant across both is the trailing
+    `.agent-work/<work_id>/` shape, which is what this checks.
+    """
+    try:
+        return gauge_path.parent.parent.name == ".agent-work"
+    except Exception:
+        return False
+
+
 def resolve_gauge_path(project_dir: Path, session_id):
     """.agent-work/<work_id>/gauge.json, sibling to spine.json, resolved via
     the existing session->spine binding. None if unresolvable (no sibling
-    module, no session_id, no binding entry, no spine path recorded)."""
+    module, no session_id, no binding entry, no spine path recorded) or if the
+    resolved path escapes the documented `.agent-work/<work_id>/` shape --
+    skip-on-uncertainty applies to WHERE we write, not just to what."""
     try:
         if _spine_rail is None or not session_id:
             return None
@@ -110,7 +138,8 @@ def resolve_gauge_path(project_dir: Path, session_id):
         entry = binding.get(session_id)
         if not entry or not entry.get("spine"):
             return None
-        return Path(entry["spine"]).parent / "gauge.json"
+        candidate = Path(entry["spine"]).parent / "gauge.json"
+        return candidate if _is_contained(candidate) else None
     except Exception:
         return None
 
