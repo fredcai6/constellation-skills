@@ -67,6 +67,62 @@ def survey(**tasks):
             "triage_candidates": [], "blockers": []}
 
 
+def _make_non_active(cl, active_status="pending", active_status_detail=None):
+    """Given a single-item GATED checklist built via `gated(g1=...)`, return
+    an equivalent checklist with the SAME target task ('g1'), preceded by a
+    dummy guard gate ('g0', status `active_status`) so g1 is guaranteed
+    NON-active. This is the shape `recovery_for`'s active-gate-position
+    branch needs and which no single-task fixture (used by every
+    recovery-family test before rework 2) can ever express (Reviewer BLOCK,
+    g3-review rework 2).
+
+    `active_status` defaults to `"pending"`, matching every caller before
+    rework 3->4 -- but a hardcoded `"pending"` guard could only ever express
+    the ONE case where `start()`'s own bare "not the active gate; start
+    {active} first" message happens to be self-recovering (Finding 1,
+    g3-review rework 3->4): it could never express `in-progress` or
+    `blocked`, exactly the two states where that unconditional advice
+    itself refuses. Pass `active_status="in-progress"` / `"blocked"` to
+    express those. `active_status_detail` optionally sets the guard gate's
+    own `status_detail` (e.g. a `blocked` guard's restorability)."""
+    new_cl = copy.deepcopy(cl)
+    g0 = gate("g0", active_status)
+    if active_status_detail is not None:
+        g0["status_detail"] = active_status_detail
+    new_cl["tasks"]["g0"] = g0
+    new_cl["items"] = ["g0"] + new_cl["items"]
+    return new_cl
+
+
+def _run_main(cl, argv):
+    """Run E.main() against `cl` (written to a tmp file) and capture
+    (exit_code, stdout, stderr) -- the real CLI boundary, not a direct verb
+    call, so this exercises dispatch()/main()'s COMPOSITION (rail position,
+    recovery text) rather than the pure verb functions alone."""
+    import contextlib
+    import io
+    with tempfile.TemporaryDirectory() as d:
+        f = Path(d) / "c.json"
+        E.save(f, cl)
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = E.main(["--file", str(f)] + argv)
+        return code, out.getvalue(), err.getvalue()
+
+
+def _run_at(path, argv):
+    """Like `_run_main`, but against an EXISTING file path -- lets a sequence
+    of CLI calls share persisted state across steps, so a two-step recovery
+    (e.g. resume, THEN retry the original op) can be run end to end and the
+    retry's own success asserted, not just that the first step didn't raise."""
+    import contextlib
+    import io
+    out, err = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+        code = E.main(["--file", str(path)] + argv)
+    return code, out.getvalue(), err.getvalue()
+
+
 class CurrentAndOrdering(unittest.TestCase):
     def test_current_is_first_open_gate(self):
         cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND), g2=gate("g2"))
@@ -1802,6 +1858,883 @@ class DoctrineRail(unittest.TestCase):
             self.assertNotIn("RAIL:", printed)
 
 
+class RailPositionOrdering(unittest.TestCase):
+    """Item 4 / constraint 4 (issue #227 gate g3): the RAIL banner moves to
+    the FRONT for every railed verb (including `current`), and to the front
+    of the REFUSED path in main() -- the operative result/refusal line lands
+    LAST on its stream, so `tail -1` reads the result, not the banner. This
+    is the exact field defect: the Admiral piped engine output through
+    `tail -1` and saw only the banner, silently hiding a real REFUSED line."""
+
+    def test_success_output_rail_banner_is_first_operative_line_is_last(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND), g2=gate("g2"))
+        code, out, err = _run_main(cl, ["advance", "g1", "--mechanical"])
+        self.assertEqual(code, 0)
+        lines = [ln for ln in out.splitlines() if ln.strip()]
+        self.assertTrue(lines[0].startswith("RAIL: "), lines)
+        self.assertEqual(lines[-1], "g1 -> complete")
+
+    def test_current_rail_banner_is_first_suffix_ordering_after_body_unchanged(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND),
+                   g2=gate("g2"), g3=gate("g3"))
+        code, out, err = _run_main(cl, ["current"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.startswith("RAIL: "))
+        self.assertLess(out.index("RAIL: "), out.index("ACTIVE g1"))
+
+    def test_refused_output_rail_banner_is_first_operative_refused_line_is_last(self):
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
+        code, out, err = _run_main(cl, ["advance", "g1", "--mechanical"])
+        self.assertEqual(code, 1)
+        lines = [ln for ln in err.splitlines() if ln.strip()]
+        self.assertTrue(lines[0].startswith("RAIL: "), lines)
+        self.assertTrue(lines[-1].startswith("REFUSED:"), lines)
+
+    def test_tail_minus_1_yields_refusal_not_banner_state_caused(self):
+        # The exact field defect, reproduced: a state-caused refusal (blocked
+        # task) piped through `tail -1` must show the REFUSED line, not RAIL.
+        g = gate("g1", "blocked")
+        g["status_detail"] = {"prior_status": "pending"}
+        cl = gated(g1=g)
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        tail_1 = [ln for ln in err.splitlines() if ln.strip()][-1]
+        self.assertIn("REFUSED:", tail_1)
+
+    def test_tail_minus_1_yields_success_result_not_banner(self):
+        cl = gated(g1=gate("g1", "pending"))
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 0)
+        tail_1 = [ln for ln in out.splitlines() if ln.strip()][-1]
+        self.assertEqual(tail_1, "g1 -> in-progress")
+
+    def test_survey_refusal_still_no_rail_operative_line_still_last(self):
+        s = survey(v1=survey_item("v1", "pending"))
+        code, out, err = _run_main(s, ["advance", "v1"])
+        self.assertEqual(code, 1)
+        self.assertNotIn("RAIL:", err)
+        tail_1 = [ln for ln in err.splitlines() if ln.strip()][-1]
+        self.assertIn("REFUSED:", tail_1)
+
+
+class RecoveryGoldenOutput(unittest.TestCase):
+    """Item 2 (issue #227 gate g3): every state-caused REFUSED names its
+    exact exit verb. One golden test per refusal family named in the
+    handoff's table, plus the runnable-as-written proof (constraint 6)."""
+
+    def test_blocked_task_recovery_names_resume_and_notes_no_unblock_verb(self):
+        g = gate("g1", "blocked")
+        g["status_detail"] = {"prior_status": "pending"}
+        cl = gated(g1=g)
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        self.assertIn("REFUSED:", err)
+        self.assertIn("resume g1 --reason", err)
+        self.assertIn("no separate", err.lower())
+        self.assertIn("Do not edit the JSON — use the engine.", err)
+
+    def test_blocked_task_with_no_restorable_prior_does_not_suggest_resume_or_reopen(self):
+        # No status_detail.prior_status at all: resume would ALSO refuse, and
+        # so would reopen (it requires status=="complete", never "blocked") --
+        # recovery must not loop back to a command that just fails again
+        # (Reviewer BLOCK, g3-review rework 1: the previous fix here still
+        # named `reopen` as a runnable alternative; it refuses every time).
+        # Only `skip` genuinely works from this state -- prove it runs.
+        g = gate("g1", "blocked")
+        cl = gated(g1=g)
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        self.assertNotIn("resume g1 --reason", err)
+        self.assertNotIn("reopen g1 --reason", err)
+        self.assertIn("skip g1 --reason", err)
+        self.assertIn("Do not edit the JSON — use the engine.", err)
+        self.assertEqual(E.skip(cl, "g1", "why"), "g1 -> skipped because why")
+
+    def test_complete_task_recovery_names_reopen(self):
+        cl = gated(g1=gate("g1", "complete"))
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        self.assertIn("reopen g1 --reason", err)
+        self.assertIn("Do not edit the JSON — use the engine.", err)
+
+    def test_unmet_precondition_recovery_names_exact_attest_with_real_id(self):
+        pre = [{"id": "p1", "statement": "iface exists", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        self.assertIn("attest g1 --cond p1 --which preconditions", err)
+        self.assertIn("Do not edit the JSON — use the engine.", err)
+
+    def test_unmet_postcondition_recovery_names_exact_attest_with_real_id(self):
+        post_null = [{"id": "c1", "statement": "docs updated", "check": None, "satisfied": False}]
+        g = gate("g1", "in-progress")
+        g["postconditions"] = post_null
+        cl = gated(g1=g)
+        code, out, err = _run_main(cl, ["advance", "g1", "--mechanical"])
+        self.assertEqual(code, 1)
+        self.assertIn("attest g1 --cond c1 --which postconditions", err)
+        self.assertIn("Do not edit the JSON — use the engine.", err)
+
+    def test_recovery_commands_actually_run(self):
+        # Constraint 6: recovery must be runnable AS WRITTEN (positional id,
+        # not --id) -- prove it by actually running the printed command.
+        pre = [{"id": "p1", "statement": "iface exists", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        self.assertIn("attest g1 --cond p1 --which preconditions", err)
+        E.attest(cl, "g1", "p1", "preconditions", "checked it")
+        self.assertEqual(E.start(cl, "g1"), "g1 -> in-progress")
+
+
+class UnknownCondIdRecovery(unittest.TestCase):
+    """Constraint 3 (issue #227 gate g3): unknown-cond-id is a 4th axis
+    OUTSIDE the (status, verb) grid -- a malformed-argument refusal, not a
+    status one. Its own standalone test: the refusal must literally contain
+    EVERY real p*/c* id on the task, not just the words
+    'preconditions'/'postconditions' (test_attest_not_found_names_both_lists
+    at :236 only asserts the latter and must not be mistaken for coverage of
+    this)."""
+
+    def test_unknown_cond_id_enumerates_every_real_id_on_the_task(self):
+        pre = [{"id": "p1", "statement": "a", "check": None, "satisfied": False},
+               {"id": "p2", "statement": "b", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, preconds=pre))
+        code, out, err = _run_main(cl, ["attest", "g1", "--cond", "nope", "--which", "preconditions"])
+        self.assertEqual(code, 1)
+        self.assertIn("REFUSED:", err)
+        for real_id in ("p1", "p2", "c1"):
+            self.assertIn(real_id, err)
+
+
+class Inv3RecoveryEnumeration(unittest.TestCase):
+    """Constraint 2 (issue #227 gate g3, THE TRAP): the enumeration grid must
+    be GENERATED from MUTATING_VERBS + the engine's own status vocabulary,
+    not a hand-typed list of the three named refusal families -- a
+    hand-typed list would pass green while OTHER status-guarded refusals
+    (e.g. `advance` on a `pending` task, `reopen` on a `blocked` task) fall
+    through to the old bare message."""
+
+    # WHICH verbs carry a status guard is unavoidably identified by hand (the
+    # guard lives inside each verb's own body, not in a lookup table); what
+    # must NOT be hand-typed is the grid itself, the coverage count, or
+    # "non-generic" -- all three are derived/checked below. The EXCLUSION of
+    # every other MUTATING_VERBS member is independently PROVEN (not just
+    # asserted) by Inv3ExclusionCheck below, which actually runs them.
+    STATUS_GUARDED_VERBS = {"start": "pending", "advance": "in-progress",
+                             "resume": "blocked", "reopen": "complete"}
+
+    def _argv(self, verb, tid):
+        return {
+            "start": ["start", tid],
+            "advance": ["advance", tid, "--mechanical"],
+            "resume": ["resume", tid, "--reason", "cleared"],
+            "reopen": ["reopen", tid, "--reason", "why"],
+        }[verb]
+
+    def _fixture(self, status):
+        g = gate("g1", status, command=PASS_COMMAND)
+        if status == "blocked":
+            g["status_detail"] = {"prior_status": "pending"}
+        return gated(g1=g)
+
+    def _is_non_generic(self, message, task_id):
+        runnable_tokens = ("start ", "advance ", "resume ", "reopen ", "attest ")
+        return task_id in message and any(tok in message for tok in runnable_tokens)
+
+    def test_generated_grid_every_state_caused_refusal_is_non_generic(self):
+        self.assertTrue(set(self.STATUS_GUARDED_VERBS) <= E.MUTATING_VERBS)
+        grid = [(status, verb) for verb in self.STATUS_GUARDED_VERBS for status in E.STATUS_VALUES]
+        self.assertEqual(len(grid), len(self.STATUS_GUARDED_VERBS) * len(E.STATUS_VALUES))
+        refused = 0
+        honest_terminal = 0
+        for status, verb in grid:
+            cl = self._fixture(status)
+            code, out, err = _run_main(cl, self._argv(verb, "g1"))
+            if code == 0:
+                self.assertEqual(status, self.STATUS_GUARDED_VERBS[verb],
+                                  f"{verb} unexpectedly succeeded from status={status!r}")
+                continue
+            self.assertIn("REFUSED:", err)
+            refused += 1
+            if status == "skipped":
+                # Genuinely terminal: no verb reverses a skip. An honest
+                # "no recovery verb exists" statement is correct here, not a
+                # fabricated runnable command (global doctrine: fail visibly,
+                # no hidden fallback).
+                self.assertIn("g1", err)
+                self.assertIn("skip", err.lower())
+                honest_terminal += 1
+            else:
+                self.assertTrue(self._is_non_generic(err, "g1"),
+                                 f"generic refusal for (status={status!r}, verb={verb!r}): {err!r}")
+        expected_refusals = len(grid) - len(self.STATUS_GUARDED_VERBS)
+        self.assertEqual(refused, expected_refusals)
+        self.assertEqual(honest_terminal, len(self.STATUS_GUARDED_VERBS))
+
+
+class Inv3ExclusionCheck(unittest.TestCase):
+    """The trap's own named examples (issue #227 gate g3 handoff): `waive` on
+    a complete gate, `block` on an already-blocked gate, `attest` on a
+    pending task, `skip` on a complete gate -- plus `attach`, the fifth
+    verb with no status guard. None of these five guards on task status in
+    its own body -- proven here by actually RUNNING each across every
+    status, rather than asserted in prose.
+
+    Reviewer BLOCK (g3-review rework 1): the previous version of this class
+    hand-picked 4 of the 10 excluded `MUTATING_VERBS` members and claimed
+    totality it never checked -- `amend`'s `drop`/`rescope`/`retext-check`
+    sub-ops turned out to guard on status too (now covered by
+    `Inv3AmendSubOpEnumeration` below, with recovery wired). The exclusion
+    set here is now DERIVED from `E.MUTATING_VERBS` itself (an engine-native
+    constant) minus the buckets covered elsewhere, so a FUTURE verb that
+    starts guarding on status and isn't sorted into one of those buckets
+    fails the set-equality assertion below instead of silently vanishing
+    from coverage the way `amend` did."""
+
+    STATUS_GUARDED_TOP_LEVEL = {"start", "advance", "resume", "reopen"}
+    STRUCTURALLY_EXCLUDED = {"record", "consolidate", "append", "flag-candidate"}
+    PARTIALLY_GUARDED = {"amend"}
+
+    def test_exclusion_set_is_derived_and_exhaustive(self):
+        remaining = (E.MUTATING_VERBS - self.STATUS_GUARDED_TOP_LEVEL
+                     - self.STRUCTURALLY_EXCLUDED - self.PARTIALLY_GUARDED)
+        self.assertEqual(remaining, {"skip", "block", "attest", "waive", "attach"})
+
+    def test_waive_block_attest_skip_attach_never_produce_a_status_caused_refusal(self):
+        for status in E.STATUS_VALUES:
+            post = [{"id": "c1", "statement": "x", "check": None, "satisfied": False,
+                     "override_policy": {"allowed": True}}]
+            g = gate("g1", status)
+            g["postconditions"] = post
+            if status == "blocked":
+                g["status_detail"] = {"prior_status": "pending"}
+            base_cl = gated(g1=g)
+            for verb, args in (
+                ("waive", ["waive", "g1", "--cond", "c1", "--which", "postconditions",
+                           "--authority", "human", "--reason", "why"]),
+                ("block", ["block", "g1", "--blocker", "x", "--authority", "human"]),
+                ("attest", ["attest", "g1", "--cond", "c1", "--which", "postconditions",
+                            "--note", "n"]),
+                ("skip", ["skip", "g1", "--reason", "why"]),
+                ("attach", ["attach", "g1", "--type", "note", "--field", "k=v"]),
+            ):
+                cl = copy.deepcopy(base_cl)
+                code, out, err = _run_main(cl, args)
+                self.assertEqual(code, 0,
+                                  f"{verb} on status={status!r} unexpectedly refused: {err!r}")
+
+
+class Inv3StructuralExclusion(unittest.TestCase):
+    """The remaining `MUTATING_VERBS` members (`record`, `consolidate`,
+    `append`, `flag-candidate`) are excluded from the (status, verb) grid for
+    a STRUCTURAL reason, not because nobody checked: `record`/`append`
+    refuse on a checklist-TYPE mismatch before ever inspecting a task's
+    status; `consolidate`/`flag-candidate` take no task `id` argument at
+    all. Verified by running them against a gated, single-task fixture
+    across every status (record/append) or with no id supplied at all
+    (consolidate/flag-candidate)."""
+
+    def test_record_and_append_refuse_on_type_before_touching_task_status(self):
+        for status in E.STATUS_VALUES:
+            cl = gated(g1=gate("g1", status, command=PASS_COMMAND))
+            code, out, err = _run_main(cl, ["record", "g1", "--result", "pass"])
+            self.assertEqual(code, 1)
+            self.assertIn("record is for survey checklists", err)
+            cl2 = gated(g1=gate("g1", status, command=PASS_COMMAND))
+            code, out, err = _run_main(cl2, ["append", "g9", "--title", "t", "--imperative", "i"])
+            self.assertEqual(code, 1)
+            self.assertIn("append only on survey checklists", err)
+
+    def test_consolidate_and_flag_candidate_never_touch_a_task_id(self):
+        for status in E.STATUS_VALUES:
+            s = survey(v1=survey_item("v1", "complete"))
+            code, out, err = _run_main(s, ["consolidate", "--verdict", "APPROVE"])
+            self.assertEqual(code, 0)
+            cl = gated(g1=gate("g1", status, command=PASS_COMMAND))
+            code, out, err = _run_main(cl, ["flag-candidate", "--from", "g1", "--statement", "s"])
+            self.assertEqual(code, 0)
+
+
+class Inv3AmendSubOpEnumeration(unittest.TestCase):
+    """Same GENERATED-grid rigor as `Inv3RecoveryEnumeration`, applied to
+    `amend`'s status-guarded sub-ops (Reviewer BLOCK, g3-review rework 1:
+    these were the actual hole in the original exclusion claim). The grid is
+    amend's own op-kind -> required-status(es) mapping (read directly off
+    `amend()`'s own guards, the same way `STATUS_GUARDED_VERBS` records
+    start/advance/resume/reopen's) crossed with `E.STATUS_VALUES`."""
+
+    AMEND_OP_REQUIRED_STATUSES = {
+        "drop": ("pending",),
+        "rescope": ("pending",),
+        "retext-check": ("pending", "in-progress"),
+    }
+
+    def _delta_for(self, op):
+        if op == "drop":
+            return {"ops": [{"op": "drop", "id": "g1"}]}
+        if op == "rescope":
+            return {"ops": [{"op": "rescope", "id": "g1", "title": "new title"}]}
+        return {"ops": [{"op": "retext-check", "id": "g1", "which": "postconditions",
+                         "cond": "c1", "command": PASS_COMMAND}]}
+
+    def _fixture(self, status):
+        g = gate("g1", status)
+        g["postconditions"] = [{"id": "c1", "statement": "x",
+                                 "check": {"kind": "command", "command": PASS_COMMAND},
+                                 "satisfied": status == "complete"}]
+        if status == "complete":
+            g["evidence"] = [{"id": "e-g1-1", "type": "command-output",
+                               "payload": {"cmd": PASS_COMMAND, "exit": 0, "shell": "posix"},
+                               "produced_by": "engine", "ts": ""}]
+            g["postconditions"][0]["satisfied_by"] = "e-g1-1"
+        if status == "blocked":
+            g["status_detail"] = {"prior_status": "pending"}
+        return gated(g1=g)
+
+    def test_generated_amend_grid_every_refusal_is_non_generic_or_honest(self):
+        grid = [(status, op) for op in self.AMEND_OP_REQUIRED_STATUSES for status in E.STATUS_VALUES]
+        expected_successes = sum(len(v) for v in self.AMEND_OP_REQUIRED_STATUSES.values())
+        refused = 0
+        for status, op in grid:
+            cl = self._fixture(status)
+            with tempfile.TemporaryDirectory() as d:
+                f = Path(d) / "c.json"
+                E.save(f, cl)
+                delta = Path(d) / "delta.json"
+                delta.write_text(json.dumps(self._delta_for(op)), encoding="utf-8")
+                code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                             "--reason", "r", "--authority", "human"])
+            if code == 0:
+                self.assertIn(status, self.AMEND_OP_REQUIRED_STATUSES[op])
+                continue
+            self.assertIn("REFUSED:", err)
+            refused += 1
+            runnable = any(f"{tok} g1" in err for tok in
+                           ("start", "advance", "resume", "reopen", "skip", "attest"))
+            honest = "no verb reaches" in err
+            self.assertTrue(runnable or honest,
+                             f"generic amend refusal for (status={status!r}, op={op!r}): {err!r}")
+        self.assertEqual(refused, len(grid) - expected_successes)
+
+
+class RecoveryRunnabilityAudit(unittest.TestCase):
+    """Reviewer ask #3 (g3-review rework 1): a general regression test that
+    would have caught BOTH original defects -- for every branch
+    `recovery_for()` can emit, actually invoke the command(s) it names
+    against a tmp fixture in the originating state, and assert none of them
+    raise `EngineError`. Where a branch is a genuine two-step recovery
+    (resume/reopen, THEN retry the original op), both steps run in sequence
+    against the SAME persisted file and the retry is asserted to SUCCEED,
+    not just that the first step didn't raise. A branch that prints no
+    command at all (the honest "no verb" statements) is asserted to name
+    none of the runnable verbs, so a future edit can't quietly reintroduce a
+    fabricated command there either."""
+
+    def test_blocked_restorable_prior_resume_runs(self):
+        g = gate("g1", "blocked", command=PASS_COMMAND)
+        g["status_detail"] = {"prior_status": "pending"}
+        cl = gated(g1=g)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("resume g1 --reason", err)
+            code, out, err = _run_at(f, ["resume", "g1", "--reason", "cleared"])
+            self.assertEqual(code, 0)
+
+    def test_blocked_no_restorable_prior_only_skip_is_named_and_it_runs(self):
+        cl = gated(g1=gate("g1", "blocked", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("skip g1 --reason", err)
+            self.assertNotIn("reopen g1 --reason", err)
+            self.assertNotIn("resume g1 --reason", err)
+            code, out, err = _run_at(f, ["skip", "g1", "--reason", "why"])
+            self.assertEqual(code, 0)
+
+    def test_complete_reopen_runs(self):
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("reopen g1 --reason", err)
+            code, out, err = _run_at(f, ["reopen", "g1", "--reason", "why"])
+            self.assertEqual(code, 0)
+
+    def test_skipped_status_names_no_runnable_command(self):
+        cl = gated(g1=gate("g1", "skipped", command=PASS_COMMAND))
+        code, out, err = _run_main(cl, ["start", "g1"])
+        self.assertEqual(code, 1)
+        for tok in ("start ", "advance ", "resume ", "reopen ", "attest "):
+            self.assertNotIn(tok + "g1", err)
+
+    def test_unmet_null_precondition_attest_then_start_runs(self):
+        pre = [{"id": "p1", "statement": "x", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("attest g1 --cond p1 --which preconditions", err)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "p1",
+                                         "--which", "preconditions", "--note", "n"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 0)
+
+    def test_unmet_artifact_postcondition_attest_evidence_then_advance_runs(self):
+        post = [{"id": "c1", "statement": "reviewed",
+                 "check": {"kind": "artifact", "evidence_type": "review-result",
+                           "match": {"verdict": "APPROVE"}}, "satisfied": False}]
+        g = gate("g1", "in-progress")
+        g["postconditions"] = post
+        cl = gated(g1=g)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["advance", "g1", "--mechanical"])
+            self.assertEqual(code, 1)
+            self.assertIn("attest g1 --cond c1 --which postconditions", err)
+            self.assertIn("--evidence", err)
+            code, out, err = _run_at(f, ["attach", "g1", "--type", "review-result",
+                                         "--field", "verdict=APPROVE"])
+            self.assertEqual(code, 0)
+            self.assertIn("attached e-g1-1", out)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "c1",
+                                         "--which", "postconditions", "--evidence", "e-g1-1"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["advance", "g1", "--mechanical"])
+            self.assertEqual(code, 0)
+
+    def test_unmet_command_precondition_fix_and_retry_runs(self):
+        pre = [{"id": "p1", "statement": "x",
+                "check": {"kind": "command", "command": FAIL_COMMAND}, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn(
+                "fix the underlying issue so precondition p1 passes, then retry start g1", err)
+            # "Fix the underlying issue": the equivalent of a human fixing whatever
+            # made the command fail -- rewrite the fixture's command to one that
+            # now passes, then retry exactly the verb the recovery text names.
+            data = E.load(f)
+            data["tasks"]["g1"]["preconditions"][0]["check"]["command"] = PASS_COMMAND
+            E.save(f, data)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 0)
+
+    def test_unknown_cond_id_attest_with_a_real_id_runs(self):
+        pre = [{"id": "p1", "statement": "a", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, preconds=pre))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "nope", "--which", "preconditions"])
+            self.assertEqual(code, 1)
+            self.assertIn("p1", err)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "p1",
+                                         "--which", "preconditions", "--note", "n"])
+            self.assertEqual(code, 0)
+
+    def test_amend_drop_blocked_pending_prior_resume_then_retry_runs(self):
+        g = gate("g1", "blocked", command=PASS_COMMAND)
+        g["status_detail"] = {"prior_status": "pending"}
+        cl = gated(g1=g)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "drop.json"
+            delta.write_text(json.dumps({"ops": [{"op": "drop", "id": "g1"}]}), encoding="utf-8")
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 1)
+            self.assertIn("resume g1 --reason", err)
+            code, out, err = _run_at(f, ["resume", "g1", "--reason", "cleared"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 0)
+
+    def test_amend_drop_in_progress_names_no_runnable_command(self):
+        # in-progress has no verb that resets a gate back to 'pending' -- an
+        # honest "no verb reaches" statement is correct, not a fabricated one.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "drop.json"
+            delta.write_text(json.dumps({"ops": [{"op": "drop", "id": "g1"}]}), encoding="utf-8")
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 1)
+            for tok in ("start ", "advance ", "resume ", "reopen ", "skip ", "attest "):
+                self.assertNotIn(tok + "g1", err)
+
+    def test_amend_retext_check_complete_reopen_then_retry_runs(self):
+        post = [{"id": "c1", "statement": "tests pass",
+                 "check": {"kind": "command", "command": PASS_COMMAND}, "satisfied": True,
+                 "satisfied_by": "e-g1-1"}]
+        g = gate("g1", "complete")
+        g["postconditions"] = post
+        g["evidence"] = [{"id": "e-g1-1", "type": "command-output",
+                           "payload": {"cmd": PASS_COMMAND, "exit": 0, "shell": "posix"},
+                           "produced_by": "engine", "ts": ""}]
+        cl = gated(g1=g)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "retext.json"
+            delta.write_text(json.dumps({"ops": [{"op": "retext-check", "id": "g1",
+                                                   "which": "postconditions", "cond": "c1",
+                                                   "command": PASS_COMMAND}]}), encoding="utf-8")
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 1)
+            self.assertIn("reopen g1 --reason", err)
+            code, out, err = _run_at(f, ["reopen", "g1", "--reason", "why"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 0)
+
+    def test_amend_retext_check_blocked_in_progress_prior_resume_then_retry_runs(self):
+        g = gate("g1", "blocked")
+        g["postconditions"] = [{"id": "c1", "statement": "x",
+                                 "check": {"kind": "command", "command": PASS_COMMAND},
+                                 "satisfied": False}]
+        g["status_detail"] = {"prior_status": "in-progress"}
+        cl = gated(g1=g)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "retext.json"
+            delta.write_text(json.dumps({"ops": [{"op": "retext-check", "id": "g1",
+                                                   "which": "postconditions", "cond": "c1",
+                                                   "command": PASS_COMMAND}]}), encoding="utf-8")
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 1)
+            self.assertIn("resume g1 --reason", err)
+            code, out, err = _run_at(f, ["resume", "g1", "--reason", "cleared"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 0)
+
+    def test_amend_retext_check_skipped_names_no_runnable_command(self):
+        g = gate("g1", "skipped")
+        g["postconditions"] = [{"id": "c1", "statement": "x",
+                                 "check": {"kind": "command", "command": PASS_COMMAND},
+                                 "satisfied": False}]
+        cl = gated(g1=g)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "retext.json"
+            delta.write_text(json.dumps({"ops": [{"op": "retext-check", "id": "g1",
+                                                   "which": "postconditions", "cond": "c1",
+                                                   "command": PASS_COMMAND}]}), encoding="utf-8")
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 1)
+            for tok in ("start ", "advance ", "resume ", "reopen ", "skip "):
+                self.assertNotIn(tok + "g1", err)
+
+
+class RecoveryActiveGatePosition(unittest.TestCase):
+    """Reviewer BLOCK (g3-review rework 2): before this gate, `_next_verbs()`
+    had exactly ONE caller (`state()`), always invoked on the checklist's own
+    active gate. `recovery_for()` is the first caller to invoke it on an
+    ARBITRARY refusing task -- which need not be active. `start()`, and only
+    `start()`, additionally refuses a non-active gate on a GATED checklist, so
+    the `pending` sub-case's bare "start {tid}" suggestion could itself
+    refuse. Scope is precise: only `pending` (not `in-progress` --
+    `advance`/`resume`/`reopen` carry no active-gate check), only `GATED`
+    (`SURVEY` has no active-gate ordering at all)."""
+
+    def _two_gate(self):
+        g1 = gate("g1", "pending")  # stays active/incomplete throughout
+        g2 = gate("g2", "pending")  # the refusing, non-active task
+        return gated(g1=g1, g2=g2)
+
+    def test_non_active_pending_recovery_does_not_suggest_start_and_names_active_gate(self):
+        cl = self._two_gate()
+        code, out, err = _run_main(cl, ["advance", "g2", "--mechanical"])
+        self.assertEqual(code, 1)
+        self.assertIn("REFUSED:", err)
+        self.assertIn("not the active gate", err)
+        self.assertIn("'g1'", err)
+        self.assertIn("current", err)
+        # The exact failure mode: must NOT hand back a `start g2` command,
+        # since g2 is not the active gate and `start g2` would itself refuse.
+        self.assertNotIn("start g2", err)
+        self.assertIn("Do not edit the JSON — use the engine.", err)
+
+    def test_non_active_pending_recovery_full_sequence_resolves_the_original_problem(self):
+        # Full end-to-end proof, not just "the advice doesn't crash": follow
+        # the recovery's own advice (run `current`, work the active gate)
+        # and confirm the ORIGINAL attempted op eventually succeeds too --
+        # not just that some other command happened not to raise.
+        g1 = gate("g1", "pending", command=PASS_COMMAND)
+        g2 = gate("g2", "pending")
+        cl = gated(g1=g1, g2=g2)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["advance", "g2", "--mechanical"])
+            self.assertEqual(code, 1)
+            self.assertIn("not the active gate", err)
+            self.assertIn("'g1'", err)
+            # Run exactly what the recovery says: `current`.
+            code, out, err = _run_at(f, ["current"])
+            self.assertEqual(code, 0)
+            self.assertIn("ACTIVE g1", out)
+            self.assertIn("next: start g1", out)
+            # Follow current's own (separately-proven-safe) hint through to
+            # g1's completion.
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["advance", "g1", "--mechanical"])
+            self.assertEqual(code, 0)
+            # g2 is active now -- the ORIGINAL problem (advance g2) still
+            # refuses (g2 itself hasn't been started), but for the RIGHT
+            # reason, and start g2 -- refused a moment ago -- now succeeds.
+            code, out, err = _run_at(f, ["start", "g2"])
+            self.assertEqual(code, 0)
+
+    def test_in_progress_non_active_task_has_no_equivalent_hole(self):
+        # advance()/resume()/reopen() carry no active-gate check at all, so
+        # an in-progress, non-active task's "advance {tid}" recovery
+        # genuinely runs -- confirmed live, not just asserted from the
+        # rework request's own claim.
+        g1 = gate("g1", "in-progress", command=PASS_COMMAND)
+        g2 = gate("g2", "in-progress", command=PASS_COMMAND)  # also in-progress; active_id(cl) is still g1
+        cl = gated(g1=g1, g2=g2)
+        self.assertEqual(E.active_id(cl), "g1")
+        code, out, err = _run_main(cl, ["resume", "g2", "--reason", "x"])
+        self.assertEqual(code, 1)  # resume refuses (g2 isn't blocked) -- unrelated to position
+        self.assertIn("advance g2", err)
+        code, out, err = _run_main(cl, ["advance", "g2", "--mechanical"])
+        self.assertEqual(code, 0)
+
+
+class RecoveryPositionAudit(unittest.TestCase):
+    """Reviewer ask (g3-review rework 2), the load-bearing half: parameterize
+    the recovery-family tests over ACTIVE vs NON-active position, not just
+    status -- a single-task fixture makes the refusing task trivially always
+    active by construction, so it structurally cannot exercise this axis
+    (which is exactly how the position hole shipped unnoticed). Re-runs every
+    OTHER refusal family against a NON-active version of its fixture and
+    proves the named recovery command still runs clean -- confirming, by
+    actually running them, that `resume`/`reopen`/`attest`/`skip`/`amend`
+    genuinely have no active-gate dependency, rather than taking that on
+    faith from source inspection alone."""
+
+    def test_blocked_restorable_prior_resume_runs_when_non_active(self):
+        g = gate("g1", "blocked", command=PASS_COMMAND)
+        g["status_detail"] = {"prior_status": "pending"}
+        cl = _make_non_active(gated(g1=g))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("resume g1 --reason", err)
+            code, out, err = _run_at(f, ["resume", "g1", "--reason", "cleared"])
+            self.assertEqual(code, 0)
+
+    def test_blocked_no_restorable_prior_skip_runs_when_non_active(self):
+        cl = _make_non_active(gated(g1=gate("g1", "blocked", command=PASS_COMMAND)))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("skip g1 --reason", err)
+            code, out, err = _run_at(f, ["skip", "g1", "--reason", "why"])
+            self.assertEqual(code, 0)
+
+    def test_complete_reopen_runs_when_non_active(self):
+        cl = _make_non_active(gated(g1=gate("g1", "complete", command=PASS_COMMAND)))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("reopen g1 --reason", err)
+            code, out, err = _run_at(f, ["reopen", "g1", "--reason", "why"])
+            self.assertEqual(code, 0)
+
+    def test_unmet_precondition_recovery_is_unreachable_while_non_active(self):
+        # start()'s active-gate check runs BEFORE its precondition-unmet
+        # check, so a non-active task's unmet-precondition recovery can
+        # never actually surface via `start` -- the position refusal fires
+        # first and wins. This is itself the self-audit answer for this
+        # branch: it needs no position-awareness of its own, because it is
+        # structurally unreachable until position is already correct.
+        # Confirmed by actually driving the sequence, not just asserted.
+        pre = [{"id": "p1", "statement": "x", "check": None, "satisfied": False}]
+        cl = _make_non_active(gated(g1=gate("g1", "pending", preconds=pre)))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("not the active gate", err)
+            self.assertIn("'g0'", err)
+            self.assertNotIn("attest g1", err)
+            # Clear g0 out of the way; g1 becomes active, and ONLY THEN does
+            # the precondition-unmet recovery appear and run clean.
+            code, out, err = _run_at(f, ["skip", "g0", "--reason", "clear the way"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 1)
+            self.assertIn("attest g1 --cond p1 --which preconditions", err)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "p1",
+                                         "--which", "preconditions", "--note", "n"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["start", "g1"])
+            self.assertEqual(code, 0)
+
+    def test_unmet_postcondition_attest_runs_when_non_active(self):
+        post = [{"id": "c1", "statement": "x", "check": None, "satisfied": False}]
+        g = gate("g1", "in-progress")
+        g["postconditions"] = post
+        cl = _make_non_active(gated(g1=g))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["advance", "g1", "--mechanical"])
+            self.assertEqual(code, 1)
+            self.assertIn("attest g1 --cond c1 --which postconditions", err)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "c1",
+                                         "--which", "postconditions", "--note", "n"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["advance", "g1", "--mechanical"])
+            self.assertEqual(code, 0)
+
+    def test_unknown_cond_id_attest_runs_when_non_active(self):
+        pre = [{"id": "p1", "statement": "a", "check": None, "satisfied": False}]
+        cl = _make_non_active(gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, preconds=pre)))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "nope", "--which", "preconditions"])
+            self.assertEqual(code, 1)
+            self.assertIn("p1", err)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "p1",
+                                         "--which", "preconditions", "--note", "n"])
+            self.assertEqual(code, 0)
+
+    def test_amend_drop_blocked_pending_prior_resume_runs_when_non_active(self):
+        g = gate("g1", "blocked", command=PASS_COMMAND)
+        g["status_detail"] = {"prior_status": "pending"}
+        cl = _make_non_active(gated(g1=g))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            delta = Path(d) / "drop.json"
+            delta.write_text(json.dumps({"ops": [{"op": "drop", "id": "g1"}]}), encoding="utf-8")
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 1)
+            self.assertIn("resume g1 --reason", err)
+            code, out, err = _run_at(f, ["resume", "g1", "--reason", "cleared"])
+            self.assertEqual(code, 0)
+            code, out, err = _run_at(f, ["amend", "--delta", str(delta),
+                                         "--reason", "r", "--authority", "human"])
+            self.assertEqual(code, 0)
+
+
+class Inv3StartNonActiveEnumeration(unittest.TestCase):
+    """Finding 1 (g3-review rework 3 -> 4, the FOURTH instance of the same
+    anti-pattern). `start()`'s own "not the active gate" guard
+    (`checklist_engine.py` ~:1420) named an UNCONDITIONAL `start {active}`
+    exit -- self-recovering only in the one case every prior fixture could
+    express (`_make_non_active`'s guard hardcoded `status="pending"`), and
+    silently wrong whenever the active gate was actually `in-progress` or
+    `blocked` (both ordinary, reopen-cascade-reachable states). Fixed by
+    wiring `task_id`/`verb`/`status="pending"` onto that raise (the refusing
+    task IS always pending here -- the status!="pending" branch above it
+    already returns otherwise), routing it into the SAME
+    pending/GATED/non-active branch rework 3 already proved safe (never
+    guesses a command for the active gate; points at `current`) -- no new
+    branch, per the rework request's explicit instruction to reuse rather
+    than parallel-write.
+
+    Generated over `E.STATUS_VALUES` restricted to the statuses `active_id`
+    can actually return (non-terminal: `pending`/`in-progress`/`blocked`),
+    not hand-picked, so a future new status is not silently skipped."""
+
+    ACTIVE_GATE_STATUSES = tuple(s for s in E.STATUS_VALUES if s not in E.TERMINAL)
+
+    def test_active_statuses_are_exactly_the_non_terminal_ones(self):
+        self.assertEqual(self.ACTIVE_GATE_STATUSES, ("pending", "in-progress", "blocked"))
+
+    def test_generated_grid_never_names_a_refusing_command_for_the_active_gate(self):
+        for active_status in self.ACTIVE_GATE_STATUSES:
+            with self.subTest(active_status=active_status):
+                cl = _make_non_active(gated(g1=gate("g1", "pending")), active_status=active_status)
+                code, out, err = _run_main(cl, ["start", "g1"])
+                self.assertEqual(code, 1)
+                self.assertIn("REFUSED:", err)
+                self.assertIn("not the active gate", err)
+                self.assertIn("'g0'", err)
+                self.assertIn("Recovery:", err)
+                self.assertIn("current", err)
+                # The exact failure mode this closes: must NOT hand back
+                # "start g0" as if it always worked -- it only does when
+                # active_status=='pending', and this message must not claim
+                # otherwise for the other two.
+                self.assertNotIn("start g0", err)
+                self.assertIn("Do not edit the JSON — use the engine.", err)
+
+    def test_generated_grid_the_named_advice_current_never_refuses(self):
+        # Prove the recovery's own advice is unconditionally safe by
+        # actually running it, for every active-gate status -- not assumed
+        # from "current is read-only" alone.
+        for active_status in self.ACTIVE_GATE_STATUSES:
+            with self.subTest(active_status=active_status):
+                cl = _make_non_active(gated(g1=gate("g1", "pending")), active_status=active_status)
+                code, out, err = _run_main(cl, ["current"])
+                self.assertEqual(code, 0)
+                self.assertIn(f"ACTIVE g0 [{active_status}]", out)
+
+    def test_reopen_cascade_reproduces_the_ordinary_reachability_path(self):
+        # Reviewer's own reachability note: a reopen cascade leaves an
+        # upstream gate active (in-progress) while resetting a downstream
+        # gate to pending -- no synthetic fixture hacking required.
+        g1 = gate("g1", "complete", command=PASS_COMMAND)
+        g2 = gate("g2", "complete", command=PASS_COMMAND)
+        cl = gated(g1=g1, g2=g2)
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["reopen", "g1", "--reason", "rework"])
+            self.assertEqual(code, 0)
+            reloaded = E.load(f)
+            self.assertEqual(reloaded["tasks"]["g1"]["status"], "in-progress")
+            self.assertEqual(reloaded["tasks"]["g2"]["status"], "pending")
+            self.assertEqual(E.active_id(reloaded), "g1")
+            code, out, err = _run_at(f, ["start", "g2"])
+            self.assertEqual(code, 1)
+            self.assertIn("not the active gate", err)
+            self.assertIn("'g1'", err)
+            self.assertIn("current", err)
+            self.assertNotIn("start g1", err)
+
+
 class WhyCapture(unittest.TestCase):
     """#179 Module 1 — the why-capture invariant: a non-exempt advance solicits a
     single running `why`, silence fails closed, the digest is the latest
@@ -2439,3 +3372,398 @@ class TripRealGaugeFileWiring(unittest.TestCase):
             self.assertIn(">= soft", out.getvalue())
             # SOFT never forces: advance still succeeds
             self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+
+
+# --------------------------------------------------------------------------- #
+# #227 gate g2 — state()/render_human() port-and-adapter, current() as a
+# complete gate briefing. See dit-I1-ports-RESULT.md (constellation-skills,
+# archive/2026-07-24-explore-design-thrust) for the ratified StateView shape;
+# the g2 handoff deliberately kills the panel's --json flag / render_json
+# adapter / explain-show verb, so state() below is internal structure only.
+# --------------------------------------------------------------------------- #
+class GoldenOutputBriefing(unittest.TestCase):
+    """Golden-output tests for render_human()/current(): one per active-task
+    state (pending/in-progress/blocked) plus the three no-active-task branches
+    (DONE with no waived, DONE with WAIVED, survey ALL ITEMS VISITED). None of
+    these six had a golden (exact-output) test before this change, and they
+    are exactly the branches most likely to be silently reshaped by a
+    render_human() rewrite."""
+
+    def test_pending_active_task_shows_open_preconditions_and_next_start(self):
+        # p1 is a NULL-kind precondition and it is still [unmet]: `start` MUST
+        # NOT appear in next: (rework 1, g2 review BLOCK) -- it would refuse
+        # immediately ("preconditions unmet ['p1']"). Only attest is legal here.
+        pre = [{"id": "p1", "statement": "iface exists", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "preconditions:\n"
+            "  p1 [unmet] null — iface exists\n"
+            "0/1 met\n"
+            "next: attest g1 --cond p1 --which preconditions"
+        ))
+
+    def test_pending_active_task_with_satisfied_preconditions_shows_next_start(self):
+        # Once the (only) precondition is satisfied, `start` becomes legal and
+        # reappears in next: -- the positive-space complement of the test above.
+        pre = [{"id": "p1", "statement": "iface exists", "check": None, "satisfied": True, "satisfied_by": "attested"}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "1/1 met\n"
+            "next: start g1"
+        ))
+
+    def test_in_progress_active_task_shows_open_postconditions_and_next_advance(self):
+        # A non-exempt gate with one open ARTIFACT-kind postcondition: `advance`
+        # MUST NOT appear in next: (rework 1, g2 review BLOCK) -- it would
+        # refuse immediately ("postconditions unmet ['c1']"). Only the
+        # attest --evidence hint (the INV-1 trap) is legal here.
+        t = gate("g1", "in-progress", why_exempt=False)
+        t["postconditions"] = [{
+            "id": "c1", "statement": "approved",
+            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+            "satisfied": False,
+        }]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [in-progress] — do g1\n"
+            "postconditions:\n"
+            "  c1 [unmet] artifact — approved\n"
+            "0/1 met\n"
+            "next: attest g1 --cond c1 --which postconditions --evidence <evidence-id>"
+        ))
+
+    def test_in_progress_non_exempt_with_open_command_postcondition_shows_advance_with_why(self):
+        # A COMMAND-kind postcondition is live-checked inside advance() itself,
+        # so an open one here does NOT suppress the hint (unlike the artifact
+        # case above) -- and being non-exempt, --why is required.
+        t = gate("g1", "in-progress", why_exempt=False, command=PASS_COMMAND)
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [in-progress] — do g1\n"
+            "postconditions:\n"
+            "  c1 [unmet] command — tests pass\n"
+            "0/1 met\n"
+            "next: advance g1 --why \"<understanding>\" (or --mechanical)"
+        ))
+
+    def test_blocked_active_task_shows_resume_hint(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.block(cl, "g1", "waiting on x1 result", "parent agent", "escalate; do not re-dispatch")
+        out = E.current(cl)
+        self.assertIn("ACTIVE g1 [blocked] — do g1", out)
+        self.assertIn("next: resume g1 --reason \"<why the blocker cleared>\"", out)
+
+    def test_done_no_open_items_no_waived(self):
+        cl = gated(g1=gate("g1", "complete"))
+        self.assertEqual(E.current(cl), "DONE: no open items.")
+
+    def test_done_no_open_items_with_waived(self):
+        t = gate("g1", "in-progress", why_exempt=True)
+        t["postconditions"] = [{
+            "id": "c1", "statement": "x",
+            "check": {"kind": "command", "command": FAIL_COMMAND},
+            "satisfied": False, "override_policy": {"allowed": True},
+        }]
+        cl = gated(g1=t)
+        E.waive(cl, "g1", "c1", "postconditions", "human", "flaky check, closeout-only")
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete (WAIVED postconditions ['c1'])")
+        self.assertEqual(E.current(cl), "DONE: no open items. WAIVED: ['g1.c1']")
+
+    def test_all_items_visited_prompts_consolidate(self):
+        cl = survey(v1=survey_item("v1", "complete"))
+        self.assertEqual(E.current(cl), "ALL ITEMS VISITED. Next: consolidate")
+
+
+class Inv1CompletenessOracle(unittest.TestCase):
+    """#227 g2 constraint 3 (INV-1, completeness): current()'s output must be a
+    superset of every argument the caller's ACTUAL next legal verb needs. The
+    map below is HAND-AUTHORED against the verbs' RUNTIME bodies:
+
+      - advance --why: optional at parse_args() (~line 1668) but REQUIRED at
+        runtime unless --mechanical or the gate is why_exempt — see advance()
+        ~1077-1087 (`raise EngineError(...)` on a why-less non-exempt advance).
+      - attest --evidence: optional at parse_args() (~line 1715) but REQUIRED
+        at runtime whenever the condition's check.kind == "artifact" — see
+        attest() ~1539-1544 (`raise EngineError(...)` with no --evidence).
+
+    A map built by walking `parser._actions` for `required=True` would omit
+    BOTH of these — exactly the two args agents most often re-open source to
+    discover. This test does not call any engine map or read state()'s
+    next_verbs list; it inspects the rendered current() STRING directly, so it
+    cannot be a self-confirming fixture.
+
+    Rework 1 (g2 review BLOCK) split this into TWO scenarios instead of one:
+    while an open artifact-kind postcondition is unresolved, `advance` is not
+    yet the caller's legal next verb at all (only `attest --evidence` is), so
+    a single gate can't exercise both `--evidence` and `--why` truthfully at
+    once — the original combined test's premise ("advance is always next") was
+    exactly the bug this rework fixes."""
+
+    VERB_REQUIRED_ARGS = {
+        "start": [("id", "always")],
+        "advance": [
+            ("id", "always"),
+            ("why", lambda t, c=None: not bool(t.get("why_exempt"))),
+        ],
+        "attest": [
+            ("id", "always"), ("cond", "always"), ("which", "always"),
+            ("evidence", lambda t, c: (c or {}).get("check", {}).get("kind") == "artifact"),
+        ],
+        "waive": [("id", "always"), ("cond", "always"), ("which", "always"), ("authority", "always")],
+    }
+
+    def test_current_output_covers_attest_evidence_when_that_is_the_legal_move(self):
+        # An in-progress gate with ONE open artifact-kind postcondition (not
+        # just a null-check gate, per the handoff's instruction): `attest
+        # --evidence` is the legal next move; `advance` is NOT (it would
+        # refuse), so current() must not need to carry --why here at all.
+        t = gate("g1", "in-progress", why_exempt=False)
+        cond = {
+            "id": "c1", "statement": "approved",
+            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+            "satisfied": False,
+        }
+        t["postconditions"] = [cond]
+        cl = gated(g1=t)
+        out = E.current(cl)
+
+        self.assertIn("g1", out)  # `id` is required by every verb in the map
+        for argname, rule in self.VERB_REQUIRED_ARGS["attest"]:
+            if not (rule == "always" or rule(t, cond)):
+                continue
+            if argname == "cond":
+                self.assertIn(cond["id"], out, "attest --cond value missing from current()")
+            elif argname == "which":
+                self.assertIn("postconditions", out, "attest --which value ('postconditions') missing")
+            elif argname == "evidence":
+                self.assertIn("--evidence", out, "attest --evidence flag missing though c1 is artifact-kind")
+        # advance is not yet legal from here -> must not be suggested at all.
+        self.assertNotIn("advance g1", out)
+
+    def test_current_output_covers_advance_why_once_it_is_the_legal_move(self):
+        # A non-exempt in-progress gate with NO open null/artifact condition
+        # left (a live command postcondition is present but never blocks, per
+        # _blocking_conditions): `advance --why` IS the legal next move now.
+        t = gate("g1", "in-progress", why_exempt=False, command=PASS_COMMAND)
+        cl = gated(g1=t)
+        out = E.current(cl)
+
+        self.assertIn("g1", out)
+        for argname, rule in self.VERB_REQUIRED_ARGS["advance"]:
+            if argname == "why" and (rule == "always" or rule(t)):
+                self.assertIn("--why", out, "advance --why flag missing though g1 is not why_exempt")
+
+
+class Inv2PurityNoSubprocess(unittest.TestCase):
+    """#227 g2 constraint 2 (INV-2, purity): state()/current() must NEVER
+    invoke subprocess for a command/git-change-policy check — reading state is
+    not a probe. Patches subprocess.run to explode if called, drives current()
+    over a spine full of command- and git-change-policy-kind conditions
+    recorded as unsatisfied, and asserts it renders (without raising from
+    current() itself) while subprocess.run is never reached."""
+
+    def test_current_never_invokes_subprocess(self):
+        pre = [{"id": "p1", "statement": "iface exists",
+                "check": {"kind": "command", "command": FAIL_COMMAND}, "satisfied": False}]
+        t = gate("g1", "in-progress", preconds=pre)
+        t["postconditions"] = [
+            {"id": "c1", "statement": "tests pass",
+             "check": {"kind": "command", "command": FAIL_COMMAND}, "satisfied": False},
+            {"id": "c2", "statement": "no suspicious artifacts",
+             "check": {"kind": "git-change-policy", "mode": "staged"}, "satisfied": False},
+        ]
+        cl = gated(g1=t)
+
+        with mock.patch.object(
+            E.subprocess, "run",
+            side_effect=AssertionError("current()/state() must never invoke subprocess.run (INV-2)"),
+        ):
+            out = E.current(cl)  # would raise AssertionError if subprocess.run were called
+
+        self.assertIn("p1 [unmet] command", out)
+        self.assertIn("c1 [unmet] command", out)
+        self.assertIn("c2 [unmet] git-change-policy", out)
+
+
+class LegacySpineBackwardCompat(unittest.TestCase):
+    """#227 g2 constraint 5: a REAL captured, organically-evolved spine (no
+    why_trail key at all, no why_exempt on any task) must render through
+    current()/state() WITHOUT EVER RAISING. This engine drives live runs right
+    now, including the one that dispatched this change; a KeyError on real
+    data would break work in flight. The fixture is a read-only COPY of a real
+    explorer spine.json (constellation-skills .agent-work archive) — never
+    mutated with a live/mutating engine verb; any status flip below is a
+    plain in-memory dict edit on the copy, not an engine call."""
+
+    FIXTURE = ROOT / "tests" / "fixtures" / "legacy_spine_organic.json"
+
+    def test_fixture_is_genuinely_legacy_shaped(self):
+        cl = E.load(self.FIXTURE)
+        self.assertNotIn("why_trail", cl)
+        self.assertTrue(all("why_exempt" not in t for t in cl["tasks"].values()))
+
+    def test_all_terminal_shape_renders_done_without_raising(self):
+        cl = E.load(self.FIXTURE)
+        out = E.current(cl)  # must not raise
+        self.assertIn("DONE: no open items.", out)
+        self.assertIn("LEASE released:", out)
+
+    def test_state_projection_renders_on_all_terminal_shape(self):
+        cl = E.load(self.FIXTURE)
+        view = E.state(cl)  # must not raise
+        self.assertIsNone(view["active"])
+        self.assertEqual(view["kind"], "gated")
+
+    def test_status_flip_renders_active_branch_on_real_condition_data(self):
+        # In-memory-only status flip (not a `reopen` engine call) so the ACTIVE
+        # branch renders against a real historic task missing why_exempt.
+        cl = E.load(self.FIXTURE)
+        cl["tasks"]["route"]["status"] = "in-progress"
+        out = E.current(cl)  # must not raise despite the missing why_exempt key
+        # a released-lease line still precedes the ACTIVE line (see LEASE tests
+        # elsewhere), so check containment, not startswith, here.
+        self.assertIn("ACTIVE route", out)
+        self.assertIn("met", out)
+
+    def test_reopened_gate_with_unmet_condition_renders_kind_and_real_statement(self):
+        cl = E.load(self.FIXTURE)
+        t = cl["tasks"]["init"]
+        t["status"] = "in-progress"
+        t["postconditions"][0]["satisfied"] = False  # c1: check.kind == "command"
+        out = E.current(cl)  # must not raise
+        self.assertIn("ACTIVE init", out)
+        self.assertIn(
+            "c1 [unmet] command — work area scaffolded and spine.json materialized", out)
+
+
+class NextVerbsAreLegalFromHere(unittest.TestCase):
+    """Rework 1 (#227 g2 review BLOCK): `next:` must only suggest a verb that
+    will NOT refuse from the state it renders — the ratified panel's invariant
+    4 ("next_verbs is exhaustive and legal-from-here… derived from (status,
+    position, condition state)"), which the pre-fix `_next_verbs()` violated.
+    The reviewer reproduced two concrete refusals: a pending gate with an open
+    null precondition suggested `start` (refused: preconditions unmet), and a
+    non-exempt in-progress gate with an open artifact postcondition suggested
+    `advance` (refused: postconditions unmet) — against the implementer's own
+    two canonical golden fixtures.
+
+    This closes the loop the golden (string-only) tests didn't: for a matrix
+    of task states and condition mixes, it ACTUALLY RUNS the verb `next:`
+    suggests against a tmp in-memory fixture (never a real spine file) and
+    asserts it does not raise `EngineError` — plus proves the terminal verb is
+    SUPPRESSED while a blocking null/artifact condition is open, and NOT
+    suppressed by an open command/git-change-policy condition (those are
+    live-checked inside start()/advance() itself, never probed by state())."""
+
+    def _next(self, cl, aid):
+        return E.state(cl)["active"]["next_verbs"]
+
+    # --- start() is gated on PREconditions ---------------------------------- #
+    def test_pending_with_open_null_precondition_suppresses_start(self):
+        pre = [{"id": "p1", "statement": "upstream done", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        verbs = self._next(cl, "g1")
+        self.assertFalse(any(v.startswith("start ") for v in verbs),
+                          f"start suggested despite an open null precondition: {verbs}")
+        self.assertTrue(any(v.startswith("attest g1 --cond p1") for v in verbs))
+        # The ONE verb actually suggested must not raise.
+        E.attest(copy.deepcopy(cl), "g1", "p1", "preconditions", "checked it")
+
+    def test_pending_with_open_artifact_precondition_suppresses_start_until_attested(self):
+        pre = [{
+            "id": "p1", "statement": "reviewed",
+            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+            "satisfied": False,
+        }]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        self.assertFalse(any(v.startswith("start ") for v in self._next(cl, "g1")))
+        # Run the suggested attest --evidence for real, then confirm the
+        # previously-suppressed `start` reappears AND actually succeeds.
+        work = copy.deepcopy(cl)
+        E.attach(work, "g1", "review-result", {"verdict": "APPROVE"})
+        eid = work["tasks"]["g1"]["evidence"][-1]["id"]
+        E.attest(work, "g1", "p1", "preconditions", None, evidence_id=eid)  # must not raise
+        self.assertTrue(any(v.startswith("start ") for v in self._next(work, "g1")))
+        self.assertEqual(E.start(work, "g1"), "g1 -> in-progress")  # must not raise
+
+    def test_pending_with_only_open_command_precondition_still_suggests_start(self):
+        # command-kind preconditions are engine-checked LIVE at start(); state()
+        # never probes them (INV-2), so an open one must NOT suppress the hint.
+        pre = [{"id": "p1", "statement": "tests pass", "check": {"kind": "command", "command": PASS_COMMAND}, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        verbs = self._next(cl, "g1")
+        self.assertTrue(any(v.startswith("start ") for v in verbs), f"start missing: {verbs}")
+        self.assertEqual(E.start(copy.deepcopy(cl), "g1"), "g1 -> in-progress")  # no raise: command passes live
+
+    def test_pending_with_satisfied_preconditions_suggests_start_and_it_runs(self):
+        pre = [{"id": "p1", "statement": "upstream done", "check": None, "satisfied": True, "satisfied_by": "attested"}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        self.assertIn("start g1", self._next(cl, "g1"))
+        self.assertEqual(E.start(copy.deepcopy(cl), "g1"), "g1 -> in-progress")  # no raise
+
+    # --- advance() is gated on POSTconditions -------------------------------- #
+    def test_in_progress_with_open_null_postcondition_suppresses_advance(self):
+        t = gate("g1", "in-progress", why_exempt=True)
+        t["postconditions"] = [{"id": "c1", "statement": "reviewed", "check": None, "satisfied": False}]
+        cl = gated(g1=t)
+        verbs = self._next(cl, "g1")
+        self.assertFalse(any(v.startswith("advance ") for v in verbs),
+                          f"advance suggested despite an open null postcondition: {verbs}")
+        self.assertTrue(any(v.startswith("attest g1 --cond c1") for v in verbs))
+        E.attest(copy.deepcopy(cl), "g1", "c1", "postconditions", "verified")  # must not raise
+
+    def test_in_progress_with_open_artifact_postcondition_suppresses_advance_until_attested(self):
+        t = gate("g1", "in-progress", why_exempt=False)
+        t["postconditions"] = [{
+            "id": "c1", "statement": "approved",
+            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+            "satisfied": False,
+        }]
+        cl = gated(g1=t)
+        self.assertFalse(any(v.startswith("advance ") for v in self._next(cl, "g1")),
+                          "advance suggested despite an open artifact postcondition")
+        # Run the suggested attest --evidence for real, then confirm the
+        # previously-suppressed `advance` reappears AND actually succeeds.
+        work = copy.deepcopy(cl)
+        E.attach(work, "g1", "review-result", {"verdict": "APPROVE"})
+        eid = work["tasks"]["g1"]["evidence"][-1]["id"]
+        E.attest(work, "g1", "c1", "postconditions", None, evidence_id=eid)  # must not raise
+        self.assertTrue(any(v.startswith("advance ") for v in self._next(work, "g1")))
+        self.assertEqual(E.advance(work, "g1", why="cleared the blocker"), "g1 -> complete")  # no raise
+
+    def test_in_progress_with_only_open_command_postcondition_still_suggests_advance(self):
+        t = gate("g1", "in-progress", why_exempt=True, command=PASS_COMMAND)
+        cl = gated(g1=t)
+        verbs = self._next(cl, "g1")
+        self.assertTrue(any(v.startswith("advance ") for v in verbs), f"advance missing: {verbs}")
+        self.assertEqual(E.advance(copy.deepcopy(cl), "g1"), "g1 -> complete")  # no raise: command passes live
+
+    def test_in_progress_non_exempt_advance_hint_carries_why_and_runs(self):
+        t = gate("g1", "in-progress", why_exempt=False, command=PASS_COMMAND)
+        cl = gated(g1=t)
+        verbs = self._next(cl, "g1")
+        advance_hint = next(v for v in verbs if v.startswith("advance "))
+        self.assertIn("--why", advance_hint)
+        self.assertEqual(
+            E.advance(copy.deepcopy(cl), "g1", why="test understanding"), "g1 -> complete")  # no raise
+
+    # --- resume() / record() carry no condition gate at all ------------------ #
+    def test_blocked_resume_hint_runs(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        E.block(cl, "g1", "waiting on x1 result", "parent agent", "escalate; do not re-dispatch")
+        verbs = self._next(cl, "g1")
+        self.assertTrue(any(v.startswith("resume ") for v in verbs))
+        self.assertEqual(
+            E.resume(copy.deepcopy(cl), "g1", reason="blocker cleared"),
+            "g1 resumed -> in-progress (blocker resolved: blocker cleared)")  # no raise
+
+    def test_survey_in_progress_record_hint_runs_even_with_open_null_postcondition(self):
+        # record() carries no gate at all (unlike advance()) -- confirm the
+        # hint is present AND runnable despite an open null postcondition.
+        cl = survey(v1=survey_item("v1", "in-progress"))
+        cl["tasks"]["v1"]["postconditions"] = [{"id": "c1", "statement": "checked", "check": None, "satisfied": False}]
+        verbs = self._next(cl, "v1")
+        self.assertTrue(any(v.startswith("record ") for v in verbs), f"record missing: {verbs}")
+        self.assertEqual(E.record(copy.deepcopy(cl), "v1", "pass", None), "v1 recorded pass")  # no raise

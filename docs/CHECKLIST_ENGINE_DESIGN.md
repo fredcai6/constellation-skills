@@ -103,12 +103,17 @@ The engine doesn't just enforce ordering — it appends a short doctrine block, 
 to its own output at every decision point, so the enforcement text lives with the mechanism
 that decides, not in prose an agent might skip or misremember.
 
-- **Surface.** `_rail(point, cl)` in `checklist_engine.py` appends `\n\nRAIL: <text>` to the
-  successful output of the six railed verbs (`RAIL_VERBS = {claim, current, start, advance,
-  attest, attach}`) and to the REFUSED path in `main()`. The verb functions themselves stay
+- **Surface.** `_rail(point, cl)` in `checklist_engine.py` supplies the `RAIL: <text>` block for
+  the successful output of the six railed verbs (`RAIL_VERBS = {claim, current, start, advance,
+  attest, attach}`) and for the REFUSED path in `main()`. The verb functions themselves stay
   pure — their return values are unchanged; the rail rides only the CLI output boundary, so
   existing exact-equality tests keep passing. `gated` checklists only: a `survey` checklist
   (`cl["type"] != GATED`) gets no rail at all.
+- **Position on the stream (#227 item 4).** The banner is emitted **first** and the operative
+  result/refusal line **last**, via `_rail_prefix()`. It used to be appended as a suffix, which
+  meant `tail -1` read the banner and silently hid the operative line — observed twice in the
+  live epic-226 run, where a real `REFUSED: … preconditions unmet ['p1']` disappeared behind it.
+  Stream assignment is unchanged: success → stdout, refusal → stderr.
 - **Five decision-point strings**, keyed by position, held verbatim in `_RAIL_STRINGS`:
   `early` (first gate, not yet worked), `mid-flight` (mid-run, `{n}` gates from done, names
   the next `{imperative}`), `near-terminal` (one gate left before release-eligibility),
@@ -129,6 +134,44 @@ that decides, not in prose an agent might skip or misremember.
   hand-maintained prose that can drift. The five strings are **frozen, verbatim** (a
   measurement precondition for #145): do not paraphrase them; `{id}`/`{n}`/`{imperative}` are
   the only substituted tokens.
+
+## Answerability: `current` as a complete briefing, refusals that carry their exit (#227)
+
+Agents driving a spine were falling through to reading `spine.json` and the engine source,
+because `current` printed the imperative and nothing else and a refusal named no way out. Both
+are now answered from engine output, so reading the raw file is unnecessary (and, per
+`_shared/global-everyone.md`, a violation).
+
+- **State projection (the port).** `state(cl) -> dict` is a **pure** projection returning a
+  `StateView`-shaped dict — active id, status, full imperative, pre/postconditions with their
+  ids and kinds, lease, why-digest, legal `next_verbs`, and a `contract` version int.
+  `render_human(view) -> str` is the only adapter that ships; `current()` is now exactly
+  `render_human(state(cl))`. The shape follows the ratified 3-agent design-it-twice panel. **No
+  public `--json` flag ships** — a future conductor adapter is `json.dumps` behind a flag once a
+  consumer exists; `contract` is there so it can pin.
+- **Purity (INV-2).** The projection reports **recorded** condition state and never re-runs a
+  `command`/`git-change-policy` check. Reading is not a probe. The sharp edge, made explicit:
+  `satisfied: false` means "not yet recorded as passing", **not** "would fail if run now".
+- **Completeness (INV-1).** `current`'s output is a superset of the arguments the caller's next
+  verb needs. This is tested against a **hand-authored map derived from the verb bodies**, never
+  from argparse: `advance --why` and `attest --evidence` are required at runtime but optional at
+  the parser, so an argparse-walked map would omit exactly the two arguments agents most often
+  read source to discover.
+- **Recovery (INV-3).** Every state-caused refusal names its exact exit, derived from
+  `(status, attempted-verb)` by the pure `recovery_for()` — blocked → `resume`, complete →
+  `reopen`, unmet condition → the precise `attest` naming the real ids, unknown cond id →
+  enumerate the valid ids — closing with `Do not edit the JSON — use the engine.` Recovery is a
+  **separate channel** from the five frozen rail strings.
+- **Seam.** Recovery composes at the **CLI boundary**, like the rail, so the verb-purity law
+  above survives. `EngineError` carries structured attributes (`task_id`, `verb`, `status`,
+  `unmet`, `valid_ids`); nothing re-parses message text.
+- **Standing hazard, learned the hard way.** Four defects were found here, all identical in
+  shape: a recovery naming a command that *refused when run*. None was a careless branch — each
+  time the test fixtures could not express the failing state (single-task fixtures hid the
+  non-active gate; a hardcoded `pending` guard gate hid the active-gate statuses where the
+  advice was wrong). Any change to this surface must be validated by **invoking** the commands
+  it prints, over fixtures parameterized on status **and position**, not by string-matching the
+  render.
 
 ## Evidence: gate on type/shape, not quality
 
@@ -265,7 +308,9 @@ The engine owns **structured (JSON) canonical state**. Human-readable markdown, 
 ## Engine verb set (provisional)
 
 ```
-current                         which node is active + its imperative description
+current                         the complete gate briefing: active node, FULL imperative,
+                                open pre/postconditions (id/state/kind/statement) with an
+                                `n/m met` summary, and the legal next verbs (#227)
 criteria <node>                 completion criteria + required evidence types for a node
 advance <node> --evidence …     attempt close; engine validates ordering + evidence shape, else refuses
 skip <node> --reason …          mark OBE (state op; reason required)

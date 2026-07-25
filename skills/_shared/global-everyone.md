@@ -159,6 +159,16 @@ four clauses: this is an accepted, untested compression at the getting-IN moment
 rail cannot yet backstop it) — the rail covers every call from `claim` onward, so the pointer only needs to
 survive the pre-first-call window.
 
+**Engine output is the state channel.** Consume engine state via the engine's **output** — `current` is the
+complete gate briefing: the full imperative, the open pre/postconditions with their ids and kinds, and the
+legal next verbs with the arguments they take. Opening `spine.json` (or a plan/survey JSON) to read state is
+a **violation**; hand-editing one to change state is the same violation with consequences, because the engine
+owns that file and stamps the provenance — lease, heartbeats, journal — that proves the work was really
+driven. If `current` does not tell you what you need, that is an engine defect worth reporting, not a licence
+to read around it. Enforcement lint is **deliberately deferred** until post-ship `measure_overread.py`
+evidence shows the rule is broken often enough to justify the machinery — its absence is a decision, not an
+oversight.
+
 ## Decision fixedness: the `@grade:` tag
 
 A recorded decision does not say how *fixed* it is, so every decision reads as equally settled and an executor

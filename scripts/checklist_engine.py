@@ -39,6 +39,10 @@ _utf8_stdio()
 
 GATED = "gated"
 SURVEY = "survey"
+# The full task-status vocabulary (#227 gate g3): the single source of truth
+# an (status, verb) recovery grid is GENERATED from, rather than hand-typed
+# per test. TERMINAL below is the subset that ends a task's lifecycle.
+STATUS_VALUES = ("pending", "in-progress", "blocked", "complete", "skipped")
 TERMINAL = {"complete", "skipped"}
 DEFAULT_REWORK_CAP = 3
 DEFAULT_LEASE_STALE_SECONDS = 1800
@@ -80,7 +84,37 @@ _gauge_reader = _load_gauge_reader()
 
 
 class EngineError(Exception):
-    """A refusal: the requested transition is not allowed. No exit-0."""
+    """A refusal: the requested transition is not allowed. No exit-0.
+
+    Optional structured attributes (#227 gate g3) let the CLI boundary
+    (`main()`, via `recovery_for()`) compose a recovery line WITHOUT
+    re-parsing the message string -- the verb functions that raise stay pure
+    (their message text is unchanged); they just also hand the boundary the
+    facts it needs:
+      - `task_id` / `verb`: which task, and which attempted verb, refused.
+      - `status`: the task's ACTUAL status at refusal time (a status-caused
+        refusal -- start/advance/resume/reopen each require one).
+      - `unmet`: the REAL unmet condition ids from a live check inside the
+        verb (`start`'s preconditions, `advance`'s postconditions), each as
+        {"id", "which", "kind"}. A command/git-change-policy kind's pass/fail
+        is only known HERE, at the moment the check ran -- `state()` must
+        never re-derive it (INV-2 purity), so this is genuinely a fact only
+        the exception carries.
+      - `valid_ids`: every real p*/c* id on the task, for an unknown-cond-id
+        refusal on `attest` (a malformed-argument refusal, a 4th axis
+        outside the (status, verb) grid -- see `recovery_for`).
+    None of these are read anywhere except `recovery_for` at the CLI
+    boundary; a caller that never inspects them (most of the existing test
+    suite, which raises/asserts EngineError by message text) is unaffected."""
+
+    def __init__(self, message, *, task_id=None, verb=None, status=None,
+                 unmet=None, valid_ids=None):
+        super().__init__(message)
+        self.task_id = task_id
+        self.verb = verb
+        self.status = status
+        self.unmet = unmet
+        self.valid_ids = valid_ids
 
 
 # --------------------------------------------------------------------------- #
@@ -227,6 +261,165 @@ def _rail(point: str, cl: dict) -> str:
         for key, value in tokens.items():
             text = text.replace("{" + key + "}", str(value))
     return f"\n\nRAIL: {text}"
+
+
+def _rail_prefix(point: str, cl: dict) -> str:
+    """The doctrine rail as a FRONT-loaded prefix (#227 gate g3, items 2/4):
+    ``"RAIL: <text>\\n\\n"`` when a rail applies, else ``""``. `_rail()`'s own
+    unit contract is UNCHANGED (still a ``"\\n\\n" + "RAIL: " + text`` suffix
+    shape -- pinned by `test_rail_marker_and_leading_newlines`); this only
+    repositions the SAME text at the two CLI-boundary call sites
+    (`dispatch()`'s success path, `main()`'s REFUSED path) so the banner
+    lands FIRST and the operative result/refusal line lands LAST on the
+    stream -- the field defect this fixes: `tail -1` used to show only the
+    banner, silently hiding a real REFUSED line."""
+    rail = _rail(point, cl)
+    return f"{rail.lstrip(chr(10))}\n\n" if rail else ""
+
+
+# --------------------------------------------------------------------------- #
+# recovery (#227 gate g3, item a) — every STATE-CAUSED `REFUSED` names its
+# exact exit verb. Composed ONLY at the CLI boundary (`main()`), never inside
+# a verb function: the same design law as the rail above (~:160-171) — verb
+# functions stay pure, so `recovery_for` reads ONLY the structured facts an
+# `EngineError` carries (see the class docstring) plus the task's condition
+# definitions in `cl` (kind/statement/id — never the message text itself).
+#
+# Reuses `_next_verbs()` (the SAME tested "legal move from here" mapping
+# `current` already shows, incl. its `NextVerbsAreLegalFromHere` proof that
+# every hint it prints actually runs) for the two non-terminal statuses
+# (`pending`/`in-progress`) rather than re-deriving that logic — one source of
+# truth for "what command is actually legal right now."  `blocked`/`complete`/
+# `skipped` are handled directly: `blocked` must NOT blindly suggest `resume`
+# when the gate has no restorable prior status (constraint 6 — that would
+# print the exact command that just refused), and `skipped` genuinely has no
+# recovery verb (an honest "no verb reverses a skip" beats a fabricated one).
+# --------------------------------------------------------------------------- #
+_RECOVERY_TAIL = "Do not edit the JSON — use the engine."
+
+
+def recovery_for(exc: "EngineError", cl: dict) -> str:
+    """A recovery line naming a runnable exit command for a state-caused
+    `EngineError`, or ``""`` when the refusal carries no `task_id` (not every
+    refusal is state-caused — a missing/malformed argument, an unowned lease,
+    etc. are left as their existing bare message)."""
+    tid = exc.task_id
+    if tid is None or tid not in cl.get("tasks", {}):
+        return ""
+    t = cl["tasks"][tid]
+
+    # Axis 4 (outside the (status, verb) grid): unknown --cond id on attest.
+    if exc.valid_ids is not None:
+        ids = ", ".join(exc.valid_ids) if exc.valid_ids else "(this task defines no conditions)"
+        return (f"Recovery: {tid} defines these condition ids: {ids} -- re-run attest "
+                f"with a real --cond from that list. {_RECOVERY_TAIL}")
+
+    # amend's drop/rescope/retext-check sub-ops guard on task status exactly
+    # like start/advance/resume/reopen (Reviewer BLOCK, g3-review rework 1:
+    # these previously raised bare messages with no recovery at all). They get
+    # DEDICATED branches, not the generic complete/skipped/blocked/pending
+    # branches below: those are tuned for "how do I finish this gate," but
+    # drop/rescope need the gate back at 'pending' specifically (no verb ever
+    # resets a gate to 'pending' except `resume` restoring a blocked gate whose
+    # recorded prior_status was 'pending' -- verified live, not assumed), and
+    # retext-check needs 'pending' OR 'in-progress' (so `reopen` on a complete
+    # gate -- which lands 'in-progress' -- genuinely unblocks it too).
+    if exc.verb in ("amend-drop", "amend-rescope", "amend-retext-check"):
+        status = exc.status if exc.status is not None else t.get("status")
+        op_label = {"amend-drop": "drop", "amend-rescope": "rescope",
+                    "amend-retext-check": "retext-check"}[exc.verb]
+        wants_in_progress_too = exc.verb == "amend-retext-check"
+        if wants_in_progress_too and status == "complete":
+            return (f'Recovery: reopen {tid} --reason "<why>", then retry the same amend '
+                    f"delta (retext-check accepts a pending or in-progress gate). {_RECOVERY_TAIL}")
+        if status == "blocked":
+            detail = t.get("status_detail") or {}
+            prior = detail.get("prior_status")
+            wants = ("pending", "in-progress") if wants_in_progress_too else ("pending",)
+            if prior in wants:
+                return (f'Recovery: resume {tid} --reason "<why the blocker cleared>", then '
+                        f"retry the same amend delta ({op_label} only applies to "
+                        f"{'a pending or in-progress' if wants_in_progress_too else 'a pending'} "
+                        f"gate). {_RECOVERY_TAIL}")
+        needed = "a pending or in-progress" if wants_in_progress_too else "a pending"
+        return (f"Recovery: amend's {op_label} only applies to {needed} gate; {tid} is "
+                f"{status!r} and no verb reaches {needed} status from here -- escalate to a "
+                f"human if the plan genuinely needs to change. {_RECOVERY_TAIL}")
+
+    # Real unmet conditions found by a LIVE check inside start()/advance():
+    # command/git-change-policy kinds are only knowable HERE (INV-2 forbids
+    # `state()` from re-deriving them).
+    if exc.unmet:
+        lines = []
+        for cond in exc.unmet:
+            cid, which, kind = cond["id"], cond["which"], cond["kind"]
+            if kind in ("null", "artifact"):
+                hint = f'attest {tid} --cond {cid} --which {which} --note "<verification>"'
+                if kind == "artifact":
+                    hint += " --evidence <evidence-id>"
+            else:
+                singular = which[:-1]  # preconditions -> precondition
+                hint = (f"fix the underlying issue so {singular} {cid} passes, "
+                        f"then retry {exc.verb} {tid}")
+            lines.append(hint)
+        return "Recovery: " + " | ".join(lines) + f". {_RECOVERY_TAIL}"
+
+    # Status-caused: `exc.verb` required a different status than the task is
+    # actually in.
+    status = exc.status if exc.status is not None else t.get("status")
+    if status == "complete":
+        return f'Recovery: reopen {tid} --reason "<why>". {_RECOVERY_TAIL}'
+    if status == "skipped":
+        return (f"Recovery: {tid} is 'skipped' (terminal) -- no verb reverses a skip; "
+                f"this needs a human decision (`amend` a new gate, or accept it stays "
+                f"skipped). {_RECOVERY_TAIL}")
+    if status == "blocked":
+        detail = t.get("status_detail") or {}
+        prior = detail.get("prior_status")
+        if prior in ("pending", "in-progress"):
+            return (f'Recovery: resume {tid} --reason "<why the blocker cleared>" '
+                    f'(there is no separate "unblock" verb -- resume is it). {_RECOVERY_TAIL}')
+        # Reviewer BLOCK (g3-review, rework 1): the previous text also offered
+        # `reopen` as an alternative here -- reopen() requires status=="complete"
+        # and this branch is ONLY reached when status=="blocked", so it always
+        # refused when run (reproduced live). Only `skip` genuinely works from
+        # a non-restorable blocked gate; do not name an exit without running it.
+        return (f"Recovery: {tid} is blocked with no restorable prior status (rework-cap "
+                f'escalated, or blocked before `resume` existed) -- `resume`/`reopen` would '
+                f"also refuse here (reopen needs a complete gate, not blocked); use "
+                f'`skip {tid} --reason "<why>"`, or escalate to a human. {_RECOVERY_TAIL}')
+    if status == "pending" and cl.get("type", GATED) == GATED:
+        # Position-awareness (Reviewer BLOCK, g3-review rework 2): before this
+        # gate, `_next_verbs` had exactly one caller (`state()`), always
+        # invoked on the checklist's own active gate. `recovery_for` is the
+        # first caller to invoke it on an ARBITRARY refusing task, which need
+        # not be active. `start()` -- and ONLY `start()` -- additionally
+        # refuses a non-active gate on a GATED checklist, so `_next_verbs`'s
+        # bare "start {tid}" suggestion can itself refuse when `tid` isn't
+        # active (reproduced live: a 2-gate fixture, g2 pending/non-active,
+        # `advance g2` refused with a `start g2` recovery that ALSO refused).
+        # `advance`/`resume`/`reopen` carry NO active-gate check, so the
+        # `in-progress` sub-case below has no equivalent hole.
+        active = active_id(cl)
+        if active is not None and active != tid:
+            # Do NOT try to guess the active gate's own correct command here:
+            # that would re-run `_next_verbs`'s status dispatch a second,
+            # riskier time -- the active gate could itself be pending,
+            # in-progress, or blocked, and blindly suggesting "start
+            # {active}" would refuse whenever it is not literally pending
+            # (the exact same anti-pattern this fix exists to close, one
+            # level removed). `current` is read-only, NEVER refuses, and is
+            # the single already-correct source for "what do I do right
+            # now" -- point at it instead of re-deriving.
+            return (f"Recovery: {tid} is not the active gate; the checklist works "
+                    f"gates in order and {active!r} must be worked first -- run "
+                    f"`current` to see {active}'s legal next move (do not act on "
+                    f"{tid} yet). {_RECOVERY_TAIL}")
+    if status in ("pending", "in-progress"):
+        hints = _next_verbs(tid, t, cl.get("type", GATED))
+        if hints:
+            return "Recovery: " + " | ".join(hints) + f". {_RECOVERY_TAIL}"
+    return ""
 
 
 def _new_evidence_id(t: dict) -> str:
@@ -998,39 +1191,255 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
 
 
 # --------------------------------------------------------------------------- #
+# state projection (ports-and-adapters port; #227 gate g2) — the single
+# sanctioned answer to "what is true right now and what may I legally do next,"
+# so an agent never has to fall through to reading spine.json or the engine
+# source to find a condition id or a recovery verb. Ratified design:
+# .agent-work/archive/2026-07-24-explore-design-thrust/dit-I1-ports-RESULT.md
+# (constellation-skills repo, read-only). DELIBERATE DEVIATION from that panel
+# (g2 handoff): NO public --json flag, NO render_json adapter, NO explain/show
+# verb — the projection below is INTERNAL STRUCTURE ONLY, consumed solely by
+# render_human() to build current()'s text. `contract` is still carried so a
+# future consumer can pin a shape version, but nothing exposes it yet.
+#
+# INV-2 (purity): state() reads STORED condition flags ONLY. It must NEVER call
+# _check_condition / _run_check_command / subprocess for a command/git-change-
+# policy check — reading state must never be a probe. Sharp edge, made
+# explicit: a condition's `satisfied: false` in the view means "not yet
+# recorded as passing," NEVER "would fail if run now" — only start()/advance()
+# actually run a check.
+# --------------------------------------------------------------------------- #
+_STATE_CONTRACT_VERSION = 1
+
+
+def _condition_kind(c: dict) -> str:
+    """The condition's check kind for display: the literal `check.kind`, or
+    "null" for a qualitative (`check: null`) condition. Never runs the check."""
+    chk = c.get("check")
+    if not isinstance(chk, dict):
+        return "null"
+    return chk.get("kind") or "null"
+
+
+def _condition_open(c: dict) -> bool:
+    """True iff the condition is NOT (yet) recorded as satisfied. Reads the
+    stored `satisfied` flag only — see the INV-2 sharp edge above; this is
+    never a live re-check."""
+    return not bool(c.get("satisfied"))
+
+
+def _condition_view(c: dict) -> dict:
+    return {
+        "id": c.get("id"),
+        "statement": c.get("statement", ""),
+        "kind": _condition_kind(c),
+        "satisfied": bool(c.get("satisfied")),
+        "waived": bool(c.get("waived")),
+        "attested": bool(c.get("attested")),
+    }
+
+
+def _attestable(kind: str) -> bool:
+    """`attest` accepts a qualitative (`check: null`) condition unconditionally,
+    or an `artifact` condition by reference (`--evidence`). `command`/
+    `git-change-policy` conditions are engine-checked and refuse attest (see
+    `attest()`), so they never get an attest hint."""
+    return kind in ("null", "artifact")
+
+
+def _blocking_conditions(conds: list[dict]) -> list[dict]:
+    """The subset of `conds` that WILL make `start()`/`advance()` refuse right
+    now, from state() alone -- i.e. the conditions a `next:` hint must actually
+    account for before suggesting the terminal verb (rework 1, g2 review BLOCK:
+    the pre-fix `_next_verbs()` ignored this and suggested a verb that refused
+    immediately).
+
+    Only `null`/`artifact`-kind conditions qualify: `_check_condition()` never
+    re-runs them (their `satisfied` flag only moves via `attest`/`waive`), so an
+    open one here is a GUARANTEED refusal. `command`/`git-change-policy`
+    conditions are the opposite case: they are engine-checked LIVE inside
+    `start()`/`advance()` itself, so state() cannot know whether they'd pass
+    right now without probing them -- and INV-2 forbids that probe. So a
+    command/git-change-policy condition showing `[unmet]` must NOT suppress the
+    hint; it may well pass when the suggested verb actually runs."""
+    return [c for c in conds if _condition_open(c) and _attestable(_condition_kind(c))]
+
+
+def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
+    """Legal-from-here move templates for the active task, hand-derived from
+    the RUNTIME contract of each verb's body — NOT from argparse. Two traps
+    this must not reintroduce:
+
+    INV-1 (g2 handoff): `advance --why` is optional at `parse_args()` but
+    required at runtime unless `--mechanical` or the gate is `why_exempt` (see
+    `advance()`); `attest --evidence` is optional at `parse_args()` but
+    required at runtime whenever the condition's `check.kind == "artifact"`
+    (see `attest()`). Walking `parser._actions` for `required=True` would
+    silently omit exactly those two.
+
+    Rework 1 (g2 review BLOCK): the TERMINAL verb (`start` for a pending task,
+    `advance` for an in-progress one) must only appear once every blocking
+    null/artifact condition for it is resolved — see `_blocking_conditions()`.
+    The gate is ASYMMETRIC: `start()` refuses on unmet PREconditions, `advance()`
+    on unmet POSTconditions, so each is checked against its own list only.
+    `resume`/`record` carry no precondition/postcondition gate at all (see
+    `resume()`/`record()`), so they are never suppressed.
+
+    Placeholders (`<...>`) mark free text only the agent can supply; every
+    other token is a real id read off THIS task."""
+    status = t.get("status")
+    if status == "blocked":
+        return [f'resume {aid} --reason "<why the blocker cleared>"']
+    if status not in ("pending", "in-progress"):
+        return []
+    preconds = t.get("preconditions") or []
+    postconds = t.get("postconditions") or []
+    verbs: list[str] = []
+    sections = [("preconditions", preconds)]
+    if status == "in-progress":
+        sections.append(("postconditions", postconds))
+    for which, conds in sections:
+        for c in conds:
+            if not _condition_open(c):
+                continue
+            ckind = _condition_kind(c)
+            if not _attestable(ckind):
+                continue
+            hint = f"attest {aid} --cond {c.get('id')} --which {which}"
+            if ckind == "artifact":
+                hint += " --evidence <evidence-id>"
+            verbs.append(hint)
+    if status == "pending":
+        if not _blocking_conditions(preconds):
+            verbs.append(f"start {aid}")
+    elif kind == SURVEY:
+        # record() carries no precondition/postcondition gate at all (see
+        # record()) -- unlike advance(), it is ALWAYS legal from in-progress,
+        # so it is never suppressed by open conditions.
+        verbs.append(f'record {aid} --result <pass|fail> [--finding "<text>"]')
+    elif not _blocking_conditions(postconds):
+        if t.get("why_exempt"):
+            verbs.append(f"advance {aid}")
+        else:
+            verbs.append(f'advance {aid} --why "<understanding>" (or --mechanical)')
+    return verbs
+
+
+def state(cl: dict) -> dict:
+    """Pure state projection: `cl -> StateView`. Read-only — see the INV-2
+    purity note above. `current()` is `render_human(state(cl))`; the whole
+    completeness upgrade (#227 items 1+3) lives here, not in the adapter."""
+    kind = cl.get("type", GATED)
+    aid = active_id(cl)
+    active = None
+    if aid is not None:
+        t = task(cl, aid)
+        active = {
+            "id": aid,
+            "status": t.get("status"),
+            "imperative": t.get("imperative", ""),
+            "preconditions": [_condition_view(c) for c in (t.get("preconditions") or [])],
+            "postconditions": [_condition_view(c) for c in (t.get("postconditions") or [])],
+            "next_verbs": _next_verbs(aid, t, kind),
+        }
+    waived_postconditions: list[str] = []
+    consolidation_pending = False
+    if aid is None:
+        if kind == SURVEY and cl.get("consolidation") is None:
+            consolidation_pending = True
+        else:
+            for iid in cl.get("items", []):
+                wt = cl["tasks"][iid]
+                for c in wt.get("postconditions", []) or []:
+                    if c.get("waived"):
+                        waived_postconditions.append(f"{iid}.{c['id']}")
+    return {
+        "kind": kind,
+        "active": active,
+        "lease_line": _lease_line(cl),
+        "why_text": _why_suffix(cl, aid),
+        "consolidation_pending": consolidation_pending,
+        "waived_postconditions": waived_postconditions,
+        "contract": _STATE_CONTRACT_VERSION,
+    }
+
+
+def render_human(view: dict) -> str:
+    """Human adapter: format a StateView as the text agents read from
+    `current`. Pure presentation — every fact comes from `view`; this function
+    adds none of its own. The FIRST line of the active branch stays exactly
+    `ACTIVE {id} [{status}] — {imperative}` (tests/test_checklist_engine.py:818
+    pins this across every shipped template); the conditions block, `n/m met`
+    summary and `next:` hint are appended AFTER it. The why/refresh suffix
+    (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
+    `state()`) rides last, same relative order as before this change; the Trip
+    `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
+    entirely and is untouched."""
+    prefix = f"{view['lease_line']}\n" if view.get("lease_line") else ""
+    active = view.get("active")
+    if active is None:
+        if view.get("consolidation_pending"):
+            body = "ALL ITEMS VISITED. Next: consolidate"
+        else:
+            waived = view.get("waived_postconditions") or []
+            body = (f"DONE: no open items. WAIVED: {waived}" if waived
+                    else "DONE: no open items.")
+        return prefix + body + view.get("why_text", "")
+
+    lines = [f"ACTIVE {active['id']} [{active['status']}] — {active['imperative']}"]
+    open_pre = [c for c in active["preconditions"] if not c["satisfied"]]
+    open_post = [c for c in active["postconditions"] if not c["satisfied"]]
+    # (rework 1, non-blocking Fowler note) share the label+lines shape with
+    # _next_verbs()'s sections pattern instead of repeating it per list.
+    for which, open_conds in (("preconditions", open_pre), ("postconditions", open_post)):
+        if open_conds:
+            lines.append(f"{which}:")
+            lines.extend(f"  {c['id']} [unmet] {c['kind']} — {c['statement']}" for c in open_conds)
+    total = len(active["preconditions"]) + len(active["postconditions"])
+    if total:
+        met = total - len(open_pre) - len(open_post)
+        lines.append(f"{met}/{total} met")
+    if active.get("next_verbs"):
+        lines.append("next: " + " | ".join(active["next_verbs"]))
+    body = "\n".join(lines)
+    return prefix + body + view.get("why_text", "")
+
+
+# --------------------------------------------------------------------------- #
 # verbs (each returns a human/agent-readable message; refusals raise)
 # --------------------------------------------------------------------------- #
 def current(cl: dict) -> str:
-    lease = _lease_line(cl)
-    prefix = f"{lease}\n" if lease else ""
-    aid = active_id(cl)
-    if aid is None:
-        if cl["type"] == SURVEY and cl.get("consolidation") is None:
-            body = "ALL ITEMS VISITED. Next: consolidate"
-        else:
-            waived = []
-            for iid in cl.get("items", []):
-                t = cl["tasks"][iid]
-                for c in t.get("postconditions", []):
-                    if c.get("waived"):
-                        waived.append(f"{iid}.{c['id']}")
-            body = (f"DONE: no open items. WAIVED: {waived}" if waived
-                    else "DONE: no open items.")
-    else:
-        t = task(cl, aid)
-        body = f"ACTIVE {aid} [{t['status']}] — {t['imperative']}"
-    return prefix + body + _why_suffix(cl, aid)
+    return render_human(state(cl))
 
 
 def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
     t = task(cl, iid)
     if t["status"] != "pending":
-        raise EngineError(f"{iid} is {t['status']!r}, cannot start")
+        raise EngineError(f"{iid} is {t['status']!r}, cannot start",
+                           task_id=iid, verb="start", status=t["status"])
     if cl["type"] == GATED and active_id(cl) != iid:
-        raise EngineError(f"{iid} is not the active gate; start {active_id(cl)!r} first")
-    unmet = [c["id"] for c in t.get("preconditions", []) if not _check_condition(c, t, base_dir)]
+        # Reviewer BLOCK (g3-review rework 3): this raise never carried
+        # task_id/verb/status, so recovery_for() returned "" for it and the
+        # bare message's own embedded advice ("start {active} first") was
+        # unconditional -- wrong whenever the active gate isn't literally
+        # pending (reproduced live for both in-progress and blocked active
+        # gates). Wiring status="pending" (guaranteed true here -- the
+        # status!="pending" branch above already returned) routes this
+        # straight into the EXISTING pending/GATED/non-active branch below,
+        # which already never guesses a command for the active gate -- no
+        # new logic, just making this raise visible to the one that already
+        # exists.
+        raise EngineError(f"{iid} is not the active gate; start {active_id(cl)!r} first",
+                           task_id=iid, verb="start", status=t["status"])
+    preconds = t.get("preconditions", [])
+    unmet = [c["id"] for c in preconds if not _check_condition(c, t, base_dir)]
     if unmet:
-        raise EngineError(f"{iid}: preconditions unmet {unmet} (verify upstream work, then attest)")
+        raise EngineError(
+            f"{iid}: preconditions unmet {unmet} (verify upstream work, then attest)",
+            task_id=iid, verb="start",
+            unmet=[{"id": c["id"], "which": "preconditions", "kind": _condition_kind(c)}
+                   for c in preconds if c["id"] in unmet],
+        )
     t["status"] = "in-progress"
     return f"{iid} -> in-progress"
 
@@ -1041,7 +1450,8 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
         raise EngineError("advance is for gated checklists; use record")
     t = task(cl, iid)
     if t["status"] != "in-progress":
-        raise EngineError(f"{iid} is {t['status']!r}, must be in-progress to advance")
+        raise EngineError(f"{iid} is {t['status']!r}, must be in-progress to advance",
+                           task_id=iid, verb="advance", status=t["status"])
     if from_child:
         child_path = Path(from_child)
         if not child_path.is_absolute() and base_dir is not None:
@@ -1067,7 +1477,12 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
         raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
     unmet = [c["id"] for c in posts if not _check_condition(c, t, base_dir)]
     if unmet:
-        raise EngineError(f"{iid}: postconditions unmet {unmet}")
+        raise EngineError(
+            f"{iid}: postconditions unmet {unmet}",
+            task_id=iid, verb="advance",
+            unmet=[{"id": c["id"], "which": "postconditions", "kind": _condition_kind(c)}
+                   for c in posts if c["id"] in unmet],
+        )
     # Why-capture (#179): postconditions are proven ABOVE, before we ever solicit
     # the why (no buying past unfinished work — a failed postcondition yields the
     # postcondition refusal, not the why prompt). A non-exempt gate must then carry
@@ -1167,7 +1582,8 @@ def resume(cl: dict, iid: str, reason: str, note: str | None = None) -> str:
     Refuses a gate that is not `blocked` and an empty reason."""
     t = task(cl, iid)
     if t["status"] != "blocked":
-        raise EngineError(f"can only resume a blocked gate; {iid} is {t['status']!r}")
+        raise EngineError(f"can only resume a blocked gate; {iid} is {t['status']!r}",
+                           task_id=iid, verb="resume", status=t["status"])
     if not (reason or "").strip():
         raise EngineError("resume requires a non-empty --reason (how the blocker was resolved)")
     detail = t.get("status_detail") or {}
@@ -1176,7 +1592,8 @@ def resume(cl: dict, iid: str, reason: str, note: str | None = None) -> str:
         raise EngineError(
             f"{iid} has no restorable pre-block status (it was rework-cap escalated or "
             f"blocked before `resume` existed, not blocked via `block`); use `reopen`/"
-            f"`skip` or a human decision, not `resume`"
+            f"`skip` or a human decision, not `resume`",
+            task_id=iid, verb="resume", status="blocked",
         )
     t["status"] = prior
     detail.pop("prior_status", None)
@@ -1225,7 +1642,8 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
     if cl["type"] != GATED:
         raise EngineError("reopen applies to gated checklists")
     if t["status"] != "complete":
-        raise EngineError(f"can only reopen a complete gate; {iid} is {t['status']!r}")
+        raise EngineError(f"can only reopen a complete gate; {iid} is {t['status']!r}",
+                           task_id=iid, verb="reopen", status=t["status"])
     if cap is None:
         cap = rework_cap(cl.get("config", {}))
     if t.get("rework_count", 0) + 1 > cap:
@@ -1382,7 +1800,10 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 raise EngineError(f"drop {tid}: no such gate")
             status = new_tasks[tid]["status"]
             if status != "pending":
-                raise EngineError(f"drop {tid}: only a pending gate can be dropped (is {status!r})")
+                raise EngineError(
+                    f"drop {tid}: only a pending gate can be dropped (is {status!r})",
+                    task_id=tid, verb="amend-drop", status=status,
+                )
             new_items.remove(tid)
             del new_tasks[tid]
             summaries.append(f"dropped {tid}")
@@ -1392,7 +1813,10 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 raise EngineError(f"rescope {tid}: no such gate")
             status = new_tasks[tid]["status"]
             if status != "pending":
-                raise EngineError(f"rescope {tid}: only a pending gate can be rescoped (is {status!r})")
+                raise EngineError(
+                    f"rescope {tid}: only a pending gate can be rescoped (is {status!r})",
+                    task_id=tid, verb="amend-rescope", status=status,
+                )
             overwritable = ("title", "imperative", "postconditions",
                             "preconditions", "constraints", "directives")
             fields = {k: op[k] for k in overwritable if k in op}
@@ -1417,7 +1841,8 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if status not in ("pending", "in-progress"):
                 raise EngineError(
                     f"retext-check {tid}: only a pending or in-progress gate's check text "
-                    f"may be corrected (is {status!r}); reopen a complete gate instead"
+                    f"may be corrected (is {status!r}); reopen a complete gate instead",
+                    task_id=tid, verb="amend-retext-check", status=status,
                 )
             which = op.get("which", "postconditions")
             if which not in ("preconditions", "postconditions"):
@@ -1563,7 +1988,12 @@ def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evide
                 c["attested"] = {"evidence": evidence_id, "note": note}
                 return f"attested {iid}.{cond_id} via {evidence_id}"
             raise EngineError(f"{cond_id} is engine-checked; cannot attest")
-    raise EngineError(f"condition {cond_id!r} not found in preconditions or postconditions on {iid}")
+    raise EngineError(
+        f"condition {cond_id!r} not found in preconditions or postconditions on {iid}",
+        task_id=iid, verb="attest",
+        valid_ids=[c["id"] for c in t.get("preconditions", [])]
+        + [c["id"] for c in t.get("postconditions", [])],
+    )
 
 
 def waive(
@@ -1791,11 +2221,14 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # self-heals. A refused verb never gets here.
         if v in MUTATING_VERBS:
             _refresh_owner_heartbeat(cl, session_id)
-    # Doctrine rail (#138 channel A): append the position-derived doctrine block to
-    # the railed verbs' success output. The verb functions above stay pure; the rail
-    # rides only this CLI-boundary chokepoint. `_rail` returns "" for non-gated cls.
+    # Doctrine rail (#138 channel A): prepend the position-derived doctrine block
+    # to the railed verbs' success output. The verb functions above stay pure; the
+    # rail rides only this CLI-boundary chokepoint. `_rail_prefix` returns "" for
+    # non-gated checklists. FRONT, not suffix (#227 gate g3, item b/constraint 4):
+    # the operative result line must land LAST on the stream so `tail -1` reads
+    # it, not the banner -- the field defect this fixes.
     if v in RAIL_VERBS:
-        message += _rail(v, cl)
+        message = _rail_prefix(v, cl) + message
     return message
 
 
@@ -1932,9 +2365,18 @@ def main(argv: list[str] | None = None) -> int:
         # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
         if not args.dry_run and args.verb != "current":
             save(path, cl)
-        # Doctrine rail (#138 channel A): a refusal is a check-failure decision point.
-        # Append the check-failure rail (gated checklists only; "" for surveys).
-        print(f"REFUSED: {exc}{_rail('check-failure', cl)}", file=sys.stderr)
+        # Recovery (#227 gate g3, item a): a state-caused refusal names its exact
+        # exit verb, composed HERE at the CLI boundary from the exception's
+        # structured attributes -- never inside the verb function that raised.
+        recovery = recovery_for(exc, cl)
+        refused_line = f"REFUSED: {exc}" + (f" {recovery}" if recovery else "")
+        # Doctrine rail (#138 channel A): a refusal is a check-failure decision
+        # point. Prepend the check-failure rail (gated checklists only; "" for
+        # surveys) -- FRONT, not suffix (#227 gate g3, item b): the operative
+        # REFUSED(+recovery) line must land LAST so `tail -1` reads it, not the
+        # banner. This is the exact field defect: an Admiral piping engine
+        # output through `tail -1` twice saw only RAIL and never the refusal.
+        print(f"{_rail_prefix('check-failure', cl)}{refused_line}", file=sys.stderr)
         return 1
     if not args.dry_run and args.verb != "current":
         save(path, cl)
