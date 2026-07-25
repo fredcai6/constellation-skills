@@ -73,6 +73,34 @@ AGENT_TARGETS: dict[str, AgentTarget] = {
     ),
 }
 AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
+
+# RUNTIME COMPANIONS: a bundled script that loads a sibling module at runtime must
+# ship that sibling too, or the feature silently no-ops wherever the skill is
+# actually installed. Expressed as a dependency rather than hand-added to every
+# bundle below, because the hand-added form is what drifted: `gauge_reader.py` was
+# never added to any of the ten bundles carrying `checklist_engine.py`, so the
+# Context Governor (epic-178) was inert in every install since it shipped --
+# `_load_gauge_reader()` fails open to None, so Trip never fired and nothing
+# reported that it wasn't firing. `tests/test_install_constellation.py` pins this
+# against the engine's actual dynamic loads, so a new companion cannot be
+# forgotten the same way.
+SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
+    # checklist_engine._load_gauge_reader() -> Path(__file__).parent/"gauge_reader.py"
+    "checklist_engine.py": ("gauge_reader.py",),
+}
+
+
+def expand_script_bundle(scripts: tuple[str, ...]) -> tuple[str, ...]:
+    """Add each script's runtime companions, preserving order and de-duplicating.
+    Applied at discovery so every install path inherits it automatically."""
+    expanded: list[str] = []
+    for script in scripts:
+        for name in (script, *SCRIPT_RUNTIME_COMPANIONS.get(script, ())):
+            if name not in expanded:
+                expanded.append(name)
+    return tuple(expanded)
+
+
 SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
     "lessons-auditor": ("checklist_engine.py",),
@@ -172,7 +200,8 @@ def discover_skills(source_root: Path = SOURCE_ROOT) -> list[Skill]:
                 source_name=source_path.name,
                 install_name=metadata["name"],
                 source_path=source_path,
-                required_scripts=SKILL_SCRIPT_BUNDLES.get(source_path.name, ()),
+                required_scripts=expand_script_bundle(
+                    SKILL_SCRIPT_BUNDLES.get(source_path.name, ())),
                 required_references=SKILL_REFERENCE_BUNDLES.get(source_path.name, ()),
             )
         )

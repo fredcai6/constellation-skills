@@ -1167,6 +1167,82 @@ class InterpreterProbeTests(unittest.TestCase):
             self.assertEqual("py", sidecar["interpreter"])
 
 
+class RuntimeCompanionBundleTests(unittest.TestCase):
+    """A bundled script that loads a sibling at runtime must ship that sibling.
+
+    The Context Governor (epic-178) was inert in every install from the day it
+    shipped: `checklist_engine.py` was bundled into ten skills, `gauge_reader.py`
+    into none, and `_load_gauge_reader()` fails open to None -- so Trip silently
+    never fired and nothing reported that it wasn't firing. These tests are
+    derived from the engine's ACTUAL dynamic loads rather than a hand-kept list,
+    so a newly-added companion cannot be forgotten the same way."""
+
+    # Modules checklist_engine.py loads by path at runtime. Kept here as the
+    # expected set so the parse below has something to assert against; the parse
+    # is what makes it honest.
+    ENGINE_RUNTIME_SIBLINGS = {"gauge_reader.py"}
+
+    def test_engine_dynamic_loads_are_declared_as_companions(self):
+        """Parse the engine source for `parent / "<name>.py"` sibling loads and
+        require each to be declared in SCRIPT_RUNTIME_COMPANIONS. Catches a NEW
+        dynamic load added without a matching bundle entry."""
+        installer = load_installer()
+        engine_src = (ROOT / "scripts" / "checklist_engine.py").read_text(encoding="utf-8")
+        siblings = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', engine_src))
+        self.assertEqual(
+            self.ENGINE_RUNTIME_SIBLINGS, siblings,
+            "checklist_engine.py's dynamic sibling loads changed; update "
+            "SCRIPT_RUNTIME_COMPANIONS and this expectation together",
+        )
+        declared = set(installer.SCRIPT_RUNTIME_COMPANIONS.get("checklist_engine.py", ()))
+        self.assertEqual(siblings, declared)
+
+    def test_every_skill_bundling_the_engine_also_gets_the_gauge_reader(self):
+        installer = load_installer()
+        engine_skills = [
+            name for name, scripts in installer.SKILL_SCRIPT_BUNDLES.items()
+            if "checklist_engine.py" in scripts
+        ]
+        self.assertTrue(engine_skills, "no skill bundles checklist_engine.py?")
+        for name in engine_skills:
+            with self.subTest(skill=name):
+                expanded = installer.expand_script_bundle(
+                    installer.SKILL_SCRIPT_BUNDLES[name])
+                self.assertIn("gauge_reader.py", expanded)
+
+    def test_expansion_preserves_order_and_does_not_duplicate(self):
+        installer = load_installer()
+        # already-present companion must not be added twice
+        out = installer.expand_script_bundle(("checklist_engine.py", "gauge_reader.py"))
+        self.assertEqual(("checklist_engine.py", "gauge_reader.py"), out)
+        # a script with no companions passes through untouched
+        self.assertEqual(("docent_freshness.py",),
+                         installer.expand_script_bundle(("docent_freshness.py",)))
+
+    def test_installed_engine_can_actually_load_its_gauge_reader(self):
+        """End-to-end: install for real, then load the INSTALLED engine and assert
+        it resolved its gauge reader. Asserting the file's presence would not
+        prove the import path works -- this drives the real loader."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            rc = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "admiral"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, rc)
+            engine = dest / "constellation-admiral" / "scripts" / "checklist_engine.py"
+            self.assertTrue(engine.is_file())
+            mod = load_module("installed_checklist_engine", engine)
+            self.assertIsNotNone(
+                mod._gauge_reader,
+                "installed engine could not load gauge_reader.py -- the Context "
+                "Governor would be inert in this install",
+            )
+            self.assertTrue(hasattr(mod._gauge_reader, "thresholds_for"))
+
+
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
         installer = load_installer()
