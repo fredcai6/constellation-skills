@@ -28,6 +28,84 @@ FRESH_RECORD = {
 }
 
 
+class UncalibratedModelTests(unittest.TestCase):
+    """#252: a model with no profile must yield NO reading, and the reason must
+    be retrievable so a caller can explain the silence."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "gauge.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write_flag(self, model):
+        (self.path.with_name(self.m.UNCALIBRATED_FILENAME)).write_text(
+            json.dumps({"schema_version": 1, "model": model,
+                        "observed_at": NOW.isoformat()}), encoding="utf-8")
+
+    def test_record_for_uncalibrated_model_yields_no_reading(self):
+        """Otherwise Trip judges the fill against DEFAULT_THRESHOLDS, i.e. the
+        wrong scale — the exact failure #252 reports. The record here is
+        perfectly fresh and well-formed; only the model is unknown."""
+        record = dict(FRESH_RECORD, model="claude-future-9")
+        self.path.write_text(json.dumps(record), encoding="utf-8")
+        self.assertIsNone(self.m.read(self.path, now=NOW, max_age=MAX_AGE))
+
+    def test_calibrated_model_still_reads(self):
+        self.path.write_text(json.dumps(FRESH_RECORD), encoding="utf-8")
+        self.assertIsNotNone(self.m.read(self.path, now=NOW, max_age=MAX_AGE))
+
+    def test_uncalibrated_model_reports_the_model(self):
+        self._write_flag("claude-future-9")
+        self.assertEqual("claude-future-9", self.m.uncalibrated_model(self.path))
+
+    def test_no_flag_reports_none(self):
+        self.assertIsNone(self.m.uncalibrated_model(self.path))
+
+    def test_flag_naming_a_now_calibrated_model_is_ignored(self):
+        """A row added since the flag was written makes it obsolete — report
+        nothing rather than nag about a model that now resolves fine."""
+        self._write_flag("claude-opus-5")
+        self.assertIsNone(self.m.uncalibrated_model(self.path))
+
+    def test_corrupt_flag_never_raises(self):
+        (self.path.with_name(self.m.UNCALIBRATED_FILENAME)).write_text(
+            "{not json", encoding="utf-8")
+        self.assertIsNone(self.m.uncalibrated_model(self.path))
+
+
+class ModelTableSyncTests(unittest.TestCase):
+    """The writer supplies the window, the reader supplies the thresholds. A
+    model in only one table is a half-added model: either no reading is ever
+    produced for it, or a reading is produced that the reader then rejects.
+    Both are silent, so pin the key sets equal."""
+
+    def test_writer_and_reader_cover_the_same_models(self):
+        reader = load("gauge_reader")
+        spec = importlib.util.spec_from_file_location(
+            "gauge_writer_hook", ROOT / "scripts" / "hooks" / "gauge_writer_hook.py")
+        writer = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = writer
+        spec.loader.exec_module(writer)
+
+        self.assertEqual(set(writer.MODEL_WINDOWS), set(reader._PROFILES))
+
+    def test_windows_agree_between_the_two_tables(self):
+        """The reader stores the window alongside its caps; a disagreement
+        would make the same model read at two different scales."""
+        reader = load("gauge_reader")
+        spec = importlib.util.spec_from_file_location(
+            "gauge_writer_hook", ROOT / "scripts" / "hooks" / "gauge_writer_hook.py")
+        writer = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = writer
+        spec.loader.exec_module(writer)
+
+        for model, window in writer.MODEL_WINDOWS.items():
+            self.assertEqual(window, reader._PROFILES[model][0], model)
+
+
 class ReadTests(unittest.TestCase):
     def setUp(self):
         self.m = load("gauge_reader")

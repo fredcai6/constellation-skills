@@ -60,17 +60,33 @@ SCHEMA_VERSION = 1
 # (e.g. 200k here vs a real 1M window reads 5x high). Kept per-model (not one
 # constant) because the windows genuinely differ and gauge_reader keys thresholds
 # per model too; a new model just adds a row.
+#
+# ADDING A MODEL: every value here must come from the published model catalog
+# (platform.claude.com "Models overview"), never from inference. A wrong window
+# silently mis-scales every reading for that model. Add the row to
+# `gauge_reader._PROFILES` in the same change — a test pins the two key sets
+# equal, so a half-added model fails the suite rather than shipping.
 MODEL_WINDOWS = {
+    # Verified against platform.claude.com/docs/en/about-claude/models/overview,
+    # 2026-07-25.
+    "claude-opus-5": 1_000_000,
     "claude-opus-4-8": 1_000_000,
     "claude-sonnet-5": 1_000_000,
     "claude-fable-5": 1_000_000,
     "claude-haiku-4-5-20251001": 200_000,
 }
-# Unknown model -> conservative SMALL window on purpose: an unknown model reads
-# as more-full, so the governor errs toward handing off early rather than late
-# (fail-safe direction). Not a guess of 0 (which would divide-by-zero-guard to
-# no-reading); 200k is the smallest window we actually ship.
-DEFAULT_WINDOW = 200_000
+# There is deliberately NO default window. The original 200k fallback was
+# justified as fail-safe ("an unknown model reads as more-full, so the governor
+# errs toward handing off early"), and that reasoning held when 200k was a
+# typical window. It no longer does: every non-Haiku model in the current
+# lineup is 1M, so an unknown model is far more likely to be 1M than 200k, and
+# the "conservative" default produced a 5x OVER-read as its normal behavior.
+# Measured live: claude-opus-5 was absent from this table during epic-226 and
+# 139,750 real tokens were written as fill_fraction 0.69875 against the 200k
+# default, tripping the governor HARD at roughly 14% of a real 1M window.
+# An uncalibrated model now yields NO reading and raises a visible flag instead
+# (see _write_uncalibrated_flag) -- skip-on-uncertainty, which is what the rest
+# of this module already does, rather than a confident wrong number.
 
 # Bounded reverse-scan window (bytes) -- see docs/GAUGE_WRITER_HOOK.md. Real
 # transcripts run into the tens of MB; a full forward parse every tool call
@@ -210,25 +226,39 @@ def find_latest_usage(transcript_path):
 
 
 def compute_record(transcript_path):
-    """Build the frozen 4-field record, or None if fill can't be computed
-    confidently. None here means "write nothing" -- never a placeholder."""
+    """Build the frozen 4-field record for this transcript.
+
+    Returns `(record, uncalibrated)`. At most one is non-None:
+
+    - `(record, None)` -- a usable reading.
+    - `(None, {"model": ..., "observed_at": ...})` -- a usable token count for
+      a model absent from MODEL_WINDOWS. There is no window to divide by, so
+      there is no honest fill to report; the model and the sampled moment come
+      back so the caller can flag it.
+    - `(None, None)` -- nothing usable found (no transcript record, no
+      timestamp, unparseable usage). Write nothing, say nothing.
+
+    "Write nothing" never means "write a placeholder" -- a fabricated fill
+    reads as a genuine measurement downstream."""
     try:
         found = find_latest_usage(transcript_path)
         if found is None:
-            return None
+            return None, None
         model, total_tokens, observed_at = found
-        window = MODEL_WINDOWS.get(model, DEFAULT_WINDOW)
-        if not window or window <= 0:
-            return None
+        window = MODEL_WINDOWS.get(model)
+        if window is None:
+            return None, {"model": model, "observed_at": observed_at}
+        if window <= 0:
+            return None, None
         fill = max(0.0, min(1.0, total_tokens / window))
         return {
             "schema_version": SCHEMA_VERSION,
             "fill_fraction": fill,
             "model": model,
             "observed_at": observed_at,
-        }
+        }, None
     except Exception:
-        return None
+        return None, None
 
 
 # --- atomic write ------------------------------------------------------------
@@ -239,6 +269,44 @@ def _atomic_write_json(path: Path, record: dict) -> None:
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(record, f)
     os.replace(tmp, path)  # atomic on POSIX and Windows alike
+
+
+# --- uncalibrated-model flag (visible, not silent) ---------------------------
+
+# A SIDECAR, deliberately not a field on gauge.json: that record is frozen at
+# four fields and shared with the reader, and "no reading" must stay literally
+# no reading so every existing fail-safe path keeps working untouched. The flag
+# rides alongside so the engine can explain the silence instead of the governor
+# just going quiet -- an unexplained silent governor is how a miscalibration
+# survives unnoticed, which is exactly what happened with claude-opus-5.
+UNCALIBRATED_FILENAME = "gauge-uncalibrated.json"
+
+
+def _uncalibrated_path(gauge_path: Path) -> Path:
+    return gauge_path.with_name(UNCALIBRATED_FILENAME)
+
+
+def _write_uncalibrated_flag(gauge_path: Path, uncalibrated: dict) -> None:
+    """Record that this model has no window, so no reading could be produced.
+    `observed_at` is the SAMPLED moment carried through from the transcript,
+    consistent with the gauge record -- not write time."""
+    _atomic_write_json(_uncalibrated_path(gauge_path), {
+        "schema_version": SCHEMA_VERSION,
+        "model": uncalibrated["model"],
+        "observed_at": uncalibrated["observed_at"],
+    })
+
+
+def _clear_uncalibrated_flag(gauge_path: Path) -> None:
+    """Drop a stale flag once the model resolves again -- otherwise adding the
+    missing row to MODEL_WINDOWS would fix the reading but leave the warning
+    nagging forever."""
+    try:
+        _uncalibrated_path(gauge_path).unlink()
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
 
 
 # --- PostToolUse handler ------------------------------------------------------
@@ -254,10 +322,17 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         gauge_path = resolve_gauge_path(project_dir, data.get("session_id"))
         if gauge_path is None:
             return {}
-        record = compute_record(transcript_path)
+        record, uncalibrated = compute_record(transcript_path)
+        if uncalibrated is not None:
+            # No window for this model: raise the flag and leave gauge.json
+            # exactly as it was. It ages into staleness naturally, which the
+            # reader already collapses to "no reading" -- the correct outcome.
+            _write_uncalibrated_flag(gauge_path, uncalibrated)
+            return {}
         if record is None:
             return {}
         _atomic_write_json(gauge_path, record)
+        _clear_uncalibrated_flag(gauge_path)
         return {}
     except Exception:
         return {}

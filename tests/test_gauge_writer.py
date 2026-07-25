@@ -238,31 +238,88 @@ def test_worktree_local_agent_work_outside_project_dir_still_writes(proj, tmp_pa
     assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
 
 
-# --- unknown model falls back to the default window, not a crash ------------
+# --- uncalibrated model: no reading, but a visible flag ---------------------
 
-def test_unknown_model_uses_default_window(proj, tmp_path):
-    work = proj / ".agent-work" / "run1"
-    work.mkdir(parents=True)
-    spine_path = work / "spine.json"
-    spine_path.write_text("{}", encoding="utf-8")
-    _bind(proj, "s1", spine_path)
 
+def _unknown_model_transcript(tmp_path, model="claude-future-9"):
     transcript = tmp_path / "unknown_model.jsonl"
     line = {
         "type": "assistant",
         "isSidechain": False,
         "timestamp": "2026-07-18T12:00:00.000Z",
         "message": {
-            "model": "claude-future-9",
+            "model": model,
             "usage": {"input_tokens": 1, "cache_creation_input_tokens": 1, "cache_read_input_tokens": 99998},
         },
     }
     transcript.write_text(json.dumps(line) + "\n", encoding="utf-8")
+    return transcript
 
-    gw.handle_post_tool_use(_hook_data("s1", transcript), proj)
-    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
-    assert record["model"] == "claude-future-9"
-    assert record["fill_fraction"] == pytest.approx(100_000 / gw.DEFAULT_WINDOW)
+
+def _bound_work(proj):
+    work = proj / ".agent-work" / "run1"
+    work.mkdir(parents=True, exist_ok=True)
+    spine_path = work / "spine.json"
+    spine_path.write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", spine_path)
+    return work
+
+
+def test_uncalibrated_model_writes_no_reading(proj, tmp_path):
+    """The #252 regression. An unknown model previously divided its token count
+    by a 200k default and wrote that as a genuine fill — which read ~5x high
+    for the 1M-window models that are now the whole lineup, and tripped the
+    governor at ~14% of real capacity. There must be NO reading at all."""
+    work = _bound_work(proj)
+    gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
+    assert not (work / "gauge.json").exists()
+
+
+def test_uncalibrated_model_raises_a_visible_flag(proj, tmp_path):
+    """Silence alone would be a regression of a different kind — a blind
+    governor that says nothing is how this survived a whole epic unnoticed."""
+    work = _bound_work(proj)
+    gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
+
+    flag = json.loads((work / gw.UNCALIBRATED_FILENAME).read_text(encoding="utf-8"))
+    assert flag["model"] == "claude-future-9"
+    # the SAMPLED moment, carried from the transcript — not write time
+    assert flag["observed_at"] == "2026-07-18T12:00:00.000Z"
+
+
+def test_uncalibrated_flag_does_not_clobber_an_existing_reading(proj, tmp_path):
+    """A good reading already on disk must survive; it ages into staleness on
+    its own, which the reader already collapses to no-reading."""
+    work = _bound_work(proj)
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    before = (work / "gauge.json").read_text(encoding="utf-8")
+
+    gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
+    assert (work / "gauge.json").read_text(encoding="utf-8") == before
+
+
+def test_flag_is_cleared_once_the_model_resolves(proj, tmp_path):
+    """Adding the missing row must actually silence the warning — otherwise the
+    fix leaves a permanent nag and people learn to ignore it."""
+    work = _bound_work(proj)
+    gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
+    assert (work / gw.UNCALIBRATED_FILENAME).exists()
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert not (work / gw.UNCALIBRATED_FILENAME).exists()
+    assert (work / "gauge.json").exists()
+
+
+def test_no_default_window_constant_remains(proj):
+    """The 200k default IS the bug — guard against a well-meaning reintroduction
+    of a fallback on the reading path."""
+    assert not hasattr(gw, "DEFAULT_WINDOW")
+
+
+def test_claude_opus_5_is_calibrated(proj):
+    """Verified against platform.claude.com Models overview, 2026-07-25:
+    claude-opus-5 has a 1M context window (default and maximum)."""
+    assert gw.MODEL_WINDOWS["claude-opus-5"] == 1_000_000
 
 
 # --- atomic write / torn-read (TF9) ------------------------------------------
