@@ -9,11 +9,12 @@ errored runs are FENCED and excluded from the N-of-M tally (infra-fence).
 
 This module is built test-first and is fully agent-free except the single
 `launch_agent` seam (the ONLY place a real agent subprocess would be spawned).
-`launch_agent` and `temp_install` are inert stubs here (raising NotImplementedError
-with a "wired at g3" message); the live wiring lands at g3. `--dry-run` and
-`--dry-run-fail` work end-to-end NOW by injecting a fake launcher + a dry installer
-through the same seams the unit layer uses, so no path here ever reaches a real
-`claude`.
+`launch_agent` and `temp_install` are the real, live implementations (g3 wiring
+shipped) — `subprocess.Popen`/`install_constellation.install_skills` under the
+hood — so a `claude` process IS reachable through them. `--dry-run` and
+`--dry-run-fail` instead inject a fake launcher + a dry installer through the
+same seams the unit layer uses, so no path taken under `--dry-run(-fail)` ever
+reaches a real `claude`.
 
 Seam pattern mirrors run_crew.py: the module-level default launcher/installer are
 resolved INSIDE the orchestration function at CALL time, so a monkeypatched (or
@@ -552,7 +553,7 @@ def write_stable_corpus_marker(skills_dir, source_commit, *, build_date=None) ->
 
 
 # --------------------------------------------------------------------------- #
-# the ONE real seam (inert until g3) + fake launchers for --dry-run
+# the ONE real seam (live, wired) + fake launchers for --dry-run
 # --------------------------------------------------------------------------- #
 # Bytes of stderr tail kept for infra-marker sniffing — enough to catch a
 # usage/rate-limit banner without slurping a giant transcript into memory.
@@ -1310,8 +1311,8 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     _apply_overrides(scenario, args)
 
-    # Seam selection. Only --dry-run/--dry-run-fail run at g2; the real
-    # launch_agent + temp_install are inert stubs until g3.
+    # Seam selection. --dry-run/--dry-run-fail inject a fake launcher/installer;
+    # otherwise the real launch_agent + temp_install run (live, wired since g3).
     if args.dry_run:
         launch, installer = dry_run_launch, _dry_installer
     elif args.dry_run_fail:
