@@ -76,6 +76,11 @@ evidence, required verification commands (POSIX-form, absolute paths), test mode
 rationale, stop conditions, return format. Do NOT re-derive proven mitigations into each handoff — they are
 inherited (`global-crew.md`, `global-everyone.md`); the handoff carries only the task-specific specifics.
 
+**Return thin, write fat.** Put the detail in the durable artifact and keep the returned message a pointer to
+it: the artifact survives the run and is what the next actor reads, while a fat return is paid for in every
+reader's context and is lost when the agent ends. A return states the verdict, the evidence that decides it,
+and the artifact path — not the full transcript the artifact already holds.
+
 ## Gating, evidence, stop/ask
 
 - Pause for a `user-decision` at the project's enabled checkpoints (the rigor dial). Human verification is a
