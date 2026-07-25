@@ -1,8 +1,10 @@
 import importlib.util
 import contextlib
+import os
 import re
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -341,12 +343,19 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual("python3", installer._platform_interpreter())
 
     def _install_commander_spine(self, installer, interpreter):
-        # Drive the REAL rewrite path but pin the platform interpreter, so the test
+        # Drive the REAL rewrite path but pin the resolved interpreter, so the test
         # runs identically on any host (os.name can't be safely faked around a full
-        # install because pathlib refuses to build a foreign path flavor).
+        # install because pathlib refuses to build a foreign path flavor, and the
+        # real probe's outcome is host-dependent). `resolve_interpreter` -- not
+        # `_platform_interpreter` -- is main()'s entry point since #228 added the
+        # real host probe; `_platform_interpreter` is now only the total-failure
+        # fallback, no longer the sole thing to patch to control the outcome.
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
-            with mock.patch.object(installer, "_platform_interpreter", return_value=interpreter):
+            resolution = installer.InterpreterResolution(
+                interpreter, installer.INTERPRETER_CANDIDATES, "probe"
+            )
+            with mock.patch.object(installer, "resolve_interpreter", return_value=resolution):
                 exit_code = installer.main(
                     ["--agent", "codex", "--scope", "user", "--dest",
                      str(target_root), "--skills", "commander"],
@@ -931,6 +940,208 @@ class InstallConstellationTests(unittest.TestCase):
                         source_bytes = (shared_root / ref).read_bytes()
                         installed_bytes = (installed_refs / ref).read_bytes()
                         self.assertEqual(source_bytes, installed_bytes)
+
+
+def _find_py_free_interpreter_dir(installer):
+    """Find a real PATH entry that carries a genuine python3/python executable
+    but NOT a `py` launcher -- used to genuinely shadow PATH so the real probe
+    cannot resolve `py`, rather than asserting a hand-set fixture value (issue
+    #228's active lesson `verify-harness-field-and-drive-real-writer`). Returns
+    None if the current host has no such entry (test skips rather than fakes it).
+    """
+    exe_suffix = ".exe" if installer.os.name == "nt" else ""
+    py_names = {"py" + exe_suffix}
+    target_names = {"python3" + exe_suffix, "python" + exe_suffix}
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        if not entry:
+            continue
+        directory = Path(entry)
+        if not directory.is_dir():
+            continue
+        try:
+            names = {p.name for p in directory.iterdir() if p.is_file()}
+        except OSError:
+            continue
+        if names & py_names:
+            continue
+        if names & target_names:
+            return directory
+    return None
+
+
+class InterpreterProbeTests(unittest.TestCase):
+    """Issue #228: real host probe (py -> python3 -> python) + fallback chain +
+    per-skill sidecar, threaded through install_skills() as an explicit
+    parameter (never a module-level global/cache)."""
+
+    def test_probe_resolves_a_real_invocable_interpreter_on_this_host(self):
+        # Required evidence (1): drives the REAL probe end to end, no mocked
+        # return value anywhere in this test.
+        installer = load_installer()
+        resolved = installer.probe_host_interpreter()
+        self.assertIsNotNone(resolved)
+        self.assertIn(resolved, installer.INTERPRETER_CANDIDATES)
+        # Independently re-drive the same real subprocess call to prove the
+        # returned name is genuinely invocable on this host right now, not
+        # merely the first candidate returned by construction.
+        result = subprocess.run(
+            [resolved, "--version"], capture_output=True, text=True, timeout=5
+        )
+        self.assertEqual(0, result.returncode)
+
+    def test_probe_falls_through_to_next_candidate_when_py_is_unresolvable(self):
+        # Required evidence (2): genuinely induces "py is unresolvable" by
+        # mutating the AMBIENT os.environ PATH (mock.patch.dict), not by passing
+        # a restricted `env=` into subprocess.run and not by hand-setting a
+        # "resolved interpreter" fixture value. On Windows, CreateProcess resolves
+        # an unqualified executable name against the CALLING process's real
+        # environment, not the `env=` dict handed to subprocess.run -- verified
+        # empirically while building this test: a restricted `env=` argument left
+        # `py` resolving via the untouched ambient PATH, while mutating
+        # os.environ["PATH"] itself made `py` genuinely unresolvable. This is why
+        # the shadow below patches os.environ directly.
+        installer = load_installer()
+        py_free_dir = _find_py_free_interpreter_dir(installer)
+        if py_free_dir is None:
+            self.skipTest(
+                "no PATH entry on this host carries python3/python without also "
+                "carrying a py launcher; cannot genuinely induce py-unresolvable"
+            )
+        with mock.patch.dict(os.environ, {"PATH": str(py_free_dir)}):
+            resolved = installer.probe_host_interpreter()
+        self.assertIn(resolved, ("python3", "python"))
+        self.assertNotEqual("py", resolved)
+
+    def test_probe_prefers_py_over_python3_when_both_succeed(self):
+        # Required evidence (4): candidate order. Monkeypatches the exact
+        # subprocess boundary the probe calls (installer.subprocess.run), per the
+        # active lesson's sanctioned alternative to PATH-shadowing.
+        installer = load_installer()
+        calls = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append(cmd[0])
+            return subprocess.CompletedProcess(cmd, 0, stdout="Python 3.x\n", stderr="")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=fake_run):
+            resolved = installer.probe_host_interpreter()
+        self.assertEqual("py", resolved)
+        self.assertEqual(["py"], calls)  # never even tries python3 -- py wins first
+
+    def test_probe_timeout_candidate_falls_through_without_hanging(self):
+        # Required evidence (7): a subprocess.TimeoutExpired candidate is treated
+        # as failure and falls through, not left hanging.
+        installer = load_installer()
+        calls = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append((cmd[0], kwargs.get("timeout")))
+            if cmd[0] == "py":
+                raise subprocess.TimeoutExpired(cmd, kwargs.get("timeout"))
+            return subprocess.CompletedProcess(cmd, 0, stdout="Python 3.x\n", stderr="")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=fake_run):
+            resolved = installer.probe_host_interpreter()
+        self.assertEqual("python3", resolved)
+        self.assertEqual(["py", "python3"], [c for c, _ in calls])
+        # the explicit timeout really is threaded into the subprocess call, not
+        # just documented in prose
+        self.assertTrue(all(t == installer.DEFAULT_INTERPRETER_PROBE_TIMEOUT for _, t in calls))
+
+    def test_resolve_interpreter_falls_back_to_os_default_on_total_failure(self):
+        # Required evidence (5): a dedicated test for the NEW total-probe-failure
+        # -> os.name-default fallback branch, distinct from
+        # test_platform_interpreter_maps_os_name (which tests the OLD, still-intact
+        # pure os.name helper directly, not this new fallback wiring).
+        installer = load_installer()
+
+        def always_fails(cmd, **kwargs):
+            raise FileNotFoundError(f"no such candidate: {cmd[0]}")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=always_fails):
+            with mock.patch.object(installer.os, "name", "nt"):
+                resolution = installer.resolve_interpreter()
+        self.assertEqual("py", resolution.interpreter)
+        self.assertEqual("os-default-fallback", resolution.resolved_via)
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=always_fails):
+            with mock.patch.object(installer.os, "name", "posix"):
+                resolution = installer.resolve_interpreter()
+        self.assertEqual("python3", resolution.interpreter)
+        self.assertEqual("os-default-fallback", resolution.resolved_via)
+
+    def test_probe_invoked_exactly_once_total_across_multi_skill_install(self):
+        # Required evidence (3): a call-count assertion (not prose) that the
+        # once-per-run resolution is genuinely threaded/cached, not re-probed per
+        # skill. Wraps (not replaces) resolve_interpreter -- the once-per-run probe
+        # entry point install_skills() lazily calls -- so this still drives the
+        # real probe underneath while positively counting invocations.
+        installer = load_installer()
+        skills = installer.discover_skills()[:3]
+        self.assertGreaterEqual(len(skills), 2, "need N>1 skills for this test to be meaningful")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            with mock.patch.object(
+                installer, "resolve_interpreter", wraps=installer.resolve_interpreter
+            ) as resolve_spy:
+                installer.install_skills(
+                    skills,
+                    target_root,
+                    dry_run=False,
+                    force=False,
+                    full_set=False,
+                    restart_message="",
+                    out=lambda _msg: None,
+                )
+            self.assertEqual(
+                1,
+                resolve_spy.call_count,
+                "resolve_interpreter must be called exactly once for an N-skill "
+                "install, not once per skill",
+            )
+            for skill in skills:
+                self.assertTrue((target_root / skill.install_name / "interpreter.json").is_file())
+
+    def test_sidecar_records_resolved_via_for_probe_success_and_fallback(self):
+        # Required evidence (6): resolved_via sidecar-content correctness for
+        # BOTH the probe-success and os-default-fallback cases.
+        installer = load_installer()
+        skill = installer.discover_skills()[0]
+
+        def fake_run_success(cmd, **kwargs):
+            return subprocess.CompletedProcess(cmd, 0, stdout="Python 3.x\n", stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            with mock.patch.object(installer.subprocess, "run", side_effect=fake_run_success):
+                installer.install_skills(
+                    [skill], target_root, dry_run=False, force=False,
+                    full_set=False, restart_message="", out=lambda _msg: None,
+                )
+            sidecar = json.loads(
+                (target_root / skill.install_name / "interpreter.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual("probe", sidecar["resolved_via"])
+            self.assertEqual("py", sidecar["interpreter"])
+            self.assertEqual(["py", "python3", "python"], sidecar["candidates"])
+
+        def fake_run_failure(cmd, **kwargs):
+            raise FileNotFoundError("no such candidate")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            with mock.patch.object(installer.subprocess, "run", side_effect=fake_run_failure):
+                with mock.patch.object(installer.os, "name", "nt"):
+                    installer.install_skills(
+                        [skill], target_root, dry_run=False, force=False,
+                        full_set=False, restart_message="", out=lambda _msg: None,
+                    )
+            sidecar = json.loads(
+                (target_root / skill.install_name / "interpreter.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual("os-default-fallback", sidecar["resolved_via"])
+            self.assertEqual("py", sidecar["interpreter"])
 
 
 class TemplateBaselineTests(unittest.TestCase):
