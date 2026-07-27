@@ -50,7 +50,20 @@ def proj(tmp_path, monkeypatch):
 
 
 def _bind(proj, session_id, spine_path):
-    sr.save_binding(proj, {session_id: {"spine": str(spine_path), "engine_session": "eng-1", "worktree": str(proj)}})
+    """Write a NEW-shape (#202 nested) binding entry for `session_id`, keyed
+    by `spine_path` -- merges onto any existing entries for this session_id
+    rather than clobbering them, so two calls under the same session_id bind
+    two distinct spines (needed for the fan-out tests below)."""
+    binding = sr.load_binding(proj)
+    sid_bindings = dict(binding.get(session_id) or {})
+    sid_bindings[str(spine_path)] = {
+        "spine": str(spine_path),
+        "engine_session": "eng-1",
+        "worktree": str(proj),
+        "claimed_at": "2026-07-27T00:00:00+00:00",
+    }
+    binding[session_id] = sid_bindings
+    sr.save_binding(proj, binding)
 
 
 def _hook_data(session_id="s1", transcript_path=None):
@@ -236,6 +249,191 @@ def test_worktree_local_agent_work_outside_project_dir_still_writes(proj, tmp_pa
     record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
     assert record["model"] == EXPECTED_MODEL
     assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
+
+
+# --- #261: gauge-write skips on 2+ bound spines (supersedes #202 fan-out) ---
+
+# A REAL captured subagent transcript (isSidechain: true on every line,
+# carrying the PARENT's own sessionId -- copied read-only from
+# C:/Users/fredc/.claude/projects/C--Programs-constellation-skills/ce777c3b-505c-4b76-b09b-db2c11082b83/
+# subagents/agent-af45cec63b2835a40.jsonl; the original is untouched). It has
+# exactly one assistant/usage line, so this is adversarial: a bug that failed
+# to skip isSidechain entries would find a usable reading here, not silence.
+_REAL_SUBAGENT_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "real_subagent_transcript.jsonl"
+
+
+def test_resolve_gauge_path_returns_list_of_every_bound_spine(proj):
+    work_a = proj / ".agent-work" / "run-a"
+    work_b = proj / ".agent-work" / "run-b"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json")
+
+    paths = gw.resolve_gauge_path(proj, "s1")
+    assert isinstance(paths, list)
+    assert set(paths) == {work_a / "gauge.json", work_b / "gauge.json"}
+
+
+def test_resolve_gauge_path_empty_list_when_unbound(proj):
+    assert gw.resolve_gauge_path(proj, "no-such-session") == []
+
+
+def test_multiple_bindings_skips_writes_neither_spine(proj):
+    """One session_id bound to TWO spines, ONE PostToolUse event with a
+    realistic main-chain transcript -- (decision:gauge-write-skips-on-
+    multiple-bindings, supersedes decision:gauge-write-fans-out-on-ambiguity).
+
+    Live production evidence (epic-226 / #261) proved fan-out wrong: when two
+    genuinely different top-level agents share one session_id, find_latest_usage
+    cannot tell whose activity produced the latest usage record, and fanning the
+    same wrong-source record out to every bound spine SPREADS the
+    misattribution instead of fixing it. So 2+ candidates must now be treated
+    as uncertainty -- write NOTHING to either spine, exactly like the existing
+    zero-candidate (unbound) case. Before/after comparison: neither
+    gauge.json existed before the call, and neither exists after -- the
+    strongest form of "unchanged" for a file that was never there."""
+    work_a = proj / ".agent-work" / "run-a"
+    work_b = proj / ".agent-work" / "run-b"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    (work_a / "spine.json").write_text("{}", encoding="utf-8")
+    (work_b / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json")
+
+    gauge_a = work_a / "gauge.json"
+    gauge_b = work_b / "gauge.json"
+    assert not gauge_a.exists() and not gauge_b.exists()  # before
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+
+    assert not gauge_a.exists() and not gauge_b.exists()  # after: both still absent
+
+
+def test_multiple_bindings_skips_and_leaves_existing_gauge_files_untouched(proj):
+    """Same 2-binding ambiguity, but each spine already carries a prior
+    reading -- proves 'skip' means the prior content survives byte-identical,
+    not merely 'no crash'."""
+    work_a = proj / ".agent-work" / "run-a"
+    work_b = proj / ".agent-work" / "run-b"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    (work_a / "spine.json").write_text("{}", encoding="utf-8")
+    (work_b / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json")
+
+    prior_a = json.dumps({"schema_version": 1, "fill_fraction": 0.1, "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"})
+    prior_b = json.dumps({"schema_version": 1, "fill_fraction": 0.2, "model": "claude-sonnet-5", "observed_at": "2026-07-18T09:05:00.000Z"})
+    (work_a / "gauge.json").write_text(prior_a, encoding="utf-8")
+    (work_b / "gauge.json").write_text(prior_b, encoding="utf-8")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+
+    assert (work_a / "gauge.json").read_text(encoding="utf-8") == prior_a  # byte-identical
+    assert (work_b / "gauge.json").read_text(encoding="utf-8") == prior_b  # byte-identical
+
+
+def test_single_binding_still_writes_normally(proj):
+    """No-regression check: exactly ONE bound spine must still write the real
+    record -- skip-on-multiple must not become skip-on-any."""
+    work = proj / ".agent-work" / "run1"
+    work.mkdir(parents=True)
+    (work / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work / "spine.json")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+
+    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
+    assert record["model"] == EXPECTED_MODEL
+    assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
+
+
+def test_multiple_bindings_uncalibrated_flag_path_also_skips(proj, tmp_path):
+    """The uncalibrated-flag path is a second write path inside the same
+    handler -- it must skip on 2+ bindings too, not just the calibrated-record
+    path. Neither spine gets a gauge-uncalibrated.json flag."""
+    work_a = proj / ".agent-work" / "run-a"
+    work_b = proj / ".agent-work" / "run-b"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    (work_a / "spine.json").write_text("{}", encoding="utf-8")
+    (work_b / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json")
+
+    unknown_model_transcript = tmp_path / "unknown_model.jsonl"
+    line = {
+        "type": "assistant",
+        "isSidechain": False,
+        "timestamp": "2026-07-18T12:00:00.000Z",
+        "message": {
+            "model": "claude-future-9",
+            "usage": {"input_tokens": 1, "cache_creation_input_tokens": 1, "cache_read_input_tokens": 99998},
+        },
+    }
+    unknown_model_transcript.write_text(json.dumps(line) + "\n", encoding="utf-8")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", unknown_model_transcript), proj)
+    assert out == {}
+
+    assert not (work_a / gw.UNCALIBRATED_FILENAME).exists()
+    assert not (work_b / gw.UNCALIBRATED_FILENAME).exists()
+    assert not (work_a / "gauge.json").exists()
+    assert not (work_b / "gauge.json").exists()
+
+
+def test_containment_drops_one_bad_path_writes_the_remaining_single_candidate(proj):
+    """One session_id bound to two spines -- one whose resolved spine path is
+    OUTSIDE the `.agent-work/<work_id>/` shape (fails `_is_contained`), one
+    legitimate. `_is_contained` is exercised PER PATH inside
+    `resolve_gauge_path` itself (unchanged by this rework -- see its own
+    docstring/#202), so the bad candidate is dropped BEFORE the handler ever
+    sees the list -- `resolve_gauge_path` returns exactly ONE candidate here,
+    not two. That means this scenario was never actually a multi-binding case
+    from `handle_post_tool_use`'s point of view: it collapses to the ordinary
+    single-candidate path (decision:gauge-write-skips-on-multiple-bindings
+    only changes behavior when 2+ candidates reach the handler). Retained
+    rather than retired -- it still proves per-path containment filtering,
+    just no longer frames it as 'both attempted' since nothing in this design
+    ever attempted both."""
+    bad_spine = proj / "spine.json"  # root-level: NOT under .agent-work/
+    work_good = proj / ".agent-work" / "run-good"
+    work_good.mkdir(parents=True)
+    bad_spine.write_text("{}", encoding="utf-8")
+    (work_good / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", bad_spine)
+    _bind(proj, "s1", work_good / "spine.json")
+
+    paths = gw.resolve_gauge_path(proj, "s1")
+    assert paths == [work_good / "gauge.json"]  # bad_spine's candidate fenced out
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert (work_good / "gauge.json").exists()
+    assert not (proj / "gauge.json").exists()
+
+
+def test_real_subagent_transcript_finds_no_usage_and_writes_nothing(proj):
+    """Adversarial confirmation of decision:gauge-write-fans-out-on-ambiguity's
+    residual open question: a REAL captured subagent transcript (every line
+    isSidechain: true, carrying the PARENT's own sessionId) must make
+    find_latest_usage skip every line and return None, so the PostToolUse
+    handler writes nothing -- even though the transcript DOES contain a
+    parseable assistant/usage record, just a sidechain one."""
+    assert gw.find_latest_usage(_REAL_SUBAGENT_FIXTURE) is None
+
+    work = proj / ".agent-work" / "run1"
+    work.mkdir(parents=True)
+    (work / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work / "spine.json")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _REAL_SUBAGENT_FIXTURE), proj)
+    assert out == {}
+    assert not (work / "gauge.json").exists()
 
 
 # --- uncalibrated model: no reading, but a visible flag ---------------------

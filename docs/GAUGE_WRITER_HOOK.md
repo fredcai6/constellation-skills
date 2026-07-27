@@ -13,9 +13,16 @@ every tool call it:
 1. Reads `transcript_path` and `session_id` from the hook's stdin JSON.
 2. Resolves `.agent-work/<work_id>/gauge.json` by looking up `session_id` in
    `.agent-work/.spine-rail-binding.json` — the session→spine binding that
-   `scripts/hooks/spine_rail.py`'s own `PostToolUse` handler already
-   maintains (populated when `checklist_engine.py claim` runs). This hook
-   **reuses that binding, it does not maintain a second one.**
+   `scripts/hooks/spine_rail.py`'s own `PostToolUse` and `SessionStart`
+   handlers maintain (populated when `checklist_engine.py claim` runs, or
+   when a session resumes/compacts onto an unambiguous single active-leased
+   spine it did not itself claim — #261). This hook **reuses that binding,
+   it does not maintain a second one.** Since #202, one `session_id` may
+   legitimately hold bindings into more than one spine at once (e.g. an
+   Agent-tool subagent sharing its parent's `session_id` claims its own
+   spine without clobbering the parent's); when that happens, this hook
+   writes to **none** of them rather than guessing — see "Skip-on-uncertainty,
+   enumerated" below.
 3. Parses the tail of the transcript (JSONL) for the latest non-sidechain
    assistant message's `usage` block, sums
    `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`
@@ -167,6 +174,20 @@ The writer never fabricates a record. Each of these leaves any existing
 - `transcript_path` missing from the hook payload, or the file doesn't
   exist on disk.
 - No session→spine binding for this `session_id` (work_id unresolvable).
+- **This `session_id` is bound to more than one spine** (#202/#261,
+  `decision:gauge-write-skips-on-multiple-bindings`). Two genuinely
+  different top-level agents can share one `session_id` (confirmed live: an
+  Agent-tool-dispatched Commander and its own Admiral) — when they do, they
+  also share one physical transcript, so `find_latest_usage` cannot tell
+  whose activity produced the latest usage record. Writing that record to
+  every bound spine ("fan-out") was tried and reverted after live evidence
+  showed it cross-writes one agent's reading into an unrelated agent's work
+  area — a confident wrong record, not silence. Only exactly one binding
+  writes; two or more means silence for **all** of them, including the
+  parent's own spine. Known cost, not fixed here: an orchestrator holding
+  multiple bindings is ungauged for the duration of every wave it
+  dispatches — filed as its own issue, cross-referenced from #261/#202 (see
+  that issue for the residual gap and a candidate discriminator).
 - The transcript has no line, within the bounded tail-scan window, that is
   a non-sidechain assistant message with a well-formed `usage` block, a
   `model`, and a `timestamp`.
@@ -189,14 +210,24 @@ and skip-on-uncertainty applies (documented, not a silent truncation bug).
 This hook does not maintain its own session↔work-directory mapping. It
 imports `scripts/hooks/spine_rail.py`'s `load_binding`/`resolve_project_dir`
 by file path and reads the same `.agent-work/.spine-rail-binding.json` that
-hook already writes on `checklist_engine.py claim`/`release`. This was a
+hook already writes on `checklist_engine.py claim`/`release`, and, since
+#261, on an unambiguous `SessionStart` resume/compaction too. This was a
 pre-existing mechanism found in the repo (`scripts/hooks/spine_rail.py`,
-`PostToolUse` handler, `handle_post_tool_use`) -- not something invented for
-this issue. The dependency this creates: **the gauge writer can only
-produce a reading for sessions where a spine has actually been claimed.**
-That is the intended scope (gauge.json only matters where an engine gate
-will read it), so this is noted as a documented coupling, not floated as a
-gap.
+`PostToolUse`/`SessionStart` handlers) -- not something invented for this
+issue. **As of #202/#261, the binding is a nested multi-entry map**
+(`{session_id: {abs_spine_path: {spine, engine_session, worktree,
+claimed_at}}}`), keyed by the resolved absolute spine path rather than a
+derived worktree or the harness's `cwd` field (empirically unreliable for
+a session dispatched into a worktree by instruction rather than a real
+per-agent working-directory parameter — see `notes-261.md` in that fix's
+PR for the live evidence). The dependency this creates: **the gauge writer
+can only produce a reading for sessions bound to EXACTLY ONE spine** — zero
+bindings (nothing claimed/resumed yet) or two-or-more (an ambiguous shared
+session) both skip. That is the intended, now-narrower scope (gauge.json
+only matters where an engine gate will read it, and only when the reading
+is genuinely about that gate's own spine), so this is noted as a documented
+coupling, not floated as a gap — except for the multi-binding coverage cost
+named above, which IS floated, in the issue this doc points to.
 
 ## What was NOT done here (HITL boundary, per the launch order)
 

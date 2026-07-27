@@ -142,22 +142,31 @@ def _is_contained(gauge_path: Path) -> bool:
 
 
 def resolve_gauge_path(project_dir: Path, session_id):
-    """.agent-work/<work_id>/gauge.json, sibling to spine.json, resolved via
-    the existing session->spine binding. None if unresolvable (no sibling
-    module, no session_id, no binding entry, no spine path recorded) or if the
-    resolved path escapes the documented `.agent-work/<work_id>/` shape --
-    skip-on-uncertainty applies to WHERE we write, not just to what."""
+    """`.agent-work/<work_id>/gauge.json` for EVERY spine this session_id is
+    currently bound to (#202: one session_id can hold N distinct spine
+    bindings at once) -- a list of Path, possibly empty. Each candidate is
+    individually checked against `_is_contained`; a candidate that fails the
+    fence is dropped rather than failing the whole call, so one bad entry
+    never blinds the write for the session's other, legitimate bindings.
+    Empty list if unresolvable (no sibling module, no session_id, no binding
+    at all) -- skip-on-uncertainty applies to WHERE we write, not just to
+    what."""
     try:
         if _spine_rail is None or not session_id:
-            return None
+            return []
         binding = _spine_rail.load_binding(project_dir)
-        entry = binding.get(session_id)
-        if not entry or not entry.get("spine"):
-            return None
-        candidate = Path(entry["spine"]).parent / "gauge.json"
-        return candidate if _is_contained(candidate) else None
+        sid_bindings = binding.get(session_id) or {}
+        candidates = []
+        for entry in sid_bindings.values():
+            spine_path = entry.get("spine") if isinstance(entry, dict) else None
+            if not spine_path:
+                continue
+            candidate = Path(spine_path).parent / "gauge.json"
+            if _is_contained(candidate):
+                candidates.append(candidate)
+        return candidates
     except Exception:
-        return None
+        return []
 
 
 # --- X2 strategic-compact: parse transcript, sum latest usage record -------
@@ -312,21 +321,39 @@ def _clear_uncalibrated_flag(gauge_path: Path) -> None:
 # --- PostToolUse handler ------------------------------------------------------
 
 def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
-    """Compute + atomically write the gauge record. NEVER raises; NEVER
-    blocks; NEVER writes on uncertainty. Always returns {} (this hook never
-    influences the tool call)."""
+    """Compute the record ONCE, then write it to the session's SOLE bound
+    spine (#261, decision:gauge-write-skips-on-multiple-bindings -- supersedes
+    #202's decision:gauge-write-fans-out-on-ambiguity). When two genuinely
+    different top-level agents share one session_id (confirmed live: an
+    Agent-tool-dispatched Commander and its own Admiral), find_latest_usage
+    cannot tell whose activity produced the latest usage record -- fan-out
+    doesn't fix that misattribution, it SPREADS the same wrong-source record
+    to every spine the shared session_id happens to be bound to. So 2+
+    candidates is treated as exactly the same kind of uncertainty the module
+    already treats a missing binding as: skip-on-uncertainty, write NOTHING,
+    for both the calibrated-record path and the uncalibrated-flag path. Only
+    exactly one candidate is written. NEVER raises; NEVER blocks; NEVER
+    writes on uncertainty. Always returns {} (this hook never influences the
+    tool call)."""
     try:
         transcript_path = data.get("transcript_path")
         if not transcript_path or not os.path.isfile(transcript_path):
             return {}
-        gauge_path = resolve_gauge_path(project_dir, data.get("session_id"))
-        if gauge_path is None:
+        gauge_paths = resolve_gauge_path(project_dir, data.get("session_id"))
+        if len(gauge_paths) != 1:
+            # Zero: unresolvable, already the existing skip-on-uncertainty
+            # case. Two or more: WHICH spine this reading belongs to is
+            # itself uncertain -- fabricating a write to any of them (let
+            # alone all of them) risks cross-writing a reading from an
+            # unrelated agent sharing this session_id. Skip entirely.
             return {}
+        gauge_path = gauge_paths[0]
         record, uncalibrated = compute_record(transcript_path)
         if uncalibrated is not None:
             # No window for this model: raise the flag and leave gauge.json
             # exactly as it was. It ages into staleness naturally, which the
-            # reader already collapses to "no reading" -- the correct outcome.
+            # reader already collapses to "no reading" -- the correct
+            # outcome.
             _write_uncalibrated_flag(gauge_path, uncalibrated)
             return {}
         if record is None:
