@@ -87,6 +87,38 @@ class InitWorkAreaTests(unittest.TestCase):
             m.init_work_area(Path(d), "x")
             m.init_work_area(Path(d), "x")  # second call must not raise
 
+    def test_refuses_a_root_that_is_already_the_agent_work_dir(self):
+        # The flag name reads as "the agent-work root", so passing .agent-work
+        # itself is an easy slip; unguarded it silently scaffolds
+        # .agent-work/.agent-work/<work-id>/ (f1Brainz 624-phase0).
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            already = Path(d) / ".agent-work"
+            already.mkdir()
+            with self.assertRaises(SystemExit) as ctx:
+                m.init_work_area(already, "issue-7")
+            self.assertIn(".agent-work", str(ctx.exception))
+            self.assertFalse((already / ".agent-work").exists())
+
+    def test_refusal_names_the_parent_as_the_intended_root(self):
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            already = Path(d) / ".agent-work"
+            already.mkdir()
+            with self.assertRaises(SystemExit) as ctx:
+                m.init_work_area(already, "issue-7")
+            self.assertIn(str(Path(d)), str(ctx.exception))
+
+    def test_a_root_merely_containing_agent_work_is_fine(self):
+        # Only the final segment is the footgun; a project legitimately named
+        # e.g. <tmp>/.agent-work-notes must still scaffold.
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / ".agent-work-notes"
+            root.mkdir()
+            base = m.init_work_area(root, "issue-7")
+            self.assertTrue(base.is_dir())
+
 
 class SpineInstantiationTests(unittest.TestCase):
     def test_bare_init_writes_no_spine(self):
