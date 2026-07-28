@@ -130,11 +130,35 @@ def thresholds_for(model: str) -> tuple[float, float]:
     return (soft_cap / window, hard_cap / window)
 
 
-def _parse_record(record: dict, now: datetime, max_age: timedelta) -> Reading | None:
-    """Validate an already-decoded record dict and convert it to a Reading.
+def _parse_observed_at(raw_value) -> datetime | None:
+    """Parse an `observed_at` value into a tz-aware datetime, or None if it
+    isn't a well-formed ISO-8601 string. A naive timestamp is assumed UTC --
+    the same convention `_parse_fields` and `_parse_record` have always used.
+    Shared by `_parse_fields` (the record's `observed_at` field) and
+    `skip_reason` (the sidecar's own `observed_at` field) so this parse-and-
+    assume-UTC logic lives in exactly one place."""
+    if not isinstance(raw_value, str):
+        return None
+    try:
+        observed_at = datetime.fromisoformat(raw_value)
+    except ValueError:
+        return None
+    if observed_at.tzinfo is None:
+        observed_at = observed_at.replace(tzinfo=timezone.utc)
+    return observed_at
 
-    Never raises: any problem -- missing field, wrong type, out-of-range
-    value, stale timestamp, clock-skew -- returns None.
+
+def _parse_fields(record: dict) -> Reading | None:
+    """Validate an already-decoded record dict's required fields, types, and
+    range, and convert it to a Reading -- WITH NO staleness, clock-skew, or
+    calibration-table gate. Never raises: any problem -- missing field, wrong
+    type, out-of-range value -- returns None.
+
+    This is the field-shape half of what `_parse_record` used to do inline.
+    It is shared by `_parse_record` (which layers staleness/skew/calibration
+    on top of the Reading this returns) and `raw_record` (which reports the
+    Reading's fields as-is, with nothing layered on top) -- one place for the
+    required-fields/types/range checks, so the two callers cannot drift.
     """
     for field in REQUIRED_FIELDS:
         if field not in record:
@@ -155,17 +179,30 @@ def _parse_record(record: dict, now: datetime, max_age: timedelta) -> Reading | 
         return None
     if not isinstance(model, str):
         return None
-    if not isinstance(observed_at_raw, str):
+
+    observed_at = _parse_observed_at(observed_at_raw)
+    if observed_at is None:
         return None
 
-    try:
-        observed_at = datetime.fromisoformat(observed_at_raw)
-    except ValueError:
-        return None
-    if observed_at.tzinfo is None:
-        observed_at = observed_at.replace(tzinfo=timezone.utc)
+    return Reading(
+        schema_version=schema_version,
+        fill_fraction=float(fill_fraction),
+        model=model,
+        observed_at=observed_at,
+    )
 
-    age = now - observed_at
+
+def _parse_record(record: dict, now: datetime, max_age: timedelta) -> Reading | None:
+    """Validate an already-decoded record dict and convert it to a Reading.
+
+    Never raises: any problem -- missing field, wrong type, out-of-range
+    value, stale timestamp, clock-skew -- returns None.
+    """
+    reading = _parse_fields(record)
+    if reading is None:
+        return None
+
+    age = now - reading.observed_at
     if age > max_age:
         return None  # stale
     if age < -CLOCK_SKEW_TOLERANCE:
@@ -178,15 +215,10 @@ def _parse_record(record: dict, now: datetime, max_age: timedelta) -> Reading | 
     # wrong scale. The current writer never emits such a record, so in practice
     # this catches a stale file written before a model was added, or one copied
     # in from another machine -- defense in depth, not the primary guard.
-    if model not in _PROFILES:
+    if reading.model not in _PROFILES:
         return None
 
-    return Reading(
-        schema_version=schema_version,
-        fill_fraction=float(fill_fraction),
-        model=model,
-        observed_at=observed_at,
-    )
+    return reading
 
 
 def read(
@@ -230,11 +262,91 @@ def read(
     return _parse_record(record, now, max_age)
 
 
+def raw_record(gauge_path: str | Path) -> dict | None:
+    """The gauge file's own facts -- `fill_fraction`, `model`, `observed_at`
+    (a parsed, tz-aware datetime) -- with field-shape validation ONLY. NO
+    staleness check, NO clock-skew check, NO calibration-table check: this is
+    a raw report, not a judgment.
+
+    Exists for exactly one caller-facing purpose: when `read()` itself
+    rejects the file at this path (e.g. it is simply too old), this is the
+    one remaining honest thing to say about it -- the file's last recorded
+    numbers, displayed as-is, so a frozen `gauge.json` is never silently
+    mistaken for a fresh low reading. A caller must render these facts raw
+    (age included) and must not re-derive a soft/hard verdict from them --
+    that verdict is exactly what `read()` already declined to give.
+
+    Never raises: any problem -- absent file, corrupt JSON, missing/
+    malformed fields -- returns None, same fail-safe contract as `read()`.
+    """
+    try:
+        raw = Path(gauge_path).read_text(encoding="utf-8")
+        record = json.loads(raw)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(record, dict):
+        return None
+
+    reading = _parse_fields(record)
+    if reading is None:
+        return None
+
+    return {
+        "fill_fraction": reading.fill_fraction,
+        "model": reading.model,
+        "observed_at": reading.observed_at,
+    }
+
+
 # Sidecar written by the harness hook when it sees a model it has no window for
 # (gauge_writer_hook.UNCALIBRATED_FILENAME). Kept as a literal rather than an
 # import: this module stays writer-agnostic by design and must not depend on a
 # harness-specific hook. The filename is the seam.
 UNCALIBRATED_FILENAME = "gauge-uncalibrated.json"
+
+# Sidecar written by the harness hook when it POSITIVELY LOCALIZES why no
+# reading could be written at a gauge path -- ambiguous session->spine
+# binding, or a transcript with no usable usage record (issue #271,
+# gauge_writer_hook.SKIP_FILENAME). Kept as a literal for the same
+# writer-agnostic reason as UNCALIBRATED_FILENAME above.
+SKIP_FILENAME = "gauge-skip.json"
+
+
+def skip_reason(gauge_path: str | Path) -> dict | None:
+    """Why the writer hook wrote NO reading at this gauge path, if it knows --
+    mirrors `uncalibrated_model`'s fail-safe contract exactly: never raises,
+    any problem (absent file, corrupt JSON, missing/malformed fields) is None.
+
+    Returns `{"reason": str, "observed_at": datetime, "candidate_count": int}`
+    -- `candidate_count` only present when the source file carries it as a
+    valid non-bool int (it only applies to the ambiguous-binding reason).
+    `observed_at` is parsed the same way `_parse_fields` parses a gauge
+    record's own `observed_at`.
+
+    Deliberately NOT staleness-checked, same rationale as `raw_record`: this
+    answers "why is there no reading", which a caller displays with its own
+    raw age, never a pass/fail this function decides."""
+    try:
+        path = Path(gauge_path).with_name(SKIP_FILENAME)
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(record, dict):
+        return None
+
+    reason = record.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        return None
+
+    observed_at = _parse_observed_at(record.get("observed_at"))
+    if observed_at is None:
+        return None
+
+    result = {"reason": reason, "observed_at": observed_at}
+    candidate_count = record.get("candidate_count")
+    if isinstance(candidate_count, int) and not isinstance(candidate_count, bool):
+        result["candidate_count"] = candidate_count
+    return result
 
 
 def uncalibrated_model(gauge_path: str | Path) -> str | None:

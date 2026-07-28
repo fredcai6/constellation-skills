@@ -167,31 +167,63 @@ this table against a fresh real transcript sample.
 
 ## Skip-on-uncertainty, enumerated
 
-The writer never fabricates a record. Each of these leaves any existing
-`gauge.json` byte-for-byte untouched (unit-tested in
-`tests/test_gauge_writer.py`):
+The writer never fabricates a `gauge.json` record. Each of these leaves any
+existing `gauge.json` byte-for-byte untouched (unit-tested in
+`tests/test_gauge_writer.py`). As of #265 (issue #271), **two of these causes
+are no longer silent**: the writer hook can positively localize them, so it
+also writes a visible `gauge-skip.json` sidecar — `{schema_version, reason,
+observed_at, candidate_count?}` — at the exact gauge path(s) it skipped,
+which `checklist_engine.py`'s `current` advisory (`_skip_reason_advisory`)
+then surfaces at the gate boundary. The other three stay silent by design,
+each for the same reason: there is no known gauge path to write a sidecar
+**to**.
 
-- `transcript_path` missing from the hook payload, or the file doesn't
-  exist on disk.
-- No session→spine binding for this `session_id` (work_id unresolvable).
+**Now flagged (`gauge-skip.json` written):**
+
 - **This `session_id` is bound to more than one spine** (#202/#261,
   `decision:gauge-write-skips-on-multiple-bindings`). Two genuinely
   different top-level agents can share one `session_id` (confirmed live: an
   Agent-tool-dispatched Commander and its own Admiral) — when they do, they
   also share one physical transcript, so `find_latest_usage` cannot tell
-  whose activity produced the latest usage record. Writing that record to
+  whose activity produced the latest usage record. Writing *that* record to
   every bound spine ("fan-out") was tried and reverted after live evidence
   showed it cross-writes one agent's reading into an unrelated agent's work
-  area — a confident wrong record, not silence. Only exactly one binding
-  writes; two or more means silence for **all** of them, including the
-  parent's own spine. Known cost, not fixed here: an orchestrator holding
-  multiple bindings is ungauged for the duration of every wave it
-  dispatches — filed as its own issue, cross-referenced from #261/#202 (see
-  that issue for the residual gap and a candidate discriminator).
-- The transcript has no line, within the bounded tail-scan window, that is
-  a non-sidechain assistant message with a well-formed `usage` block, a
-  `model`, and a `timestamp`.
-- Any usage field present but not a number (a schema-drift symptom).
+  area — a confident wrong record, not silence. `gauge.json` itself still
+  gets no write for **any** of the candidates, including the parent's own
+  spine. But `reason: "ambiguous-binding"` (with `candidate_count`) IS now
+  written to **every** candidate path (fan-out is safe here — a diagnostic
+  fact about why nothing was written can never be a misattributed reading,
+  unlike `gauge.json` itself; `decision:skip-sidecar-fanout-and-clear`).
+  Known cost, not fixed here: an orchestrator holding multiple bindings is
+  ungauged for the duration of every wave it dispatches — filed as its own
+  issue, cross-referenced from #261/#202 (see that issue for the residual
+  gap and a candidate discriminator).
+- **The transcript has no usable usage line** — either no line, within the
+  bounded tail-scan window, that is a non-sidechain assistant message with a
+  well-formed `usage` block, a `model`, and a `timestamp`; or a usage field
+  present but not a number (a schema-drift symptom). Both collapse to
+  `compute_record` returning `(None, None)`. On the single resolved
+  candidate path, `reason: "no-usable-record"` (no `candidate_count`) is
+  written.
+
+Clearing: any successful outcome at a given path — a clean `gauge.json`
+write, or the existing uncalibrated-model flag write — clears that path's
+`gauge-skip.json`, mirroring `_clear_uncalibrated_flag`. A candidate that
+drops out of an ambiguous binding set without ever again being the sole
+resolved candidate keeps a stale `gauge-skip.json` indefinitely — an
+accepted, bounded residual (see the comment at `_clear_skip_flag` in
+`gauge_writer_hook.py`), not fixed here (`decision:no-repair`).
+
+**Still silent by design (no known gauge path to write a sidecar to):**
+
+- `transcript_path` missing from the hook payload, or the file doesn't
+  exist on disk — checked *before* the session→spine binding is even
+  resolved, so no gauge path is known yet either way.
+- No session→spine binding for this `session_id` at all (work_id
+  unresolvable, zero candidates) — genuinely unlocatable.
+- The hook isn't wired into `settings.json`/`settings.local.json` at all —
+  external to the writer entirely; if the hook never runs, it cannot
+  self-report (see #262 for wiring, out of scope here).
 
 ## Bounded tail scan, not a full-file parse
 

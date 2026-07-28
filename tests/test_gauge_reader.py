@@ -204,6 +204,166 @@ class ReadTests(unittest.TestCase):
         self.assertEqual(reading.fill_fraction, 0.42)
 
 
+class RawRecordTests(unittest.TestCase):
+    """#265: raw_record reports the file's own facts with field-shape
+    validation only -- no staleness, no clock-skew, no calibration gate. The
+    caller-facing purpose is a frozen `gauge.json` `read()` itself rejected
+    (e.g. simply too old) still has SOMETHING honest to say about it."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "gauge.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write(self, record):
+        self.path.write_text(json.dumps(record), encoding="utf-8")
+
+    def test_absent_file_returns_none(self):
+        self.assertIsNone(self.m.raw_record(self.path))
+
+    def test_corrupt_json_returns_none(self):
+        self.path.write_text("{not valid json", encoding="utf-8")
+        self.assertIsNone(self.m.raw_record(self.path))
+
+    def test_missing_field_returns_none(self):
+        record = dict(FRESH_RECORD)
+        del record["model"]
+        self._write(record)
+        self.assertIsNone(self.m.raw_record(self.path))
+
+    def test_wrong_typed_field_returns_none(self):
+        record = dict(FRESH_RECORD, fill_fraction="0.42")
+        self._write(record)
+        self.assertIsNone(self.m.raw_record(self.path))
+
+    def test_stale_record_STILL_reports_raw_facts(self):
+        # The whole point: read() rejects this (too old), raw_record does not.
+        stale = dict(FRESH_RECORD, observed_at=(NOW - timedelta(hours=2)).isoformat())
+        self._write(stale)
+        self.assertIsNone(self.m.read(self.path, now=NOW, max_age=MAX_AGE))
+        raw = self.m.raw_record(self.path)
+        self.assertIsNotNone(raw)
+        self.assertEqual(raw["fill_fraction"], 0.42)
+        self.assertEqual(raw["model"], "claude-opus-4-8")
+        self.assertEqual(raw["observed_at"], NOW - timedelta(hours=2))
+
+    def test_uncalibrated_model_STILL_reports_raw_facts(self):
+        # read() rejects an uncalibrated model too -- raw_record has no
+        # calibration-table gate, so it still reports the number as-is.
+        record = dict(FRESH_RECORD, model="claude-future-9")
+        self._write(record)
+        self.assertIsNone(self.m.read(self.path, now=NOW, max_age=MAX_AGE))
+        raw = self.m.raw_record(self.path)
+        self.assertIsNotNone(raw)
+        self.assertEqual(raw["model"], "claude-future-9")
+
+    def test_clock_skew_STILL_reports_raw_facts(self):
+        record = dict(FRESH_RECORD, observed_at=(NOW + timedelta(hours=1)).isoformat())
+        self._write(record)
+        self.assertIsNone(self.m.read(self.path, now=NOW, max_age=MAX_AGE))
+        raw = self.m.raw_record(self.path)
+        self.assertIsNotNone(raw)
+
+    def test_fresh_record_reports_same_facts_as_a_reading(self):
+        self._write(FRESH_RECORD)
+        raw = self.m.raw_record(self.path)
+        reading = self.m.read(self.path, now=NOW, max_age=MAX_AGE)
+        self.assertEqual(raw["fill_fraction"], reading.fill_fraction)
+        self.assertEqual(raw["model"], reading.model)
+        self.assertEqual(raw["observed_at"], reading.observed_at)
+
+    def test_returns_exactly_three_keys(self):
+        # No schema_version, no threshold judgment folded in -- raw facts only.
+        self._write(FRESH_RECORD)
+        self.assertEqual(set(self.m.raw_record(self.path)), {"fill_fraction", "model", "observed_at"})
+
+
+class SkipReasonTests(unittest.TestCase):
+    """#265: skip_reason mirrors uncalibrated_model's fail-safe contract for
+    the writer hook's gauge-skip.json sidecar."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "gauge.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write_skip(self, **overrides):
+        record = {
+            "schema_version": 1,
+            "reason": "ambiguous-binding",
+            "observed_at": NOW.isoformat(),
+            "candidate_count": 2,
+        }
+        record.update(overrides)
+        (self.path.with_name(self.m.SKIP_FILENAME)).write_text(
+            json.dumps(record), encoding="utf-8")
+
+    def test_no_sidecar_returns_none(self):
+        self.assertIsNone(self.m.skip_reason(self.path))
+
+    def test_corrupt_sidecar_never_raises(self):
+        (self.path.with_name(self.m.SKIP_FILENAME)).write_text(
+            "{not json", encoding="utf-8")
+        self.assertIsNone(self.m.skip_reason(self.path))
+
+    def test_ambiguous_binding_reports_reason_and_candidate_count(self):
+        self._write_skip(reason="ambiguous-binding", candidate_count=3)
+        info = self.m.skip_reason(self.path)
+        self.assertEqual(info["reason"], "ambiguous-binding")
+        self.assertEqual(info["candidate_count"], 3)
+        self.assertEqual(info["observed_at"], NOW)
+
+    def test_no_usable_record_has_no_candidate_count_key(self):
+        record = {
+            "schema_version": 1,
+            "reason": "no-usable-record",
+            "observed_at": NOW.isoformat(),
+        }
+        (self.path.with_name(self.m.SKIP_FILENAME)).write_text(
+            json.dumps(record), encoding="utf-8")
+        info = self.m.skip_reason(self.path)
+        self.assertEqual(info["reason"], "no-usable-record")
+        self.assertNotIn("candidate_count", info)
+
+    def test_missing_reason_returns_none(self):
+        self._write_skip(reason=None)
+        self.assertIsNone(self.m.skip_reason(self.path))
+
+    def test_missing_observed_at_returns_none(self):
+        self._write_skip(observed_at=None)
+        self.assertIsNone(self.m.skip_reason(self.path))
+
+    def test_unparseable_observed_at_returns_none(self):
+        self._write_skip(observed_at="not-a-timestamp")
+        self.assertIsNone(self.m.skip_reason(self.path))
+
+    def test_bool_candidate_count_is_dropped_not_reported(self):
+        # bool is a subclass of int -- must not pass as a valid candidate_count.
+        self._write_skip(candidate_count=True)
+        info = self.m.skip_reason(self.path)
+        self.assertIsNotNone(info)
+        self.assertNotIn("candidate_count", info)
+
+    def test_non_int_candidate_count_is_dropped_not_reported(self):
+        self._write_skip(candidate_count="3")
+        info = self.m.skip_reason(self.path)
+        self.assertIsNotNone(info)
+        self.assertNotIn("candidate_count", info)
+
+    def test_never_staleness_checked(self):
+        # Deliberately NOT staleness-checked -- a caller renders the raw age.
+        old = NOW - timedelta(days=3)
+        self._write_skip(observed_at=old.isoformat())
+        info = self.m.skip_reason(self.path)
+        self.assertEqual(info["observed_at"], old)
+
+
 class ThresholdsForTests(unittest.TestCase):
     def setUp(self):
         self.m = load("gauge_reader")

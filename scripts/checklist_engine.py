@@ -19,7 +19,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 
 
@@ -1154,6 +1154,114 @@ def _uncalibrated_advisory(base_dir: Path | None) -> str:
             f"model catalog — never an inferred one.")
 
 
+def _format_age(delta: timedelta) -> str:
+    """Render a timedelta as whole seconds/minutes/hours — pure arithmetic and
+    string formatting only, NO threshold comparisons (constraint:no-threshold-
+    values): the unit boundaries below (60s/min, 3600s/hr) are unit-conversion
+    arithmetic, not a judgment call on whether an age is "old" — this function
+    never decides that, it only renders whatever age it is handed. A negative
+    delta (a caller passing a future observed_at) clamps to 0s rather than
+    printing a negative age."""
+    total_seconds = int(delta.total_seconds())
+    if total_seconds < 0:
+        total_seconds = 0
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+    if total_seconds < 3600:
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes}m{seconds:02d}s"
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes = remainder // 60
+    return f"{hours}h{minutes:02d}m"
+
+
+def _skip_reason_advisory(gauge_path: Path | None) -> str:
+    """A visible notice that the writer hook POSITIVELY LOCALIZED why no
+    reading was written at this gauge path (issue #271) — ambiguous session->
+    spine binding, or a transcript with no usable usage record. Neither cause
+    is routine silence: the writer hook already knows exactly why it skipped,
+    so saying nothing here would waste information it already has. Fail-safe
+    like every other gauge-adjacent advisory — an absent reader, unresolvable
+    path, or any problem reading the sidecar yields the empty string."""
+    if _gauge_reader is None or gauge_path is None:
+        return ""
+    try:
+        info = _gauge_reader.skip_reason(gauge_path)
+    except Exception:
+        return ""
+    if not info:
+        return ""
+    age = _format_age(datetime.now(timezone.utc) - info["observed_at"])
+    reason = info["reason"]
+    if reason == "ambiguous-binding":
+        count = info.get("candidate_count")
+        candidates = f"{count} candidate spines" if count is not None else "more than one candidate spine"
+        return (f"\nCONTEXT GAUGE SILENT: this session is bound to {candidates} at "
+                f"once, so the writer hook could not tell which one a reading "
+                f"belongs to and wrote nothing rather than guess (flagged {age} "
+                f"ago). Watch your own context and hand off on judgement.")
+    if reason == "no-usable-record":
+        return (f"\nCONTEXT GAUGE SILENT: the writer hook found a transcript but "
+                f"no usable usage record in it, so no reading was written "
+                f"(flagged {age} ago). Watch your own context and hand off on "
+                f"judgement.")
+    # Forward-compatible fallback for a reason string this dispatcher doesn't
+    # name explicitly yet — still says SOMETHING rather than staying silent.
+    return (f"\nCONTEXT GAUGE SILENT: no reading was written (flagged {age} ago) "
+            f"— reason: {reason!r}. Watch your own context and hand off on "
+            f"judgement.")
+
+
+def _stale_record_advisory(gauge_path: Path | None) -> str:
+    """When `read()` itself rejected the gauge file at this path (e.g. it is
+    simply too old, or clock-skewed, or names an uncalibrated model), report
+    the file's OWN raw facts — fill, model, age — with explicitly NO threshold
+    judgment: this is not a fresh SOFT/HARD verdict, just the last recorded
+    number, so a caller never mistakes a frozen reading for a live low one.
+    Fail-safe like every other gauge-adjacent advisory."""
+    if _gauge_reader is None or gauge_path is None:
+        return ""
+    try:
+        raw = _gauge_reader.raw_record(gauge_path)
+    except Exception:
+        return ""
+    if not raw:
+        return ""
+    age = _format_age(datetime.now(timezone.utc) - raw["observed_at"])
+    return (f"\nCONTEXT GAUGE SILENT: the last recorded reading at this path was "
+            f"{raw['fill_fraction']:.0%} full on {raw['model']!r}, sampled {age} "
+            f"ago — too old (or otherwise rejected) to trust as a live reading. "
+            f"This is the raw last-known number, NOT a fresh soft/hard judgment. "
+            f"Watch your own context and hand off on judgement.")
+
+
+def _no_reading_advisory(base_dir: Path | None) -> str:
+    """Dispatch across every localizable "why is there no reading" cause, in
+    order, returning the FIRST non-empty result — exactly one signal reaches
+    the caller even when more than one sidecar happens to exist at a path:
+
+    1. `_uncalibrated_advisory` (#252) — completely unchanged, called exactly
+       as before this gate. A STANDING defect (true until a human edits a
+       code table), so it takes priority over the two newer, TRANSIENT causes
+       below.
+    2. `_skip_reason_advisory` (#271) — the writer hook positively localized
+       WHY it skipped this exact path (ambiguous binding / no usable record).
+    3. `_stale_record_advisory` (#271) — last resort: `read()` itself rejected
+       the file at this path, so report its raw last-known facts rather than
+       staying silent about a frozen number.
+
+    Each branch already fails safe to "" on its own (see their docstrings);
+    this dispatcher adds no new failure surface."""
+    advisory = _uncalibrated_advisory(base_dir)
+    if advisory:
+        return advisory
+    gauge_path = _gauge_path(base_dir)
+    advisory = _skip_reason_advisory(gauge_path)
+    if advisory:
+        return advisory
+    return _stale_record_advisory(gauge_path)
+
+
 def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     """The Trip advisory suffix for the read-only `current` at a gate boundary
     (gated checklists only). Empty for surveys, a missing/stale reading, or when
@@ -1167,12 +1275,12 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         return ""
     reading = _read_gauge(base_dir)
     if reading is None:
-        # No reading is normally silent (absent/stale gauge is routine). One
-        # cause is NOT routine and must be said out loud: a model with no
-        # calibration entry. Silence there means the governor is blind for the
-        # whole run with nothing to show for it -- which is how an uncalibrated
-        # claude-opus-5 went unnoticed through epic-226 (#252).
-        return _uncalibrated_advisory(base_dir)
+        # No reading is normally silent (absent/stale gauge is routine). Three
+        # causes are NOT routine and must be said out loud, in priority order:
+        # an uncalibrated model (#252), a positively-localized writer skip
+        # (#271), or the gauge file's own raw facts if `read()` rejected it.
+        # See _no_reading_advisory for the dispatch order and why.
+        return _no_reading_advisory(base_dir)
     soft, hard = _gauge_reader.thresholds_for(reading.model)
     fill = reading.fill_fraction
     if fill >= hard:
