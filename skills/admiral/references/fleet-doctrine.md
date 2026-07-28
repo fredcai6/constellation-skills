@@ -142,6 +142,22 @@ Commander is **confirmed dead with no continuation pending** — never while a l
 or recovering Commander still holds it. This is the same "confirm dead before you
 touch its worktree" rule the recovery drill already applies.
 
+**This isolation is git-topology only — it does not fence hook code.**
+`verify_worktree_isolation.py` proves the worktree is real, registered, and
+distinct; it says nothing about which project's *hook scripts* the dispatched
+Commander actually runs. `CLAUDE_PROJECT_DIR` is fixed once at session launch and
+inherited unchanged by every Agent-tool subagent, so a Commander correctly
+isolated at the git level still executes the **main checkout's**
+`scripts/hooks/*.py` against the **main checkout's** `.agent-work/` state —
+silently: the gate passes, git is fenced, and the code under test is still not
+the code running (issue #269). A Commander whose mission touches hook behavior
+cannot validate that change from inside the worktree containing it, because doing
+so runs the same unchanged main-checkout code the harness would run anyway.
+Validate with a **fresh process** whose `CLAUDE_PROJECT_DIR` genuinely resolves to
+the worktree — a headless `claude -p` launch pointed at it, or a plain subprocess
+with the env var set for the non-agent (pure-function) paths — never a fixture
+that hand-injects the value under test.
+
 **Harvest before you sweep — a required precondition of removal.** A worktree
 carries durable learning the shared root does not yet hold: its lessons-delta,
 its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. A

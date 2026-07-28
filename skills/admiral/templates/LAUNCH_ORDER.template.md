@@ -41,6 +41,18 @@ A measured negative on the stated question is a complete, successful deliverable
 First step, before any git operation: run `py scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
 NOTE: PR integration defaults to **server-side merge** (the GitHub merge on the PR itself, not a local merge that would diverge your worktree from main).
 
+**Isolation is git-only — hook code is not fenced by it.** `verify_worktree_isolation.py` proves your git
+worktree is real and distinct; it says nothing about which project's hook scripts you are actually
+running. `CLAUDE_PROJECT_DIR` is resolved once, at session launch, and inherited unchanged by every
+subagent it spawns — so a Commander dispatched into an isolated worktree still executes the **main
+checkout's** hook code against the **main checkout's** state, even while every git operation stays
+correctly fenced (issue #269). If your mission touches hook behavior (`scripts/hooks/*.py` or anything
+`CLAUDE_PROJECT_DIR` resolves through), you cannot validate the change from inside the worktree that
+contains it — that is the same process the harness would use to run the unchanged code. Validate with a
+**fresh process** whose `CLAUDE_PROJECT_DIR` genuinely resolves to your worktree (a headless `claude -p`
+launched with that value, or a plain subprocess with the env var set for the non-agent paths) — never a
+fixture that hand-injects the value you are trying to prove the harness delivers.
+
 ## Inherited Context
 `<Active lessons from .agent-work/LESSONS.md relevant to this mission; platform/technical invariants from the project playbook (encodings, shell quirks, crew-launch rules)>`
 **Charter-lite carrier:** when the target project has no `docs/agents/` overlay, this block doubles as the doctrine carrier — the thin doctrine deltas the Commander would otherwise read from `docs/agents/*` ride inline here.
