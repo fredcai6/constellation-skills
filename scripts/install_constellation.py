@@ -87,7 +87,32 @@ AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
 SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
     # checklist_engine._load_gauge_reader() -> Path(__file__).parent/"gauge_reader.py"
     "checklist_engine.py": ("gauge_reader.py",),
+    # gauge_writer_hook._load_spine_rail() -> Path(__file__).parent/"spine_rail.py",
+    # inside a bare `try/except Exception: return None`. A split lands the pair
+    # where neither can find the other and NOTHING raises -- the hook just stops
+    # resolving gauge paths. Co-location is the whole contract here.
+    "gauge_writer_hook.py": ("spine_rail.py",),
 }
+
+# SOURCE SUBDIRECTORIES: scripts whose source lives under a subdirectory of
+# scripts/ rather than scripts/ itself. The install DESTINATION stays flat
+# (`<installed skill>/scripts/<name>`) for every script, which is what puts a
+# script and its runtime companions in one directory for free. Only the source
+# lookup varies. The hook pair's source layout is frozen -- this repo's own
+# settings file and the hooks' own tests hardcode `scripts/hooks/...` -- so the
+# installer reaches into the subdirectory instead of relocating the sources.
+SCRIPT_SOURCE_SUBDIRS: dict[str, str] = {
+    "gauge_writer_hook.py": "hooks",
+    "spine_rail.py": "hooks",
+}
+
+
+def script_source_path(script: str, scripts_root: Path) -> Path:
+    """Where a bundled script is READ from. Single resolver so validation and the
+    copy loop can never disagree about a script's source -- a disagreement would
+    surface as a hard install failure or, worse, a missing companion."""
+    subdir = SCRIPT_SOURCE_SUBDIRS.get(script)
+    return scripts_root / subdir / script if subdir else scripts_root / script
 
 
 def expand_script_bundle(scripts: tuple[str, ...]) -> tuple[str, ...]:
@@ -106,7 +131,13 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "lessons-auditor": ("checklist_engine.py",),
     "charter": ("checklist_engine.py",),
     "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
-    "workbench": ("checklist_engine.py",),
+    # workbench is the checklist engine's home skill, so it is the canonical (and
+    # only) owner of the gauge WRITER hook -- the gauge exists solely to feed
+    # checklist_engine.py's `current` advisory. Deliberately NOT a companion of
+    # checklist_engine.py: that would copy the hook into every engine-carrying
+    # skill and leave "which copy is canonical?" ambiguous for whatever later
+    # wires it into a settings.json.
+    "workbench": ("checklist_engine.py", "gauge_writer_hook.py"),
     "interrogator": ("checklist_engine.py", "verify_interrogation.py"),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
     "docent": ("docent_freshness.py",),
@@ -243,8 +274,9 @@ def validate_required_scripts(skills: Iterable[Skill], scripts_root: Path = REPO
     missing: list[str] = []
     for skill in skills:
         for script in skill.required_scripts:
-            if not (scripts_root / script).is_file():
-                missing.append(f"{skill.install_name}: {scripts_root / script}")
+            source = script_source_path(script, scripts_root)
+            if not source.is_file():
+                missing.append(f"{skill.install_name}: {source}")
     if missing:
         raise InstallError(f"required script(s) missing: {'; '.join(missing)}")
 
@@ -511,9 +543,12 @@ def install_skills(
             resolved_interpreter = resolve_interpreter()
         rewrite_installed_skill_paths(target, skill, resolved_interpreter)
         for script in skill.required_scripts:
+            # Destination is flat for every script regardless of where its source
+            # lives -- that flatness is what keeps a script and its runtime
+            # companions in one directory.
             script_target = target / "scripts" / script
             script_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(REPO_ROOT / "scripts" / script, script_target)
+            shutil.copy2(script_source_path(script, REPO_ROOT / "scripts"), script_target)
         for reference in skill.required_references:
             reference_target = target / "references" / reference
             reference_target.parent.mkdir(parents=True, exist_ok=True)

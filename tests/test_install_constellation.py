@@ -643,10 +643,15 @@ class InstallConstellationTests(unittest.TestCase):
         installer = load_installer()
         scripts_dir = Path(installer.__file__).resolve().parent
         siblings = {p.stem for p in scripts_dir.glob("*.py")}
+        # A bundled script sourced from a scripts/ SUBDIRECTORY still installs flat,
+        # so it is a sibling of the rest once installed -- count it as one here too,
+        # or this guard would go blind exactly on the scripts it cannot see.
+        siblings |= {Path(name).stem for name in installer.SCRIPT_SOURCE_SUBDIRS}
         for skill, bundle in installer.SKILL_SCRIPT_BUNDLES.items():
             names = set(bundle)
             for script in bundle:
-                text = (scripts_dir / script).read_text(encoding="utf-8")
+                text = installer.script_source_path(
+                    script, scripts_dir).read_text(encoding="utf-8")
                 for mod in re.findall(r"^from (\w+) import", text, re.M):
                     if mod in siblings:
                         self.assertIn(
@@ -1241,6 +1246,140 @@ class RuntimeCompanionBundleTests(unittest.TestCase):
                 "Governor would be inert in this install",
             )
             self.assertTrue(hasattr(mod._gauge_reader, "thresholds_for"))
+
+
+class HookScriptBundleTests(unittest.TestCase):
+    """The Context Governor's gauge WRITER has to ship, and ship co-located.
+
+    #256 bundled the gauge *reader* into every skill carrying the engine, so an
+    installed tree could READ a gauge that nothing ever WROTE -- the installer
+    had zero references to the hook pair. These tests ship the writer.
+
+    The co-location half is the load-bearing half and it fails SILENTLY:
+    `gauge_writer_hook._load_spine_rail()` resolves
+    `Path(__file__).resolve().parent / "spine_rail.py"` inside a bare
+    `try/except Exception: return None`. Land the two files in different
+    directories and nothing raises, nothing logs -- the hook just stops
+    resolving gauge paths. So the assertions below are made against the
+    OUTCOME ON DISK from a real install, and against the real loader, never
+    against the bundle dict alone (which cannot see a source-path mistake)."""
+
+    HOOK_SOURCE_DIR = ROOT / "scripts" / "hooks"
+    WRITER = "gauge_writer_hook.py"
+    RAIL = "spine_rail.py"
+    # Canonical owner: the hook exists solely to feed checklist_engine.py's
+    # `current` advisory, so it installs into the checklist engine's home skill.
+    # Deliberately NOT a companion of checklist_engine.py -- that would copy it
+    # into ~10 skills and reintroduce a "which copy is canonical?" ambiguity.
+    OWNER_SKILL = "workbench"
+    INSTALLED_OWNER = "constellation-workbench"
+
+    def _install_owner_skill(self, tmp: str) -> Path:
+        """Really install the owner skill into a temp dest; return its scripts/ dir."""
+        installer = load_installer()
+        dest = Path(tmp) / "skills"
+        exit_code = installer.main(
+            ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+             "--skills", self.OWNER_SKILL],
+            env={}, out=lambda _line: None,
+        )
+        self.assertEqual(0, exit_code)
+        return dest / self.INSTALLED_OWNER / "scripts"
+
+    def test_hook_pair_lands_co_located_in_a_real_install(self):
+        """Install for real and assert both files sit in the SAME directory on
+        disk. Inspecting the bundle dict would pass even if the copy loop wrote
+        them to different places."""
+        with tempfile.TemporaryDirectory() as tmp:
+            scripts_dir = self._install_owner_skill(tmp)
+            writer = scripts_dir / self.WRITER
+            rail = scripts_dir / self.RAIL
+            self.assertTrue(
+                writer.is_file(),
+                f"{self.WRITER} was not installed -- no install ships a gauge writer",
+            )
+            self.assertTrue(
+                rail.is_file(),
+                f"{self.RAIL} was not installed -- the writer's sibling load "
+                f"would fail open to None and the hook would silently no-op",
+            )
+            self.assertEqual(
+                writer.parent, rail.parent,
+                "hook pair is not co-located; the sibling load resolves relative "
+                "to __file__, so a split lands them where neither can find the other",
+            )
+            installed = sorted(p.name for p in scripts_dir.iterdir() if p.is_file())
+            self.assertIn(self.WRITER, installed)
+            self.assertIn(self.RAIL, installed)
+
+    def test_installed_gauge_writer_hook_actually_loads_its_spine_rail(self):
+        """End-to-end: install, then import the INSTALLED writer and assert it
+        resolved its rail. Presence on disk does not prove the sibling load
+        works; this drives the real loader (import-time `_load_spine_rail()`)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            scripts_dir = self._install_owner_skill(tmp)
+            mod = load_module("installed_gauge_writer_hook", scripts_dir / self.WRITER)
+            self.assertIsNotNone(
+                mod._spine_rail,
+                "installed gauge writer hook could not load spine_rail.py -- it "
+                "would resolve no gauge path and write nothing, silently",
+            )
+            self.assertTrue(hasattr(mod._spine_rail, "resolve_project_dir"))
+
+    def test_gauge_writer_hook_dynamic_loads_are_declared_as_companions(self):
+        """Parse the writer's source for `parent / "<name>.py"` sibling loads and
+        require each to be declared. Mirrors the engine's companion test so a NEW
+        dynamic load cannot be added without a matching bundle entry."""
+        installer = load_installer()
+        source = (self.HOOK_SOURCE_DIR / self.WRITER).read_text(encoding="utf-8")
+        siblings = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', source))
+        self.assertEqual(
+            {self.RAIL}, siblings,
+            f"{self.WRITER}'s dynamic sibling loads changed; update "
+            "SCRIPT_RUNTIME_COMPANIONS and this expectation together",
+        )
+        declared = set(installer.SCRIPT_RUNTIME_COMPANIONS.get(self.WRITER, ()))
+        self.assertEqual(siblings, declared)
+
+    def test_owner_skill_bundle_expands_to_both_hook_scripts(self):
+        installer = load_installer()
+        expanded = installer.expand_script_bundle(
+            installer.SKILL_SCRIPT_BUNDLES[self.OWNER_SKILL])
+        self.assertIn(self.WRITER, expanded)
+        self.assertIn(self.RAIL, expanded)
+
+    def test_gauge_writer_hook_ships_to_exactly_one_canonical_owner(self):
+        """One canonical copy, by design: whatever later wires this hook into a
+        settings.json needs an unambiguous path to point at."""
+        installer = load_installer()
+        owners = sorted(
+            name for name, scripts in installer.SKILL_SCRIPT_BUNDLES.items()
+            if self.WRITER in installer.expand_script_bundle(scripts)
+        )
+        self.assertEqual([self.OWNER_SKILL], owners)
+
+    def test_hook_sources_stay_under_scripts_hooks(self):
+        """The SOURCE layout is frozen -- this repo's own settings file plus
+        tests/test_gauge_writer.py and tests/test_spine_rail.py hardcode
+        `scripts/hooks/...`. Bundling must reach into the subdirectory rather
+        than relocate the sources up into scripts/."""
+        installer = load_installer()
+        for name in (self.WRITER, self.RAIL):
+            with self.subTest(script=name):
+                self.assertTrue((self.HOOK_SOURCE_DIR / name).is_file())
+                self.assertFalse((ROOT / "scripts" / name).exists())
+                self.assertEqual("hooks", installer.SCRIPT_SOURCE_SUBDIRS[name])
+
+    def test_validation_accepts_hook_scripts_from_their_subdirectory(self):
+        """`validate_required_scripts` runs before every install and resolves
+        sources under scripts/. A subdir-blind check turns bundling the hooks
+        into a hard install failure rather than a silent one."""
+        installer = load_installer()
+        owner = [s for s in installer.discover_skills()
+                 if s.source_name == self.OWNER_SKILL]
+        self.assertEqual(1, len(owner))
+        self.assertIn(self.WRITER, owner[0].required_scripts)
+        installer.validate_required_scripts(owner)  # must not raise
 
 
 class TemplateBaselineTests(unittest.TestCase):
