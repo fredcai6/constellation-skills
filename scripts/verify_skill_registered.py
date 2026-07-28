@@ -109,11 +109,19 @@ def verify_skill_registered(
     )
 
     # 2b. If the skill ships bundled scripts, every one must exist on disk (an
-    #     entry naming a missing script is a broken registration).
+    #     entry naming a missing script is a broken registration). Resolution
+    #     goes through the installer's OWN resolver, never a second hand-rolled
+    #     `scripts/<name>` join: not every bundled script is flat in scripts/
+    #     (SCRIPT_SOURCE_SUBDIRS), and a private copy of that lookup drifts into
+    #     a FALSE refusal the moment one is not -- which is exactly what
+    #     happened to `workbench` when the hook pair started shipping (#262).
+    scripts_root = Path(install_constellation.REPO_ROOT) / "scripts"
     for script in script_bundles.get(skill, ()):
+        source = install_constellation.script_source_path(script, scripts_root)
         _require(
-            (Path(install_constellation.REPO_ROOT) / "scripts" / script).is_file(),
-            f"skill {skill!r} registers script {script!r} that does not exist under scripts/",
+            source.is_file(),
+            f"skill {skill!r} registers script {script!r} that does not exist "
+            f"(resolved to {source})",
         )
 
     # 3. Mechanically broken — the gating subset of curate_corpus.

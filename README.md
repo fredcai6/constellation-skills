@@ -100,6 +100,20 @@ Install into a Codex project:
 python scripts/install_constellation.py --agent codex --scope project --project C:\path\to\repo
 ```
 
+Every install also **reports** whether the Context Governor's `PostToolUse` hooks are wired into
+your `settings.json` — `WIRED`, `STALE`, `UNWIRED`, or `CANNOT EVALUATE`. It only reports: nothing
+is written to `settings.json` without the opt-in flag below, and it will not create that file.
+
+To also wire the hooks (Claude Code only):
+
+```powershell
+python scripts/install_constellation.py --agent claude --scope user --wire-hooks
+```
+
+The entry is added alongside any `PostToolUse` matchers you already have. Prefer `--scope user`:
+project scope writes a committable `settings.json`, and the path it carries is absolute and so
+embeds your username. See [docs/GAUGE_WRITER_HOOK.md](docs/GAUGE_WRITER_HOOK.md).
+
 Install into a Claude Code project:
 
 ```powershell

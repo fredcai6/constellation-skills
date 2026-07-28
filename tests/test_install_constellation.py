@@ -643,10 +643,15 @@ class InstallConstellationTests(unittest.TestCase):
         installer = load_installer()
         scripts_dir = Path(installer.__file__).resolve().parent
         siblings = {p.stem for p in scripts_dir.glob("*.py")}
+        # A bundled script sourced from a scripts/ SUBDIRECTORY still installs flat,
+        # so it is a sibling of the rest once installed -- count it as one here too,
+        # or this guard would go blind exactly on the scripts it cannot see.
+        siblings |= {Path(name).stem for name in installer.SCRIPT_SOURCE_SUBDIRS}
         for skill, bundle in installer.SKILL_SCRIPT_BUNDLES.items():
             names = set(bundle)
             for script in bundle:
-                text = (scripts_dir / script).read_text(encoding="utf-8")
+                text = installer.script_source_path(
+                    script, scripts_dir).read_text(encoding="utf-8")
                 for mod in re.findall(r"^from (\w+) import", text, re.M):
                     if mod in siblings:
                         self.assertIn(
@@ -1243,6 +1248,140 @@ class RuntimeCompanionBundleTests(unittest.TestCase):
             self.assertTrue(hasattr(mod._gauge_reader, "thresholds_for"))
 
 
+class HookScriptBundleTests(unittest.TestCase):
+    """The Context Governor's gauge WRITER has to ship, and ship co-located.
+
+    #256 bundled the gauge *reader* into every skill carrying the engine, so an
+    installed tree could READ a gauge that nothing ever WROTE -- the installer
+    had zero references to the hook pair. These tests ship the writer.
+
+    The co-location half is the load-bearing half and it fails SILENTLY:
+    `gauge_writer_hook._load_spine_rail()` resolves
+    `Path(__file__).resolve().parent / "spine_rail.py"` inside a bare
+    `try/except Exception: return None`. Land the two files in different
+    directories and nothing raises, nothing logs -- the hook just stops
+    resolving gauge paths. So the assertions below are made against the
+    OUTCOME ON DISK from a real install, and against the real loader, never
+    against the bundle dict alone (which cannot see a source-path mistake)."""
+
+    HOOK_SOURCE_DIR = ROOT / "scripts" / "hooks"
+    WRITER = "gauge_writer_hook.py"
+    RAIL = "spine_rail.py"
+    # Canonical owner: the hook exists solely to feed checklist_engine.py's
+    # `current` advisory, so it installs into the checklist engine's home skill.
+    # Deliberately NOT a companion of checklist_engine.py -- that would copy it
+    # into ~10 skills and reintroduce a "which copy is canonical?" ambiguity.
+    OWNER_SKILL = "workbench"
+    INSTALLED_OWNER = "constellation-workbench"
+
+    def _install_owner_skill(self, tmp: str) -> Path:
+        """Really install the owner skill into a temp dest; return its scripts/ dir."""
+        installer = load_installer()
+        dest = Path(tmp) / "skills"
+        exit_code = installer.main(
+            ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+             "--skills", self.OWNER_SKILL],
+            env={}, out=lambda _line: None,
+        )
+        self.assertEqual(0, exit_code)
+        return dest / self.INSTALLED_OWNER / "scripts"
+
+    def test_hook_pair_lands_co_located_in_a_real_install(self):
+        """Install for real and assert both files sit in the SAME directory on
+        disk. Inspecting the bundle dict would pass even if the copy loop wrote
+        them to different places."""
+        with tempfile.TemporaryDirectory() as tmp:
+            scripts_dir = self._install_owner_skill(tmp)
+            writer = scripts_dir / self.WRITER
+            rail = scripts_dir / self.RAIL
+            self.assertTrue(
+                writer.is_file(),
+                f"{self.WRITER} was not installed -- no install ships a gauge writer",
+            )
+            self.assertTrue(
+                rail.is_file(),
+                f"{self.RAIL} was not installed -- the writer's sibling load "
+                f"would fail open to None and the hook would silently no-op",
+            )
+            self.assertEqual(
+                writer.parent, rail.parent,
+                "hook pair is not co-located; the sibling load resolves relative "
+                "to __file__, so a split lands them where neither can find the other",
+            )
+            installed = sorted(p.name for p in scripts_dir.iterdir() if p.is_file())
+            self.assertIn(self.WRITER, installed)
+            self.assertIn(self.RAIL, installed)
+
+    def test_installed_gauge_writer_hook_actually_loads_its_spine_rail(self):
+        """End-to-end: install, then import the INSTALLED writer and assert it
+        resolved its rail. Presence on disk does not prove the sibling load
+        works; this drives the real loader (import-time `_load_spine_rail()`)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            scripts_dir = self._install_owner_skill(tmp)
+            mod = load_module("installed_gauge_writer_hook", scripts_dir / self.WRITER)
+            self.assertIsNotNone(
+                mod._spine_rail,
+                "installed gauge writer hook could not load spine_rail.py -- it "
+                "would resolve no gauge path and write nothing, silently",
+            )
+            self.assertTrue(hasattr(mod._spine_rail, "resolve_project_dir"))
+
+    def test_gauge_writer_hook_dynamic_loads_are_declared_as_companions(self):
+        """Parse the writer's source for `parent / "<name>.py"` sibling loads and
+        require each to be declared. Mirrors the engine's companion test so a NEW
+        dynamic load cannot be added without a matching bundle entry."""
+        installer = load_installer()
+        source = (self.HOOK_SOURCE_DIR / self.WRITER).read_text(encoding="utf-8")
+        siblings = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', source))
+        self.assertEqual(
+            {self.RAIL}, siblings,
+            f"{self.WRITER}'s dynamic sibling loads changed; update "
+            "SCRIPT_RUNTIME_COMPANIONS and this expectation together",
+        )
+        declared = set(installer.SCRIPT_RUNTIME_COMPANIONS.get(self.WRITER, ()))
+        self.assertEqual(siblings, declared)
+
+    def test_owner_skill_bundle_expands_to_both_hook_scripts(self):
+        installer = load_installer()
+        expanded = installer.expand_script_bundle(
+            installer.SKILL_SCRIPT_BUNDLES[self.OWNER_SKILL])
+        self.assertIn(self.WRITER, expanded)
+        self.assertIn(self.RAIL, expanded)
+
+    def test_gauge_writer_hook_ships_to_exactly_one_canonical_owner(self):
+        """One canonical copy, by design: whatever later wires this hook into a
+        settings.json needs an unambiguous path to point at."""
+        installer = load_installer()
+        owners = sorted(
+            name for name, scripts in installer.SKILL_SCRIPT_BUNDLES.items()
+            if self.WRITER in installer.expand_script_bundle(scripts)
+        )
+        self.assertEqual([self.OWNER_SKILL], owners)
+
+    def test_hook_sources_stay_under_scripts_hooks(self):
+        """The SOURCE layout is frozen -- this repo's own settings file plus
+        tests/test_gauge_writer.py and tests/test_spine_rail.py hardcode
+        `scripts/hooks/...`. Bundling must reach into the subdirectory rather
+        than relocate the sources up into scripts/."""
+        installer = load_installer()
+        for name in (self.WRITER, self.RAIL):
+            with self.subTest(script=name):
+                self.assertTrue((self.HOOK_SOURCE_DIR / name).is_file())
+                self.assertFalse((ROOT / "scripts" / name).exists())
+                self.assertEqual("hooks", installer.SCRIPT_SOURCE_SUBDIRS[name])
+
+    def test_validation_accepts_hook_scripts_from_their_subdirectory(self):
+        """`validate_required_scripts` runs before every install and resolves
+        sources under scripts/. A subdir-blind check turns bundling the hooks
+        into a hard install failure rather than a silent one."""
+        installer = load_installer()
+        owner = [s for s in installer.discover_skills()
+                 if s.source_name == self.OWNER_SKILL]
+        self.assertEqual(1, len(owner))
+        self.assertIn(self.WRITER, owner[0].required_scripts)
+        installer.validate_required_scripts(owner)  # must not raise
+
+
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
         installer = load_installer()
@@ -1556,3 +1695,565 @@ class CorpusMarkerTests(unittest.TestCase):
                 env={}, out=lambda _: None,
             )
             self.assertFalse((target_root / "CORPUS.json").exists())
+
+
+class RegisteredScriptSourceTests(unittest.TestCase):
+    """Source resolution has exactly ONE owner: `script_source_path`.
+
+    The installer half of the #262 regression. `scripts/verify_skill_registered.py`
+    re-implemented the lookup as `REPO_ROOT/"scripts"/script`, blind to
+    SCRIPT_SOURCE_SUBDIRS, and falsely refused `workbench` the moment a bundled
+    script started shipping from `scripts/hooks/`. That was invisible to the whole
+    suite, so pin it from both sides: the rail's side lives in
+    tests/test_write_a_skill.py."""
+
+    def test_every_registered_bundle_script_resolves_through_the_shared_resolver(self):
+        installer = load_installer()
+        scripts_root = Path(installer.REPO_ROOT) / "scripts"
+        subdir_backed = 0
+        for skill, bundle in installer.SKILL_SCRIPT_BUNDLES.items():
+            for script in installer.expand_script_bundle(bundle):
+                with self.subTest(skill=skill, script=script):
+                    source = installer.script_source_path(script, scripts_root)
+                    self.assertTrue(
+                        source.is_file(),
+                        f"{skill} registers {script}, which script_source_path resolves "
+                        f"to {source} -- a path with no file behind it",
+                    )
+                if script in installer.SCRIPT_SOURCE_SUBDIRS:
+                    subdir_backed += 1
+        self.assertGreater(
+            subdir_backed, 0,
+            "no registered script is sourced from a subdirectory any more -- this "
+            "test no longer exercises the case it was written for",
+        )
+
+
+class _HookWiringFixture(unittest.TestCase):
+    """Shared fixture for the Context Governor settings.json detection + wiring
+    tests. `--dest <tmp>/skills` is used everywhere so the settings file under
+    test is `<tmp>/settings.json` -- a real install layout, and structurally
+    incapable of touching the developer's own ~/.claude/settings.json."""
+
+    OWNER_SKILL = "workbench"
+    INSTALLED_OWNER = "constellation-workbench"
+    WRITER = "gauge_writer_hook.py"
+
+    def _dest(self, tmp) -> Path:
+        return Path(tmp) / "skills"
+
+    def _settings(self, tmp) -> Path:
+        return Path(tmp) / "settings.json"
+
+    def _write_settings(self, tmp, payload: dict) -> Path:
+        path = self._settings(tmp)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        return path
+
+    def _run(self, tmp, *extra, expect=0):
+        """A real install run against <tmp>/skills, capturing its output."""
+        installer = load_installer()
+        lines = []
+        code = installer.main(
+            ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+             "--skills", self.OWNER_SKILL, *extra],
+            env={}, out=lines.append,
+        )
+        self.assertEqual(expect, code)
+        return "\n".join(lines)
+
+    def _fake_hook_file(self, tmp) -> Path:
+        """A resolvable gauge_writer_hook.py that no install created -- lets the
+        detector be exercised without paying for a full install."""
+        path = Path(tmp) / "elsewhere" / self.WRITER
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# stand-in\n", encoding="utf-8")
+        return path
+
+    @staticmethod
+    def _entry(command: str, matcher: str = "*") -> dict:
+        return {"matcher": matcher,
+                "hooks": [{"type": "command", "command": command, "timeout": 10}]}
+
+
+class HookWiringDetectionTests(_HookWiringFixture):
+    """Always-on, no-flag detection (#262). Three states -- wired / stale /
+    unwired -- classified by RESOLVING the referenced path against the
+    filesystem, never by string-matching it.
+
+    `stale` is the load-bearing state and is not polish: under binary detection
+    a moved or renamed install reads as *wired*, which is the reassuring-failure
+    shape. Per #265, "hook not wired at all" is the one silence cause the gauge
+    writer can never self-report -- a hook that never runs cannot write a sidecar
+    explaining that it never ran -- so this detector is the only thing in the
+    system that can ever surface it.
+
+    The other half is a human ruling (`decision:opt-in-wiring-only`): without
+    `--wire-hooks` the installer reads and reports and writes NOTHING, and does
+    not even create an absent settings.json."""
+
+    def test_detects_unwired_when_settings_json_is_absent(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            wiring = installer.detect_hook_wiring(self._settings(tmp), env={})
+            self.assertEqual(installer.WIRING_UNWIRED, wiring.state)
+            self.assertFalse(wiring.settings_exists)
+
+    def test_detects_unwired_when_settings_has_no_governor_entry(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "/opt/other/unrelated_hook.py"', matcher="Bash")]}})
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_UNWIRED, wiring.state)
+            self.assertTrue(wiring.settings_exists)
+
+    def test_detects_wired_when_the_entry_resolves_on_disk(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+
+    def test_detects_stale_when_the_entry_path_no_longer_exists(self):
+        """The moved-install case. A string-matching detector reports this as
+        `wired` -- syntactically present, silently dead."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            hook.unlink()  # the install moved / was uninstalled
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_STALE, wiring.state)
+            self.assertEqual((), wiring.resolved)
+            self.assertEqual(1, len(wiring.unresolved))
+
+    def test_detection_classifies_by_resolution_not_by_string_match(self):
+        """Two entries, textually indistinguishable in shape; only one has a file
+        behind it. A string-matching detector cannot tell them apart at all."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            real = self._fake_hook_file(tmp)
+            ghost = Path(tmp) / "moved-away" / self.WRITER  # never created
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{ghost.as_posix()}"'),
+                self._entry(f'py "{real.as_posix()}"'),
+            ]}})
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+            self.assertEqual(1, len(wiring.resolved))
+            self.assertEqual(1, len(wiring.unresolved))
+
+    def test_detection_expands_env_tokens_in_a_hand_wired_entry(self):
+        """docs/GAUGE_WRITER_HOOK.md currently tells users to hand-wire a
+        `${CLAUDE_PROJECT_DIR}` entry. The installer never GENERATES that form,
+        but reporting a working hand-wired entry as `stale` would be a false
+        alarm, so resolution expands env tokens from the run's own env."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "${CLAUDE_PROJECT_DIR}/' + self.WRITER + '"')]}})
+            env = {"CLAUDE_PROJECT_DIR": hook.parent.as_posix()}
+            self.assertEqual(installer.WIRING_WIRED,
+                             installer.detect_hook_wiring(path, env=env).state)
+            # ...and with nothing to expand it with, we say we CANNOT TELL.
+            # Not `stale`: CLAUDE_PROJECT_DIR is empirically unreadable outside a
+            # hook subprocess (#269), so it is unset in the ordinary case and
+            # reporting "definitely broken" would be the false alarm this
+            # expansion was added to prevent -- just pointed the other way.
+            self.assertEqual(installer.WIRING_UNDETERMINABLE,
+                             installer.detect_hook_wiring(path, env={}).state)
+
+    def test_detection_will_not_expand_an_arbitrary_env_var(self):
+        """Regression, reproduced by the g2 reviewer: expansion happens in the
+        INSTALLER's environment while the entry runs in a future HOOK's, so an
+        unrelated variable that happens to be set right now could resolve a path
+        and report WIRED -- manufacturing the exact reassuring failure this
+        detector exists to prevent. Only CLAUDE_PROJECT_DIR is expandable."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "%MYTOOLS%/' + self.WRITER + '"')]}})
+            # The var IS set and WOULD resolve to a real file -- and we still
+            # refuse to claim the hook is wired on that basis.
+            wiring = installer.detect_hook_wiring(
+                path, env={"MYTOOLS": hook.parent.as_posix()})
+            self.assertEqual(installer.WIRING_UNDETERMINABLE, wiring.state)
+            self.assertEqual((), wiring.resolved)
+            self.assertEqual(1, len(wiring.undeterminable))
+
+    def test_undeterminable_is_reported_as_neither_wired_nor_stale(self):
+        """"I cannot tell" must not be laundered into either confident verdict."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "${SOME_OTHER_VAR}/' + self.WRITER + '"')]}})
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_UNDETERMINABLE, wiring.state)
+            line = installer.describe_hook_wiring(wiring)
+            self.assertIn("CANNOT EVALUATE", line)
+            self.assertNotIn("WIRED --", line)
+            self.assertNotIn("STALE", line)
+
+    def test_a_resolvable_entry_still_wins_over_an_undeterminable_one(self):
+        """A real working entry alongside an unevaluatable one is WIRED: the
+        governor demonstrably fires, whatever the other entry does."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "%MYSTERY%/' + self.WRITER + '"'),
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            self.assertEqual(installer.WIRING_WIRED,
+                             installer.detect_hook_wiring(path, env={}).state)
+
+    def test_detection_survives_an_unparseable_settings_json(self):
+        """A broken settings.json must not take the install down with it, and
+        must not be reported as one of the three real states -- we could not
+        classify it at all."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._settings(tmp)
+            path.write_text("{ not json", encoding="utf-8")
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_UNREADABLE, wiring.state)
+            output = self._run(tmp)  # a real install run still succeeds
+            self.assertIn("Context Governor hooks:", output)
+
+    def test_no_flag_install_run_reports_the_wiring_state(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = self._run(tmp)
+            self.assertIn(f"Context Governor hooks: {installer.WIRING_UNWIRED.upper()}",
+                          output)
+
+    def test_no_flag_install_run_does_not_create_an_absent_settings_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)
+            self.assertFalse(
+                self._settings(tmp).exists(),
+                "the no-flag path created a settings.json -- the human ruling is "
+                "that the installer never writes one without --wire-hooks",
+            )
+
+    def test_no_flag_install_run_leaves_settings_json_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write_settings(tmp, {
+                "permissions": {"allow": ["Bash(ls:*)"]},
+                "hooks": {"PostToolUse": [
+                    self._entry('py "/opt/other/unrelated_hook.py"', matcher="Bash")]},
+            })
+            before = path.read_bytes()
+            self._run(tmp)
+            self.assertEqual(before, path.read_bytes())
+
+    def test_no_flag_dry_run_detects_without_writing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--dry-run")
+            self.assertFalse(self._settings(tmp).exists())
+
+    def test_settings_path_is_the_sibling_of_the_installed_skills_dir(self):
+        installer = load_installer()
+        self.assertEqual(
+            Path("/home/u/.claude/settings.json"),
+            installer.settings_path_for_target_root(Path("/home/u/.claude/skills")),
+        )
+
+    def test_detection_is_skipped_for_agents_with_no_hook_mechanism(self):
+        """Hooks are a Claude Code mechanism. Reporting on -- let alone writing --
+        a `hooks.PostToolUse` array under ~/.codex/ would be talking about a file
+        nothing ever reads."""
+        installer = load_installer()
+        lines = []
+        with tempfile.TemporaryDirectory() as tmp:
+            code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--skills", self.OWNER_SKILL],
+                env={}, out=lines.append,
+            )
+        self.assertEqual(0, code)
+        self.assertNotIn("Context Governor hooks:", "\n".join(lines))
+
+
+class HookWiringOptInTests(_HookWiringFixture):
+    """`--wire-hooks` -- the ONLY path on which the installer writes a
+    settings.json (`decision:opt-in-wiring-only`, a human ruling).
+
+    The command string carries an ABSOLUTE installed path, never
+    `${CLAUDE_PROJECT_DIR}`. That variable happens to deliver anti-tamper today
+    only as an accident of undocumented harness behaviour (#269: it is fixed at
+    session launch, so it happens to point at the main checkout for a worktree
+    agent). An absolute installed path is pinned BY CONSTRUCTION and asks the
+    harness to guarantee nothing -- which is what actually protects Fred's
+    ruling that an agent's own branch cannot edit the code that judges it."""
+
+    def _wire(self, tmp, *extra):
+        return self._run(tmp, "--wire-hooks", *extra)
+
+    def _settings_json(self, tmp) -> dict:
+        return json.loads(self._settings(tmp).read_text(encoding="utf-8"))
+
+    def _entries(self, tmp) -> list:
+        return self._settings_json(tmp)["hooks"]["PostToolUse"]
+
+    UNRELATED = {
+        "matcher": "Bash",
+        "hooks": [{"type": "command",
+                   "command": 'py "${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py" PostToolUse',
+                   "timeout": 20}],
+    }
+
+    # -- the command string -------------------------------------------------
+
+    def test_wire_hooks_writes_an_absolute_path_not_a_project_dir_token(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            command = self._entries(tmp)[0]["hooks"][0]["command"]
+            expected = installer.installed_gauge_writer_path(self._dest(tmp))
+            self.assertIn(expected.as_posix(), command)
+            self.assertNotIn("${CLAUDE_PROJECT_DIR}", command)
+            self.assertNotIn("$HOME", command)
+            self.assertNotIn("%USERPROFILE%", command)
+            self.assertTrue(Path(expected).is_absolute())
+            self.assertTrue(expected.is_file(), "wired a path with no file behind it")
+
+    def test_wired_command_uses_the_probed_interpreter_and_documented_timeout(self):
+        """The interpreter comes from the existing probe, not a hardcoded `py`;
+        the timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            entry = self._entries(tmp)[0]
+            self.assertEqual("*", entry["matcher"])
+            hook = entry["hooks"][0]
+            self.assertEqual("command", hook["type"])
+            self.assertEqual(10, hook["timeout"])
+            self.assertEqual(installer.HOOK_TIMEOUT, hook["timeout"])
+            self.assertTrue(
+                hook["command"].startswith(installer.resolve_interpreter().interpreter + " "),
+                f"command did not start with the probed interpreter: {hook['command']!r}",
+            )
+
+    def test_the_wired_command_string_actually_executes(self):
+        """Run the generated command EXACTLY as Claude Code would -- same string,
+        stdin JSON -- and require it not to refuse.
+
+        String-matching the rendered command is not evidence that it works, and
+        this whole issue exists because a shipped-but-inert Context Governor is
+        indistinguishable from a working one from the outside. A quoting slip,
+        a bad interpreter, or a path that does not resolve would be invisible to
+        every other assertion in this class."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            command = self._entries(tmp)[0]["hooks"][0]["command"]
+            result = subprocess.run(
+                command, shell=True, input="{}", capture_output=True, text=True,
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+            )
+            self.assertEqual(
+                0, result.returncode,
+                f"the wired command did not run: {command!r}\n"
+                f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
+            )
+
+    def test_a_wired_entry_then_detects_as_wired(self):
+        """Round trip: what the wiring writes is what the detector recognises."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            wiring = installer.detect_hook_wiring(self._settings(tmp), env={})
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+
+    # -- negative 2: --wire-hooks --dry-run TOGETHER -------------------------
+
+    def test_wire_hooks_with_dry_run_together_writes_nothing(self):
+        """THE risky combination, and it gets its own test on purpose: `dry_run`
+        is pre-existing plumbing that a brand-new write path can trivially fail
+        to consult. A no-flag dry run is trivially safe and does NOT stand in
+        for this."""
+        with tempfile.TemporaryDirectory() as tmp:
+            existing = self._write_settings(tmp, {
+                "permissions": {"allow": ["Bash(ls:*)"]},
+                "hooks": {"PostToolUse": [self.UNRELATED]},
+            })
+            before = existing.read_bytes()
+            output = self._wire(tmp, "--dry-run")
+            self.assertEqual(
+                before, existing.read_bytes(),
+                "--wire-hooks --dry-run modified settings.json",
+            )
+            self.assertIn("DRY RUN", output)
+
+    def test_wire_hooks_with_dry_run_does_not_create_an_absent_settings_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp, "--dry-run")
+            self.assertFalse(
+                self._settings(tmp).exists(),
+                "--wire-hooks --dry-run created a settings.json",
+            )
+
+    # -- negative 3: additive -----------------------------------------------
+
+    def test_wire_hooks_is_additive_and_preserves_unrelated_settings(self):
+        """An unrelated PostToolUse matcher must survive intact and unreordered,
+        alongside unrelated top-level keys."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_settings(tmp, {
+                "permissions": {"allow": ["Bash(ls:*)"], "deny": []},
+                "env": {"FOO": "bar"},
+                "hooks": {
+                    "Stop": [{"hooks": [{"type": "command", "command": "py stop.py"}]}],
+                    "PostToolUse": [self.UNRELATED],
+                },
+            })
+            self._wire(tmp)
+            settings = self._settings_json(tmp)
+            self.assertEqual({"allow": ["Bash(ls:*)"], "deny": []}, settings["permissions"])
+            self.assertEqual({"FOO": "bar"}, settings["env"])
+            self.assertEqual(
+                [{"hooks": [{"type": "command", "command": "py stop.py"}]}],
+                settings["hooks"]["Stop"],
+            )
+            entries = settings["hooks"]["PostToolUse"]
+            self.assertEqual(2, len(entries))
+            # ...intact, and FIRST -- not reordered.
+            self.assertEqual(self.UNRELATED, entries[0])
+
+    def test_wire_hooks_appends_a_sibling_and_never_nests_in_an_existing_matcher(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_settings(tmp, {"hooks": {"PostToolUse": [self.UNRELATED]}})
+            self._wire(tmp)
+            entries = self._entries(tmp)
+            self.assertEqual(1, len(entries[0]["hooks"]),
+                             "the new hook was nested inside the existing matcher block")
+            new = entries[1]
+            self.assertEqual("*", new["matcher"])
+            self.assertEqual(1, len(new["hooks"]))
+
+    def test_wire_hooks_creates_settings_json_only_under_the_opt_in_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)                       # no flag
+            self.assertFalse(self._settings(tmp).exists())
+            self._wire(tmp, "--force")           # opt-in
+            self.assertTrue(self._settings(tmp).exists())
+            self.assertEqual(1, len(self._entries(tmp)))
+
+    def test_wire_hooks_twice_does_not_duplicate_the_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            self._wire(tmp, "--force")
+            self.assertEqual(1, len(self._entries(tmp)))
+
+    def test_wire_hooks_leaves_a_stale_entry_in_place_and_adds_a_sibling(self):
+        """No self-healing, by design (the design brief names this an accepted
+        cost): the stale entry is REPORTED, never silently rewritten."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            stale = self._entry('py "/gone/away/gauge_writer_hook.py"')
+            self._write_settings(tmp, {"hooks": {"PostToolUse": [stale]}})
+            output = self._wire(tmp)
+            entries = self._entries(tmp)
+            self.assertEqual(2, len(entries))
+            self.assertEqual(stale, entries[0])
+            self.assertEqual(
+                installer.WIRING_WIRED,
+                installer.detect_hook_wiring(self._settings(tmp), env={}).state,
+            )
+            self.assertIn("Context Governor hooks:", output)
+
+    # -- refusals -----------------------------------------------------------
+
+    def test_wire_hooks_hard_errors_when_the_canonical_owner_is_not_installed(self):
+        """Refusing to wire something it cannot locate is correct, and is NOT a
+        fail-open violation: `decision:fail-open-is-inviolable` governs hook
+        EXECUTION paths, not installer preconditions."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(self._dest(tmp)),
+                         "--skills", "charter", "--wire-hooks"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn(self.OWNER_SKILL, stderr.getvalue())
+            self.assertFalse(self._settings(tmp).exists())
+
+    def test_wire_hooks_refuses_an_unparseable_settings_json_without_clobbering(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._settings(tmp)
+            path.write_text("{ not json", encoding="utf-8")
+            before = path.read_bytes()
+            installer = load_installer()
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(self._dest(tmp)),
+                         "--skills", self.OWNER_SKILL, "--wire-hooks"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertEqual(before, path.read_bytes())
+
+    def test_wire_hooks_is_rejected_for_an_agent_with_no_hook_mechanism(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "codex", "--scope", "user",
+                         "--dest", str(self._dest(tmp)),
+                         "--skills", self.OWNER_SKILL, "--wire-hooks"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertFalse(self._settings(tmp).exists())
+
+    def test_wire_hooks_is_rejected_with_baseline_only(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project",
+                         "--project", str(project), "--baseline-only", "--wire-hooks"],
+                        env={}, cwd=project, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+
+    # -- the committability cost, surfaced ----------------------------------
+
+    def test_wire_hooks_at_project_scope_warns_the_file_is_committable(self):
+        """An absolute path embeds the user's home directory AND username, and a
+        project-scope settings.json is committable. Wiring must not make
+        committing it the path of least resistance."""
+        installer = load_installer()
+        lines = []
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.OWNER_SKILL, "--wire-hooks"],
+                env={}, cwd=project, out=lines.append,
+            )
+            self.assertEqual(0, code)
+            settings = project / ".claude" / "settings.json"
+            self.assertTrue(settings.is_file())
+            output = "\n".join(lines).lower()
+            self.assertIn("commit", output)
+            self.assertIn("absolute path", output)
+            self.assertIn("user name", output)

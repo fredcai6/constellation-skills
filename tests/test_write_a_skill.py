@@ -138,6 +138,53 @@ class RealSkillRegistrationTests(unittest.TestCase):
         # Uses the live registration maps + the real skills/ corpus.
         self.rail.verify_skill_registered("write-a-skill", ROOT / "skills")  # no raise
 
+    def test_rail_resolves_a_subdir_sourced_script_instead_of_falsely_refusing(self):
+        """Regression (#262): the rail checked bundle members with a hand-rolled
+        `REPO_ROOT/"scripts"/script`, blind to SCRIPT_SOURCE_SUBDIRS. The moment
+        the Context Governor hook pair was bundled -- its source lives in
+        `scripts/hooks/`, not flat in `scripts/` -- the rail emitted a FALSE
+        refusal for the skill that carries it:
+
+            REFUSED: skill 'workbench' registers script 'gauge_writer_hook.py'
+                     that does not exist under scripts/
+
+        The script was right there. Source resolution has exactly ONE owner,
+        `install_constellation.script_source_path`, and every consumer must go
+        through it or they drift apart again.
+
+        Driven against a TOY skill so the assertion isolates the resolver: the
+        live corpus carries unrelated pre-existing curate gating flags (missing
+        `invoker:` tags on ~12 skills, workbench included) that would mask what
+        this test is measuring. `subdir_scripts` is derived from the live
+        SCRIPT_SOURCE_SUBDIRS map, so the NEXT subdirectory-sourced script is
+        covered automatically."""
+        import tempfile
+        subdir_scripts = sorted(self.installer.SCRIPT_SOURCE_SUBDIRS)
+        self.assertTrue(subdir_scripts, "no script is sourced from a subdirectory any more")
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "skills"
+            _write_toy(root)
+            self.rail.verify_skill_registered(
+                "toy-widget", root,
+                reference_bundles={"toy-widget": ("global-everyone.md",)},
+                script_bundles={"toy-widget": tuple(subdir_scripts)},
+            )  # no raise == the subdir-sourced sources were found
+
+    def test_rail_still_refuses_a_script_that_really_is_missing(self):
+        """The resolver fix must not soften the check it was guarding: a bundle
+        entry naming a script that exists nowhere is still a broken
+        registration."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "skills"
+            _write_toy(root)
+            with self.assertRaises(self.rail.SkillRegistrationError):
+                self.rail.verify_skill_registered(
+                    "toy-widget", root,
+                    reference_bundles={"toy-widget": ("global-everyone.md",)},
+                    script_bundles={"toy-widget": ("no_such_script_anywhere.py",)},
+                )
+
 
 class SharedSeamTests(unittest.TestCase):
     def test_criteria_reference_exists_and_both_consumers_reference_it(self):
