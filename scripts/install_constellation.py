@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -492,6 +493,354 @@ def remove_existing_constellation_set(target_root: Path) -> None:
             target.unlink()
 
 
+# ---------------------------------------------------------------------------
+# Context Governor hook wiring (#262)
+# ---------------------------------------------------------------------------
+# The hook scripts bundled above do nothing at all until a settings.json
+# actually invokes them, and NOTHING ELSE IN THE SYSTEM CAN REPORT THAT GAP:
+# per #265 a hook that never runs cannot write a sidecar explaining that it
+# never ran. So detection here is always on.
+#
+# It is also strictly READ-ONLY. `decision:opt-in-wiring-only` is a human
+# ruling: without --wire-hooks the installer reads settings.json, reports, and
+# writes nothing -- it does not even create the file when it is absent.
+
+SETTINGS_FILENAME = "settings.json"
+GAUGE_WRITER_HOOK_SCRIPT = "gauge_writer_hook.py"
+# The canonical owner (see SKILL_SCRIPT_BUNDLES["workbench"]): exactly one
+# installed copy exists, so the wiring has an unambiguous path to point at.
+HOOK_OWNER_SKILL = "workbench"
+HOOK_OWNER_INSTALL_NAME = "constellation-workbench"
+HOOK_EVENT = "PostToolUse"
+# Matcher and timeout are carried VERBATIM from the snippet in
+# docs/GAUGE_WRITER_HOOK.md. Neither is tuned, derived, or invented here: the
+# matcher is "*" (unlike spine_rail.py's "Bash", the gauge must see every tool
+# call to track fill continuously) and the timeout is the documented 10.
+HOOK_MATCHER = "*"
+HOOK_TIMEOUT = 10
+
+# Hooks are a Claude Code mechanism. No other supported agent reads a
+# `hooks.PostToolUse` array, so detecting -- let alone writing -- one under
+# ~/.codex/ would be reporting on a file nothing ever reads.
+HOOK_CAPABLE_AGENT_NAMES = frozenset({AGENT_TARGETS["claude"].name})
+
+WIRING_WIRED = "wired"
+WIRING_STALE = "stale"
+WIRING_UNWIRED = "unwired"
+# NOT a fourth classification of entries -- it says the entries could not be
+# classified at all. Reporting that beats lying in the reassuring direction
+# ("wired") or the alarming one ("stale"), and beats taking the install down.
+WIRING_UNREADABLE = "unreadable"
+# Also not a classification of entries: it says THESE entries cannot be
+# classified from here. See `_EXPANDABLE_ENV_TOKENS`.
+WIRING_UNDETERMINABLE = "undeterminable"
+
+# The ONLY env token this detector will expand. Everything else stays literal
+# and makes its entry undeterminable, on purpose.
+#
+# Expansion happens in the INSTALLER's environment, but the entry will run in a
+# future HOOK's environment -- different process, different variables. Expanding
+# freely lets an unrelated variable that happens to be set right now resolve a
+# path and report WIRED, which manufactures exactly the reassuring failure this
+# detector exists to prevent (reproduced with a `%MYTOOLS%` entry during g2
+# review). `CLAUDE_PROJECT_DIR` is the one token we can reason about: it is the
+# form our own docs recommend for a source checkout, so refusing to detect it
+# would be incoherent. Note we are still stricter about what we EMIT than what
+# we ACCEPT -- `build_hook_command` never produces a token at all.
+_EXPANDABLE_ENV_TOKENS = frozenset({"CLAUDE_PROJECT_DIR"})
+
+_ESCAPED_HOOK_SCRIPT = re.escape(GAUGE_WRITER_HOOK_SCRIPT)
+# Quoted form first: an installed path on Windows can contain spaces, so the
+# quotes -- not whitespace -- are what delimit it.
+_HOOK_SCRIPT_PATH_RE = re.compile(
+    rf'"([^"]*{_ESCAPED_HOOK_SCRIPT})"|(\S*{_ESCAPED_HOOK_SCRIPT})'
+)
+_ENV_TOKEN_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|%([A-Za-z_][A-Za-z0-9_]*)%")
+
+
+@dataclass(frozen=True)
+class HookWiring:
+    """One read-only verdict about one settings.json."""
+
+    state: str
+    settings_path: Path
+    settings_exists: bool
+    resolved: tuple[str, ...] = ()    # governor commands whose script IS on disk
+    unresolved: tuple[str, ...] = ()  # governor commands that resolve to nothing
+    # governor commands carrying an env token we decline to evaluate -- neither
+    # confirmed nor condemned, because from here they are genuinely unknowable
+    undeterminable: tuple[str, ...] = ()
+    error: str | None = None
+
+
+def settings_path_for_target_root(target_root: Path) -> Path:
+    """The settings.json governing the agent config dir this install writes
+    into: `~/.claude/skills` -> `~/.claude/settings.json`, and at project scope
+    `<project>/.claude/skills` -> `<project>/.claude/settings.json`.
+
+    Derived from the RESOLVED target root rather than re-derived from scope, so
+    a `--dest` install -- which every test in this repo uses -- can never reach
+    past its own tree into the developer's real ~/.claude/settings.json."""
+    return target_root.parent / SETTINGS_FILENAME
+
+
+def installed_gauge_writer_path(target_root: Path) -> Path:
+    return target_root / HOOK_OWNER_INSTALL_NAME / "scripts" / GAUGE_WRITER_HOOK_SCRIPT
+
+
+def _expand_env_tokens(text: str, env: Mapping[str, str]) -> str:
+    """Expand ONLY `_EXPANDABLE_ENV_TOKENS`, and only when actually set,
+    leaving every other token LITERAL rather than dropping it -- a dropped
+    token would collapse the path to a shorter one that might coincidentally
+    exist. A surviving token is the signal `detect_hook_wiring` uses to declare
+    an entry undeterminable rather than guessing at it."""
+
+    def replace(match: re.Match) -> str:
+        name = match.group(1) or match.group(2)
+        if name not in _EXPANDABLE_ENV_TOKENS:
+            return match.group(0)
+        return env.get(name, match.group(0))
+
+    return _ENV_TOKEN_RE.sub(replace, text)
+
+
+def extract_hook_script_path(command: str) -> str | None:
+    """The gauge-writer script path a hook `command` string invokes, or None
+    when the command is not a Context Governor entry at all."""
+    match = _HOOK_SCRIPT_PATH_RE.search(command)
+    if match is None:
+        return None
+    return match.group(1) or match.group(2)
+
+
+def governor_hook_commands(settings: object) -> list[str]:
+    """Every PostToolUse `command` string that invokes a gauge writer hook,
+    flattened across matcher blocks. Deliberately tolerant of shapes it does
+    not expect: an odd settings.json is something to REPORT, never something to
+    raise on in the middle of an otherwise-fine install."""
+    commands: list[str] = []
+    if not isinstance(settings, dict):
+        return commands
+    hooks = settings.get("hooks")
+    entries = hooks.get(HOOK_EVENT) if isinstance(hooks, dict) else None
+    if not isinstance(entries, list):
+        return commands
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        for hook in entry.get("hooks") or []:
+            if not isinstance(hook, dict):
+                continue
+            command = hook.get("command")
+            if isinstance(command, str) and extract_hook_script_path(command):
+                commands.append(command)
+    return commands
+
+
+def detect_hook_wiring(settings_path: Path, *, env: Mapping[str, str]) -> HookWiring:
+    """Three-state and READ-ONLY -- opens nothing for writing and creates
+    nothing.
+
+    Classification is by RESOLVING each entry's script path against the
+    filesystem, never by string-matching the command. Under a string match a
+    moved, renamed, or uninstalled tree still reads as `wired`, which is exactly
+    the reassuring-failure shape this detector exists to prevent."""
+    if not settings_path.is_file():
+        return HookWiring(WIRING_UNWIRED, settings_path, False)
+    try:
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return HookWiring(WIRING_UNREADABLE, settings_path, True, error=str(exc))
+
+    resolved: list[str] = []
+    unresolved: list[str] = []
+    undeterminable: list[str] = []
+    for command in governor_hook_commands(settings):
+        raw = extract_hook_script_path(command) or ""
+        expanded = _expand_env_tokens(raw, env)
+        if _ENV_TOKEN_RE.search(expanded):
+            # An env token we will not evaluate survives. Resolving it against
+            # the installer's own environment would answer a question about the
+            # WRONG process, so we decline rather than guess in either direction.
+            undeterminable.append(command)
+            continue
+        (resolved if Path(expanded).is_file() else unresolved).append(command)
+
+    if resolved:
+        state = WIRING_WIRED
+    elif undeterminable:
+        # Ahead of STALE deliberately: "I cannot tell" must not be reported as
+        # "definitely broken" any more than as "definitely fine".
+        state = WIRING_UNDETERMINABLE
+    elif unresolved:
+        state = WIRING_STALE
+    else:
+        state = WIRING_UNWIRED
+    return HookWiring(
+        state, settings_path, True, tuple(resolved), tuple(unresolved), tuple(undeterminable)
+    )
+
+
+def describe_hook_wiring(wiring: HookWiring) -> str:
+    """One reportable line. ASCII only -- this goes to a Windows console."""
+    if wiring.state == WIRING_WIRED:
+        paths = ", ".join(sorted(
+            {extract_hook_script_path(command) or command for command in wiring.resolved}
+        ))
+        return f"- Context Governor hooks: WIRED -- {paths}"
+    if wiring.state == WIRING_STALE:
+        return (
+            f"- Context Governor hooks: STALE -- {len(wiring.unresolved)} {HOOK_EVENT} "
+            f"entry(ies) in {wiring.settings_path} name a {GAUGE_WRITER_HOOK_SCRIPT} that "
+            f"is not on disk, so the hook never runs and nothing else can tell you that: "
+            f"{'; '.join(wiring.unresolved)}. Re-run with --wire-hooks to add a correct "
+            f"entry; the stale one is left in place for you to remove."
+        )
+    if wiring.state == WIRING_UNDETERMINABLE:
+        return (
+            f"- Context Governor hooks: CANNOT EVALUATE -- {len(wiring.undeterminable)} "
+            f"{HOOK_EVENT} entry(ies) in {wiring.settings_path} name the script through an "
+            f"environment variable this installer will not expand, because it would be "
+            f"expanded in the WRONG process (this one, not the future hook's): "
+            f"{'; '.join(wiring.undeterminable)}. Whether the hook fires cannot be "
+            f"determined from here -- it is neither confirmed nor condemned."
+        )
+    if wiring.state == WIRING_UNREADABLE:
+        return (
+            f"- Context Governor hooks: UNREADABLE -- could not parse "
+            f"{wiring.settings_path} ({wiring.error}), so the wiring state is unknown. "
+            f"Nothing was read past this point and nothing was changed."
+        )
+    where = wiring.settings_path if wiring.settings_exists else f"{wiring.settings_path} (absent)"
+    return (
+        f"- Context Governor hooks: UNWIRED -- no {HOOK_EVENT} entry for "
+        f"{GAUGE_WRITER_HOOK_SCRIPT} in {where}, so the Context Governor never fires. "
+        f"Re-run with --wire-hooks to add one; nothing is written without that flag."
+    )
+
+
+def report_hook_wiring(
+    target_root: Path, *, env: Mapping[str, str], out: Callable[[str], object]
+) -> HookWiring:
+    wiring = detect_hook_wiring(settings_path_for_target_root(target_root), env=env)
+    out(describe_hook_wiring(wiring))
+    return wiring
+
+
+def build_hook_command(script_path: Path, interpreter: str) -> str:
+    """The literal `command` string an entry carries.
+
+    ABSOLUTE, and never `${CLAUDE_PROJECT_DIR}`. That variable delivers its
+    anti-tamper property only as an accident of undocumented harness behaviour
+    (#269 established it is fixed at session launch, so it HAPPENS to point at
+    the main checkout for an agent working in a worktree) -- unowned by us and
+    one release from changing. An absolute installed path is pinned BY
+    CONSTRUCTION and asks the harness to guarantee nothing, which is what
+    actually protects the ruling that an agent's own branch cannot edit the code
+    that judges it.
+
+    `interpreter` comes from the run's single `resolve_interpreter()` probe --
+    never re-probed here, never hardcoded."""
+    return f'{interpreter} "{script_path.as_posix()}"'
+
+
+def build_hook_entry(command: str) -> dict:
+    return {
+        "matcher": HOOK_MATCHER,
+        "hooks": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT}],
+    }
+
+
+def add_hook_entry(settings: dict, entry: dict) -> bool:
+    """Append `entry` as a SIBLING in `hooks.PostToolUse`, in place. Never nests
+    inside an existing matcher block, never reorders what is already there, and
+    never removes anything -- including a stale governor entry, which is
+    reported rather than silently rewritten (no self-healing, by design).
+
+    Returns False when an identical command is already present."""
+    hooks = settings.setdefault("hooks", {})
+    if not isinstance(hooks, dict):
+        raise InstallError(f"--wire-hooks: 'hooks' in settings is not an object: {type(hooks).__name__}")
+    entries = hooks.setdefault(HOOK_EVENT, [])
+    if not isinstance(entries, list):
+        raise InstallError(
+            f"--wire-hooks: 'hooks.{HOOK_EVENT}' in settings is not an array: {type(entries).__name__}"
+        )
+    if entry["hooks"][0]["command"] in governor_hook_commands(settings):
+        return False
+    entries.append(entry)
+    return True
+
+
+def wire_hooks(
+    target_root: Path,
+    *,
+    interpreter: str,
+    dry_run: bool,
+    scope: str,
+    out: Callable[[str], object],
+) -> None:
+    """The ONE path on which this installer writes a settings.json. Reached only
+    from the explicit `--wire-hooks` opt-in (`decision:opt-in-wiring-only`, a
+    human ruling), and still a no-op under `--dry-run`."""
+    script = installed_gauge_writer_path(target_root)
+    if not dry_run and not script.is_file():
+        raise InstallError(
+            f"--wire-hooks: no {GAUGE_WRITER_HOOK_SCRIPT} at {script}. Refusing to wire a "
+            f"path with no file behind it, and refusing to point at another skill's copy."
+        )
+
+    command = build_hook_command(script, interpreter)
+    settings_path = settings_path_for_target_root(target_root)
+
+    settings: dict = {}
+    if settings_path.is_file():
+        try:
+            loaded = json.loads(settings_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise InstallError(
+                f"--wire-hooks: refusing to touch {settings_path} -- it is not valid JSON "
+                f"({exc}). Fix or move it; the installer will not clobber a file it cannot read."
+            )
+        if not isinstance(loaded, dict):
+            raise InstallError(
+                f"--wire-hooks: refusing to touch {settings_path} -- its top level is "
+                f"{type(loaded).__name__}, not an object."
+            )
+        settings = loaded
+
+    added = add_hook_entry(settings, build_hook_entry(command))
+
+    if dry_run:
+        # `dry_run` is pre-existing plumbing and this is a NEW write path, so the
+        # bail-out is placed after everything that can refuse and before anything
+        # that can write -- the mutation above happened only in memory.
+        verb = "add" if added else "leave unchanged (already present)"
+        out(f"- DRY RUN: would {verb} the {HOOK_EVENT} entry in {settings_path}")
+        out(f"- DRY RUN: would write command: {command}")
+        out("- DRY RUN: settings.json NOT written")
+        return
+
+    if added:
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        settings_path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+        out(f"- wired the Context Governor {HOOK_EVENT} hook into {settings_path}")
+        out(f"  command: {command}")
+    else:
+        out(f"- Context Governor {HOOK_EVENT} hook already present in {settings_path}; unchanged")
+
+    if scope == "project":
+        # The absolute path is the accepted cost of rejecting a project-relative
+        # form, and it embeds the user's home directory AND user name. A
+        # project-scope settings.json is committable, so say so out loud rather
+        # than letting committing it be the path of least resistance.
+        out(
+            f"- NOTE: this entry embeds an absolute path containing your user name, and it "
+            f"is machine-specific. A project-scope {SETTINGS_FILENAME} is committable -- "
+            f"prefer --scope user, or keep {settings_path} out of version control."
+        )
+
+
 def install_skills(
     skills: Sequence[Skill],
     target_root: Path,
@@ -885,6 +1234,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true", help="Print the install plan only.")
     parser.add_argument("--force", action="store_true", help="Replace existing installed skill folders.")
     parser.add_argument(
+        "--wire-hooks",
+        action="store_true",
+        help=(
+            "Add the Context Governor PostToolUse hook entry to the target scope's "
+            "settings.json, additively. WITHOUT this flag the installer only reads and "
+            "reports the wiring state and never writes or creates that file."
+        ),
+    )
+    parser.add_argument(
         "--baseline-only",
         action="store_true",
         help=(
@@ -913,6 +1271,24 @@ def main(
         validate_required_scripts(skills)
         validate_required_references(skills)
 
+        if args.wire_hooks:
+            # Refuse EARLY, before anything is written. An installer that
+            # declines to wire a hook it cannot locate is correct -- and this is
+            # not a fail-open violation: `decision:fail-open-is-inviolable`
+            # governs hook EXECUTION paths, not installer preconditions.
+            if args.baseline_only:
+                raise InstallError(
+                    "--wire-hooks cannot be combined with --baseline-only (which installs "
+                    "no skills, so there would be no hook to point at)"
+                )
+            if HOOK_OWNER_SKILL not in {skill.source_name for skill in skills}:
+                raise InstallError(
+                    f"--wire-hooks needs the '{HOOK_OWNER_SKILL}' skill -- the canonical owner "
+                    f"of {GAUGE_WRITER_HOOK_SCRIPT} -- and this install does not include it. "
+                    f"Refusing to wire a hook it cannot locate rather than silently pointing "
+                    f"at some other skill's copy."
+                )
+
         if args.baseline_only:
             if args.scope != "project":
                 raise InstallError("--baseline-only requires --scope project")
@@ -926,10 +1302,18 @@ def main(
             return 0
 
         target_roots = resolve_target_roots(args, runtime_env, runtime_cwd)
+        if args.wire_hooks and not any(
+            agent.name in HOOK_CAPABLE_AGENT_NAMES for agent, _ in target_roots
+        ):
+            raise InstallError(
+                f"--wire-hooks wires Claude Code hooks; --agent {args.agent} has no "
+                f"{SETTINGS_FILENAME} hook mechanism to wire into."
+            )
         # Resolve ONCE for the whole process here (not per target root / agent) so
         # a `--agent all` run still probes the host exactly once, not once per
-        # agent target.
-        interpreter = None if args.dry_run else resolve_interpreter()
+        # agent target. A --wire-hooks dry run still probes, so it can PRINT the
+        # exact command string it would have written.
+        interpreter = None if (args.dry_run and not args.wire_hooks) else resolve_interpreter()
         for agent, target_root in target_roots:
             out(f"{agent.name}:")
             install_skills(
@@ -942,6 +1326,19 @@ def main(
                 out=out,
                 interpreter=interpreter,
             )
+            if agent.name in HOOK_CAPABLE_AGENT_NAMES:
+                if args.wire_hooks:
+                    wire_hooks(
+                        target_root,
+                        interpreter=interpreter.interpreter,
+                        dry_run=args.dry_run,
+                        scope=args.scope,
+                        out=out,
+                    )
+                # Always-on and read-only, with or without the flag. Runs AFTER
+                # the install so a fresh install that just placed the hook flips
+                # a previously-stale entry to wired.
+                report_hook_wiring(target_root, env=runtime_env, out=out)
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
             seeded = write_template_baselines(skills, project_root, out=out)
