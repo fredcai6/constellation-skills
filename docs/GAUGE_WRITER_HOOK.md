@@ -34,19 +34,80 @@ every tool call it:
 If any step is uncertain, it writes nothing and leaves the existing file to
 age into staleness — see "Skip-on-uncertainty" below.
 
-## The human action (HITL seam)
+## Wiring it up
 
-Everything above is built and tested. Three things need you:
+### (a) In a consuming project: let the installer do it (#262)
 
-### (a) The settings.json snippet
+`scripts/install_constellation.py` ships both hook scripts into the installed
+`constellation-workbench` skill and can wire them for you:
 
-Add a **second** `PostToolUse` hook entry to your `~/.claude/settings.json`
-(or this project's `.claude/settings.json` if you want it project-scoped —
-your call). Do not replace the existing `spine_rail.py PostToolUse` entry;
-add alongside it. Unlike `spine_rail.py`'s entry (matcher `"Bash"` only,
-because it only cares about `checklist_engine.py` commands), the gauge
-writer needs to see **every** tool call to track fill continuously, so its
-matcher is `"*"`:
+```
+py scripts/install_constellation.py --agent claude --scope user --wire-hooks
+```
+
+**The installer never writes your `settings.json` without `--wire-hooks`.** Every
+ordinary run only *reports* the wiring state and writes nothing — it will not
+create the file, and `--wire-hooks --dry-run` together writes nothing either.
+That report is four-state:
+
+| State | Meaning |
+|---|---|
+| `WIRED` | an entry names a `gauge_writer_hook.py` that is on disk |
+| `STALE` | an entry exists but names a script that is **not** on disk — the hook never fires, and nothing else can tell you that |
+| `UNWIRED` | no entry at all |
+| `CANNOT EVALUATE` | the entry names the script through an environment variable the installer declines to expand (see below) |
+
+`STALE` and `CANNOT EVALUATE` exist because a hook that never runs **cannot
+report that it never ran** — see "Skip-on-uncertainty" below. This report is the
+only thing in the system that can surface an unwired or dead hook.
+
+The entry it writes is added **alongside** whatever `PostToolUse` matchers you
+already have — never nested inside one, never reordering the others:
+
+```json
+{"matcher": "*", "hooks": [{"type": "command",
+  "command": "py \"C:/Users/<you>/.claude/skills/constellation-workbench/scripts/gauge_writer_hook.py\"",
+  "timeout": 10}]}
+```
+
+**Which scope is safe to commit.** Note the absolute path above: it embeds your
+home directory and therefore your **username**.
+
+- **`--scope user`** writes `~/.claude/settings.json`, which is yours alone and
+  never committed. **This is the safe default and the recommended one.**
+- **`--scope project`** writes `<project>/.claude/settings.json`, which **is
+  committable** — so committing it publishes your username in the path and gives
+  your teammates a path that does not exist on their machines. If you wire at
+  project scope, either keep that file out of version control or expect each
+  teammate to re-run `--wire-hooks` for themselves. There is no portable form:
+  no `$HOME`/`%USERPROFILE%` token is confirmed to expand in a hook `command`.
+
+**Why an absolute path and not `${CLAUDE_PROJECT_DIR}`.** The variable form does
+resolve correctly inside this repo — but only as an *accident of undocumented
+harness behaviour*: `CLAUDE_PROJECT_DIR` is fixed at session launch (#269), so it
+*happens* to point at the main checkout even for an agent working in a worktree.
+That is a property we are borrowing, not one we hold, and it is one release from
+changing. An absolute installed path is pinned **by construction** and asks the
+harness to guarantee nothing — which is what actually protects the rule that an
+agent's own branch cannot edit the code that judges it.
+
+The installer therefore **never emits** a variable form. It will still *detect* a
+hand-written `${CLAUDE_PROJECT_DIR}` entry (refusing to recognise the form this
+document itself recommends below would be incoherent), but it expands **only**
+that one variable. Any other variable leaves the entry `CANNOT EVALUATE`, because
+expansion would happen in the installer's environment while the entry runs in a
+future hook's — a different process with different variables — and a confident
+wrong answer there is worse than an honest "I cannot tell".
+
+### (a2) In this repo, working on the hooks themselves
+
+The source layout is `scripts/hooks/`, which exists only here. Wiring against the
+source tree (rather than an install) is the `${CLAUDE_PROJECT_DIR}` form, and it
+is what this repo's own `.claude/settings.local.json` uses. Do not replace the
+existing `spine_rail.py` entry; add alongside it. Unlike `spine_rail.py`'s entry
+(matcher `"Bash"` only, because it only cares about `checklist_engine.py`
+commands), the gauge writer needs to see **every** tool call to track fill
+continuously, so its matcher is `"*"`:
 
 ```json
 {
@@ -62,6 +123,10 @@ matcher is `"*"`:
 If your real `settings.json` already has other `PostToolUse` matchers
 (unrelated hooks), add this as one more entry in that same array — don't
 nest it inside an existing matcher block.
+
+## The human action (HITL seam)
+
+Two things still need your eyes:
 
 **Ordering note:** the gauge writer only produces a record once a binding
 exists for the session, i.e. only after at least one `checklist_engine.py
@@ -223,7 +288,10 @@ accepted, bounded residual (see the comment at `_clear_skip_flag` in
   unresolvable, zero candidates) — genuinely unlocatable.
 - The hook isn't wired into `settings.json`/`settings.local.json` at all —
   external to the writer entirely; if the hook never runs, it cannot
-  self-report (see #262 for wiring, out of scope here).
+  self-report. **This one is structurally unfixable from inside the writer**,
+  which is why #262 put the detection outside it: the installer's always-on
+  `WIRED`/`STALE`/`UNWIRED`/`CANNOT EVALUATE` report (see "Wiring it up" above)
+  is the only thing that can ever surface this cause.
 
 ## Bounded tail scan, not a full-file parse
 
@@ -264,9 +332,30 @@ named above, which IS floated, in the issue this doc points to.
 ## What was NOT done here (HITL boundary, per the launch order)
 
 - No real `~/.claude/settings.json` (or this repo's own `.claude/settings.json`)
-  was edited. The snippet above is the exact addition; applying it is the
-  human action.
+  was edited. As of #262 the installer *can* write it, but only when you pass
+  `--wire-hooks` — applying it is still deliberately the human action.
 - The hook has not been driven end-to-end through the actual Claude Code
   hook subprocess plumbing (only its handler function, directly, against
   fixtures and one hand-inspected real transcript). Confirming it fires
   correctly as a wired hook is part of the human validation step above.
+
+  #262 narrowed the untested gap without closing it. Verified there, by real
+  install plus a **fresh subprocess from a neutral working directory**: the
+  *installed* `gauge_writer_hook.py` loads its *installed* `spine_rail.py`
+  sibling, so the silent `try/except -> None` degradation does not occur in an
+  install tree. What remains unproven is the step above that — Claude Code
+  actually invoking the entry as a hook — which needs a live session.
+
+## Known limits of the installed wiring (#262)
+
+Named here rather than left to be discovered:
+
+- **No self-healing.** A `--force` reinstall that probes a different interpreter,
+  or a moved install tree, leaves the old entry behind. It is *reported* as
+  `STALE`, not repaired; re-run `--wire-hooks` to add a correct entry and remove
+  the stale one yourself.
+- **The wiring is not tamper-proof, only the code is.** The installed hook script
+  lives outside any project's working tree, so an agent's own branch cannot edit
+  it. The `settings.json` entry, however, is an ordinary editable file — an agent
+  can leave the judging code untouchable and simply unregister it. Tracked as
+  **#288**; it qualifies the anti-tamper property rather than completing it.
