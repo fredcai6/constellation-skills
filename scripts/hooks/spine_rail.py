@@ -32,6 +32,7 @@ import json
 import os
 import shlex
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # The engine's terminal statuses, re-encoded here on purpose (see docstring).
@@ -87,8 +88,37 @@ def _save_json_map(path: Path, data: dict) -> None:
         pass
 
 
+def _is_old_shape_binding_entry(entry: dict) -> bool:
+    """True if `entry` looks like the OLD flat per-session binding value
+    (`{spine, engine_session, worktree}`) rather than the NEW nested
+    `{abs_spine_path: {spine, engine_session, worktree, claimed_at}}` map.
+
+    A `"spine"` key present DIRECTLY on `entry` is the old shape's signature --
+    the new shape's values are themselves dicts keyed by abs_spine_path, never
+    a literal `"spine"` key at this level.
+    """
+    return "spine" in entry
+
+
 def load_binding(project_dir: Path) -> dict:
-    return _load_json_map(binding_path(project_dir))
+    """Load `session_id -> {abs_spine_path: {spine, engine_session, worktree,
+    claimed_at}}`.
+
+    An old-shape (flat, pre-#202) entry under a session_id is treated as
+    ABSENT for that session_id -- fail-open, never a crash and never a silent
+    misinterpretation as a new-shape entry (decision:binding-schema-may-change).
+    No in-place migration: the file self-heals as sessions re-claim under the
+    new writer.
+    """
+    raw = _load_json_map(binding_path(project_dir))
+    try:
+        return {
+            sid: entry
+            for sid, entry in raw.items()
+            if isinstance(entry, dict) and not _is_old_shape_binding_entry(entry)
+        }
+    except Exception:
+        return {}
 
 
 def save_binding(project_dir: Path, data: dict) -> None:
@@ -271,8 +301,19 @@ def _resolve_abs(file_val: str, cwd, project_dir: Path) -> str:
         return file_val
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     """Maintain the session->spine binding from engine claim/release commands.
+
+    One session_id can hold a binding into more than one distinct spine at
+    once (#202) -- the binding is keyed by the RESOLVED ABSOLUTE SPINE PATH
+    itself (`abs_spine`), not by worktree or cwd
+    (decision:key-binding-by-spine-path-not-worktree-or-cwd). A claim writes
+    only `binding[sid][abs_spine]`, leaving any other abs_spine_path entries
+    for that sid untouched; a release removes only that one entry.
 
     PostToolUse NEVER blocks -- always returns {}.
     """
@@ -289,21 +330,32 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         sid = data.get("session_id")
         if not sid:
             return {}
+        file_val = _extract_opt(tokens, "--file")
+        cwd = data.get("cwd") or str(project_dir)
+        abs_spine = _resolve_abs(file_val, cwd, project_dir) if file_val else None
+        if not abs_spine:
+            return {}  # nothing to key the entry by -- fail-open, no write
         binding = load_binding(project_dir)
         if verb == "claim":
-            file_val = _extract_opt(tokens, "--file")
             engine_session = _extract_opt(tokens, "--session-id")
-            cwd = data.get("cwd") or str(project_dir)
-            abs_spine = _resolve_abs(file_val, cwd, project_dir) if file_val else None
-            binding[sid] = {
+            sid_bindings = dict(binding.get(sid) or {})
+            sid_bindings[abs_spine] = {
                 "spine": abs_spine,
                 "engine_session": engine_session,
                 "worktree": cwd,
+                "claimed_at": _now_iso(),
             }
+            binding[sid] = sid_bindings
             save_binding(project_dir, binding)
         else:  # release
-            if sid in binding:
-                del binding[sid]
+            sid_bindings = binding.get(sid)
+            if sid_bindings and abs_spine in sid_bindings:
+                sid_bindings = dict(sid_bindings)
+                del sid_bindings[abs_spine]
+                if sid_bindings:
+                    binding[sid] = sid_bindings
+                else:
+                    del binding[sid]
                 save_binding(project_dir, binding)
             nudges = load_nudges(project_dir)
             if sid in nudges:
@@ -336,43 +388,76 @@ def _mid_flight_reason(spine: dict, aid) -> str:
     ).format(aid=aid, imp=imperative)
 
 
+def _entry_mid_flight_view(data: dict, entry: dict):
+    """Per-entry mid-flight check, unchanged in substance from the pre-#202
+    single-entry logic -- just factored so decide_stop can apply it to every
+    bound abs_spine_path entry for a session_id, not just one.
+
+    Returns None if this entry is NOT a genuine mid-flight blocker (foreign
+    worktree, unreadable spine, released/inactive lease, or an honest engine
+    block); else `(spine_path, spine_dict, aid)`.
+    """
+    spine_path = entry.get("spine")
+    if not spine_path:
+        return None
+    if _foreign_worktree(data, entry):
+        return None  # stopping session is not THIS entry's driver (subagent
+        # sharing the parent's session_id claimed a spine in its own worktree)
+    spine = load_spine(spine_path)
+    if spine is None:
+        return None  # unreadable -> allow
+    lease = spine.get("engine_session") or {}
+    if lease.get("status") != "active":
+        return None  # run closed -> allow
+    aid = active_id(spine)
+    tasks = spine.get("tasks") or {}
+    if aid is not None and (tasks.get(aid) or {}).get("status") == "blocked":
+        return None  # honest engine block -> allow
+    return spine_path, spine, aid
+
+
 def decide_stop(data: dict, project_dir: Path) -> dict:
+    """Block the Stop if ANY non-foreign bound entry for this session_id is
+    genuinely mid-flight (same per-entry semantics as the pre-#202 single-
+    entry version, just applied across every abs_spine_path entry now bound
+    under `sid`). The nudge-tracking / 3-strike escape hatch stays keyed by
+    `sid` ALONE -- never fragmented per-entry, which would weaken the escape
+    hatch.
+    """
     try:
         sid = data.get("session_id")
         binding = load_binding(project_dir)
-        b = binding.get(sid)
-        if not b:
+        sid_bindings = binding.get(sid) or {}
+        if not sid_bindings:
             return {}  # no binding -> allow
-        spine_path = b.get("spine")
-        if not spine_path:
-            return {}
-        if _foreign_worktree(data, b):
-            return {}  # stopping session is not this spine's driver (subagent
-            # sharing the parent's session_id repointed the single-slot binding)
-        spine = load_spine(spine_path)
-        if spine is None:
-            return {}  # unreadable -> allow
-        lease = spine.get("engine_session") or {}
-        if lease.get("status") != "active":
-            return {}  # run closed -> allow
-        aid = active_id(spine)
-        tasks = spine.get("tasks") or {}
-        if aid is not None and (tasks.get(aid) or {}).get("status") == "blocked":
-            return {}  # honest engine block -> allow
 
-        # Mid-flight: aid non-blocked, OR aid is None while lease still active.
-        seq = journal_seq(spine_path)
+        mid_flight = []
+        for entry in sid_bindings.values():
+            view = _entry_mid_flight_view(data, entry)
+            if view is not None:
+                mid_flight.append(view)
+
+        if not mid_flight:
+            return {}  # every bound entry is foreign/unreadable/closed/honest-blocked -> allow
+
+        # Mid-flight: aggregate a single progress signal across every
+        # mid-flight entry (never fragment nudges[sid] per-entry).
+        seq = sum(journal_seq(spine_path) for spine_path, _, _ in mid_flight)
+        active_ids = sorted(
+            "{}::{}".format(spine_path, aid) for spine_path, _, aid in mid_flight
+        )
         nudges = load_nudges(project_dir)
         prior = nudges.get(sid) or {"count": 0, "journal_seq": -1, "active_id": None}
-        progress = (seq != prior.get("journal_seq")) or (aid != prior.get("active_id"))
+        progress = (seq != prior.get("journal_seq")) or (active_ids != prior.get("active_id"))
         count = (0 if progress else prior.get("count", 0)) + 1
-        nudges[sid] = {"count": count, "journal_seq": seq, "active_id": aid}
+        nudges[sid] = {"count": count, "journal_seq": seq, "active_id": active_ids}
         save_nudges(project_dir, nudges)
 
         if count >= 3:
             # Escape hatch: allow the stop, but leave a loud marker.
             return {"continue": True, "systemMessage": STUCK_MSG}
 
+        _, spine, aid = mid_flight[0]
         reason = _mid_flight_reason(spine, aid)
         ctx = "ENGINE current -> " + reconstruct_current(spine)
         return {
@@ -390,32 +475,71 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
 # --- SessionStart: re-inject resume doctrine after compaction ----------------
 
 def _scan_active_spine(project_dir: Path):
-    """Best-effort fallback: first .agent-work/*/spine.json with an active
-    lease and a non-None active id. (session->spine binding is preferred.)"""
+    """Best-effort fallback: EVERY .agent-work/*/spine.json with an active
+    lease and a non-None active id, as a list of `(spine_dict, spine_path)`
+    tuples in glob order (session->spine binding is preferred; this is the
+    last-resort discovery path). Empty list if none found.
+
+    Returning every match (not just the first) is deliberate: the caller
+    needs a COUNT to tell an unambiguous single active spine from an
+    ambiguous multi-spine scan (#261 bind-on-resume), while still wanting
+    the same "first match" spine for the advisory-context injection it did
+    before this match ever mattered. One glob pass serves both."""
     try:
         base = _agent_work(project_dir)
+        matches = []
         for spath in base.glob("*/spine.json"):
             spine = load_spine(str(spath))
             if not isinstance(spine, dict):
                 continue
             lease = spine.get("engine_session") or {}
             if lease.get("status") == "active" and active_id(spine) is not None:
-                return spine
-        return None
+                matches.append((spine, str(spath)))
+        return matches
     except Exception:
-        return None
+        return []
 
 
 def decide_session_start(data: dict, project_dir: Path) -> dict:
     try:
         sid = data.get("session_id")
         binding = load_binding(project_dir)
-        b = binding.get(sid) if sid else None
+        sid_bindings = (binding.get(sid) or {}) if sid else {}
+        # Per-entry iteration mirroring decide_stop's already-generalized
+        # pattern (#202/#261): `sid_bindings` is a dict of abs_spine_path ->
+        # entry (never a flat {spine, ...} directly). Take the FIRST entry
+        # (natural dict.values() order) that has a spine and is not foreign
+        # -- same "first match" tone as _scan_active_spine below.
         spine = None
-        if b and b.get("spine") and not _foreign_worktree(data, b):
-            spine = load_spine(b.get("spine"))
+        for entry in sid_bindings.values():
+            if entry.get("spine") and not _foreign_worktree(data, entry):
+                spine = load_spine(entry.get("spine"))
+                break
         if spine is None:
-            spine = _scan_active_spine(project_dir)  # best-effort fallback
+            matches = _scan_active_spine(project_dir)  # best-effort fallback
+            if matches:
+                spine = matches[0][0]  # first match, same tone as before
+            if len(matches) == 1 and sid:
+                # Unambiguous (decision:no-bind-on-ambiguous-scan): exactly
+                # one active-leased spine on disk and no positional-count
+                # confusion about which one it is -- bind this session to it,
+                # same shape g1's claim writer uses, so a resumed/compacted
+                # session that never itself ran `claim` still gets a binding
+                # (#261) and gauge_writer_hook.resolve_gauge_path stops
+                # returning empty for it. Zero or 2+ matches: inject context
+                # (below) but write NO binding -- ambiguity is not ours to
+                # silently resolve.
+                own_spine, own_spine_path = matches[0]
+                lease_for_bind = own_spine.get("engine_session") or {}
+                sid_bindings2 = dict(binding.get(sid) or {})
+                sid_bindings2[own_spine_path] = {
+                    "spine": own_spine_path,
+                    "engine_session": lease_for_bind.get("session_id"),
+                    "worktree": data.get("cwd") or str(project_dir),
+                    "claimed_at": _now_iso(),
+                }
+                binding[sid] = sid_bindings2
+                save_binding(project_dir, binding)
         if spine is None:
             return {}
         lease = spine.get("engine_session") or {}
