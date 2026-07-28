@@ -508,6 +508,179 @@ def test_flag_is_cleared_once_the_model_resolves(proj, tmp_path):
     assert (work / "gauge.json").exists()
 
 
+# --- #271: gauge-skip.json -- positively-localized silence causes ------------
+#
+# Every test below drives the REAL handler (gw.handle_post_tool_use, loaded by
+# file path via importlib.util.spec_from_file_location at module scope above)
+# against real tmp_path fixtures -- the same real-file-I/O boundary the rest
+# of this file already uses, and the technique the handoff names as the
+# required fresh-process-equivalent evidence for these new branches: nothing
+# here hand-injects sidecar content, every sidecar on disk was produced by the
+# hook's own handler.
+
+
+def test_ambiguous_binding_writes_skip_flag_to_every_candidate(proj):
+    """Two genuinely different top-level agents sharing one session_id (#202/
+    #261) still write NOTHING to gauge.json (unchanged), but now BOTH
+    candidate spines get a gauge-skip.json: each one genuinely has no reading
+    because of this exact ambiguity, so each deserves the signal
+    (decision:skip-sidecar-fanout-and-clear -- unlike a gauge.json reading,
+    a diagnostic fact about why nothing was written can never cross-write a
+    misattributed value)."""
+    work_a = proj / ".agent-work" / "run-a"
+    work_b = proj / ".agent-work" / "run-b"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    (work_a / "spine.json").write_text("{}", encoding="utf-8")
+    (work_b / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+
+    assert not (work_a / "gauge.json").exists()
+    assert not (work_b / "gauge.json").exists()
+
+    flag_a = json.loads((work_a / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
+    flag_b = json.loads((work_b / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
+    for flag in (flag_a, flag_b):
+        assert flag["reason"] == "ambiguous-binding"
+        assert flag["candidate_count"] == 2
+        assert isinstance(flag["observed_at"], str) and flag["observed_at"]
+    # one shared event -> one shared observed_at across every candidate
+    assert flag_a["observed_at"] == flag_b["observed_at"]
+
+
+def test_ambiguous_binding_with_three_candidates_fans_out_to_all_three(proj):
+    """N candidates, not just two -- the fan-out is unbounded in N."""
+    works = []
+    for name in ("run-a", "run-b", "run-c"):
+        w = proj / ".agent-work" / name
+        w.mkdir(parents=True)
+        (w / "spine.json").write_text("{}", encoding="utf-8")
+        _bind(proj, "s1", w / "spine.json")
+        works.append(w)
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+
+    for w in works:
+        flag = json.loads((w / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
+        assert flag["reason"] == "ambiguous-binding"
+        assert flag["candidate_count"] == 3
+
+
+def test_no_usable_record_single_candidate_writes_skip_flag_no_candidate_count(proj, tmp_path):
+    """Single resolved candidate, transcript exists and is readable, but
+    compute_record finds nothing usable -- the second positively-localized
+    cause. No candidate_count key (this is a single-path outcome, unlike
+    ambiguous-binding)."""
+    work = _bound_work(proj)
+    empty_transcript = tmp_path / "no_usage.jsonl"
+    empty_transcript.write_text(
+        json.dumps({"type": "user", "message": {"role": "user", "content": []}}) + "\n",
+        encoding="utf-8")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", empty_transcript), proj)
+    assert out == {}
+    assert not (work / "gauge.json").exists()
+
+    flag = json.loads((work / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
+    assert flag["reason"] == "no-usable-record"
+    assert "candidate_count" not in flag
+
+
+def test_corrupt_transcript_single_candidate_also_writes_no_usable_record_flag(proj, tmp_path):
+    """Unparseable transcript lines are also a compute_record (None, None)
+    outcome -- same 'no-usable-record' treatment as an empty transcript."""
+    work = _bound_work(proj)
+    bad_transcript = tmp_path / "corrupt.jsonl"
+    bad_transcript.write_text("{ not json\nalso not json\n", encoding="utf-8")
+
+    gw.handle_post_tool_use(_hook_data("s1", bad_transcript), proj)
+
+    flag = json.loads((work / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
+    assert flag["reason"] == "no-usable-record"
+
+
+def test_zero_candidates_never_writes_a_skip_flag_anywhere(proj):
+    """No binding at all -- genuinely unlocatable, no known path to write a
+    sidecar TO. Must stay silent by design, unlike the two cases above."""
+    gw.handle_post_tool_use(_hook_data("unbound-session", _FIXTURE), proj)
+    assert list(proj.rglob(gw.SKIP_FILENAME)) == []
+
+
+def test_missing_transcript_path_never_writes_a_skip_flag(proj):
+    """Missing/unreadable transcript_path is checked BEFORE gauge_paths is
+    even resolved -- there is no known gauge path yet, so this stays silent
+    even though a real (single) binding exists."""
+    work = _bound_work(proj)
+    gw.handle_post_tool_use({"session_id": "s1"}, proj)
+    assert not (work / gw.SKIP_FILENAME).exists()
+
+
+def test_clean_write_clears_a_prior_skip_flag_at_that_path(proj, tmp_path):
+    """A path that was flagged no-usable-record on one call and then resolves
+    to a clean reading on the next call must have its skip flag cleared --
+    mirrors _clear_uncalibrated_flag exactly."""
+    work = proj / ".agent-work" / "run1"
+    work.mkdir(parents=True)
+    spine_path = work / "spine.json"
+    spine_path.write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", spine_path)
+
+    empty_transcript = tmp_path / "no_usage.jsonl"
+    empty_transcript.write_text(
+        json.dumps({"type": "user", "message": {"role": "user", "content": []}}) + "\n",
+        encoding="utf-8")
+    gw.handle_post_tool_use(_hook_data("s1", empty_transcript), proj)
+    assert (work / gw.SKIP_FILENAME).exists()
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert not (work / gw.SKIP_FILENAME).exists()
+    assert (work / "gauge.json").exists()
+
+
+def test_uncalibrated_outcome_clears_a_prior_skip_flag_at_that_path(proj, tmp_path):
+    """The uncalibrated-flag write is also a 'resolved' outcome for this
+    path (a real, if unwindowed, usage record was found) -- it must clear a
+    stale skip flag too, not just a clean gauge.json write."""
+    work = _bound_work(proj)
+    empty_transcript = tmp_path / "no_usage.jsonl"
+    empty_transcript.write_text(
+        json.dumps({"type": "user", "message": {"role": "user", "content": []}}) + "\n",
+        encoding="utf-8")
+    gw.handle_post_tool_use(_hook_data("s1", empty_transcript), proj)
+    assert (work / gw.SKIP_FILENAME).exists()
+
+    gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
+    assert not (work / gw.SKIP_FILENAME).exists()
+    assert (work / gw.UNCALIBRATED_FILENAME).exists()
+
+
+def test_ambiguous_binding_skip_flags_do_not_clobber_existing_gauge_files(proj):
+    """Same 'byte-identical survival' proof the existing multi-binding tests
+    make for gauge.json, extended to confirm the NEW skip-flag write doesn't
+    disturb a prior reading at either candidate path."""
+    work_a = proj / ".agent-work" / "run-a"
+    work_b = proj / ".agent-work" / "run-b"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    (work_a / "spine.json").write_text("{}", encoding="utf-8")
+    (work_b / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json")
+
+    prior_a = json.dumps({"schema_version": 1, "fill_fraction": 0.1, "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"})
+    (work_a / "gauge.json").write_text(prior_a, encoding="utf-8")
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+
+    assert (work_a / "gauge.json").read_text(encoding="utf-8") == prior_a  # byte-identical
+    assert json.loads((work_a / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == "ambiguous-binding"
+    assert json.loads((work_b / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == "ambiguous-binding"
+
+
 def test_no_default_window_constant_remains(proj):
     """The 200k default IS the bug — guard against a well-meaning reintroduction
     of a fallback on the reading path."""

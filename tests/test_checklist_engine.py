@@ -3302,6 +3302,166 @@ class RefreshRequestIdentity(unittest.TestCase):
         self.assertEqual(cl["tasks"]["g3"]["status"], "complete")
 
 
+class FormatAgeTests(unittest.TestCase):
+    """_format_age: whole seconds/minutes/hours, pure arithmetic + string
+    formatting -- the unit boundaries (60s, 3600s) are unit conversion, never
+    a threshold judgment this function makes (constraint:no-threshold-values)."""
+
+    def test_seconds(self):
+        self.assertEqual(E._format_age(timedelta(seconds=45)), "45s")
+
+    def test_zero(self):
+        self.assertEqual(E._format_age(timedelta(seconds=0)), "0s")
+
+    def test_minutes(self):
+        self.assertEqual(E._format_age(timedelta(minutes=26, seconds=3)), "26m03s")
+
+    def test_just_under_an_hour(self):
+        self.assertEqual(E._format_age(timedelta(minutes=59, seconds=59)), "59m59s")
+
+    def test_hours(self):
+        self.assertEqual(E._format_age(timedelta(hours=2, minutes=5)), "2h05m")
+
+    def test_exactly_one_hour(self):
+        self.assertEqual(E._format_age(timedelta(hours=1)), "1h00m")
+
+    def test_negative_delta_clamps_to_zero(self):
+        # A future observed_at (clock skew) must never render a negative age.
+        self.assertEqual(E._format_age(timedelta(seconds=-30)), "0s")
+
+    def test_fractional_seconds_truncate_to_whole_seconds(self):
+        self.assertEqual(E._format_age(timedelta(seconds=1.9)), "1s")
+
+
+class SkipReasonAdvisoryTests(unittest.TestCase):
+    """_skip_reason_advisory reads a REAL gauge-skip.json sidecar (same real-
+    file convention as TripRealGaugeFileWiring below) and renders it."""
+
+    def _write_skip(self, d, reason, observed_at, candidate_count=None):
+        record = {"schema_version": 1, "reason": reason, "observed_at": observed_at}
+        if candidate_count is not None:
+            record["candidate_count"] = candidate_count
+        (Path(d) / E._gauge_reader.SKIP_FILENAME).write_text(json.dumps(record), encoding="utf-8")
+
+    def test_no_sidecar_returns_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(E._skip_reason_advisory(Path(d) / "gauge.json"), "")
+
+    def test_none_gauge_path_returns_empty(self):
+        self.assertEqual(E._skip_reason_advisory(None), "")
+
+    def test_ambiguous_binding_message(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._write_skip(d, "ambiguous-binding", datetime.now(timezone.utc).isoformat(), candidate_count=2)
+            out = E._skip_reason_advisory(Path(d) / "gauge.json")
+        self.assertIn("CONTEXT", out)
+        self.assertIn("2 candidate spines", out)
+
+    def test_no_usable_record_message(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._write_skip(d, "no-usable-record", datetime.now(timezone.utc).isoformat())
+            out = E._skip_reason_advisory(Path(d) / "gauge.json")
+        self.assertIn("CONTEXT", out)
+        self.assertIn("no usable usage record", out)
+
+    def test_unknown_reason_gets_a_generic_fallback_not_silence(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._write_skip(d, "some-future-reason", datetime.now(timezone.utc).isoformat())
+            out = E._skip_reason_advisory(Path(d) / "gauge.json")
+        self.assertIn("CONTEXT", out)
+        self.assertIn("some-future-reason", out)
+
+    def test_corrupt_sidecar_never_raises_returns_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / E._gauge_reader.SKIP_FILENAME).write_text("{not json", encoding="utf-8")
+            self.assertEqual(E._skip_reason_advisory(Path(d) / "gauge.json"), "")
+
+    def test_skip_reason_raising_is_swallowed(self):
+        with tempfile.TemporaryDirectory() as d:
+            gauge_path = Path(d) / "gauge.json"
+            with mock.patch.object(E._gauge_reader, "skip_reason", side_effect=RuntimeError("boom")):
+                self.assertEqual(E._skip_reason_advisory(gauge_path), "")
+
+
+class StaleRecordAdvisoryTests(unittest.TestCase):
+    """_stale_record_advisory reports a REAL gauge.json's own raw facts, with
+    no staleness/skew/calibration gate of its own (raw_record's contract)."""
+
+    def _write_gauge(self, d, record):
+        (Path(d) / "gauge.json").write_text(json.dumps(record), encoding="utf-8")
+
+    def test_no_gauge_file_returns_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(E._stale_record_advisory(Path(d) / "gauge.json"), "")
+
+    def test_none_gauge_path_returns_empty(self):
+        self.assertEqual(E._stale_record_advisory(None), "")
+
+    def test_stale_record_reports_raw_facts_no_threshold_language(self):
+        with tempfile.TemporaryDirectory() as d:
+            stale = (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+            self._write_gauge(d, {"schema_version": 1, "fill_fraction": 0.33,
+                                   "model": "claude-opus-4-8", "observed_at": stale})
+            out = E._stale_record_advisory(Path(d) / "gauge.json")
+        self.assertIn("CONTEXT", out)
+        self.assertIn("33%", out)
+        self.assertIn("claude-opus-4-8", out)
+        self.assertNotIn(">= soft", out)
+        self.assertNotIn(">= hard", out)
+
+    def test_uncalibrated_model_record_also_reported_raw(self):
+        # raw_record has no calibration gate -- an uncalibrated model's own
+        # gauge.json (which read() also rejects) is still reported raw here.
+        with tempfile.TemporaryDirectory() as d:
+            self._write_gauge(d, {"schema_version": 1, "fill_fraction": 0.5,
+                                   "model": "claude-future-9",
+                                   "observed_at": datetime.now(timezone.utc).isoformat()})
+            out = E._stale_record_advisory(Path(d) / "gauge.json")
+        self.assertIn("claude-future-9", out)
+
+    def test_corrupt_file_never_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "gauge.json").write_text("{not json", encoding="utf-8")
+            self.assertEqual(E._stale_record_advisory(Path(d) / "gauge.json"), "")
+
+    def test_raw_record_raising_is_swallowed(self):
+        with tempfile.TemporaryDirectory() as d:
+            gauge_path = Path(d) / "gauge.json"
+            with mock.patch.object(E._gauge_reader, "raw_record", side_effect=RuntimeError("boom")):
+                self.assertEqual(E._stale_record_advisory(gauge_path), "")
+
+
+class NoReadingAdvisoryDispatchTests(unittest.TestCase):
+    """_no_reading_advisory tries each localizable cause in order and returns
+    the FIRST non-empty result -- the three sub-advisories are mocked
+    directly (band-structure style) since this is testing DISPATCH ORDER,
+    not any one advisory's own text."""
+
+    def test_uncalibrated_wins_over_skip_and_stale(self):
+        with mock.patch.object(E, "_uncalibrated_advisory", return_value="\nCONTEXT GAUGE OFF: x"), \
+             mock.patch.object(E, "_skip_reason_advisory", return_value="\nCONTEXT GAUGE SILENT: skip"), \
+             mock.patch.object(E, "_stale_record_advisory", return_value="\nCONTEXT GAUGE SILENT: stale"):
+            self.assertEqual(E._no_reading_advisory(Path(".")), "\nCONTEXT GAUGE OFF: x")
+
+    def test_skip_reason_wins_over_stale_when_uncalibrated_empty(self):
+        with mock.patch.object(E, "_uncalibrated_advisory", return_value=""), \
+             mock.patch.object(E, "_skip_reason_advisory", return_value="\nCONTEXT GAUGE SILENT: skip"), \
+             mock.patch.object(E, "_stale_record_advisory", return_value="\nCONTEXT GAUGE SILENT: stale"):
+            self.assertEqual(E._no_reading_advisory(Path(".")), "\nCONTEXT GAUGE SILENT: skip")
+
+    def test_stale_record_is_the_last_resort(self):
+        with mock.patch.object(E, "_uncalibrated_advisory", return_value=""), \
+             mock.patch.object(E, "_skip_reason_advisory", return_value=""), \
+             mock.patch.object(E, "_stale_record_advisory", return_value="\nCONTEXT GAUGE SILENT: stale"):
+            self.assertEqual(E._no_reading_advisory(Path(".")), "\nCONTEXT GAUGE SILENT: stale")
+
+    def test_all_empty_yields_empty(self):
+        with mock.patch.object(E, "_uncalibrated_advisory", return_value=""), \
+             mock.patch.object(E, "_skip_reason_advisory", return_value=""), \
+             mock.patch.object(E, "_stale_record_advisory", return_value=""):
+            self.assertEqual(E._no_reading_advisory(Path(".")), "")
+
+
 class TripRealGaugeFileWiring(unittest.TestCase):
     """#182 — end-to-end through `main()` with a REAL gauge.json written where
     #180's writer drops it (a SIBLING of the spine: `base_dir/gauge.json`), read by
@@ -3424,6 +3584,91 @@ class TripRealGaugeFileWiring(unittest.TestCase):
             self.assertIn(">= soft", out.getvalue())
             # SOFT never forces: advance still succeeds
             self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+
+    # -- #271: gauge-skip.json real-file wiring through main() --------------- #
+
+    def _write_skip_flag_sidecar(self, d, reason, candidate_count=None):
+        record = {"schema_version": 1, "reason": reason,
+                   "observed_at": datetime.now(timezone.utc).isoformat()}
+        if candidate_count is not None:
+            record["candidate_count"] = candidate_count
+        (Path(d) / E._gauge_reader.SKIP_FILENAME).write_text(json.dumps(record), encoding="utf-8")
+
+    def test_ambiguous_binding_skip_is_announced_on_current(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_skip_flag_sidecar(d, "ambiguous-binding", candidate_count=2)
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertEqual(rc, 0)
+            self.assertIn("CONTEXT", out)
+            self.assertIn("2 candidate spines", out)
+
+    def test_no_usable_record_skip_is_announced_on_current(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_skip_flag_sidecar(d, "no-usable-record")
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = E.main(["--file", str(f), "current"])
+            self.assertEqual(rc, 0)
+            self.assertIn("CONTEXT", buf.getvalue())
+
+    def test_skip_flag_never_forces_or_refuses(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_skip_flag_sidecar(d, "ambiguous-binding", candidate_count=2)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    def test_uncalibrated_flag_wins_over_a_skip_flag_at_the_same_path(self):
+        """Priority order proven with REAL coexisting sidecars, not just
+        mocks: the uncalibrated flag (a standing defect) always wins."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_skip_flag_sidecar(d, "no-usable-record")
+            self._write_uncalibrated_flag(d, "claude-future-9")
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertIn("CONTEXT GAUGE OFF", out)
+            self.assertNotIn("GAUGE SILENT", out)
+
+    def test_stale_rejected_gauge_reports_raw_facts_on_current(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            stale = (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat()
+            self._write_gauge(d, 0.22, stale)
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertEqual(rc, 0)
+            self.assertIn("CONTEXT", out)
+            self.assertIn("22%", out)
+            self.assertNotIn(">= soft", out)
+            self.assertNotIn(">= hard", out)
+
+    def test_stale_gauge_report_never_forces_advance(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            stale = (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat()
+            self._write_gauge(d, 0.99, stale)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
 
 
 # --------------------------------------------------------------------------- #

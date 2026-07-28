@@ -48,6 +48,7 @@ import importlib.util
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA_VERSION = 1
@@ -318,6 +319,81 @@ def _clear_uncalibrated_flag(gauge_path: Path) -> None:
         pass
 
 
+# --- skip-reason flag (visible, not silent) -- issue #271 --------------------
+
+# A second, independent SIDECAR family (deliberately NOT reusing
+# UNCALIBRATED_FILENAME/gauge-uncalibrated.json): that flag is a STANDING
+# defect -- true until a human edits MODEL_WINDOWS/_PROFILES, correctly never
+# staleness-checked. Ambiguous-binding and no-usable-record are TRANSIENT
+# per-call conditions that must expire as binding/transcript state changes on
+# a LATER call. Sharing one file/clearing rule across both shapes would either
+# make the standing flag falsely time out, or make the transient ones falsely
+# persist -- so this is a parallel mechanism, additive alongside the existing
+# one, both consumed by checklist_engine.py's single `_no_reading_advisory`
+# dispatcher (decision:sidecar-is-a-parallel-mechanism-not-a-literal-
+# extension).
+SKIP_FILENAME = "gauge-skip.json"
+
+
+def _skip_path(gauge_path: Path) -> Path:
+    return gauge_path.with_name(SKIP_FILENAME)
+
+
+def _write_skip_flag(gauge_path: Path, reason: str, *, candidate_count: int | None = None,
+                      observed_at: str | None = None) -> None:
+    """Record WHY no reading was written at this gauge path -- a diagnostic
+    fact about the writer's own decision, never a fabricated/misattributed
+    reading (unlike gauge.json itself, this is safe to fan out -- see the
+    ambiguous-binding branch in handle_post_tool_use below).
+
+    `observed_at` here is WRITE time, unlike the uncalibrated flag's SAMPLED
+    moment: neither skip cause reaches a point where a transcript-sampled
+    timestamp exists to carry through (ambiguous binding never gets far
+    enough to parse the transcript at all; no-usable-record means parsing
+    found nothing usable), so "now" is the only honest timestamp available.
+    A caller (checklist_engine.py's advisory) renders this age raw, exactly
+    like every other gauge-adjacent timestamp -- never a threshold judgment."""
+    if observed_at is None:
+        observed_at = datetime.now(timezone.utc).isoformat()
+    record = {
+        "schema_version": SCHEMA_VERSION,
+        "reason": reason,
+        "observed_at": observed_at,
+    }
+    if candidate_count is not None:
+        record["candidate_count"] = candidate_count
+    _atomic_write_json(_skip_path(gauge_path), record)
+
+
+def _clear_skip_flag(gauge_path: Path) -> None:
+    """Mirror _clear_uncalibrated_flag exactly: drop a stale skip sidecar once
+    this path resolves to a real outcome again (a clean gauge.json write, or
+    the uncalibrated-flag write -- both are called from the single-candidate
+    branch below, the only place a path can go from 'skipped' to 'resolved').
+
+    CLEARING SCOPE (decision:skip-sidecar-fanout-and-clear, cold-critic
+    finding #1): only the path that is LATER resolved back to a single
+    candidate ever gets cleared here. A candidate that drops out of an
+    ambiguous binding set without ever again being the SOLE resolved
+    candidate keeps a stale gauge-skip.json indefinitely -- there is no code
+    path that revisits a former candidate this hook has no further reason to
+    touch, so closing that gap would mean building cross-path bookkeeping
+    (out of scope, decision:no-repair). This is an ACCEPTED, bounded
+    residual: it self-heals the moment anyone actually resumes and drives
+    that spine again (the very next single-candidate call clears/overwrites
+    it), and while nobody resumes it, nobody is reading that spine's
+    `current` either. checklist_engine.py's advisory always renders the
+    flag's own age, never a threshold judgment on it, so even in the
+    residual window a reader sees exactly how old the diagnosis is rather
+    than trusting a silently-aging claim."""
+    try:
+        _skip_path(gauge_path).unlink()
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
+
+
 # --- PostToolUse handler ------------------------------------------------------
 
 def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
@@ -330,22 +406,52 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     doesn't fix that misattribution, it SPREADS the same wrong-source record
     to every spine the shared session_id happens to be bound to. So 2+
     candidates is treated as exactly the same kind of uncertainty the module
-    already treats a missing binding as: skip-on-uncertainty, write NOTHING,
-    for both the calibrated-record path and the uncalibrated-flag path. Only
-    exactly one candidate is written. NEVER raises; NEVER blocks; NEVER
-    writes on uncertainty. Always returns {} (this hook never influences the
-    tool call)."""
+    already treats a missing binding as: skip-on-uncertainty, write NOTHING
+    to gauge.json, for both the calibrated-record path and the uncalibrated-
+    flag path. Only exactly one candidate ever gets a gauge.json/
+    gauge-uncalibrated.json write.
+
+    Two of the skip causes are now POSITIVELY LOCALIZED (issue #271) with a
+    visible gauge-skip.json sidecar -- see _write_skip_flag's docstring for
+    why this rides a SEPARATE sidecar family rather than reusing
+    gauge-uncalibrated.json:
+      - ambiguous binding (2+ candidates): unlike a gauge.json reading, a
+        diagnostic fact about WHY nothing was written is never a fabricated/
+        misattributed value, so fan-out carries none of the cross-write risk
+        that killed fan-out for readings (#202/#261) -- written to EVERY
+        candidate (decision:skip-sidecar-fanout-and-clear).
+      - no-usable-record on the single resolved candidate: same treatment,
+        one path.
+    The other two causes stay silent by design -- there is no known gauge
+    path to write a sidecar TO: zero candidates (unresolvable binding) and a
+    missing/unreadable transcript_path (checked first, below, before
+    gauge_paths is even resolved).
+
+    NEVER raises; NEVER blocks; NEVER writes gauge.json/gauge-uncalibrated.json
+    on uncertainty. Always returns {} (this hook never influences the tool
+    call)."""
     try:
         transcript_path = data.get("transcript_path")
         if not transcript_path or not os.path.isfile(transcript_path):
+            # No known gauge path yet (resolve_gauge_path hasn't even run) --
+            # genuinely unlocatable, so this cause stays silent by design.
             return {}
         gauge_paths = resolve_gauge_path(project_dir, data.get("session_id"))
-        if len(gauge_paths) != 1:
-            # Zero: unresolvable, already the existing skip-on-uncertainty
-            # case. Two or more: WHICH spine this reading belongs to is
-            # itself uncertain -- fabricating a write to any of them (let
-            # alone all of them) risks cross-writing a reading from an
-            # unrelated agent sharing this session_id. Skip entirely.
+        if not gauge_paths:
+            # Zero: unresolvable binding, no known gauge path to flag either.
+            # Existing skip-on-uncertainty, unchanged.
+            return {}
+        if len(gauge_paths) > 1:
+            # WHICH spine this reading belongs to is itself uncertain --
+            # fabricating a gauge.json write to any of them (let alone all of
+            # them) risks cross-writing a reading from an unrelated agent
+            # sharing this session_id. But the AMBIGUITY ITSELF is a fact
+            # every one of these candidates shares right now, so flag all N
+            # (one shared observed_at for this one event).
+            now_iso = datetime.now(timezone.utc).isoformat()
+            for candidate in gauge_paths:
+                _write_skip_flag(candidate, "ambiguous-binding",
+                                  candidate_count=len(gauge_paths), observed_at=now_iso)
             return {}
         gauge_path = gauge_paths[0]
         record, uncalibrated = compute_record(transcript_path)
@@ -353,13 +459,21 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             # No window for this model: raise the flag and leave gauge.json
             # exactly as it was. It ages into staleness naturally, which the
             # reader already collapses to "no reading" -- the correct
-            # outcome.
+            # outcome. This IS a resolved outcome for this path, so clear any
+            # stale skip flag left over from an earlier ambiguous/no-usable
+            # call at this exact path.
             _write_uncalibrated_flag(gauge_path, uncalibrated)
+            _clear_skip_flag(gauge_path)
             return {}
         if record is None:
+            # Transcript exists and is readable, exactly one candidate, but
+            # nothing usable was found in it -- the second positively-
+            # localizable skip cause. Single path, no candidate_count.
+            _write_skip_flag(gauge_path, "no-usable-record")
             return {}
         _atomic_write_json(gauge_path, record)
         _clear_uncalibrated_flag(gauge_path)
+        _clear_skip_flag(gauge_path)
         return {}
     except Exception:
         return {}
