@@ -50,7 +50,26 @@ def _assert_no_resolver_placeholders(text: str) -> None:
         )
 
 
+def _assert_root_is_not_the_agent_work_dir(root: Path) -> None:
+    """Refuse a ``--root`` that already ends in ``.agent-work``.
+
+    ``--root`` is the *project/worktree* root; this script appends its own
+    ``.agent-work`` segment. The flag name reads as "the agent-work root",
+    so passing the ``.agent-work`` directory itself is an easy slip — and it
+    silently scaffolds ``.agent-work/.agent-work/<work-id>/`` rather than
+    failing, leaving a run's artifacts one level below where every other
+    script (and ``durable_root()``) looks for them.
+    """
+    if root.name == ".agent-work":
+        raise SystemExit(
+            f"--root {root} already ends in .agent-work; pass the PROJECT/WORKTREE "
+            f"root instead (this script appends .agent-work itself). Did you mean "
+            f"--root {root.parent if str(root.parent) else '.'} ?"
+        )
+
+
 def init_work_area(root: Path, work_id: str) -> Path:
+    _assert_root_is_not_the_agent_work_dir(root)
     base = root / ".agent-work" / work_id
     for sub in [""] + SUBDIRS:
         (base / sub).mkdir(parents=True, exist_ok=True)
@@ -148,7 +167,12 @@ def instantiate_spine(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("work_id")
-    parser.add_argument("--root", default=".")
+    parser.add_argument(
+        "--root",
+        default=".",
+        help="project/worktree root; .agent-work is appended by this script "
+        "(pass the root, NOT a path already ending in .agent-work)",
+    )
     parser.add_argument("--spine", help="path to a spine template to instantiate into spine.json")
     parser.add_argument("--skill-dir", dest="skill_dir", help="value for <commander-skill-dir> and <skill-dir> (auto-detected if omitted)")
     parser.add_argument("--force", action="store_true", help="overwrite an existing spine.json")
