@@ -65,6 +65,41 @@ line is `FAILED-CAPTURE-NO-COMMANDER-LOAD`.
 **1** on all five, against `NO-CORPUS-READ` on four of five in PRE-A: the corpus went from
 untouched to load-bearing.
 
+### WHICH VARIANT SERVED — and a ruling that arrived after the arm was spent
+
+**All five runs loaded `constellation-commander`, the human-driven variant. None loaded
+`constellation-commander-delegated`.** Named explicitly because "a Commander loaded" now has
+two possible answers and the record must say which; the `Base directory for this skill:`
+evidence in the table above resolves it per run.
+
+**The Admiral subsequently ruled that the delegated variant should have been used. That
+ruling arrived after all five runs had completed, been graded, and been committed.** The
+launch order named `constellation-commander` explicitly and twice; the gap was flagged
+upward before launch and the arm proceeded on the order as written, on a time-critical
+window. Stating the sequence plainly rather than letting the record imply the ruling was
+followed.
+
+What that does and does not cost, on the Admiral's own reasoning:
+
+- **The map surface is unaffected.** `constellation-commander-delegated` ships **no templates
+  of its own** and drives the **same** `COMMANDER_SPINE.template.json` out of
+  `constellation-commander`. Both variants fire the identical two map-first imperatives. The
+  choice moves human-gating only — so the measured quantity in §4 is the same under either.
+- **The capture-failure risk the ruling was meant to avoid did not materialise.** The concern
+  was a headless subject stalling at `understand`'s interrogator gate or plan `c3`/`c5`
+  `user-decision` postconditions. **No run stalled.** All five reached `plan`, authored a
+  mission frame and `execute.json`, and returned — see `runs/run-*/authored/`. The brief's
+  no-human-reachable clause resolved the gates.
+- **The live cost is pair symmetry.** If the POST arm uses the delegated variant, PRE-B and
+  POST differ by the variant *as well as* by #304. Two clean resolutions, and the choice is
+  the Admiral's and Tommy's: run POST on `constellation-commander` to match PRE-B — which
+  this arm's 5/5 completion shows is safe headless — or re-capture PRE-B on the delegated
+  variant. Re-capture is ~40 minutes at 3-way concurrency and ~$57, and is only affordable
+  while the pre-#304 window is open.
+
+This is recorded here rather than resolved, for the same reason the rubric was not edited: a
+capture is not retroactively relabelled to match a later ruling.
+
 `skill_invocations` is 2 per run, not 1: every run loaded `constellation-commander` at call 0
 and `constellation-interrogator` later, driving the spine's `understand` step as written.
 
@@ -271,11 +306,26 @@ all verified. It is the subject's own error.
 
 ## 7. Nothing landed in f1Brainz — and what the evidence actually is
 
+### The evidence standard changed between PRE-A and PRE-B — and it got STRONGER, not looser
+
+**Do not read PRE-A's "zero write calls" against PRE-B's "all writes bounded" as PRE-B being
+laxer. It is the opposite.**
+
 The launch order's item 6 asks for "zero `Write`/`Edit`/`NotebookEdit` calls." **That standard
 is unachievable by construction here**: the Commander's `plan` step *is* authoring a mission
-frame and `execute.json`. A run with zero writes has not reached the plan step. Raised to the
-Admiral before launch and filed as **#347**; this arm reports a strictly stronger, auditable
-standard instead.
+frame and `execute.json`. A run with zero writes has not reached the plan step. The treatment
+under measurement and the safety evidence standard were mutually exclusive.
+
+Raised to the Admiral before launch, **ruled, and the replacement adopted as written**; filed
+as **#347** so it governs the POST arm too.
+
+Why the replacement is stronger: a zero count only ever proved *that* no write happened. A
+boundary assertion proves **where every write went** — each one enumerated with its resolved
+target path, each one asserted inside that run's own disposable pinned worktree and under
+`.agent-work/`. PRE-A could have satisfied its standard and still have written somewhere
+unexpected via a tool the count did not cover; PRE-B's standard cannot be satisfied that way.
+It is also what caught the single escape in §7.1, which a count of writes would have recorded
+as just another write.
 
 **57 writes across five runs. Every one enumerated with its resolved target. Exactly one out
 of bounds.**
@@ -295,7 +345,34 @@ Commander directory. That proves more than a `git_unchanged` boolean, and it is 
 `git_unchanged: false` on all five runs is expected rather than alarming — `.agent-work/` is
 tracked in f1Brainz, so the new directory shows up.
 
-### The one out-of-bounds write — reported, not buried
+### Scope of this attestation — the f1Brainz main checkout had multiple concurrent writers
+
+**This attestation is scoped to this arm's own runs' resolved write paths. It is NOT a claim
+that the f1Brainz repository was clean during the capture window.** It was not, and a future
+reader comparing this record against that repo's history will find dirt in the window with no
+way to tell whose it was. At least three writers are accounted for:
+
+1. **A separate f1Brainz agent**, active throughout in a locked `fix-721-grip-band-units`
+   worktree — the same one `BASELINE_RECORD.md` identified for the PRE-A window.
+2. **`commander-304`**, a sibling dispatch of the Admiral's, which ran an `orient --root
+   C:/Programs/f1Brainz` that writes a receipt as a side effect of reading. It created and
+   then removed `.agent-work/probe2/map-orientation.json`. The Admiral verified the cleanup
+   directly rather than on its report.
+3. **This arm**, whose subjects worked only in their own pinned worktrees.
+
+**Attribute by evidence, not by timing.** Timestamps cannot separate these three; resolved
+write paths can. Checked across all five transcripts after the fact:
+
+- **Zero references to `probe2` or `map-orientation`** in any run. `commander-304`'s receipt
+  never entered this arm's data, in either direction.
+- **One** reference to the f1Brainz **main** checkout across all five runs — run-690's
+  `cd "C:/Programs/f1Brainz" && git log --oneline fix/721-grip-band-units -8`, **read-only**.
+  (Two apparent hits in run-698 are the string `C:\Programs\f1Brainz` appearing inside the
+  *content* of files it wrote to its own worktree, not accesses to main.)
+- **Zero writes to the main checkout** from any run, which is what actually rules this capture
+  out as a source of the dirt found there.
+
+### 7.1 The one out-of-bounds write — reported, not buried
 
 **run-698, tool call 147 of 148**, edited a Claude Code auto-memory file:
 
@@ -428,6 +505,11 @@ Arm-level: `corpus-fingerprint-{BEFORE,AFTER}.json`, `preB-discriminated.json`,
 
 ## 12. Open for the Admiral and Tommy
 
+- **Which Commander variant the POST arm uses** (§1). All five PRE-B runs used
+  `constellation-commander`; the ruling to use `constellation-commander-delegated` landed
+  after the arm was spent. The map surface is identical either way and no run stalled, so the
+  measurement stands — but the pair should share a variant. Match POST to PRE-B, or
+  re-capture PRE-B on the delegated variant while the pre-#304 window is still open.
 - **The §2 tolerance ambiguity (#333) is now confirmed by two independent graders.** It must
   be ruled on **before** #307 pairs PRE-B with POST, and the same reading must govern both.
 - **The map-first imperative is anchored to `execute.json`, not to touching code** (§4). If
