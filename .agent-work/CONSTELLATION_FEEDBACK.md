@@ -167,3 +167,44 @@ format rather than synthesized.
 **Grounding:** `.agent-work/epic-298/baselines/extract_ordering.py` (33-check `--self-test`,
 `fixtures/real-stream-excerpt.ndjson`); `.agent-work/299/PLAN_CRITIC_DISPOSITION.md` findings
 B4 and B6; `.agent-work/AGENT_FEEDBACK.md` 2026-08-01 entry for 299.
+
+## 2026-08-01 — issue-309 (adversarial coherence sweep, #321 fix)
+
+**Lesson:** a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed
+
+**Fifth+ recurrence in this epic, same mechanism class, caught pre-dispatch this time.**
+A solo cold plan critic (mandatory per the sibling lesson
+`cold-critic-mandatory-for-measurement-dependent-plans`, itself confirmed again this run)
+found TWO independent vacuous-pass checks in this run's own gate plan before any crew was
+dispatched or any real recall/noise number was produced:
+
+1. **`g1-seed`'s original postcondition** asserted "corpus-slice/ populated with 4 seeded
+   copies, none under git tracking" via
+   `git status --porcelain .agent-work/ | wc -l -eq 0 || git check-ignore -q
+   .agent-work/issue-309/corpus-slice/`. `git status --porcelain` silently OMITS an
+   ignored directory rather than reporting it — it does not distinguish "ignored and
+   populated" from "ignored and never created" from "not ignored at all." The check
+   passed unconditionally the moment `.agent-work/` was confirmed generally ignorable,
+   regardless of whether the 4 files existed.
+2. **`g0`'s adversarial test spec** for issue #321's fix asked for a traversal-shaped id
+   handed to `resolve_episode_path()`, asserted to return `None`. A well-formed-but-absent
+   id already returns `None` with or without the new `ID_RE` guard — so a test that only
+   checks "returns `None`" cannot distinguish "the guard fired" from "the id was simply
+   not found," and would pass whether or not the fix existed.
+
+Both fixed before dispatch (see `.agent-work/issue-309/plan/PLAN_CRITIC_DISPOSITION.md`,
+findings 1 and 2, for the corrected checks). Distinct from all four prior recurrences in
+mechanism (a `git status`/existence-check confusing "silently absent from a filtered
+listing" with "confirmed present," and a not-found-id test standing in for a
+guard-fired test) but the same root shape: **a check whose failure path is never actually
+exercised is indistinguishable, from the outside, from one that passed for real.**
+
+**Suggested upstream shape, additive to the existing repair clause:** for any postcondition
+or test asserting a directory/file is BOTH ignored/excluded AND populated/correct, require
+BOTH halves to be independently, positively checked (existence of the specific expected
+artifacts, not merely a filtered listing's silence about them) — a single command that can
+pass on either half alone is the same vacuous-pass shape as an untriggered guard.
+
+**Grounding:** `.agent-work/issue-309/plan/PLAN_CRITIC_DISPOSITION.md` findings 1 and 2;
+`.agent-work/issue-309/execute.json` g1-seed.c1 and g0-fix321-implement's corrected
+imperative; `.agent-work/AGENT_FEEDBACK.md` 2026-08-01 entry for issue-309.

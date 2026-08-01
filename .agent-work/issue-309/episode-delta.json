@@ -1,0 +1,111 @@
+{
+  "work_id": "issue-309",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-309",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g3-score",
+        "context-manifest-ref": "LAUNCH_ORDER-309@8de2faa",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/issue-309/GROUND_TRUTH.json",
+          ".agent-work/issue-309/SCORING.md",
+          ".agent-work/issue-309/VIEWPOINT_REPORTS.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Measure whether opinionated viewpoint subagents, dispatched whole-slice with doctrine pasted inline, can recall known-seeded coherence defects in a bounded 4-file copied corpus slice, and at what noise cost -- with the instrument's ability to both MISS and RAISE-then-REJECT a false positive demonstrated before either number is trusted (decision:prove-the-miss)."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected recall well below 100% and some nonzero noise, given the launch order's own framing (three prior instances this epic of checks that could not fail) and the a-priori risk that free-text viewpoint reports would either miss cross-file contradictions or over-flag stylistic differences as defects."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Recall (any-viewpoint, over SD1-SD4) = 4/4 (100%); real-viewpoint noise ratio = 0/7 (0%). The miss control (SD5, a wrong issue-number reference verifiable only against the live GitHub tracker) was correctly reported as NOT-FOUND by both viewpoints, both as genuine non-readings rather than considered rejections -- confirming the instrument CAN miss when a defect requires context it was never given. The noise control (DECOY1, a real unmodified cross-file pattern that looks like a tooling contradiction but is two skills legitimately choosing independent process policy) was NOT flagged by either real viewpoint -- but a supplementary, deliberately low-bar 'fast pattern-matcher' probe against the same two quotes in isolation DID flag it (YES-contradiction, while its own text conceded the two documents 'may govern different workflows'), and that finding was then correctly rejected at scoring per the ground truth's own criterion. Both halves of decision:prove-the-miss demonstrated before recall/noise were reported as final."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra Agent dispatch (the supplementary low-bar probe) was needed beyond the planned 2-viewpoint sweep, because the two carefully-worded lenses proved too disciplined to bait on their own -- a 0% noise ratio from well-instructed viewpoints does not, by itself, satisfy a requirement to demonstrate a false positive being raised and rejected; a null is not a demonstration. Total sweep cost: 2 real viewpoint dispatches + 1 supplementary validation dispatch + 2 implementer/reviewer crew dispatches for the unrelated #321 fix folded into the same run."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none -- the supplementary probe was a deliberate design choice (an explicitly-labeled instrument-validation exercise, not a slice expansion), not a workaround for a defect in the sweep."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Well-instructed viewpoints (given an explicit 'do not flag two independent policy choices as a contradiction' guardrail) are, by construction, resistant to a decoy engineered around exactly that shape -- the 0% noise result measures lens discipline, not an absence of noise risk in the underlying pathway."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "weak",
+          "statement": "A future coherence-sweep design that wants to measure REALISTIC noise from realistically-instructed viewpoints (rather than instrument-validate the pathway's raw capacity for noise) should seed a decoy the target lens's own guardrail does NOT already name as an exclusion, so the noise measurement isn't structurally deflated by the lens wording itself."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-309",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "understand",
+        "context-manifest-ref": "LAUNCH_ORDER-309@8de2faa",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "docs/EPISODE_STORE.md",
+          ".gitignore",
+          ".agent-work/issue-309/plan/MISSION_FRAME.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Seed a copied, never-live corpus slice under .agent-work/ for the coherence sweep, relying on docs/EPISODE_STORE.md section 1's own stated claim that .agent-work/ is gitignored ('git check-ignore .agent-work/episodes/ ; echo $? # 0 -> IGNORED')."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "git check-ignore -v .agent-work/issue-309/corpus-slice/ should exit 0 (ignored), matching EPISODE_STORE.md section 1's transcript, so the seeded copy would never be stageable by construction."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "git check-ignore -v .agent-work/issue-309/corpus-slice/ exited 1 (NOT ignored) before any mitigation. .agent-work/ was made TRACKED at commit b69e6c8 (#326, 'chore: track .agent-work/ -- run history is project history'), which post-dates EPISODE_STORE.md section 1's git-check-ignore transcript. EPISODE_STORE.md section 1's own claim about .agent-work/'s ignore status is now stale, and the plan's first draft (MISSION_FRAME.md) inherited the same false premise before this run's own follow-up check caught it."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Mitigated within this run (a worktree-local .agent-work/issue-309/.gitignore scoping out corpus-slice/, re-verified with git check-ignore -v exit 0) before any seeded file could have been staged. No live-corpus or canon impact occurred. Cost: one extra verification step and one plan-document correction, caught before the slice was ever at risk."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "worktree-local .agent-work/issue-309/.gitignore (pattern: corpus-slice/) -- explicit, not inherited -- keeps the seeded slice out of git regardless of .agent-work/'s repo-wide tracked status."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "docs/EPISODE_STORE.md section 1 (frozen at #301 g1, describing a decision-it-twice inheritance correction) documents a git-check-ignore transcript that was accurate when written but was invalidated by a later, unrelated repo-hygiene decision (#326) that changed .agent-work/'s tracked status for a different reason (durable run-history) without anyone revisiting section 1's own worked claim."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "docs/EPISODE_STORE.md section 1 should be updated to drop or caveat the now-stale git-check-ignore transcript for .agent-work/ specifically -- the store's own root (episodes/, never under .agent-work/) is unaffected by this staleness, only the illustrative contrast against .agent-work/ is now wrong. Filed as a triage candidate rather than edited directly this run (doctrine-text edit is out of this issue's Allowed Scope)."
+        }
+      ]
+    }
+  ]
+}
