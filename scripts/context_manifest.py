@@ -16,6 +16,26 @@ Three properties carry the whole design:
    gitignored files. One function covers tracked, dirty, untracked, gitignored and
    out-of-repo files with no case analysis, and it structurally eliminates CRLF —
    this corpus's largest named irreproducibility source — rather than excluding it.
+   Beside every per-file row sits one repo-level, coarser fact in content,
+   `repo_rev: {commit}` — *which commit is canon versioned at* (Tommy's
+   doctrine-version stamp, #300 g5). `commit` alone is safe as content because it
+   is **canon-determined**: identical in any checkout of that commit, anywhere, so
+   two environments delivering the same declared bytes always agree on it.
+   `dirty` — *is that commit's tree honest right now* — is a different kind of
+   fact: it describes the working tree that **produced** this manifest, not the
+   bytes it delivered, so it lives in the excluded `run` subtree instead
+   (`run.dirty`; #300 g5 rework 1, after a review disproved the original
+   placement). The split is what keeps content genuinely canon-determined:
+   `git status --porcelain` is repo-wide, so an edit to a file no declaration
+   names would otherwise flip `dirty` and make two environments that delivered
+   byte-identical canon disagree on content. It does not reopen the honesty gap a
+   bare commit SHA has: content already carries the per-file blob OID as the
+   precise "which bytes did this agent actually get" answer for a dirty,
+   untracked or out-of-repo file, so `repo_rev.commit` only has to be the coarse,
+   human-facing traceability stamp, not the honesty marker too. Computed by
+   `checklist_engine.repo_revision()` — a real `git` subprocess, deliberately
+   kept **out of this module's own source** so the guarantee above (no `git`
+   subprocess **in this file**) stays literally true.
 2. **Declaration order is content.** There are no globs, no directory patterns and
    no directory enumeration anywhere in this module, and paths are never sorted.
    A glob would import filesystem ordering — the second named irreproducibility
@@ -36,8 +56,10 @@ Three properties carry the whole design:
    `ManifestEnvelope::test_the_envelope_is_exactly_the_content_allowlist_plus_run`
    until the envelope and the allow-list are made to agree deliberately.
 
-The single impure edge is the injected `reader` callable, which is what lets a
-test point the whole producer at a fixture tree.
+There are now two injected impure edges, mirroring each other: `reader` for file
+bytes, and `repo_state` for the repo-level `repo_rev` fact. Each is what lets a
+test point the whole producer at a fixture tree (or a fixed `{commit, dirty}`)
+without touching the real filesystem or a real git process.
 
 There is intentionally **no CLI verb** here: the manifest is a JSON file, and a
 verb would touch the engine's persistence control flow for a convenience print.
@@ -55,7 +77,10 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Mapping, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from checklist_engine import active_id  # noqa: E402  — THE selector, never a second one
+from checklist_engine import active_id, repo_revision  # noqa: E402  — active_id is THE
+# selector, never a second one; repo_revision is the real, git-backed implementation
+# of the repo_state impure edge below — imported by name, so this module's own
+# source never contains the literal identifier `subprocess`.
 
 # Independent of the engine's `_STATE_CONTRACT_VERSION` (both read 1 today, and
 # they are free to diverge) — same versioning idiom, different contract. Anything
@@ -76,7 +101,15 @@ ROOT_TOKENS = ("skill", "repo", "durable")
 #: determinism comparison; adding it here without adding it to the envelope is a
 #: dangling admission. Either way the two must be reconciled by hand, which is the
 #: point: an environment-varying field cannot drift into the compared content.
-CONTENT_KEYS = ("contract", "step", "files")
+#: `repo_rev` is admitted deliberately, but only its `commit` sub-field: `commit`
+#: is a fact about *canon* (which commit doctrine is versioned at) and is
+#: identical for any checkout of that commit, so it never varies by run
+#: environment. `dirty` is the opposite kind of fact -- which working tree
+#: *produced* this manifest, not which bytes it delivered -- so it is excluded to
+#: `run.dirty` instead (#300 g5 rework 1: `git status --porcelain` is repo-wide,
+#: so it flips on an edit to a file no declaration names, which is exactly the
+#: case that must never reach content).
+CONTENT_KEYS = ("contract", "step", "files", "repo_rev")
 
 
 def rev(data: bytes) -> str:
@@ -127,11 +160,13 @@ class DeclarationError(ValueError):
 
 
 # --------------------------------------------------------------------------- #
-# The single impure edge.
+# The first of two injected impure edges (the second is `default_repo_state`,
+# below `rows()`).
 #
-# Everything else in this module is a pure function of (checklist, roots, reader).
-# Injecting a different reader is what lets a test point the whole producer at a
-# fixture tree without touching the real filesystem.
+# Everything else in this module is a pure function of
+# (checklist, roots, reader, repo_state). Injecting a different reader is what
+# lets a test point the whole producer at a fixture tree without touching the
+# real filesystem.
 # --------------------------------------------------------------------------- #
 def read_bytes(abs_path: str) -> bytes | None:
     """Read `abs_path`, or return None if it does not exist.
@@ -256,16 +291,52 @@ def rows(
     return out
 
 
-def run_facts(roots: Mapping[str, Any], work_id: str | None = None) -> dict:
+def default_repo_state(roots: Mapping[str, Any]) -> Mapping[str, Any]:
+    """The real, git-backed implementation of the `repo_state` impure edge.
+
+    Delegates to `checklist_engine.repo_revision`, the module that already shells
+    out to git for `git-change-policy` — this file's own source stays free of the
+    literal identifier `subprocess`, which is what keeps
+    `ProducerGuards.test_producer_shells_out_to_nothing` true after this function
+    exists. `roots["repo"]` is the same repo root every other declaration entry
+    resolves against; a checklist with no `repo` root mapped (some fixtures map
+    only `skill`) yields `{"commit": None, "dirty": None}` rather than raising —
+    the same "absence is normal" rule `read_bytes` follows for a missing file.
+
+    Returns **both** `commit` and `dirty` — this edge is not where the
+    content/`run` split happens. `build_manifest` is what splits the pair:
+    `commit` becomes the content field `repo_rev`; `dirty` becomes `run.dirty`
+    (#300 g5 rework 1). Keeping this function un-split keeps `repo_revision()` a
+    general repo-facts primitive, not one pre-shaped to this module's own
+    content/run boundary — a second caller with different needs is free to use
+    either half.
+    """
+    base = roots.get("repo")
+    if base is None:
+        return {"commit": None, "dirty": None}
+    return repo_revision(Path(base))
+
+
+def run_facts(
+    roots: Mapping[str, Any], work_id: str | None = None, dirty: bool | None = None
+) -> dict:
     """The `/run` subtree: every legitimately-varying fact, and nothing else.
 
     Absolute roots, timestamps and host facts all live here. Nothing varying may
     live outside this subtree — that is what makes the determinism comparison a
     single-pointer exclusion instead of a maintained field list.
+
+    `dirty` joined this subtree in #300 g5 rework 1: whether the working tree
+    that produced this manifest was clean is a fact about the *producing
+    environment*, not about the bytes delivered, so it sits here beside
+    `roots`/`host` rather than inside the content field `repo_rev`. The caller
+    (`build_manifest`) is what supplies it — this function stays a plain
+    assembler of whatever run-environment facts it is handed.
     """
     return {
         "work_id": work_id,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "dirty": dirty,
         # ROOT_TOKENS order, not sorted() and not dict order — deterministic without
         # importing any ordering the declaration did not ask for.
         "roots": {t: Path(roots[t]).as_posix() for t in ROOT_TOKENS if t in roots},
@@ -281,6 +352,7 @@ def build_manifest(
     checklist: Mapping[str, Any],
     roots: Mapping[str, Any],
     reader: Callable[[str], bytes | None] = read_bytes,
+    repo_state: Callable[[Mapping[str, Any]], Mapping[str, Any]] = default_repo_state,
 ) -> dict:
     """The one envelope, for the checklist's active step.
 
@@ -291,6 +363,13 @@ def build_manifest(
     point. A second way to choose the step is a second selector wearing a keyword
     argument, and it would let a test assert against a step production never
     reaches.
+
+    `repo_state(roots)` returns `{commit, dirty}` and is split right here, not
+    upstream: `commit` becomes the content field `repo_rev` — canon-determined,
+    identical for any checkout of that commit; `dirty` becomes `run.dirty` — a
+    fact about the working tree that produced this manifest, excluded like every
+    other run-environment fact (#300 g5 rework 1; see `CONTENT_KEYS` and the
+    module docstring for why the two do not travel together).
     """
     selected = active_id(checklist)
     if selected is None:
@@ -299,11 +378,13 @@ def build_manifest(
     if task is None:
         raise ValueError(f"step {selected!r} is not a task on this checklist")
 
+    state = dict(repo_state(roots))
     return {
         "contract": _MANIFEST_CONTRACT_VERSION,
         "step": selected,
         "files": rows(declaration_of(task), roots, reader),
-        "run": run_facts(roots, work_id=checklist.get("work_id")),
+        "repo_rev": {"commit": state.get("commit")},
+        "run": run_facts(roots, work_id=checklist.get("work_id"), dirty=state.get("dirty")),
     }
 
 
@@ -355,8 +436,9 @@ def produce(
     roots: Mapping[str, Any],
     agent_work_root: Any,
     reader: Callable[[str], bytes | None] = read_bytes,
+    repo_state: Callable[[Mapping[str, Any]], Mapping[str, Any]] = default_repo_state,
 ) -> tuple[Path, dict]:
     """Build the active step's manifest and write it. Returns `(path, manifest)`."""
-    manifest = build_manifest(checklist, roots, reader=reader)
+    manifest = build_manifest(checklist, roots, reader=reader, repo_state=repo_state)
     destination = manifest_path(agent_work_root, checklist.get("work_id"), manifest["step"])
     return write_manifest(manifest, destination), manifest

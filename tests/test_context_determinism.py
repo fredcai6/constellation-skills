@@ -525,6 +525,100 @@ class RealCheckoutSkew(unittest.TestCase):
         # vacuous and still report green.
         self.assertEqual(differed, 1)
 
+    def test_two_checkouts_same_commit_unequal_dirt_on_an_undeclared_file_agree_on_content(self):
+        """Regression, review BLOCKER-1 (#300 g5 rework 1).
+
+        Reproduces the reviewer's own construction: two FRESH worktrees at the
+        SAME commit, nothing overlaid. One stays genuinely clean; the other gets a
+        one-line edit to `docs/CHECKLIST_SCHEMA.md` -- a file NO declaration
+        names (the reviewer's own choice of undeclared file). The declaration
+        below names only `TRACKED` paths, so declared canon is byte-identical on
+        both sides; the only variable is dirt the declaration never sees.
+
+        FAILS before the split fix: `repo_rev` carried `dirty` inside content, so
+        `content()` differed between the two checkouts even though every declared
+        byte was identical. PASSES after: `dirty` moved to `/run`, so identical
+        canon means identical content regardless of undeclared dirt.
+
+        Deliberately does NOT assert which subtree `dirty` lives in -- only that
+        `content()` agrees -- so this exact test body produces both the red
+        transcript (run against the pre-fix shape) and the green one (run after)
+        without being edited in between.
+
+        No `unittest.SkipTest` environment guard here (unlike its siblings above
+        in this file) per this round's explicit "introduce no skipTest"
+        constraint: if git is somehow absent, `git worktree add` fails loudly
+        below via the ordinary assertion on its return code instead.
+        """
+        declaration = list(self.TRACKED)
+        checklist = {
+            "work_id": "skew-dirt", "type": "gated", "items": ["context"],
+            "tasks": {"context": {"id": "context", "title": "context",
+                                  "imperative": "…", "status": "pending",
+                                  cm.DECLARATION_KEY: declaration}},
+        }
+
+        def project(base):
+            roots = {"skill": Path(base) / "skills" / "commander",
+                     "repo": Path(base), "durable": Path(base)}
+            return cm.build_manifest(checklist, roots)
+
+        tmp = tempfile.mkdtemp(prefix="ctx-dirt-skew-")
+        clean = Path(tmp) / "clean"
+        dirty = Path(tmp) / "dirty"
+        try:
+            for path in (clean, dirty):
+                added = subprocess.run(
+                    ["git", "worktree", "add", "--detach", str(path), "HEAD"],
+                    cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                )
+                self.assertEqual(added.returncode, 0, added.stderr)
+
+            # The dirt: an edit to a file NO declaration names -- not in TRACKED,
+            # not an overlay of the change under test, just an ordinary undeclared
+            # tracked file, modified in only one of the two checkouts.
+            undeclared = dirty / "docs" / "CHECKLIST_SCHEMA.md"
+            with open(undeclared, "a", encoding="utf-8", newline="\n") as handle:
+                handle.write("\n<!-- regression probe: undeclared edit, #300 g5 rework 1 -->\n")
+
+            clean_status = subprocess.run(
+                ["git", "status", "--porcelain"], cwd=clean,
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            dirty_status = subprocess.run(
+                ["git", "status", "--porcelain"], cwd=dirty,
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            # The premise, established rather than assumed: one side really is
+            # clean, the other really is dirty, on a file no declaration names.
+            self.assertEqual(clean_status.stdout.strip(), "")
+            self.assertNotEqual(dirty_status.stdout.strip(), "")
+
+            m_clean = project(clean)
+            m_dirty = project(dirty)
+
+            # Declared canon really is identical -- the only variable is dirt on
+            # a file the declaration never names.
+            self.assertEqual(
+                [(r["root"], r["path"], r["rev"]) for r in m_clean["files"]],
+                [(r["root"], r["path"], r["rev"]) for r in m_dirty["files"]],
+            )
+            self.assertEqual(m_clean["repo_rev"]["commit"], m_dirty["repo_rev"]["commit"])
+
+            # THE regression assertion: identical canon must mean identical
+            # content, regardless of which side happens to be dirty on a file
+            # nothing declares.
+            self.assertEqual(cm.content(m_clean), cm.content(m_dirty))
+        finally:
+            for path in (clean, dirty):
+                subprocess.run(
+                    ["git", "worktree", "remove", "--force", str(path)],
+                    cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                )
+            subprocess.run(["git", "worktree", "prune"], cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8")
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1053,6 +1053,63 @@ class GitChangePolicyCheck(unittest.TestCase):
         self.assertEqual(E.advance(cl, "g1"), "g1 -> complete (WAIVED postconditions ['c4'])")
 
 
+class RepoRevision(unittest.TestCase):
+    """`repo_revision()` -- Tommy's doctrine-version stamp (#300 g5): HEAD commit
+    plus a dirty marker, both via the existing `_git()` subprocess helper.
+    Oracle-compared against real `git` output, the same pattern the manifest's
+    `rev()` blob-OID tests use against `git hash-object`."""
+
+    def _git(self, *args, cwd=None):
+        import subprocess
+        return subprocess.run(
+            ["git", *args], cwd=str(cwd) if cwd else str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+
+    def test_repo_revision_commit_matches_git_rev_parse_head_oracle(self):
+        oracle = self._git("rev-parse", "HEAD")
+        self.assertEqual(oracle.returncode, 0, oracle.stderr)
+        result = E.repo_revision(ROOT)
+        self.assertEqual(result["commit"], oracle.stdout.strip())
+
+    def test_repo_revision_dirty_matches_git_status_porcelain_non_emptiness_oracle(self):
+        oracle = self._git("status", "--porcelain")
+        self.assertEqual(oracle.returncode, 0, oracle.stderr)
+        result = E.repo_revision(ROOT)
+        self.assertEqual(result["dirty"], bool(oracle.stdout.strip()))
+
+    def test_repo_revision_shape_is_exactly_commit_and_dirty(self):
+        result = E.repo_revision(ROOT)
+        self.assertEqual(sorted(result), ["commit", "dirty"])
+
+    def test_repo_revision_a_non_git_directory_yields_none_none_without_raising(self):
+        with tempfile.TemporaryDirectory() as d:
+            result = E.repo_revision(Path(d))
+        self.assertEqual(result, {"commit": None, "dirty": None})
+
+    def test_repo_revision_base_dir_none_falls_back_to_process_cwd(self):
+        # `_git(args, None)` runs with no `cwd=` override, i.e. the caller's own
+        # cwd -- this test's cwd is inside the repo (pytest's invocation root),
+        # so it must resolve exactly like passing ROOT explicitly does.
+        self.assertEqual(E.repo_revision(None), E.repo_revision(ROOT))
+
+    def test_repo_revision_a_real_dirty_working_tree_is_detected(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            self._git("init", "-q", cwd=d)
+            self._git("config", "user.email", "t@t", cwd=d)
+            self._git("config", "user.name", "t", cwd=d)
+            (d / "a.txt").write_text("one\n", encoding="utf-8")
+            self._git("add", "a.txt", cwd=d)
+            self._git("commit", "-q", "-m", "init", cwd=d)
+            clean = E.repo_revision(d)
+            self.assertEqual(clean, {"commit": clean["commit"], "dirty": False})
+            (d / "a.txt").write_text("two\n", encoding="utf-8")
+            dirty = E.repo_revision(d)
+            self.assertEqual(dirty["commit"], clean["commit"])
+            self.assertTrue(dirty["dirty"])
+
+
 class GitChangePolicyCollectorIntegration(unittest.TestCase):
     """Optional end-to-end: a real temp git repo exercising _collect_changed_files.
     Skipped if git is unavailable."""

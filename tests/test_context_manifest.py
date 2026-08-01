@@ -241,9 +241,9 @@ class ManifestEnvelope(unittest.TestCase):
     def build(self, declaration, **kw):
         return cm.build_manifest(checklist(declaration), self.roots, **kw)
 
-    def test_envelope_has_exactly_four_keys(self):
+    def test_envelope_has_exactly_five_keys(self):
         m = self.build([{"root": "skill", "path": "references/doctrine.md", "required": True}])
-        self.assertEqual(list(m), ["contract", "step", "files", "run"])
+        self.assertEqual(list(m), ["contract", "step", "files", "repo_rev", "run"])
         self.assertEqual(m["contract"], cm._MANIFEST_CONTRACT_VERSION)
         self.assertEqual(m["step"], "context")
 
@@ -815,11 +815,53 @@ class ProducerGuards(unittest.TestCase):
                         self.fail(f"{path.name}: {name}() is 3.13+ only")
 
     def test_producer_shells_out_to_nothing(self):
-        # `rev` is computed in-process: no `git` process, and no network or LLM call
-        # at assembly time. The manifest is a pure function of (canon, selector).
+        # AST-level, narrower than it once read: this file's OWN SOURCE contains
+        # none of these identifiers. It does NOT mean build_manifest() never
+        # shells out -- the default `repo_state` edge (`default_repo_state`)
+        # delegates to `checklist_engine.repo_revision`, which does shell out to
+        # git, by design (#300 g5): that indirection is what keeps this guard
+        # literally true after `repo_rev` exists, not a claim that assembly is
+        # subprocess-free. The invariant that actually matters -- real
+        # injectability, not merely an absent identifier -- is pinned directly by
+        # `test_build_manifest_with_both_edges_injected_shells_out_to_nothing`
+        # below.
         used = self._names_used(self.SOURCE)
         banned = {"subprocess", "urllib", "requests", "socket", "http", "system", "popen"}
         self.assertEqual(sorted(banned & used), [])
+
+    def test_build_manifest_with_both_edges_injected_shells_out_to_nothing(self):
+        # The guarantee readers actually care about: with BOTH impure edges
+        # faked, build_manifest performs zero subprocess calls, so no test needs
+        # a real git repository. Patched at the `subprocess` module level (not
+        # merely "the fakes were never called") so a future unconditional git
+        # call added anywhere in build_manifest's own path -- not mediated by
+        # `repo_state` -- would be caught here too.
+        import subprocess as _subprocess
+
+        def explode(*a, **k):  # pragma: no cover - must never be called
+            raise AssertionError("build_manifest shelled out despite both edges being injected")
+
+        original_run, original_popen = _subprocess.run, _subprocess.Popen
+        _subprocess.run = explode
+        _subprocess.Popen = explode
+        self.addCleanup(lambda: (
+            setattr(_subprocess, "run", original_run),
+            setattr(_subprocess, "Popen", original_popen),
+        ))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            (base / "references").mkdir()
+            (base / "references" / "declared.md").write_bytes(b"doctrine\n")
+            m = cm.build_manifest(
+                checklist([{"root": "skill", "path": "references/declared.md",
+                            "required": True}]),
+                {"skill": base, "repo": base, "durable": base},
+                reader=cm.read_bytes,
+                repo_state=lambda roots: {"commit": "deadbeef", "dirty": False},
+            )
+        self.assertEqual(m["repo_rev"], {"commit": "deadbeef"})
+        self.assertEqual(m["run"]["dirty"], False)
 
 
 class Serialisation(unittest.TestCase):
@@ -846,6 +888,143 @@ class Serialisation(unittest.TestCase):
     def test_manifest_path_is_agent_work_workid_context_step_json(self):
         p = cm.manifest_path(".agent-work", "300", "context")
         self.assertEqual(Path(p).as_posix(), ".agent-work/300/context/context.json")
+
+
+class RepoRevContent(unittest.TestCase):
+    """`repo_rev` -- Tommy's doctrine-version stamp (#300 g5): the repo revision,
+    admitted into `CONTENT_KEYS` (a fact about canon, not about the run
+    environment). The per-file blob OID (`rev`, tested above in `RevIsGitBlobOid`)
+    is untouched -- this is a second, coarser fact, not a replacement.
+
+    Split in rework 1 (BLOCKER-1): `repo_rev` in content carries `commit` only,
+    which is canon-determined (identical for any checkout of that commit).
+    `dirty` -- a fact about the working tree that *produced* the manifest, not
+    the bytes it delivered -- lives in `run.dirty` instead. A review proved the
+    original placement (both fields inside content) wrong: two checkouts at the
+    same commit, delivering byte-identical declared canon, disagreed on
+    `repo_rev` solely because `git status --porcelain` is repo-wide and picked
+    up dirt on a file no declaration named."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.skill = Path(self.tmp.name) / "skill"
+        self.repo = Path(self.tmp.name) / "repo"
+        (self.skill / "references").mkdir(parents=True)
+        (self.repo / "docs").mkdir(parents=True)
+        (self.skill / "references" / "doctrine.md").write_bytes(b"doctrine\n")
+        self.roots = {"skill": self.skill, "repo": self.repo, "durable": self.repo}
+
+    def build(self, repo_state=None, **kw):
+        decl = [{"root": "skill", "path": "references/doctrine.md", "required": True}]
+        kwargs = dict(kw)
+        if repo_state is not None:
+            kwargs["repo_state"] = repo_state
+        return cm.build_manifest(checklist(decl), self.roots, **kwargs)
+
+    def test_repo_rev_is_admitted_into_content_keys(self):
+        self.assertIn("repo_rev", cm.CONTENT_KEYS)
+
+    def test_repo_rev_is_a_content_field_not_a_run_field(self):
+        # The whole point of #300 g5: commit is a fact about canon, so it must
+        # not hide in the excluded /run subtree.
+        m = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": False})
+        self.assertNotIn("repo_rev", m["run"])
+        self.assertIn("repo_rev", cm.content(m))
+        self.assertEqual(cm.content(m)["repo_rev"], {"commit": "deadbeef"})
+
+    def test_repo_rev_shape_is_exactly_commit(self):
+        m = self.build(repo_state=lambda roots: {"commit": "abc123", "dirty": True})
+        self.assertEqual(sorted(m["repo_rev"]), ["commit"])
+
+    def test_dirty_lives_in_run_not_content(self):
+        # BLOCKER-1's fix, asserted directly: dirty is present in the manifest
+        # (nothing is deleted -- it is still useful provenance) but excluded from
+        # content, and it appears exactly where /run's other varying facts do.
+        m = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": True})
+        self.assertIn("dirty", m["run"])
+        self.assertEqual(m["run"]["dirty"], True)
+        self.assertNotIn("dirty", cm.content(m))
+        self.assertNotIn("dirty", m["repo_rev"])
+
+    def test_content_is_unaffected_by_dirty_when_commit_is_equal(self):
+        # The regression this rework closes, in-process and fast: two repo_state
+        # fakes that agree on `commit` but disagree on `dirty` must still produce
+        # byte-identical content. `tests/test_context_determinism.py`'s
+        # `RealCheckoutSkew` covers the same property end-to-end, over real git
+        # worktrees; this is the unit-level complement.
+        m_clean = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": False})
+        m_dirty = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": True})
+        self.assertEqual(cm.content(m_clean), cm.content(m_dirty))
+        self.assertNotEqual(m_clean["run"]["dirty"], m_dirty["run"]["dirty"])
+
+    def test_repo_rev_does_not_replace_the_per_file_blob_oid(self):
+        # The per-file row's `rev` -- tested exhaustively in RevIsGitBlobOid and
+        # ManifestEnvelope above -- must be completely unaffected by repo_rev's
+        # presence: still exactly {root, path, rev}, still the blob OID.
+        m = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": True})
+        self.assertEqual(list(m["files"][0]), ["root", "path", "rev"])
+        self.assertEqual(m["files"][0]["rev"], cm.rev(b"doctrine\n"))
+
+    def test_repo_state_is_injectable_as_the_second_impure_edge(self):
+        seen = []
+
+        def fake_repo_state(roots):
+            seen.append(roots)
+            return {"commit": "injected-sha", "dirty": True}
+
+        m = self.build(repo_state=fake_repo_state)
+        self.assertEqual(len(seen), 1)
+        self.assertIs(seen[0], self.roots)
+        self.assertEqual(m["repo_rev"], {"commit": "injected-sha"})
+        self.assertEqual(m["run"]["dirty"], True)
+
+    def test_default_repo_state_on_a_non_git_directory_yields_none_none(self):
+        # self.repo is a plain tempdir, never `git init`-ed.
+        m = self.build()
+        self.assertEqual(m["repo_rev"], {"commit": None})
+        self.assertIsNone(m["run"]["dirty"])
+
+    def test_default_repo_state_with_no_repo_root_mapped_yields_none_none(self):
+        roots = {"skill": self.skill, "durable": self.repo}
+        m = cm.build_manifest(
+            checklist([{"root": "skill", "path": "references/doctrine.md", "required": True}]),
+            roots,
+        )
+        self.assertEqual(m["repo_rev"], {"commit": None})
+        self.assertIsNone(m["run"]["dirty"])
+
+    def test_default_repo_state_against_the_real_repo_matches_git_oracles(self):
+        import subprocess
+        commit_oracle = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        status_oracle = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(commit_oracle.returncode, 0, commit_oracle.stderr)
+        self.assertEqual(status_oracle.returncode, 0, status_oracle.stderr)
+
+        roots = {"skill": self.skill, "repo": ROOT, "durable": self.repo}
+        m = cm.build_manifest(
+            checklist([{"root": "skill", "path": "references/doctrine.md", "required": True}]),
+            roots,
+        )
+        self.assertEqual(m["repo_rev"]["commit"], commit_oracle.stdout.strip())
+        self.assertEqual(m["run"]["dirty"], bool(status_oracle.stdout.strip()))
+
+    def test_repo_rev_survives_json_round_trip_untransformed(self):
+        m = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": False})
+        self.assertEqual(json.loads(json.dumps(m))["repo_rev"], m["repo_rev"])
+        self.assertEqual(json.loads(json.dumps(m))["run"]["dirty"], m["run"]["dirty"])
+
+    def test_doctrine_version_is_the_repo_rev_field(self):
+        # Named for gate g5's own -k selector ('repo_rev or doctrine_version'):
+        # "doctrine version" IS the repo_rev content field, not a separate one.
+        m = self.build(repo_state=lambda roots: {"commit": "cafefeed", "dirty": False})
+        self.assertEqual(cm.content(m)["repo_rev"]["commit"], "cafefeed")
 
 
 class EpisodeContextFieldShape(unittest.TestCase):

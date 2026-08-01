@@ -221,6 +221,30 @@ caller builds and, optionally, writes under `<agent_work_root>/<work-id>/context
 check comparing canon against a committed artifact is a later issue's territory, not this
 substrate's.
 
+**Two-level revision scheme (#300 g5, Tommy's ruling; split in rework 1).** Beside the per-file rows
+sits one repo-level content field, `repo_rev: {commit}` — `commit` is `git rev-parse HEAD`, via
+`checklist_engine.repo_revision()` (a real git subprocess, deliberately kept out of
+`context_manifest.py`'s own source so its no-subprocess guarantee stays literally true, and injected
+as a second impure edge, `repo_state`, beside the existing `reader`). It answers a coarser, repo-wide
+question than `rev` does — *which commit is canon versioned at* — and does not replace the per-file
+blob OID's *which bytes did this agent actually get*, which stays the identity answer for a dirty,
+untracked or out-of-repo file that a commit SHA alone cannot cover.
+
+`repo_revision()` also returns `dirty` — is that commit's tree honest right now — but it does **not**
+ship beside `commit` inside content. The original design shipped it there, reasoning that a bare
+commit SHA needs the caveat to stay honest; a review disproved that (BLOCKER-1, rework 1): two fresh
+checkouts at the same commit, delivering byte-identical declared canon, disagreed on `repo_rev`
+because `git status --porcelain` is repo-wide and picked up an edit to a file no declaration named.
+`commit` is canon-determined (identical for any checkout of that commit) so it is safe as content;
+`dirty` describes the working tree that *produced* the manifest, not the bytes it delivered, so it
+lives in `run.dirty` instead — a fact about the run, like `roots`/`host`, not about canon. The split
+does not reopen the honesty gap: the per-file blob OID already answers the "which bytes did this
+agent actually get" question for a dirty/untracked/out-of-repo file, which is what `dirty` was really
+protecting; `repo_rev.commit` only ever had to be the coarse, human-facing traceability stamp. The
+split is made once, at `build_manifest`'s assembly point — `repo_revision()`/`default_repo_state()`
+still return both fields together, as a general repo-facts primitive not pre-shaped to this one
+caller's content/run boundary.
+
 **Downstream, not yet resolved here.** The manifest is consumed, not produced, by whatever issue
 turns out to build on it, and two questions are open across that interface. **Durability:** that
 root is gitignored and a linked worktree's copy is destroyed by `git worktree remove`, so a
