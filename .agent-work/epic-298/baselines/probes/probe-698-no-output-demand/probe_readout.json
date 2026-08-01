@@ -1,0 +1,19 @@
+{
+  "transcript_complete": true,
+  "tool_call_count": 20,
+  "skill_invocations": 0,
+  "skill_calls": [],
+  "served_by_base_dir": [],
+  "sentinel_occurrences_in_transcript": 0,
+  "init_constellation_entries": 37,
+  "init_duplicated_names": 18,
+  "write_tool_calls": 0,
+  "write_tool_detail": [],
+  "forbidden_operations": [],
+  "tool_histogram": {
+    "Bash": 10,
+    "Read": 6,
+    "Grep": 3,
+    "Glob": 1
+  }
+}
