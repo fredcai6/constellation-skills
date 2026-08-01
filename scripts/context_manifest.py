@@ -25,8 +25,16 @@ Three properties carry the whole design:
 3. **`/run` is the entire exclusion set.** Every legitimately-varying fact —
    timestamps, run ids, absolute roots, host facts — lives in the `run` subtree and
    nowhere else. Determinism is therefore checked by comparing everything outside
-   one JSON pointer; a new varying field cannot become "accidentally content",
-   because it has to be placed in one subtree or the other.
+   one JSON pointer.
+
+   The mechanism that keeps that claim true is that `content()` **admits** the keys
+   in `CONTENT_KEYS` rather than **denying** `run`. Denial was the obvious spelling
+   and it is the wrong one: it makes every future key content by default, so a new
+   varying field becomes "accidentally content" merely by being added, silently.
+   Admission inverts the default — a new key is excluded until someone edits
+   `CONTENT_KEYS`, and that edit fails
+   `ManifestEnvelope::test_the_envelope_is_exactly_the_content_allowlist_plus_run`
+   until the envelope and the allow-list are made to agree deliberately.
 
 The single impure edge is the injected `reader` callable, which is what lets a
 test point the whole producer at a fixture tree.
@@ -62,8 +70,13 @@ DECLARATION_KEY = "context_refs"
 #: mapping, so absolute (environment-varying) paths never reach the content.
 ROOT_TOKENS = ("skill", "repo", "durable")
 
-#: The entire exclusion set for the determinism comparison — one JSON pointer.
-RUN_POINTER = "/run"
+#: The manifest keys that ARE content — the allow-list `content()` projects. The
+#: envelope is exactly these plus `run`, and the exclusion set is exactly `run`.
+#: Adding a key to the envelope without adding it here excludes it from the
+#: determinism comparison; adding it here without adding it to the envelope is a
+#: dangling admission. Either way the two must be reconciled by hand, which is the
+#: point: an environment-varying field cannot drift into the compared content.
+CONTENT_KEYS = ("contract", "step", "files")
 
 
 def rev(data: bytes) -> str:
@@ -83,14 +96,23 @@ def rev(data: bytes) -> str:
        stores the raw bytes, while this function normalises unconditionally — so it
        deliberately diverges there.
 
-    The gate's `.gitattributes` grep pins condition 1 **only**; it structurally
-    cannot see condition 2, which is content rather than configuration. That half is
+    Both halves are watched mechanically, by two different kinds of check, because
+    they are two different kinds of fact.
+
+    Condition 1 is repository **configuration**: this repository's `.gitattributes`
+    is `* text=auto` and assigns `-text`/`binary` to nothing, so no path is exempt.
+    `RevIsGitBlobOid.test_gitattributes_exempts_no_path_from_lf_normalisation`
+    asserts that, and it fails the moment any exemption is added — including one
+    scoped to a subtree a `context_refs` declares, which is the shape that would
+    otherwise slip past a reader's eye.
+
+    Condition 2 is **content**, so no configuration check can see it at all. It is
     pinned instead by
     `RevIsGitBlobOid.test_rev_diverges_from_git_for_content_git_refuses_to_normalise`,
     which asserts the divergence rather than assuming it away. No file in any root a
     `context_refs` can name is in that class today — this corpus is markdown and
-    JSON written under `* text=auto` — but the boundary is now watched mechanically
-    instead of being stated more narrowly than it is.
+    JSON written under `* text=auto` — but the boundary is watched rather than
+    stated more narrowly than it is.
     """
     body = data.replace(b"\r\n", b"\n")
     return hashlib.sha1(b"blob %d\x00" % len(body) + body).hexdigest()
@@ -234,23 +256,16 @@ def rows(
     return out
 
 
-def run_facts(
-    roots: Mapping[str, Any],
-    work_id: str | None = None,
-    session_id: str | None = None,
-    now: datetime | None = None,
-) -> dict:
+def run_facts(roots: Mapping[str, Any], work_id: str | None = None) -> dict:
     """The `/run` subtree: every legitimately-varying fact, and nothing else.
 
-    Absolute roots, timestamps, host facts and run identity all live here. Nothing
-    varying may live outside this subtree — that is what makes the determinism
-    comparison a single-pointer exclusion instead of a maintained field list.
+    Absolute roots, timestamps and host facts all live here. Nothing varying may
+    live outside this subtree — that is what makes the determinism comparison a
+    single-pointer exclusion instead of a maintained field list.
     """
-    stamp = now if now is not None else datetime.now(timezone.utc)
     return {
         "work_id": work_id,
-        "session_id": session_id,
-        "generated_at": stamp.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         # ROOT_TOKENS order, not sorted() and not dict order — deterministic without
         # importing any ordering the declaration did not ask for.
         "roots": {t: Path(roots[t]).as_posix() for t in ROOT_TOKENS if t in roots},
@@ -266,16 +281,18 @@ def build_manifest(
     checklist: Mapping[str, Any],
     roots: Mapping[str, Any],
     reader: Callable[[str], bytes | None] = read_bytes,
-    step: str | None = None,
-    run: Mapping[str, Any] | None = None,
 ) -> dict:
     """The one envelope, for the checklist's active step.
 
-    The step is selected with the engine's own `active_id()` — never a second
-    selector — unless the caller pins one explicitly. `run` defaults to
-    `run_facts(roots, work_id=checklist['work_id'])`.
+    The step is selected with the engine's own `active_id()`, and there is no way
+    to pin one instead: a `step=` override existed briefly and had exactly one
+    caller, a test, which is now spelled the way a real run is — mark the earlier
+    items terminal and let the selector arrive at the step. Its absence is the
+    point. A second way to choose the step is a second selector wearing a keyword
+    argument, and it would let a test assert against a step production never
+    reaches.
     """
-    selected = active_id(checklist) if step is None else step
+    selected = active_id(checklist)
     if selected is None:
         raise ValueError("no active step: every item on this checklist is terminal")
     task = checklist.get("tasks", {}).get(selected)
@@ -286,16 +303,24 @@ def build_manifest(
         "contract": _MANIFEST_CONTRACT_VERSION,
         "step": selected,
         "files": rows(declaration_of(task), roots, reader),
-        "run": dict(run) if run is not None else run_facts(roots, work_id=checklist.get("work_id")),
+        "run": run_facts(roots, work_id=checklist.get("work_id")),
     }
 
 
 def content(manifest: Mapping[str, Any]) -> dict:
-    """The manifest minus the `/run` subtree — the part that must be identical
-    across environments. This is the *only* exclusion; anything else that has to be
-    masked to make a determinism comparison pass belongs in `/run` instead, and its
-    presence outside `/run` is a design defect, not a test to loosen."""
-    return {k: v for k, v in manifest.items() if k != "run"}
+    """The part of the manifest that must be identical across environments.
+
+    Built by **admitting** `CONTENT_KEYS`, never by denying `run`. The two spellings
+    agree on today's envelope and disagree on every future one: a denial makes an
+    added key content by default, so an environment-varying field would slip into
+    the compared content just by existing. Admission excludes it by default and
+    forces a deliberate, reviewable edit to let it in.
+
+    `/run` remains the *only* exclusion. Anything else that has to be masked to make
+    a determinism comparison pass belongs in `/run` instead, and its presence
+    outside `/run` is a design defect, not a test to loosen.
+    """
+    return {k: manifest[k] for k in CONTENT_KEYS if k in manifest}
 
 
 def encode(obj: Any) -> str:
@@ -305,7 +330,9 @@ def encode(obj: Any) -> str:
 
 
 def manifest_path(agent_work_root: Any, work_id: str, step: str) -> Path:
-    """`<agent-work-root>/<work-id>/context/<step>.json`."""
+    """`<agent_work_root>/<work-id>/context/<step>.json` — named for this
+    function's own parameter, so the path shape is readable without knowing which
+    directory the caller happens to pass."""
     return Path(agent_work_root) / str(work_id) / "context" / f"{step}.json"
 
 
@@ -328,9 +355,8 @@ def produce(
     roots: Mapping[str, Any],
     agent_work_root: Any,
     reader: Callable[[str], bytes | None] = read_bytes,
-    run: Mapping[str, Any] | None = None,
 ) -> tuple[Path, dict]:
     """Build the active step's manifest and write it. Returns `(path, manifest)`."""
-    manifest = build_manifest(checklist, roots, reader=reader, run=run)
+    manifest = build_manifest(checklist, roots, reader=reader)
     destination = manifest_path(agent_work_root, checklist.get("work_id"), manifest["step"])
     return write_manifest(manifest, destination), manifest

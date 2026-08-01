@@ -135,10 +135,12 @@ class RevIsGitBlobOid(unittest.TestCase):
         #
         # This is a characterization test. It does not ask for the divergence to be
         # fixed: `rev` is settled, and no file in any declarable root is in this
-        # class. It exists because the gate's `.gitattributes` grep can only see the
-        # attribute half of the condition, so without this the content half would be
-        # a claim nothing checks. If git's normalisation rules ever move, the two
-        # explanatory assertions below say which half moved.
+        # class. It exists because a `.gitattributes` check can only ever see the
+        # attribute half of the condition (that half is
+        # `test_gitattributes_exempts_no_path_from_lf_normalisation` below), so
+        # without this the content half would be a claim nothing checks. If git's
+        # normalisation rules ever move, the two explanatory assertions below say
+        # which half moved.
         diverging = {
             "lone_CR": b"alpha\rbeta\r\n",
             "CR_CR_LF": b"alpha\r\r\nbeta\r\n",
@@ -170,6 +172,39 @@ class RevIsGitBlobOid(unittest.TestCase):
             self.assertEqual(oracle.returncode, 0, oracle.stderr)
             self.assertEqual(cm.rev(control), oracle.stdout.strip())
             self.assertNotEqual(self._raw_blob_oid(control), oracle.stdout.strip())
+
+    def test_gitattributes_exempts_no_path_from_lf_normalisation(self):
+        # The configuration half of `rev`'s equality envelope, asserted in a
+        # committed test rather than in a run-local gate check that no reader of
+        # `main` can open. `rev` equals `git hash-object` only while git actually
+        # normalises the bytes; a `-text` or `binary` attribute makes git stop, and
+        # the two then diverge silently for every path the pattern covers.
+        #
+        # Deliberately pattern-blind: it rejects the attribute on ANY pattern, not
+        # only on `*`. An exemption scoped to a subtree — `skills/**/references/*.md
+        # -text`, `docs/agents/*.md -text` — is the dangerous shape precisely
+        # because it looks narrow while covering exactly the corpus `context_refs`
+        # declares, and a check written against `*` alone would wave it through.
+        attributes = ROOT / ".gitattributes"
+        self.assertTrue(attributes.exists(), ".gitattributes is part of the invariant")
+        offenders = []
+        for number, line in enumerate(
+            attributes.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            body = line.split("#", 1)[0].strip()
+            if not body:
+                continue
+            pattern, *attrs = body.split()
+            for attr in attrs:
+                # `-text`, `binary` (a macro for `-text -diff`), and `text=false`
+                # all take a path out of LF normalisation.
+                if attr in ("-text", "binary", "text=false"):
+                    offenders.append((number, pattern, attr))
+        self.assertEqual(
+            offenders, [],
+            "a path exempted from LF normalisation makes rev() diverge from "
+            "git hash-object for that path, silently and permanently",
+        )
 
     def test_rev_of_empty_bytes_is_the_git_empty_blob(self):
         self.assertEqual(cm.rev(b""), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391")
@@ -278,6 +313,33 @@ class ManifestEnvelope(unittest.TestCase):
                 with self.assertRaises(cm.DeclarationError):
                     self.build(bad)
 
+    def test_a_declaration_that_is_not_a_list_raises_rather_than_projecting_nothing(self):
+        # `context_refs: "docs/agents/GLOSSARY.md"` is an entirely plausible
+        # authoring mistake, and the silent reading of it is the worst one: a string
+        # is a Sequence, a dict is iterable, and either would project an empty (or
+        # nonsense) manifest that looks perfectly valid. Absent means "nothing
+        # declared"; malformed must mean "stop", not "nothing declared".
+        for bad in ("docs/agents/GLOSSARY.md",
+                    {"root": "repo", "path": "docs/agents/GLOSSARY.md"},
+                    b"docs/agents/GLOSSARY.md",
+                    7,
+                    True):
+            with self.subTest(declaration=bad):
+                with self.assertRaises(cm.DeclarationError):
+                    cm.declaration_of({"context_refs": bad})
+                with self.assertRaises(cm.DeclarationError):
+                    cm.build_manifest(
+                        {"work_id": "w", "type": "gated", "items": ["context"],
+                         "tasks": {"context": {"id": "context", "title": "c",
+                                               "imperative": "…", "status": "pending",
+                                               "context_refs": bad}}},
+                        self.roots,
+                    )
+        # …while the absent case stays exactly as forgiving as it was.
+        self.assertEqual(cm.declaration_of({}), ())
+        self.assertEqual(cm.declaration_of({"context_refs": None}), ())
+        self.assertEqual(cm.declaration_of({"context_refs": []}), ())
+
     def test_declaration_order_is_content_and_a_permutation_is_a_difference(self):
         a = {"root": "skill", "path": "references/doctrine.md", "required": True}
         b = {"root": "repo", "path": "docs/glossary.md", "required": True}
@@ -305,7 +367,42 @@ class ManifestEnvelope(unittest.TestCase):
 
     def test_content_excludes_exactly_the_run_subtree(self):
         m = self.build([{"root": "skill", "path": "references/doctrine.md", "required": True}])
-        self.assertEqual(set(m) - set(cm.content(m)), {"run"})
+        # BIDIRECTIONAL. `set(m) - set(content(m)) == {"run"}` on its own is blind to
+        # any key `content()` *adds* — the direction a leak actually travels.
+        self.assertEqual(set(m), set(cm.content(m)) | {"run"})
+        self.assertNotIn("run", cm.content(m))
+
+    def test_the_envelope_is_exactly_the_content_allowlist_plus_run(self):
+        # The weld that makes "/run is the entire exclusion set" true rather than
+        # merely stated: the produced envelope and the admitted key list must agree.
+        # Adding a key to either alone fails here, so neither can drift.
+        m = self.build([{"root": "skill", "path": "references/doctrine.md", "required": True}])
+        self.assertEqual(set(m), set(cm.CONTENT_KEYS) | {"run"})
+        self.assertEqual(list(cm.content(m)), list(cm.CONTENT_KEYS))
+
+    def test_a_varying_field_placed_outside_run_cannot_become_content(self):
+        # The cold panel's surviving mutation, in its two forms. `cwd` is the
+        # environment fact `run_facts()` already reads, so this is the exact leak.
+        m = self.build([{"root": "skill", "path": "references/doctrine.md", "required": True}])
+
+        # Form 1 — the producer grows a top-level key. `content()` admits rather than
+        # denies, so the key is excluded by default…
+        leaked = dict(m)
+        leaked["host_cwd"] = Path.cwd().as_posix()
+        self.assertNotIn("host_cwd", cm.content(leaked))
+        # …and its mere presence in the envelope is a failure, not a silent pass.
+        with self.assertRaises(AssertionError):
+            self.assertEqual(set(leaked), set(cm.content(leaked)) | {"run"})
+
+        # Form 2 — `content()` itself is rewritten to promote a `/run` fact. The
+        # bidirectional assertion is what catches this one.
+        def leaky_content(manifest):
+            out = {k: v for k, v in manifest.items() if k != "run"}
+            out["host_cwd"] = manifest.get("run", {}).get("host", {}).get("cwd")
+            return out
+
+        with self.assertRaises(AssertionError):
+            self.assertEqual(set(m), set(leaky_content(m)) | {"run"})
 
     def test_manifest_never_carries_file_contents(self):
         # Delivery, not use — and metadata only. The bytes of a declared file must
@@ -412,31 +509,6 @@ class SelectionUsesTheEnginesOwnSelector(unittest.TestCase):
                     if cm.DECLARATION_KEY not in task:
                         self.assertEqual(m["files"], [], "no declaration -> empty manifest")
 
-    def test_a_live_spine_in_this_work_area_also_projects(self):
-        # Opportunistic extra: an in-flight spine is a shape no committed template
-        # has. `.agent-work/` is gitignored, so a CI checkout NEVER has one — and
-        # this must return, not skip. `.github/workflows/ci.yml` runs
-        # `scripts/verify_skip_guard.py` over the junit report and REFUSES any skip
-        # whose (classname, name, message) triple is not on its documented
-        # allow-list, so skipping here would turn CI red on every clean
-        # checkout while reading green on a developer box that happens to have a
-        # live spine. The allow-list is for tests that genuinely cannot run on a
-        # platform, not for an absent fixture, and the property this asserts is
-        # covered far more strongly by
-        # `test_real_spine_templates_produce_a_manifest_without_crashing` over all
-        # the real committed templates. So: no live spine, nothing extra to check.
-        live = sorted((ROOT / ".agent-work").glob("*/spine.json"))
-        if not live:
-            return
-        with tempfile.TemporaryDirectory() as tmp:
-            roots = {"skill": Path(tmp), "repo": ROOT, "durable": Path(tmp)}
-            for path in live:
-                with self.subTest(spine=path.name):
-                    cl = json.loads(path.read_text(encoding="utf-8"))
-                    if cm.active_id(cl) is None:
-                        continue
-                    self.assertIn("files", cm.build_manifest(cl, roots))
-
 
 class CommanderSpineDeclaration(unittest.TestCase):
     """The first real declaration in the corpus. (Pinning the declaration against
@@ -444,9 +516,32 @@ class CommanderSpineDeclaration(unittest.TestCase):
 
     TEMPLATE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
 
+    #: The declaration, pinned as a literal. Everything else in this class compares
+    #: the declaration against itself or against a manifest derived from it — a
+    #: self-referential oracle that cannot see an entry being **dropped**, or its
+    #: `root` token being **retargeted** to a tree the file is not in (which
+    #: resolves to `rev: null` forever, indistinguishable from a legitimately-absent
+    #: overlay). The prose lint is one-directional by design and cannot see it
+    #: either. This literal is the only place either defect is visible: a deliberate
+    #: change here is a two-line diff, an accidental one is a failure.
+    EXPECTED = [
+        ("skill", "references/global-orchestrator.md", True),
+        ("skill", "references/global-everyone.md", True),
+        ("repo", "docs/agents/ORCHESTRATOR_CONTEXT.md", False),
+        ("repo", "docs/agents/GLOSSARY.md", False),
+        ("repo", "docs/agents/engine-config.json", False),
+        ("durable", ".agent-work/LESSONS.md", False),
+    ]
+
     def setUp(self):
         self.spine = json.loads(self.TEMPLATE.read_text(encoding="utf-8"))
         self.declaration = self.spine["tasks"]["context"][cm.DECLARATION_KEY]
+
+    def test_the_declaration_is_exactly_the_pinned_root_path_required_list(self):
+        self.assertEqual(
+            [(e["root"], e["path"], e["required"]) for e in self.declaration],
+            self.EXPECTED,
+        )
 
     def test_declaration_is_ordered_wellformed_and_non_empty(self):
         self.assertGreater(len(self.declaration), 0)
@@ -461,7 +556,13 @@ class CommanderSpineDeclaration(unittest.TestCase):
     def test_declaration_projects_one_row_per_entry_in_declared_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             roots = {"skill": Path(tmp), "repo": Path(tmp), "durable": Path(tmp)}
-            m = cm.build_manifest(self.spine, roots, step="context")
+            # Reached the way a real run reaches it — `init` terminal, then the
+            # engine's own selector arrives at `context`. There is no `step=`
+            # override to pin it with, deliberately.
+            self.spine["tasks"]["init"]["status"] = "complete"
+            self.assertEqual(cm.active_id(self.spine), "context")
+            m = cm.build_manifest(self.spine, roots)
+            self.assertEqual(m["step"], "context")
             self.assertEqual(
                 [(r["root"], r["path"]) for r in m["files"]],
                 [(e["root"], e["path"]) for e in self.declaration],

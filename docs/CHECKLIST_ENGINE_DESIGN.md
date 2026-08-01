@@ -213,17 +213,20 @@ it cannot catch the reverse — a path quietly dropped from the declaration whil
 names it (the declaration narrowing away from the prose) — because prose is not a parseable list.
 The lint's own docstring states that same limit, in these same terms.
 
-**No committed artifact ships from #300.** A design-it-twice comparison
-(`.agent-work/300/DIT-COMPARISON.md`) considered a committed, diffable `CONTEXT_PROJECTION.json`
-alongside the run-local manifest; that was ruled out of this issue's scope. `scripts/context_manifest.py`
-therefore ships no CLI verb at all — the manifest is a JSON value a caller builds and, optionally,
-writes under `.agent-work/<work-id>/context/<step>.json` via `produce()`. A future drift check
-comparing canon against a committed artifact is a later issue's territory, not this substrate's.
+**No committed artifact ships from #300.** A committed, diffable `CONTEXT_PROJECTION.json`
+alongside the run-local manifest was considered and ruled out of this issue's scope.
+`scripts/context_manifest.py` therefore ships no CLI verb at all — the manifest is a JSON value a
+caller builds and, optionally, writes under `<agent_work_root>/<work-id>/context/<step>.json` via
+`produce()`, where `<agent_work_root>` is whatever durable root the caller hands it. A future drift
+check comparing canon against a committed artifact is a later issue's territory, not this
+substrate's.
 
 **Downstream, not yet resolved here.** The manifest is consumed, not produced, by whatever issue
-turns out to build on it — durability (`.agent-work/` is gitignored and destroyed by
-`git worktree remove`) and cardinality (one manifest per spine *step*, not per episode) are real
-open questions across that interface, stated explicitly in `.agent-work/300/OBLIGATIONS-301.md`.
+turns out to build on it, and two questions are open across that interface. **Durability:** that
+root is gitignored and a linked worktree's copy is destroyed by `git worktree remove`, so a
+manifest is not a durable record unless something copies it out. **Cardinality:** one manifest
+is produced per spine *step*, not per episode, so a consumer that thinks in episodes has to decide
+which step's manifest it means. Neither is settled by this substrate.
 
 ## Evidence: gate on type/shape, not quality
 

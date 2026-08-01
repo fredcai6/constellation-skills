@@ -81,12 +81,28 @@ INSTALL_SHIM = (
 
 #: Runs inside each checkout, in its own process, with its own environment. Reports
 #: the environment it actually observed alongside the manifest it produced.
+#:
+#: It writes **two** artifacts, and the second one is the load-bearing one. The
+#: manifest is written whole; then `content_out` is written as
+#: `encode(content(manifest))` **using this child's own encoder, in this child's own
+#: environment**. The parent byte-compares those two files verbatim and never
+#: re-encodes anything itself. That distinction is the whole acceptance criterion:
+#: if the parent parsed both artifacts and re-encoded them, any environment
+#: dependence in serialisation would be normalised away by the parent's own encoder
+#: before the comparison ever happened, and the test would report green on two
+#: children that had written materially different bytes.
+#:
+#: `argv[4]` overrides which producer module is loaded. Real runs leave it at the
+#: checkout's own; `TheComparisonHasTeeth` points it at a deliberately
+#: environment-dependent copy to prove this comparison can fail.
 CHILD = r'''
 import importlib.util, json, os, sys
 checkout = sys.argv[1]
 out = sys.argv[2]
-spec = importlib.util.spec_from_file_location(
-    "context_manifest", os.path.join(checkout, "scripts", "context_manifest.py"))
+content_out = sys.argv[3]
+producer = sys.argv[4] if len(sys.argv) > 4 else os.path.join(
+    checkout, "scripts", "context_manifest.py")
+spec = importlib.util.spec_from_file_location("context_manifest", producer)
 cm = importlib.util.module_from_spec(spec)
 sys.modules["context_manifest"] = cm
 spec.loader.exec_module(cm)
@@ -107,9 +123,12 @@ roots = {
 }
 manifest = cm.build_manifest(spine, roots)
 cm.write_manifest(manifest, out)
+# The comparison surface: the content subtree, encoded HERE, by this environment.
+cm.write_manifest(cm.content(manifest), content_out)
 
 print(json.dumps({
     "checkout": checkout,
+    "cwd": os.getcwd(),
     "step": manifest["step"],
     "LC_ALL": os.environ.get("LC_ALL"),
     "LANG": os.environ.get("LANG"),
@@ -175,14 +194,23 @@ class DeterministicAcrossEnvironments(unittest.TestCase):
             env.update(mutation)
             env["PYTHONIOENCODING"] = "utf-8"
             out = checkout / "manifest.json"
+            content_out = checkout / "content.json"
             done = subprocess.run(
-                [sys.executable, str(script), str(checkout), str(out)],
+                [sys.executable, str(script), str(checkout), str(out), str(content_out)],
+                # Each child runs from its OWN checkout. Without this both children
+                # inherit the pytest process's cwd, and cwd is the one
+                # environment fact `run_facts()` reads — held constant, a cwd leak
+                # out of `/run` and into the content would be invisible here.
+                cwd=str(checkout),
                 capture_output=True, text=True, encoding="utf-8", env=env,
             )
             self.assertEqual(done.returncode, 0, done.stderr)
             self.results.append({
                 "probe": json.loads(done.stdout),
                 "bytes": out.read_bytes(),
+                # The bytes THIS child wrote for the content subtree. Never
+                # re-encoded by the parent — that is the point of the artifact.
+                "content_bytes": content_out.read_bytes(),
                 "manifest": json.loads(out.read_text(encoding="utf-8")),
                 "mutation": mutation,
             })
@@ -192,6 +220,11 @@ class DeterministicAcrossEnvironments(unittest.TestCase):
         # trivially true and prove nothing.
         first, second = (r["probe"]["checkout"] for r in self.results)
         self.assertNotEqual(Path(first).resolve(), Path(second).resolve())
+        # And they really ran from different working directories, so cwd — the one
+        # environment fact `run_facts()` reads — is a live variable here, not a
+        # constant that would hide a leak out of `/run`.
+        cwds = [Path(r["probe"]["cwd"]).resolve() for r in self.results]
+        self.assertNotEqual(cwds[0], cwds[1])
 
     def test_the_locale_and_hash_seed_mutations_took_effect_inside_the_child(self):
         # The Windows trap, closed by measurement: `env=` is asserted to have
@@ -206,16 +239,34 @@ class DeterministicAcrossEnvironments(unittest.TestCase):
                             self.results[1]["probe"]["hash_probe"])
 
     def test_content_is_byte_identical_excluding_exactly_the_run_subtree(self):
-        first, second = (r["manifest"] for r in self.results)
         self.assertNotEqual(self.results[0]["bytes"], self.results[1]["bytes"],
                             "the whole file must NOT be compared: /run varies by design")
-        self.assertEqual(
-            cm.encode(cm.content(first)).encode("utf-8"),
-            cm.encode(cm.content(second)).encode("utf-8"),
-        )
-        # And the exclusion really is one pointer: `/run` is the only key removed.
-        self.assertEqual(set(first) - set(cm.content(first)), {"run"})
-        self.assertEqual(set(second) - set(cm.content(second)), {"run"})
+        # THE acceptance assertion. Both operands are bytes a child wrote, with its
+        # own encoder, in its own environment. Nothing is re-encoded here — a parent
+        # re-encode would launder away exactly the class of defect this test exists
+        # to catch (see CHILD's comment, and TheComparisonHasTeeth below).
+        self.assertEqual(self.results[0]["content_bytes"],
+                         self.results[1]["content_bytes"])
+
+        # The exclusion really is one pointer, in BOTH directions: nothing was
+        # dropped besides `/run`, and nothing was added. A one-directional
+        # `set(m) - set(content(m)) == {"run"}` is blind to an added key.
+        for result in self.results:
+            with self.subTest(checkout=result["probe"]["checkout"]):
+                manifest = result["manifest"]
+                self.assertEqual(set(manifest), set(cm.content(manifest)) | {"run"})
+                self.assertNotIn("run", cm.content(manifest))
+
+    def test_the_compared_bytes_are_the_ones_the_children_wrote(self):
+        # Parsing for diagnostics is fine; the assertion above must be over the
+        # child's own bytes. This pins that they are in fact a faithful encoding of
+        # the content subtree, so the comparison is not comparing two empty files.
+        for result in self.results:
+            with self.subTest(checkout=result["probe"]["checkout"]):
+                parsed = json.loads(result["content_bytes"].decode("utf-8"))
+                self.assertEqual(parsed, cm.content(result["manifest"]))
+                self.assertTrue(result["content_bytes"].endswith(b"\n"))
+                self.assertNotIn(b"\r\n", result["content_bytes"])
 
     def test_the_run_subtrees_differ_so_the_exclusion_is_load_bearing(self):
         first, second = (r["manifest"]["run"] for r in self.results)
@@ -232,9 +283,111 @@ class DeterministicAcrossEnvironments(unittest.TestCase):
     def test_no_absolute_path_leaks_into_the_content(self):
         for result in self.results:
             with self.subTest(checkout=result["probe"]["checkout"]):
-                rendered = cm.encode(cm.content(result["manifest"]))
-                self.assertNotIn(result["probe"]["checkout"], rendered)
-                self.assertNotIn(Path(result["probe"]["checkout"]).as_posix(), rendered)
+                # Read from the child's own bytes, not a parent re-render.
+                rendered = result["content_bytes"].decode("utf-8")
+                for varying in (result["probe"]["checkout"], result["probe"]["cwd"]):
+                    self.assertNotIn(varying, rendered)
+                    self.assertNotIn(Path(varying).as_posix(), rendered)
+
+
+#: Deliberately defective producers: the real module plus one appended definition
+#: that shadows a canonical one. Both are real defect shapes that a cold review
+#: demonstrated this acceptance test used to report **green** on, and each is the
+#: minimal expression of one of the two guarantees the test claims to keep.
+#:
+#: They are appended as source rather than monkey-patched in-process because the
+#: defect only exists across a process and environment boundary — that is precisely
+#: where the old comparison was blind.
+POISONS = {
+    # Different bytes per environment, still valid JSON parsing to the same object.
+    # A parent that parses both artifacts and re-encodes them cannot see this.
+    "environment_dependent_encoder": '''
+
+def encode(obj):  # noqa: F811 - deliberately shadows the canonical encoder
+    _indent = 4 if os.environ.get("LC_ALL") == "tr_TR.UTF-8" else 2
+    return json.dumps(obj, indent=_indent, ensure_ascii=False) + "\\n"
+''',
+    # An environment-varying fact promoted out of `/run` and into the content.
+    # `cwd` is the one such fact `run_facts()` already reads.
+    "varying_field_outside_run": '''
+
+def content(manifest):  # noqa: F811 - deliberately shadows the canonical filter
+    out = {k: v for k, v in manifest.items() if k != "run"}
+    out["host_cwd"] = manifest.get("run", {}).get("host", {}).get("cwd")
+    return out
+''',
+}
+
+
+class TheComparisonHasTeeth(unittest.TestCase):
+    """The acceptance test above, turned on itself.
+
+    A determinism test that cannot fail is worse than none, because it reads as
+    coverage. This class runs the *same* two-child harness against deliberately
+    defective producers and asserts the comparison **does** separate them — and,
+    as a control, that the real producer still comes out byte-identical through
+    the identical path, so a difference here means the defect and not the harness.
+    """
+
+    def _producer(self, tmp, poison):
+        """A copy of the real producer under `tmp`, optionally poisoned."""
+        stage = Path(tmp) / "scripts"
+        stage.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / "scripts" / "checklist_engine.py", stage / "checklist_engine.py")
+        source = (ROOT / "scripts" / "context_manifest.py").read_text(encoding="utf-8")
+        target = stage / "context_manifest.py"
+        with open(target, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(source + (POISONS[poison] if poison else ""))
+        return target
+
+    def content_bytes_from_two_environments(self, poison=None):
+        tmp = tempfile.mkdtemp(prefix="ctx-teeth-")
+        try:
+            producer = self._producer(tmp, poison)
+            script = Path(tmp) / "child.py"
+            script.write_bytes(CHILD.encode("utf-8"))
+            written = []
+            for index, mutation in enumerate(DeterministicAcrossEnvironments.ENVIRONMENTS):
+                env = dict(os.environ)
+                env.update(mutation)
+                env["PYTHONIOENCODING"] = "utf-8"
+                work = Path(tmp) / f"run-{index}"
+                work.mkdir()
+                out, content_out = work / "manifest.json", work / "content.json"
+                done = subprocess.run(
+                    [sys.executable, str(script), str(ROOT), str(out),
+                     str(content_out), str(producer)],
+                    cwd=str(work), capture_output=True, text=True,
+                    encoding="utf-8", env=env,
+                )
+                self.assertEqual(done.returncode, 0, done.stderr)
+                written.append(content_out.read_bytes())
+            return written
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_the_real_producer_is_byte_identical_through_this_harness(self):
+        first, second = self.content_bytes_from_two_environments()
+        self.assertEqual(first, second)
+        self.assertGreater(len(first), 0)
+
+    def test_an_environment_dependent_encoder_is_caught(self):
+        first, second = self.content_bytes_from_two_environments(
+            "environment_dependent_encoder")
+        # Same object, different bytes. This is the exact shape a parent-side
+        # re-encode launders away.
+        self.assertEqual(json.loads(first.decode("utf-8")),
+                         json.loads(second.decode("utf-8")))
+        self.assertNotEqual(first, second)
+
+    def test_a_varying_field_placed_outside_run_is_caught(self):
+        first, second = self.content_bytes_from_two_environments(
+            "varying_field_outside_run")
+        self.assertNotEqual(first, second)
+        # And it is caught for the right reason: the leaked key is present and
+        # holds two different values.
+        self.assertNotEqual(json.loads(first.decode("utf-8"))["host_cwd"],
+                            json.loads(second.decode("utf-8"))["host_cwd"])
 
 
 class RealCheckoutSkew(unittest.TestCase):
@@ -244,24 +397,60 @@ class RealCheckoutSkew(unittest.TestCase):
     real difference in what was *delivered*, and the manifest is a delivery record,
     so the two manifests SHOULD disagree on that row's `rev`. What must never
     differ is the record's shape: same step, same rows, same order.
+
+    **The skew is materialised, not hoped for.** An earlier version of this class
+    projected the shipped Commander declaration, whose every path is legitimately
+    absent from a skill-source tree — so all six rows were `rev: None` on both
+    sides, the "revs differ" branch never executed, and the class could not fail.
+    The declaration below therefore names real **tracked** files (identical in both
+    trees, so their revs must AGREE — the determinism half) alongside one file this
+    test creates untracked in the working tree only (so its rev must DIFFER — the
+    skew half). Both halves are asserted to have actually occurred.
     """
+
+    #: Created untracked in the working tree for the duration of the test. Absent
+    #: from any clean checkout of HEAD by construction — that IS the skew.
+    PROBE = "untracked-skew-probe.md"
+
+    #: Tracked and unmodified in this worktree, so byte-identical in a clean
+    #: checkout of the same commit. `skill` resolves to `skills/commander`.
+    TRACKED = (
+        {"root": "repo", "path": "scripts/agent_work_root.py", "required": True},
+        {"root": "skill", "path": "templates/COMMANDER_SPINE.template.json",
+         "required": True},
+    )
+
+    def declaration(self):
+        return [
+            *self.TRACKED,
+            {"root": "repo", "path": self.PROBE, "required": False},
+            {"root": "repo", "path": "docs/absent-from-both-checkouts.md",
+             "required": False},
+        ]
 
     def test_a_clean_checkout_differs_only_in_rev_never_in_shape(self):
         if shutil.which("git") is None:  # pragma: no cover - environment guard
             raise unittest.SkipTest("git is required to add a second checkout")
-        spine = json.loads(
-            (ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json")
-            .read_text(encoding="utf-8")
-        )
-        spine["tasks"]["init"]["status"] = "complete"
+
+        declaration = self.declaration()
+        checklist = {
+            "work_id": "skew", "type": "gated", "items": ["context"],
+            "tasks": {"context": {"id": "context", "title": "context",
+                                  "imperative": "…", "status": "pending",
+                                  cm.DECLARATION_KEY: declaration}},
+        }
+
+        probe = ROOT / self.PROBE
+        self.addCleanup(lambda: probe.unlink(missing_ok=True))
+        with open(probe, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write("untracked in this working tree only\n")
 
         def project(base):
             roots = {"skill": Path(base) / "skills" / "commander",
                      "repo": Path(base), "durable": Path(base)}
-            manifest = cm.build_manifest(spine, roots)
+            manifest = cm.build_manifest(checklist, roots)
             # Presence is recorded now, while both trees still exist.
-            present = [Path(cm.resolve(entry, roots)).exists()
-                       for entry in spine["tasks"]["context"][cm.DECLARATION_KEY]]
+            present = [Path(cm.resolve(entry, roots)).exists() for entry in declaration]
             return manifest, present
 
         here, here_present = project(ROOT)
@@ -285,12 +474,39 @@ class RealCheckoutSkew(unittest.TestCase):
                            capture_output=True, text=True, encoding="utf-8")
             shutil.rmtree(tmp, ignore_errors=True)
 
+        # The premise, established rather than assumed: the probe really was present
+        # on one side and absent on the other, and the tracked files really resolved.
+        self.assertEqual(here_present, [True, True, True, False])
+        self.assertEqual(there_present, [True, True, False, False])
+
         # Shape is invariant: same step, same rows, same declaration order.
         self.assertEqual(here["step"], there["step"])
         self.assertEqual([(r["root"], r["path"]) for r in here["files"]],
                          [(r["root"], r["path"]) for r in there["files"]])
-        # Any difference is confined to `rev`, and only where the two checkouts
-        # genuinely hold different bytes for that path.
+
+        # The determinism half: identical tracked bytes give identical revs across
+        # two independent checkouts at two different absolute paths.
+        for index in range(len(self.TRACKED)):
+            with self.subTest(path=here["files"][index]["path"]):
+                self.assertIsNotNone(here["files"][index]["rev"])
+                self.assertEqual(here["files"][index]["rev"],
+                                 there["files"][index]["rev"])
+
+        # The skew half: the untracked probe differs, and differs in exactly the way
+        # a delivery record should — present here, absent there.
+        probe_here, probe_there = here["files"][-2], there["files"][-2]
+        self.assertEqual(probe_here["path"], self.PROBE)
+        self.assertIsNotNone(probe_here["rev"])
+        self.assertIsNone(probe_there["rev"])
+        self.assertNotEqual(probe_here["rev"], probe_there["rev"])
+
+        # Absent on both sides is not skew, and must not masquerade as it.
+        self.assertIsNone(here["files"][-1]["rev"])
+        self.assertIsNone(there["files"][-1]["rev"])
+
+        # Nothing else moved: every remaining difference is confined to `rev`, and
+        # only where the two checkouts genuinely hold different bytes.
+        differed = 0
         for mine, theirs, mine_here, mine_there in zip(
             here["files"], there["files"], here_present, there_present
         ):
@@ -299,11 +515,15 @@ class RealCheckoutSkew(unittest.TestCase):
                 self.assertEqual(theirs["rev"] is not None, mine_there)
                 if mine["rev"] == theirs["rev"]:
                     continue
+                differed += 1
                 self.assertNotEqual(
                     mine_here, mine_there,
                     f"{mine['path']}: revs differ although the file is present in "
                     "both checkouts — that is a determinism defect, not delivery skew",
                 )
+        # The headline assertion above ran. Without this the whole loop can be
+        # vacuous and still report green.
+        self.assertEqual(differed, 1)
 
 
 if __name__ == "__main__":
