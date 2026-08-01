@@ -112,6 +112,28 @@ predictions in a committed `TRIPWIRES.md`, use commit history as the tamper-evid
 episode writer is deliberately clock-free, so git supplies exactly what the store cannot), then file
 episodes afterwards carrying a **real** `observed-behavior`. Never fabricates an observation.
 
+## I made the predicate mistake TWICE - and the second time makes it a pattern, not a slip
+
+**First instance (word count).** I derived the deletion size from a command, as doctrine requires. The
+command's predicate - "sentences containing engine-config" - encoded my assumption about sentence
+boundaries, so it silently dropped each block's trailing sentence. Reported 112; the truth is 172.
+
+**Second instance (the rework poll), same day, AFTER I had already written the lesson down.** I polled
+for the g1 rework with the predicate "does a nonexistent substitute now refuse?" It fired true. But the
+required suite was **4 failed / 79 passed**, the self-test exited **13**, and the full suite hit a
+**collection error** - the agent was still mid-write. My poll was a true positive on one clause of a
+five-clause close criterion, and I read it as "rework landed."
+
+**The generalized lesson, bigger than either instance:**
+*Derive claims from a command* is necessary and **not sufficient**. **A command is only as good as its
+predicate**, and a predicate encoding one clause of a multi-clause condition reports success on a
+partial state. The fix is not "run a command" but **make the predicate the whole condition** - I
+re-polled on required-suite AND self-test AND full-suite, which is what the close criteria actually say.
+
+This rhymes exactly with the epic's own finding. A check that tests one clause of the property it exists
+to test is *available but not load-bearing* - the same shape as a map that is read but not used to
+orient, and the same shape as a necessity gate that passes 4 of 4 defective runs.
+
 ## Triage filed to the tracker
 
 | issue | finding |
