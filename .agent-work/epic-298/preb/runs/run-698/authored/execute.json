@@ -1,0 +1,202 @@
+{
+  "work_id": "cmdr-698",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-address-implement", "g1-address-review", "g1-address-integrate",
+    "g2-store-implement", "g2-store-review", "g2-store-integrate",
+    "g3-scripts-implement", "g3-scripts-review", "g3-scripts-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json, and the Cartographer packet section for struct:physics.fingerprint (docs/architecture/packets/physics.md:2688-2733) plus docs/architecture/overlays/{purposes,constraints}.yml. Re-read this run's own .agent-work/cmdr-698/{PROBLEM_STATEMENT.md,MISSION_FRAME.md,PLAN_ALTERNATIVES.md,PLAN_CRITIC.md}. Confirm the frozen plan's intent and scope -- in particular that H1 is satisfied by SlotAddress (candidate B), NOT by the issue's literal 'CellAddress on the store API' wording, which q2/q3 established is unachievable. THEN (critic finding F4/F5, toolchain self-test): DRY-RUN every command postcondition in this plan once, before opening any gate -- the three pytest commands, the three simplification_limits commands, the g2 c4 cross-region py -c one-liner, and the two git commands in g3. c2 below is the cheapest of these and gates the rest. If `py` in the executing shell resolves to a runtime WITHOUT pytest (this repo's agent Bash shell resolves `py` to a codex runtime lacking pytest and scipy), pin the absolute interpreter C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe in EVERY affected command using the engine's `amend` verb -- never by hand-editing this JSON. A quoting fault in the g2 c4 one-liner is fixed the same way. Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "orchestrator context + glossary + physics packet loaded; plan intent and scope confirmed, including the H1 wording-vs-intent ruling", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "TOOLCHAIN SELF-TEST (critic F4): the interpreter named in this plan's command postconditions actually has pytest in the EXECUTING shell -- if this fails, amend every command to the absolute pythoncore interpreter before opening g1 rather than discovering it as a false-red at a gate", "check": {"kind": "command", "command": "py -m pytest --version"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-address-implement": {
+      "id": "g1-address-implement",
+      "title": "G1 address value object: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK: in src/physics/fingerprint/address.py add a frozen dataclass SlotAddress(driver, era, vocabulary_version, channel, what_measure) carrying EXACTLY the validation CellAddress already enforces -- each field a non-empty str, none containing CELL_KEY_DELIMITER, what_measure in _KNOWN_WHAT_MEASURES -- with ValueError messages that name the offending field, its expectation and its actual value (project rule). Re-express CellAddress as slot + class_id so the validation rules exist in exactly ONE place: either CellAddress composes a SlotAddress, or both delegate to one module-private validator. Add SlotAddress.for_vocabulary(driver, vocabulary, channel, what_measure) deriving era from vocabulary.rules_era, and a slot->cell accessor (e.g. SlotAddress.cell(class_id) -> CellAddress). *** CRITIC FINDING F1 -- THE LANDMINE, READ THIS TWICE *** CellAddress.cell_key MUST produce a byte-identical string to today's for every input: it is a STORED PRIMARY KEY, so a changed join order silently orphans every row in every existing driver_fingerprint.db with no test failure. The current order is _CELL_KEY_FIELD_NAMES = (driver, era, vocabulary_version, class_id, channel, what_measure) -- note that class_id is at POSITION 4, NOT LAST. The natural 'slot + class_id' composition puts class_id LAST and is therefore WRONG. Preserve the existing order explicitly. The characterization test must assert a HARD-CODED expected cell_key string (e.g. 'VER|drs1-mguk1-mguh1|severity:v1|severity:v1:c0|utilization|deficit'), NOT a value recomputed from _CELL_KEY_FIELD_NAMES -- a test that recomputes from the same constant passes happily after a reorder and proves nothing. Add SlotAddress unit tests to tests/unit/physics/fingerprint/test_address.py alongside the existing CellAddress ones. THIS GATE IS PURELY ADDITIVE: do not touch store.py, fit.py, pilot/pipeline.py, any script, or any call site. The suite must be green at this gate boundary.",
+      "preconditions": [{"id": "p1", "statement": "plan intent and scope confirmed at e0-context", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "Additive only -- zero changes outside src/physics/fingerprint/address.py and tests/unit/physics/fingerprint/test_address.py.",
+        "CellAddress.cell_key output must be byte-identical to the pre-change implementation (stored primary key).",
+        "No new import into src/physics/fingerprint/ from src.evo_predictor / src.latent_power / src.compound_prior (constraint:physics_region_no_evo_import).",
+        "Validation errors must name field, expectation, and actual value (engine-config rules_root)."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.fingerprint -- src/physics/fingerprint/address.py, component"],
+        "capability": ["purpose:weekend_utilization_prior -- served by struct:physics.fingerprint; this gate must not change any value it produces"],
+        "constraint": ["constraint:physics_region_no_evo_import -- no evo/latent_power/compound_prior import under src/physics/fingerprint/", "assumption: CELL_KEY_DELIMITER and _KNOWN_WHAT_MEASURES are frozen-by-design constants and stay non-injectable (PLAN_ALTERNATIVES candidate C rejected)"],
+        "decision": ["decision:fingerprint-slot-vs-cell-address -- the store's read/write surface addresses a SLOT of k cells, not a single cell; SlotAddress is the five-field identity and CellAddress is slot + class_id @grade: guess/reasoned - leans g1-address-implement - settle: g2 review confirms every migrated call site reads more naturally and no caller wanted a single-cell read", "decision:fingerprint-era-key -- era is a canonical era key, not a raw season int @grade: guess - unchanged by this gate; SlotAddress carries era as an opaque validated string"],
+        "evidence": ["cell_key byte-identical characterization test (new)", "tests/unit/physics/fingerprint/test_address.py existing CellAddress tests unchanged and green"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-address-review": {
+      "id": "g1-address-review",
+      "title": "G1 address value object: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify specifically: (a) the six validation rules exist in exactly ONE place, not duplicated between SlotAddress and CellAddress; (b) cell_key is byte-identical -- read the characterization test and confirm it would actually fail on a reordered or re-delimited join, not merely re-assert the implementation; (c) the diff touches ONLY address.py and test_address.py; (d) error messages name field, expectation and actual; (e) no new cross-region import. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-address-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-address-integrate": {
+      "id": "g1-address-integrate",
+      "title": "G1 address value object: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification commands yourself, then advance (command-kind postconditions are satisfied by advance, not attest). BLOCK: return the implementer for rework. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson pool.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "SlotAddress exists and validates; every pre-existing fingerprint test still passes unchanged (the consumed-frozen-module guard: this gate extends a ratified module, so its OWN prior tests are re-run, not just the new ones)", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/fingerprint/ -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c3", "statement": "simplification limits pass strict on the touched paths", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --paths src/physics/fingerprint/address.py tests/unit/physics/fingerprint/test_address.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-store-implement": {
+      "id": "g2-store-implement",
+      "title": "G2 store retype + call-site migration: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK, ATOMIC IN ONE GATE (splitting it guarantees a red suite between gates): retype DriverFingerprintStore.write_fingerprint, .get_fingerprint and .row_count to take a SlotAddress in place of the five loose primitives (driver, era, vocabulary_version, channel, what_measure), keeping the separate vocabulary argument and, for write, observations. HARD CUTOVER -- no primitives-accepting overload, no deprecation shim (engine-config rules_root: one clear execution path; an overload would preserve the very unvalidated path this gate exists to close). Migrate EVERY call site, enumerated: src/physics/fingerprint/fit.py:356; src/physics/pilot/pipeline.py:257 and :325; scripts/fingerprint_bounded_validation.py:124; scripts/join_bounded_validation_667.py:173; tests/unit/physics/fingerprint/test_store.py (27 occurrences), test_fit.py (10), test_bounded_validation.py (7). All are POSITIONAL, so a missed site is a TypeError at collect time. Inside write_fingerprint, build each row's CellAddress from the slot via the g1 accessor rather than re-constructing it field-by-field. ADD the H1 acceptance test -- and note CRITIC FINDING F2 on WHERE the refusal lives: once the signature takes a SlotAddress, a malformed address can no longer REACH the store; it fails at SlotAddress CONSTRUCTION. Do NOT add a redundant re-validation inside get_fingerprint/row_count -- that would re-create the two-places-to-forget problem this whole gate exists to remove. The acceptance test therefore asserts BOTH: (a) SlotAddress construction raises ValueError naming the field for driver='', driver=None, and a driver containing CELL_KEY_DELIMITER; and (b) the store method is unreachable with a bad address by type -- there is no primitives path left to smuggle one in. Contrast with today, where those same inputs make get_fingerprint silently return k synthesized 'unresolved' cells. PROTECTED, must remain observably identical: the four store invariants (non-NULL cell_key; exactly k cells always, unresolved never missing; all four loud-refusal arms incl. EraVocabularyMismatchError and ReservedWhatMeasureError; no fit-on-read). _check_era_vocabulary_argument_consistency stays live and guard-tested even though SlotAddress.for_vocabulary cannot produce a mismatch -- the explicit constructor still can, and the refusal must not be deleted. A read for a legitimately ABSENT driver must still return k unresolved cells; do not conflate 'malformed' with 'missing'.",
+      "preconditions": [{"id": "p1", "statement": "g1 closed: SlotAddress exists, validated, tested, and the suite is green", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "No compatibility overload or dual signature on any store method.",
+        "No change to the SQL, the column set, FORMAT_VERSION, the unresolved-support floor, or any fit numeric.",
+        "The four store invariants and their existing guard tests must pass UNMODIFIED -- if a guard test needs editing to compile against the new signature, only its call form may change, never its assertion.",
+        "Do not add a read-side refusal for a RESERVED what_measure -- that is a behaviour change, ruled out of scope and routed to triage.",
+        "No new import into src/physics/fingerprint/ from src.evo_predictor / src.latent_power / src.compound_prior.",
+        "Update the module docstrings in store.py and address.py where they describe the now-changed API surface; do NOT edit docs/architecture/ -- the map is reconciled at the spine's reconcile step by Cartographer."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.fingerprint -- src/physics/fingerprint/store.py (the retyped boundary), address.py, fit.py, component", "struct:physics.pilot -- src/physics/pilot/pipeline.py:257,:325, the two production readers"],
+        "capability": ["purpose:weekend_utilization_prior -- stage G writes cells, stage H composes them; the prior's VALUES must not move", "purpose:pilot_orchestration -- the C->D->E->G->H->PANEL chain consumes the store; orchestration semantics unchanged"],
+        "constraint": ["constraint:physics_region_no_evo_import", "assumption: no fit-on-read -- store.py must continue to import nothing from a fit/pooling/observables module"],
+        "decision": ["decision:fingerprint-slot-vs-cell-address -- settled by this gate's review: does every migrated call site read more naturally on a slot object @grade: guess/reasoned - leans g2-store-review - settle: read all ~48 migrated sites and report any that wanted a single-cell read instead", "decision:join-consumer-boundary -- the race sim and the #668 panel read un-aggregated cells directly @grade: settled/inherited - unchanged", "decision pressure: whether the read path should eventually refuse a RESERVED what_measure as write does -- NOT decided here, routed to triage"],
+        "evidence": ["the five test_store.py guard classes (TestKCellsAlwaysPopulated, TestIdempotencyAndReplaceOnRerun, TestLoudRefusal, TestNoFitOnRead, TestFormatVersionAndMustExist) pass with assertions unmodified", "test_fit.py + test_bounded_validation.py pass -- the fit-value no-op guard", "new: malformed-address read is refused; absent-driver read still returns k unresolved cells", "constraint:physics_region_no_evo_import re-confirmed by scan"],
+        "confidence_flags": ["claim:instrument_panel_reads_cells_directly -- the packet attributes the direct get_fingerprint read to instrument_panel, but no store import exists under src/physics/instrument_panel/; the call is at pilot/pipeline.py:325. Does NOT alter this gate (both candidate sites are in the migration set) -- recorded for the reconcile step to correct."]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-store-review": {
+      "id": "g2-store-review",
+      "title": "G2 store retype + call-site migration: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify specifically: (a) NO primitives-accepting path survives on any store method; (b) all five test_store.py guard classes have UNMODIFIED assertions -- diff them, do not take the implementer's word (verify-subagent-self-report lesson); (c) the malformed-vs-missing distinction is genuinely tested both ways -- a malformed driver raises AND an absent driver still returns k unresolved cells; (d) no SQL, column, FORMAT_VERSION, floor or fit numeric changed; (e) every enumerated call site migrated, none left behind; (f) the era-mismatch refusal is still reachable and still tested via the explicit constructor. ALSO REPORT (settles decision:fingerprint-slot-vs-cell-address): whether any migrated call site would have preferred a single-cell read over a slot read.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-store-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-store-integrate": {
+      "id": "g2-store-integrate",
+      "title": "G2 store retype + call-site migration: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification commands yourself and advance. BLOCK: return for rework. The regression command is scoped to the REAL importer set (fingerprint + pilot), per the scope-self-authored-regression-to-import-graph lesson -- a blanket full-suite run on this numerics-heavy repo risks a harness reap at the worst moment. Log out-of-scope finds as triage candidates; harvest crew Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "store API is typed on SlotAddress, a malformed address is refused on read as well as write, and the real importer set is green (fingerprint + pilot)", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/fingerprint/ tests/unit/physics/pilot/ -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c3", "statement": "simplification limits pass strict on every touched src/ and tests/ path", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --paths src/physics/fingerprint/address.py src/physics/fingerprint/store.py src/physics/fingerprint/fit.py src/physics/pilot/pipeline.py tests/unit/physics/fingerprint/test_address.py tests/unit/physics/fingerprint/test_store.py tests/unit/physics/fingerprint/test_fit.py tests/unit/physics/fingerprint/test_bounded_validation.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c4", "statement": "constraint:physics_region_no_evo_import still holds -- no evo_predictor/latent_power/compound_prior reference under src/physics/fingerprint/", "check": {"kind": "command", "command": "py -c \"import pathlib,re,sys;h=[str(p) for p in pathlib.Path('src/physics/fingerprint').rglob('*.py') if re.search('evo_predictor|latent_power|compound_prior',p.read_text(encoding='utf-8'))];print('cross-region refs:',h);sys.exit(1 if h else 0)\""}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-scripts-implement": {
+      "id": "g3-scripts-implement",
+      "title": "G3 script path guard + artifact anchoring + narrow ignore: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. THREE bounded changes. (H2) In scripts/fingerprint_class_coverage_675.py add the house worktree-first guard verbatim in the form used at scripts/build_class_utilization_observables.py:71-75 -- _REPO_ROOT = Path(__file__).resolve().parents[1]; if str(_REPO_ROOT) not in sys.path: sys.path.insert(0, str(_REPO_ROOT)) -- placed AFTER the stdlib imports and BEFORE the numpy/scipy/src imports at lines 95-100, with `import sys` added. This works because the editable install APPENDS its finder to sys.meta_path (verified in site-packages/__editable___f1brainz_0_2_0_finder.py), so sys.path is consulted first. (H3) Re-anchor the two path constants that are currently bare relative Paths -- DEFAULT_SLICE_DB (:122) and VERDICT_PATH (:123) -- on _REPO_ROOT, and add an --out argument beside the existing --slice-db so the verdict destination is overridable; today a bare run from any cwd mkdir -p's and writes a stale pre-archive .agent-work/666-driver-fingerprint/artifacts/ tree (that work area was archived on 2026-07-26). (H3b) Add to .gitignore a NARROW rule covering only the live pre-archive artifact path .agent-work/666-driver-fingerprint/artifacts/. CRITIC FINDING F3 -- H3a AND H3b ARE COUPLED, SHIP BOTH OR NEITHER: before re-anchoring, a bare run scattered its output relative to whatever cwd it ran from (sometimes outside the repo entirely); AFTER re-anchoring it writes under _REPO_ROOT every time, which GUARANTEES the stray lands inside the tracked tree. So the ignore rule is not belt-and-braces here, it is REQUIRED BY the anchoring change, and landing the anchoring without the ignore makes H3 strictly worse than doing nothing. DO NOT add a blanket .agent-work/**/*.json rule (tc2 as originally worded): .agent-work/ is a TRACKED directory here and the archived JSONs under .agent-work/archive/**/artifacts/ are committed durable evidence by the repo's own archive-then-commit convention -- a blanket rule would silently un-track the evidence trail across 664/666/667/669/670. (TEST) Add tests/unit/physics/fingerprint/test_script_path_guard.py proving the property, not the text: load scripts/fingerprint_class_coverage_675.py by file path from an unrelated cwd and assert the resolved src package file lives under THIS repo root; and assert the script's slice-db and verdict path defaults are absolute and rooted at the repo. A grep-for-the-guard-line test is a proxy and is not accepted.",
+      "preconditions": [{"id": "p1", "statement": "none -- independent of g1/g2; may run at any point after e0-context", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "Scope is EXACTLY three files: scripts/fingerprint_class_coverage_675.py, .gitignore, and the new test file. Do NOT touch the other 50 scripts/*.py that lack the guard -- that repo-wide gap is a triage candidate wanting a lint/CI check, not this issue.",
+        "No change to the coverage method, N_REPS, the frozen constants, or any computed number in the 675 script -- the issue fences behaviour change to the fit/coverage.",
+        "Do NOT add a blanket .agent-work/**/*.json ignore rule.",
+        "scripts/fingerprint_bounded_validation.py:27-29 and scripts/join_bounded_validation_667.py:41-43 ALREADY carry the guard and already anchor their outputs -- verify, do not re-edit."
+      ],
+      "anchors": {
+        "structural": ["scripts/fingerprint_class_coverage_675.py -- non-map script node on the struct:physics.fingerprint edge", ".gitignore -- repo root", "tests/unit/physics/fingerprint/test_script_path_guard.py -- new"],
+        "capability": ["purpose:weekend_utilization_prior -- the 675 script is a research diagnostic feeding the G3 shared-floor decision; its NUMBERS must not move"],
+        "constraint": ["assumption (verified): the editable install's finder is APPENDED to sys.meta_path, so sys.path.insert(0, repo_root) wins -- site-packages/__editable___f1brainz_0_2_0_finder.py install()", "assumption (verified): .agent-work/ is a TRACKED directory; only *.pkl/*.npz/*.db/scratch/ckpt/backtests and four named legacy subpaths are ignored under it"],
+        "decision": ["decision pressure: whether the repo should enforce the scripts/ sys.path convention mechanically (51 scripts non-compliant) -- NOT decided here, routed to triage as a lint/CI candidate"],
+        "evidence": ["new test: src resolves under THIS repo root when the script is loaded from an unrelated cwd", "new test: the script's path defaults are absolute and repo-rooted", "git check-ignore: the live pre-archive artifact path IS ignored", "git ls-files: the ARCHIVED artifact JSONs are STILL tracked (proves the ignore did not over-reach)"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-scripts-review": {
+      "id": "g3-scripts-review",
+      "title": "G3 script path guard + artifact anchoring + narrow ignore: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify specifically: (a) the new test proves the PROPERTY (src resolves under this repo root from a foreign cwd), not the presence of a source line -- a grep-for-marker proxy is a BLOCK; (b) the guard sits before the src.* imports, not after; (c) the .gitignore rule is narrow and the archived evidence JSONs are still tracked; (d) no computed value in the 675 script changed -- diff the numeric constants; (e) exactly three files touched, none of the other 50 non-compliant scripts.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-scripts-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-scripts-integrate": {
+      "id": "g3-scripts-integrate",
+      "title": "G3 script path guard + artifact anchoring + narrow ignore: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification commands yourself and advance. BLOCK: return for rework. Note c4 is the OVER-REACH guard -- it fails if the new ignore rule un-tracked the committed archive evidence, which is exactly the failure mode tc2's original blanket wording would have caused. Log out-of-scope finds as triage candidates; harvest crew Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the 675 script resolves src under this repo root from a foreign cwd and its path defaults are repo-anchored", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/fingerprint/test_script_path_guard.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c3", "statement": "the live pre-archive artifact path is now ignored", "check": {"kind": "command", "command": "git check-ignore -q .agent-work/666-driver-fingerprint/artifacts/coverage_675_verdict.json"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c4", "statement": "OVER-REACH GUARD: the archived, committed evidence JSONs are still tracked -- the narrow rule did not un-track the evidence trail", "check": {"kind": "command", "command": "git ls-files --error-unmatch .agent-work/archive/2026-07-26-666-driver-fingerprint/artifacts/coverage_675_verdict.json .agent-work/archive/2026-07-26-666-driver-fingerprint/artifacts/bounded_fit_summary.json"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c5", "statement": "simplification limits pass strict on the new test file", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --paths tests/unit/physics/fingerprint/test_script_path_guard.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1-698",
+      "title": "Read path silently accepts a RESERVED what_measure that write refuses",
+      "detail": "write_fingerprint raises ReservedWhatMeasureError for a Build-2 dormant slot (store.py:213-217); get_fingerprint returns k synthesized unresolved cells for the same slot. Closing the asymmetry is a store BEHAVIOUR change, which issue #698 fences out. Note the address retype partially narrows it: an UNKNOWN what_measure is now refused on read too, via _KNOWN_WHAT_MEASURES; only the known-but-reserved case stays permissive. Lives on the same surface as cmdr-666's still-open tc4.",
+      "disposition": "recommend-and-defer"
+    },
+    {
+      "id": "tc2-698",
+      "title": "51 scripts/*.py import src.* with no sys.path guard -- a repo-wide convention gap",
+      "detail": "Sweep of scripts/*.py: 51 files import src.* and contain no sys.path line, so each re-hits the editable-install worktree trap on a bare run. #698 fixes only the one script it names. This wants a mechanical lint/CI check (or a scripts/_bootstrap.py the family imports), not 51 hand edits. Named examples: corner_fingerprint.py, pooling_imbalance_validation_665.py, run_628_driver_utility_gate.py, race_week_stages.py, cascade.py.",
+      "disposition": "recommend-and-defer"
+    },
+    {
+      "id": "tc3-698",
+      "title": "Map imprecision: claim:instrument_panel_reads_cells_directly attributes the store read to the wrong component",
+      "detail": "docs/architecture/packets/physics.md:2753 says instrument_panel reads fingerprint.store.get_fingerprint cells directly. No store import exists under src/physics/instrument_panel/; the call is at src/physics/pilot/pipeline.py:325. The edge is real, the attribution is not. Route to the spine's reconcile step (Cartographer) rather than a code gate.",
+      "disposition": "route-to-reconcile"
+    },
+    {
+      "id": "tc4-698",
+      "title": "Issue #698's own text carries two false premises -- correct the issue body at closeout",
+      "detail": "H1's acceptance ('store API typed on CellAddress') is unachievable as written (CellAddress carries class_id; the store methods are class-agnostic slot operations). H3 asserts the artifacts are 'already ignored via .agent-work/'; they are not -- .agent-work/ is tracked and both JSONs are committed archive evidence. Both are recorded in this run's PROBLEM_STATEMENT.md; the issue body should be amended so a future reader does not re-derive from the wrong premise.",
+      "disposition": "recommend-and-defer"
+    }
+  ],
+  "blockers": []
+}
