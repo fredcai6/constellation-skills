@@ -1,0 +1,152 @@
+{
+  "work_id": "issue-102-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-survey",
+    "m2-edit"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff complete",
+      "imperative": "Read inherited global-everyone.md, the handoff, and the target files. Verify handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete; global-everyone.md + checklist-engine.md paths confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-survey": {
+      "id": "m1-survey",
+      "title": "Command-derived residual engine-invocation survey + classification",
+      "imperative": "Run the residual grep, classify each hit generic-duplicate / role-specific / canonical-source, and determine whether a generic duplicate survives Move 1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every hit classified; no generic engine-invocation duplicate survives outside role-specific/canonical contexts (subsumed by Move 1)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-edit": {
+      "id": "m2-edit",
+      "title": "Narrow completing edit \u2014 pointer to canonical engine mechanism",
+      "imperative": "Append a one-clause pointer to global-everyone.md's Engine-drive compliance section directing to the canonical engine mechanism (workbench references/checklist-engine.md). No new global-*.md file; do not duplicate mechanism content. Suite stays green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "survey shows subsumption; edit is the narrow completing pointer only",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "global-everyone.md now points at checklist-engine.md exactly once",
+          "check": {
+            "kind": "command",
+            "command": "test $(grep -c 'checklist-engine.md' skills/_shared/global-everyone.md) -eq 1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-edit-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-wt-102 && py -m pytest tests/ -q >/dev/null 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-edit-2"
+        }
+      ],
+      "constraints": [
+        "append into existing global-everyone.md only; point at checklist-engine.md, do not duplicate it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-edit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(grep -c 'checklist-engine.md' skills/_shared/global-everyone.md) -eq 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-edit-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-wt-102 && py -m pytest tests/ -q >/dev/null 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "issue-102-g2-implement",
+    "status": "released",
+    "claimed_at": "2026-07-09T21:00:35.041197+00:00",
+    "last_heartbeat": "2026-07-09T21:02:11.774068+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-09T21:02:19.335614+00:00"
+  }
+}

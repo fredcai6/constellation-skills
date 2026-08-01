@@ -1,0 +1,54 @@
+{
+  "work_id": "explore-shared-understanding",
+  "cycle": "2",
+  "flavor": "research sweep (divergent prior-art gathering to inform a later compare; human-directed)",
+  "type": "survey",
+  "items": ["c0-frame", "x2", "x3", "x4"],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame cycle 2",
+      "imperative": "Human directed: 'keep exploring high level; send a couple agents to search similarly-themed skills / prior art on teaching users concepts — education is a broad field, don't YOLO it.' Multi-modal sweep: 3 parallel research excursions, each searching a different way so they don't overlap.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass", "finding": "Cycle 2 = human-directed prior-art sweep. 3 excursions dispatched background.", "evidence": [], "rework_count": 0
+    },
+    "x2": {
+      "id": "x2",
+      "title": "X2 research: agent-skill teaching/explaining ecosystem",
+      "imperative": "Pocock /teach + /grill-me structure (GitHub if public), explain-diff/change-explaining tools, superpowers/marketplace/IDE 'explain' skills. Transfers vs not for per-user in-flow expert teaching.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass", "finding": "Pocock's teach IS public (github.com/mattpocock/skills): MISSION.md (mission-tethering) + NOTES.md (durable prefs) + learning-records/NNNN.md explicitly 'ADR-like' append-only records driving zone-of-proximal-development. grill-me = one-Q Socratic + fact/decision split + shared-understanding gate. STEAL: learning-records-as-ADRs (best fit for expert-but-learning), mission-tethering, docent freshness stamp on any persisted explainer, Copilot's prose+file-bullets output shape. MISMATCH: Pocock's HTML lesson COURSE (novice, out-of-flow); explain-diff tools (Copilot/Cursor) are audience-flat/stateless/no-depth-decision. NULL: all of superpowers teaches the AGENT not the human; the personalized-expert-reader-in-flow niche is UNFILLED (validates 'requires new things').", "evidence": [], "rework_count": 0
+    },
+    "x3": {
+      "id": "x3",
+      "title": "X3 research: education field for teaching a working expert",
+      "imperative": "ITS architecture, scaffolding/fading + ZPD, expertise-reversal effect + expert blind spot (teaching an expert differs), just-in-time/situated learning + cognitive apprenticeship, concept/prerequisite maps. Beyond X1's classroom-assessment coverage.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass", "finding": "DOMINANT FINDING = expertise-reversal effect (Kalyuga/Sweller): for an expert wanting peer register, the whole novice toolkit (worked steps, build-ups, redundant restatement) is ACTIVELY HARMFUL — raises load, reads as condescension. Correct default = minimal/pointer register, add depth ONLY on a detected miss (inverse of novice default). Counter-warning = expert blind spot: agent under-explains the genuinely-NEW delta because it feels obvious. Expertise is concept-LOCAL (expert on A, novice on new B like Matern). ITS 4-component architecture = clean skeleton: concept book = student model (as OVERLAY on a domain map), architecture map = domain model, tutor = tutoring model; drop the instrumented-data pipeline. Fading via contingency rule answers 'when to stop explaining': register DOWN on fluent use, UP on a stumble — a graded dial read off the human's OWN writing. Just-in-time/situated learning validates teach-when-it-comes-up. Concept dependency graph gives depth-gating + ordering (not hard gating).", "evidence": [], "rework_count": 0
+    },
+    "x4": {
+      "id": "x4",
+      "title": "X4 research: how dev tools teach concepts in-flow",
+      "imperative": "Explanatory compiler errors (Rust --explain), Diataxis explanation quadrant, ADRs/literate programming, IDE/AI 'explain this' features, progressive disclosure/glossary-on-hover. Transfers to K9 explainer + gloss/dial.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass", "finding": "Two-tier / short-then-deep is UNIVERSAL (Rust inline vs --explain; tooltip vs full doc; Diataxis reference vs explanation): in-flow default terse, depth PULLED — the concrete shape for K9 + register dial + tutor. Diataxis explanation quadrant ~= spec for K9 (make connections, give the why, discuss alternatives, own perspective, stay bounded) BUT assumes 4 separate docs — interleaving one explanation paragraph into a working stream is UNSOLVED and ours. Compiler-error framing (blocked/erroring reader, corrective tone) is a MISMATCH for a healthy milestone. ADRs = durable context->decision->why-not->consequences teaching unit + immutability/supersession, but written for a future ABSENT reader (mismatch for live single reader). Copilot offloads calibration to the human re-declaring level each time — we must instead HOLD a persistent per-reader model. Gloss-on-first-use maps cleanly BUT linear text has no zero-cost hover layer, so a gloss is never free — forces a real word-spend judgment.", "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "summary": "Cycle 2 (3-agent prior-art sweep) consolidated & verified fresh. Convergent across independent searches. DOMINANT finding: expertise-reversal effect — for an expert wanting peer register the novice toolkit is actively HARMFUL (load + condescension); correct default is minimal/pointer register, depth added ONLY on a detected miss. This scientifically backs the user's 'don't talk down' and reshapes the tutor to default-quiet. Two-tier short-then-deep is the universal in-flow shape. Fading via contingency rule (register down on fluent use, up on stumble, read off the user's OWN writing) is how familiarity is OBSERVED not guessed/chore. ITS gives the skeleton: concept book = student model as an OVERLAY on the architecture map (domain model), tutor = tutoring model. Pocock's learning-records-as-ADRs is the most stealable state layer. The personalized-expert-reader-in-flow niche is UNFILLED — validates building new. THE GENUINELY-NOVEL CORE we'd invent: the calibration+interleaving problem — hold a standing per-reader familiarity model AND blend one paragraph of explanation into a working text stream without condescending or cluttering. No existing tool solves this (all assume a mismatched reader/medium).",
+    "reshapes": {
+      "K5 concept book": "best realized as a per-concept OVERLAY on the architecture map (student-over-domain), familiarity updated by contingent fading from the user's own writing; entries shaped like Pocock learning-records/ADRs (append-only, numbered, non-obvious-insight); freshness-stamped.",
+      "K7 tutor": "default NEAR-SILENT / minimal register; teaches only the delta, only on a detected miss or the user's pushback (matches T-A). Expert blind spot => still surface the genuinely-new delta.",
+      "K9 milestone explainer": "= Diataxis explanation quadrant, two-tier (terse default + deep on demand), freshness-stamped; interleaving into the stream is the unsolved part.",
+      "register/tone (K3/T-G)": "expertise-reversal gives the rule: peer/minimal by default, add depth on miss; concept-local (expert on A, novice on new B)."
+    },
+    "open_threads_still": ["T-A2 acceptable-language table + context-load", "T-C unlock mechanism", "T-D dial levels/when-set", "T-E concept-debt paydown", "T-F milestone-explainer trigger + interleaving", "concept-book entry schema", "THE NOVEL CORE: calibration + interleaving mechanism"],
+    "next_move": "human's call — NOT converging. The field is now mapped; natural next is a compare/refine cycle that designs the calibration+interleaving core (the one genuinely-new thing), or the human may feel ready to start a spec."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

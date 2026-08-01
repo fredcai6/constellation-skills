@@ -1,0 +1,33 @@
+{
+  "work_id": "cg-fastfollows-198",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "config-ref-absent-skill-source",
+      "scope": "commander",
+      "task_class": "work-area-setup",
+      "statement": "The Commander plan/survey templates hardcode config_ref: docs/agents/engine-config.json, a path absent in a skill-source (self-hosting) repo. The engine degrades gracefully, but crews rediscover the house inline-config convention every time. Fix candidate: conditionalize the template ref, or note the absent overlay in the handoff/CREW_CONTEXT for skill-source worktrees.",
+      "grounding": "AGENT_FEEDBACK.md 2026-07-19 cg-fastfollows-198 -- all 4 crews (g1-impl, g1-rev, g2-impl, g2-rev) independently rediscovered inline config over the dead config_ref",
+      "bank_reason": "Fix is a template/doctrine change needing human authority; re-observe whether it recurs across skill-source runs to decide template-conditionalize vs handoff-note before paying it."
+    },
+    {
+      "op": "add",
+      "id": "doc-handoff-anchor-not-line-number",
+      "scope": "handoff",
+      "task_class": "handoff-authoring",
+      "statement": "Doc-gate implementer/reviewer handoffs should anchor on section names and code symbols, not absolute line numbers -- line numbers shift as edits land within the same PR and read as stale to the crew.",
+      "grounding": "AGENT_FEEDBACK.md 2026-07-19 cg-fastfollows-198 -- g2-implementer and g2-reviewer both flagged the 'L205 area' line-number anchor as pre-edit-only",
+      "bank_reason": "Minor this run; re-observe whether a stale line-number anchor ever causes a real miss (not just a note) before changing handoff-authoring doctrine."
+    },
+    {
+      "op": "add",
+      "id": "handoff-test-assertion-realizable-per-type",
+      "scope": "handoff",
+      "task_class": "handoff-authoring",
+      "statement": "A handoff that dictates a test assertion must ensure it is realizable for the specific type under test. Dictating 'assert the why_ref pointer' on a survey's REFRESH REQUESTED line overreached -- a survey has no why_trail, so the minimal fix renders no why_ref suffix; the crew had to reconcile the spec against the code.",
+      "grounding": "AGENT_FEEDBACK.md 2026-07-19 cg-fastfollows-198 -- g1-implementer workflow feedback: the #189 test sub-bullet's why_ref-pointer assertion is unrealizable for a survey under the minimal fix",
+      "bank_reason": "One instance; re-observe whether type-blind test-assertion specs recur enough to warrant a handoff-authoring checklist item vs staying a per-run judgment."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "work_id": "explore-context-governor",
+  "cycle": "1",
+  "flavor": "shotgun",
+  "type": "survey",
+  "framing": "Pure divergence over the context-governor design space. Goal: surface angles BEYOND the pre-exploration conversation (gauge-at-turn-start, governor-at-seam, reach-up refresh, richer handoff, PreCompact tripwire). Wild entries sanctioned. Organized by design axis: SENSING / THRESHOLD / TRIGGER TIMING / RESPONSE / HANDOFF PAYLOAD / AUTHORITY / ENFORCEMENT+DOCTRINE / WILD. Light excursions only.",
+  "ideas": [
+    {"axis": "sensing", "id": "S1", "one_liner": "Hook injects a model-keyed fill readout at turn start (UserPromptSubmit additionalContext) — the baseline gauge."},
+    {"axis": "sensing", "id": "S2", "one_liner": "Tool-call-count proxy: skip JSONL parsing, just count tool calls vs a model-keyed budget. Crude but zero-cost."},
+    {"axis": "sensing", "id": "S3", "one_liner": "Byte-weight heuristic: use transcript.jsonl file size on disk as the gauge. Dead simple, no tokenizer."},
+    {"axis": "sensing", "id": "S4", "one_liner": "Calibrated self-report: periodically have the agent estimate its fill, correct it with the hook's true number, carry a running bias offset."},
+    {"axis": "threshold", "id": "T1", "one_liner": "Model-keyed static threshold (Opus vs Sonnet vs Haiku have different windows)."},
+    {"axis": "threshold", "id": "T2", "one_liner": "Work-remaining-adaptive: threshold slides by how much of the spine is left — hand off earlier when lots of work remains."},
+    {"axis": "threshold", "id": "T3", "one_liner": "Cost-of-next-step predictive: estimate what the NEXT unit will consume; refuse to START what you can't finish under the ceiling."},
+    {"axis": "threshold", "id": "T4", "one_liner": "Two-band: a soft 'wrap up soon' band and a hard 'stop now' band."},
+    {"axis": "trigger", "id": "R1", "one_liner": "Task-seam check: fire at a bounded unit-of-work boundary, the natural handoff point."},
+    {"axis": "trigger", "id": "R2", "one_liner": "Every-N-tool-calls backstop (PostToolUse) for a runaway single task that has no seam before the ceiling."},
+    {"axis": "trigger", "id": "R3", "one_liner": "Pre-expensive-op check: before a known-heavy step (big read, subagent fan-out), check headroom first."},
+    {"axis": "trigger", "id": "R4", "one_liner": "Wave-boundary check at Admiral tier — the wave IS the seam."},
+    {"axis": "response", "id": "P1", "one_liner": "Reach-up refresh: agent emits handoff, signals delegator to re-instantiate it fresh."},
+    {"axis": "response", "id": "P2", "one_liner": "Self-spawn continuation: agent spawns its OWN fresh successor with the handoff, no delegator involved (peer relay)."},
+    {"axis": "response", "id": "P3", "one_liner": "Checkpoint-and-park: write resume note, stop, let delegator/human refresh on their own schedule (async)."},
+    {"axis": "response", "id": "P4", "one_liner": "Opportunistic self-compact-then-continue if /compact ever becomes agent-available — no refresh needed."},
+    {"axis": "handoff", "id": "H1", "one_liner": "Tier-specific cold-start block: minimum sufficient resume content differs implementer vs commander vs admiral."},
+    {"axis": "handoff", "id": "H2", "one_liner": "'Expected handover' pre-declaration: when a seam-handoff is foreseen, pre-write the log block ('I expect to hand over after step 4') so refresh is half-built."},
+    {"axis": "handoff", "id": "H3", "one_liner": "The ideas-board/spine IS the handoff: lean on existing durable engine state; fresh agent re-reads it, minimal extra block."},
+    {"axis": "handoff", "id": "H4", "one_liner": "Context-vitals line in every handoff artifact: 'fuel at handoff: X%, next-step est: Y'."},
+    {"axis": "authority", "id": "A1", "one_liner": "Chain-up authority: refresh flows up the delegation tree (Commander→impl/reviewer, Admiral→Commander, human→top)."},
+    {"axis": "authority", "id": "A2", "one_liner": "Governor-as-watcher sidecar: a cheap dedicated agent watches fleet fill and triggers refreshes (likely YAGNI, but named)."},
+    {"axis": "authority", "id": "A3", "one_liner": "Upstream prevention: Admiral/Commander sizes issues to fit a fresh agent's budget so nobody approaches the ceiling."},
+    {"axis": "enforcement", "id": "E1", "one_liner": "Stop-hook enforces the resume artifact exists before an over-threshold agent is allowed to end."},
+    {"axis": "enforcement", "id": "E2", "one_liner": "PreCompact tripwire: emergency auto-compact firing = governor FAILED; log/alarm loudly for threshold tuning."},
+    {"axis": "enforcement", "id": "E3", "one_liner": "Context as a first-class spine resource: engine tracks a budget line (like Workflow's budget.spent()), gates surface it."},
+    {"axis": "doctrine", "id": "D1", "one_liner": "Amend §Universal-posture '/compact opportunistic, not a gate' — OR explicitly fit the governor under it as opportunistic-at-seam, not a hard gate."},
+    {"axis": "wild", "id": "W1", "one_liner": "Context-bankruptcy circuit breaker: agent can declare itself too full to continue safely and halt hard."},
+    {"axis": "wild", "id": "W2", "one_liner": "Fractional handoff: hand off only the completed sub-unit's state, keep working the rest."},
+    {"axis": "wild", "id": "W3", "one_liner": "Model-tier downshift on refresh: refresh into a cheaper model when remaining work is mechanical."},
+    {"axis": "wild", "id": "W4", "one_liner": "Pre-flight fit check at dispatch: estimate whether a task fits a fresh agent's budget BEFORE dispatch; oversized tasks split."}
+  ],
+  "consolidation": {
+    "summary": "32 ideas cluster into 8 families. The shotgun's real yield is four STRATEGIC AXES the design must pick a position on, each of which pits named ideas against each other — these are the natural fuel for a compare cycle.",
+    "strategic_axes": [
+      {"axis": "Govern vs Prevent", "tension": "Handle the full agent (P1/P2/E1) vs size work so no agent ever fills (A3/T3/W4). Complementary or competing — unresolved.", "ideas": ["P1", "P2", "E1", "A3", "T3", "W4"]},
+      {"axis": "Thin vs Rich handoff", "tension": "H3 says constellation's engine state already IS the resume block, so the governor is thin; H1/H4 say we need substantial new per-tier handoff content. How much is already solved?", "ideas": ["H3", "H1", "H4", "H2"]},
+      {"axis": "Reach-up vs Self-relay", "tension": "P1 delegator re-instantiates the agent vs P2 the agent spawns its own fresh successor. Different control structure.", "ideas": ["P1", "P2", "A1"]},
+      {"axis": "Doctrine fork (must resolve)", "tension": "D1: amend §Universal-posture ('/compact opportunistic, not a gate') or deliberately fit under it as opportunistic-at-seam. Independent of the other three.", "ideas": ["D1", "E3"]}
+    ],
+    "families": {
+      "sensing": {"lead": "S1", "fallbacks": ["S2", "S3"], "note": "S1 (hook injects real number) strongest; S2/S3 cheap proxies if JSONL parse too heavy."},
+      "trigger": {"lead": "R1", "with": ["R2", "R4"], "note": "R1 seam primary + R2 N-tool backstop for seamless runaways; R4 = R1 at Admiral wave. R3 folds into T3."},
+      "threshold": {"lead": "T1", "with": ["T4"], "upgrade": "T3", "note": "T1 model-keyed + T4 two-band as baseline; T3 predictive is the ambitious upgrade; T2 a later refinement."},
+      "response_authority": {"leads": ["P1", "P2"], "with": ["A1", "P3"], "note": "P1 vs P2 is a real compare; P3 (park-async) is what the top tier does when the human refreshes."},
+      "prevention": {"leads": ["A3", "T3", "W4"], "note": "A whole upstream strategy — its own candidate family."},
+      "handoff": {"anchor": "H3", "with": ["H1", "H4", "H2"], "note": "H3 constellation-native; may make governor thin."},
+      "enforcement_doctrine": {"leads": ["E1", "E2"], "architectural": "E3", "fork": "D1"}
+    },
+    "culls": [
+      {"id": "S4", "reason": "self-calibration adds a feedback-loop subsystem; revive if S1's hook number proves unavailable or too costly."},
+      {"id": "A2", "reason": "watcher-sidecar is a whole extra agent to babysit fill; YAGNI unless fleet-scale monitoring becomes a real need."},
+      {"id": "P4", "reason": "self-/compact depends on a capability agents don't have; revive if /compact becomes agent-invokable."},
+      {"id": "W1", "reason": "context-bankruptcy breaker collapses into T4's hard band + E1; not a separate mechanism."},
+      {"id": "W2", "reason": "fractional handoff is high-complexity, unclear payoff; park for a later refine cycle."},
+      {"id": "W3", "reason": "model downshift is an orthogonal, separable follow-up optimization (ties to no-fable-subagents doctrine)."}
+    ],
+    "converged": false,
+    "next_move_suggestion": "compare cycle over the four strategic axes — but the human decides direction; this is not a convergence flag."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,29 @@
+{
+  "work_id": "issue-87",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "commander-template-source-vs-installed-divergence",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-08 issue-87, Instruction adherence Misfit 1 (spine instantiated from stale installed template lacking the feedback ripe-lessons check) and Friction bullet 2 (stale installed engine refused bare attest --cond c2, fallback only in repo copy); resolved by mid-run reinstall"
+    },
+    {
+      "op": "add",
+      "id": "reviewer-handoff-survey-result-paths-split",
+      "scope": "handoff",
+      "task_class": "handoff-authoring",
+      "statement": "REVIEWER_HANDOFF's boilerplate puts the review survey at .agent-work/<work-id>/<gate>-review/ while Commander convention parks the result at .agent-work/<work-id>/crew-handoffs/<gate>-review/ — two subtrees for one gate's review artifacts. Reviewers follow each literally and the split survives to closeout. Align both under one gate directory in the template.",
+      "grounding": ".agent-work/issue-87/crew-handoffs/g1-review/REVIEW_RESULT.md Workflow Feedback (reviewer note: survey path and result path sit in different subtrees; followed each literally)",
+      "target": "skills/commander/templates/REVIEWER_HANDOFF.template.md"
+    },
+    {
+      "op": "add",
+      "id": "handoff-name-invalidated-existing-tests",
+      "scope": "handoff",
+      "task_class": "handoff-authoring",
+      "statement": "When a handoff's behavior change invalidates an existing test's scenario, say so explicitly ('expect to reseed/rewrite test X — its old scenario is what this change forbids'). Otherwise 'full suite green (N tests pre-change)' reads as don't-touch-existing-tests and momentarily conflicts with the close criteria.",
+      "grounding": ".agent-work/issue-87/crew-handoffs/g1-implement/IMPLEMENTER_RESULT.md Workflow Feedback, Handoff gaps bullet (same-epoch guard vs test_tick_auto_deletes_unconfirmed; the implementer had to resolve the conflict itself)",
+      "target": "skills/commander/templates/IMPLEMENTER_HANDOFF.template.md"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "work_id": "issue-99",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q2b"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load issue #99 body, the confirmed conversation direction (doctrine generalization + Commander consumption + two lifted ideas), global-orchestrator.md critical-review section, explorer SKILL.md design-it-twice/excursion/critic sections, commander SKILL.md mission-frame/plan sections. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "When does plan-alternatives (plan-it-twice) fire in a Commander run?",
+      "imperative": "The capability being added: Commander's plan step generates parallel plan alternatives before execute.json freezes. Settle the trigger/weight rule \u2014 always-on, mission-frame-scaled (skip trivial with stated reason), or epic-only. This sets per-run cost for every future issue. Ask the human with a recommendation.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Mission-frame-scaled (option a) with a bias to YES: default is to run plan-alternatives; skip only when genuinely trivial, and any skip must be surfaced explicitly as an 'untaken road' (named skip with stated reason, visible to the human at plan approval), never a silent omission.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Scope of the always-on plan critic (today epic-only)",
+      "imperative": "The issue says a lightweight always-on plan critic before plan-approved. Settle: does 'always-on' include trivial/mechanical issues, and what panel scaling applies below epic weight. Ask the human with a recommendation.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Plan critic rides the same dial as plan-alternatives (bias to YES; trivial skip must be surfaced as a named untaken road). Panel scaling below epic: single cold critic for ordinary plans, existing 3-lens panel at epic weight; human triages every finding; critic reads candidate plan + mission frame only, no authoring context.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2b": {
+      "id": "q2b",
+      "title": "Refinement: panel scaling below epic",
+      "imperative": "Human refined q2: prefer panels at lower weights too; single critic acceptable only for fairly easy plans; panel-vs-single is a Commander complexity call, and the choice made is always surfaced to the human at plan approval.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Panel-vs-single critic is a Commander complexity judgment (single only when the plan is fairly easy; hard stories get the panel; 'when in doubt, panel' stands), and the chosen panel size is explicitly reported to the human at plan approval \u2014 same loud-choice rule as untaken roads.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved",
+    "findings": [],
+    "summary": "As prior consolidation, amended: critic panel size below epic is a Commander complexity call with a preference for panels (single only for fairly easy plans; when in doubt, panel), and the choice is surfaced to the human at plan approval alongside any untaken roads."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

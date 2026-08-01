@@ -1,0 +1,10 @@
+{
+  "status": "FAIL",
+  "exit_code": 1,
+  "completed": 1,
+  "passed": 0,
+  "fenced": 0,
+  "corpus_id": "sha256:bbe4d072ce0e70c53260747f801ab139af8818ff58461880d2ab28af871ba4b5",
+  "source_commit": "ae7659d8049e14fb9d5273e4cf04dc7e384998a6",
+  "n_of_m": "regression-vs-variance smoke, not a statistical guarantee"
+}

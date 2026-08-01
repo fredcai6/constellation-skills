@@ -1,0 +1,19 @@
+{
+  "gate": "g5-review",
+  "commit": "2c8074d",
+  "branch": "constellation/issue-58",
+  "verdict": "APPROVE",
+  "checks": [
+    {"id": "c1", "name": "Full suite green (THE exit criterion)", "status": "pass", "evidence": "python -m pytest tests/ -q -> 424 passed, 1 skipped, 26 subtests passed, 0 failures (reproduced)"},
+    {"id": "c2", "name": "Install tests green", "status": "pass", "evidence": "python -m pytest tests/test_install_constellation.py -q -> 33 passed, 12 subtests"},
+    {"id": "c3", "name": "Vocabulary term-by-term vs Chosen design 3", "status": "pass", "evidence": "all six terms (module, interface, seam, adapter, depth/leverage, locality) with spec-fixed meanings + both working rules (interface-is-test-surface w/ wrong-shape consequence; deletion test w/ both outcomes); dense departures-only register, no essay"},
+    {"id": "c4", "name": "Commander intake line", "status": "pass", "evidence": "one bolded prose line in understand-step guidance (2 lines added incl blank); semantics match seam paragraph; no other Commander doctrine touched"},
+    {"id": "c5", "name": "Marker inline-only, does not trip _unconfirmed_marker_hit", "status": "pass", "evidence": "scratch fixture: _unconfirmed_marker_hit(commander_line)=None; standalone marker line=hit; full SKILL.md scan=None; no standalone marker line introduced"},
+    {"id": "c6", "name": "Installer edits scoped", "status": "pass", "evidence": "SKILL_SCRIPT_BUNDLES explorer=6 spec scripts; SKILL_REFERENCE_BUNDLES explorer=_GLOBAL_ORCHESTRATOR, prototyper=_GLOBAL_CREW; prototyper no script bundle; keys match source_path.name consumer convention (lines 163-164)"},
+    {"id": "c7", "name": "Install tests genuine (installed-tree)", "status": "pass", "evidence": "both new tests run installer.main and assert on target_root/constellation-explorer/{scripts,references}; not source-tree tautologies; both names in expected list"},
+    {"id": "c8", "name": "Red->green claim", "status": "pass", "evidence": "at HEAD~1 exactly 2 fail: test_codex_project_scope_installs_all_skills_under_project_codex_skills, test_shared_reference_dir_is_not_installed_as_a_skill; both fixed by expected-list addition"},
+    {"id": "c9", "name": "Dry-run discovery", "status": "pass", "evidence": "both discovered as constellation-explorer / constellation-prototyper"},
+    {"id": "c10", "name": "Integrate greps", "status": "pass", "evidence": "grep -qi deep-module global-everyone.md OK; grep -qi shaped-design commander/SKILL.md OK"},
+    {"id": "c11", "name": "Scope: only four allowed files; commit on branch", "status": "pass", "evidence": "git show --stat = 4 files (+52); git status clean; HEAD 2c8074d on constellation/issue-58"}
+  ]
+}

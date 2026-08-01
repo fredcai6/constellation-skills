@@ -1,0 +1,41 @@
+{
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "parent-spine-lease-stales-under-child-drive",
+      "scope": "constellation",
+      "note": "A Commander driving a child checklist (execute.json) through the engine heartbeats the CHILD lease, not the parent spine lease. On a long execute phase the parent spine lease goes stale and refuses `advance` until a same-id `--force` re-claim (idempotent/free). Either document this as expected (re-claim before post-execute spine steps) or heartbeat the parent on child mutation.",
+      "grounding": "issue-102 feedback step: spine.json advance refused 'lease stale' after all 7 execute.json gates driven; resolved by claim --force --reason."
+    },
+    {
+      "op": "add",
+      "id": "sequence-overlapping-dedup-moves-broad-first",
+      "scope": "constellation",
+      "note": "In a single-sourcing dedup cluster, moves whose target TEXT overlaps (e.g. a compliance boilerplate whose sentence contains the engine-invocation clause) should be sequenced broad-move-first, and later moves RE-SCOPED against the actual post-move state. Several nominal 'moves' collapse to honest partials/subsumed once the broad move lands (issue-102: move 2 subsumed by move 1; move 10 subsumed by prior #99). Plan for this, and let the honest-null clause carry it.",
+      "grounding": "issue-102 g2 (subsumed by g1) and g6 move 10 (subsumed by #99), both reported with grep proof as complete deliverables."
+    },
+    {
+      "op": "add",
+      "id": "cold-critic-earns-keep-on-mechanical-clusters",
+      "scope": "constellation",
+      "note": "Run the cold plan critic even on a 'trivial mechanical' cluster. On issue-102 it caught, before execution: contractual word-count evidence dropped from execute.json; a residual-test scope that would false-fail on retained role references; and an integrate command guarding one test file instead of the full suite. Bias-to-yes paid off.",
+      "grounding": "issue-102 CRITIC_TRIAGE.md: 3 HIGH findings accepted and folded into execute.json before the plan froze."
+    },
+    {
+      "op": "add",
+      "id": "under-epic-durable-write-tension-git-common-dir-vs-worktree-local",
+      "scope": "constellation",
+      "note": "The git-common-dir 'shared durable root' design (durable trio resolves to one shared root) is in direct tension with a launch order that directs 'stage worktree-local, do not write the main checkout mid-epic.' verify_agent_feedback/verify_lessons_applied then check the shared root and the Commander must WAIVE them, citing the order. Settle this at epic/doctrine level — it recurs for every under-epic Commander.",
+      "grounding": "issue-102 feedback: verify_agent_feedback.py resolved to C:\\Programs\\constellation-skills\\.agent-work\\AGENT_FEEDBACK.md (main checkout); launch order forbids writing there mid-epic; c1/c2 waived."
+    },
+    {
+      "op": "mention",
+      "id": "move-doctrine-into-bucket-handoff-pattern",
+      "scope": "constellation",
+      "note": "A 'move doctrine into a _shared bucket' handoff should pre-state: (a) cite pointers to the installed references/global-*.md, never source skills/_shared/; (b) cite by SLUG not section-title when the moved phrase equals the destination heading (else the pointer re-introduces the signature into the carrier); (c) give the case-INSENSITIVE drift-robust grep; (d) name which rationale nubs stay inline vs delegate.",
+      "grounding": "issue-102 g4/g5/g6 implementer + reviewer workflow feedback (recurring)."
+    }
+  ],
+  "work_id": "issue-102"
+}

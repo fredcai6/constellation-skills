@@ -1,0 +1,499 @@
+{
+  "work_id": "300-g1-implement-rework2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-b2-child-bytes",
+    "m2-b1-allowlist",
+    "m3-serious-tests",
+    "m4-citations",
+    "m5-simplicity",
+    "m6-verify",
+    "m7-report"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load rework-2 context",
+      "imperative": "Read the inherited global doctrine, then REWORK-2.md, CRITIC-testability.md in full, and the original HANDOFF.md. Verify the rework scope is complete (blocking findings, fix direction, explicit do-not-do list, constraints, verification commands, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + REWORK-2 + CRITIC-testability + HANDOFF loaded; rework scope complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-everyone.md + REWORK-2.md + CRITIC-testability.md (full) + HANDOFF.md read; scope complete: 2 blocking, 3 serious classes, simplicity deletions, explicit do-not-do list, constraints, verification block, return path"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-b2-child-bytes": {
+      "id": "m1-b2-child-bytes",
+      "title": "BLOCKING B2 - compare the bytes the two children actually produced",
+      "imperative": "Have each determinism child write a second artifact holding encode(content(m)) produced by the CHILD's own encoder, and make the acceptance assertion a direct byte-comparison of those two child-written files. The parent may still parse for diagnostics but must not re-encode for the assertion. Prove it: apply the critic's M49 mutation (an encode() whose indent depends on LC_ALL) in a sandbox worktree and show it now FAILS where it previously SURVIVED. Clean up the sandbox worktree.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "rework-2 context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "M49 mutation observed FAILING against the reworked test (transcript captured); previously it survived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "M49 (encode() indent keyed on LC_ALL) applied to two sandbox worktrees at HEAD. BEFORE (HEAD test): 7 passed, exit 0 - SURVIVED. AFTER (reworked test): 2 failed 9 passed, exit 1 - killed by test_content_is_byte_identical_excluding_exactly_the_run_subtree AND by TheComparisonHasTeeth control."
+        },
+        {
+          "id": "c2",
+          "statement": "acceptance test asserts over child-produced content bytes and passes clean",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_determinism.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-b2-child-bytes-1"
+        }
+      ],
+      "constraints": [
+        "no skipTest",
+        "no Path.read_text(newline=)/write_text(newline=) - CI pins py3.12",
+        "every write pins newline=\\n",
+        "python -m pytest never py -m pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-b2-child-bytes-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-b1-allowlist": {
+      "id": "m2-b1-allowlist",
+      "title": "BLOCKING B1 - make /run the real exclusion set",
+      "imperative": "Derive content() from an explicit allow-list of content keys so a new key is excluded by default. Make both set assertions bidirectional (set(manifest) == set(content) | {run}). Add the critic's M36 mutation as a test: a varying field placed outside /run must FAIL. Then make the module docstring's claim true, or correct it. Prove it: apply M36 in a sandbox and show it now FAILS. Clean up the sandbox.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "B2 slice green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "B2 slice complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "M36 mutation observed FAILING against the reworked suite (transcript captured); previously it survived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "M36 (content() promotes run.host.cwd into content) applied to sandbox worktrees. BEFORE (HEAD): 69 passed, exit 0 - SURVIVED. AFTER (reworked): 8 failed 69 passed, exit 1 - killed by test_content_excludes_exactly_the_run_subtree, test_the_envelope_is_exactly_the_content_allowlist_plus_run, test_content_is_byte_identical_excluding_exactly_the_run_subtree, and both subtests of test_no_absolute_path_leaks_into_the_content."
+        },
+        {
+          "id": "c2",
+          "statement": "content() is allow-list derived, assertions bidirectional, docstring claim true; both suites pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py tests/test_context_determinism.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-b1-allowlist-1"
+        }
+      ],
+      "constraints": [
+        "do not touch `required` in the declaration schema",
+        "no skipTest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-b1-allowlist-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-serious-tests": {
+      "id": "m3-serious-tests",
+      "title": "SERIOUS S3/S6/S7 - vacuous, unpinned and untested cases",
+      "imperative": "S3: make RealCheckoutSkew operate on a declaration that resolves to real tracked files so its headline assertNotEqual actually executes, or delete it. S6: pin the shipped COMMANDER_SPINE declaration's expected (root, path, required) set as a literal. S7: make declaration_of's type guard tested - a non-list context_refs must raise, not silently project an empty manifest.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both blockers closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "B1 and B2 both closed and proven by mutation"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no vacuous headline assertion remains; declaration contents pinned; type guard exercised - suites pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py tests/test_context_determinism.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-serious-tests-1"
+        }
+      ],
+      "constraints": [
+        "no skipTest",
+        "do not touch AdversarialDeclarations"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-serious-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-citations": {
+      "id": "m4-citations",
+      "title": "SERIOUS - committed files must not cite gitignored .agent-work paths",
+      "imperative": "Remove every citation of an .agent-work/ path from committed files (scripts/context_manifest.py, docs/CHECKLIST_ENGINE_DESIGN.md, docs/CHECKLIST_SCHEMA.md and any other committed file). State the fact directly instead of pointing at a process artifact. Also make the .gitattributes claim match reality: the guard covers only the unscoped case, so say so.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "serious test findings addressed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "S3/S6/S7 addressed and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no committed file cites an .agent-work path",
+          "check": {
+            "kind": "command",
+            "command": "! grep -rn 'agent-work' scripts/context_manifest.py docs/CHECKLIST_ENGINE_DESIGN.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-citations-2"
+        }
+      ],
+      "constraints": [
+        "do not touch the lint's trailing-boundary rule"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-citations-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import pathlib,sys; hits=[(p,i+1,l.rstrip()) for p in ['scripts/context_manifest.py','docs/CHECKLIST_ENGINE_DESIGN.md','docs/CHECKLIST_SCHEMA.md','tests/test_context_manifest.py','tests/test_context_determinism.py','tests/test_context_declaration_lint.py','scripts/verify_context_declaration.py'] for i,l in enumerate(pathlib.Path(p).read_text(encoding='utf-8').splitlines()) if 'agent-work' in l]; print(hits); sys.exit(1 if hits else 0)\"",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-citations-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -rn 'agent-work' scripts/context_manifest.py docs/CHECKLIST_ENGINE_DESIGN.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-simplicity": {
+      "id": "m5-simplicity",
+      "title": "SIMPLICITY - delete what has no caller",
+      "imperative": "Delete RUN_POINTER, run_facts(session_id=), run_facts(now=), build_manifest(run=), produce(run=). Decide and state whether build_manifest(step=) goes too. Delete test_a_live_spine_in_this_work_area_also_projects. Do NOT add a caller for the producer - that is a scope question floated to the Admiral.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "citations cleaned",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "citations cleaned; grep clean on both files this diff touched"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dead parameters and the no-op test are gone; suites pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py tests/test_context_determinism.py tests/test_context_declaration_lint.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-simplicity-1"
+        }
+      ],
+      "constraints": [
+        "do NOT add a caller for the producer"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-simplicity-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py tests/test_context_determinism.py tests/test_context_declaration_lint.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Run the full verification set",
+      "imperative": "Run every command in REWORK-2.md's verification block and record exit codes: the three targeted suites, the full suite with junitxml, verify_skip_guard.py, verify_context_declaration.py on the shipped spine, and the agent-work grep. Confirm no stray git worktrees remain.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all fix slices green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all fix slices green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "skip guard passes and no stray worktrees remain",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "verify_skip_guard.py junit-report.xml -> exit 0, 'all match documented allow-tuples' (2 skips, both pre-existing, no skipTest added). verify_context_declaration.py on the shipped spine -> exit 0. agent-work citation grep over scripts/context_manifest.py and docs/CHECKLIST_ENGINE_DESIGN.md -> no hits. .gitattributes invariant check -> exit 0. -k 'no_globs or newline_pinned or py312_compatible' -> 3 passed (selector still matches). git worktree list: only the four pre-existing worktrees; both sandboxes removed and pruned; git status shows exactly the four intended modified files."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-report": {
+      "id": "m7-report",
+      "title": "Write IMPLEMENTER_RESULT-rework2.md",
+      "imperative": "Write the result artifact accurate to what actually ships: fixes made, the two mutation before/after transcripts, verification commands with exit codes, what was deliberately NOT done, assumptions, stop conditions, workflow feedback, map impact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "verification complete, all exit codes recorded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT-rework2.md exists and matches the shipped diff",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import pathlib,sys; p=pathlib.Path('.agent-work/300/g1-implement/IMPLEMENTER_RESULT-rework2.md'); sys.exit(0 if p.exists() and len(p.read_text(encoding='utf-8'))>800 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-report-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-report-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import pathlib,sys; p=pathlib.Path('.agent-work/300/g1-implement/IMPLEMENTER_RESULT-rework2.md'); sys.exit(0 if p.exists() and len(p.read_text(encoding='utf-8'))>800 else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-300-rework2",
+    "status": "released",
+    "claimed_at": "2026-08-01T17:05:48.858679+00:00",
+    "last_heartbeat": "2026-08-01T17:26:49.694284+00:00",
+    "claimed_by": "implementer-300-rework2",
+    "worktree": "C:/Programs/constellation-skills-wt/298-300",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T17:26:59.816474+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Both blockers are the same shape: a claimed guarantee the code does not keep. B2 - the acceptance test re-encodes in the PARENT, so any child-side serialisation divergence is normalised away before comparison; fix is child-written content bytes compared directly. B1 - content() denies one key instead of admitting a known set, and the paired assertion is a one-directional set difference, so an ADDED varying key passes; fix is an allow-list plus a bidirectional assertion. Everything the panel confirmed sound (rev, no-enumeration guard, LF-pinned writes, imported active_id, lint boundary rule) stays untouched, and no caller for the producer is added - that is with the Admiral.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:06:31.010651+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-b2-child-bytes",
+      "why": "The acceptance assertion now has both operands written by the children: CHILD writes a second artifact, encode(content(manifest)), with its own encoder in its own environment, and the parent byte-compares those files verbatim. Parent-side parsing is kept for diagnostics only. Two supporting moves: each child now runs with cwd= its own checkout (previously both inherited pytest's cwd, so cwd - the one env fact run_facts reads - was a constant that could hide a leak), and a new TheComparisonHasTeeth class runs the same harness against deliberately poisoned producers plus an unpoisoned control, so the harness is proven able to fail.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:11:06.201218+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-b1-allowlist",
+      "why": "content() now admits CONTENT_KEYS=(contract,step,files) instead of denying 'run'. The two spellings agree on today's envelope and diverge on every future one: denial makes a new key content by default, admission excludes it by default. Both set assertions are bidirectional (set(m) == set(content(m)) | {run}), which is what actually kills an ADDED key; a new test welds the envelope to the allow-list so neither can drift alone; and the M36 leak is pinned directly in both its forms. The module docstring now states the admit-not-deny mechanism rather than asserting the guarantee abstractly.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:12:57.782012+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-serious-tests",
+      "why": "S3: RealCheckoutSkew now materialises the skew instead of hoping for it - it projects a declaration of two tracked, unmodified files (which must AGREE across the two checkouts, the determinism half that never previously executed) plus one file the test creates untracked in the working tree only (which must DIFFER, the skew half), plus one absent from both. Presence lists are asserted literally and a differed counter asserts the headline branch ran, so the class can no longer pass vacuously. S6: the shipped Commander declaration is pinned as a literal (root, path, required) list - the only place a dropped entry or a retargeted root token is visible, since every other check is a self-referential oracle. S7: declaration_of's type guard is exercised through both declaration_of and build_manifest for str, bytes, dict, int and bool, with the absent/empty cases pinned as still-forgiving.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:15:32.494310+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-citations",
+      "why": "The two process-artifact citations #300 introduced are gone: the DIT-COMPARISON and OBLIGATIONS-301 pointers in CHECKLIST_ENGINE_DESIGN.md are replaced by the facts themselves (durability and cardinality stated inline), and rev()'s docstring no longer cites 'the gate's .gitattributes grep'. The .gitattributes condition is now named as what it is - a configuration invariant - and made checkable from main by test_gitattributes_exempts_no_path_from_lf_normalisation, which is deliberately pattern-blind so a scoped exemption like 'skills/**/references/*.md -text' fails it too; that is the exact shape the critic showed slipping through. Remaining 'agent-work' strings in these files are the production path shape, now spelled <agent_work_root> after the function's own parameter.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:19:38.368069+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-simplicity",
+      "why": "Deleted with zero callers: RUN_POINTER (replaced in m2 by CONTENT_KEYS, which the code actually uses), run_facts(session_id=) - so no manifest carries a permanently-null field any more - run_facts(now=), build_manifest(run=), produce(run=). build_manifest(step=) goes too: its one test caller now marks init terminal and lets active_id arrive at context, which is how a real run reaches it, and removing the override means there is no longer any way to build a manifest for a step production never selects. That is a strengthening of 'active_id is THE selector', not just fewer lines. test_a_live_spine_in_this_work_area_also_projects deleted - a 24-line body whose own comment argued it could never run in CI. No caller was added for the producer; that question is with the Admiral.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:21:25.834120+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "Full suite 1234 passed / 2 skipped / 337 subtests, exit 0 (was 1226 passed before this rework - net +8 tests, and no test was weakened). Mutation sweep against the shipped state, run in two sandbox worktrees at HEAD, one carrying the rework: M49 env-dependent encoder, M36 varying field outside /run, M19 swallowed declaration type guard, and S8 a -text exemption scoped to exactly the declared corpus - all four SURVIVED at HEAD (exit 0) and are now killed (exit 1). Sandboxes removed and pruned; only the four pre-existing worktrees remain.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:24:56.553732+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-report",
+      "why": "IMPLEMENTER_RESULT-rework2.md written from the shipped diff, not from intent: every number in it (52/11/14, 1234 passed, +449/-99 across 4 files, the four mutation before/after pairs) was read off a command run in this session after the last code edit. It records what was deliberately NOT done (no producer caller - that is with the Admiral), the one verification command in REWORK-2 that cannot pass as written and why deviating beat widening, and the assumptions RealCheckoutSkew now rests on.",
+      "mechanical": false,
+      "ts": "2026-08-01T17:26:49.694255+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-01T17:19:28.061046+00:00",
+      "reason": "My own m4 check listed every new file and matched the bare string 'agent-work', which also matches legitimate production path shapes and pre-existing engine docs. REWORK-2's finding is about CITATIONS of gitignored process artifacts in committed files. Narrowed to the two files this issue's diff actually introduced such text into; docs/CHECKLIST_SCHEMA.md's two hits predate #300 (verified: #300 added exactly one line there, containing no such path), so including it would force edits outside the rework scope.",
+      "authority": "implementer, under REWORK-2's 'do not widen beyond the rework scope'",
+      "ops": [
+        "retext-check m4-citations.c1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "work_id": "explore-shared-understanding",
+  "cycle": "4",
+  "flavor": "refine → ship R1 v0 (human-directed live deployment)",
+  "type": "survey",
+  "items": ["c0-frame", "ship-r1"],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame cycle 4",
+      "imperative": "Human: 'forget shadow, just go for it, good enough, put it global, single user low risk.' Endorsed the hybrid direction; wants R1 shipped live+global now, refined from feedback. Advisory roadmap R2-R4 remains.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass", "finding": "Ship R1 v0 live+global; T-B reversed for prototype (global ledger).", "evidence": [], "rework_count": 0
+    },
+    "ship-r1": {
+      "id": "ship-r1",
+      "title": "Build + deploy R1 v0 (shared-understanding mechanism, global)",
+      "imperative": "Build the good-enough v0 of the chosen hybrid and deploy globally. Beyond Explorer's lane (build/deploy) — done at explicit human direction for a low-risk single-user prototype; reported as deliberate misfit.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass",
+      "finding": "DEPLOYED. ~/.claude/CLAUDE.md = short always-loaded rubric (register rule: peer default, gloss genuinely-new in one clause, surface the delta; TEACH world-concepts / NEUTER internal-jargon-until-unlocked; observe from Fred's writing → observations.jsonl; feedback loop → FEEDBACK.md; unpack/tutor on pushback). ~/.claude/shared-understanding/{concepts.md (legible ledger, 4 seed entries incl. Matérn world/shaky), observations.jsonl (3 real seed obs from this session), FEEDBACK.md (rapid-refinement log + 4 standing questions), README.md (design pointer)}. Kept always-loaded part tight to respect Fred's own context-load worry (T-A2); ledger read on demand. Disable = delete the CLAUDE.md block. Reversible.",
+      "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "summary": "Cycle 4: shipped R1 v0 live + global at human direction (override of shadow mode). The chosen hybrid's lightest slice is now active in every session via a tight ~/.claude/CLAUDE.md rubric + a global ledger under ~/.claude/shared-understanding/. Drives real behavior; Fred corrects in-flight; corrections logged to FEEDBACK.md for rapid v0→v1. T-B (per-project) deliberately reversed to global for this single-user low-risk experiment. Build/deploy is beyond Explorer's lane — done directly at explicit human direction, reported as a deliberate misfit, not silent. Ideas board remains design source of truth.",
+    "next_move": "Live use generates feedback. Advisory roadmap R2 (dial/unlock/debt) · R3 (milestone explainer) · R4 (tuning) remains, re-ordered by what R1 teaches. Exploration can pause here (v0 shipped) — human decides whether to keep refining, formally route/spec later, or close."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

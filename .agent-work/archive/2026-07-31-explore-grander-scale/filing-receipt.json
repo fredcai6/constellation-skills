@@ -1,0 +1,56 @@
+{
+  "issues": {
+    "A": {
+      "key": "issue:c312386d4b62:A",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/299"
+    },
+    "B": {
+      "key": "issue:c312386d4b62:B",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/300"
+    },
+    "C": {
+      "key": "issue:c312386d4b62:C",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/301"
+    },
+    "D": {
+      "key": "issue:c312386d4b62:D",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/302"
+    },
+    "E": {
+      "key": "issue:c312386d4b62:E",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/303"
+    },
+    "F": {
+      "key": "issue:c312386d4b62:F",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/304"
+    },
+    "G": {
+      "key": "issue:c312386d4b62:G",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/305"
+    },
+    "H": {
+      "key": "issue:c312386d4b62:H",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/306"
+    },
+    "I": {
+      "key": "issue:c312386d4b62:I",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/307"
+    },
+    "J": {
+      "key": "issue:c312386d4b62:J",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/308"
+    },
+    "K": {
+      "key": "issue:c312386d4b62:K",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/309"
+    },
+    "L": {
+      "key": "issue:c312386d4b62:L",
+      "ref": "https://github.com/fredcai6/constellation-skills/issues/310"
+    }
+  },
+  "epic": {
+    "key": "epic:7bfb0c06d334",
+    "ref": "https://github.com/fredcai6/constellation-skills/issues/298"
+  }
+}

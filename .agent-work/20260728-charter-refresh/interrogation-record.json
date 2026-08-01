@@ -1,0 +1,16 @@
+{
+  "goal": "Resolve project-specific engineering doctrine for active development of the Constellation Skills corpus.",
+  "mode": "interactive",
+  "questions": [
+    {"id":"q1","kind":"decision","question":"What is the project-specific meaning of proven effectiveness?","status":"resolved","resolution":"Verify every mechanism cleanly; ground effectiveness in feedback from real projects, not invented projects.","code_evidence":"","human_answer":"We need clean verification of all mechanistic pieces and rely on feedback collected from agents in real projects; we do not need arbitrary projects."},
+    {"id":"q2","kind":"decision","question":"How should collected feedback govern a skill change?","status":"resolved","resolution":"Feedback is advisory and should be pursued aggressively.","code_evidence":"","human_answer":"It is really advisory; we have been treating things as something to be aggressively chased and may need to improve that."},
+    {"id":"q3","kind":"decision","question":"What disposition does each advisory feedback item require?","status":"resolved","resolution":"Keep a lightweight freeform post-job feedback record, optionally inviting positives and negatives; later work interprets it.","code_evidence":"","human_answer":"The intent is freeform post-job feedback recorded for later issues; keep it super light and easy, perhaps collecting positives and negatives."},
+    {"id":"q4","kind":"decision","question":"May feedback collection block completion?","status":"resolved","resolution":"No; feedback does not block completed work.","code_evidence":"","human_answer":"Nope."},
+    {"id":"q5","kind":"decision","question":"What repository actions may agents take directly?","status":"resolved","resolution":"Local commits are allowed; remote Git actions require approval unless pre-approved.","code_evidence":"","human_answer":"Local commits are allowed; push, PR creation, and merging need my approval, which may be pre-approved for specified work."},
+    {"id":"q6","kind":"decision","question":"What verification is required for a changed mechanism?","status":"resolved","resolution":"Use targeted automated tests plus the relevant broader suite; explicitly justify a genuine no-test-surface exception.","code_evidence":"","human_answer":"Yup."},
+    {"id":"q7","kind":"decision","question":"Are any other project-specific doctrine departures needed?","status":"resolved","resolution":"All remaining engineering areas retain the inherited rigorous default.","code_evidence":"","human_answer":"Yup."}
+  ],
+  "signoff": {"by":"project owner","statement":"Confirmed: the shared Charter understanding is complete."},
+  "consolidated": true,
+  "rail_exception": {"reviewer_cosign":"","log":""}
+}

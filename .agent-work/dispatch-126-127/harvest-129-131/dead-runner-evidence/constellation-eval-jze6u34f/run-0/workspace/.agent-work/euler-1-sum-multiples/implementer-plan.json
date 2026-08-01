@@ -1,0 +1,150 @@
+{
+  "work_id": "euler-1-sum-multiples-impl",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-solution",
+    "m2-test"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read handoff and verify completeness (task, intent, scope, exclusions, required evidence, test mode, stop conditions). The handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff loaded and verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff verified complete: task, intent, scope, exclusions, evidence, test mode, stop conditions all present"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-solution": {
+      "id": "m1-solution",
+      "title": "Create solution.py",
+      "imperative": "Create solution.py in workspace root that computes the sum of all multiples of 3 or 5 below 1000 and prints the result. The correct answer is 233168. Attest p1 before starting, then attest c1 after implementation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "solution.py exists and prints 233168",
+          "check": {
+            "kind": "command",
+            "command": "python solution.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-solution-1"
+        }
+      ],
+      "constraints": [
+        "File must be in workspace root",
+        "Must print the answer"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-solution-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python solution.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-test": {
+      "id": "m2-test",
+      "title": "Create test_solution.py",
+      "imperative": "Create test_solution.py in workspace root with a pytest test that asserts the computed answer equals 233168. Attest p1 before starting, then verify pytest passes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "solution.py complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_solution.py exists and pytest passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest test_solution.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-test-2"
+        }
+      ],
+      "constraints": [
+        "File must be in workspace root",
+        "Must use pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest test_solution.py -v",
+            "exit": 127,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-test-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest test_solution.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

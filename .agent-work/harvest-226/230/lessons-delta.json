@@ -1,0 +1,32 @@
+{
+  "work_id": "issue-230",
+  "produced_by": "cmd-230 (delegated commander, epic-226 item D)",
+  "ops": [
+    {
+      "op": "confirm",
+      "lesson": "verify-launch-order-claims-against-code",
+      "scope": "project",
+      "task-class": "delegated-planning",
+      "evidence": "Third data point, and a NEW failure mode. The prior two were 'the named mechanism is already shipped'. This run's grep confirmed the launch order's build-from-zero claim was accurate — but the same verify-first habit caught a different mismatch: the order granted ownership of 'the Decision Anchors section of skills/commander/references/commander-core.md', and that section does not exist under that name (the concept lives under '## Decision candidates' L112 and '## Mission frame' L116; the authoritative '## Decision Anchors' definition is in the Cartographer's map-model.md).",
+      "proposed-widening": "Extend the statement from 'verify the named DEFECT/MECHANISM against current code' to also cover 'verify the named EDIT TARGET exists at the named address'. A launch order can be wrong about where something is, not only about whether it is already built."
+    },
+    {
+      "op": "add",
+      "lesson": "round-trip-tests-prove-artifacts-not-parsers",
+      "scope": "project",
+      "task-class": "testing",
+      "statement": "A round-trip test that lints/parses the REAL shipped artifacts proves those artifacts are clean — it does not prove the parser is correct. Bugs unreachable from the shipped artifacts pass it silently. Pair every round-trip test with adversarial fixtures authored to make the tool return a WRONG answer (false FAIL on a valid input, silent PASS on an invalid one), and instruct reviewers to hunt that specific class rather than only re-running the suite.",
+      "grounding": "issue-230: 18 shipped tests including a four-template round-trip all passed while TWO real bugs were live in grade_lint.py — a greedy placeholder regex that silently PASSED a real ungraded decision (worst failure mode for a linter), and a nested sub-bullet that false-FAILed a valid plan. Both were found only when the reviewer handoff explicitly asked for adversarial fixtures; neither is reachable from the four templates.",
+      "bank-reason": "First instance in this repo of round-trip-green-but-parser-wrong. Re-observe on the next tool that ships with a real-artifact round-trip test before promoting to a standing testing-conventions line; it is a strong candidate to graduate alongside the two banked testing lessons (test-harness-concurrency-failsafe, verify-harness-field-and-drive-real-writer) if a testing-conventions doc is ever minted."
+    },
+    {
+      "op": "add",
+      "lesson": "canonical-routing-can-dissolve-a-file-fence",
+      "scope": "handoff",
+      "task-class": "delegated-planning",
+      "statement": "When a launch order fences a contended file AND a canonical-source rule (PR-6-style) governs where the content belongs, resolve the canonical target FIRST — routing the content to its canonical home can make the contended edit unnecessary, dissolving the collision instead of resolving it. A stop-and-float instruction that fires on 'another PR touches this file' should be qualified with 'if the edit is still required after canonical routing'.",
+      "grounding": "issue-230: #231's PR #236 was open against skills/commander/references/commander-core.md, a declared stop condition that would have cost a full Admiral round-trip. Routing the cross-role executor doctrine to its canonical skills/_shared/global-everyone.md home per PR-6 removed the need for the commander-core.md edit entirely; nothing was lost and no merge order had to be guessed.",
+      "bank-reason": "One occurrence. Re-observe whether concurrent-wave file fences routinely have a canonical-routing escape before hardening the launch-order template's stop-condition wording."
+    }
+  ]
+}

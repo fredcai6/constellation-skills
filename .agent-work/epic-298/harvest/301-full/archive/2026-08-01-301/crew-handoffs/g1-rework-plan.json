@@ -1,0 +1,347 @@
+{
+  "work_id": "301-g1-rework",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix-worked-example",
+    "m2-fix-membership-seam",
+    "m3-fix-section2-path",
+    "m4-sweep",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load review BLOCK, original handoff, and the current doc",
+      "imperative": "Read .agent-work/301/crew-handoffs/g1-review-result.md (the BLOCK and its findings 1-5), .agent-work/301/crew-handoffs/g1-handoff.md (original gate contract, still governs), and docs/EPISODE_STORE.md (the file being fixed) in full. Confirm the three concrete findings (SS7 worked-example self-contradiction, SS2 path claim, SS8 missing membership-predicate seam) and their fix directions per the rework dispatch. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "review-result + handoff + EPISODE_STORE.md loaded; three findings and fix directions confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read g1-review-result.md (BLOCK, findings 1-5), g1-handoff.md (contract, still governs), docs/EPISODE_STORE.md (full 503-line doc) prior to plan creation. Three findings confirmed: (1) SS7 worked example asserts Option B path-stability as fact, contradicting HELD OPEN two paragraphs later; (2) SS8/SS7 'additive not a rewrite' claim not backed by a named seam -- concrete grep mechanism specified with no abstraction; (3) SS2 'filename IS the id: episodes/<id>.md' assumes Option B's flat path."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix-worked-example": {
+      "id": "m1-fix-worked-example",
+      "title": "Fix finding 1: SS7 worked retirement example asserts Option B's behavior as unconditional fact",
+      "imperative": "Edit docs/EPISODE_STORE.md SS7's worked-example closing sentence (currently: 'The file is never deleted, moved, or truncated -- \"retained in history\" is one field flip on the same file at the same path, not a second data store to keep in sync.') so it does not assert path stability as a blanket property of retirement. Either name the example as illustrated under Option B explicitly, with a one-clause note that Option A's same state change is a file move plus the same field update, OR rewrite the sentence to be layout-neutral (content is never deleted/truncated; whether the path also stays fixed is exactly the layout question below). Do NOT choose the layout. Make the minimal prose edit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context loaded and confirmed per m0-context (attested c1)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the 'never deleted, moved, or truncated ... same path' sentence no longer asserts path stability as unconditional fact; it is explicitly scoped to Option B or made layout-neutral",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rewrote SS7 worked-example closing sentence: content-preservation stated as holding under either option; the 'same path' claim now explicitly scoped to Option B; Option A's identical field update plus file move stated as the parallel case. No longer asserts path stability as unconditional fact."
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only, no executable code or tests",
+        "scope: docs/EPISODE_STORE.md only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-fix-membership-seam": {
+      "id": "m2-fix-membership-seam",
+      "title": "Fix finding 2: name a membership-predicate seam so 'additive, not a rewrite' is true of the implementation, not just the primitive name",
+      "imperative": "Edit docs/EPISODE_STORE.md SS7 (closing paragraph) and SS8 to introduce and name a MEMBERSHIP PREDICATE SEAM, exactly parallel to SS1's 'one named seam' treatment of durable_root(). E.g. is_episode_in_ordinary_search(id) (or is_episode_active(episode_id)), with a directory-check adapter for Option A and a status-grep adapter for Option B named as the two adapters at that seam. State explicitly that g3's retrieval primitives (enumerate non-retired, select, neighbour enumeration) must call the seam and must NOT inline either mechanism (no direct line-anchored grep over status, no direct directory check), and that g4 binds one adapter at that seam. Update SS8's current concrete description ('every retrieval primitive ... is a direct path read or a line-anchored grep') so it routes the membership check through the named seam instead of specifying grep as the mechanism. Then make SS7's 'binding the layout later is additive, not a rewrite of g2 or g3's own contracts' claim actually true under this seam -- or drop/qualify the claim if it still does not hold. Do NOT choose the retirement layout; the seam names both adapters without picking one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finding 1 fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Finding 1 fixed per m1-fix-worked-example (advanced, complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a named membership-predicate seam appears in docs/EPISODE_STORE.md with two named adapters (Option A directory-check, Option B status-grep)",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'is_episode' docs/EPISODE_STORE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-membership-seam-1"
+        },
+        {
+          "id": "c2",
+          "statement": "SS8's retrieval description routes membership checks through the seam, not a bare inlined grep/directory-check; g3-must-call-seam and g4-binds-adapter stated explicitly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "SS8 rewritten: retrieval primitives (enumerate non-retired, select by exact field value restricted to ordinary-search set, neighbour enumeration) explicitly route membership checks through is_episode_in_ordinary_search() rather than inlining a directory check or status grep. SS7's new membership-predicate-seam paragraph states g3 must call the seam and must not inline either adapter, and that g4 binds exactly one adapter."
+        },
+        {
+          "id": "c3",
+          "statement": "SS7's 'additive, not a rewrite' claim is either now true under the named seam, or has been dropped/qualified so it is not asserted falsely",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "SS7's closing paragraph rewritten: 'additive, not a rewrite' is now grounded in the named seam -- binding the layout at g4 means writing the chosen adapter and wiring it at the seam, g3's primitives and this document's description of them do not change. The claim is now true of g3's actual retrieval code, not only of the primitive's name."
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only, no executable code or tests",
+        "scope: docs/EPISODE_STORE.md only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-membership-seam-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'is_episode' docs/EPISODE_STORE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fix-section2-path": {
+      "id": "m3-fix-section2-path",
+      "title": "Fix finding 3: SS2's 'the filename is the id' claim quietly assumes Option B's flat path",
+      "imperative": "Edit docs/EPISODE_STORE.md SS2's sentence 'The filename **is** the id: episodes/<id>.md' so it distinguishes: the BASENAME is the id under both retirement-layout options; the full containing path (episodes/<id>.md vs episodes/active/<id>.md or episodes/retired/<id>.md) depends on the still-held-open layout. Minimal qualifying edit, do not restructure the section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finding 2 fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Finding 2 fixed per m2-fix-membership-seam (advanced, complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "SS2 no longer states an unconditional full path; basename-is-id-under-both-options is stated, containing directory noted as layout-dependent",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "SS2's filename-is-the-id sentence now distinguishes: basename is the id under both options; the full path is layout-dependent (episodes/<id>.md under Option B, episodes/active|retired/<id>.md under Option A), with a note that other flat-path examples in the doc are illustrating the id, not a settled path."
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only",
+        "scope: docs/EPISODE_STORE.md only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-sweep": {
+      "id": "m4-sweep",
+      "title": "Sweep docs/EPISODE_STORE.md and episodes/README.md for any OTHER unqualified single-layout assumption",
+      "imperative": "Re-read docs/EPISODE_STORE.md in full (worked example in SS3, the field list in SS4, the retrieval description in SS8, SS9 cross-worktree, and the closing SS10 obligations) plus episodes/README.md, hunting specifically for any other sentence that quietly assumes Option A or Option B is settled (e.g. a bare path like episodes/<id>.md stated as fact elsewhere, a claim about the file never moving, a retrieval mechanism named concretely instead of through the SS7/SS8 seam). Fix any found with the same minimal-qualification approach used in m1-m3. If none are found beyond the three already fixed, state that explicitly with where you checked.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "findings 1-3 fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Findings 1-3 fixed per m1-m3 (all advanced, complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full sweep of docs/EPISODE_STORE.md and episodes/README.md complete; any additional single-layout assumptions found are fixed, or the sweep explicitly reports none found beyond findings 1-3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full re-read of docs/EPISODE_STORE.md (all 10 sections, post m1-m3 edits) and episodes/README.md. Found and fixed TWO additional unqualified single-layout instances beyond findings 1-3, same root cause: (1) SS2's id-sequence derivation ('scanning existing episodes/<run>-*.md for the current maximum') assumed a flat Option-B glob; fixed to state the scan must cover both retired and active episodes for collision-safety, one glob under Option B vs a union of episodes/active/ and episodes/retired/ under Option A. (2) SS2's 'filename doubles as a query primitive for free' bullet used the same bare Option-B glob as the demonstration; fixed to note the glob's root changes but the free-run-lookup-key property holds under either option. episodes/README.md: no unqualified layout assumption found -- it only claims the directory (episodes/, unaffected by which subdirectory layout binds) and the basename-is-id property, both true under either option; left unmodified. SS3 worked example, SS4 field list, SS8 retrieval description (post m2 fix), SS9 cross-worktree, SS10 closing obligations: all re-checked, remaining path/glob/scan mentions are either the root episodes/ tracked-path claim (unaffected by A/B) or already-qualified text from m1-m3."
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only",
+        "scope: docs/EPISODE_STORE.md and episodes/README.md only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Verify scope, run required checks, write IMPLEMENTER_RESULT",
+      "imperative": "Run: git status --short (confirm only docs/EPISODE_STORE.md, and episodes/README.md if touched, are modified -- no other files); python -m pytest tests/ -q (expect 1157 passed, 2 skipped, use python not py). Write .agent-work/301/crew-handoffs/g1-result.md (overwrite) as IMPLEMENTER_RESULT with a literal 'VERDICT: COMPLETE' line, a per-finding account of exactly what changed for findings 1-3, the sweep's outcome, and a non-empty Workflow Feedback section. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweep complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Sweep complete per m4-sweep (advanced, complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git status shows only in-scope doc files modified (manually inspected, no other files touched)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git status --short shows exactly episodes/README.md (staged, from original gate) and docs/EPISODE_STORE.md (modified, this rework) -- no other files touched. No scope drift."
+        },
+        {
+          "id": "c2",
+          "statement": "pytest suite unchanged: 1157 passed, 2 skipped",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-1"
+        },
+        {
+          "id": "c3",
+          "statement": "g1-result.md written with VERDICT: COMPLETE and non-empty Workflow Feedback",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'VERDICT: COMPLETE' .agent-work/301/crew-handoffs/g1-result.md && grep -qi 'Workflow Feedback' .agent-work/301/crew-handoffs/g1-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-2"
+        }
+      ],
+      "constraints": [
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'VERDICT: COMPLETE' .agent-work/301/crew-handoffs/g1-result.md && grep -qi 'Workflow Feedback' .agent-work/301/crew-handoffs/g1-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "implementer-301-g1-rework",
+    "status": "released",
+    "claimed_at": "2026-08-01T06:53:23.677981+00:00",
+    "last_heartbeat": "2026-08-01T07:00:29.541940+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T07:00:40.156174+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Findings verified against the review-result and current doc text directly; fix directions match the rework dispatch's four items.",
+      "mechanical": false,
+      "ts": "2026-08-01T06:53:38.502539+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix-worked-example",
+      "why": "Finding 1 (BLOCKER) fixed: the self-contradiction between SS7's worked example and the HELD OPEN declaration two paragraphs later is resolved by scoping the never-moved claim to Option B explicitly and stating Option A's parallel behavior inline.",
+      "mechanical": false,
+      "ts": "2026-08-01T06:54:10.729185+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix-membership-seam",
+      "why": "Finding 2 (BLOCKER) fixed: named is_episode_in_ordinary_search(episode_id) seam parallel to SS1's durable_root() treatment, with Option-A directory-check and Option-B status-grep adapters. g3 must call the seam, not inline either mechanism; SS8's retrieval description updated to route through it; SS7's additive-not-a-rewrite claim now grounded in the seam.",
+      "mechanical": false,
+      "ts": "2026-08-01T06:55:36.102126+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-fix-section2-path",
+      "why": "Finding 3 (Minor) fixed: SS2's path claim now qualified per-option, same root cause as findings 1-2, minimal targeted edit.",
+      "mechanical": false,
+      "ts": "2026-08-01T06:56:04.908763+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-sweep",
+      "why": "Sweep complete: two additional layout-coupled mechanisms found (id-sequence scan, free-query-primitive glob in SS2) and fixed with the same minimal-qualification pattern as findings 1-3. No other unqualified single-layout assumption found in EPISODE_STORE.md or episodes/README.md.",
+      "mechanical": false,
+      "ts": "2026-08-01T06:57:24.722034+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify",
+      "why": "All verification commands run and pasted into g1-result.md: git status --short confirms no scope drift; python -m pytest tests/ -q reproduces the exact baseline (1157 passed, 2 skipped, 260 subtests); g1-result.md written with VERDICT: COMPLETE, per-finding account for findings 1-3 plus the sweep's two additional instances, and a non-empty Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:00:29.541920+00:00"
+    }
+  ]
+}

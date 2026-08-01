@@ -1,0 +1,357 @@
+{
+  "work_id": "300-g5-implement-rework1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red-regression",
+    "m2-split-fix",
+    "m3-major2-comment",
+    "m4-full-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load rework scope",
+      "imperative": "Read REWORK-1.md and REVIEW_RESULT.md (both under .agent-work/300/g5-implement/ and .agent-work/300/g5-review/), and the current state of scripts/context_manifest.py, scripts/checklist_engine.py's repo_revision(), tests/test_context_manifest.py's RepoRevContent + ProducerGuards classes, and tests/test_context_determinism.py's RealCheckoutSkew class. Confirm the rework note is complete (the split, the docstring correction, the test extension, the reviewer's MAJOR, constraints, verification, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REWORK-1.md + REVIEW_RESULT.md + current source read; rework scope confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red-regression": {
+      "id": "m1-red-regression",
+      "title": "TDD red: add the reviewer's own regression case to tests/test_context_determinism.py, BEFORE touching production code",
+      "imperative": "Add a new test method to tests/test_context_determinism.py's RealCheckoutSkew class (or a clearly-related sibling method there) reproducing the reviewer's exact BLOCKER-1 case: two FRESH git worktrees at the SAME commit, NOTHING overlaid; one stays genuinely clean, the other gets a one-line appended edit to docs/CHECKLIST_SCHEMA.md (a file NO context_refs declaration names -- reuse the reviewer's own choice of file). The declaration must name only tracked, unmodified files (reuse RealCheckoutSkew.TRACKED) so declared canon is byte-identical on both sides. Establish the premise with real git status output (one side's --porcelain is empty, the other's is not) before asserting. THE regression assertion is `self.assertEqual(cm.content(m_clean), cm.content(m_dirty))` -- do not additionally assert which subtree `dirty` lives in inside this same test method (that would crash with KeyError against the CURRENT pre-fix shape, where `run` has no `dirty` key yet); keep the shared assertions safe to run unchanged both before and after the fix, so the SAME test text produces the red and the green transcript. Run it now, before any production-code edit this round, and confirm it FAILS (content differs -- pre-fix `repo_rev` carries `dirty` inside content). Paste the failing pytest transcript into IMPLEMENTER_RESULT-rework1.md verbatim. Do not weaken or delete any existing test in this file. Attest c1 (manual: red observed) -- do NOT use a command check here, it would run the by-design-failing test and block this gate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "rework scope loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: rework scope loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new regression test added to tests/test_context_determinism.py; run once against current (pre-fix) code and observed FAILING for the right reason (content differs on repo_rev.dirty); failing transcript captured -- manual attest, must stay null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "new regression test added; run standalone against pre-fix code, FAILED as expected: content differs solely on repo_rev.dirty (False vs True) while commit matches and declared file revs are identical -- exactly the reviewer's BLOCKER-1 reproduction"
+        }
+      ],
+      "constraints": [
+        "do not edit scripts/context_manifest.py or scripts/checklist_engine.py in this step -- test-only",
+        "do not weaken any existing test in tests/test_context_determinism.py",
+        "no skipTest",
+        "every file write pins newline='\\n'",
+        "python -m pytest, never py -m pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-split-fix": {
+      "id": "m2-split-fix",
+      "title": "The surgical split: commit stays content, dirty moves to /run",
+      "imperative": "Implement REWORK-1.md's split. In scripts/context_manifest.py: CONTENT_KEYS stays (contract, step, files, repo_rev) but `repo_rev` in the manifest now carries `{commit}` only; `run_facts()` gains a `dirty` parameter and the `run` subtree carries `run.dirty`; `build_manifest()` calls `repo_state(roots)` once, splits the returned {commit, dirty} pair at assembly (repo_revision()/default_repo_state() themselves keep returning both -- the split is NOT pushed into the git helper). Update the module docstring's point 1, the CONTENT_KEYS comment, and default_repo_state()'s docstring to describe the split and why it does not reopen the honesty gap (content already carries the per-file blob OID as the precise per-byte answer; repo_rev.commit only has to be the coarse traceability stamp). In scripts/checklist_engine.py, rewrite repo_revision()'s docstring: remove the disproven claim that `dirty` keeps the repo-wide SHA honest INSIDE content, replace with the corrected argument from REWORK-1.md (commit is canon-determined so it is safe as content; dirty is a fact about the producing working tree, not the delivered bytes, so it belongs in /run; the per-file rev already answers the honesty question dirty was protecting). Update docs/CHECKLIST_ENGINE_DESIGN.md's 'Two-level revision scheme' paragraph to match. Update the existing tests/test_context_manifest.py::RepoRevContent class (every test currently asserting `m['repo_rev'] == {commit, dirty}` or `m['repo_rev']['dirty']`) to the new split shape, and add a new test asserting content is byte-identical for two repo_state fakes that share `commit` but differ on `dirty` (in-process, fast complement to the git-worktree regression). Do NOT touch rev(), the per-file row shape, or docs/CHECKLIST_SCHEMA.md. Attest c1 (test-after/inspection for this wiring-level change, matching the original gate's test mode) and satisfy c2/c3/c4 (commands) -- c4 is the m1 regression test, now expected GREEN; paste the passing transcript into IMPLEMENTER_RESULT-rework1.md beside the m1 failing one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "regression test written and observed red",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "regression test written and observed red (m1-red-regression complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test-after/inspection acceptable for this wiring-level split, matching the gate's original test mode",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test-after/inspection acceptable, matches original gate's mode; wiring-level split of an already-tested pair, not new algorithmic risk"
+        },
+        {
+          "id": "c2",
+          "statement": "gate g5's own content-projection selector still passes against the new shape",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py -q -k 'repo_rev or doctrine_version' --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-split-fix-1"
+        },
+        {
+          "id": "c3",
+          "statement": "the whole test_context_manifest.py suite is green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-split-fix-2"
+        },
+        {
+          "id": "c4",
+          "statement": "the m1 regression case (RealCheckoutSkew's new method) now passes -- the fix actually closes the reviewer's reproduction",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_determinism.py -q -k RealCheckoutSkew"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-split-fix-3"
+        }
+      ],
+      "constraints": [
+        "do not touch rev(), the per-file row shape, or docs/CHECKLIST_SCHEMA.md",
+        "do not weaken the m1 regression test to make it pass",
+        "repo_revision()/default_repo_state() keep returning both commit and dirty -- split happens at build_manifest assembly",
+        "every file write pins newline='\\n'",
+        "no skipTest",
+        "python -m pytest, never py -m pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-split-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py -q -k 'repo_rev or doctrine_version' --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-split-fix-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-split-fix-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_determinism.py -q -k RealCheckoutSkew",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-major2-comment": {
+      "id": "m3-major2-comment",
+      "title": "MAJOR-2: correct the AST guard's comment, add the injectability test it should have had",
+      "imperative": "In tests/test_context_manifest.py::ProducerGuards::test_producer_shells_out_to_nothing, the comment above `banned = {...}` currently claims 'no git process ... at assembly time. The manifest is a pure function of (canon, selector)' -- false since build_manifest shells out via the default repo_state edge. Re-comment it to state the guard's actual, narrower property: this file's own source contains none of these identifiers at the AST level; it does NOT mean build_manifest never shells out (the default repo_state edge delegates to checklist_engine.repo_revision, which does, by design, so context_manifest.py's own no-subprocess guarantee stays true after repo_rev exists). Add a new test in the same class asserting the invariant that actually matters: with BOTH `reader` and `repo_state` injected as fakes, build_manifest performs zero subprocess calls (patch subprocess.run/Popen to raise if called, mirroring the existing filesystem-enumeration guard pattern in test_no_globs_or_filesystem_enumeration_anywhere_in_the_producer). Attest c1 and satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "split fix landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "split fix landed (m2-split-fix complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test-after acceptable; the guard's comment now states what the guard actually pins",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "guard comment now states its actual AST-level property and points to the new injectability test; no weakening of the identifier ban"
+        },
+        {
+          "id": "c2",
+          "statement": "test_context_manifest.py still green including the new injectability test",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-major2-comment-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken the existing AST-identifier ban itself -- comment-only correction plus a new test",
+        "no skipTest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-major2-comment-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-full-suite": {
+      "id": "m4-full-suite",
+      "title": "Full suite green, no new skip, determinism suite green",
+      "imperative": "Run the full determinism suite (all of tests/test_context_determinism.py, not just RealCheckoutSkew), then the whole repo suite plus the skip guard, exactly as gate g5's postconditions require. Fix anything red. Do not introduce any unittest.SkipTest anywhere. Attest c1 once everything is green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "split fix and MAJOR-2 fix both landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "split fix (m2) and MAJOR-2 fix (m3) both landed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full determinism suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_determinism.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full repo suite green, skip guard passes, 0 new skips",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q --junitxml=junit-report.xml && python scripts/verify_skip_guard.py junit-report.xml && rm -f junit-report.xml"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-suite-2"
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py -m pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-full-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q --junitxml=junit-report.xml && python scripts/verify_skip_guard.py junit-report.xml && rm -f junit-report.xml",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-300-g5-rework1",
+    "status": "released",
+    "claimed_at": "2026-08-01T18:37:18.665165+00:00",
+    "last_heartbeat": "2026-08-01T18:44:36.344213+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T18:46:31.022344+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "REWORK-1.md, REVIEW_RESULT.md, context_manifest.py, checklist_engine.py repo_revision(), test_context_manifest.py RepoRevContent+ProducerGuards, test_context_determinism.py RealCheckoutSkew all read; rework scope confirmed complete (split, docstring fix, test extension, MAJOR-2)",
+      "mechanical": false,
+      "ts": "2026-08-01T18:37:35.760686+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red-regression",
+      "why": "TDD red confirmed: new regression test (RealCheckoutSkew.test_two_checkouts_same_commit_unequal_dirt_on_an_undeclared_file_agree_on_content) fails against current pre-fix code for exactly the right reason (repo_rev.dirty differs, commit and declared revs agree). Proceeding to implement the content/run split.",
+      "mechanical": false,
+      "ts": "2026-08-01T18:38:53.834165+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-split-fix",
+      "why": "content/run split implemented: repo_rev carries commit only, run.dirty carries dirty; docstrings updated in context_manifest.py, checklist_engine.py, docs/CHECKLIST_ENGINE_DESIGN.md; RepoRevContent tests updated to new shape plus new in-process regression test; the m1 git-worktree regression now passes",
+      "mechanical": false,
+      "ts": "2026-08-01T18:41:51.970062+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-major2-comment",
+      "why": "MAJOR-2 fixed: ProducerGuards comment corrected, new test_build_manifest_with_both_edges_injected_shells_out_to_nothing pins real injectability; test_context_manifest.py green (65 passed, 62 subtests)",
+      "mechanical": false,
+      "ts": "2026-08-01T18:42:41.746209+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-full-suite",
+      "why": "full determinism suite green (12 passed, 14 subtests, up from 11/13 -- the new regression test); full repo suite green (1254 passed, 2 skipped, 336 subtests, up from 1250 -- exactly the 4 new tests this round); skip guard ok, 2 skips both pre-existing allow-listed, no new skipTest introduced",
+      "mechanical": false,
+      "ts": "2026-08-01T18:44:36.344183+00:00"
+    }
+  ]
+}
