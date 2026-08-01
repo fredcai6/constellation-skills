@@ -22,6 +22,14 @@
       "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution — do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs — condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Read the current map (packets, overlays, decision anchors) for the area the ask touches; this read is the map-first input the mission frame and plan are built from. The checklist config_ref (docs/agents/engine-config.json) is absent-by-design in repos that vendor their own scripts (a skill-source repo has no docs/agents/ overlay at all); the engine degrades it gracefully to built-in defaults (rework cap, lease-stale seconds), so a missing engine-config is a sanctioned degradation, not a gap to fix — do NOT create the overlay file. If a run in such a repo needs non-default engine settings, inline a `config` object on the checklist (the engine prefers an inline `config` over `config_ref`) rather than chasing the dead path. Attest c1.",
       "preconditions": [],
       "postconditions": [{"id": "c1", "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist", "check": null, "satisfied": false}],
+      "context_refs": [
+        {"root": "skill", "path": "references/global-orchestrator.md", "required": true},
+        {"root": "skill", "path": "references/global-everyone.md", "required": true},
+        {"root": "repo", "path": "docs/agents/ORCHESTRATOR_CONTEXT.md", "required": false},
+        {"root": "repo", "path": "docs/agents/GLOSSARY.md", "required": false},
+        {"root": "repo", "path": "docs/agents/engine-config.json", "required": false},
+        {"root": "durable", "path": ".agent-work/LESSONS.md", "required": false}
+      ],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
