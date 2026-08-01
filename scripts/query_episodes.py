@@ -50,7 +50,9 @@ this code, not merely of a function's name. So:
 Newline handling (Windows hazard): every read passes newline="" so a stored \r\n is
 never silently folded to \n, exactly as the writer does. Retrieval must see the bytes
 that are actually on disk, since one of this gate's obligations is proving a stored
-line is BYTE-identical before and after an unrelated write.
+line is BYTE-identical before and after an unrelated write. That read goes through the
+writer's read_text_exact() helper — NOT Path.read_text(newline=...), which is Python
+3.13+ while CI pins 3.12.
 """
 
 from __future__ import annotations
@@ -117,7 +119,10 @@ def store_root() -> Path:
 
 
 def _read_episode(path: Path):
-    text = path.read_text(encoding="utf-8", newline="")
+    # read_text_exact is re-exported from the writer for the same reason store_root() is:
+    # reading and writing must never disagree about newline handling. It exists because
+    # Path.read_text(newline=...) is Python 3.13+ and CI pins 3.12.
+    text = writer().read_text_exact(path)
     return writer().parse_episode(text)
 
 

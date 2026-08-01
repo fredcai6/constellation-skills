@@ -120,7 +120,7 @@ class RoundTripTests(EpisodeStoreTestCase):
         self.assertEqual(files, ["governor-268-001.md"])
 
         path = self.root / "governor-268-001.md"
-        text = path.read_text(encoding="utf-8", newline="")
+        text = path.open(encoding="utf-8", newline="").read()
 
         # header + heading
         self.assertIn(
@@ -165,7 +165,7 @@ class RoundTripTests(EpisodeStoreTestCase):
             "  scripts/apply_episode_delta.py  ",
         ]
         self.run_delta({"work_id": "issue-1", "ops": [op]})
-        text = (self.root / "governor-268-001.md").read_text(encoding="utf-8", newline="")
+        text = (self.root / "governor-268-001.md").open(encoding="utf-8", newline="").read()
 
         self.assertIn("- artifact-ref: docs/EPISODE_STORE.md\n", text)
         self.assertIn("- artifact-ref: scripts/apply_episode_delta.py\n", text)
@@ -417,28 +417,32 @@ class WritePhaseAtomicityTests(EpisodeStoreTestCase):
         delta_path = Path(self.tmp.name) / "racy-delta.json"
         delta_path.write_text(json.dumps({"work_id": "i1", "ops": ops}), encoding="utf-8")
 
-        # Monkeypatch Path.write_text to raise on exactly the SECOND call made
-        # after this point (the delta file itself is already written above, before
-        # the patch is installed, so it is never counted). This simulates a real
-        # OS-level failure -- disk full, permission denied, a locked file -- on
-        # whichever write is second in commit()'s write order, independent of
-        # whether the implementation writes directly to the final path (old code)
-        # or to a staged temp path first (the fix): either way it is still the
-        # second call to write_text.
-        original_write_text = Path.write_text
+        # Fail exactly the SECOND write commit() performs, simulating a real OS-level
+        # failure -- disk full, permission denied, a locked file -- partway through a
+        # multi-file delta.
+        #
+        # Patch the module's OWN named write seam, not Path.write_text. An earlier
+        # version patched the stdlib method and claimed to work "either way"; that
+        # stopped being true the moment the writer moved off Path.write_text (it now
+        # goes through write_text_exact, because Path.write_text(newline=...) is Python
+        # 3.13+ and CI pins 3.12). The patch then never fired, no failure was injected,
+        # and the test asserted an exit code that could not happen -- it went red for a
+        # reason unrelated to what it was testing. Patching the seam the writer actually
+        # calls makes this test track the implementation instead of a stdlib detail.
+        original_write = self.m.write_text_exact
         calls = {"n": 0}
 
-        def flaky_write_text(path_self, *args, **kwargs):
+        def flaky_write(path, text):
             calls["n"] += 1
             if calls["n"] == 2:
                 raise OSError("simulated write failure (e.g. disk full) on the second touched file")
-            return original_write_text(path_self, *args, **kwargs)
+            return original_write(path, text)
 
-        Path.write_text = flaky_write_text
+        self.m.write_text_exact = flaky_write
         try:
             rc = self.m.main(["--delta", str(delta_path), "--store-root", str(self.root)])
         finally:
-            Path.write_text = original_write_text
+            self.m.write_text_exact = original_write
 
         self.assertEqual(rc, 1, "a mid-write I/O failure must still exit non-zero")
         self.assertGreaterEqual(calls["n"], 2, "the test did not actually reach a second write")
@@ -475,7 +479,7 @@ class RetirementSeamTests(EpisodeStoreTestCase):
             }
         )
 
-        text = path.read_text(encoding="utf-8", newline="")
+        text = path.open(encoding="utf-8", newline="").read()
         self.assertIn("status=retired", text)  # header token stays in sync
         self.assertIn("- status: retired", text)
         self.assertIn(
@@ -511,7 +515,7 @@ class RetirementSeamTests(EpisodeStoreTestCase):
             retired_path = self.root / "retired" / "governor-268-001.md"
             self.assertTrue(retired_path.exists(), "Option-A adapter did not move the file")
             self.assertFalse(active_path.exists(), "old active/ path should be gone after the move")
-            self.assertIn("- status: retired", retired_path.read_text(encoding="utf-8", newline=""))
+            self.assertIn("- status: retired", retired_path.open(encoding="utf-8", newline="").read())
         finally:
             self.m._LAYOUT_ADAPTER = self.m._LAYOUT_OPTION_B
 
@@ -536,7 +540,7 @@ class SurgicalDisputeTests(EpisodeStoreTestCase):
     def test_dispute_changes_only_the_named_assertion_sibling_untouched(self):
         self.run_delta({"work_id": "i0", "ops": [create_op()]})
         path = self.root / "governor-268-001.md"
-        before_text = path.read_text(encoding="utf-8", newline="")
+        before_text = path.open(encoding="utf-8", newline="").read()
         a3_before = _assertion_block(before_text, "a3")  # observed-behavior, untouched
         a4_before = _assertion_block(before_text, "a4")  # impact-cost, will be disputed
 
@@ -555,7 +559,7 @@ class SurgicalDisputeTests(EpisodeStoreTestCase):
             }
         )
 
-        after_text = path.read_text(encoding="utf-8", newline="")
+        after_text = path.open(encoding="utf-8", newline="").read()
         a3_after = _assertion_block(after_text, "a3")
         a4_after = _assertion_block(after_text, "a4")
 
@@ -614,7 +618,7 @@ class SurgicalDisputeTests(EpisodeStoreTestCase):
                     ],
                 }
             )
-            text = (self.root / "retired" / "governor-268-001.md").read_text(encoding="utf-8", newline="")
+            text = (self.root / "retired" / "governor-268-001.md").open(encoding="utf-8", newline="").read()
             self.assertIn("- lifecycle-standing: superseded", text)
         finally:
             self.m._LAYOUT_ADAPTER = self.m._LAYOUT_OPTION_B
@@ -760,7 +764,7 @@ def naive_select_dict_collapse(root, field, value):
     for path in sorted(Path(root).glob("*.md")):
         if path.name == "README.md":
             continue
-        text = path.read_text(encoding="utf-8", newline="")
+        text = path.open(encoding="utf-8", newline="").read()
         mechanical = {}
         for line in text.splitlines():
             if line.startswith("- ") and ": " in line:
@@ -780,7 +784,7 @@ def naive_select_substring(root, field, value):
     for path in sorted(Path(root).glob("*.md")):
         if path.name == "README.md":
             continue
-        if f"- {field}: {value}" in path.read_text(encoding="utf-8", newline=""):
+        if f"- {field}: {value}" in path.open(encoding="utf-8", newline="").read():
             matched.append(path.stem)
     return sorted(matched)
 
@@ -1644,6 +1648,134 @@ class LayoutIndependenceTests(QueryTestCase):
         episode_id = self.seed()
         self.assertTrue(self.m.is_episode_in_ordinary_search(episode_id, self.root))
         self.assertFalse(self.m.is_episode_in_ordinary_search("governor-268-999", self.root))
+
+
+class FloorInterpreterPortabilityTests(unittest.TestCase):
+    """The store must run on the OLDEST interpreter it claims to support, not merely on
+    whatever the author happened to launch.
+
+    Why this class exists. PR #320 went green locally on Python 3.14 and RED in CI on
+    3.12: 39 failures from one root cause, `Path.read_text(newline="")`, a kwarg pathlib
+    only gained in 3.13. The local suite could not have caught it, because the local
+    interpreter was two minor versions AHEAD of CI — so "green here" was never evidence
+    for "green there", and nothing said so out loud.
+
+    The sting is that the skew came from following advice. Issue #313 documents that
+    `py -m pytest` false-reds on this host (no pytest installed for it), which routes
+    agents onto `python`. Here `python` is 3.14 and `py` is 3.12 — the CI version. The
+    documented false-red and this false-green are the same underlying problem, two
+    interpreters that are not the same environment, and the guidance is wrong in both
+    directions.
+
+    A CI matrix entry would not have helped: CI already ran the floor and already caught
+    it. What was missing was a LOCAL check, so this drives the store on the floor
+    interpreter in a real subprocess. It SKIPS rather than fails when no floor
+    interpreter is discoverable, so it is a safety net and not a new environment
+    requirement.
+
+    Stated honestly, because a guard whose reach is overclaimed is worse than none. On CI
+    the running interpreter IS the floor, so the round trip below genuinely exercises it
+    (and `["python"]` resolves on the first try). On a developer host it runs only if a
+    launcher name resolves to the floor or `EPISODE_STORE_FLOOR_PYTHON` points at one;
+    otherwise it skips and the drift test below is the only protection left. So this
+    class does not make local green equal CI green — it narrows the gap and names it.
+    """
+
+    def floor_interpreter(self):
+        """A launcher that really is the declared floor version, or None.
+
+        Every candidate is ACCEPTED ONLY IF it reports the floor version when asked, so
+        bare launcher names are safe to probe — the version check, not the name, is what
+        makes the answer trustworthy. That matters here: on this host `py` is not the
+        Windows launcher but a shim pointing straight at a 3.12 runtime, and it rejects
+        the `-3.12` selector outright. A candidate list that assumed the selector worked
+        found nothing and skipped, which is the failure mode this whole class exists to
+        prevent — a guard that silently never runs is worse than no guard, because it
+        reads as coverage.
+        """
+        major, minor = load().REQUIRES_PYTHON
+        candidates = []
+        # Explicit override first: on a host where no launcher NAME resolves to the floor,
+        # this is the only way to point the guard at one. Needed more often than it looks
+        # — a launcher's meaning can differ between an interactive shell and a subprocess
+        # spawned from the test runner (observed here: `py` is 3.12 from the shell and
+        # 3.14 from inside pytest), so name-based discovery alone is not dependable.
+        override = os.environ.get("EPISODE_STORE_FLOOR_PYTHON")
+        if override:
+            candidates.append([override])
+        candidates += [
+            ["py", f"-{major}.{minor}"],      # real Windows launcher, version selector
+            [f"python{major}.{minor}"],       # POSIX versioned name
+            ["py"],                           # a shim that may already BE the floor
+            ["python3"],
+            ["python"],                       # on CI the runner IS the floor, so this hits
+        ]
+        for cmd in candidates:
+            try:
+                probe = subprocess.run(
+                    cmd + ["-c", "import sys; print('%d.%d' % sys.version_info[:2])"],
+                    capture_output=True, text=True, timeout=60,
+                )
+            except (OSError, subprocess.SubprocessError):
+                continue
+            if probe.returncode == 0 and probe.stdout.strip() == f"{major}.{minor}":
+                return cmd
+        return None
+
+    def test_the_declared_floor_matches_the_version_ci_actually_pins(self):
+        # Config drift: if CI's pin moves and REQUIRES_PYTHON does not, the floor this
+        # suite exercises stops being the floor that gates the merge.
+        ci = ROOT / ".github" / "workflows" / "ci.yml"
+        if not ci.exists():
+            self.skipTest("no CI workflow in this checkout")
+        pinned = re.findall(
+            r'python-version:\s*"?([0-9]+\.[0-9]+)"?', ci.read_text(encoding="utf-8")
+        )
+        self.assertTrue(pinned, "found no pinned python-version in ci.yml")
+        major, minor = load().REQUIRES_PYTHON
+        self.assertIn(
+            f"{major}.{minor}", pinned,
+            f"REQUIRES_PYTHON is {major}.{minor} but ci.yml pins {pinned} — the declared "
+            "floor and the version that actually gates the merge have drifted apart",
+        )
+
+    def test_the_store_actually_runs_on_the_floor_interpreter(self):
+        # The check that would have caught the 3.13-only kwarg before the push. Drives a
+        # real create -> enumerate round trip, because merely importing the modules would
+        # not have reached the failing call.
+        interp = self.floor_interpreter()
+        if interp is None:
+            major, minor = load().REQUIRES_PYTHON
+            self.skipTest(f"no Python {major}.{minor} interpreter available to probe")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Path(tmp) / "episodes"
+            store.mkdir()
+            delta = Path(tmp) / "delta.json"
+            delta.write_text(
+                json.dumps({"work_id": "floor-probe", "ops": [create_op()]}), encoding="utf-8"
+            )
+
+            wrote = subprocess.run(
+                interp + [str(WRITER_SCRIPT), "--delta", str(delta), "--store-root", str(store)],
+                capture_output=True, text=True, timeout=120,
+            )
+            self.assertEqual(
+                wrote.returncode, 0,
+                f"writer failed on the floor interpreter:\n{wrote.stdout}\n{wrote.stderr}",
+            )
+
+            read_back = subprocess.run(
+                # --store-root is a flag on the top-level parser, so it precedes the
+                # subcommand; argparse rejects it after one.
+                interp + [str(QUERY_SCRIPT), "--store-root", str(store), "enumerate"],
+                capture_output=True, text=True, timeout=120,
+            )
+            self.assertEqual(
+                read_back.returncode, 0,
+                f"query failed on the floor interpreter:\n{read_back.stdout}\n{read_back.stderr}",
+            )
+            self.assertIn("governor-268", read_back.stdout)
 
 
 if __name__ == "__main__":

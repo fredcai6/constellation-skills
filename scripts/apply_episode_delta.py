@@ -43,6 +43,10 @@ write emits LF-only line endings on every platform, including Windows. Combined 
 newline-injection guard (which rejects any delta value containing a literal `\n` or `\r`
 before it is ever rendered), this keeps the store's bytes fully deterministic regardless
 of which OS produced them.
+
+That newline discipline goes through `read_text_exact` / `write_text_exact` below rather
+than `Path.read_text(newline=...)` / `Path.write_text(newline=...)`, which exist only on
+Python 3.13+ while CI pins 3.12 — see those helpers.
 """
 
 from __future__ import annotations
@@ -55,6 +59,37 @@ import sys
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+
+
+# The store's minimum interpreter. Must equal the version CI pins in
+# .github/workflows/ci.yml — tests/test_episode_store.py asserts that equality, so the two
+# cannot drift apart silently.
+REQUIRES_PYTHON = (3, 12)
+
+
+def read_text_exact(path: Path) -> str:
+    """Read a store file with newline translation DISABLED, so bytes survive the round trip.
+
+    Deliberately NOT `path.read_text(encoding=..., newline="")`: pathlib only gained the
+    `newline` kwarg in Python 3.13, and CI pins 3.12, so that form raises TypeError there.
+    `Path.open()` has accepted `newline` on every supported version. The `newline=""` is
+    load-bearing rather than cosmetic — it is what keeps the bytes the parser sees identical
+    to the bytes on disk, which is what `_reject_newline` and the byte-for-byte-unchanged
+    assertions both depend on.
+    """
+    with path.open(encoding="utf-8", newline="") as handle:
+        return handle.read()
+
+
+def write_text_exact(path: Path, text: str) -> None:
+    """Write a store file emitting exactly `text`, with no platform newline translation.
+
+    Same portability reason as `read_text_exact`, and the same load-bearing semantics: on
+    Windows the default would translate every `\\n` to `\\r\\n`, making the store's bytes
+    depend on which OS wrote them.
+    """
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        handle.write(text)
 
 
 def _utf8_stdio() -> None:
@@ -455,7 +490,7 @@ def is_episode_in_ordinary_search(episode_id: str, root: Path) -> bool:
     path = resolve_episode_path(episode_id, root)
     if path is None:
         return False
-    ep = parse_episode(path.read_text(encoding="utf-8", newline=""))
+    ep = parse_episode(read_text_exact(path))
     return ep.status != "retired"
 
 
@@ -683,7 +718,7 @@ class _Transaction:
         path = resolve_episode_path(episode_id, self.root)
         if path is None:
             raise EpisodeDeltaError(f"no such episode: {episode_id}")
-        ep = parse_episode(path.read_text(encoding="utf-8", newline=""))
+        ep = parse_episode(read_text_exact(path))
         self.loaded[episode_id] = ep
         self.original_paths[episode_id] = path
         return ep
@@ -737,7 +772,7 @@ class _Transaction:
             for final_path, text in writes.items():
                 final_path.parent.mkdir(parents=True, exist_ok=True)
                 tmp_path = final_path.parent / f".{final_path.name}.tmp-{uuid.uuid4().hex}"
-                tmp_path.write_text(text, encoding="utf-8", newline="")
+                write_text_exact(tmp_path, text)
                 staged.append((tmp_path, final_path))
         except Exception:
             for tmp_path, _ in staged:
