@@ -1,26 +1,55 @@
 # Crash-resume state note - issue-304
 
-- **step:** execute - gate g1-integrate (g1 implement done, g1 review returned BLOCK, rework in flight)
+- **step:** execute - gate g1-integrate (blocked on re-review verdict), then g2
 - **slug:** `issue-304` - branch `epic-298/304` - worktree `C:/Programs/constellation-skills-wt/e298-304`
 - **next command:** `py C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-304/execute.json current`
-- **pid:** none - foreground commander; rework running as resumed subagent `aa5138cd649f1b77e`
-- **expected artifact:** `.agent-work/issue-304/crew-handoffs/g1-result.md` updated in place with the B1/B2/B3 fixes
+- **pid:** none - foreground commander; re-review is resumed subagent `a9717a0c8b80d89fd`
+- **expected artifact:** `.agent-work/issue-304/crew-handoffs/g1-review-result-2.md` (fresh APPROVE/BLOCK)
 
-_Updated: 2026-08-01T23:05:00Z_
+_Updated: 2026-08-02T00:05:00Z_
 
-## g1 status
+## g1: BUILT AND GREEN, awaiting re-review verdict only
 
-- g1-implement: COMPLETE. `scripts/map_orient.py`, `<repo-root>` placeholder, `tests/test_map_orient.py`,
-  `tests/test_mutation_floor.py`. Exit vocabulary 0/10/11/12/13, clear of argparse(2)/traceback(1)/127.
-- g1-review: COMPLETE, verdict **BLOCK**.
-- **B1 (blocker, reproduced by me):** `pin_substitutes` writes `content_hash="unreadable"` and
-  `is_filler("unreadable")` is False, so a NONEXISTENT substitute path discharges the degraded record at
-  exit 0. The exact silent-degradation hole the contract exists to close.
-- **B2 (major):** reviewer's own mutation M4 (`not any(is_filler)` -> `not all(is_filler)`) SURVIVED -
-  every filler test uses single-element lists where any and all are identical.
-- **B3 (minor):** the result artifact claimed `.agent-work/probe/` was removed; it was not.
-- Out of scope, filed as triage: `orient` writes a receipt into any `--root` (recommend `--receipt-dir`);
-  the mutation kill criterion is class-level, not reason-level.
+Required suite **91 passed**; `--self-test` exit 0; **FULL suite exit 0**. B1 fixed both directions
+(bad substitute -> exit 10, real substitute -> exit 0, positive control checked). M4 pinned with
+multi-element filler cases. Mutation floor asserts the mutation APPLIED via strict count delta.
+
+**If the verdict is APPROVE:** attest `g1-integrate` p1, start it, attach the review-result with
+`--field verdict=APPROVE`, then `advance g1-integrate` (the command check re-runs on advance; it is NOT
+attestable).
+
+## g2 IS READY TO DISPATCH - handoff is written and already updated for PRE-B
+
+`.agent-work/issue-304/crew-handoffs/g2-implementer-handoff.md`. Two things were added after PRE-B and
+they are the highest-value items in the gate:
+
+1. **THE ANCHOR CHANGE.** Re-anchor `tasks.context.imperative` from "Read the current map ..." to
+   **"Before you open any source file, resolve and read the map input."** PRE-B measured that the
+   late-anchored form (served `:40`, "BEFORE authoring execute.json") produces exact compliance with
+   zero orientation - #698 read source at call 25 and the map at call 57 and satisfied it. Context
+   precedes exploration; plan does not. **This is the untested variable.**
+2. **The fallback oracle.** Corpus-declared fallback set (README.md, AGENTS.md, docs/ index, CLAUDE.md)
+   whose resolution is verified by FILESYSTEM EXISTENCE - an oracle the agent does not author.
+   Agent-declared additions allowed but LABELLED UNVERIFIED. Partial fix; do not claim it closes the gap.
+
+Dispatch via `run_crew.py --backend external` after `recover_crews.py issue-304` is clean, then an Agent
+subagent, then `--verify-result`.
+
+## Pre-registration is DONE and committed - do not redo it
+
+- `0119fa4` - TRIPWIRES.md T1-T4 (the prose deletions)
+- `1662b90` - T5 (the anchor change)
+- `b9773c9` - run artifacts
+
+g3 files episodes AFTER the run, each citing these SHAs, with a REAL observed-behavior.
+
+## Do NOT do these
+
+- Do not point ANY tooling at `C:/Programs/f1Brainz`. A sibling PRE-B dispatch is capturing against it.
+  Use a local fixture or scratch clone. (`orient` WRITES a receipt into whatever --root it gets.)
+- Do not build a bootstrap/CLAUDE.md stanza (Q1 ruled: map is orchestrator content).
+- Do not fix #341, #342, #344, or the `--receipt-dir` item.
+- Do not overclaim: necessity gate is a REGRESSION FLOOR, sensitivity 0/4 specificity 0/1.
 
 ---
 
