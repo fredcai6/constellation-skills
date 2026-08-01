@@ -1,0 +1,22 @@
+{
+  "work_id": "issue-309",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed",
+      "grounding": "PLAN_CRITIC_DISPOSITION.md findings 1 and 2 (constellation-skills, issue-309): a solo cold plan critic found TWO independent vacuous-pass checks in this run's own gate plan before any crew was dispatched -- g1-seed's original postcondition (git status --porcelain over a directory that IS gitignored just silently omits it, so the check passed unconditionally whether or not the slice was ever seeded) and g0-fix321-implement's original adversarial-test spec (a traversal id that does not resolve to a real existing file returns None whether or not the ID_RE guard exists, so the test could pass with or without the fix). Both fixed before dispatch. Fifth+ recurrence in this epic, same mechanism class (a check whose failure path is never actually exercised)."
+    },
+    {
+      "op": "confirm",
+      "id": "cold-critic-mandatory-for-measurement-dependent-plans",
+      "grounding": "issue-309's own plan (a recall/noise measurement, squarely the trigger class): PLAN_CRITIC_DISPOSITION.md, 2 BLOCKING + 3 SERIOUS findings, all fixed or mitigated before dispatch (see the confirm above for the two BLOCKING ones). Directly attributable counterfactual: without the critic, both would have shipped as vacuous acceptance evidence for the sweep's headline recall/noise numbers and the #321 fix's own test proof."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-launch-order-claims-against-code",
+      "grounding": "issue-309: the plan's first draft (MISSION_FRAME.md) inherited a stale premise not from the launch order's own text but from a DIFFERENT frozen project doc the launch order pointed at as the map substitute (docs/EPISODE_STORE.md section 1's git-check-ignore transcript for .agent-work/, accurate when written at #301 g1, invalidated by the unrelated #326 commit that made .agent-work/ tracked repo-wide). git check-ignore -v caught it before any seeded file was at risk.",
+      "proposed-widening": "Extend the lesson beyond 'verify the launch order's own claims against code' to 'verify any doctrine claim a run relies on against code, including doctrine the launch order only POINTS AT rather than restates' -- a pointer to frozen prior-issue doctrine inherits that doctrine's staleness risk exactly like a launch-order claim would, and the current statement's wording ('a delegated commander must verify a launch order's NAMED defect/sub-fix... AND verify that any named EDIT TARGET') does not obviously cover a premise borrowed from a document the order cites rather than asserts directly."
+    }
+  ]
+}
