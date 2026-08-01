@@ -1,0 +1,193 @@
+[
+  {
+    "run": "run-690",
+    "status": "ok",
+    "tool_call_count": 43,
+    "first_map_read_index": 5,
+    "first_src_read_index": 2,
+    "map_before_src": false,
+    "map_call_count": 5,
+    "map_call_indices": [
+      5,
+      7,
+      35,
+      38,
+      39
+    ],
+    "read_at_bootstrap": false,
+    "returned_to_map_after_src": true,
+    "map_artifacts_read": [
+      "docs/architecture/decisions",
+      "docs/architecture/decisions/tyre-age-g-track-design.md",
+      "docs/architecture/packets/physics.md",
+      "docs/architecture/",
+      "docs/architecture/reference/physics-unit-conventions.md"
+    ],
+    "map_cues_in_plan": "2/4",
+    "map_cues_cited": [
+      "docs/architecture/packets/physics.md",
+      "docs/architecture/reference/physics-unit-conventions.md"
+    ],
+    "plan_heading_present": true,
+    "src_precision": "3/8",
+    "src_named_in_plan": [
+      "src/physics/fingerprint/fit.py",
+      "src/physics/utilization/class_utilization_observable.py",
+      "src/physics/utilization/reference_utilization_store.py"
+    ],
+    "src_opened": [
+      "src/physics/fingerprint/fit.py",
+      "src/physics/layer2/grip_baseline.py",
+      "src/physics/layer2/grip_store.py",
+      "src/physics/pilot/pipeline.py",
+      "src/physics/utilization/class_ledger.py",
+      "src/physics/utilization/class_utilization_observable.py",
+      "src/physics/utilization/class_utilization_validation.py",
+      "src/physics/utilization/reference_utilization_store.py"
+    ]
+  },
+  {
+    "run": "run-688",
+    "status": "ok",
+    "tool_call_count": 35,
+    "first_map_read_index": 23,
+    "first_src_read_index": 0,
+    "map_before_src": false,
+    "map_call_count": 5,
+    "map_call_indices": [
+      23,
+      24,
+      26,
+      27,
+      34
+    ],
+    "read_at_bootstrap": false,
+    "returned_to_map_after_src": true,
+    "map_artifacts_read": [
+      "docs/architecture/packets/physics.md",
+      "docs/architecture/overlays/constraints.yml",
+      "docs/architecture/decisions",
+      "docs/architecture/"
+    ],
+    "map_cues_in_plan": "3/3",
+    "map_cues_cited": [
+      "docs/architecture/decisions",
+      "docs/architecture/overlays/constraints.yml",
+      "docs/architecture/packets/physics.md"
+    ],
+    "plan_heading_present": true,
+    "src_precision": "3/8",
+    "src_named_in_plan": [
+      "src/data/weather_features.py",
+      "src/physics/layer2/grip_baseline.py",
+      "src/physics/layer2/grip_store.py"
+    ],
+    "src_opened": [
+      "src/data/database/_ingest.py",
+      "src/data/schema.sql",
+      "src/data/weather_features.py",
+      "src/physics/layer2/frozen_constants.py",
+      "src/physics/layer2/grip_baseline.py",
+      "src/physics/layer2/grip_batch.py",
+      "src/physics/layer2/grip_store.py",
+      "src/physics/utilization/class_utilization_observable.py"
+    ]
+  },
+  {
+    "run": "run-698",
+    "status": "ok",
+    "tool_call_count": 35,
+    "first_map_read_index": 28,
+    "first_src_read_index": 0,
+    "map_before_src": false,
+    "map_call_count": 3,
+    "map_call_indices": [
+      28,
+      33,
+      34
+    ],
+    "read_at_bootstrap": false,
+    "returned_to_map_after_src": true,
+    "map_artifacts_read": [
+      "docs/architecture/packets/physics.md",
+      "docs/architecture/index.md"
+    ],
+    "map_cues_in_plan": "2/2",
+    "map_cues_cited": [
+      "docs/architecture/index.md",
+      "docs/architecture/packets/physics.md"
+    ],
+    "plan_heading_present": true,
+    "src_precision": "4/6",
+    "src_named_in_plan": [
+      "src/physics/fingerprint/address.py",
+      "src/physics/fingerprint/fit.py",
+      "src/physics/fingerprint/store.py",
+      "src/physics/pilot/pipeline.py"
+    ],
+    "src_opened": [
+      "src/physics/fingerprint/__init__.py",
+      "src/physics/fingerprint/address.py",
+      "src/physics/fingerprint/fit.py",
+      "src/physics/fingerprint/join.py",
+      "src/physics/fingerprint/store.py",
+      "src/physics/pilot/pipeline.py"
+    ]
+  },
+  {
+    "run": "run-716",
+    "status": "ok",
+    "tool_call_count": 61,
+    "first_map_read_index": 51,
+    "first_src_read_index": "NO-SRC-READ",
+    "map_before_src": "NO-SRC-READ",
+    "map_call_count": 1,
+    "map_call_indices": [
+      51
+    ],
+    "read_at_bootstrap": false,
+    "returned_to_map_after_src": "NO-SRC-READ",
+    "map_artifacts_read": [
+      "docs/architecture/"
+    ],
+    "map_cues_in_plan": "0/0",
+    "map_cues_cited": [],
+    "plan_heading_present": true,
+    "src_precision": "n/a",
+    "src_named_in_plan": [],
+    "src_opened": []
+  },
+  {
+    "run": "run-704",
+    "status": "ok",
+    "tool_call_count": 10,
+    "first_map_read_index": 4,
+    "first_src_read_index": 0,
+    "map_before_src": false,
+    "map_call_count": 4,
+    "map_call_indices": [
+      4,
+      6,
+      7,
+      8
+    ],
+    "read_at_bootstrap": false,
+    "returned_to_map_after_src": true,
+    "map_artifacts_read": [
+      "docs/architecture/",
+      "docs/architecture/index.md"
+    ],
+    "map_cues_in_plan": "1/1",
+    "map_cues_cited": [
+      "docs/architecture/index.md"
+    ],
+    "plan_heading_present": true,
+    "src_precision": "1/1",
+    "src_named_in_plan": [
+      "src/physics/instrument_panel/replication.py"
+    ],
+    "src_opened": [
+      "src/physics/instrument_panel/replication.py"
+    ]
+  }
+]
