@@ -180,6 +180,51 @@ are now answered from engine output, so reading the raw file is unnecessary (and
   it prints, over fixtures parameterized on status **and position**, not by string-matching the
   render.
 
+## Context manifest: a second, delivery-shaped projection (#300)
+
+Beside `state(cl) -> StateView` (what the engine believes about condition/lease progress, above)
+sits a second, narrower projection: `scripts/context_manifest.py`'s
+`build_manifest(checklist, roots, ...) -> {contract, step, files, run}`. Both select the active
+unit through the **same** `active_id(cl)` — the manifest producer imports it rather than defining
+a second selector, so the two projections can never silently disagree about which task is active.
+
+Where `state()` answers "what is true about this checklist's progress," the manifest answers a
+narrower, orthogonal question: **what was made available to the agent running this step, and at
+which revision** — delivery, not use. It carries no claim that the agent read anything; it is not
+an access trace, and its rows never carry file contents.
+
+Shape: a task may carry an optional ordered `context_refs` list (`{root, path, required}`
+entries — see the Task-table row in `docs/CHECKLIST_SCHEMA.md`). Root tokens (`skill` \| `repo` \|
+`durable`) are resolved through a caller-supplied mapping, so absolute, environment-varying paths
+never reach the manifest content, and the producer never globs or enumerates a directory:
+declaration order **is** content, matching doctrine's own reading precedence (inherited global
+doctrine, then project deltas). Each row's `rev` is the git blob OID of the LF-normalised bytes,
+computed in-process (no `git` subprocess), so tracked, dirty, untracked, gitignored and
+out-of-repo files share one code path with no case split; an absent file yields `rev: null` and
+keeps its row rather than disappearing.
+
+**The prose is not replaced.** The first real declaration in the corpus,
+`COMMANDER_SPINE.template.json`'s `context` step, still carries the substitute-and-record rule and
+the sanctioned-degradation rule in its `imperative` — a path list cannot express either.
+`scripts/verify_context_declaration.py` is the mechanical lint that keeps the two from drifting
+apart: every declared path must appear verbatim in its own task's imperative. The check is
+one-directional by design: it catches the declaration naming a path its own prose never mentions;
+it cannot catch the reverse — a path quietly dropped from the declaration while the prose still
+names it (the declaration narrowing away from the prose) — because prose is not a parseable list.
+The lint's own docstring states that same limit, in these same terms.
+
+**No committed artifact ships from #300.** A design-it-twice comparison
+(`.agent-work/300/DIT-COMPARISON.md`) considered a committed, diffable `CONTEXT_PROJECTION.json`
+alongside the run-local manifest; that was ruled out of this issue's scope. `scripts/context_manifest.py`
+therefore ships no CLI verb at all — the manifest is a JSON value a caller builds and, optionally,
+writes under `.agent-work/<work-id>/context/<step>.json` via `produce()`. A future drift check
+comparing canon against a committed artifact is a later issue's territory, not this substrate's.
+
+**Downstream, not yet resolved here.** The manifest is consumed, not produced, by whatever issue
+turns out to build on it — durability (`.agent-work/` is gitignored and destroyed by
+`git worktree remove`) and cardinality (one manifest per spine *step*, not per episode) are real
+open questions across that interface, stated explicitly in `.agent-work/300/OBLIGATIONS-301.md`.
+
 ## Evidence: gate on type/shape, not quality
 
 The engine does **not** judge whether work is good. A gate declares the **evidence types** required before it can close, and the engine checks **presence and minimal shape** only:

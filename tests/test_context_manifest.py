@@ -747,5 +747,59 @@ class Serialisation(unittest.TestCase):
         self.assertEqual(Path(p).as_posix(), ".agent-work/300/context/context.json")
 
 
+class EpisodeContextFieldShape(unittest.TestCase):
+    """The manifest must be assignable to an episode `context` field with **no
+    transformation** — a plain JSON value the caller can store as-is. This is a
+    test-after/inspection check: it exercises the real producer end to end and
+    makes the property explicit, rather than trusting it as an implied side
+    effect of the other tests."""
+
+    def test_produced_manifest_is_assignable_to_episode_context_field_untransformed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            work = base / ".agent-work"
+            (base / "doc.md").write_bytes(b"doctrine\n")
+            roots = {"skill": base, "repo": base, "durable": base}
+            cl = checklist(
+                [{"root": "repo", "path": "doc.md", "required": True},
+                 {"root": "repo", "path": "absent.md", "required": False}],
+                work_id="300",
+            )
+            path, manifest = cm.produce(cl, roots, work)
+
+            # No transformation required: assigning `manifest` to a JSON field is
+            # exactly json.loads(json.dumps(manifest)), and it must round-trip
+            # byte-for-byte -- not merely "close enough".
+            round_tripped = json.loads(json.dumps(manifest))
+            self.assertEqual(round_tripped, manifest)
+            # ...and the file actually on disk agrees with the in-memory value too.
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8")), manifest)
+
+            # Every value anywhere in the structure is a JSON-native type: no Path,
+            # no datetime, no set, nothing that would need a custom encoder to
+            # survive assignment into an episode record.
+            def assert_json_native(value):
+                if isinstance(value, dict):
+                    for key, sub in value.items():
+                        self.assertIsInstance(key, str)
+                        assert_json_native(sub)
+                elif isinstance(value, list):
+                    for item in value:
+                        assert_json_native(item)
+                else:
+                    self.assertIsInstance(value, (str, int, float, bool, type(None)))
+
+            assert_json_native(manifest)
+
+            # No absolute path in the manifest's informational content -- the part
+            # an episode record would actually key or compare on. (`run.roots` and
+            # `run.host.cwd` legitimately carry this environment's absolute paths;
+            # that is the declared, single exclusion set `cm.content()` strips —
+            # see test_no_absolute_root_path_appears_in_content above.)
+            rendered_content = cm.encode(cm.content(manifest))
+            self.assertNotIn(base.as_posix(), rendered_content)
+            self.assertNotIn(str(base), rendered_content)
+
+
 if __name__ == "__main__":
     unittest.main()
