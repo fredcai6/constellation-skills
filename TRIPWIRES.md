@@ -87,6 +87,35 @@ edit was made.
 asserting its **presence** ships alongside the tests asserting the dead prose's absence — the deletion
 is pinned in both directions.
 
+
+## T5 — the anchor change (added after PRE-B, pre-registered before it is made)
+
+**Changed:** `tasks.context.imperative` is re-anchored from *"Read the current map ... for the area the
+ask touches"* to **"Before you open any source file, resolve and read the map input."**
+
+**Why:** PRE-B measured five runs with verified Commander loads. Both pathless imperatives fired in every
+run and orientation moved not at all — `map_before_src` false on 4 of 4 runs that read source. The
+measured diagnosis: *"a map-first imperative anchored to a late artifact is not a map-first imperative."*
+The served plan imperative (`:40` at `74953936`) anchors to *"BEFORE authoring execute.json"*, which
+happens at the END of a run — so crawling fifty calls, then reading the map, then authoring the frame is
+**exact compliance**. Run #698 read source at call 25 and the map at call 57 and satisfied it.
+
+**Prediction — and this one I genuinely do not know the answer to.** Anchoring at `context` to *"before
+you open any source file"* is the **untested variable**. I predict it does **not**, on its own, move
+`map_before_src`, because it remains prose with no preventive enforcement and the corpus cannot own a
+`PreToolUse` hook. But I predict it is **strictly better positioned** than the late anchor, because
+`context` precedes `understand` and `plan` in the spine, so the instruction now sits before exploration
+rather than after it.
+
+**Fires if:** POST shows orientation unchanged AND the anchor is shown to be irrelevant to that (i.e.
+the late-vs-early anchor makes no difference), which would mean the anchor hypothesis is wrong rather
+than merely insufficient.
+
+**Distinguishing the two outcomes matters more than the outcome.** "Insufficient" (prose can't enforce
+ordering) and "irrelevant" (the anchor location doesn't matter) are different findings with different
+consequences, and POST must be able to tell them apart. If it cannot, that is a measurement gap to
+report, not a result to round off.
+
 ---
 
 ## Outcome recording

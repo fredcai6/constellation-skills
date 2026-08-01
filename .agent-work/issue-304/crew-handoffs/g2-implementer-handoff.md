@@ -89,9 +89,73 @@ mechanism, use it so the script cannot be shipped without whatever it needs.
   **applied-before-red** discipline (assert the substitution landed via a strict count delta; a
   non-matching anchor must raise a loud harness error, never be credited as a kill).
 
+
+## ADDED AFTER PRE-B LANDED — the anchor change. Read this first; it is the highest-value item in the gate.
+
+PRE-B captured five runs with **verified Commander loads**, so both pathless map-first imperatives
+**definitely fired** in every run. Orientation still moved **not at all**: `map_before_src` false on 4 of
+4 runs that read source, bootstrap orientation 0 of 5. Same shape as PRE-A under a different treatment.
+
+The measured diagnosis:
+
+> **"A map-first imperative anchored to a late artifact is not a map-first imperative."**
+
+The served plan imperative (`COMMANDER_SPINE.template.json:40` at `74953936`) says *"Map-first: BEFORE
+authoring execute.json, produce a mission frame from the current map."* **Authoring `execute.json`
+happens at the END of a long run.** So a run can crawl source for fifty calls, then read the map, then
+author the frame — and it has **complied exactly**. Run #698 read source at call 25 and the map at call
+57 and satisfied the instruction. The instruction is not ignored; **it is satisfied by a sequence it
+does not constrain.**
+
+### What you must do about it
+
+**Re-anchor the CONTEXT imperative to the act, not to the artifact.** In
+`COMMANDER_SPINE.template.json` `tasks.context.imperative`, the sentence that currently reads:
+
+> "Read the current map (packets, overlays, decision anchors) for the area the ask touches; this read is
+> the map-first input the mission frame and plan are built from."
+
+becomes an imperative anchored to **before you open any source file** — not "before authoring
+execute.json", and not a stronger adjective on the same anchor. Something of this shape, wording yours
+to sharpen:
+
+> **"Before you open any source file, resolve and read the map input:** run `map_orient.py orient --root
+> <repo-root> --work-id <work-id>`. On RESOLVED, read the entrypoint it names and the packets it routes
+> you to for the area the ask touches, and treat every later source read as **confirming** a frame the
+> map gave you rather than **building** one. On DEGRADED, record substitutes, the unmapped gap, and an
+> escalation before any source read — degraded is a declared reading, never a licence to start from
+> code."
+
+**Why this is the whole point:** `context` precedes `understand` and `plan` in the spine, so an
+instruction anchored there is anchored *before exploration*. The plan-step anchor is anchored *after* it.
+PRE-B has now measured the late-anchored form and shown it does not work. **Anchoring at context to
+"before you touch code" is the untested variable, and nothing in this epic has tested it.**
+
+Keep the plan-step `verify-frame` check — but know and record that **it inherits the late-anchor defect**:
+anchors-in-a-late-frame is compliance without sequence. It is a floor, not the fix.
+
+**Cite SERVED line numbers** (`:22` context, `:40` plan at `74953936`) in anything describing runtime
+behaviour. The repo copy has drifted to `:22`/`:48` (#344).
+
+## ALSO ADDED — a partial independent oracle for the degraded case (Admiral-offered, taken because cheap)
+
+The degraded check's declared weakness is that substitutes are **self-selected**: it verifies the author
+cited what the author declared. Close half of that without leaving the corpus.
+
+Add a **fixed, corpus-declared fallback search order** for the degraded case — `README.md`, `AGENTS.md`,
+a `docs/` index, `CLAUDE.md` — and have the receipt record **which of those actually resolved**. That
+half is verified by **filesystem existence**, an oracle the agent does not author.
+
+Agent-declared additions stay allowed but are **labelled unverified**, so the receipt distinguishes
+*"resolved from the known fallback set"* from *"the agent said so."* Test both labels.
+
+This does not make the degraded check sound — it converts part of it from self-attestation to an
+independent oracle. Say so honestly; do not describe it as closing the gap.
+
 ## Allowed scope
 
-`scripts/map_orient.py`, `skills/commander/templates/COMMANDER_SPINE.template.json`,
+`scripts/map_orient.py`, `skills/commander/templates/COMMANDER_SPINE.template.json` (including the
+`tasks.context.imperative` re-anchor above),
 `scripts/install_constellation.py`, `tests/test_map_orient.py`, `tests/test_mutation_floor.py`, and a new
 test file if you prefer to separate the wiring assertions.
 
