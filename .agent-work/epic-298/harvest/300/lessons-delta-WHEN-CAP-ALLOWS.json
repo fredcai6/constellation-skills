@@ -1,0 +1,35 @@
+{
+  "work_id": "300",
+  "tick": false,
+  "ops": [
+    {
+      "op": "add",
+      "id": "contract-review-and-cold-panel-catch-different-classes",
+      "scope": "commander",
+      "task_class": "review",
+      "statement": "A gate reviewer given a handoff checks CONFORMANCE TO THE CONTRACT; only a critic with no contract asks whether the contract was RIGHT. These catch disjoint defect classes, so a run that reviews every gate independently can still ship a broken acceptance test -- the reviewer had no reason to ask 'can this test actually fail?', because the handoff did not put that question in front of it. Practical consequence: for any gate whose deliverable is EVIDENCE (a determinism test, a lint, a measurement harness), the cold panel is not a redundant second opinion over the same ground, it is the only pass that interrogates the evidence's own validity -- and its most productive method is MUTATION: deliberately break the production code in a sandbox and count which mutations no test catches, because the surviving set IS the map of blindness.",
+      "grounding": ".agent-work/300/COLD_PANEL_DISPOSITION.md: the testability critic ran 45 deliberate mutations in a throwaway git worktree; 34 were killed and 11 SURVIVED. Two survivors were blocking defects in issue #300's single acceptance test -- the determinism test re-encoded both children's parsed artifacts with the PARENT's encoder so an environment-dependent encoder passed green, and the '/run is the exclusion set' guarantee was one-directional so a varying field added to content survived the whole suite. Both had already passed TWO independent reviewer rounds (one of which returned a correct BLOCK on a different, real defect), because both rounds reviewed conformance to a handoff that never asked whether the test could fail.",
+      "bank_reason": "One run, but an unusually clean natural experiment: the same change went through two contract-bound reviewer rounds and then a no-contract panel, and the panel found a defect class neither reviewer round could have been expected to reach. Re-observe on a second consequence-scaled run before promoting into the review-class doctrine in global-orchestrator.md -- specifically whether the disjointness holds when the gate's deliverable is CODE rather than EVIDENCE, where a contract-bound reviewer may already be sufficient.",
+      "note": "DESTINATION if confirmed: the 'Critical spec review' / review-class section of references/global-orchestrator.md, as the reason panel depth scales with consequence rather than being a bigger version of the same check. Retire on landing there."
+    },
+    {
+      "op": "add",
+      "id": "state-a-settle-condition-as-a-falsifiable-experiment",
+      "scope": "commander",
+      "task_class": "delegated-planning",
+      "statement": "When grading a decision `@grade: guess`, write the `settle:` clause as an EXPERIMENT A REVIEWER CAN RUN -- a concrete construction with a concrete outcome -- not as a judgement to be argued. The payoff is asymmetric: a falsifiable settle condition lets a reviewer disprove the guess with a command instead of debating taxonomy, and it converts a disagreement about categories into a measurement. The trap that comes with it: CHECK THAT THE HARNESS CAN ACTUALLY REACH THE FAILING CASE. A settle condition whose experiment is structurally unable to fail is worse than no grade at all, because the `guess` tag advertises an open question that was in fact quietly closed by an assumption stated elsewhere in the same brief.",
+      "grounding": "epic-298 #300 gate g5: the Commander graded a field's placement `guess` with settle condition 'if two checkouts at the same commit disagree on the field, it belongs in /run' -- and in the SAME gate imperative wrote 'both children are worktrees at the SAME commit and are equally dirty, so the field is identical across environments', which is the assumption that made the experiment unreachable. The reviewer built the excluded case (dirt confined to a file no declaration names), measured the disagreement, and settled it with a transcript rather than an argument. The reviewer named this as the gate's transferable lesson, above the three blind-test findings that preceded it: 'you stated the settle condition as a falsifiable experiment rather than a judgement, which is what let a reviewer disprove it with a command instead of arguing taxonomy.'",
+      "bank_reason": "One instance, but it cuts both ways in the same gate -- the falsifiable phrasing is what made the correction cheap, and the self-blinding clause is what made the correction necessary. Re-observe whether other `@grade: guess` settle clauses in this corpus are actually runnable before promoting into the decision-fixedness section of global-everyone.md.",
+      "note": "DESTINATION if confirmed: the 'Decision fixedness' section of references/global-everyone.md, beside the grammar for @grade tags. Retire on landing there."
+    },
+    {
+      "op": "add",
+      "id": "python-default-args-bind-at-def-time-so-shadowing-never-reaches-the-caller",
+      "scope": "handoff",
+      "task_class": "testing",
+      "statement": "A mutation/poison test that SHADOWS a module-level function does NOT reach a caller that bound that function as a DEFAULT ARGUMENT VALUE -- Python evaluates defaults once at `def` time, so the caller holds the original object forever. The mutation silently no-ops and the test reads GREEN, which looks exactly like 'the code is correct'. Callers that look it up at CALL time (module attribute access inside the body) are shadowable and behave as expected, so a poison framework can work perfectly for some seams and silently fail for others in the same file. Before trusting any negative result from a mutation harness, verify the mutation TOOK EFFECT -- assert the poisoned behaviour is observable, not merely installed.",
+      "grounding": "epic-298 #300 g5 review: the reviewer's first mutation run reported 'the test cannot see repo_rev' and it nearly filed a false blocker; the mutation had never taken effect, because `build_manifest(repo_state=default_repo_state)` binds the default at def time while the shipped poisons (`encode`, `content`) are call-time lookups and worked. It filed the trap as tc1, and the same trap then applied one round later and told it how to mutate correctly -- the lesson paid for itself within the same issue.",
+      "bank_reason": "One occurrence, but it produced a near-miss FALSE BLOCKER, which is the expensive direction of error, and the reviewer independently re-used it a round later. Re-observe on any other mutation-testing harness in this corpus before promoting into reviewer doctrine."
+    }
+  ]
+}

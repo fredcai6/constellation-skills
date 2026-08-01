@@ -1,0 +1,101 @@
+{
+  "work_id": "issue-87",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q3",
+    "q4"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load issue 87 items, verify each against current code state (OBE check). Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "issue 87 read; all 8 items verified live against current code (none OBE)",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Dormancy clock (item 6): which mechanism keys the dormancy counter, or defer?",
+      "imperative": "Ask: key dormancy to distinct work-ids, calendar days, or epic boundaries \u2014 or defer with reasoning. Recommend distinct work-ids.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Human: distinct work-ids. Tick dormancy once per distinct work-id (dedupe repeat invocations from same run); pair with not-before-adding-epoch guard so a lesson cannot age on ticks from the same date it was added/confirmed",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Attest both-lists collision (item 7): refuse-on-ambiguity fix or honest-null close?",
+      "imperative": "Ask: implement refuse-on-ambiguity in attest fallback, or document honest-null since p*/c* disjointness holds in all templates.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Human: honest-null close. Document p*/c* disjointness as the invariant; no code change",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Item 8 disposition: AGENT_FEEDBACK newest-on-top guard \u2014 fix or honest-null?",
+      "imperative": "Ask: no mechanical append path exists today (conditional on future blessing); document honest-null note or add guard now.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Human: honest-null + doc note. Record newest-on-top constraint in the s5.5 rewrite where a future write-through implementer will see it; no verifier change",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4": {
+      "id": "q4",
+      "title": "\u00a75.5 (item 3): rewrite to shipped durable-root reality, or mark rejected?",
+      "imperative": "Ask: rewrite \u00a75.5 to describe shipped durable-root + under-epic staging rule, or mark the sidecar proposal rejected/superseded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Human: rewrite s5.5 to shipped durable-root + under-epic staging rule, sidecar noted superseded; fold item-8 newest-on-top constraint note into the rewrite",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved",
+    "findings": [],
+    "summary": "All 8 issue-87 items live (none OBE). Scope: (1-5) five doc fixes in RECURSIVE_IMPROVEMENT_DESIGN.md and CONSTELLATION_OVERVIEW.md, with s5.5 rewritten to shipped durable-root+staging reality carrying the item-8 newest-on-top note; (6) dormancy clock keyed to distinct work-ids with a same-epoch guard, implemented in apply_lessons_delta.py; (7) attest both-lists closed honest-null, p*/c* disjointness documented as the invariant; (8) honest-null + doc note. Map revisit trigger: record only, no action."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

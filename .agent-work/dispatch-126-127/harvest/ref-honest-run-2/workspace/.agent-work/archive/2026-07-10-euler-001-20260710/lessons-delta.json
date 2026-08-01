@@ -1,0 +1,19 @@
+{
+  "work_id": "euler-001-20260710",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "python-module-form-for-postconditions",
+      "scope": "commander",
+      "task_class": "planning",
+      "statement": "Use python -m <tool> rather than bare <tool> in command postconditions",
+      "title": "Prefer python -m <tool> form in command postconditions",
+      "body": "When authoring command postconditions for Python tools (pytest, black, mypy, etc.), use `python -m <tool>` rather than bare `<tool>` to avoid PATH availability issues across environments.\n\n**Why**: Command postconditions run under the engine's POSIX shell, where tool executables may not be in PATH even when `python -m <tool>` works. This manifests as exit code 127 (command not found) forcing manual verification and human waivers.\n\n**How to apply**: In execute.json gate postconditions, write `python -m pytest` not `pytest`, `python -m black` not `black`, etc.\n\n**Grounding**: euler-001-20260710 g1-integrate c1 waived (evidence e-g1-integrate-5) after `pytest` command failed with exit 127 in POSIX shell (evidence e-g1-integrate-1, e-g1-integrate-3), while manual `python -m pytest` succeeded.",
+      "target": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "tags": ["command-postcondition", "cross-platform", "python-tools"],
+      "authority": "commander-euler-001-20260710",
+      "grounding": ".agent-work/euler-001-20260710/execute.json:162-175 (g1-integrate c1 waived)"
+    }
+  ]
+}

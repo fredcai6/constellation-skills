@@ -1,0 +1,24 @@
+{
+  "work_id": "228",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "windows-subprocess-env-does-not-shadow-path-resolution",
+      "scope": "project",
+      "task_class": "testing / windows subprocess probing",
+      "statement": "On Windows, passing a restricted env={'PATH': ...} into subprocess.run() does NOT shadow which executable an unqualified command name resolves to -- CreateProcess resolves the executable name against the CALLING process's real environment, not the child env= dict. A test that wants to genuinely make a candidate executable unresolvable must mutate the ambient os.environ['PATH'] directly (or monkeypatch the subprocess.run call boundary itself), not pass a restricted env= override -- the latter looks correct but silently passes even when the probe logic is completely broken.",
+      "grounding": "g1-implementer-result.md Evidence section (issue #228): two pasted `py -c` transcripts empirically comparing env={'PATH': d} (py still resolves, returncode 0) against mutating os.environ['PATH'] directly (py raises FileNotFoundError as intended); scripts/install_constellation.py's probe_host_interpreter + tests/test_install_constellation.py::InterpreterProbeTests::test_probe_falls_through_to_next_candidate_when_py_is_unresolvable built on this finding.",
+      "bank_reason": "Single occurrence so far, discovered empirically on one host/Windows build during this issue. Banking to see whether another Windows subprocess-probing surface added later in this repo hits the same trap before promoting it to a doctrine/comment note (per the implementer's own Workflow Feedback: 'worth a short doctrine or comment note if another interpreter-probing surface gets added later')."
+    },
+    {
+      "op": "add",
+      "id": "checklist-engine-from-child-relative-path-and-gated-vs-survey",
+      "scope": "constellation",
+      "task_class": "commander / checklist engine gate-execution",
+      "statement": "checklist_engine.py's `advance <gate> --from-child <path>` (1) refused a path to the child checklist given relative to cwd, only accepting an absolute path, unlike every other engine verb used in this run; (2) only works when the child checklist is a SURVEY type (it has a `consolidation` object to attach as review-result) -- attempting it against a GATED-type child (e.g. execute.json, which has no consolidate step) refuses with 'has no consolidation yet', forcing a manual attest+advance instead. Neither behavior is documented in --help or the gate-execution doctrine text.",
+      "grounding": "This run (issue #228, continuation commander): `advance g1-review --from-child .agent-work/228/g1-review/review.json` refused ('child checklist ... not found') until given the absolute path `C:/Programs/constellation-wt-228/.agent-work/228/g1-review/review.json`; `advance execute --from-child .agent-work/228/execute.json` (a gated-type checklist) refused with 'child ... has no consolidation yet' regardless of path form, requiring a plain `attest execute.c1` + `advance execute` instead.",
+      "bank_reason": "Single occurrence so far, one continuation-commander run. Banking to see whether this trips up another Commander (especially another continuation/takeover run needing --from-child) before proposing a checklist_engine.py fix -- that file is fenced from me this wave (issue #227 owns it)."
+    }
+  ]
+}

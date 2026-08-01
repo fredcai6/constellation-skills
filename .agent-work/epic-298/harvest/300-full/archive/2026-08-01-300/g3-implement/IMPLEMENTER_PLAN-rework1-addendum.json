@@ -1,0 +1,164 @@
+{
+  "work_id": "300-g3-implement-rework1-addendum",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-trailing-boundary"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load addendum scope",
+      "imperative": "Read commander-300's addendum message: close the trailing half of the path-boundary check, symmetric with the existing leading half, because the reviewer's defect class (declared path matching a DIFFERENT longer file) is caught from either end. Scope: make _appears_at_path_boundary bounded at both ends; watch the real prose's trailing punctuation (comma, period-ending-sentence, closing backtick/paren, whitespace, end-of-string) so a naive '.' -is-always-a-path-char rule does not break the shipped template; add trailing-reject + trailing-legitimate fixtures; regression-check the shipped spine template; append (not replace) evidence to IMPLEMENTER_RESULT-rework1.md. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "addendum scope understood: symmetric trailing boundary, watch '.' ambiguity, spine regression is the design arbiter",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Addendum scope: symmetric trailing boundary; '.' disambiguated by what follows it; spine regression is the design arbiter; append not replace result."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-trailing-boundary": {
+      "id": "m1-trailing-boundary",
+      "title": "Make the path-boundary check symmetric (trailing side) and prove it",
+      "imperative": "In scripts/verify_context_declaration.py, extend _appears_at_path_boundary so a match also requires the character AFTER the match not to continue the path -- except that a trailing '.' must be disambiguated: '.' followed by an alnum char is an extension continuation (reject), '.' followed by anything else (or end-of-string) is sentence punctuation (accept). Add fixtures: 'boundary_trailing_rejected' (declared X.md, prose only has X.md.bak -> must FAIL) and 'boundary_trailing_legitimate_accepted' (paths ending in a sentence period, a comma, a closing backtick, a closing paren, and end-of-string -> must all PASS), with matching tests. Capture a before/after transcript for the trailing case. Re-run the mandatory spine regression check. Attest c1 before running the GREEN checks.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "addendum scope loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "addendum scope loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before/after transcript captured for the trailing case; spine regression re-verified -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Before/after transcript captured for trailing case (docs/agents/GLOSSARY.md vs docs/agents/GLOSSARY.md.bak: exit 0 -> exit 1); spine regression re-verified exit 0."
+        },
+        {
+          "id": "c2",
+          "statement": "lint test suite (with new trailing fixtures) passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_declaration_lint.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-trailing-boundary-1"
+        },
+        {
+          "id": "c3",
+          "statement": "shipped COMMANDER_SPINE.template.json still lints clean under the symmetric boundary rule",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-300 && python scripts/verify_context_declaration.py skills/commander/templates/COMMANDER_SPINE.template.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-trailing-boundary-2"
+        },
+        {
+          "id": "c4",
+          "statement": "full suite + skip guard still pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-300 && python -m pytest tests/ -q --junitxml=junit-report.xml && python scripts/verify_skip_guard.py junit-report.xml && rm -f junit-report.xml"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-trailing-boundary-3"
+        }
+      ],
+      "constraints": [
+        "nothing else changes; do not revisit anything already verified sound",
+        "append to IMPLEMENTER_RESULT-rework1.md, do not replace it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-trailing-boundary-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_declaration_lint.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-trailing-boundary-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-300 && python scripts/verify_context_declaration.py skills/commander/templates/COMMANDER_SPINE.template.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-trailing-boundary-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-300 && python -m pytest tests/ -q --junitxml=junit-report.xml && python scripts/verify_skip_guard.py junit-report.xml && rm -f junit-report.xml",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-300-addendum-1785601799",
+    "status": "released",
+    "claimed_at": "2026-08-01T16:30:00.028317+00:00",
+    "last_heartbeat": "2026-08-01T16:34:00.375920+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T16:34:52.550121+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Addendum scope confirmed from commander-300's message: extend the boundary check to the trailing side, disambiguate '.', add trailing fixtures, re-verify spine regression, append to the existing result file.",
+      "mechanical": false,
+      "ts": "2026-08-01T16:30:07.914425+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-trailing-boundary",
+      "why": "Symmetric trailing boundary added, disambiguating '.' by the character past it; 2 new fixtures + 2 new tests; suffix-trailing fixture flips 0->1; spine regression stays clean (0 offenders); full suite 1226 passed (+2), 2 skipped unchanged, skip guard ok.",
+      "mechanical": false,
+      "ts": "2026-08-01T16:34:00.375887+00:00"
+    }
+  ]
+}

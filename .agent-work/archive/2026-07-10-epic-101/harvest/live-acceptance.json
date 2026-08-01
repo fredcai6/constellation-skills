@@ -1,0 +1,10 @@
+{
+  "status": "INCONCLUSIVE",
+  "exit_code": 2,
+  "completed": 1,
+  "passed": 0,
+  "fenced": 4,
+  "corpus_id": "sha256:604bf53ef4afb6a229c55f8ddec5b4d91b79d0f36f58cabfa1135c49b68c6ce6",
+  "source_commit": "2350a959386751dca0858f3af4f520b8340f7f1d",
+  "n_of_m": "regression-vs-variance smoke, not a statistical guarantee"
+}

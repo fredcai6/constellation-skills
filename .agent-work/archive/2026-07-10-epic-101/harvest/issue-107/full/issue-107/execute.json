@@ -1,0 +1,353 @@
+{
+  "work_id": "issue-107",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Baseline context loaded at spine context step (skill-source repo: no docs/agents/ overlay; doctrine read from skills/_shared/global-orchestrator.md + global-everyone.md; structural record = install_constellation.py bundle maps + SKILL_INDEX + skills tree). Frozen plan intent + scope confirmed against LAUNCH_ORDER-issue-107 and mission-frame.md. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + frozen plan intent/scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execution context loaded; frozen plan intent+scope confirmed vs launch order + mission frame"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1": {
+      "id": "g1",
+      "title": "Doctrine home + diet + human entry (reasoning gate)",
+      "imperative": "REASONING GATE (crew-waiver: doc restructure, full context held; launch order mandates inspection-attestation for doc gates, not crew/test proxies). Author skills/commander/references/commander-core.md = the full commander role doctrine from the POST-#108 SKILL.md, rewritten mode-neutral against 'your principal' (not 'the human'); >100 lines carries a TOC. Author skills/commander/references/crew-dispatch.md = the diet move: the 'Never hand-launch a crew' + 'Crew backend (CLI vs Agent-tool harness)' paragraphs, history-swept (drop meta-asides, PR-number/self-referential 'gap this closes' lines); the core keeps a one-line pointer to it. Rewrite skills/commander/SKILL.md to a thin HUMAN entry: frontmatter description (third-person, what+when, exclusion clause 'not for delegated/launch-order dispatch \u2014 for that use constellation-commander-delegated'), live-human principal binding (surface decisions; ask and wait; human is top tier), pointer into references/commander-core.md. Apply the history-to-current-truth sweep to all commander prose rewritten. Do NOT touch templates/ or _shared/. Attest c1 with quoted before/after word counts (command-derived) + grep showing the moved paragraphs absent from SKILL.md/core and present in crew-dispatch.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "core + crew-dispatch references authored, commander/SKILL.md is a thin human entry, diet move verified by grep, before/after word counts recorded; suite still green (no new skill dir yet)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "core+crew-dispatch authored; SKILL.md thin human entry (2452->254 words, command-derived); crew paragraphs absent from SKILL.md/core (grep 0/0), present in crew-dispatch.md (grep 1); 0 skill-dir tokens in refs; retired sigs absent from SKILL.md; full suite green 444 passed/2 skipped"
+        }
+      ],
+      "constraints": [
+        "core name != global-*.md",
+        "templates and _shared untouched",
+        "no retired-doctrine signatures reintroduced into any SKILL.md body",
+        "history-to-current-truth sweep applied",
+        "core/crew-dispatch prose carries NO <skill-dir>/<*-skill-dir> tokens (critic #8 \u2014 they resolve to commander's dir for every reader)"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/SKILL.md \u2014 file",
+          "skills/commander/references/commander-core.md \u2014 new file",
+          "skills/commander/references/crew-dispatch.md \u2014 new file"
+        ],
+        "capability": [
+          "commander-run doctrine \u2014 relocated to single core"
+        ],
+        "constraint": [
+          "core != global-*.md glob",
+          "_shared/ + templates/ untouched",
+          "green-at-boundary: no new skill dir this gate"
+        ],
+        "decision": [
+          "entry-only-over-core (ratified epic #101)"
+        ],
+        "evidence": [
+          "grep: moved paragraphs absent from SKILL.md, present in crew-dispatch.md; word counts command-derived"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Delegated skill + install wiring + index + tests + admiral line: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer crew via scripts/run_crew.py --backend external + --verify-result (Agent-tool harness). Task: create skills/commander-delegated/SKILL.md (thin delegated entry: description with 'do NOT use when a human is driving' + admiral exclusion 'runs ONE issue under a frozen LAUNCH_ORDER; for an EPIC use constellation-admiral'; frozen-principal binding cite-and-proceed/gaps-go-up; prose pointer into the constellation-commander skill's bundled references/commander-core.md and constellation-commander's templates/); wire commander-delegated into install_constellation.py: OMIT it from SKILL_SCRIPT_BUNDLES entirely (critic #6 \u2014 get() defaults to (); it ships no scripts of its own and borrows commander's), add it to SKILL_REFERENCE_BUNDLES (_GLOBAL_ORCHESTRATOR); add SKILL_INDEX.md entry; update the ONE test roster SKILL_NAMES (critic #7 \u2014 there is no second list; SKILL_NAMES feeds both full-equality asserts incl. test_shared_reference_dir_is_not_installed_as_a_skill) + add per-skill install tests (skill installs; gets global-orchestrator+windows bundle; core-pointer test asserts commander-delegated SKILL.md contains the literal relative path AND that commander's installed references/commander-core.md exists \u2014 existence + path-literal, NOT behavioral resolution, per critic #3); make the ONE admiral SKILL.md frontmatter description edit if the commander-delegated exclusion needs the admiral side (flag loudly). The delegated SKILL.md names its co-install dependency on constellation-commander for core+templates (critic #2, workbench-engine precedent). Suite must be green at gate close. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 doctrine home exists (core reference to point at)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 core reference exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "prose-pointer precedent (workbench engine), not a cross-skill token",
+        "no new global-*.md filename",
+        "commander-delegated ships no templates/scripts of its own",
+        "admiral: ONLY the description line, flagged"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander-delegated/SKILL.md \u2014 new",
+          "scripts/install_constellation.py \u2014 bundle maps",
+          "SKILL_INDEX.md",
+          "tests/test_install_constellation.py \u2014 SKILL_NAMES",
+          "skills/admiral/SKILL.md \u2014 description line only"
+        ],
+        "capability": [
+          "skill-install/bundle-composition",
+          "skill-selection (confusable pair)"
+        ],
+        "constraint": [
+          "bundle-glob tests stay green",
+          "green-at-boundary: dir+wiring+tests co-land"
+        ],
+        "decision": [
+          "delegated entry name = constellation-commander-delegated"
+        ],
+        "evidence": [
+          "pytest tests/test_install_constellation.py green"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-107/g2-IMPLEMENTER_RESULT.md",
+            "summary": "delegated skill + install wiring + index + tests + admiral line; reworded binding to pointer; full suite green 446 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Delegated skill + install wiring: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and IMPLEMENTER_RESULT and dispatch a constellation-reviewer crew via scripts/run_crew.py --backend external + --verify-result. Verify: commander-delegated installs and gets its buckets; core+templates reach it by the prose pointer (no dangling/tokenized ref); SKILL_INDEX.md entry present + accurate (critic #4 \u2014 unpinned by tests, so the reviewer owns it); bundle-glob + SKILL_NAMES tests green; per-skill tests real (falsifiable); admiral edit is description-line only; descriptions third-person with the confusable-pair exclusion both ways. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received + reconciled green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-107/g2-REVIEW_RESULT.md",
+            "summary": "independent verify: suite green 446, both new tests bite, all criteria met, scope clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Delegated skill + install wiring: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the pytest verification yourself, confirm fresh IMPLEMENTER_RESULT + reproducing evidence, advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates; harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "FULL test suite green with commander-delegated wired (critic #1: boundary check is the whole suite, not just the install file)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-107/g2-REVIEW_RESULT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "Fresh-context selection check (reasoning gate)",
+      "imperative": "REASONING GATE (crew-waiver: acceptance evidence is a cold-agent transcript, not a code change). Spawn a fresh subagent (one tier down) given ONLY all constellation skills' frontmatter descriptions (read from THIS worktree) and three invocation contexts: (a) a human driving one issue; (b) a LAUNCH_ORDER delegated dispatch of one issue; (c) an epic to run. It must name constellation-commander / constellation-commander-delegated / constellation-admiral respectively, with no other context. Paste the transcript excerpt as c1 evidence + verdict. If selection fails, iterate the descriptions (g1/g2 files) and re-run; if it keeps failing after honest iteration, ship with the failure documented (honest-null clause). Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both entry descriptions finalized (g2 done)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 done: both entry descriptions finalized"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cold-agent selection check run; transcript + verdict recorded (pass, or documented honest-null after iteration)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "cold selection check PASS (haiku, one tier down): a->commander, b->commander-delegated, c->admiral all correct; transcript in .agent-work/issue-107/g3-selection-check.md; honest-null not triggered"
+        }
+      ],
+      "constraints": [
+        "descriptions read from worktree, not installed copies",
+        "cold agent one tier down"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/*/SKILL.md frontmatter descriptions"
+        ],
+        "capability": [
+          "skill-selection (confusable pair commander-delegated \u2194 admiral)"
+        ],
+        "constraint": [
+          "selection must work one tier down"
+        ],
+        "decision": [],
+        "evidence": [
+          "cold-agent transcript naming the 3 skills correctly"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,68 @@
+{
+  "work_id": "explore-design-thrust",
+  "cycle": "1",
+  "flavor": "shotgun",
+  "type": "survey",
+  "items": [
+    "c0-frame",
+    "q1",
+    "x1"
+  ],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame the cycle",
+      "imperative": "Set the cycle flavor (shotgun | compare | refine) in the top-level flavor field; the human picks, you may recommend. Shotgun: pure divergence, a deliberately challenging idea count (default ~20, human-set) as cheap one-liners, wild entries sanctioned, light excursions only. Compare: 2-5 candidates developed seriously with trade-offs, recommendation-led, excursions per candidate where earned. Refine: harden one direction, chase open threads, test load-bearing assumptions, tighten interfaces in deep-module terms. Seed the FIRST cycle from templates/EXPLORER_STARTING_QUESTIONS.template.md (the itch; for whom; what does done feel like; what already exists; what would make this pointless); later cycles seed from the ideas board's open threads. Record pass when framed.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "flavor=shotgun, human-picked; idea count default ~20; seeds = opening statement + still-open starting questions",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Starting questions still open: what does done feel like; kill condition; one thrust or several",
+      "imperative": "Ask the human, one at a time with a recommended answer: (a) what does done feel like \u2014 the world after this is handled; (b) what would make this pointless \u2014 the kill condition; (c) is the prior belief one unifying thrust or several separable ones. The itch is already answered in the opening statement; 'what exists' is partially answered by the issue board. Record answers onto the ideas board (the point / open threads), not into a spec.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Q(a) done-feels-like: slice-wise forward solve + deliberate step-back pass (arch refactor review, test honesty); slices are a tool not dogma; context mgmt is part of step-back. Q(b) kill: none global \u2014 'grand unifying theory is a fiction, just a viewpoint'; unification is an opportunistic synergy lens; each concern stands alone. Q(c) folded into (a)/(b): loosely-correlated set, synergies taken where real.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x1": {
+      "id": "x1",
+      "title": "<excursion dispatch: one named question \u2014 TBD after framing>",
+      "imperative": "An excursion answering ONE named question, recorded as an EXCURSION_BRIEF on the ideas board before dispatch. Candidate excursions surfaced at framing: (1) research \u2014 measure what agents actually read per run (transcript evidence for the over-read concern); (2) research \u2014 watch/summarize the referenced Pocock video for #224 alignment. Skip this item if the cycle needs no excursion. Record the excursion's scoped verdict as the finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both cycle-1 excursions landed and registry-verified. x2 (Pocock/#224): July wayfinder pivot ~80% already embodied, 3 deltas -> ideas 26-28 (task-type excursion, commander prototype off-ramp, prototype-as-primary-source). x1 (over-read): ~8.8k tokens/run scaffolding read in engine-driven runs; worst reads caused by engine answerability gaps (terse REFUSED, truncated current --verbose) incl. one doctrine-violating hand-edit of spine.json; scoped to 6 recent transcripts.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": null,
+    "findings": [],
+    "summary": "Cycle 1 (shotgun) consolidated: 28 ideas -> 4 packages (A engine-answerability quick-wins; B step-back phase w/ scout; C slice-wise planning; D conductor-inversion arc). Culls: 24 (no mechanism), 26 parked, 27 reframed cheap. Human endorsements: 25 regenerate-don't-reread strong; D named as the core. Board updated."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

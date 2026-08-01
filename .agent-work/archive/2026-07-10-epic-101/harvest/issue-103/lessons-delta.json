@@ -1,0 +1,32 @@
+{
+  "work_id": "issue-103",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "doc-diet-preservation-grep",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "For a doc-diet or register-rewrite gate, a structural test suite does NOT guard prose invariants (pointer-name presence, forbidden-signature absence, meaning-preservation). Make each of those an explicit per-gate reviewer grep and Commander re-grep; never read suite-green as assurance for them.",
+      "grounding": ".agent-work/issue-103/plan-critic-findings.md finding #6; per-gate reviewer greps in g1-g4 review-results",
+      "target": "skills/commander/templates/REVIEWER_HANDOFF.template.md"
+    },
+    {
+      "op": "add",
+      "id": "register-diet-handoff-recipe",
+      "scope": "handoff",
+      "task_class": "general-workflow",
+      "statement": "A meaning-preserving doc/register diet handoff carries three explicit lists: exact BEFORE/AFTER for each edit, a MUST-SURVIVE operative-fact list, and a forbidden-signature list. This makes register-sensitive edits deterministic for the implementer and independently verifiable for the reviewer.",
+      "grounding": "crew workflow feedback across g1/g3 (register-sensitive gates); .agent-work/issue-103/crew-handoffs/g1-implement-handoff.md",
+      "target": "skills/commander/templates/IMPLEMENTER_HANDOFF.template.md"
+    },
+    {
+      "op": "add",
+      "id": "dogfood-skill-dir-resolution",
+      "scope": "project",
+      "task_class": "general-workflow",
+      "statement": "When dogfooding the commander spine on this source repo, instantiate the work area with --skill-dir <repo-root> so the spine's <commander-skill-dir>/scripts/ command postconditions resolve to the vendored ./scripts/; drive template paths from skills/commander/templates/ by judgment (scripts live at repo root, templates under the skill dir).",
+      "grounding": "issue-103 init step: init_work_area.py --skill-dir C:/Programs/constellation-wt-103 resolved command paths to scripts/; verified via spine.json command greps"
+    }
+  ]
+}

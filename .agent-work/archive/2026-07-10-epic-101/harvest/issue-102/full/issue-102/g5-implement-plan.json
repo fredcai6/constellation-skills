@@ -1,0 +1,142 @@
+{
+  "work_id": "issue-102-g5-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-move6",
+    "m2-move7"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine + handoff + the four carrier files (global-orchestrator.md, commander/SKILL.md, admiral/SKILL.md, fleet-doctrine.md). Verify handoff complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context+handoff loaded, handoff complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-move6": {
+      "id": "m1-move6",
+      "title": "Move 6 \u2014 unchanged-tree shortcut to global-orchestrator",
+      "imperative": "Append a canonical 'Unchanged-tree shortcut' subsection to global-orchestrator.md carrying the shared evidence contract. Reduce commander SKILL.md and admiral SKILL.md at the unchanged-tree passage to a slug-cited pointer + genuine role tail (commander: engine-postcondition clarification; admiral: wave-batching application). Inspection-only; keep suite green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "global-orchestrator carries the shared evidence contract; both carriers reduced to pointer+tail; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-move6-1"
+        }
+      ],
+      "constraints": [
+        "append-only into global-orchestrator",
+        "cite by slug not section-title",
+        "touch only unchanged-tree passage"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-move6-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-move7": {
+      "id": "m2-move7",
+      "title": "Move 7 \u2014 crew-idle adjudication to global-orchestrator",
+      "imperative": "Append a canonical crew-idle-adjudication subsection to global-orchestrator.md. Reduce commander SKILL.md, admiral SKILL.md, and fleet-doctrine.md 'Adjudication invariants' bullet to pointer + role tail; fleet-doctrine keeps ONLY its epic-specific delta + pointer. Inspection-only; keep suite green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "move 6 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "move 6 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "global-orchestrator carries shared crew-idle rule; three carriers reduced to pointer+tail; fleet-doctrine keeps epic delta only; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-move7-1"
+        }
+      ],
+      "constraints": [
+        "append-only into global-orchestrator",
+        "cite by slug not section-title",
+        "fleet-doctrine keeps epic delta + pointer only",
+        "touch only crew-idle passages"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-move7-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

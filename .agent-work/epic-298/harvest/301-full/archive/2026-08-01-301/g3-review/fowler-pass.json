@@ -1,0 +1,64 @@
+{
+  "work_id": "301-g3",
+  "diff_ref": "scripts/query_episodes.py (new, 431 lines), tests/test_episode_store.py (24 -> 65 tests), scripts/apply_episode_delta.py (one authorized line: artifact-ref .strip() on create)",
+  "repo_standards_ref": "docs/EPISODE_STORE.md sections 7-9 (the frozen contract, incl. the five-seam table), C:/Users/fredc/.claude/skills/constellation-reviewer/references/global-crew.md, references/global-everyone.md (no docs/agents/CREW_CONTEXT.md or GLOSSARY.md exists in this worktree)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "test_episode_committed_in_one_worktree_is_retrievable_from_another is ~80 lines; main() is ~64 (mostly argparse construction plus one dispatch).",
+      "override": {
+        "repo_standard": "global-crew.md 'The deliverable': required evidence by change type -- a behavior change needs test/check output; plus the g3 handoff's C3, which requires the absent -> still-absent-after-local-commit -> present-only-after-merge transition to be OBSERVED rather than assumed.",
+        "reason": "The length IS the assertion. The test's value comes from one uninterrupted causal sequence observed in a single fixture: two real linked worktrees, a query before the episode exists, a local commit, a query proving it is STILL absent, the merge, then a query proving it arrived. Splitting it into per-phase tests would either duplicate the expensive git setup or force shared mutable state between tests, and in both cases the transition -- the only thing that distinguishes a real git boundary from a same-directory simulation -- stops being observed within one test. I verified the length is load-bearing by aliasing the reader worktree to the writer's: the still-absent assertion in the MIDDLE of that long method is what catches the simulation, so it cannot be dropped. main() is argparse boilerplate with a flat dispatch; extracting it would add indirection without reducing anything a reader must hold."
+      }
+    },
+    {"smell": "large-class", "verdict": "absent", "finding": "query_episodes.py is one cohesive module: four primitives, one serializer, one CLI. The test file is many small focused TestCases, one per property, each under 100 lines.", "override": null},
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The unknown-field rejection is written twice with a byte-identical message: field_values() at lines 194-196 and select_episodes() at lines 216-219 both build f\"{field!r} is not a selectable field (selectable: {', '.join(SELECTABLE_FIELDS)})\". Two copies of one contract message can drift, and the second copy exists only because select_episodes wants to raise BEFORE the scan. Extract a _require_selectable_field(field) helper and call it from both. Minor, observation-grade.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "query_episodes.py reaches into the writer module for parse_episode, store_root, resolve_episode_path, iter_episode_ids, AGENT_SUPPLIED_KINDS and EpisodeDeltaError -- almost every non-trivial operation is somebody else's method.",
+      "override": {
+        "repo_standard": "EPISODE_STORE.md section 7, 'The full seam set, gathered in one place': five concerns route through exactly one named mechanism each, and gates g1-g3 must call each BY NAME, never inline the path, glob, grep or move it stands for. Section 8 repeats it for every primitive.",
+        "reason": "The envy is the contract, not an accident. Moving any of this behavior into query_episodes.py is precisely the inlining the seam table forbids, because it is what would turn g4's layout binding from an adapter swap into a retrieval rewrite -- the failure two g1 review rounds were spent closing. I confirmed the discipline is enforced rather than merely intended: inlining a glob plus a status check into enumerate_episode_ids turned three tests red. The correct read of the deep-module vocabulary here is that the writer OWNS the grammar and the seams and retrieval is a client of that interface, which is the shape doctrine asks for."
+      }
+    },
+    {"smell": "data-clumps", "verdict": "absent", "finding": "(root, field, values) and (root, episode_id) recur, but each is at most three arguments and no subset travels together often enough to earn an object. No clump.", "override": null},
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "_join_key_values() encodes the composite role+spine-step key as a NUL-joined string, f\"{episode.role}\\x00{episode.spine_step}\", inside a tuple that is already a tuple. The sentinel exists only to keep two values from colliding when concatenated -- a nested tuple (\"role+spine-step\", (role, spine_step)) needs no sentinel, is directly readable in a failure message, and cannot be defeated by a value that somehow contains the separator. Cosmetic today (the writer rejects control characters), so observation-grade, but it is stringly-typed composite-key handling where the language already has the right type.",
+      "override": null
+    },
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No function in the diff takes more than three parameters.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The opposite is true by design and demonstrated: flipping _LAYOUT_ADAPTER between Option A and Option B changes on-disk layout while every retrieval answer stays identical, so g4's binding touches four adapters in one file rather than scattering across retrieval.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "query_episodes.py changes for exactly one reason (retrieval). The CLI and the serializer are thin surfaces over the same four primitives, not independent axes of change.", "override": null},
+    {
+      "smell": "message-chains",
+      "verdict": "overridden",
+      "finding": "writer().parse_episode(...), writer().resolve_episode_path(...), writer().AGENT_SUPPLIED_KINDS and similar appear roughly ten times -- a repeated one-hop accessor call rather than a direct import.",
+      "override": {
+        "repo_standard": "global-everyone.md 'Universal posture': one canonical path, fail visibly, no hidden fallback -- the module must never be operating on a second, divergent copy of the grammar.",
+        "reason": "It is one hop, not a train wreck, and the hop is what buys the canonical-path guarantee: writer() re-resolves sys.modules on every call and reuses a caller's already-imported writer object, so a test (or a harness) that reloads the writer to flip _LAYOUT_ADAPTER is guaranteed to be flipping the SAME module retrieval reads. Binding the module once at import is exactly what would silently create the second copy. The reason is documented at the function, and the layout-flip test depends on the behavior, so this is a stated requirement rather than a chain that grew."
+      }
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "JOIN_KEYS = (\"artifact-ref\", \"role+spine-step\") at line 258 is DEAD: nothing reads it. _join_key_values() hardcodes both keys independently, and JOIN_KEYS survives only as a name inside neighbours()'s docstring, which claims the answer is 'a union over all of JOIN_KEYS'. So the module's own completeness claim is stated against a constant that has no mechanical relationship to the code implementing it -- add a third join key to _join_key_values and forget JOIN_KEYS (or vice versa) and nothing anywhere notices. It should either be iterated by _join_key_values or deleted; a constant that only documentation reads is the drift hazard this store is otherwise careful about. Observation-grade now, a real hazard when #308 wants to extend the join set.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The module is comment-dense (docstrings outweigh code), which is right for a file whose job is to carry a frozen contract's obligations forward to g4 -- the WHY genuinely is not inferable from the code. But two comments have already drifted from what the code does, which is the deodorant failure mode arriving on schedule: (1) select_episodes()'s docstring says the field name is 'validated once, up front, against the FIRST episode scanned -- and, when the store is empty, still validated below', while the code actually validates against _FIELD_READERS before the loop, unconditionally (the code is BETTER than the comment); (2) tests/test_episode_store.py's naive_select_dict_collapse docstring says it reads 'each episode's ## Mechanical block into a dict', while the code folds every '- key: value' line in the whole file. Neither changes behavior; both should be corrected before they are read as the contract.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

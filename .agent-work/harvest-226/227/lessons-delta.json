@@ -1,0 +1,35 @@
+{
+  "work_id": "issue-227",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "execute-the-advice-a-test-asserts-on",
+      "scope": "project",
+      "task_class": "test-authoring",
+      "statement": "When a change's deliverable is GENERATED ADVICE — a hint, recovery line, or next-step suggestion naming a runnable command — the test must EXECUTE that advice and assert it does not refuse, over fixtures parameterized on every dimension the advice depends on. String-matching the rendered text is not evidence. In issue-227 gate g3 this failure recurred FOUR times with one root cause: the fixtures could not express the failing state. Single-task fixtures made a non-active gate structurally impossible, and a guard gate hardcoded to 'pending' hid the two active-gate statuses where the advice was wrong, so each fix was validated against a world where its own bug could not exist. The Commander's independent 640-combination sweep also came back clean because it shared the fixtures' blind spot; only a multi-gate fixture exposed it.",
+      "grounding": ".agent-work/issue-227/results/g3-review-result.md (three BLOCK verdicts across rework rounds 1-3) + .agent-work/issue-227/execute.json g3-implement rework_count=3/3 + .agent-work/epic-226/verdicts/commander-227.md section 3",
+      "bank_reason": "The four data points are all one surface (checklist_engine.py recovery lines), so the SCOPE is genuinely open: re-observe on a different generated-advice surface to learn whether this generalizes to any generated artifact, or specifically to advice that names runnable commands. That distinction decides whether the doctrine line belongs in crew test-authoring guidance broadly or only where a test asserts on emitted commands."
+    },
+    {
+      "op": "defer",
+      "id": "execute-the-advice-a-test-asserts-on",
+      "reason": "needs human — the fix target is project doctrine (crew test-authoring guidance, a .md edit), and per the feedback step a doctrine apply carries authority=human; a delegated Commander does not self-apply doctrine. My launch order additionally forbids any doctrine edit beyond item 6's two named riders, making this a float. Applied THIS run at the code and structural-record level instead (RecoveryRunnabilityAudit + fixtures parameterized over status and position + a standing-hazard note in docs/CHECKLIST_ENGINE_DESIGN.md), so the mitigation is live where it bites; only the generalized doctrine line awaits a human ruling. Surfaced to the Admiral in commander-227.md section 7."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-launch-order-claims-against-code",
+      "grounding": ".agent-work/epic-226/verdicts/commander-227.md section 1 — third data point. Item 1's headline 'full imperative verbatim (never elided)' was ALREADY TRUE at HEAD: current() had no slicing, textwrap, or ellipsis in its render path, and INV-2 purity already held because current() never called _check_condition. The genuine gap was the unnamed sibling — the conditions block. Verified by grep BEFORE planning per PR-7, which redirected the gate plan away from work that did not need doing."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-harness-field-and-drive-real-writer",
+      "grounding": ".agent-work/issue-227/execute.json g2-implement constraint 3 + the cold-critic finding it encodes. INV-1's oracle would have been self-confirming had the verb->required-args map been walked from argparse required=True: 'advance --why' and 'attest --evidence' are required at RUNTIME (advance()'s why-capture block; attest()'s artifact branch) but OPTIONAL at the parser, so the map would have omitted exactly the two arguments agents most often read source to discover, and the test would have passed green while current() still failed the caller. The map was hand-authored against the verb bodies instead, and the test drives an artifact-kind postcondition and a non-exempt gate."
+    },
+    {
+      "op": "mention",
+      "id": "observe-midprocess-state-not-via-end-output",
+      "grounding": "Adjacent but not confirmed this run: the crew-rework loop observed mid-process state through the result ARTIFACT's content and mtime plus direct behavioral probes of the changed code, never through end-of-turn output — which is why a rework that had already landed in code was detectable before its result file was rewritten. No test of the lesson's own kill/hang scenario was performed, so this is a mention, not a confirmation."
+    }
+  ]
+}

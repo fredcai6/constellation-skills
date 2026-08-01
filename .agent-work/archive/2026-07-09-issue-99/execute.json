@@ -1,0 +1,342 @@
+{
+  "work_id": "issue-99",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-close"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read inherited global doctrine (skills/_shared/global-orchestrator.md, skills/_shared/global-everyone.md). No docs/agents overlay or packet map exists in this repo (sanctioned substitution: README + docs/CONSTELLATION_OVERVIEW.md). Confirm the frozen plan's intent and scope from .agent-work/issue-99/PROBLEM_STATEMENT.md and MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + problem statement + mission frame loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Doctrine + shared contract + Commander consumption: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF and dispatch via run_crew.py (external backend). Task: (1) NEW skills/_shared/design-it-twice-brief.md \u2014 the shared parallel-alternatives contract, SPUN OUT of explorer's EXCURSION_BRIEF design-it-twice type (not a copy of it): fill-in brief for N>=2 parallel agents each under one named distinct constraint (constraint menu: minimal-interface / max-flexibility / common-caller-first / ports-and-adapters for interfaces; smallest-diff / most-testable / best-seam-placement for plans); comparison axes depth/locality/seam/testability; opinionated recommendation or hybrid, never a menu; frame-the-problem-while-agents-run block the orchestrator presents to the human, explicitly marked 'not a proposal'; untaken-road record (named skip + reason, surfaced at approval); panel-vs-single record (choice + rationale, surfaced at approval). Rich template over prose \u2014 the mechanism lives here. (2) skills/_shared/global-orchestrator.md gains a 'Design-it-twice (standard, not optional)' section symmetric with the critical-review section: trigger (any skill authoring a plan or introducing a load-bearing interface); bias-to-yes (skip only genuinely-trivial, surfaced as a named untaken road); count/panel scaled by weight as a surfaced choice ('when in doubt, panel'); human-only convergence; names design-it-twice-brief.md as the reusable contract (explorer's excursion design-it-twice type is the same contract in its design-phase form). (3) Same file, critical-review section: competitive-critic human-opt-in option \u2014 panel critics judged against each other on serious confirmed findings; MUST state that competition modulates critic effort never disposition: critics still never self-triage, the human disposes every finding (this is the erosion guard); tension vs never-bias-the-reviewer stated. (4) skills/commander/SKILL.md Mission frame section: SHORT consumption paragraph superseding the epic-only critic sentence \u2014 plan-alternatives + cold plan critic (reads candidate plan + mission frame only) both before plan-approved, per the shared standard and design-it-twice-brief contract; points at doctrine rather than restating rules. (5) skills/commander/templates/COMMANDER_SPINE.template.json plan task: imperative names alternatives + critic + loud-skip + surfaced panel choice + the brief; ADD postcondition c4 (check null, attested): 'plan-alternatives run (or skip surfaced as named untaken road); cold plan critic run; panel-vs-single choice surfaced'; JSON valid; freeze/amend semantics untouched. (6) scripts/install_constellation.py: add 'design-it-twice-brief.md' to the _GLOBAL_ORCHESTRATOR bundle tuple (one line \u2014 ship path for the shared contract; dry-run must pass). Register: dense, agent-facing, departures-only. Evidence: ruling-traceability table (q1/q2/q2b ruling -> exact sentence). The g1-integrate c1 chain is the frozen mechanical invariant \u2014 make it pass as written; do not invent additional check proxies. Required exact tokens (case-insensitive, hyphen/space free per the tolerant greps): 'untaken road', 'not a proposal', 'competitive-critic' (hyphenated), 'self-triage', 'when in doubt, panel', 'bias to yes' or 'bias-to-yes'.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "edit skills/_shared/ source only, never per-skill references/ mirrors",
+        "no engine/schema changes; installer change is the one-line bundle tuple only",
+        "no explorer files in this gate"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/_shared/global-orchestrator.md \u2014 critical-review section is the symmetry model",
+          "skills/_shared/design-it-twice-brief.md (new shared contract, orchestrator-tier bundle)",
+          "skills/commander/SKILL.md Mission frame section",
+          "skills/commander/templates/COMMANDER_SPINE.template.json plan task",
+          "scripts/install_constellation.py _GLOBAL_ORCHESTRATOR tuple"
+        ],
+        "capability": [
+          "shared orchestrator doctrine baseline",
+          "Commander per-issue planning",
+          "installer reference bundling"
+        ],
+        "constraint": [
+          "doctrine register dense/departures-only",
+          "human-only convergence and triage \u2014 competitive mode modulates effort, never disposition",
+          "execute.json freeze/amend semantics unchanged",
+          "rich shared template over skill prose (human ruling)"
+        ],
+        "decision": [
+          "human rulings q1/q2/q2b encoded faithfully",
+          "human ruling at critic triage: shared spun-out contract, not commander-local template, not EXCURSION_BRIEF reuse",
+          "c4 spine postcondition kept despite critical-review asymmetry (triage candidate filed for symmetry)"
+        ],
+        "evidence": [
+          "ruling-traceability table",
+          "g1-integrate c1 invariant chain",
+          "reviewer side-by-side symmetry read"
+        ],
+        "confidence_flags": [
+          "_shared propagation verified: SKILL_REFERENCE_BUNDLES in install_constellation.py:94-113; new file ships only if added to the tuple"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/issue-99/crew-handoffs/g1-implement/IMPLEMENTER_RESULT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Doctrine + shared contract + Commander consumption: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan and IMPLEMENTER_RESULT; dispatch via run_crew.py (external backend). Named review focus items: (1) side-by-side symmetry read: new design-it-twice section vs critical-review section \u2014 structure, register, weight-scaling, human-only authority, contract pointer. (2) Faithful encoding of q1/q2/q2b rulings against the ruling-traceability table, not memory. (3) COMPETITIVE-CRITIC EROSION GUARD: verify the option's text preserves human-only triage \u2014 competition affects critic effort only; critics never self-triage; human disposes every finding. (4) Internal consistency of commander/SKILL.md \u2014 the old epic-only critic sentence must not survive in contradiction. (5) design-it-twice-brief.md is a genuine spin-out: covers the excursion type's contract (constraints, axes, recommendation-not-menu) plus the three new fields (not-a-proposal framing, untaken road, panel-vs-single record), usable by explorer, commander, and admiral alike. (6) Spine plan task carries c4 and stays schema-valid. (7) Non-goals: no explorer edits, no engine change; diff confined to the five owned files.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies against the same anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-99/crew-handoffs/g1-review/REVIEW_RESULT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Doctrine + shared contract + Commander consumption: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the c1 invariant chain yourself and advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates (including the queued one: give critical-review its own spine postcondition for symmetry). Harvest Workflow Feedback into the lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mechanical invariant chain green: doctrine section + lifts + erosion guard + commander wiring + shared contract + ship path + spine c4 + scope allowlist",
+          "check": {
+            "kind": "command",
+            "command": "grep -Eqi 'design.it.twice \\(standard, not optional\\)' skills/_shared/global-orchestrator.md && grep -Eqi 'untaken road' skills/_shared/global-orchestrator.md && grep -Eqi 'not a proposal' skills/_shared/global-orchestrator.md && grep -Eqi 'competitive.critic' skills/_shared/global-orchestrator.md && grep -Eqi 'self.triage' skills/_shared/global-orchestrator.md && grep -Eqi 'when in doubt, panel' skills/_shared/global-orchestrator.md && grep -Eqi 'bias.to.yes' skills/_shared/global-orchestrator.md && grep -Eqi 'design-it-twice-brief' skills/_shared/global-orchestrator.md && test -f skills/_shared/design-it-twice-brief.md && grep -Eqi 'not a proposal' skills/_shared/design-it-twice-brief.md && grep -Eqi 'untaken road' skills/_shared/design-it-twice-brief.md && grep -Eqi 'panel' skills/_shared/design-it-twice-brief.md && grep -Eqi 'plan.alternatives' skills/commander/SKILL.md && grep -Eqi 'plan.critic' skills/commander/SKILL.md && grep -Eqi 'untaken road' skills/commander/SKILL.md && grep -Eqi 'untaken road' skills/commander/templates/COMMANDER_SPINE.template.json && grep -q 'design-it-twice-brief.md' scripts/install_constellation.py && python -c \"import json;d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'));assert any(c['id']=='c4' for c in d['tasks']['plan']['postconditions'])\" && test -z \"$(git diff --name-only main -- skills scripts docs | grep -Ev '^(skills/_shared/global-orchestrator\\.md|skills/_shared/design-it-twice-brief\\.md|skills/commander/SKILL\\.md|skills/commander/templates/COMMANDER_SPINE\\.template\\.json|scripts/install_constellation\\.py)$')\" && python scripts/install_constellation.py --agent codex --scope user --dry-run >/dev/null"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -Eqi 'design.it.twice \\(standard, not optional\\)' skills/_shared/global-orchestrator.md && grep -Eqi 'untaken road' skills/_shared/global-orchestrator.md && grep -Eqi 'not a proposal' skills/_shared/global-orchestrator.md && grep -Eqi 'competitive.critic' skills/_shared/global-orchestrator.md && grep -Eqi 'self.triage' skills/_shared/global-orchestrator.md && grep -Eqi 'when in doubt, panel' skills/_shared/global-orchestrator.md && grep -Eqi 'bias.to.yes' skills/_shared/global-orchestrator.md && grep -Eqi 'design-it-twice-brief' skills/_shared/global-orchestrator.md && test -f skills/_shared/design-it-twice-brief.md && grep -Eqi 'not a proposal' skills/_shared/design-it-twice-brief.md && grep -Eqi 'untaken road' skills/_shared/design-it-twice-brief.md && grep -Eqi 'panel' skills/_shared/design-it-twice-brief.md && grep -Eqi 'plan.alternatives' skills/commander/SKILL.md && grep -Eqi 'plan.critic' skills/commander/SKILL.md && grep -Eqi 'untaken road' skills/commander/SKILL.md && grep -Eqi 'untaken road' skills/commander/templates/COMMANDER_SPINE.template.json && grep -q 'design-it-twice-brief.md' scripts/install_constellation.py && python -c \"import json;d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'));assert any(c['id']=='c4' for c in d['tasks']['plan']['postconditions'])\" && test -z \"$(git diff --name-only main -- skills scripts docs | grep -Ev '^(skills/_shared/global-orchestrator\\.md|skills/_shared/design-it-twice-brief\\.md|skills/commander/SKILL\\.md|skills/commander/templates/COMMANDER_SPINE\\.template\\.json|scripts/install_constellation\\.py)$')\" && python scripts/install_constellation.py --agent codex --scope user --dry-run >/dev/null",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-close": {
+      "id": "g2-close",
+      "title": "Explorer refs + acceptance trace + rubric'd dogfood (reasoning gate)",
+      "imperative": "REASONING GATE \u2014 crew waiver: deliverables are two additive reference lines (mechanically fenced by working-tree diff invariants), work-area synthesis, and a dogfood whose independent verification is supplied INSIDE the gate by a cold-context subagent judged against a PRE-REGISTERED rubric. Steps: (1) Explorer refs (Commander-direct): one line in skills/explorer/SKILL.md naming the shared standard in global-orchestrator doctrine; one line in skills/explorer/templates/EXCURSION_BRIEF.template.md noting its design-it-twice type is the design-phase form of the shared design-it-twice-brief.md contract. Additions only; no machinery change. (2) Author .agent-work/issue-99/DOGFOOD_RUBRIC.md BEFORE dispatching the dogfood: a toy issue containing a deliberate trap \u2014 one genuinely-trivial sub-part whose correct handling is a SKIP that must surface as a named untaken road \u2014 plus a complexity profile where panel-vs-single is a real call; pre-register the expected outputs (N agents with distinct named constraints from the menu; not-a-proposal framing; the trap skip surfaced; panel choice with rationale) and the fail conditions. (3) Dispatch a fresh subagent with ONLY the new doctrine section, the new commander plan-step wording, and design-it-twice-brief.md (no authoring context) plus the toy issue; judge the transcript against the rubric; save to .agent-work/issue-99/DOGFOOD_TRANSCRIPT.md. A rubric fail is a real finding: reopen g1. (4) Author .agent-work/issue-99/ACCEPTANCE_TRACE.md: every #99 acceptance criterion, scope item, ruling, and lift -> file+section + the mechanical check proving it (reference g1's ruling-traceability table rather than redoing it); every row resolves.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 closed (referenced section and contract exist \u2014 no known-red cross-ref window)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "explorer refs present (new tokens, not pre-green) + explorer diff is exactly the two files, additions only (working tree vs main) + final combined invariant suite green at final tree state",
+          "check": {
+            "kind": "command",
+            "command": "grep -Eqi 'global-orchestrator' skills/explorer/SKILL.md && grep -Eqi 'design-it-twice-brief' skills/explorer/templates/EXCURSION_BRIEF.template.md && test \"$(git diff --name-only main -- skills/explorer/ | sort | tr '\\n' ' ')\" = 'skills/explorer/SKILL.md skills/explorer/templates/EXCURSION_BRIEF.template.md ' && git diff --numstat main -- skills/explorer/ | awk '{if ($2 != 0) exit 1}' && grep -Eqi 'design.it.twice \\(standard, not optional\\)' skills/_shared/global-orchestrator.md && grep -Eqi 'competitive.critic' skills/_shared/global-orchestrator.md && grep -Eqi 'self.triage' skills/_shared/global-orchestrator.md && grep -Eqi 'plan.alternatives' skills/commander/SKILL.md && test -f skills/_shared/design-it-twice-brief.md && grep -q 'design-it-twice-brief.md' scripts/install_constellation.py && python -c \"import json;d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'));assert any(c['id']=='c4' for c in d['tasks']['plan']['postconditions'])\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-close-1"
+        },
+        {
+          "id": "c2",
+          "statement": "ACCEPTANCE_TRACE complete \u2014 every acceptance row resolves to a file+section and a passing check",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "DOGFOOD_RUBRIC pre-registered before dispatch; transcript judged against it; verdict recorded (a fail reopens g1)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "explorer machinery unchanged \u2014 additive reference lines only",
+        "dogfood subagent gets no authoring context \u2014 cold by construction"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/explorer/SKILL.md",
+          "skills/explorer/templates/EXCURSION_BRIEF.template.md",
+          ".agent-work/issue-99/ (work-area artifacts, not shipped)"
+        ],
+        "capability": [
+          "explorer design shaping \u2014 reference-only touch",
+          "acceptance traceability",
+          "doctrine followability"
+        ],
+        "constraint": [
+          "non-goal: explorer machinery unchanged beyond references"
+        ],
+        "decision": [],
+        "evidence": [
+          "working-tree references-only diff invariant",
+          "pre-registered dogfood rubric + transcript",
+          "final-state combined invariant suite"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -Eqi 'global-orchestrator' skills/explorer/SKILL.md && grep -Eqi 'design-it-twice-brief' skills/explorer/templates/EXCURSION_BRIEF.template.md && test \"$(git diff --name-only main -- skills/explorer/ | sort | tr '\\n' ' ')\" = 'skills/explorer/SKILL.md skills/explorer/templates/EXCURSION_BRIEF.template.md ' && git diff --numstat main -- skills/explorer/ | awk '{if ($2 != 0) exit 1}' && grep -Eqi 'design.it.twice \\(standard, not optional\\)' skills/_shared/global-orchestrator.md && grep -Eqi 'competitive.critic' skills/_shared/global-orchestrator.md && grep -Eqi 'self.triage' skills/_shared/global-orchestrator.md && grep -Eqi 'plan.alternatives' skills/commander/SKILL.md && test -f skills/_shared/design-it-twice-brief.md && grep -q 'design-it-twice-brief.md' scripts/install_constellation.py && python -c \"import json;d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'));assert any(c['id']=='c4' for c in d['tasks']['plan']['postconditions'])\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "Symmetry follow-up: the critical-review standard has no engine-enforced spine postcondition of its own (design-it-twice now has c4, which co-locates both mechanisms under one attest). Consider a dedicated critic postcondition on the plan task, or an explicit doctrine note that c4 covers both."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "commander-e0e54137",
+    "status": "released",
+    "claimed_at": "2026-07-09T12:40:59.815996+00:00",
+    "last_heartbeat": "2026-07-09T13:03:08.687970+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-09T14:35:12.471597+00:00"
+  }
+}

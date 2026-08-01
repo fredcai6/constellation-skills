@@ -1,0 +1,573 @@
+{
+  "work_id": "301-g4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-bind-option-a",
+    "m2-tracked-layout",
+    "m3-retirement-retrieval",
+    "m4-relocated-omission-fixtures",
+    "m5-half-retirement-safety",
+    "m6-cluster-companion",
+    "m7-doc-corrections",
+    "m8-verify-and-report"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), the g4 handoff, docs/EPISODE_STORE.md (esp. section 7's seam set), scripts/apply_episode_delta.py, scripts/query_episodes.py, tests/test_episode_store.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, stop conditions, return format). Capture the pre-change baseline test count. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + EPISODE_STORE.md section 7 + both scripts + test module read; handoff verified complete; baseline suite count recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "doctrine (global-crew/global-everyone), g4 handoff, EPISODE_STORE.md ss1-10 incl the s7 seam set, apply_episode_delta.py, query_episodes.py, tests/test_episode_store.py all read. Handoff complete: task, protected intent, close criteria C2-C6, allowed scope, specific exclusions, constraints, required evidence, stop conditions, return format all present. Baseline: 67 passed, 1 skipped, 16 subtests in tests/test_episode_store.py."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-bind-option-a": {
+      "id": "m1-bind-option-a",
+      "title": "Bind Option A at the four named seams; remove the Option-B adapters",
+      "imperative": "In scripts/apply_episode_delta.py, bind the ratified file-move layout at exactly the seam set: iter_episode_ids, resolve_episode_path, is_episode_in_ordinary_search, _retirement_destination (plus the co-located _new_episode_path and apply_retirement, which are layout-dependent in the same way). Delete the _LAYOUT_ADAPTER switch and both _LAYOUT_OPTION_* constants and every Option-B branch \u2014 the decision is no longer held. Update the existing tests that hardcode the old flat path to the bound active/ path (path literals only; do NOT restructure the 68 existing tests). Red first: write/adjust a test asserting a created episode lands under active/ and a retired one under retired/, observe it fail, then bind.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the Option-A binding test written and observed failing before the seams are bound",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: RatifiedLayoutTests -> 3 failed, 1 passed. test_a_new_episode_is_written_under_active FAILED, test_retiring_moves_the_file_into_retired FAILED, test_the_layout_adapter_switch_is_gone FAILED (AssertionError: True is not false : _LAYOUT_ADAPTER still present)."
+        },
+        {
+          "id": "c2",
+          "statement": "Option A bound at the seams; no _LAYOUT_ADAPTER / Option-B branch remains; episode store suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5 && ! grep -q '_LAYOUT_OPTION_B' scripts/apply_episode_delta.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-bind-option-a-1"
+        }
+      ],
+      "constraints": [
+        "no Path.read_text(newline=) / write_text(newline=) \u2014 use read_text_exact / write_text_exact",
+        "do not call durable_root()",
+        "do not touch apply_lessons_delta.py or .agent-work/LESSONS.md"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-bind-option-a-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5 && ! grep -q '_LAYOUT_OPTION_B' scripts/apply_episode_delta.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-tracked-layout": {
+      "id": "m2-tracked-layout",
+      "title": "episodes/active/ and episodes/retired/ exist and are tracked",
+      "imperative": "Create the real store layout with a tracked placeholder in each subdirectory so git does not drop the empty directories at commit (the g1 hazard). Record why the flat episodes/README.md must be excluded from every enumeration deliberately, not by accident.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Option A bound at the seams",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "episodes/active/ and episodes/retired/ each carry a tracked placeholder git will keep",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && test -f episodes/active/README.md && test -f episodes/retired/README.md && git add -An episodes >/dev/null && git status --short episodes | grep -q 'episodes/active' && git status --short episodes | grep -q 'episodes/retired'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-tracked-layout-1"
+        }
+      ],
+      "constraints": [
+        "Markdown in git only; no database, no index"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-tracked-layout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && test -f episodes/active/README.md && test -f episodes/retired/README.md && git add -An episodes >/dev/null && git status --short episodes | grep -q 'episodes/active' && git status --short episodes | grep -q 'episodes/retired'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-retirement-retrieval": {
+      "id": "m3-retirement-retrieval",
+      "title": "Retirement-dependent retrieval + C3 both directions",
+      "imperative": "Add the ordinary-search and history-inclusive retrieval variants to scripts/query_episodes.py, built from the seams via section 7's scan-then-filter composition rule \u2014 never an inlined directory or status check. Ordinary retrieval globs active/ only; history-inclusive is a separate deliberate act that unions both. Add the CLI surface. Prove C3 in both directions: a retired episode ABSENT from ordinary retrieval and PRESENT in history-inclusive. Red first.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the layout is bound and the tracked directories exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1+m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the C3 both-directions test written and observed failing before retrieval exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: RetirementDependentRetrievalTests -> 4 failed, 3 passed. FAILED test_a_retired_episode_leaves_ordinary_retrieval_and_stays_in_history, test_select_and_neighbours_respect_retirement_in_both_directions, test_the_archive_is_opt_in_not_opt_out, test_the_cli_states_which_universe_it_answered_from (TypeError/AssertionError: no include_retired parameter existed)."
+        },
+        {
+          "id": "c2",
+          "statement": "retired episode absent from ordinary retrieval and present in history-inclusive; both asserted; suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-retirement-retrieval-1"
+        }
+      ],
+      "constraints": [
+        "the store never guesses \u2014 exact match and set membership only",
+        "no ranking, scoring, similarity, or embedding",
+        "do not build capture wiring (#305) or the rhyme/consolidation loop (#308)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-retirement-retrieval-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-relocated-omission-fixtures": {
+      "id": "m4-relocated-omission-fixtures",
+      "title": "The three relocated silent-omission fixtures",
+      "imperative": "Option A makes the old positive-allowlist trap structurally impossible but RELOCATES the class. Write one adversarial fixture per relocated trap: (1) a glob that misses a subdirectory (episodes/*.md after the layout gained active/retired), (2) a history-inclusive enumeration that forgets to union both directories, (3) a stray file at the old flat path belonging to neither set \u2014 which must be surfaced as malformed, not silently skipped, while episodes/README.md is excluded deliberately. Each fixture shows what a naive implementation returns versus ours. Also keep and adapt the original trap: a `disputed` non-retired episode still appears in ordinary search, and a forged `- status: retired` line in free text cannot change set membership.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "retirement-dependent retrieval exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: each relocated-trap fixture written and observed failing against the naive implementation it indicts",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed by substituting each naive implementation into the seam it would occupy (scratchpad/red_probe.py): trap1 flat glob RED, trap2 forgotten union RED, trap3 stray-skipped RED, trap3 README allowlist RED, forged-status-line RED. ALL FIXTURES HAVE TEETH."
+        },
+        {
+          "id": "c2",
+          "statement": "all three relocated fixtures plus the adapted original pass; suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-relocated-omission-fixtures-1"
+        }
+      ],
+      "constraints": [
+        "do not rename or alter the three existing tests/fixtures/episodes/*.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-relocated-omission-fixtures-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-half-retirement-safety": {
+      "id": "m5-half-retirement-safety",
+      "title": "C6 \u2014 the store is never left half-retired",
+      "imperative": "Prove the store never ends half-retired (fields updated but file not moved, or file moved but fields not updated). Force a failure between the field update and the move using the staging discipline commit() already has, and assert the store afterwards is consistent \u2014 exactly one of active/<id>.md and retired/<id>.md exists, and its status field agrees with the directory it is in. Red first.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the retirement move is bound at the seam",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the half-retirement fault-injection test written and observed failing (or observed to expose a real gap) before the fix",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed, and it exposed a real gap rather than merely failing: test_a_half_retired_store_is_reported_rather_than_answered_around FAILED with 'AssertionError: HalfRetiredStore not raised' -- the scan/membership cross-check could NOT see an id present in both directories, because both seams agree it is in the ordinary set. Fixed by adding _reject_half_retired() at the enumeration seam."
+        },
+        {
+          "id": "c2",
+          "statement": "a forced failure between field-update and move leaves the store consistent; asserted; suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-half-retirement-safety-1"
+        }
+      ],
+      "constraints": [
+        "all-or-nothing: an invalid or failed delta leaves the store byte-for-byte unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-half-retirement-safety-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-cluster-companion": {
+      "id": "m6-cluster-companion",
+      "title": "C5 \u2014 the #308 companion is not precluded",
+      "imperative": "With one episode of a cluster retired, assert its still-active neighbours remain findable by ordinary retrieval and the retired one stays reachable history-inclusively. Make consolidation possible; do not implement it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "retirement-dependent retrieval and its fixtures are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cluster test asserts active neighbours findable ordinarily and the retired member reachable history-inclusively; suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-cluster-companion-1"
+        }
+      ],
+      "constraints": [
+        "do not implement the consolidation / rhyme-search loop (#308)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-cluster-companion-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/test_episode_store.py -q 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-doc-corrections": {
+      "id": "m7-doc-corrections",
+      "title": "Clear the two deferred doc corrections and record the ruling in section 7",
+      "imperative": "In docs/EPISODE_STORE.md: (1) correct sections 8/10 which describe retirement-dependent retrieval as if it already existed \u2014 make them match what actually ships; (2) correct section 9's 'sees the identical file content' to say the same content and the same blob OID, working-tree bytes may differ by platform (.gitattributes `* text=auto`; issue #319). Also update section 7: the layout is no longer an open seam \u2014 record that Option A was ratified, quote the ruling verbatim, keep Option B as rejected-with-reason rather than deleting it, and state the archive principle. Sweep sections 2/3 for now-stale 'Option B path shown for concreteness' disclaimers.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the shipped behavior is final, so the doc can be made to match it",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m6 complete; shipped behavior final"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "section 7 records the ratified ruling verbatim + the archive principle + Option B as rejected-with-reason; sections 8/9/10 corrected",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && grep -q 'move the file, prefer to keep files clean of history' docs/EPISODE_STORE.md && grep -q 'blob OID' docs/EPISODE_STORE.md && ! grep -q 'HELD OPEN' docs/EPISODE_STORE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-doc-corrections-1"
+        }
+      ],
+      "constraints": [
+        "do not design #300's manifest; context-manifest-ref stays an opaque <ref>@<revision>"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-doc-corrections-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && grep -q 'move the file, prefer to keep files clean of history' docs/EPISODE_STORE.md && grep -q 'blob OID' docs/EPISODE_STORE.md && ! grep -q 'HELD OPEN' docs/EPISODE_STORE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-verify-and-report": {
+      "id": "m8-verify-and-report",
+      "title": "Full-suite verification, C2 seam containment, IMPLEMENTER_RESULT",
+      "imperative": "Run every verification command from the handoff to completion in the foreground: the full suite, the three rejection fixtures, git ls-files episodes, git status --short. Produce the C2 seam-containment evidence \u2014 no primitive outside the seams references active/ or retired/ as a literal. Write the IMPLEMENTER_RESULT to .agent-work/301/crew-handoffs/g4-result.md with VERDICT, pasted evidence for all four Required Evidence items, Map Impact, and a non-empty Workflow Feedback section. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "every implementation slice is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-m7 complete, all green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green (baseline + new); the three rejection fixtures still exit 1",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/ -q 2>&1 | tail -3"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-verify-and-report-1"
+        },
+        {
+          "id": "c2",
+          "statement": "C2 seam containment proven: no literal active//retired/ outside the seam block",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "C2 containment proven and made permanent. Writer: seam block lines 422-643; INSIDE has the layout literals, OUTSIDE has NONE once the 5 record-grammar lines (LIFECYCLE_STANDINGS, default status, lifecycle_standing= at create) are excluded BY EXACT LINE. query_episodes.py: zero layout literals anywhere, no .glob(, no status branch, all three seams called. CONTAINMENT EXIT=0. Two new permanent tests enforce it: test_the_writer_names_the_directories_only_inside_the_seam_block and test_retrieval_reaches_the_layout_only_through_the_seams (relocates the store, re-points only the seams, asserts retrieval follows). Required one real fix: write_plan() branched on ep.status to pick a destination -- moved into destination_for() inside the seam block."
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT written at .agent-work/301/crew-handoffs/g4-result.md with a literal VERDICT and non-empty Workflow Feedback",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/298-301 && grep -q '^VERDICT: ' .agent-work/301/crew-handoffs/g4-result.md && grep -q 'Workflow Feedback' .agent-work/301/crew-handoffs/g4-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-verify-and-report-2"
+        }
+      ],
+      "constraints": [
+        "do not commit \u2014 the Commander integrates and commits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-verify-and-report-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && python -m pytest tests/ -q 2>&1 | tail -3",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-verify-and-report-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/298-301 && grep -q '^VERDICT: ' .agent-work/301/crew-handoffs/g4-result.md && grep -q 'Workflow Feedback' .agent-work/301/crew-handoffs/g4-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g4-impl-1",
+    "status": "released",
+    "claimed_at": "2026-08-01T14:25:20.250126+00:00",
+    "last_heartbeat": "2026-08-01T14:58:25.408671+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T14:58:42.425095+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Ruling binds Option A: retirement MOVES episodes/active/<id>.md -> episodes/retired/<id>.md, and retired/ is an ARCHIVE, not a second live search space. The seams already implement BOTH adapters behind _LAYOUT_ADAPTER, so binding is deleting the switch and the Option-B branch at six layout-dependent functions. Real risk: ~10 existing tests hardcode the flat path self.root/'<id>.md' and will break; those are path-literal edits, not restructuring. The silent-omission class RELOCATES rather than vanishes -- three new traps (missed subdir glob, forgotten union, stray flat-path file incl episodes/README.md) each need a fixture.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:25:48.348832+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-bind-option-a",
+      "why": "Option A bound at ACTIVE_DIR/RETIRED_DIR in one seam block; _LAYOUT_ADAPTER and both _LAYOUT_OPTION_* deleted. Added a fourth layout concern the seam table did not name: stray_episode_paths() -- a file at the flat root belongs to NEITHER set, so both enumerations would omit it. Surfacing it (raise) rather than skipping it also protects the writer's id-assignment scan from minting an id a stray already holds. commit() gained a compensating rollback because binding A gave placement a SECOND step (write retired/, remove active/) whose failure would leave the id in both directories -- exactly the half-retired store C6 rules out. 18 existing tests needed path-literal updates (not restructuring); two Option-B scaffolding tests were replaced by bound-behavior equivalents. 71 passed, 1 skipped.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:34:27.991594+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-tracked-layout",
+      "why": "Placeholders are README.md rather than .gitkeep (my call, logged): the g1 hazard needs any tracked file, but each directory also has a real thing to say -- active/ that membership is a filesystem fact, retired/ that it is an archive with a named, deliberate way in. A .gitkeep would carry the git property and none of the meaning. Named-not-globbed exclusion: NON_EPISODE_FILENAMES holds README.md, so a stray episode at the flat root is a visible refusal rather than a file that quietly matches nobody's glob. git add -An dry-run lists all three READMEs; check-ignore exits 1 for both new dirs.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:35:36.105219+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-retirement-retrieval",
+      "why": "Archive is OPT-IN, not opt-out: include_retired defaults False on every SCANNING primitive (enumerate/select/neighbours) and does not exist on fetch, because a lookup by id is not a search and a consolidated-into cross-ref would dangle otherwise. That default is the ruling's second half made mechanical -- an opt-out default would turn every future caller's forgotten filter into a silent correctness bug. Section 7's redundant scan-then-confirm is kept but re-justified: with the layout bound the filter cannot subtract, so its value is now cross-checking two INDEPENDENT seams; a disagreement RAISES (HalfRetiredStore) instead of dropping the id, since dropping is precisely how a candidate set gets quietly short. Envelope now carries include_retired so a consumer cannot mistake an archive-excluding answer for a complete one. 78 passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:39:40.152235+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-relocated-omission-fixtures",
+      "why": "A fixture that passes on day one proves nothing about the trap it names, so each naive implementation was substituted INTO the seam it would occupy and the fixture observed failing -- all five red. Trap 3 turned out to be the one with real teeth beyond retrieval: a stray at the flat path also poisons the writer's id-assignment scan (it would mint an id the stray already holds), so the refusal lives in iter_episode_ids where both the reader and the writer inherit it. The README exclusion is asserted through the ALLOWLIST, not through the answer -- emptying NON_EPISODE_FILENAMES turns the very same file into a stray, which is what proves the exclusion is deliberate. 84 passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:42:01.309622+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-half-retirement-safety",
+      "why": "Two independent defenses, because they cover different failure classes. (1) By construction: the retired CONTENT is only ever rendered to the archive path, so 'fields updated but file not moved' has no representation in the write plan -- asserted against write_plan() directly, not inferred from effects. (2) By compensation: binding A gave placement a SECOND step, so commit() now snapshots the prior bytes of everything it will disturb and, on any failure, restores them and deletes what it newly created. Faults injected at BOTH steps (_place, _remove_superseded), and the source-removal test asserts the archived file was already placed -- proving the injection landed in the gap rather than before it. Honest residual: a hard kill runs no compensation, so that state is made LOUD (half-retired refusal at the enumeration seam, inherited by reader and writer alike) rather than claimed impossible. 89 passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:44:03.169870+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-cluster-companion",
+      "why": "C5 green first try, which is itself the finding: the anchor of neighbours() is fetched BY ID, so an archived episode can still walk back to its live cluster -- the move #308 actually needs -- without any retirement-aware special case. That falls out of fetch-by-id being exempt from the archive default (a lookup is not a search), a choice made at m3 for a different reason. Four assertions cover the door in both directions: survivors findable ordinarily, the retired member reachable three ways (by id, by history-inclusive scan, from a survivor's neighbourhood), and a wholly-consolidated cluster empty to search and intact in history. 93 passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:44:52.184164+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-doc-corrections",
+      "why": "Section 7 now records the ruling verbatim, states the archive principle as the mechanism (include_retired defaults False), keeps Option B as rejected-with-reason -- explicitly BECAUSE a reader finding four adapters and no record of the second candidate would judge the indirection unearned -- and names the three relocated traps so the next reader does not have to rediscover that binding A moved the failure class rather than killing it. Sections 8/10 now describe what ships rather than what was planned; 10 became built/not-built. Section 9's 'identical file content' is corrected to same content + same blob OID with working-tree bytes platform-dependent (.gitattributes * text=auto, #319), and the test that pins it is cited so doc and test now agree in tone. Also swept the stale Option-B-for-concreteness disclaimers out of ss1/2/3, which the handoff did not list but which would have contradicted the ruling on the first page a reader hits. 93 passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:49:11.955863+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-verify-and-report",
+      "why": "All four Required Evidence items produced with pasted output, plus both confirmatory items. Full suite 1251 passed / 3 skipped (episode store 67 -> 93); the three rejection fixtures still exit 1 and are byte-untouched; check-ignore exits 1 for every target and git add -An proves both new READMEs enter the index (the g1 empty-directory hazard is closed, but they are UNTRACKED until the integrator commits -- called out explicitly at the end of the result). Result written with VERDICT: COMPLETE, five-point Workflow Feedback, and Map Impact carrying the ratified decision anchors forward. Not committed.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:58:25.408651+00:00"
+    }
+  ]
+}

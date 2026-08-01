@@ -1,0 +1,36 @@
+{
+  "work_id": "issue-99",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "background-teammate-must-sendmessage-before-idle",
+      "scope": "constellation",
+      "task_class": "dispatch-authoring",
+      "statement": "Any background Agent-tool teammate's spawn prompt must explicitly require delivering its result via SendMessage to 'main' before ending its turn. Teammates without that line routinely end on a bare idle notification with the report undelivered, costing one nudge round-trip each; teammates with it mostly deliver unprompted. Same family as crew idle-no-verdict adjudication, applied at dispatch-authoring time.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-09 issue-99, Friction bullet 1 (repo-audit, both plan-alternative agents, and one critic each needed a SendMessage nudge; critics with the explicit instruction delivered)"
+    },
+    {
+      "op": "add",
+      "id": "shipped-json-templates-text-surgical-edits-only",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "Never edit a shipped compact-format JSON template by round-tripping it through json.load/json.dump \u2014 the formatter reflows the whole file (hundreds-of-line diff for a 2-line change), destroying blame and review signal. Edit the raw text surgically; validate with json.load afterward.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-09 issue-99, Friction bullet 2 (T1 c4/c5 split first committed as a 363-line reflow, reset and redone as a 2+/1- text edit, 5fad3e3)"
+    },
+    {
+      "op": "add",
+      "id": "handoff-untracked-new-file-diff-caveat",
+      "scope": "handoff",
+      "task_class": "handoff-authoring",
+      "statement": "When a gate creates a NEW tracked-to-be file, the handoff must state that the file is untracked until staged: 'git diff shows N-1 files; the new file appears in git status'. Otherwise a scope claim like 'diff touches exactly N files' reads as false against a correct working tree and the reviewer momentarily mistrusts correct evidence.",
+      "grounding": ".agent-work/issue-99/crew-handoffs/g1-implement/IMPLEMENTER_RESULT.md Workflow Feedback, Handoff gaps bullet (design-it-twice-brief.md untracked; chain's diff check proved only no-unexpected-changes)",
+      "target": "skills/commander/templates/IMPLEMENTER_HANDOFF.template.md"
+    },
+    {
+      "op": "confirm",
+      "id": "doc-only-gate-inspection-postcondition",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-09 issue-99, What worked bullet 1 \u2014 Commander-authored frozen invariant chains in gate postconditions eliminated the proxy-improvisation this lesson describes; zero bent checks across g1/g2 (engine advance ran the chains green). Confirms the gap and demonstrates the working mitigation shape."
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "work_id": "301-g3",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-omission-fixture",
+    "r4b-uncovered-omission"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, the g3 handoff, EPISODE_STORE.md sections 7-9 (frozen contract), scripts/query_episodes.py in full, the writer's five seams, and the full g3 test block (QueryTestCase through LayoutIndependenceTests). No docs/agents/ overlay exists in this worktree (CREW_CONTEXT/GLOSSARY absent) -- inherited doctrine is the whole standard set.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "C2 REAL: subprocess.Popen + sys.executable, 3 distinct OS pids, child reports its own os.getpid() inside the JSON answer; session 2 receives ONLY --store-root and an id (no env var, no inherited handle, no pickled state; the id carries only the run slug, never the statement asserted). Proved live by mutation M1 (envelope pid -> constant 424242 => RED on payload[pid]==query[pid]) and M3 (statement truncated in transit => RED). Vacuity guard proved live by M2 (not-found silently becomes rc 0 empty => RED). C3 REAL: real git init + two real 'git worktree add', .git-is-a-FILE + gitdir: pointer under .git/worktrees/ asserted, absent -> still-absent-after-local-commit -> present-only-after-merge observed. Attacked with M7 (reader_wt aliased to writer_wt) and M7b (aliased AND the resolve() guard neutered): STILL RED at the still-absent-after-local-commit assertion -- a same-directory simulation cannot pass. C4 proved live by M6 (amend re-stamps siblings => RED on both the standing and the byte-identical assertions). Seam discipline proved live by M8 (inlined glob + status check => RED on 3 tests).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff is exactly scripts/query_episodes.py (new), tests/test_episode_store.py (24 -> 65), and the one authorized line in apply_episode_delta.py (artifact-ref .strip() on create) -- which carries a proper adversarial regression test asserting render(parse(text))==text over DIRTY input, not a clean round trip. Retirement layout still unbound: _LAYOUT_ADAPTER is untouched by this diff, both adapters remain implemented, and query_episodes.py contains no 'retired'/'active' literal, no .glob(, no .status branch. is_episode_in_ordinary_search() is deliberately NOT called by any primitive -- retirement-dependent retrieval was NOT built. Judged: the right call, and the handoff excludes asking for it. No LESSONS.md / apply_lessons_delta.py / #300 manifest changes. No stray files; episodes/ holds only README.md; git status shows no reviewer edit.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed command independently reproduced: python -m pytest tests/test_episode_store.py -q => 65 passed, 16 subtests (claimed 65/16); python -m pytest tests/ -q => 1222 passed, 2 skipped (claimed 1222/2, baseline 1181); git status --short => 2 modified + 1 new, episodes/ clean. Beyond reproducing, I built a pristine out-of-repo mirror of scripts/ + tests/ (green at 65) and ran EIGHT mutations; every acceptance property went red under a targeted break (M1-M8 above). No claim rested unreproduced.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Inherited crew rules hold. Minimal change, no speculative abstraction (four primitives, one CLI, nothing more). Behavior is test-led and adversarial, not round-trip-confirming. Fail-visibly is honored at the CLI boundary: three distinct exit codes (0 answered / 1 invalid query / 2 no such episode) so an unanswerable query never masquerades as an empty result, and an unknown field RAISES rather than returning []. C5 verified independently: no ranking/scoring/similarity import, results carry no score-like key, id-sort only, and neighbours joined on two keys do not sort above neighbours joined on one. One doc-vs-code nit inside query_episodes.py: select_episodes' docstring says the field name is 'validated once, up front, against the FIRST episode scanned' -- the code actually validates it against _FIELD_READERS before the scan (which is better). Stale prose, not a defect.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "One genuine divergence Commander must reconcile, routed to g4 rather than charged here. EPISODE_STORE.md section 8 states that 'enumerate non-retired' obtains its candidate set from iter_episode_ids(include_retired=False) then confirms each id through is_episode_in_ordinary_search(), and that select and neighbours 'both scan the same iter_episode_ids(include_retired=False) candidate set'. Section 10 lists 'enumerate non-retired' as a g3 deliverable. The shipped code instead calls iter_episode_ids(root, include_retired=True) with no membership filter anywhere, and builds no non-retired variant. Under the currently-bound Option-B placeholder adapter include_retired is a no-op, so behavior is identical TODAY -- but the frozen contract now describes primitives that do not exist as described, and I demonstrated the consequence: a retired episode is returned by all three scanning primitives while is_episode_in_ordinary_search() correctly says False, contradicting section 7's settled 'excluded from ordinary rhyme-search'. I judge the implementer's deferral CORRECT (wiring the membership seam now is retirement-dependent retrieval, which this handoff explicitly excludes and which section 10 assigns to g4), so the fix is a DOC reconciliation at g4: section 8's composition sentences and section 10's g3 bullet must move to g4 when the layout binds. Everything else reconciles: the five-seam table is honored exactly (store root, resolve_episode_path, iter_episode_ids used; is_episode_in_ordinary_search named-but-unused by design; apply_retirement untouched), and I proved the seam discipline is enforced by a live test, not just by convention. Also confirmed rather than rediscovered: the Windows core.autocrlf hazard is genuinely PINNED -- the test asserts writer bytes are LF-only, that the two worktrees' bytes differ by line endings at most, that git ls-files --eol reports i/lf, and, when CRLF is actually live in the environment, that raw bytes DIFFER while the parsed records are equal. That is a real pin, not prose, and issue #319 carries it for #308.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Pass recorded to .agent-work/301/g3-review/fowler-pass.json; verify_fowler_pass.py exits 0 (smells=12, flagged=4, overridden=3). FLAGGED (all observation-grade, none blocking): duplicated-code -- the unknown-field error message is built twice, byte-identical, in field_values() and select_episodes(); primitive-obsession -- the composite join key is a NUL-joined string inside a tuple that is already a tuple; speculative-generality -- JOIN_KEYS is DEAD, read by nothing, while neighbours()'s docstring claims completeness 'over all of JOIN_KEYS', so the completeness claim and the code implementing it (_join_key_values, which hardcodes both keys) can drift with nothing detecting it -- a real hazard when #308 extends the join set; comments-as-deodorant -- two docstrings have already drifted from the code (select_episodes' 'validated against the FIRST episode scanned', and the naive fixture's '## Mechanical block'). OVERRIDDEN with logged standards: long-method (the 80-line C3 acceptance test -- the length IS the assertion, and I verified the mid-method still-absent check is what catches a same-directory simulation); feature-envy (EPISODE_STORE.md section 7's five-seam table REQUIRES retrieval to call the writer's seams by name -- the envy is the contract, and I proved inlining goes red); message-chains (writer() re-resolves sys.modules on every call to guarantee one canonical grammar module, which the layout-flip test depends on).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/301/crew-handoffs/g3-review-result.md",
+            "verdict": "APPROVE",
+            "fowler_record": ".agent-work/301/g3-review/fowler-pass.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-omission-fixture": {
+      "id": "r4a-omission-fixture",
+      "title": "Silent-omission fixture: realistic naive, or strawman?",
+      "imperative": "Judge whether the naive implementations in the silent-omission fixtures are realistic naive implementations rather than strawmen built to lose.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "REALISTIC, not strawmen. naive_select_dict_collapse folds '- key: value' lines into a dict -- the single most common way anyone writes a Markdown field reader, and it loses on the store's OWN genuinely-repeated field (artifact-ref), not on a contrivance. naive_select_substring over-returns on a real prefix collision (g1 vs g1-implement) -- the opposite error, so 'exact' is pinned from both sides. naive_neighbours_first_key_wins reads as an entirely sensible 'find shared artifacts, else fall back to same role+step'. The fixtures are also not rigged: seed_ref_position_fixture puts TARGET first, middle and last, so the collapse loses on 2 of 3 rather than on a single hand-placed record, and the property is asserted as set(naive) < set(ours), not as a magic number. One cosmetic mismatch: naive_select_dict_collapse's docstring says it reads the '## Mechanical block' but the code scans every '- key: value' line in the whole file; the demonstrated outcome is identical for artifact-ref, so this is a comment nit, not a rigged fixture.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-uncovered-omission": {
+      "id": "r4b-uncovered-omission",
+      "title": "Hunt a silent omission the fixture does NOT cover",
+      "imperative": "Find a record that should be returned and is not (or should not be and is), in the SHIPPED retrieval, outside what the fixtures cover.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUNT PERFORMED, DEFECT FOUND, adjudicated BELOW the block threshold. Probe: scratchpad/probe_omission.py against the repo's real scripts. FINDING-1 (ranked first in REVIEW_RESULT, recommended as an authorized one-line fix-now): select_episodes(root, field, values) does set(values), so a caller passing a bare STRING silently degrades to CHARACTER membership. Demonstrated with two episodes, role=implementer and role=i: the string form select_episode_ids(root, role, implementer) returned the role=i episode -- the WRONG record -- and omitted the right one, with no exception. The natural caller idiom is the buggy one, and the future callers (#305, #308) are agent-written. Unreachable from the CLI because argparse action=append always yields a list, which is why no test caught it. FINDING-2: enumerate_episodes ends with an 'if ep is not None' filter, dropping an enumerated-but-unresolvable id with zero signal (demonstrated by stubbing resolve_episode_path to None for one id: 2 ids enumerated, 1 record returned, select returned nothing). Unreachable under either bound adapter today, but a git merge/checkout landing between the scan and the read is a live race for a store whose whole premise is content arriving via git; doctrine says fail visibly. FINDING-3: a retired episode is returned by enumerate, select and neighbours while is_episode_in_ordinary_search() says False -- deferred to g4 by the implementer and explicitly excluded by this handoff, carried to r5 as a doc/code divergence. ADJUDICATION: none of global-crew's block triggers fires -- close criteria C2-C5 are met and I proved each test can go red; evidence reproduced exactly; scope respected; no contract decision needed. Routed the way g2's artifact-ref defect was routed (authorized fix-now), not as a gate failure.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE with findings. All four close criteria met and independently demonstrated, not accepted on report. C2 is a REAL process boundary (subprocess + sys.executable, three distinct OS pids, child reports its own getpid inside the answer, session 2 receives only a store root and an id whose slug carries none of the asserted content, session 1 already exited) and C3 is a REAL git worktree boundary (real git init + two real worktree adds, .git-is-a-FILE with a gitdir: pointer, absent -> still-absent-after-local-commit -> present-only-after-merge observed). Eight mutations run in an out-of-repo mirror proved every acceptance test can go red: M1 fake pid, M2 not-found silently rc 0, M3 statement truncated in transit, M4 first-key-wins neighbours, M5 collapsed artifact-ref, M6 non-surgical amend, M7/M7b same-directory worktree simulation (still red with the anti-aliasing guard neutered), M8 inlined glob + status check. Naive fixtures are realistic, not strawmen. Findings, none blocking: (1) MEDIUM demonstrated defect -- select_episodes does set(values), so a bare-string values argument degrades to CHARACTER membership and returns the WRONG episode silently; one-line guard, recommended as an authorized fix-now on the g2-artifact-ref precedent; (2) MEDIUM doc reconciliation -- EPISODE_STORE.md sections 8 and 10 describe include_retired=False composition and a g3 'enumerate non-retired' that were correctly deferred to g4, so the frozen contract now misdescribes what shipped; (3) LOW enumerate_episodes silently drops an unresolvable id; (4-7) LOW Fowler flags -- dead JOIN_KEYS constant with a drift hazard, duplicated error message, two already-drifted docstrings, NUL-joined composite key. Repo left untouched: git status shows only the implementer's 2 modified + 1 new, episodes/ holds only README.md."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4b-uncovered-omission",
+      "statement": "Harden query_episodes.select_episodes against a str 'values' argument (raise QueryError instead of degrading to character-set membership), and make enumerate_episodes raise on an enumerated-but-unresolvable id instead of silently dropping it. Both are silent-omission-class holes in the module written specifically against that class."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3-review-301",
+    "status": "released",
+    "claimed_at": "2026-08-01T09:32:44.289908+00:00",
+    "last_heartbeat": "2026-08-01T09:47:34.513791+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/constellation-skills-wt/298-301",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T09:47:46.668434+00:00"
+  }
+}

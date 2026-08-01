@@ -1,0 +1,33 @@
+{
+  "work_id": "explore-context-governor",
+  "cycle": "2",
+  "flavor": "refine",
+  "type": "survey",
+  "framing": "Harden the one direction the excursions converged on: the governor as a LOGGING-DISCIPLINE upgrade (capture the why the engine doesn't) plus a gauge-advice-at-gate trip mechanism, riding reach-up refresh. Chase the open threads: what the handoff carries, enforcement, and who trips the refresh.",
+  "decisions": [
+    {"id": "d1", "decision": "The governor is primarily an upgrade to how agents log, not a bolted-on mechanism. Capture the WHY continuously; the handoff then already exists at any defined point. (Human synthesis, Pocock-connected.)"},
+    {"id": "d2", "decision": "Why-capture is hooked onto engine gate events, at EVERY gate (not just tier seams) — because the goal is handoff WITHIN a tier, and a gate is the finest-grained defined point. (Human decision.)"},
+    {"id": "d3", "decision": "Prompt mandatory, content optional: 'mechanical / no why' is a first-class EXPLICIT answer, never silence — silence is a bug, explicit-nothing is data. Resolves the enforced-vs-light tension and the STATE_NOTE 'discipline-not-invariant' rot."},
+    {"id": "d4", "decision": "Mechanical gates are pre-marked why-exempt at TEMPLATE-AUTHORING time (the author knows 'claim lease'/'archive' are mechanical vs 'adjudicate finding'/'sequence gates'). Agents only get prompted where a why could matter."},
+    {"id": "d5", "decision": "No separate 'running digest' machinery needed: each gate's why has 3 cheap parts (why-done / what-I-understand / what's-next); the 'what I understand' line self-supersedes, so the latest one IS the live digest and the trail is history."},
+    {"id": "d6", "decision": "Enforcement is an ENGINE SCHEMA update (the why-field is part of the gate schema), not a convention. (Human decision.)"},
+    {"id": "d7", "decision": "Who-trips is (near-)free with engine invocation: a harness hook writes the context-fill gauge to a local file on every tool call; the engine (already invoked at every gate) reads it and, past a model-keyed threshold, returns ADVICE to the agent ('you might want to hand off — request a refresh from your invoker'). The agent never introspects; sensing=hook, policy=engine, action=agent. (Human proposal.)"},
+    {"id": "d8", "decision": "Recovery is symmetric: intentional refresh and lost-session resume from the identical durable trail. The logging upgrade is independently valuable (cheap crash recovery) even where the gauge/refresh is crude — de-risks the whole project."},
+    {"id": "d9", "decision": "Refresh authority is reach-up (invoker re-instantiates; human at top) — portable across Claude Code / Codex / pi; self-refresh is a pi-only later bonus. (Settled by X3.)"},
+    {"id": "d10", "decision": "SOFT band is 'just ask the agent' — NOT an engine computation. Correction of an earlier over-build: drop the fill×gates-remaining calc; gates-remaining is a bad metric. Instead, when fill is high the engine surfaces a plain question at the gate: 'you've used most of your context — is this a good stopping point?' The clean division: the ENGINE supplies the FILL FACT (the one thing agents can't self-measure — sourced from the hook/gauge), the AGENT supplies the STOP-POINT JUDGMENT (seam quality — a thing agents CAN do). So it's not blind yolo; it's trusting the agent only on the judgment it's actually competent at. Human is 'willing to yolo' on that judgment. (Human decision.)"},
+    {"id": "d10b", "decision": "Bias toward STOPPING. 'I don't want an agent to keep working when it thinks it's tired.' Frame the question so stopping is the default — e.g. 'you're full; unless you're basically done, hand off here at this clean seam.' The agent can still say 'just finishing up' (breathe/charge survives), but we do NOT build machinery to encourage pushing through; default leans hand-off. (Human decision.)"},
+    {"id": "d11", "decision": "SYNTHESIS (survives the d10 simplification) — 'govern and prevent, one mechanism.' The soft question both GOVERNS (you're full) and PREVENTS overcommit (an agent asked 'good place to stop?' while full naturally weighs whether the next chunk is big, and stops at the seam before diving in). Prevention is now agent-judged, folded into the stop-point call — NOT a separate upstream issue-sizing strategy, and NOT an engine lookahead. Revises the earlier 'prevention out of scope.' (Human synthesis.)"},
+    {"id": "d12", "decision": "RESOLVED (not a caution anymore): the gate-count-as-effort-proxy worry is moot — the work-remaining metric is dropped entirely (d10). Nothing computes remaining effort; the agent judges the stop point directly."}
+  ],
+  "consolidation": {
+    "summary": "The design has crystallized into a coherent shape with all major forks resolved. It is a LOGGING-DISCIPLINE upgrade (engine-schema-enforced why-capture at every non-mechanical gate, self-superseding digest, reference-don't-duplicate) + a FREE GAUGE-ADVICE-AT-GATE trip (hook writes fill, engine relays+advises at the gate the agent already hits) + REACH-UP refresh (portable). Remaining work is spec-level detail (schema fields, threshold policy, per-tier exempt-gate marking, handoff artifact format, soft-advise-vs-hard-force teeth, the portable gauge-file seam) — not further open exploration. Not converged: the human owns that call.",
+    "open_threads_remaining": [
+      "Soft-advise vs hard-force teeth: engine advises at a soft threshold; can/should it REFUSE to advance past a hard threshold until a handoff is produced? (engine is the gatekeeper, so it can — two-band T4).",
+      "The local gauge-file is the seam between harness-specific sensing (hook adapter per harness) and the portable engine policy — a load-bearing interface to design-it-twice at spec time.",
+      "Fail-safe: missing/stale gauge file => engine gives no advice (never forces a handoff on absent data)."
+    ],
+    "converged": false
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

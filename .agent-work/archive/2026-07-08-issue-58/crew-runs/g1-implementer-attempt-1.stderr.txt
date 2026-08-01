@@ -1,0 +1,2 @@
+error: unknown option '--session'
+(Did you mean --version?)

@@ -1,0 +1,383 @@
+{
+  "work_id": "300-g5-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-repo-revision-fn",
+    "m2-manifest-content-field",
+    "m3-determinism-check",
+    "m4-docs-line",
+    "m5-full-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read scripts/context_manifest.py's module docstring (the design being extended), docs/CHECKLIST_ENGINE_DESIGN.md's 'Context manifest' section, tests/test_context_determinism.py, and tests/test_context_manifest.py. Confirm the handoff (given directly in the dispatch prompt, no separate HANDOFF.md) is complete: task, intent, scope, exclusions, required evidence, test mode, stop conditions are all present in the prompt. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "design docstring + existing tests read; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-repo-revision-fn": {
+      "id": "m1-repo-revision-fn",
+      "title": "checklist_engine.repo_revision(): commit + dirty, computed once, off context_manifest.py's own AST-banned-subprocess surface",
+      "imperative": "Add a `repo_revision(base_dir) -> {'commit': str|None, 'dirty': bool|None}` function to scripts/checklist_engine.py, reusing the existing `_git()` subprocess helper (already used for git-change-policy) -- `git rev-parse HEAD` for commit, `git status --porcelain` for dirty, both scoped to base_dir. Any git failure (not a repo, git missing) yields {'commit': None, 'dirty': None}, never raises -- mirrors the existing 'absence is normal, never raise' rule read_bytes()/rev() already follow for file rows. This function must live in checklist_engine.py, NOT context_manifest.py: tests/test_context_manifest.py::ProducerGuards::test_producer_shells_out_to_nothing AST-scans context_manifest.py's own source for subprocess/socket/etc identifiers and must keep passing untouched. Add tests to tests/test_checklist_engine.py asserting: commit matches `git rev-parse HEAD` oracle on this real repo; dirty is a bool computed from `git status --porcelain` non-emptiness (oracle-compared); a non-git directory (tempdir) yields {'commit': None, 'dirty': None} without raising. Test-after is fine (this is a thin subprocess wrapper mirroring the existing `_collect_changed_files` pattern, not a novel algorithm). Attest c1 (TDD not required here) and satisfy c2 (command).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test-after acceptable here; no TDD red step required -- thin wrapper over the existing _git() subprocess helper",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "repo_revision() present, tested, graceful on non-git dirs; full checklist_engine suite still green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -q -k repo_revision --no-header && python -m pytest tests/test_checklist_engine.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-repo-revision-fn-1"
+        }
+      ],
+      "constraints": [
+        "do not touch context_manifest.py's own source in this step",
+        "python -m pytest, never py -m pytest",
+        "no Path.read_text/write_text(newline=)",
+        "no skipTest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-repo-revision-fn-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py -q -k repo_revision --no-header && python -m pytest tests/test_checklist_engine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-manifest-content-field": {
+      "id": "m2-manifest-content-field",
+      "title": "repo_rev admitted into CONTENT_KEYS, wired via a second injectable impure edge",
+      "imperative": "In scripts/context_manifest.py: add `default_repo_state(roots) -> dict` (a pure-looking wrapper that calls `checklist_engine.repo_revision(roots.get('repo'))`, imported by name -- never `import subprocess`, so the module's own AST-banned-identifier guard stays clean), add a `repo_state` parameter to `build_manifest` defaulting to `default_repo_state`, add `'repo_rev'` to `CONTENT_KEYS` (before `run`, so the envelope stays CONTENT_KEYS + {run}), and emit `'repo_rev': dict(repo_state(roots))` in the manifest between `files` and `run`. Update the module docstring's 'single impure edge' claim to 'two impure edges' (reader for file bytes, repo_state for repo-level commit/dirty) and its point-1 paragraph to mention the new field briefly. Do NOT touch `rev()` or the per-file row shape -- the per-file blob OID stays byte-for-byte what it is. Update the one pre-existing test that hardcodes the 4-key envelope (`ManifestEnvelope.test_envelope_has_exactly_four_keys` -> 5 keys, in the new order) since it must legitimately change; every other pre-existing test should keep passing because they assert via `set(...)`/`CONTENT_KEYS`, not a hardcoded list. Add a new test class in tests/test_context_manifest.py (method names containing 'repo_rev', matching gate g5's `-k 'repo_rev or doctrine_version'` selector) covering: repo_rev is in CONTENT_KEYS; repo_rev survives into content(); repo_rev shape is exactly {commit, dirty}; repo_state is injectable (fake callable's return flows through untouched, mirroring the existing reader-injection test); default_repo_state against the real repo matches the `git rev-parse HEAD` / `git status --porcelain` oracles (test file only -- subprocess-as-oracle is fine there, unlike in the producer itself). Attest c1 (test-after, inspection-mode: this is wiring an existing tested primitive into an existing tested envelope, not new algorithmic risk) and satisfy c2/c3 (commands).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "repo_revision() exists in checklist_engine.py",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "repo_revision() exists and is tested in checklist_engine.py"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test-after/inspection run: no TDD red step required for this wiring step",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "gate g5's own content-projection check, verbatim",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py -q -k 'repo_rev or doctrine_version' --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-manifest-content-field-1"
+        },
+        {
+          "id": "c3",
+          "statement": "the whole test_context_manifest.py suite is green (envelope-count test updated, nothing else silently broken)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_context_manifest.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-manifest-content-field-2"
+        }
+      ],
+      "constraints": [
+        "do NOT replace or weaken the per-file blob OID",
+        "keep CONTENT_KEYS order = (contract, step, files, repo_rev)",
+        "every file write pins newline='\\n'",
+        "no skipTest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-manifest-content-field-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py -q -k 'repo_rev or doctrine_version' --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-manifest-content-field-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_context_manifest.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-determinism-check": {
+      "id": "m3-determinism-check",
+      "title": "The critical check: cross-environment determinism test passes UNCHANGED",
+      "imperative": "Run tests/test_context_determinism.py against the now-edited scripts/context_manifest.py and scripts/checklist_engine.py WITHOUT modifying that test file at all. It builds two fresh git worktrees at the SAME commit, overlays the current (in-progress) copies of context_manifest.py/checklist_engine.py onto both, and asserts the content projection (now including repo_rev) is byte-identical across both environments. If it passes: attest c1 and move on -- this is confirmation, not new work. If it FAILS: STOP. Do not patch the test, do not move the field into `run`, do not add masking. Report the failure as a design-invalidating finding in IMPLEMENTER_RESULT's stop conditions section instead -- per the dispatch instructions this would mean the field belongs in the excluded /run subtree after all, which is a bigger finding than this gate's budget covers.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "repo_rev wired into the manifest content",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "repo_rev wired into build_manifest"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_context_determinism.py passes unchanged, byte 1:1 with its pre-change form",
+          "check": {
+            "kind": "command",
+            "command": "git diff --exit-code -- tests/test_context_determinism.py && python -m pytest tests/test_context_determinism.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-determinism-check-1"
+        }
+      ],
+      "constraints": [
+        "do not edit tests/test_context_determinism.py under any circumstance in this step"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-determinism-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --exit-code -- tests/test_context_determinism.py && python -m pytest tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-docs-line": {
+      "id": "m4-docs-line",
+      "title": "One explanatory note in docs/CHECKLIST_ENGINE_DESIGN.md",
+      "imperative": "In the 'Context manifest' section (~line 183 onward), add one short paragraph explaining the two-level scheme: the per-file blob OID answers 'which bytes this agent actually got' (unchanged, still no git subprocess in rev()); the new `repo_rev: {commit, dirty}` content field answers a coarser, repo-wide question -- 'which commit is canon versioned at, and is that commit's tree honest right now' -- computed via `checklist_engine.repo_revision()` (a git subprocess, kept out of context_manifest.py's own source so its no-subprocess AST guard stays true) and injected as a second impure edge (`repo_state`) beside the existing `reader`. Keep it tight -- this is explicitly NOT a redesign, just documenting the addition. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the field exists to document",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "repo_rev field exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/CHECKLIST_ENGINE_DESIGN.md updated with the two-level explanation",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'repo_rev' docs/CHECKLIST_ENGINE_DESIGN.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-docs-line-1"
+        }
+      ],
+      "constraints": [
+        "one paragraph, not a redesign of the section"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-docs-line-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'repo_rev' docs/CHECKLIST_ENGINE_DESIGN.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-full-suite": {
+      "id": "m5-full-suite",
+      "title": "Full suite green, no new skip",
+      "imperative": "Run the full suite and the skip guard, exactly as gate g5's postcondition c4 will. Fix anything red. Do not introduce any unittest.SkipTest anywhere. Attest c1 once green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all prior steps complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all prior steps complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green, skip guard passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q --junitxml=junit-report.xml && python scripts/verify_skip_guard.py junit-report.xml && rm -f junit-report.xml"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-full-suite-1"
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py -m pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q --junitxml=junit-report.xml && python scripts/verify_skip_guard.py junit-report.xml && rm -f junit-report.xml",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-300-g5-1",
+    "status": "released",
+    "claimed_at": "2026-08-01T18:04:47.294420+00:00",
+    "last_heartbeat": "2026-08-01T18:12:43.153087+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T18:13:52.404962+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "context loaded; proceeding to wire repo_rev into the manifest per Tommy's ruling and the gate contract",
+      "mechanical": false,
+      "ts": "2026-08-01T18:05:06.440374+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-repo-revision-fn",
+      "why": "repo_revision() added to checklist_engine.py, tested against real git oracles; 6/6 new tests pass, full checklist_engine suite green (330 passed)",
+      "mechanical": false,
+      "ts": "2026-08-01T18:07:15.819251+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-manifest-content-field",
+      "why": "repo_rev admitted into CONTENT_KEYS; wired via injectable repo_state edge defaulting to default_repo_state (checklist_engine.repo_revision); per-file blob OID unchanged; 62/62 test_context_manifest.py tests green including gate g5's own -k filter",
+      "mechanical": false,
+      "ts": "2026-08-01T18:09:58.900870+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-determinism-check",
+      "why": "critical check passed: repo_rev is byte-identical across two clean worktree checkouts of the same commit, confirming it belongs in content, not run",
+      "mechanical": false,
+      "ts": "2026-08-01T18:10:37.068669+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-docs-line",
+      "why": "documented the two-level scheme in docs/CHECKLIST_ENGINE_DESIGN.md, tight, no redesign",
+      "mechanical": false,
+      "ts": "2026-08-01T18:11:02.223960+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-full-suite",
+      "why": "full suite green (1250 passed, 2 skipped, 336 subtests), skip guard confirms 0 new skips (both pre-existing, allow-listed)",
+      "mechanical": false,
+      "ts": "2026-08-01T18:12:43.153087+00:00"
+    }
+  ]
+}

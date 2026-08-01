@@ -1,0 +1,258 @@
+{
+  "work_id": "issue-102-g4-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-move4",
+    "m2-move5",
+    "m3-move8",
+    "m4-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-everyone.md), the 5 carrier SKILL.md files, and the handoff. Verify handoff completeness; capture BEFORE grep baselines. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + 5 carriers + handoff loaded; handoff complete; BEFORE greps captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-move4": {
+      "id": "m1-move4",
+      "title": "Move 4 - scoped-nulls (PARTIAL): general principle to global-everyone; explorer+prototyper SKILL.md become pointer+tail; references/ untouched",
+      "imperative": "Append canonical 'Scoped nulls' subsection to global-everyone.md. Reduce explorer item 2 + line-68 and prototyper Scoped-nulls section to pointer + role-specific tail. Do NOT touch prototyper/references/measurement.md or ui.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "canonical in global-everyone; carriers no longer carry the moved principle phrase; carriers point; references/ untouched",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'never the idea class' skills/_shared/global-everyone.md && ! grep -rq 'never the idea class' skills/explorer/SKILL.md skills/prototyper/SKILL.md && grep -q 'global-everyone.md' skills/explorer/SKILL.md && grep -q 'global-everyone.md' skills/prototyper/SKILL.md && [ -z \"$(git status --porcelain skills/prototyper/references/)\" ]"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-move4-1"
+        }
+      ],
+      "constraints": [
+        "PARTIAL move: general principle moves; prototyper spike applications in references/ stay untouched"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-move4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'never the idea class' skills/_shared/global-everyone.md && ! grep -rq 'never the idea class' skills/explorer/SKILL.md skills/prototyper/SKILL.md && grep -q 'global-everyone.md' skills/explorer/SKILL.md && grep -q 'global-everyone.md' skills/prototyper/SKILL.md && [ -z \"$(git status --porcelain skills/prototyper/references/)\" ]",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-move5": {
+      "id": "m2-move5",
+      "title": "Move 5 - world-verification: shared principle to global-everyone; commander+reviewer keep role tails + pointer",
+      "imperative": "Append canonical world-verification subsection to global-everyone.md. Reduce commander gN-integrate passage and reviewer para to pointer + role tail. Reconcile: shared principle consolidates, do NOT force-merge if genuinely distinct.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "move4 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "canonical in global-everyone; carriers no longer carry the moved conclusion clause; carriers point",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'never on what the report asserted' skills/_shared/global-everyone.md && grep -q 'claimed side-effect' skills/_shared/global-everyone.md && ! grep -rEq 'not on what the result claims|never on what the report asserted' skills/commander/SKILL.md skills/reviewer/SKILL.md && grep -q 'global-everyone.md' skills/commander/SKILL.md && grep -q 'global-everyone.md' skills/reviewer/SKILL.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-move5-2"
+        }
+      ],
+      "constraints": [
+        "Touch commander ONLY at the move-5 passage",
+        "Do not force-merge genuinely distinct rules"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-move5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'never on what the report asserted' skills/_shared/global-everyone.md && grep -q 'claimed side-effect' skills/_shared/global-everyone.md && ! grep -rEq 'not on what the result claims|never on what the report asserted' skills/commander/SKILL.md skills/reviewer/SKILL.md && grep -q 'global-everyone.md' skills/commander/SKILL.md && grep -q 'global-everyone.md' skills/reviewer/SKILL.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-move5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'never on what the report asserted' skills/_shared/global-everyone.md && grep -q 'claimed side-effect' skills/_shared/global-everyone.md && ! grep -rEq 'not on what the result claims|never on what the report asserted' skills/commander/SKILL.md skills/reviewer/SKILL.md && grep -q 'global-everyone.md' skills/commander/SKILL.md && grep -q 'global-everyone.md' skills/reviewer/SKILL.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-move8": {
+      "id": "m3-move8",
+      "title": "Move 8 - delegate-not-replacement: consolidate commander+admiral to global-everyone (deliberately broadened to all tiers)",
+      "imperative": "Append canonical delegate-not-replacement subsection to global-everyone (broadened to every tier per ruling). Reduce commander + admiral passages to pointer + role tail.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "move5 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "canonical in global-everyone; carriers no longer carry the moved phrase; carriers point",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'delegate is not a replacement' skills/_shared/global-everyone.md && ! grep -rq 'delegate is not a replacement' skills/commander/SKILL.md skills/admiral/SKILL.md && grep -q 'global-everyone.md' skills/admiral/SKILL.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-move8-2"
+        }
+      ],
+      "constraints": [
+        "Touch commander/admiral ONLY at the move-8 passage"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-move8-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'delegate is not a replacement' skills/_shared/global-everyone.md && ! grep -rq 'delegate is not a replacement' skills/commander/SKILL.md skills/admiral/SKILL.md && grep -q 'global-everyone.md' skills/admiral/SKILL.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-move8-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'delegate is not a replacement' skills/_shared/global-everyone.md && ! grep -rq 'delegate is not a replacement' skills/commander/SKILL.md skills/admiral/SKILL.md && grep -q 'global-everyone.md' skills/admiral/SKILL.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-suite": {
+      "id": "m4-suite",
+      "title": "Full suite green",
+      "imperative": "Run py -m pytest tests/ -q and confirm green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three moves done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

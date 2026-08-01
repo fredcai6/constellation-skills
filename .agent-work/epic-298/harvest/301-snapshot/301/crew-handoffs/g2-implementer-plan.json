@@ -1,0 +1,764 @@
+{
+  "work_id": "301-g2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-scaffold",
+    "m2-partition",
+    "m3-guards",
+    "m4-atomicity",
+    "m5-retirement",
+    "m6-dispute",
+    "m7-verify",
+    "m8-defect1-newline",
+    "m9-defect2-atomicity",
+    "m10-sweep",
+    "m11-reverify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (bundled with the implementer skill); docs/agents/CREW_CONTEXT.md and GLOSSARY.md do not exist in this repo (degrade to global-only, per checklist-engine.md). Read the g2 handoff in full and docs/EPISODE_STORE.md (the frozen contract, authoritative over the handoff). Read scripts/apply_lessons_delta.py and tests/test_apply_lessons_delta.py as the pattern to mirror (read-only, never edit). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "global doctrine + EPISODE_STORE.md + handoff + apply_lessons_delta.py pattern loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-scaffold": {
+      "id": "m1-scaffold",
+      "title": "Scaffold module: record grammar, parse/render round-trip, store-root seam, minimal create op",
+      "imperative": "Create scripts/apply_episode_delta.py with: the store-root seam (literal relative path episodes/ from repo root, NOT durable_root()); Episode/Assertion dataclasses matching EPISODE_STORE.md section 3's grammar exactly (HTML-comment state header, ## Mechanical, ## Agent-supplied with fixed a1..a5 kind order, optional ## Diagnosis (optional), ## Retirement); parse_episode()/render_episode() as an exact round-trip pair; validate_delta() and apply_delta() skeletons; a minimal 'create' op (mechanical bin + all 5 agent-supplied kinds, no diagnosis) that assigns the episode id itself via the run+sequence scan (EPISODE_STORE.md section 2) rather than accepting an id from the delta. Read/write files with encoding='utf-8', newline='' explicitly (state this choice) so no \\r\\n translation occurs on Windows. Write a first round-trip test in tests/test_episode_store.py: create an episode via a delta, read the file back, assert render(parse(text)) == text (idempotent) and that the five agent-supplied kinds landed as a1..a5 in the documented order. TDD: write the test first, observe it fail (module doesn't exist yet), then implement until green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_episode_store.py round-trip test written and observed failing (module/functions not yet implemented) \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "round-trip test passes: create op writes a well-formed episode file and render(parse(text)) is idempotent",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q -k round_trip"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-scaffold-1"
+        }
+      ],
+      "constraints": [
+        "do not call durable_root()",
+        "tests write to pytest tmp_path, not the real episodes/ directory",
+        "do not edit apply_lessons_delta.py or .agent-work/LESSONS.md"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-scaffold-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q -k round_trip",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-partition": {
+      "id": "m2-partition",
+      "title": "C2 \u2014 partition enforcement via per-bin field-name allowlist",
+      "imperative": "Implement the per-bin field-name allowlist in validate_delta(): the mechanical bin only accepts {run, project, role, spine-step, context-manifest-ref, refusals, reopens, rework-count, failed-commands, artifact-ref}; the agent-supplied bin only accepts exactly the 5 kinds named in EPISODE_STORE.md section 4 (task-intent, expected-behavior, observed-behavior, impact-cost, workaround), no more, no less; the diagnosis bin only accepts {suspected-cause, proposed-remedy}. Any field filed under the wrong bin (e.g. an agent-supplied concept like lifecycle-standing appearing under ## Mechanical) is REJECTED before any file is touched. Write tests/fixtures/episodes/misfiled-field-delta.json: a create op whose mechanical dict carries a field that belongs to the agent-supplied bin (the exact violation EPISODE_STORE.md section 5 warns about \u2014 a mechanical fact given an epistemic-status field). Write a test asserting the delta is rejected (non-zero exit / raises) with a clear message naming the misfiled field.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-scaffold complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: misfiled-field test written and observed failing before the allowlist exists \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "partition allowlist rejects the misfiled-field fixture from both directions (mechanical<->agent-supplied) and the round-trip tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-partition-1"
+        }
+      ],
+      "constraints": [
+        "fixture must exist at the exact path tests/fixtures/episodes/misfiled-field-delta.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-partition-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-guards": {
+      "id": "m3-guards",
+      "title": "C3 \u2014 retire-reason guard and newline-injection guard",
+      "imperative": "Implement two structural guards in validate_delta(), both purely from the JSON (no disk access), so they reject before any file is touched: (a) a retire op whose 'reason' is missing or whitespace-only; (b) any agent-supplied free-text value (statement, history/grounding citations, retire reason) containing a literal newline (\\n or \\r) \u2014 the injection defense EPISODE_STORE.md section 7 names explicitly (an observed-behavior statement that quotes a transcript containing the literal line '- status: retired'). Write tests/fixtures/episodes/missing-retire-reason-delta.json (a retire op with reason omitted or blank) and tests/fixtures/episodes/newline-injection-delta.json (a create op whose observed-behavior statement embeds a literal newline followed by '- status: retired', mirroring the doc's own example). Write tests asserting both are rejected.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-partition complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: both guard tests written and observed failing before the guards exist \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "both fixtures are rejected with clear messages; full episode-store suite still green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-guards-1"
+        }
+      ],
+      "constraints": [
+        "fixtures at tests/fixtures/episodes/missing-retire-reason-delta.json and tests/fixtures/episodes/newline-injection-delta.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-guards-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-atomicity": {
+      "id": "m4-atomicity",
+      "title": "C4 \u2014 all-or-nothing across a multi-op delta",
+      "imperative": "Ensure apply_delta() computes every op's write in memory (a write-plan) and only touches the filesystem once every op in the delta has succeeded \u2014 so an invalid op anywhere in a multi-op delta leaves every file byte-for-byte unchanged, including files a valid earlier op in the same delta would have touched. Write a test that: seeds an episode via one delta, captures its file bytes, then runs a second delta containing one valid op (e.g. a confirm-shaped amend) followed by one invalid op (e.g. retire with blank reason) in the SAME delta, expects rejection, and asserts the file bytes are byte-identical before and after.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-guards complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the before/after byte-comparison test written and observed failing before write-plan deferral exists \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "all-or-nothing test passes: file bytes unchanged after a rejected multi-op delta",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q -k atomic"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-atomicity-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-atomicity-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q -k atomic",
+            "exit": 5,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-atomicity-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q -k atomic",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-retirement": {
+      "id": "m5-retirement",
+      "title": "C8 \u2014 retire op routed through apply_retirement(), retirement layout stays unbound",
+      "imperative": "Implement the retire op so its layout effect routes ONLY through a single named apply_retirement(episode_id, reason, ...) seam, per EPISODE_STORE.md section 7 and the handoff's seam table. Isolate the layout-dependent branch behind one module-level adapter switch (both Option-A [file-move] and Option-B [status-field-only] adapters implemented, switch defaults to Option-B as a clearly-marked placeholder, NOT a ratified choice) so g4 can bind the ratified layout by flipping one constant. Do the same for resolve_episode_path(), iter_episode_ids(), and is_episode_in_ordinary_search() (stub is acceptable for the last one; g2 does not need it, but name it per the seam table). Mark every layout-dependent branch TODO(g4). Write a test that retires an episode and asserts the field diff (status/retired-reason/retired-at/consolidated-into) matches EPISODE_STORE.md section 7's worked example, plus one test that flips the adapter switch to Option-A and confirms the file actually moves between active/ and retired/ subdirectories -- proving the seam is a real, swappable boundary (two adapters), not a hypothetical one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4-atomicity complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: retire test(s) written and observed failing before apply_retirement() exists \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "retire op works under the default adapter and the seam swap test proves Option-A also works via the same call site",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q -k retire"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-retirement-1"
+        }
+      ],
+      "constraints": [
+        "do not hard-code Option A or Option B as THE answer -- both adapters exist behind one switch",
+        "no file move happens under the default (Option-B) adapter"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-retirement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q -k retire",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-dispute": {
+      "id": "m6-dispute",
+      "title": "C6 \u2014 surgical dispute op (amend-assertion), resolved via resolve_episode_path()",
+      "imperative": "Implement the amend-assertion op: given an episode id and one assertion id (e.g. a4), change only that assertion's lifecycle-standing and append one history line -- no other assertion, no mechanical field, no retirement field changes. Route its target-file lookup through resolve_episode_path() (the reviewer finding carried forward from g1: amend was missed previously; retire and fetch already used it). Write a test that disputes one agent-supplied assertion (mirroring EPISODE_STORE.md section 5's a4 worked example) and asserts a SIBLING assertion's stored lines (e.g. a3, observed-behavior) are byte-identical before and after the dispute -- read the raw file text, extract each assertion's block, and diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5-retirement complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: surgical-dispute test written and observed failing before amend-assertion exists \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "dispute op changes only the named assertion; sibling assertion's lines are byte-identical before/after",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q -k dispute"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-dispute-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-dispute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q -k dispute",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-verify": {
+      "id": "m7-verify",
+      "title": "Full verification: negation checks, full suite, clean git status, write IMPLEMENTER_RESULT",
+      "imperative": "Run the three required negation checks exactly as the gate closeout will (against the real episodes/ directory, no --store-root override) and confirm each exits non-zero with a clear message; run the full repo test suite and confirm the count matches baseline (1157 passed + new tests, 2 skipped); run git status --short and confirm only the new files (scripts/apply_episode_delta.py, tests/test_episode_store.py, tests/fixtures/episodes/*.json) appear, and that episodes/ itself is untouched (no stray files left behind by tests). Write IMPLEMENTER_RESULT to .agent-work/301/crew-handoffs/g2-result.md per the handoff's Return Format, with a literal VERDICT line, pasted evidence for the three load-bearing items (negation checks, C4 byte comparison, C6 sibling-unchanged assertion), and a non-empty Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m6-dispute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "three negation checks pasted, each non-zero; full suite green at expected count; git status shows only new files",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written with VERDICT line and required evidence",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/301/crew-handoffs/g2-result.md && grep -q '^VERDICT:' .agent-work/301/crew-handoffs/g2-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/301/crew-handoffs/g2-result.md && grep -q '^VERDICT:' .agent-work/301/crew-handoffs/g2-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-defect1-newline": {
+      "id": "m8-defect1-newline",
+      "title": "REWORK defect 1 -- newline guard tied to splitlines(), not a hand-listed char set",
+      "imperative": "Reviewer BLOCK finding (touches C3b): _reject_newline() only checks literal \\n/\\r, but parse_episode() sections the file via str.splitlines(), which treats a WIDER set as line boundaries (\\v, \\f, \\x1c-\\x1e, \\x85 NEL, U+2028, U+2029). A value embedding e.g. U+2028 passes the guard, writes once, then silently truncates on the next parse -- the exact injection class C3b exists to prevent. Fix: redefine the guard's predicate in terms of str.splitlines() itself (e.g. reject when value.splitlines() != [value], which catches both the multi-segment case AND the trailing-separator case like 'text\\u2028' that splitlines() reduces to one element but is still unsafe) so the guard and the parser can never drift apart again. Add a code comment explaining WHY the predicate is defined via the parser's own behavior rather than an enumerated character list. Update _reject_newline's docstring to match. Add tests to tests/test_episode_store.py covering U+2028, U+2029, \\v, \\f, \\x85 (NEL), and the trailing-separator case, plus at least one END-TO-END test that a forged '- status: retired' line via one of these characters is rejected (not just that the predicate returns True in isolation). TDD: write the new tests first, observe them fail against the old character-list guard, then fix.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 handoff and reviewer BLOCK (g2-review-result.md) reread; defect reproduced locally before fixing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new newline-guard tests written and observed failing against the OLD character-list guard -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "new guard predicate rejects all six line-boundary variants plus the trailing-separator case, and an end-to-end forged-status-line attack is rejected; full episode-store suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-defect1-newline-1"
+        }
+      ],
+      "constraints": [
+        "do not touch the retirement layout placeholder",
+        "do not call durable_root()",
+        "do not edit apply_lessons_delta.py or .agent-work/LESSONS.md",
+        "keep the three existing fixtures at their exact paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-defect1-newline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m9-defect2-atomicity": {
+      "id": "m9-defect2-atomicity",
+      "title": "REWORK defect 2 -- stage-then-commit write phase, so a mid-write I/O failure leaves the store untouched",
+      "imperative": "Reviewer BLOCK finding (touches C4): _Transaction.commit() writes each touched file sequentially with no staging/rollback -- a failure on the 2nd of 2 writes (disk full, permission denied, locked file) leaves the 1st file's write landed while the delta as a whole fails, contradicting the module docstring's unconditional all-or-nothing claim. Fix: write every touched file to a temp path first (inside the store directory, so the later move is same-filesystem), and only once ALL staged writes succeed, move each into place via os.replace() (atomic for a single file on Windows and POSIX). On any staging failure, clean up the temp files already written and leave the store untouched. Add a code comment stating honestly that multi-file atomicity across the MOVE step is best-effort (a crash mid-move can still leave a partial result) -- do not overclaim full multi-file atomicity. Add a test that monkeypatches the write or move step to fail on the second of two touched files and asserts the store is byte-for-byte unchanged afterward (capture full directory state before, compare after). TDD: write the failing test against the OLD sequential-write code first, observe it fail, then fix.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m8-defect1-newline complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the forced-second-write-failure test written and observed failing against the OLD sequential commit() -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "stage-then-commit implemented; forced-failure test proves the store is untouched on a mid-write failure; full episode-store suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-defect2-atomicity-1"
+        }
+      ],
+      "constraints": [
+        "temp files must stay inside the store directory (same filesystem as the final move target)",
+        "use os.replace() for the move step",
+        "do not touch the retirement layout placeholder",
+        "do not call durable_root()"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-defect2-atomicity-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m10-sweep": {
+      "id": "m10-sweep",
+      "title": "Sweep for the same defect class: an invariant enforced with one definition where a different part of the module assumes another",
+      "imperative": "Both BLOCK defects share one root cause: a validator's notion of well-formedness diverges from what the parser/renderer/a later reader actually assumes. Sweep scripts/apply_episode_delta.py end to end for other instances of this class -- e.g. ID_RE/RUN_RE vs how ids are actually constructed and parsed, FIELD_RE's assumptions vs what render_episode() emits, any other place a character set or format is validated by one rule but consumed by a different one. Fix anything found that is a live risk within scope; report anything judged safe (with reasoning) even if not fixed. No code change is required if the sweep finds nothing else load-bearing, but the imperative is not satisfied by skipping the sweep.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m9-defect2-atomicity complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sweep performed across the whole module; findings (fixed or judged-safe) recorded for the result writeup -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Swept every re.compile/strip()/write_text/read_text site in scripts/apply_episode_delta.py for the same class (a validator's well-formedness definition diverging from a parser/renderer/reader's own). Findings: (1) all free-text values rendered into a store line (mechanical scalars, artifact-ref entries, assertion statement/history, retire reason/retired-at/consolidated-into/superseded-by) route through _reject_newline before write -- confirmed by tracing every call site, no gap found. (2) ID_RE/RUN_RE (validate op-supplied ids) vs _next_episode_id's actual construction (run+'-'+3-digit seq): ID_RE is stricter-or-equal to what the writer ever constructs, and both further exclude any splitlines()-boundary char (RUN_RE's charset has none, and run is ALSO passed through _reject_newline in the mechanical-fields loop -- double-guarded, no gap). (3) FIELD_RE/ASSERTION_HEADING_RE/HEADER_RE (parse-side) vs render_episode()'s actual output format: traced field-by-field, every rendered '- key: value' line's value is guard-clean (single-line) by construction, so FIELD_RE's per-line assumption always holds; ASSERTION_HEADING_RE's id.aid tokens are writer-controlled (never free text). (4) checked str.strip()'s interaction with the guard: Python classifies several splitlines() boundary chars (\\x1c-\\x1e, \\x85, U+2028/2029, \\v treated similarly) as whitespace, so a value that is ONLY a boundary char gets caught earlier by _require_str's not-value.strip() empty check with a different but still-correct rejection message; a value with real content plus a boundary char reaches _reject_newline and is caught there -- verified both paths reject, no silent-accept gap either way. (5) noted, not fixed (pre-existing, unchanged by this rework, low risk): commit()'s per-write path.parent.mkdir(parents=True, exist_ok=True) runs before that file's write, so a staging failure on write N can leave an empty directory created for write N's parent (relevant only under the not-yet-ratified Option-A layout, which creates active/retired subdirs) -- an empty, untracked directory, not corrupted data; flagged as a cheap future tidy, not a live risk. No other instances of the class found; no additional code changes made beyond the two already-fixed defects."
+        }
+      ],
+      "constraints": [
+        "scope stays scripts/apply_episode_delta.py and tests/test_episode_store.py only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m11-reverify": {
+      "id": "m11-reverify",
+      "title": "Full reverification and overwrite IMPLEMENTER_RESULT with the rework account",
+      "imperative": "Run the three required negation-check fixtures against the real episodes/ directory, the full repo test suite, and git status --short (episodes/ must stay clean, only implementer-owned files touched). Overwrite .agent-work/301/crew-handoffs/g2-result.md with VERDICT: COMPLETE, a per-defect account of what changed and why, the exact predicate chosen for the newline guard and the reasoning for tying it to splitlines(), the class-sweep results from m10, pasted evidence for every required check, and a non-empty Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m10-sweep complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "three negation checks pasted (each non-zero), full suite green, git status clean except owned files -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Three negation checks each exit 1 with clear messages, run against the real episodes/ directory. Full episode-store suite: 24 passed, 16 subtests passed. Full repo suite: 1181 passed, 2 skipped, 276 subtests passed (baseline 1157+2skip + 24 new test methods in test_episode_store.py, up from 18). git status --short shows exactly the 3 documented paths; episodes/ holds only its pre-existing README.md."
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT overwritten with VERDICT line",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/301/crew-handoffs/g2-result.md && grep -q '^VERDICT:' .agent-work/301/crew-handoffs/g2-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m11-reverify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m11-reverify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/301/crew-handoffs/g2-result.md && grep -q '^VERDICT:' .agent-work/301/crew-handoffs/g2-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-301-g2-rework-1785573079",
+    "status": "released",
+    "claimed_at": "2026-08-01T08:31:19.385069+00:00",
+    "last_heartbeat": "2026-08-01T08:44:21.064502+00:00",
+    "claimed_by": "implementer-301-g2-rework",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T08:44:25.985820+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Read global-crew/global-everyone doctrine, EPISODE_STORE.md sections 1-10 (frozen contract), the g2 handoff in full, and apply_lessons_delta.py + its tests as the mirrored pattern. Handoff is complete: task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present. Key design decisions I'm carrying forward: op vocabulary is create/amend-assertion/retire (my choice per Authority); create auto-assigns the id via run+seq scan (writer does it, not the LLM, per section 2's zero-agent-effort argument); retirement layout stays unbound behind one adapter-switch constant with both Option-A and Option-B implemented, defaulting to Option-B as a placeholder (not a ratified choice).",
+      "mechanical": false,
+      "ts": "2026-08-01T07:54:54.535521+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-scaffold",
+      "why": "Built scripts/apply_episode_delta.py: Episode/Assertion dataclasses matching EPISODE_STORE.md section 3's grammar; parse_episode/render_episode as an exact round-trip pair (verified: render(parse(text))==text); store_root() seam is the literal relative path episodes/ from repo root (no durable_root() call); create op assigns the id itself via run+sequence scan (writer decides, not the delta). All reads/writes use encoding=utf-8, newline='' to avoid Windows CRLF translation. Also scaffolded (not yet tested) the full seam set (iter_episode_ids, resolve_episode_path, apply_retirement, is_episode_in_ordinary_search) behind one _LAYOUT_ADAPTER switch defaulting to Option B, and the amend-assertion/retire op handlers, since validate_delta needs the whole op vocabulary known up front -- next gates will add fixtures+tests to prove each one, not new code from scratch.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:58:11.391542+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-partition",
+      "why": "misfiled-field-delta.json fixture: a create op with 'lifecycle-standing' under the mechanical dict (an agent-supplied-only concept smuggled onto a mechanical fact -- the exact EPISODE_STORE.md section 5 violation). Proved red honestly: temporarily disabled both allowlist checks (mechanical->extra-key, agent_supplied->extra-key), confirmed the fixture test and the reverse-direction test failed (0 != 1), then restored and confirmed all 7 tests green. Partition enforcement is a structural allowlist per bin, checked before any file write.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:59:20.105033+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-guards",
+      "why": "Two fixtures at the exact C7 paths: missing-retire-reason-delta.json (retire op, reason='   ' whitespace-only) and newline-injection-delta.json (create op, observed-behavior statement embeds a literal newline then '- status: retired', mirroring EPISODE_STORE.md section 7's own worked warning verbatim). Proved red honestly by temporarily disabling both guards in the source (C3a's _require_str call, C3b's newline check in _reject_newline), re-ran ContentGuardTests: all 5 failed (2 as assertion mismatches, 1 as an uncaught KeyError -- also a genuine failure, since the guard is what prevents the crash). Restored both guards, full suite green (12/12). No TEMP-DISABLED markers remain in the source.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:02:13.065382+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-atomicity",
+      "why": "Renamed test methods/class to include 'atomic' so the c2 command check (-k atomic) selects them; both pass, full suite 14/14 green.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:03:54.414812+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-retirement",
+      "why": "apply_retirement() is the sole write-side seam for the field diff (status/retired-reason/retired-at/consolidated-into/superseded-by); _retirement_destination() is the sole seam for whether the file moves. Both are implemented for Option A and Option B behind one _LAYOUT_ADAPTER switch, defaulting to Option B (placeholder, not ratified -- documented TODO(g4)). Same treatment for iter_episode_ids/resolve_episode_path/is_episode_in_ordinary_search/_new_episode_path. Proved red honestly: temporarily short-circuited _retirement_destination to always return the original path (defeats the move) and dropped the retired_at/consolidated_into/superseded_by field writes in apply_retirement -- both new tests failed exactly as expected (missing retired-at field; Option-A adapter test found no moved file). Restored both, full suite 16/16 green. The adapter-swap test flips the module's live _LAYOUT_ADAPTER attribute (not the source file) to prove two real, working adapters exist behind the one call site -- the seam is genuinely swappable, matching the handoff's own suggested shape.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:05:27.564450+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-dispute",
+      "why": "amend-assertion mutates exactly assertion.lifecycle_standing plus one appended history line via all_assertions() lookup, routed through tx.load() -> resolve_episode_path() (the g1 finding: amend now uses the same seam retire/fetch already did). Two tests: (1) dispute a4, assert sibling a3's raw block byte-identical before/after, plus every other assertion's lifecycle-standing untouched and mechanical/retirement sections untouched; (2) retire an episode under Option-A (file moves to retired/), then successfully amend it there -- proving the g1 defect (amend inlining a flat path, missing episodes once Option A binds) is fixed. Proved both red honestly: (1) temporarily made amend also flip every sibling's lifecycle-standing -- test caught the diff exactly on a3; (2) temporarily reproduced the exact g1 bug by inlining a flat-path read in _apply_amend_assertion instead of calling tx.load() -- test failed with 'no such episode' against the retired/ file, exactly the described failure mode. Restored both, full suite 18/18 green.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:07:19.246767+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-verify",
+      "why": "Three negation checks each exit 1 with clear messages, run against the real episodes/ directory (no --store-root override); episodes/ confirmed clean via git status --short afterward. Full suite: 1175 passed (1157 baseline + 18 new), 2 skipped -- matches expectation exactly. git status --short shows exactly the 3 new paths. IMPLEMENTER_RESULT written to .agent-work/301/crew-handoffs/g2-result.md with VERDICT: COMPLETE, pasted evidence for all 3 load-bearing items plus C5/C7/C8 spot-checks, and a substantive Workflow Feedback section (TDD-shape friction from front-loaded implementation, a minor doc-wording note, a sixth unnamed seam).",
+      "mechanical": false,
+      "ts": "2026-08-01T08:10:06.215325+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-defect1-newline",
+      "why": "Redefined _reject_newline's predicate as value != \"\" and value.splitlines() != [value] -- ties the guard to parse_episode's own str.splitlines() boundary set instead of a hand-listed \\n/\\r check, closing the U+2028/U+2029/\\v/\\f/\\x1c-\\x1e/\\x85 gap the reviewer demonstrated, plus the trailing-separator case, with an explicit empty-string carve-out (splitlines() on '' returns [] not ['']). Added LineBoundaryGuardTests: unit coverage for all 6 non-\\n/\\r boundary chars embedded and trailing, a happy-path regression check, and two end-to-end tests (create + amend-history) reproducing the reviewer's exact U+2028 forged-status-line attack and proving it is now rejected before any file is written. Proved red honestly: ran the new tests against the OLD \\n/\\r-only guard first -- 18 failed (16 subtests + 2 end-to-end), including 0!=1 on the end-to-end create test showing the old guard silently wrote the file. Restored/implemented the fix; full suite now 23 passed, 16 subtests passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:34:42.816171+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-defect2-atomicity",
+      "why": "_Transaction.commit() now stages every touched file to a temp path (same directory as the final path, same filesystem) before touching any final location; only once ALL staged writes succeed does it move each into place via os.replace() (atomic per-file on POSIX+Windows). Any staging failure cleans up temp files already written and re-raises without touching a single final path. Documented in-code, honestly, that the MOVE loop across N files is best-effort, not fully atomic (a crash between two os.replace() calls can still leave a partial result) -- no journal/WAL is available under the markdown-in-git constraint. Also split main()'s except clause so a write-phase OSError gets its own honest message ('write failed, store left unchanged') instead of the misleading 'cannot read delta' the old single except block produced for a write error (the TDD-red run surfaced this exact misleading message). New test: WritePhaseAtomicityTests monkeypatches Path.write_text to fail on the 2nd of 2 individually-valid writes and snapshots the full store dir (paths+bytes) before/after. Proved red honestly against the OLD sequential commit(): first file was mutated on disk, rc was 1 but store bytes differed, and stderr showed the misleading 'cannot read delta' message. Fixed; full suite now 1181 passed, 2 skipped, 276 subtests passed (1157 baseline + 24 new test methods).",
+      "mechanical": false,
+      "ts": "2026-08-01T08:37:59.511288+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "m10-sweep",
+      "why": "Sweep complete, findings recorded in the c1 attest note: no additional instances of the validator/parser-drift class found beyond the two already-fixed defects; one pre-existing, unrelated, low-risk cosmetic observation noted (eager mkdir on a staging failure under the not-yet-ratified Option-A layout can leave an empty directory) but not fixed, since it predates this rework and carries no data-corruption risk.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:40:37.065809+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "m11-reverify",
+      "why": "Full reverification complete: three negation fixtures each exit 1 against the real episodes/ directory with clear messages; full episode-store suite (24 passed, 16 subtests passed) and full repo suite (1181 passed, 2 skipped, 276 subtests passed) both green; git status --short shows only the 3 documented implementer-owned paths, episodes/ itself untouched (README.md only). Overwrote .agent-work/301/crew-handoffs/g2-result.md with VERDICT: COMPLETE, a full per-defect account (root cause, exact fix, exact predicate chosen and why, TDD-red evidence pasted, tests added), the m10 sweep results, all required evidence pasted, and a substantive Workflow Feedback section covering the empty-string predicate edge case and the amend-vs-fresh-plan-file choice.",
+      "mechanical": false,
+      "ts": "2026-08-01T08:44:21.064481+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-01T08:31:56.232160+00:00",
+      "reason": "Independent reviewer BLOCKED g2 with two demonstrated defects (newline-guard/splitlines drift; write-phase atomicity gap); commander-301 dispatched a bounded rework to fix both plus a class sweep",
+      "authority": "commander-301",
+      "ops": [
+        "added m8-defect1-newline",
+        "added m9-defect2-atomicity",
+        "added m10-sweep",
+        "added m11-reverify"
+      ]
+    }
+  ]
+}
