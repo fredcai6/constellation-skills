@@ -1,0 +1,11 @@
+{
+  "work_id": "299",
+  "tick": false,
+  "ops": [
+    {
+      "op": "export",
+      "id": "a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed",
+      "grounding": ".agent-work/CONSTELLATION_FEEDBACK.md 2026-08-01 entry for 299 — exported with the originating lesson id in its Lesson field so the upstream sweep groups recurrences on stable identity. Fourth recurrence in this epic, NEW shape: the lesson's own prescribed repair (mutation-test the guard) has a vacuous mode of its own. A sed-applied mutant silently did not match, the file was unchanged, the suite stayed green, and 'mutant killed' was the natural misreading; only a separate assert that the mutation had applied exposed it. Second shape same run: the guard's fixtures were all author-synthesized and encoded a guess at the input format (input.command), passing every check against a shape that does not occur in real stream-json transcripts. Suggested upstream edit: extend the repair clause to 'mutate, ASSERT THE MUTATION APPLIED, then watch it go red', and require a fixture captured from the real format for any guard over an external format."
+    }
+  ]
+}

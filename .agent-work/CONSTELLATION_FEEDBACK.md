@@ -134,3 +134,36 @@ other silent-degradation findings: the failure produces a plausible-looking arti
 **Suggested fix:** either strip/escape control characters on the engine side, or state the
 single-quoting requirement where agents are told to pass finding text. Given how much of this system's
 value is in journal provenance, silent truncation of a finding is worse than a refusal.
+
+## 2026-08-01 — 299 (epic-298 baseline capture)
+
+**Lesson:** a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed
+
+**Recurrence (4th in this epic), NEW SHAPE: the mutation test was itself the check that could
+not fail.**
+
+The standing lesson's own prescribed repair is "mutation-testing a guard — break the thing,
+watch it go red, restore." This run applied that repair and it silently did not work. The
+mutation was applied with a `sed` whose pattern did not match; the file was unchanged; the
+suite stayed green; and "mutant killed" was the natural reading. It was caught only by
+separately asserting that the mutation had actually landed (`assert mut != src`).
+
+So the repair for a vacuous check has a vacuous mode of its own, and the standing lesson does
+not warn about it. **A mutation test that does not verify the mutant was applied is exactly the
+defect it exists to detect.**
+
+Second shape, same run, same class: the guard's fixtures were all synthesized by the author,
+so they encoded the author's *guess* at the input format. `input.command` was the only field
+ever exercised, while real `stream-json` transcripts carry `file_path` (Read) and `pattern`
+(Glob). Every check passed against a format that does not occur. The fix was to check in a real
+transcript excerpt as a fixture — after which restricting extraction to `command` drives 9
+checks red.
+
+**Suggested upstream shape:** extend the lesson's repair clause from "mutate the guard and
+watch it go red" to "mutate the guard, **assert the mutation applied**, and watch it go red" —
+and add that a guard over an external format needs at least one fixture captured from that
+format rather than synthesized.
+
+**Grounding:** `.agent-work/epic-298/baselines/extract_ordering.py` (33-check `--self-test`,
+`fixtures/real-stream-excerpt.ndjson`); `.agent-work/299/PLAN_CRITIC_DISPOSITION.md` findings
+B4 and B6; `.agent-work/AGENT_FEEDBACK.md` 2026-08-01 entry for 299.

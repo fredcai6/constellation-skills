@@ -1420,3 +1420,97 @@ re-drive of each.
 - **A gate imperative can blind the very test it names as its settle condition.** I graded the placement of a new field a guess and wrote the settle condition myself — *"if two checkouts at the same commit disagree on the field, it belongs in `/run`"* — then, in the same imperative, wrote *"both children are worktrees at the SAME commit and are equally dirty, so the field is identical across environments."* That second sentence is the assumption that makes the first unfalsifiable. The reviewer built the case I had excluded (dirt confined to a file no declaration names) and the field disagreed immediately. **When you name a settle experiment, check that the harness can actually reach the failing case** — otherwise the grade is theatre and the `@grade: guess` tag is worse than no tag, because it looks like the question was left open when it was quietly closed.
 - **Appending a gate beats reopening one.** Tommy's ruling arrived after `execute` had closed. Adding `g5` via `amend` cost one new gate; reopening `g1` would have cascade-reset five reviewed gates. Same engine honesty, an order of magnitude less churn.
 - **Three separate defects this run were "a test that cannot see what it was written for."** The `skipTest` that fired only on a clean checkout; the determinism test that re-encoded through the parent; and this one. That is a pattern, not three coincidences, and the thing that caught all three was the same move: **mutate the code and check the test goes red**. It is cheap and it should be the default proof that a new test is load-bearing, not an extra a critic applies afterwards.
+
+## 2026-08-01 — 299 (commander-delegated, epic-298 wave)
+
+**Task:** capture the PRE-change arm of the epic-298 map-first measurement — five plan-stage
+runs against f1Brainz at a pinned commit, rubric frozen and committed before any run.
+
+**Compliance.** Spine driven end to end through the engine, init → archive; execute.json
+authored at plan and driven as frozen. Two gates were authored as **reasoning gates** with the
+crew waiver stated in the gate (g1-capture: the deliverable is measurement data from a harness
+I built and mutation-verified, and the independent check that matters is the blind grader at
+g2, not a crew round-trip on the harness-driving step).
+
+**What worked, and was worth its cost**
+
+- **The mandatory cold critic paid for itself several times over.** Run before the freeze per
+  `lesson:cold-critic-mandatory-for-measurement-dependent-plans`. 8 blocking + 9 serious
+  findings; 14 fixed pre-freeze, 3 floated. Two would have silently destroyed the
+  measurement: (a) an absent SOURCE read was recorded with the literal reserved for an absent
+  MAP read, and my own self-test *asserted* that defect; (b) field extraction was exercised
+  only against `input.command` while real transcripts use `file_path`/`pattern`, so the
+  extractor would have missed every file read in every live run and reported total instrument
+  failure as a clean `NO-MAP-READ` finding. This is the first time in this epic the critic
+  caught a defect in the *measuring instrument* rather than the plan around it.
+- **Mutating my own guard before trusting it.** `a-check-that-cannot-fail-is-indistinguishable-
+  from-one-that-passed` in practice: I mutated the extractor twice and confirmed red. The first
+  mutation attempt (a `sed`) silently did not apply and the suite stayed green — I only caught
+  it because I checked that the mutation had landed. That near-miss is the lesson in miniature:
+  a mutation test that does not verify the mutation applied is itself a check that cannot fail.
+- **A real-transcript fixture, not a synthetic one.** The floor is now anchored on a checked-in
+  excerpt of an actual `stream-json` run. Synthetic-only fixtures validate the extractor against
+  the author's guess at the format, which is exactly how (b) above survived.
+
+**Friction / what cost time**
+
+- **The Windows ANSI codepage bit twice in five minutes**, both directions: `subprocess.run(text=True)`
+  decoded `gh` output as cp1252 and died on `σ⁺` (`UnicodeDecodeError: 0x81`), then `print()`
+  died re-encoding the same characters to the console. The inherited context warns about
+  writing files with explicit encoding; it does **not** mention subprocess capture or stdout,
+  which are the same hazard in two other places. Worth widening that note.
+- **Teammate agents cannot spawn background subagents** (`In-process teammates cannot spawn
+  background agents`) and cannot name them. So the cold critic and the grader had to run
+  synchronously, blocking. That is survivable but it means a Commander running as a teammate
+  cannot overlap a long critic with its own work, and the doctrine that tells you to dispatch
+  in the background does not hold at this tier.
+- **The engine's step-ordering refusals cost several round-trips** purely on verb sequencing —
+  `attest` before `start`, `advance` before `start`, attesting a precondition on a gate that is
+  not yet active. Each refusal was correct and its recovery line was right; the cost is that
+  `current` shows the active step's next verb but not that a *later* step's preconditions
+  cannot be attested yet.
+
+**Launch-order accuracy** (per `lesson:verify-launch-order-claims-against-code`, which held again)
+
+Three claims did not survive contact with the world: corpus size (5,928 → **6,435**); the
+informal-map ruling's stated evidence (both `docs/architecture` mentions in commander doctrine
+are the ABSENT-map fallback at reconcile, not an instruction to read a map); and, most
+consequentially, the arm label itself — f1Brainz's auto-loaded `CLAUDE.md:7` **already names
+`docs/architecture/index.md`**, so the pre arm is not "no canonical entrypoint" and #304 adds a
+*contract*, not an entrypoint. That last one contradicts a `settled/human` pre-ruling and was
+floated, not overridden.
+
+**A rubric ambiguity decided the result, and I did not touch it.** The blind grader flagged
+unprompted that the spurious-file tolerance swings 3 of 5 scores by a full point, and that the
+swing is exactly what decides whether losing condition L6 fires. The rubric froze before the
+runs; editing it afterward would have been the specific failure the freeze exists to prevent.
+Both readings recorded, ruling left to the Admiral. Filed as #333.
+
+**Crew workflow feedback harvested:** the cold critic's findings are dispositioned in full at
+`.agent-work/299/PLAN_CRITIC_DISPOSITION.md`; the blind grader's own ambiguity report is in
+
+**Friction / unclear**
+
+- The **Windows ANSI codepage bit twice in five minutes, in two places the inherited context does not mention.** `subprocess.run(text=True)` decoded `gh` output as cp1252 and died on `σ⁺` (`UnicodeDecodeError: 0x81`); then `print()` died re-encoding the same characters to the console. The inherited note covers writing FILES with explicit encoding — it should also cover subprocess capture and stdout, which are the same hazard wearing different clothes.
+- **`verify_agent_feedback.py` requires three specific bolded section names** (`Friction / unclear`, `Crew-reported friction`, `Improvement signals`) **with bullets**, but the bundled `AGENT_FEEDBACK.template.md` shows only `## <date> — <work-id>` and does not name them. The requirement is discoverable only by failing the check or by grepping prior entries. Cost a round-trip.
+- **I misread a verifier exit code by piping it through `tail`**, so `$?` was tail's status (0) while the verifier had actually exited 1. Caught by re-running unpiped. This is the same shape as the standing "gate the merge on the exit code read at source" rule, one scale down — a pipeline silently launders a failure into a pass.
+- **Teammate agents cannot spawn background subagents** (`In-process teammates cannot spawn background agents`) and cannot name them. The cold critic and the blind grader both had to run synchronously, blocking. Doctrine tells a Commander to dispatch in the background and poll; that guidance does not hold at this tier, and nothing says so.
+- **Engine step-ordering refusals cost several round-trips** on verb sequencing alone — attesting a precondition on a gate that is not yet active, `advance` before `start`. Every refusal was correct and its recovery line was right; the gap is that `current` shows the ACTIVE step's next verb but gives no signal that a LATER step's preconditions cannot be attested yet.
+- **The lessons bank was at cap 20 with nothing threshold-ripe**, so two genuinely new findings could not be banked without evicting a lesson I had no grounds to retire. Held them in `lessons-delta.held.json` and filed both as tracker issues instead. Worth noting the inbox is explicitly transitory and "not a permanent home for any rule" — so filing was arguably the better home anyway, but the cap gave me no way to record that judgement through the tool.
+
+**Crew-reported friction**
+
+- No implementer/reviewer crews were dispatched — both execute gates were authored as reasoning gates with the crew waiver stated in the gate, so there is no `gN-integrate` crew feedback to harvest. Confirmed by re-reading the authored gate plan, not assumed from absence.
+- The **cold critic** (a dispatched subagent) reported no friction with its own brief and returned findings in the requested severity/quote/fix shape without a nudge.
+- The **blind grader** reported a real defect in the material it was given: it flagged unprompted that the scoring tolerance was ambiguous enough to split two reasonable graders, and quantified the swing. A grader that only returned scores would have hidden the most important thing about the scores.
+
+**Improvement signals**
+
+- **A rubric should be dry-run against a fabricated maximal and minimal answer before it freezes.** This one's spurious-file tolerance turned out to decide whether a losing condition fired, and by then it could not be corrected without grading the results. One fabricated maximal answer pre-freeze would have exposed it in minutes.
+- **The mutation-test repair needs its own guard.** The standing lesson says "break the thing, watch it go red." My first mutation silently did not apply and the suite stayed green — "mutant killed" was the natural misreading. The repair clause should read "mutate, **assert the mutation applied**, then watch it go red." Exported to `CONSTELLATION_FEEDBACK.md`.
+- **A guard over an external format needs a fixture captured from that format**, never one synthesized by the guard's author. Mine encoded my guess (`input.command`) and passed every check against a shape that does not occur in real transcripts.
+- **Launch orders should state which arm-label claims were verified against the corpus** and which were inferred. Three claims here did not survive contact, one of them a `settled/human` ruling whose label the corpus itself contradicts.
+
+BASELINE_RECORD Finding 4 and issue #333. No implementer/reviewer crews were dispatched (both
+gates were reasoning gates with stated waivers), so there is no gN-integrate crew feedback to
+harvest — confirmed after review of the gate plan, not assumed.

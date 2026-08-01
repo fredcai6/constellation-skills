@@ -213,6 +213,31 @@ resolve it or its treatment is unverifiable. Filed as a triage candidate.
 
 ---
 
+## Correction to the "nothing landed" check — scope of what was actually verified
+
+The per-run `git_unchanged` check compares `git -C <worktree> status --porcelain` before and
+after. That is scoped to the **worktree**, so it would **not** have caught a write to the
+f1Brainz **main** checkout. Stating that plainly rather than letting the green check stand
+for more than it proves.
+
+The stronger evidence, checked across all five transcripts after the fact:
+
+- **Zero `Write` / `Edit` / `NotebookEdit` calls in any run** — no run invoked a file-writing
+  tool at all.
+- **Zero forbidden git/gh operations** (push, PR, commit, issue comment).
+- 7 references to the main checkout total, **all read-only** (`ls`, `grep`): #716 read
+  `C:/Programs/f1Brainz/.agent-work/epic-659/` researching the work_id bug it was asked
+  about, and #690 listed `data/*.db`. Reading the main checkout was not forbidden; writing
+  to it was, and none occurred.
+
+f1Brainz main was left dirty (`.agent-work/AGENT_FEEDBACK.md`, `.agent-work/LESSONS.md`, and
+a new `archive/2026-08-01-r3-721-consumer-units/`) with mtimes just after this capture window.
+**Those are not from these runs** — a separate f1Brainz agent was active concurrently in a
+locked `fix-721-grip-band-units` worktree throughout. The zero-write finding above is what
+rules this capture out as their source, not the timing.
+
+---
+
 ## Reproduction
 
 ```
