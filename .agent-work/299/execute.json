@@ -1,0 +1,275 @@
+{
+  "work_id": "299",
+  "type": "gated",
+  "items": [
+    "e0-context",
+    "g1-capture",
+    "g2-grade",
+    "g3-record"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against LAUNCH_ORDER-299 and the committed RUBRIC.md. Confirm the rubric commit precedes any run output in git history \u2014 that ordering is the credibility of the whole measurement. Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "launch order + frozen rubric loaded; rubric commit confirmed to precede all run output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-capture": {
+      "id": "g1-capture",
+      "title": "Capture the five measured runs at the pin",
+      "imperative": "REASONING GATE \u2014 no crew. Crew waiver: the deliverable is measurement data produced by a harness this Commander built and mutation-verified, not code an implementer would write; a crew on the harness-driving step would add a handoff round-trip without adding an independent check, and the independent check that matters (the blind grader) is g2. Provision ONE pinned f1Brainz worktree per run (never two runs in one worktree \u2014 that is data loss, not friction), each at 3541d2929b19de37107ae13e56776b7162d07255, absolute paths only. Run capture_baseline.py per task with model claude-opus-5, at most 3 concurrent. Each subject gets the frozen brief and NOTHING about epic #298, maps, or being observed. Then run extract_ordering.py over each run dir. Any forbidden operation against f1Brainz (push, PR, issue comment, commit) is a STOP condition: kill the run, log it, report it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "rubric, ground truth and frozen briefs are committed BEFORE this gate starts",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rubric, ground truth, frozen briefs and harness committed at a226642b before g1 started"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all five runs captured, ordering extracted, no forbidden operation against f1Brainz, and every worktree left at the pin with nothing landed",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/epic-298/baselines/verify_capture.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-capture-1"
+        },
+        {
+          "id": "c2",
+          "statement": "extractor falsification floor passes, including the real-transcript fixture",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/epic-298/baselines/extract_ordering.py --self-test"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-capture-2"
+        }
+      ],
+      "constraints": [
+        "Measured runs stop at plan. Nothing is implemented, committed, pushed, or merged in f1Brainz.",
+        "No gh write against fredcai6/f1Brainz. Read-only there.",
+        "Briefs come from issues.frozen.json, never live from gh, so both arms share one input.",
+        "A non-reading is not a low reading: NO-MAP-READ must stay visibly distinct from NOT-CAPTURED."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:baselines \u2014 .agent-work/epic-298/baselines/, the archive and harness home (decision:baseline-artifacts-live-here)"
+        ],
+        "capability": [
+          "capability:ordering-measure \u2014 mechanically extract first map read vs first src read from a stream-json transcript"
+        ],
+        "constraint": [
+          "constraint:pin \u2014 every run at 3541d292",
+          "constraint:blind-subject \u2014 the subject must not know it is measured"
+        ],
+        "decision": [
+          "decision:plan-stage-only \u2014 measured runs stop at plan; nothing lands in f1Brainz @grade: settled/human \u00b7 leans g1-capture",
+          "decision:baseline-is-informal-map-not-no-map \u2014 never describe this arm as 'no map' @grade: settled/human \u00b7 leans g1-capture,g3-record"
+        ],
+        "evidence": [
+          "claim:capturable \u2014 stream-json emits ordered tool_use blocks with target paths (probe, exit 0, 6 calls)"
+        ],
+        "confidence_flags": [
+          "decision:baseline-is-informal-map-not-no-map \u2014 its 'no canonical entrypoint' half is contradicted by f1Brainz CLAUDE.md:7; floated to the Admiral as F1, NOT overridden locally"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-capture-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/epic-298/baselines/verify_capture.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-capture-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/epic-298/baselines/extract_ordering.py --self-test",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-grade": {
+      "id": "g2-grade",
+      "title": "Blind grading by a separate agent",
+      "imperative": "Dispatch a Sonnet grader that has never seen LAUNCH_ORDER-299 and never sees RUBRIC.md sections 0 or 5-8. Hand it only sections 1, 2, 3 and each run's claimed seam text. Do not tell it which task is the control. The author does not grade the runs. Integrate the returned scores as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all five runs captured with claimed-seam text extracted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all five runs captured; claimed_seam.txt extracted per run"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "grader returned a score and the deciding quotation per task",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-grade-1"
+        }
+      ],
+      "constraints": [
+        "The grader must not be told which task is the negative control.",
+        "The author does not grade."
+      ],
+      "anchors": {
+        "inherits": "g1-capture anchors \u2014 grading consumes the same frozen ground truth"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-grade-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "SCORED",
+            "grader": "sonnet-blind",
+            "scores": "690=1,688=1,698=1,704=2,716=ACKNOWLEDGED-MISS",
+            "ambiguity": "spurious-file tolerance swings 690/688/698 by a full point; strict=1/1/1 mean 1.0, loose=2/2/2 mean 2.0; decides whether L6 fires"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-record": {
+      "id": "g3-record",
+      "title": "Write the baseline record",
+      "imperative": "Write BASELINE_RECORD.md: per run, the ordering measure (or explicit NO-MAP-READ), map files read, the claimed seam in the plan's own words, the rubric score, and cost. State the pin prominently. Call out the negative control separately. Do NOT issue the pathway verdict \u2014 that is #307's and Tommy's.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "grading complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "blind grading complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "baseline record exists, names the pin, and does not describe the arm as 'no map'",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/epic-298/baselines/BASELINE_RECORD.md && grep -q 3541d292 .agent-work/epic-298/baselines/BASELINE_RECORD.md && ! grep -qi 'baseline is \"no map\"' .agent-work/epic-298/baselines/BASELINE_RECORD.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-record-1"
+        }
+      ],
+      "constraints": [
+        "Capture and stop. The pathway verdict is #307's, and Tommy's."
+      ],
+      "anchors": {
+        "inherits": "g1-capture anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-record-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/epic-298/baselines/BASELINE_RECORD.md && grep -q 3541d292 .agent-work/epic-298/baselines/BASELINE_RECORD.md && ! grep -qi 'baseline is \"no map\"' .agent-work/epic-298/baselines/BASELINE_RECORD.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Launch order and frozen rubric loaded. Rubric commit a226642b confirmed to precede all run output.",
+      "mechanical": false,
+      "ts": "2026-08-01T21:09:30.905042+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-capture",
+      "why": "Five measured runs captured at pin 3541d292, one fresh worktree each, opus, briefs from the frozen snapshot, subjects told nothing about epic 298 or maps. All five exit 0, nothing landed in f1Brainz, zero forbidden operations. Headline: every run read source BEFORE the map yet every run DID read the map, late - the map acted as a confirmation step rather than an orientation step. Bigger finding: ZERO skill invocations across all five, though the Skill tool was offered and all 19 constellation skills were surfaced in every init event. The corpus was declined, not missing.",
+      "mechanical": false,
+      "ts": "2026-08-01T21:09:31.236942+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-grade",
+      "why": "Blind Sonnet grader scored from GRADER_PACKET.md alone (structural blinding: sections 0 and 5-8 were never in the file it received; leak-checked for design-role and losing-condition text). Scores 690=1, 688=1, 698=1, 704=2, 716=ACKNOWLEDGED-MISS. The grader flagged UNPROMPTED that the spurious-file tolerance is ambiguous in a way that swings three of five scores by a full point - and that ambiguity is exactly what decides whether losing condition L6 fires. Recorded both readings; the rubric is frozen and was NOT edited to resolve it.",
+      "mechanical": false,
+      "ts": "2026-08-01T21:09:44.004668+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3-record",
+      "why": "BASELINE_RECORD.md written: per-run ordering measure with explicit NO-SRC-READ/NO-CORPUS-READ literals distinct from NOT-CAPTURED, map files read, claimed seams verbatim, blind scores, and cost. Pin stated prominently and confirmed for all five. Negative control called out separately: on the ordering measure 704 is indistinguishable from the real tests, and it was the cheapest and cleanest run in the set. Four losing conditions evaluated; none fires under the grading as delivered, and L6 turns on the rubric's own tolerance ambiguity - recorded, not resolved. No pathway verdict issued; that is 307's and Tommy's.",
+      "mechanical": false,
+      "ts": "2026-08-01T21:09:52.684136+00:00"
+    }
+  ]
+}

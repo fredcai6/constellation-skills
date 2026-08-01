@@ -1,0 +1,3 @@
+```
+src/physics/instrument_panel/replication.py
+```

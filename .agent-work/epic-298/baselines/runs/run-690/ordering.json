@@ -1,0 +1,524 @@
+{
+  "captured": true,
+  "tool_call_count": 43,
+  "first_map_read_index": 5,
+  "first_src_read_index": 2,
+  "first_corpus_read_index": "NO-CORPUS-READ",
+  "map_files_read": [
+    "docs/architecture/decisions",
+    "docs/architecture/decisions/tyre-age-g-track-design.md",
+    "docs/architecture/packets/physics.md",
+    "docs/architecture/",
+    "docs/architecture/reference/physics-unit-conventions.md"
+  ],
+  "map_before_src": false,
+  "subagent_dispatch_count": 0,
+  "forbidden_operations": [],
+  "calls": [
+    {
+      "index": 0,
+      "turn": 1,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "git log --oneline -3 && grep -rn \"class_utilization_observable\" --include=*.py -l .",
+      "target": "git log --oneline -3 && grep -rn \"class_utilization_observable\" --include=*.py -l . Locate class_utilization_observable"
+    },
+    {
+      "index": 1,
+      "turn": 2,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"get_grip_at\" --include=*.py -l .",
+      "target": "grep -rn \"get_grip_at\" --include=*.py -l . Locate get_grip_at"
+    },
+    {
+      "index": 2,
+      "turn": 3,
+      "tool": "Read",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "C:/Programs/f1bwt/b690/src/physics/utilization/class_utilization_observable.py",
+      "target": "C:/Programs/f1bwt/b690/src/physics/utilization/class_utilization_observable.py"
+    },
+    {
+      "index": 3,
+      "turn": 4,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -n \"get_grip_at\" -A 60 ./src/physics/layer2/grip_store.py | head -120",
+      "target": "grep -n \"get_grip_at\" -A 60 ./src/physics/layer2/grip_store.py | head -120 Read get_grip_at"
+    },
+    {
+      "index": 4,
+      "turn": 6,
+      "tool": "Read",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "C:/Programs/f1bwt/b690/src/physics/utilization/class_ledger.py",
+      "target": "C:/Programs/f1bwt/b690/src/physics/utilization/class_ledger.py"
+    },
+    {
+      "index": 5,
+      "turn": 7,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention",
+        "src"
+      ],
+      "map_paths": [
+        "docs/architecture/decisions"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "ls src/physics/utilization/ tests/unit/physics/utilization/ 2>/dev/null; echo ---; ls docs/architecture/decisions/ | head -60 List utilization module + decisions"
+    },
+    {
+      "index": 6,
+      "turn": 9,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 1,120p src/physics/layer2/grip_store.py",
+      "target": "sed -n 1,120p src/physics/layer2/grip_store.py Read grip_store header"
+    },
+    {
+      "index": 7,
+      "turn": 10,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention"
+      ],
+      "map_paths": [
+        "docs/architecture/decisions/tyre-age-g-track-design.md"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "sed -n 1,200p docs/architecture/decisions/tyre-age-g-track-design.md Read tyre-age G design decision"
+    },
+    {
+      "index": 8,
+      "turn": 12,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"session_offset\" --include=*.py -l src/ scripts/ | head -20",
+      "target": "grep -rn \"session_offset\" --include=*.py -l src/ scripts/ | head -20 Find grip fit producers"
+    },
+    {
+      "index": 9,
+      "turn": 13,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "ls src/physics/layer2/",
+      "target": "ls src/physics/layer2/ List layer2"
+    },
+    {
+      "index": 10,
+      "turn": 14,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 1,90p src/physics/layer2/grip_baseline.py",
+      "target": "sed -n 1,90p src/physics/layer2/grip_baseline.py Read grip_baseline header"
+    },
+    {
+      "index": 11,
+      "turn": 15,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"pace/|second/|_s/b/|lap_time\" src/physics/layer2/grip_baseline.py | head -40",
+      "target": "grep -rn \"pace/|second/|_s/b/|lap_time\" src/physics/layer2/grip_baseline.py | head -40 Grip units hints"
+    },
+    {
+      "index": 12,
+      "turn": 17,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rln \"690/|\u03c3\u207a/|sigma_plus\" .agent-work 2>/dev/null | head -30",
+      "target": "grep -rln \"690/|\u03c3\u207a/|sigma_plus\" .agent-work 2>/dev/null | head -30 Find agent-work notes referencing the band"
+    },
+    {
+      "index": 13,
+      "turn": 18,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"onesided_sigma_from_grip/|g_sigma_onesided/|grip_scale_from_store/|grip_band\" --include=*.py -r src scripts tests | grep -v \"class_utilization_observable.py:\" | head -40",
+      "target": "grep -rn \"onesided_sigma_from_grip/|g_sigma_onesided/|grip_scale_from_store/|grip_band\" --include=*.py -r src scripts tests | grep -v \"class_utilization_observable.py:\" | head -40 Find consumers of the band API"
+    },
+    {
+      "index": 14,
+      "turn": 20,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 590,700p scripts/run_heldout_diagnostic_670.py",
+      "target": "sed -n 590,700p scripts/run_heldout_diagnostic_670.py Read heldout diagnostic note on pathological sigma"
+    },
+    {
+      "index": 15,
+      "turn": 21,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 1,60p src/physics/fingerprint/fit.py; echo ====; sed -n 235,310p src/physics/fingerprint/fit.py",
+      "target": "sed -n 1,60p src/physics/fingerprint/fit.py; echo ====; sed -n 235,310p src/physics/fingerprint/fit.py Read fingerprint fit sigma composition"
+    },
+    {
+      "index": 16,
+      "turn": 23,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "ls -la data/*.db 2>/dev/null | head -30; echo ===; find . -name \"*.db\" -not -path \"./.git/*\" -newermt \"2026-07-01\" 2>/dev/null | head -20",
+      "target": "ls -la data/*.db 2>/dev/null | head -30; echo ===; find . -name \"*.db\" -not -path \"./.git/*\" -newermt \"2026-07-01\" 2>/dev/null | head -20 Find stores on disk"
+    },
+    {
+      "index": 17,
+      "turn": 24,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 1,80p scripts/build_class_utilization_observables.py",
+      "target": "sed -n 1,80p scripts/build_class_utilization_observables.py Read observables builder header"
+    },
+    {
+      "index": 18,
+      "turn": 26,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -n \"grip\" scripts/build_class_utilization_observables.py | head -40; echo ====; grep -n \"grip\" scripts/run_season_670.py | head -40",
+      "target": "grep -n \"grip\" scripts/build_class_utilization_observables.py | head -40; echo ====; grep -n \"grip\" scripts/run_season_670.py | head -40 How batch scripts fetch grip"
+    },
+    {
+      "index": 19,
+      "turn": 27,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "ls /c/Programs/f1Brainz/data/*.db 2>/dev/null | head -30",
+      "target": "ls /c/Programs/f1Brainz/data/*.db 2>/dev/null | head -30 Find main checkout data dbs"
+    },
+    {
+      "index": 20,
+      "turn": 29,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"grip\" scripts/run_season_670.py | head -40; echo ==== ; ls .agent-work/archive/2026-07-27-670-season-run/ 2>/dev/null",
+      "target": "grep -rn \"grip\" scripts/run_season_670.py | head -40; echo ==== ; ls .agent-work/archive/2026-07-27-670-season-run/ 2>/dev/null Season runner grip usage + artifacts"
+    },
+    {
+      "index": 21,
+      "turn": 30,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"get_grip_at/|grip_store/|grip=\" scripts/run_season_670.py src/physics/pilot/pipeline.py | head -30",
+      "target": "grep -rn \"get_grip_at/|grip_store/|grip=\" scripts/run_season_670.py src/physics/pilot/pipeline.py | head -30 Grip wiring in pilot pipeline"
+    },
+    {
+      "index": 22,
+      "turn": 31,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"g_sigma_onesided\" .agent-work/archive/2026-07-27-670-season-run/ 2>/dev/null | head -20; echo ===; ls .agent-work/archive/2026-07-27-670-season-run/artifacts | head",
+      "target": "grep -rn \"g_sigma_onesided\" .agent-work/archive/2026-07-27-670-season-run/ 2>/dev/null | head -20; echo ===; ls .agent-work/archive/2026-07-27-670-season-run/artifacts | head Season run artifacts referencing g sigma"
+    },
+    {
+      "index": 23,
+      "turn": 33,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "find /c/Programs -maxdepth 4 -name \"refutil*.db\" -o -maxdepth 4 -name \"grip_estimates*.db\" 2>/dev/null | head",
+      "target": "find /c/Programs -maxdepth 4 -name \"refutil*.db\" -o -maxdepth 4 -name \"grip_estimates*.db\" 2>/dev/null | head Find season observables + grip DBs"
+    },
+    {
+      "index": 24,
+      "turn": 34,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 700 --json number,title,state,body 2>/dev/null | head -60",
+      "target": "gh issue view 700 --json number,title,state,body 2>/dev/null | head -60 View issue 700"
+    },
+    {
+      "index": 25,
+      "turn": 36,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue list --state open --limit 60 --json number,title | py -c \"import json,sys; [print(i['number'], i['title']) for i in json.load(sys.stdin)]\" 2>/dev/null || gh issue list --state open --limit 60",
+      "target": "gh issue list --state open --limit 60 --json number,title | py -c \"import json,sys; [print(i['number'], i['title']) for i in json.load(sys.stdin)]\" 2>/dev/null || gh issue list --state open --limit 60 List open issues"
+    },
+    {
+      "index": 26,
+      "turn": 37,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 678 --json number,title,state,body | head -40",
+      "target": "gh issue view 678 --json number,title,state,body | head -40 View issue 678"
+    },
+    {
+      "index": 27,
+      "turn": 39,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 721 --json number,title,body,labels | py -c \"import json,sys;d=json.load(sys.stdin);print(d['title']);print(d['body'])\"",
+      "target": "gh issue view 721 --json number,title,body,labels | py -c \"import json,sys;d=json.load(sys.stdin);print(d['title']);print(d['body'])\" Read issue 721"
+    },
+    {
+      "index": 28,
+      "turn": 40,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 712 --json number,title,body | py -c \"import json,sys;d=json.load(sys.stdin);print(d['title']);print(d['body'])\"; echo =====; gh issue view 717 --json title,body | py -c \"import json,sys",
+      "target": "gh issue view 712 --json number,title,body | py -c \"import json,sys;d=json.load(sys.stdin);print(d['title']);print(d['body'])\"; echo =====; gh issue view 717 --json title,body | py -c \"import json,sys;d=json.load(sys.stdin);print(d['title']);print(d['body'][:4000])\" Read issues 712 and 717"
+    },
+    {
+      "index": 29,
+      "turn": 42,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 717 --json body | py -c \"import json,sys;b=json.load(sys.stdin)['body'];i=b.find('6. **Grip');print(b[i:i+5000])\"",
+      "target": "gh issue view 717 --json body | py -c \"import json,sys;b=json.load(sys.stdin)['body'];i=b.find('6. **Grip');print(b[i:i+5000])\" Read 717 thread 6 onward"
+    },
+    {
+      "index": 30,
+      "turn": 44,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "git show --stat 3541d292 | head -20; echo ====; gh issue view 720 --json body | py -c \"import json,sys;print(json.load(sys.stdin)['body'][:5000])\"",
+      "target": "git show --stat 3541d292 | head -20; echo ====; gh issue view 720 --json body | py -c \"import json,sys;print(json.load(sys.stdin)['body'][:5000])\" Board + latest docs commit"
+    },
+    {
+      "index": 31,
+      "turn": 46,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 60,140p src/physics/utilization/reference_utilization_store.py; echo ==== ; grep -n \"_migrate/|ALTER TABLE\" src/physics/utilization/reference_utilization_store.py | head",
+      "target": "sed -n 60,140p src/physics/utilization/reference_utilization_store.py; echo ==== ; grep -n \"_migrate/|ALTER TABLE\" src/physics/utilization/reference_utilization_store.py | head Read store row shape + migration"
+    },
+    {
+      "index": 32,
+      "turn": 47,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 400,480p scripts/build_class_utilization_observables.py",
+      "target": "sed -n 400,480p scripts/build_class_utilization_observables.py Read writer loop"
+    },
+    {
+      "index": 33,
+      "turn": 49,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -n \"class Test/|def test\" tests/unit/physics/test_class_utilization_observable.py | head -60; echo ===; wc -l tests/unit/physics/test_class_utilization_observable.py",
+      "target": "grep -n \"class Test/|def test\" tests/unit/physics/test_class_utilization_observable.py | head -60; echo ===; wc -l tests/unit/physics/test_class_utilization_observable.py Test file map"
+    },
+    {
+      "index": 34,
+      "turn": 50,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"g_sigma/|sigma_plus/|bands\" src/physics/utilization/class_utilization_validation.py src/physics/pilot/*.py src/physics/fingerprint/*.py docs -r 2>/dev/null | grep -v \"/.json\" | head -30",
+      "target": "grep -rn \"g_sigma/|sigma_plus/|bands\" src/physics/utilization/class_utilization_validation.py src/physics/pilot/*.py src/physics/fingerprint/*.py docs -r 2>/dev/null | grep -v \"/.json\" | head -30 Other consumers/docs of the band"
+    },
+    {
+      "index": 35,
+      "turn": 52,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention"
+      ],
+      "map_paths": [
+        "docs/architecture/packets/physics.md",
+        "docs/architecture/packets/physics.md",
+        "docs/architecture/"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "sed -n 1505,1530p docs/architecture/packets/physics.md; echo =====; sed -n 1730,1750p docs/architecture/packets/physics.md; echo =====; grep -rn \"class_utilization_observable\" docs/architecture --include=*.yaml --include=*.md | head -20 Read packet prose about the band"
+    },
+    {
+      "index": 36,
+      "turn": 54,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -rn \"ClassDeficits(\" --include=*.py src tests | head; echo ===; sed -n 715,780p src/physics/pilot/pipeline.py",
+      "target": "grep -rn \"ClassDeficits(\" --include=*.py src tests | head; echo ===; sed -n 715,780p src/physics/pilot/pipeline.py Check ClassDeficits construction sites + pilot grip use"
+    },
+    {
+      "index": 37,
+      "turn": 55,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "grep -n \"grip/|sigma\" src/physics/utilization/class_utilization_validation.py | head -20",
+      "target": "grep -n \"grip/|sigma\" src/physics/utilization/class_utilization_validation.py | head -20 Validation harness grip usage"
+    },
+    {
+      "index": 38,
+      "turn": 57,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention"
+      ],
+      "map_paths": [
+        "docs/architecture/reference/physics-unit-conventions.md"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "sed -n 1,45p docs/architecture/reference/physics-unit-conventions.md Read unit-conventions table"
+    },
+    {
+      "index": 39,
+      "turn": 59,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention"
+      ],
+      "map_paths": [
+        "docs/architecture/reference/physics-unit-conventions.md",
+        "docs/architecture/reference/physics-unit-conventions.md"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "grep -n \"Grip/|grip/|Utilization/|utilization\" docs/architecture/reference/physics-unit-conventions.md | head -20; echo ===; wc -l docs/architecture/reference/physics-unit-conventions.md Check grip rows in unit conventions"
+    },
+    {
+      "index": 40,
+      "turn": 61,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n 126,250p tests/unit/physics/test_class_utilization_observable.py",
+      "target": "sed -n 126,250p tests/unit/physics/test_class_utilization_observable.py Read existing grip tests"
+    },
+    {
+      "index": 41,
+      "turn": 63,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "\"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/test_class_utilization_observable.py -q 2>&1 | tail -5",
+      "target": "\"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/test_class_utilization_observable.py -q 2>&1 | tail -5 Run the observable unit tests"
+    },
+    {
+      "index": 42,
+      "turn": 64,
+      "tool": "PowerShell",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "& \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/test_class_utilization_observable.py -q --no-header 2>&1 | Select-Object -Last 6",
+      "target": "& \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/test_class_utilization_observable.py -q --no-header 2>&1 | Select-Object -Last 6 Run observable unit tests"
+    }
+  ]
+}
