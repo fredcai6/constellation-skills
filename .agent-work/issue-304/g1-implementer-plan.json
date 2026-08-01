@@ -276,7 +276,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_mutation_floor.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-2"
         }
       ],
       "constraints": [
@@ -284,7 +285,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "m2"
       },
@@ -306,6 +307,17 @@
             "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
             "ts": "2026-08-01T23:08:06.920126+00:00"
           }
+        },
+        {
+          "id": "e-m4-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_mutation_floor.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -319,7 +331,8 @@
           "id": "p1",
           "statement": "m1-m4 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -330,7 +343,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-3"
         },
         {
           "id": "c2",
@@ -339,7 +353,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/crew-handoffs/g1-result.md && grep -q 'DEGRADED-NO-MAP' .agent-work/issue-304/crew-handoffs/g1-result.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-4"
         }
       ],
       "constraints": [
@@ -347,7 +362,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "m2"
       },
@@ -385,6 +400,28 @@
             "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
             "ts": "2026-08-01T23:08:06.920130+00:00"
           }
+        },
+        {
+          "id": "e-m5-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/crew-handoffs/g1-result.md && grep -q 'DEGRADED-NO-MAP' .agent-work/issue-304/crew-handoffs/g1-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -395,13 +432,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "impl-g1-304-rework",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-01T23:08:06.725130+00:00",
-    "last_heartbeat": "2026-08-01T23:19:32.610420+00:00",
+    "last_heartbeat": "2026-08-01T23:24:49.826045+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-01T23:25:00.840222+00:00"
   },
   "why_trail": [
     {
@@ -487,6 +525,20 @@
       "why": "Cascade-reset by the m2 reopen; re-evidenced unchanged. The <repo-root> work was adjudicated ACCEPTED by commander and reviewer (as_posix confirmed necessary; the test addition confirmed 53 insertions / 0 deletions) and is out of rework scope, so no code change. Check re-run fresh: tests/test_init_work_area.py 31 passed.",
       "mechanical": false,
       "ts": "2026-08-01T23:19:17.632052+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "m4",
+      "why": "REWORK B2 fixed. Reviewer's M4 (unmapped_declared 'not any'->'not all') independently confirmed SURVIVING the shipped floor: applied cleanly, floor exit 0, 42 passed, 0 failed. Cause confirmed as stated - every filler case in both self_test and PartialFillMatrix used a SINGLE-element list, where any and all are identical, so the floor could not distinguish them. Fixed by adding multi-element cases (['none', real], [real, 'n/a'], ['none','n/a'], [real,'',real]) plus an all-real positive control, and M4 is now pinned in the shipped set. Also pinned M5, the B1 blocker itself (is_content_hash shape check weakened to bool(value.strip())), so the blocker cannot silently return - flagged to commander as a judgment call since B2 asked only for M4. Post-fix, all 5 mutations killed with an in-target failure each: all->any exit 1 (42 passing, 10 in-target); UNRESOLVABLE-ROOT collapse exit 1 (39 passing, 2 in-target); citability->existence exit 1 (41 passing, 3 in-target); M4 exit 1 (50 passing, killed by exactly the new test_one_filler_poisons_a_multi_element_unmapped_list); M5 exit 1 (49 passing, 2 in-target). tests/test_mutation_floor.py 9 passed / 6 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:20:29.074516+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "m5",
+      "why": "REWORK complete, artifact updated in place. B1 fixed and pinned (UnreadableSubstitute, 6 tests, incl. the reviewer's exact repro and a positive control). B2 fixed: multi-element filler cases added at both levels, M4 pinned in the shipped set and now killed by exactly the new test; also pinned M5 guarding the B1 blocker, flagged as one item beyond the letter of B2's scope for commander to strike if unwanted. B3 accepted: the cleanup claim is WITHDRAWN, not defended - the artifact now states only what is verifiable and notes that the evidence command recreates the directory by design. Every revision-1 figure in the artifact re-measured and corrected rather than left stale: 91 passed (was 80), mutation floor 9 passed (was 7), full suite 1470 passed (was 1459), self-test 92 checks (was 77, recounted by instrumenting _check rather than guessed), map_orient.py 1137 lines. Close criteria green. No probe directories left on disk, verified at write time.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:24:49.826017+00:00"
     }
   ]
 }

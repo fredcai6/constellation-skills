@@ -2,6 +2,11 @@
 
 Status values follow `skills/workbench/references/status-model.md`.
 
+> **Revision 2 — rework after reviewer BLOCK.** B1 (blocker), B2 (major) and B3 (minor) are fixed;
+> see **[Rework](#rework--revision-2)** at the top of the evidence. Every figure in this document is
+> a revision-2 figure. The three adjudicated deviations are unchanged, and the two triaged findings
+> were left alone as instructed.
+
 ## Assigned gate
 `issue-304 g1 — resolver, receipt, reported degraded mode`
 
@@ -9,15 +14,17 @@ Status values follow `skills/workbench/references/status-model.md`.
 
 Built `scripts/map_orient.py` (`orient`, `verify-orientation`, `--self-test`), added the
 `<repo-root>` placeholder to `scripts/init_work_area.py`, and shipped two test files including an
-**executed** mutation floor in which all three named mutations are demonstrably killed.
+**executed** mutation floor in which all **five** named mutations are demonstrably killed.
 
-Engine-driven end to end: plan at `.agent-work/issue-304/g1-implementer-plan.json`, session
-`impl-g1-304`, six items `m0-context → m1 → m2 → m3 → m4 → m5`.
+Engine-driven end to end: plan at `.agent-work/issue-304/g1-implementer-plan.json`, six items
+`m0-context → m1 → m2 → m3 → m4 → m5`; session `impl-g1-304` for revision 1, then `m2` **reopened**
+through the engine for the rework (`rework 1/3`, cascade-resetting `m3`/`m4`/`m5` and superseding
+their evidence) and re-driven under session `impl-g1-304-rework`.
 
 ## Scope
 
 **Files changed:**
-- `scripts/map_orient.py` (new, 1045 lines)
+- `scripts/map_orient.py` (new, 1137 lines)
 - `tests/test_map_orient.py` (new — the floor)
 - `tests/test_mutation_floor.py` (new — executed falsifiability)
 - `scripts/init_work_area.py` (modified — `<repo-root>` placeholder + guard only)
@@ -113,7 +120,9 @@ wherever it happened to be created.
 **Degraded is the common case, so it got the design attention.** The degraded record is discharged only
 with `substitutes` **AND** `unmapped` **AND** `escalation` — all three, fillers (`""`, `"none"`,
 `"n/a"`, `"tbd"`, `<placeholder>`, …) rejected, an empty `substitutes` list treated as a refusal, and a
-substitute without a content hash treated as a refusal. Substitutes are **hash-pinned** (sha256 of
+substitute whose content hash is not a real sha256 treated as a refusal (**revision 2** -- revision 1
+checked only that the hash was non-empty, which a sentinel satisfied; that was B1). Substitutes are
+**hash-pinned** (sha256 of
 content) so g2's frame check compares against a committed prior declaration rather than a same-breath
 assertion. `orient` gained `--substitute` / `--unmapped` / `--escalation` so the tool computes the
 hashes — the two-bin rule: the hash is mechanizable, the *content* of the declaration stays prose.
@@ -128,6 +137,179 @@ and the discharge predicates existed, and observed red; see TDD evidence below.
 
 ---
 
+## Rework — revision 2
+
+Three findings from the reviewer's BLOCK. I reproduced **B1 and B2 myself before changing anything**;
+both were real and both were mine.
+
+### B1 — BLOCKER, fixed: an unreadable substitute discharged the record
+
+**Reproduced first, verbatim:**
+
+```
+##### B1 REPRO #####
+orient EXIT=0
+verify EXIT=0
+receipt substitutes: [{"path": "docs/THIS_FILE_DOES_NOT_EXIST.md", "content_hash": "unreadable"}]
+```
+
+**Root cause.** `pin_substitutes` wrote the sentinel `content_hash="unreadable"` when it could not
+read a path, and `substitutes_declared` only asked *"is this non-filler?"* — which a non-empty
+sentinel satisfies. A single typo in a substitute path therefore discharged the entire degraded
+record at exit 0. This is exactly the hole the contract exists to close, it contradicted my own
+revision-1 report, and it defeated the hash-pinning g2 depends on. No defence — it shipped broken.
+
+**Fix, in two independent halves so neither alone can regress it:**
+
+1. `pin_substitutes` now records `content_hash: null` for an unreadable path. **No sentinel.**
+2. New pure predicate `is_content_hash` validates the pin by **shape** —
+   `CONTENT_HASH_RE = ^[0-9a-f]{64}$` — so no sentinel, typo, or truncated digest can stand in for a
+   pin, including in a hand-written receipt. (`"unreadable"` was also added to `FILLER_VALUES` as a
+   third, belt-and-braces layer.)
+
+New `substitute_problems()` names the offending entry rather than failing anonymously.
+
+**Same repro, after the fix:**
+
+```
+##### B1 REPRO, POST-FIX #####
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/b1probe/map-orientation.json
+degraded and NOT discharged -- still owed:
+  - substitutes (what you read INSTEAD of a map, each hash-pinned)
+  -     substitutes[0] 'docs/THIS_FILE_DOES_NOT_EXIST.md' is not hash-pinned (content_hash=None) -- an unreadable or nonexistent substitute cannot discharge the record
+orient EXIT=10
+--- verify ---
+DEGRADED-NO-MAP
+receipt: .agent-work/b1probe/map-orientation.json
+degraded record INCOMPLETE -- substitutes AND unmapped AND escalation
+problems: 2
+  - substitutes (what you read INSTEAD of a map, each hash-pinned)
+  -     substitutes[0] 'docs/THIS_FILE_DOES_NOT_EXIST.md' is not hash-pinned (content_hash=None) -- an unreadable or nonexistent substitute cannot discharge the record
+verify EXIT=10
+--- receipt ---
+[{"path": "docs/THIS_FILE_DOES_NOT_EXIST.md", "content_hash": null}]
+```
+
+**Pinned by** the new `UnreadableSubstitute` class (6 tests), which carries the reviewer's exact
+repro (`test_a_nonexistent_substitute_path_refuses`), the sentinel/typo/truncation matrix, a test
+that the refusal *names* the offending path, and — importantly — a **positive control**
+(`test_one_real_substitute_still_discharges`) so the fix cannot degenerate into refusing everything.
+
+### B2 — MAJOR, fixed: a surviving mutation, and the gap that let it survive
+
+**Reproduced first.** The reviewer's M4 (`unmapped_declared`'s `not any(is_filler)` →
+`not all(is_filler)`) applied cleanly and the floor stayed green:
+
+```
+##### B2 REPRO (M4) #####
+anchor occurrences in shipped module: 1
+M4 floor exit: 0 | passed: 42 | failed nodes: []
+VERDICT: MUTANT SURVIVED - reviewer is right
+```
+
+**Cause, confirmed exactly as diagnosed.** Every filler case in both `self_test` and
+`PartialFillMatrix` used a **single-element** list — and on a list of length 1, `any` and `all` are
+the same function. The floor was structurally incapable of telling them apart. That is a genuine
+hole in my floor, and the honest reading is that my revision-1 claim of falsifiability was scoped
+narrower than I presented it: the three mutations I chose were killed, but I had not shown the floor
+was sensitive to mutations I did *not* choose. Finding one is the point of an independent reviewer.
+
+**Fix.**
+1. Multi-element cases added at both levels —
+   `PartialFillMatrix.test_one_filler_poisons_a_multi_element_unmapped_list` over
+   `["none", real]`, `[real, "n/a"]`, `["none", "n/a"]`, `[real, "", real]`, plus an all-real
+   positive control `test_a_multi_element_unmapped_list_of_real_entries_passes`, and the same
+   divergent cases in `self_test`.
+2. **M4 is now pinned in the shipped mutation set** so it stays killed.
+3. The same single-element blind spot applied to the `substitutes` loop, so
+   `test_one_unpinned_substitute_poisons_a_multi_element_list` was added there too (one bad entry
+   among good ones must sink the declaration).
+
+**Judgment call to flag:** I also pinned a **fifth** mutation, M5 — weakening `is_content_hash` back
+to `bool(value.strip())` — so the B1 blocker itself cannot silently return. B2 asked only for M4, so
+this is one item beyond the letter of the rework scope. It is cheap and directly guards the blocker;
+strike it if you would rather hold the line on scope.
+
+**Post-fix, all five mutations killed**, each with a failure in its intended class:
+
+```
+shipped mutation set: 5
+
+### degraded-completeness `all` -> `any`
+    exit=1 passed=42 killers=14 in-target=10
+      - tests/test_map_orient.py::PartialFillMatrix::test_filler_escalation_is_refused
+      - tests/test_map_orient.py::PartialFillMatrix::test_filler_substitute_path_is_refused
+      - tests/test_map_orient.py::PartialFillMatrix::test_filler_unmapped_is_refused
+### UNRESOLVABLE-ROOT collapsed into DEGRADED-NO-MAP, exiting 0
+    exit=1 passed=39 killers=16 in-target=2
+      - tests/test_map_orient.py::CouldNotLookDiscriminator::test_bare_directory_and_the_same_directory_with_git_differ_in_one_bit
+      - tests/test_map_orient.py::CouldNotLookDiscriminator::test_unresolvable_root_is_not_a_degraded_verdict
+### citable-content requirement weakened to mere existence
+    exit=1 passed=41 killers=10 in-target=3
+      - tests/test_map_orient.py::CitableContent::test_an_existing_but_empty_index_is_never_resolved
+      - tests/test_map_orient.py::CitableContent::test_placeholder_ids_are_not_citable
+      - tests/test_map_orient.py::CitableContent::test_the_shipped_index_template_itself_does_not_resolve
+### unmapped filler check `not any` -> `not all`
+    exit=1 passed=50 killers=2 in-target=1
+      - tests/test_map_orient.py::PartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list
+### an unreadable substitute accepted as a hash pin
+    exit=1 passed=49 killers=3 in-target=2
+      - tests/test_map_orient.py::UnreadableSubstitute::test_a_hash_pin_must_be_a_real_sha256
+      - tests/test_map_orient.py::UnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses
+```
+
+M4 is killed by exactly the test written for it, and was survived-then-killed across the fix —
+the strongest available evidence that the new case is what closes the gap.
+
+### B3 — MINOR, accepted and corrected
+
+**The claim is withdrawn.** Revision 1 said `.agent-work/probe/` "was removed after capture"; you
+found it on disk. Whatever the mechanism, **an assertion in an evidence artifact that the reader
+finds to be false is a defect**, and it is the same failure class as the one this gate is about. It
+should not have been written the way it was.
+
+What I can actually establish, stated with its limits: my run did issue the `rm -rf` and its
+follow-up `git status --short` listed no `probe` entry, so the directory was gone at that instant.
+It was on disk when you looked. The most likely mechanism is that **running the evidence command in
+section 3 recreates it** — which is exactly what independently verifying my evidence involves — and
+I saw corroboration for that pattern during this rework: a `.agent-work/pollprobe/` I did not create
+was present in the tree. I cannot prove that is what happened, and I am not offering it as an
+excuse; the lesson stands either way.
+
+**The real error** was writing a cleanup assertion into an artifact whose own pasted evidence command
+recreates the very thing being asserted about. That claim was unverifiable by construction. So the
+artifact now states only what is verifiable, and the section-3 note has been rewritten accordingly.
+
+Verified at the time of writing this revision (after all rework evidence was captured):
+
+```
+$ ls .agent-work/ | grep -iE "probe"
+(no probe dirs)
+$ git status --short
+ M .agent-work/issue-304/g1-implementer-plan.json
+ M .agent-work/issue-304/g1-implementer-plan.json.journal
+ M scripts/init_work_area.py
+ M tests/test_init_work_area.py
+?? scripts/map_orient.py
+?? tests/test_map_orient.py
+?? tests/test_mutation_floor.py
+```
+
+Anyone re-running the section-3 or B1 commands will recreate `.agent-work/<work-id>/`; that is the
+command's designed effect, not residue. (The reviewer's separate recommendation of a `--receipt-dir`
+flag is triaged and deliberately not implemented here.)
+
+---
+
 ## Evidence
 
 ### 1. Required-evidence suite
@@ -138,8 +320,8 @@ python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/tes
 ```
 
 ```
-................................................................................                                       [100%]
-80 passed, 26 subtests passed in 29.82s
+...........................................................................................                [100%]
+91 passed, 38 subtests passed in 74.95s (0:01:14)
 ```
 
 **Result:** `pass`
@@ -155,7 +337,7 @@ self-test OK
 EXIT=0
 ```
 
-**Result:** `pass` — 77 checks (counted by instrumenting `_check`), covering the exit vocabulary, the
+**Result:** `pass` — 92 checks (counted by instrumenting `_check`), covering the exit vocabulary, the
 anchor scan (including placeholder rejection and the real shipped template), citability-not-existence,
 positive root proof, all four verdict paths, first-hit-wins ordering, the classifiers, the three-way
 discharge predicate, and every `verify-orientation` verdict.
@@ -194,7 +376,9 @@ EXIT=10
 
 **Result:** `pass` — the real degraded verdict in the live degraded repo. Note this is a **reported**
 degradation: reserved literal on stdout, semantic `10` on the exit code, and the receipt names exactly
-what is still owed. The `.agent-work/probe/` directory was removed after capture.
+what is still owed. **Note:** re-running this command recreates `.agent-work/probe/` -- that is the
+command's designed effect. See [B3](#b3--minor-accepted-and-corrected); revision 1 wrongly asserted a
+cleanup here.
 
 Receipt written by that run:
 
@@ -239,56 +423,25 @@ problems: 3
 EXIT=10
 ```
 
-### 4. Executed mutation floor — every named mutation demonstrably killed
+### 4. Executed mutation floor — all FIVE named mutations demonstrably killed
 
 ```bash
 python -m pytest tests/test_mutation_floor.py -q
 ```
 
 ```
-.......                                                              [100%]
-7 passed, 4 subtests passed in 22.49s
+.........                                                          [100%]
+9 passed, 6 subtests passed in 66.87s (0:01:06)
 ```
 
-Per-mutation detail, captured by driving the harness directly:
+Per-mutation detail for the revision-2 set of **five** is pasted verbatim in
+[B2](#b2--major-fixed-a-surviving-mutation-and-the-gap-that-let-it-survive) above and is not repeated
+here. Every mutation exits 1, leaves 39-50 tests still passing (so no kill is a disguised import
+break), and fails at least one test in the class it was supposed to break.
+
+The harness's own loud-failure path, exercised directly:
 
 ```
-### degraded-completeness `all` -> `any`
-    applied: source differs=True; anchors replaced=1
-    floor exit=1  passed=36  killed_by=9 test(s)
-      - tests/test_map_orient.py::ContractShape::test_self_test_floor_passes
-      - tests/test_map_orient.py::PartialFillMatrix::test_filler_escalation_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_filler_substitute_path_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_filler_unmapped_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_missing_escalation_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_missing_substitutes_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_missing_unmapped_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_the_completeness_predicate_requires_all_three
-
-### UNRESOLVABLE-ROOT collapsed into DEGRADED-NO-MAP, exiting 0
-    applied: source differs=True; anchors replaced=2
-    floor exit=1  passed=33  killed_by=11 test(s)
-      - tests/test_map_orient.py::ContractShape::test_self_test_floor_passes
-      - tests/test_map_orient.py::CouldNotLookDiscriminator::test_bare_directory_and_the_same_directory_with_git_differ_in_one_bit
-      - tests/test_map_orient.py::CouldNotLookDiscriminator::test_unresolvable_root_is_not_a_degraded_verdict
-      - tests/test_map_orient.py::DegradedReasons::test_a_degraded_repo_never_exits_zero_undischarged
-      - tests/test_map_orient.py::PartialFillMatrix::test_filler_escalation_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_filler_substitute_path_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_filler_unmapped_is_refused
-      - tests/test_map_orient.py::PartialFillMatrix::test_missing_escalation_is_refused
-
-### citable-content requirement weakened to mere existence
-    applied: source differs=True; anchors replaced=1
-    floor exit=1  passed=32  killed_by=10 test(s)
-      - tests/test_map_orient.py::CitableContent::test_an_existing_but_empty_index_is_never_resolved
-      - tests/test_map_orient.py::CitableContent::test_placeholder_ids_are_not_citable
-      - tests/test_map_orient.py::CitableContent::test_the_shipped_index_template_itself_does_not_resolve
-      - tests/test_map_orient.py::ContractShape::test_self_test_floor_passes
-      - tests/test_map_orient.py::DegradedReasons::test_broken_generated_map_is_unparseable_not_resolved
-      - tests/test_map_orient.py::DegradedReasons::test_content_without_a_citable_anchor_is_unparseable
-      - tests/test_map_orient.py::DegradedReasons::test_empty_index_is_empty_map_not_no_map
-      - tests/test_map_orient.py::DegradedReasons::test_generated_map_without_nodes_does_not_resolve
-
 ### harness self-check: a non-matching substitution
     HarnessError raised: HARNESS ERROR: mutation 'x' did not apply -- the anchor text occurred 0 time(s), expected exactly 1. The module was edited without updating this harness. This is NOT a killed mutant.
 ```
@@ -327,7 +480,7 @@ python -m pytest tests/ -q
 ```
 
 ```
-1459 passed, 2 skipped, 436 subtests passed in 92.19s (0:01:32)
+1470 passed, 2 skipped, 448 subtests passed in 168.90s (0:02:48)
 ```
 
 ---
@@ -347,11 +500,18 @@ python -m pytest tests/ -q
   exist) — plus one test of mine with a wrong expected anchor count (`5`, actual `4`), which I
   corrected.
 
-- **Passing test observed** — after implementing:
+- **Passing test observed** — after implementing (revision-2 figure; revision 1 was
+  `42 passed, 22 subtests`):
 
   ```
-  42 passed, 22 subtests passed in 4.92s
+  51 passed, 32 subtests passed in 8.36s
   ```
+
+- **Rework red observed (revision 2)** — the B1 and B2 reproductions above were run against the
+  shipped module *before* any fix, and both showed the defect: `orient` exit `0` / `verify` exit `0`
+  on a nonexistent substitute, and M4 surviving at `floor exit 0, 42 passed, 0 failed`. The new
+  `UnreadableSubstitute` tests and the multi-element cases were written against that failing
+  behavior, then went green.
 
 - **Refactor while green:** `yes` — `receipt_problems` was corrected while green so that an
   `UNRESOLVABLE-ROOT` receipt's legitimately-empty `candidates_tried` is not flagged as a malformed
@@ -443,6 +603,12 @@ asserts), so there are no inbound Map Anchors to frame against. Recorded as cand
 
 ## Out-of-scope observations
 
+- **Observation (revision 2, no action) — the `substitutes` loop had the same single-element blind
+  spot as `unmapped`.** B2 was reported against `unmapped_declared`, but the substitutes check is the
+  same shape, so I added `test_one_unpinned_substitute_poisons_a_multi_element_list` while fixing B1.
+  A *general* lesson worth carrying past this gate: **any predicate that quantifies over a list needs
+  a multi-element case**, because `any` and `all` are indistinguishable on lists of length one. That
+  is a floor-design rule, not a fact about this module.
 - **Triage candidate — `orient` writes `.agent-work/<work-id>/` into a directory that failed the repo-root
   proof.** On `UNRESOLVABLE-ROOT` the receipt is still written when the path is a directory, because the
   delivery record is the point. It is arguably rude to scaffold `.agent-work/` inside something we just
@@ -480,6 +646,19 @@ asserts), so there are no inbound Map Anchors to frame against. Recorded as cand
   creation on Python 3.14. Every existing `tests/test_*.py` in this repo uses the `importlib` loader
   pattern *without* that line, so any future test module that gains a dataclass will hit this. It cost
   me one failed run to diagnose. Worth a line in the crew Windows/platform reference.
+- **Self-critique from the rework (revision 2), since it is the most useful signal here:** two of the
+  three findings were failures of *my own* rigor, not of the handoff.
+  - **B1** was a hole in the exact property I was assigned to protect, and I described the behavior
+    correctly in my report while the code did something else. The generalizable cause: I validated a
+    field by "is it non-empty" when the field has a *known shape*. Where a value has a checkable
+    shape, check the shape.
+  - **B2** is the sharper lesson. I demonstrated three mutations killed and presented that as
+    falsifiability, but a floor is only as good as the mutations *someone else* devises. My three
+    were the ones I could already see. The reviewer's M4 survived because of a structural blind spot
+    — single-element lists — that I could not have found by picking my own mutations, because the
+    same blind spot shaped both the code and the tests. **Executed falsifiability against a
+    self-chosen mutation set systematically overstates itself**; the adversarial set is the one that
+    matters. Worth carrying into the epic's doctrine, not just this gate.
 - **What would have made this easier:** one concrete change — have the handoff state the **test mode**
   as a named field. Everything else in this handoff was unusually complete, and the three
   extra-weight items at the top of the dispatch (exit collision, citable content, applied-before-red)

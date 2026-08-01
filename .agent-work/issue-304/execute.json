@@ -181,7 +181,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT-2 received: APPROVE, supersedes the earlier BLOCK. 8-item survey consolidated, 2 triage candidates."
         }
       ],
       "postconditions": [
@@ -197,7 +198,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
         },
         {
           "id": "c2",
@@ -209,17 +211,41 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-304/crew-handoffs/g1-review-result-2.md",
+            "summary": "Fresh APPROVE after rework, superseding the BLOCK. Reviewer re-ran M4 (now killed), devised a new mutation against the B1 fix itself, and confirmed the applied-before-red count delta still holds. 2 triage candidates, non-blocking."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-implement": {
@@ -687,6 +713,13 @@
       "why": "Reviewer completed the mutation requirement rather than checking conformance: it devised M4 outside the shipped three, applied it, and reported honestly that it SURVIVED. That is a real gap in the floor - single-element filler lists make any and all identical. It also verified the shipped three are behaviorally earned and confirmed the count-delta claim is stronger than reported (both of mutation 2's substitutions have pre-existing replacement text). Verdict BLOCK on a content-level defect I reproduced myself.",
       "mechanical": false,
       "ts": "2026-08-01T23:06:07.804791+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Reviewer APPROVE after rework of B1/B2/B3, superseding its own BLOCK. I re-verified independently rather than on report: nonexistent substitute now exits 10 while a real substitute still exits 0 (positive control checked deliberately - a fix that refused everything would produce the first line too), M4 pinned with multi-element filler cases so any and all diverge, required suite 91 passed, self-test exit 0, FULL suite exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:28:34.002440+00:00"
     }
   ]
 }

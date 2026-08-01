@@ -15,17 +15,18 @@ from pathlib import Path
 
 SUBDIRS = ["crew-handoffs", "evidence", "triage-candidates"]
 
-# Placeholder families the resolver owns: <work-id> plus role-specific
-# "<role>-skill-dir" / "<role>-session-id" tokens (<commander-skill-dir>,
-# <admiral-skill-dir>, ...; role names may themselves carry hyphens, e.g. a
-# hypothetical <lessons-auditor-skill-dir>). A token in one of these families
-# left unresolved in a materialized spine is always a resolver bug, never an
-# intentional literal — unlike prose placeholders such as <engine>, <date>,
-# <N>, <path>, which this script never resolves and are fine to survive.
+# Placeholder families the resolver owns: <work-id> and <repo-root> plus
+# role-specific "<role>-skill-dir" / "<role>-session-id" tokens
+# (<commander-skill-dir>, <admiral-skill-dir>, ...; role names may themselves
+# carry hyphens, e.g. a hypothetical <lessons-auditor-skill-dir>). A token in
+# one of these families left unresolved in a materialized spine is always a
+# resolver bug, never an intentional literal — unlike prose placeholders such
+# as <engine>, <date>, <N>, <path>, which this script never resolves and are
+# fine to survive.
 _ROLE_SKILL_DIR_RE = re.compile(r"<([a-zA-Z0-9-]+)-skill-dir>")
 _ROLE_SESSION_ID_RE = re.compile(r"<([a-zA-Z0-9-]+)-session-id>")
 _RESOLVER_OWNED_TOKEN_RE = re.compile(
-    r"<(work-id|[a-zA-Z0-9-]+-skill-dir|[a-zA-Z0-9-]+-session-id)>"
+    r"<(work-id|repo-root|[a-zA-Z0-9-]+-skill-dir|[a-zA-Z0-9-]+-session-id)>"
 )
 
 
@@ -125,6 +126,17 @@ def resolve_spine(template_text: str, work_id: str, skill_dir: str | None, root:
       ``<admiral-session-id>``, ...) -> ``<role>-<work-id>`` (the conventional default),
       likewise discovered by pattern.
     - ``<work-id>`` -> the work_id argument (all occurrences).
+    - ``<repo-root>`` -> the absolute, resolved repo root. A **robustness**
+      token, not a repair: the engine passes command checks no ``cwd``, so they
+      inherit the launcher's. The relative checks already shipped work because
+      the launcher normally sits at the repo root — they are fragile, not
+      broken (their fragility is tracked separately as #341). ``<repo-root>``
+      lets a template author write a check that does not depend on where the
+      launcher happened to be. Emitted with forward slashes
+      (``as_posix()``): a spine is JSON and command checks run under a POSIX
+      shell, so a Windows ``str(Path)`` value would carry backslashes that
+      ``instantiate_spine``'s own ``json.loads`` guard rejects as invalid
+      escapes.
     """
     text = template_text
     for token in sorted({f"{role}-skill-dir" for role in _ROLE_SKILL_DIR_RE.findall(text)}):
@@ -133,6 +145,7 @@ def resolve_spine(template_text: str, work_id: str, skill_dir: str | None, root:
     for role in sorted(set(_ROLE_SESSION_ID_RE.findall(text))):
         text = text.replace(f"<{role}-session-id>", f"{role}-{work_id}")
     text = text.replace("<work-id>", work_id)
+    text = text.replace("<repo-root>", Path(root).resolve().as_posix())
     return text
 
 
