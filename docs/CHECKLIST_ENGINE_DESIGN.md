@@ -180,6 +180,78 @@ are now answered from engine output, so reading the raw file is unnecessary (and
   it prints, over fixtures parameterized on status **and position**, not by string-matching the
   render.
 
+## Context manifest: a second, delivery-shaped projection (#300)
+
+Beside `state(cl) -> StateView` (what the engine believes about condition/lease progress, above)
+sits a second, narrower projection: `scripts/context_manifest.py`'s
+`build_manifest(checklist, roots, ...) -> {contract, step, files, run}`. Both select the active
+unit through the **same** `active_id(cl)` — the manifest producer imports it rather than defining
+a second selector, so the two projections can never silently disagree about which task is active.
+
+Where `state()` answers "what is true about this checklist's progress," the manifest answers a
+narrower, orthogonal question: **what was made available to the agent running this step, and at
+which revision** — delivery, not use. It carries no claim that the agent read anything; it is not
+an access trace, and its rows never carry file contents.
+
+Shape: a task may carry an optional ordered `context_refs` list (`{root, path, required}`
+entries — see the Task-table row in `docs/CHECKLIST_SCHEMA.md`). Root tokens (`skill` \| `repo` \|
+`durable`) are resolved through a caller-supplied mapping, so absolute, environment-varying paths
+never reach the manifest content, and the producer never globs or enumerates a directory:
+declaration order **is** content, matching doctrine's own reading precedence (inherited global
+doctrine, then project deltas). Each row's `rev` is the git blob OID of the LF-normalised bytes,
+computed in-process (no `git` subprocess), so tracked, dirty, untracked, gitignored and
+out-of-repo files share one code path with no case split; an absent file yields `rev: null` and
+keeps its row rather than disappearing.
+
+**The prose is not replaced.** The first real declaration in the corpus,
+`COMMANDER_SPINE.template.json`'s `context` step, still carries the substitute-and-record rule and
+the sanctioned-degradation rule in its `imperative` — a path list cannot express either.
+`scripts/verify_context_declaration.py` is the mechanical lint that keeps the two from drifting
+apart: every declared path must appear verbatim in its own task's imperative. The check is
+one-directional by design: it catches the declaration naming a path its own prose never mentions;
+it cannot catch the reverse — a path quietly dropped from the declaration while the prose still
+names it (the declaration narrowing away from the prose) — because prose is not a parseable list.
+The lint's own docstring states that same limit, in these same terms.
+
+**No committed artifact ships from #300.** A committed, diffable `CONTEXT_PROJECTION.json`
+alongside the run-local manifest was considered and ruled out of this issue's scope.
+`scripts/context_manifest.py` therefore ships no CLI verb at all — the manifest is a JSON value a
+caller builds and, optionally, writes under `<agent_work_root>/<work-id>/context/<step>.json` via
+`produce()`, where `<agent_work_root>` is whatever durable root the caller hands it. A future drift
+check comparing canon against a committed artifact is a later issue's territory, not this
+substrate's.
+
+**Two-level revision scheme (#300 g5, Tommy's ruling; split in rework 1).** Beside the per-file rows
+sits one repo-level content field, `repo_rev: {commit}` — `commit` is `git rev-parse HEAD`, via
+`checklist_engine.repo_revision()` (a real git subprocess, deliberately kept out of
+`context_manifest.py`'s own source so its no-subprocess guarantee stays literally true, and injected
+as a second impure edge, `repo_state`, beside the existing `reader`). It answers a coarser, repo-wide
+question than `rev` does — *which commit is canon versioned at* — and does not replace the per-file
+blob OID's *which bytes did this agent actually get*, which stays the identity answer for a dirty,
+untracked or out-of-repo file that a commit SHA alone cannot cover.
+
+`repo_revision()` also returns `dirty` — is that commit's tree honest right now — but it does **not**
+ship beside `commit` inside content. The original design shipped it there, reasoning that a bare
+commit SHA needs the caveat to stay honest; a review disproved that (BLOCKER-1, rework 1): two fresh
+checkouts at the same commit, delivering byte-identical declared canon, disagreed on `repo_rev`
+because `git status --porcelain` is repo-wide and picked up an edit to a file no declaration named.
+`commit` is canon-determined (identical for any checkout of that commit) so it is safe as content;
+`dirty` describes the working tree that *produced* the manifest, not the bytes it delivered, so it
+lives in `run.dirty` instead — a fact about the run, like `roots`/`host`, not about canon. The split
+does not reopen the honesty gap: the per-file blob OID already answers the "which bytes did this
+agent actually get" question for a dirty/untracked/out-of-repo file, which is what `dirty` was really
+protecting; `repo_rev.commit` only ever had to be the coarse, human-facing traceability stamp. The
+split is made once, at `build_manifest`'s assembly point — `repo_revision()`/`default_repo_state()`
+still return both fields together, as a general repo-facts primitive not pre-shaped to this one
+caller's content/run boundary.
+
+**Downstream, not yet resolved here.** The manifest is consumed, not produced, by whatever issue
+turns out to build on it, and two questions are open across that interface. **Durability:** that
+root is gitignored and a linked worktree's copy is destroyed by `git worktree remove`, so a
+manifest is not a durable record unless something copies it out. **Cardinality:** one manifest
+is produced per spine *step*, not per episode, so a consumer that thinks in episodes has to decide
+which step's manifest it means. Neither is settled by this substrate.
+
 ## Evidence: gate on type/shape, not quality
 
 The engine does **not** judge whether work is good. A gate declares the **evidence types** required before it can close, and the engine checks **presence and minimal shape** only:

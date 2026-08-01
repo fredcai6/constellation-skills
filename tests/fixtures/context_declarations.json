@@ -1,0 +1,70 @@
+{
+  "_readme": [
+    "Adversarial declarations for scripts/context_manifest.py. Authored to make the",
+    "producer return a WRONG answer, not to mirror the shipped corpus: a suite that",
+    "only parses real artifacts proves the corpus is clean, never that the tool is",
+    "correct.",
+    "",
+    "NOTE on the CRLF/LF twin fixtures: they are deliberately NOT committed here.",
+    "This repo's .gitattributes is `* text=auto` with core.autocrlf=true, so a",
+    "committed CRLF file is normalised on the way in and checked out with the",
+    "platform's endings — both twins would arrive identical and the test would pass",
+    "vacuously. Committing a real CRLF twin would need a `-text` exemption, which is",
+    "exactly the attribute that breaks rev()'s equality with `git hash-object`. The",
+    "twins are therefore materialised byte-for-byte at test time instead."
+  ],
+
+  "tree": {
+    "skill/references/doctrine.md": "doctrine\n",
+    "skill/references/deltas.md": "deltas\n",
+    "repo/docs/GLOSSARY.md": "glossary\n"
+  },
+
+  "accepted": {
+    "ordered_two": {
+      "why": "declaration order is content; the reversed twin below must differ",
+      "entries": [
+        {"root": "skill", "path": "references/doctrine.md", "required": true},
+        {"root": "skill", "path": "references/deltas.md", "required": true}
+      ]
+    },
+    "ordered_two_permuted": {
+      "why": "same set, opposite order - MUST register as a content difference",
+      "entries": [
+        {"root": "skill", "path": "references/deltas.md", "required": true},
+        {"root": "skill", "path": "references/doctrine.md", "required": true}
+      ]
+    },
+    "absent_is_retained": {
+      "why": "absence by design is normal: rev null, row retained, no exception",
+      "entries": [
+        {"root": "repo", "path": "docs/agents/ORCHESTRATOR_CONTEXT.md", "required": false}
+      ]
+    },
+    "duplicate_paths": {
+      "why": "the same path declared twice is two deliveries, not one",
+      "entries": [
+        {"root": "repo", "path": "docs/GLOSSARY.md", "required": true},
+        {"root": "repo", "path": "docs/GLOSSARY.md", "required": true}
+      ]
+    }
+  },
+
+  "rejected": {
+    "parent_traversal": [{"root": "skill", "path": "../outside.md", "required": true}],
+    "buried_traversal": [{"root": "skill", "path": "references/../../outside.md", "required": true}],
+    "windows_traversal": [{"root": "skill", "path": "..\\outside.md", "required": true}],
+    "absolute_posix": [{"root": "repo", "path": "/etc/passwd", "required": true}],
+    "windows_drive_letter": [{"root": "repo", "path": "C:/Windows/win.ini", "required": true}],
+    "windows_drive_relative": [{"root": "repo", "path": "C:Windows/win.ini", "required": true}],
+    "ntfs_alternate_data_stream": [{"root": "repo", "path": "docs/GLOSSARY.md:hidden", "required": true}],
+    "backslash_path": [{"root": "repo", "path": "docs\\GLOSSARY.md", "required": true}],
+    "unknown_root": [{"root": "elsewhere", "path": "docs/GLOSSARY.md", "required": true}],
+    "missing_root": [{"path": "docs/GLOSSARY.md", "required": true}],
+    "missing_path": [{"root": "repo", "required": true}],
+    "empty_path": [{"root": "repo", "path": "   ", "required": true}],
+    "not_an_object": ["docs/GLOSSARY.md"],
+    "glob_pattern_is_not_a_path": [{"root": "repo", "path": "docs/*.md", "required": true}],
+    "row_field_smuggled_into_declaration": [{"root": "repo", "path": "docs/GLOSSARY.md", "rev": "deadbeef"}]
+  }
+}

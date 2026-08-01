@@ -106,6 +106,7 @@ A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**.
 | `postconditions` | `[Condition]` | `gated`: **required (≥1)**. `survey`: usually none — the item *is* the check |
 | `constraints` | `[string]` | rules; inherited down a delegated child; forced specifics |
 | `directives` | `[string]` \| null | forced primitive specifics handed down |
+| `context_refs` | `[{root, path, required}]` \| absent | *optional*; an ordered list declaring which files `scripts/context_manifest.py` projects for this task — `root` is one of `skill`\|`repo`\|`durable`, `path` is a posix-relative path under that root, `required` is advisory (not enforced by the producer). Absent means an empty manifest; declaration order is content and is never sorted. The declaration sits *beside* the `imperative` prose, not in place of it — `scripts/verify_context_declaration.py` lints that every declared path appears verbatim in the task's own `imperative`. |
 | `child_checklist` | work-id \| null | a **delegating** gate: the sub-plan this gate waits on |
 | `why_exempt` | bool | *optional*; **opt-out, default NOT exempt.** A gate WITHOUT `why_exempt: true` (missing key included) must supply a running understanding on `advance` — see *Why-capture*. A missing key is treated as not-exempt (**fail-closed**), so a legacy gate refuses a why-less advance cleanly rather than skipping capture |
 | `status` | enum | `pending \| in-progress \| blocked \| complete \| skipped` |
