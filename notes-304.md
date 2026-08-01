@@ -96,6 +96,31 @@ command.* I did — but the command encoded my own assumption about sentence bou
 my error rather than checking it. **A command is only as good as its predicate.** Deriving from a
 command is necessary, not sufficient.
 
+## decision:tripwires-are-episodes — AMENDED rationale (Admiral-approved)
+
+The **ruling stands**: episodes remain the destination. `.agent-work/LESSONS.md` is at its 20/20 cap,
+has no outcome field either, and is being retired by #308.
+
+**The original rationale is withdrawn.** It claimed *"the episode record already carries a prediction
+and an outcome slot."* The code says otherwise (issue #342): no `confirmed` lifecycle-standing;
+`create` requires `observed-behavior`; `amend-assertion` writes only `lifecycle-standing`.
+
+**Amended rationale, cited in place of the original:** episodes are the destination because
+`LESSONS.md` is capped and being retired — **not** because the store carries an outcome slot. The
+prediction/outcome shape this pathway needs is supplied by **git**, not by the store: pre-register
+predictions in a committed `TRIPWIRES.md`, use commit history as the tamper-evident timestamp (the
+episode writer is deliberately clock-free, so git supplies exactly what the store cannot), then file
+episodes afterwards carrying a **real** `observed-behavior`. Never fabricates an observation.
+
+## Triage filed to the tracker
+
+| issue | finding |
+|---|---|
+| **#341** | engine command-kind checks inherit the launcher's cwd; 5 shipped relative checks silently fragile |
+| **#342** | episode store has no `confirmed` standing; a held prediction is indistinguishable from an unchecked one |
+| **#343** | pathless "current map" phrasing recurs in cartographer/scout/explorer — deliberately not fanned out |
+| **#344** | installed corpus 18 commits stale; 3 of 11 commander scripts differ, incl. `checklist_engine.py` |
+
 ## Run state at return
 
 | gate | state |
