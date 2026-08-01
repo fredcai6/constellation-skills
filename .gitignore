@@ -10,6 +10,10 @@
 .agent-work/**/gauge-skip.json
 .agent-work/.spine-rail-binding.json
 .agent-work/.spine-rail-nudges.json
+# Captured eval workspaces embed a full copy of another checkout's skills tree.
+# They are a copied checkout, not run history, and their nesting exceeds the
+# Windows path limit -- `git worktree add` fails with 'Filename too long'.
+.agent-work/**/constellation-eval-*/
 __pycache__/
 *.pyc
 .coverage
