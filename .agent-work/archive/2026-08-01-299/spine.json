@@ -558,19 +558,22 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills-wt/e298-299/scripts/verify_agent_feedback.py 299 --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "all work committed across four commits (a226642 rubric freeze, 902d140 captured runs, feedback closeout, archive) and pushed to origin epic-298/299; PR #334 open with CI exit 0"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "lease release is the VERY LAST action, issued after the closing advance below"
         },
         {
           "id": "c4",
@@ -605,22 +608,46 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/e298-299/scripts/verify_agent_feedback.py 299 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -629,13 +656,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "cmdr-299-a",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-01T20:09:59.752710+00:00",
-    "last_heartbeat": "2026-08-01T21:20:53.046198+00:00",
+    "last_heartbeat": "2026-08-01T21:21:39.554861+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-01T21:21:50.598868+00:00"
   },
   "why_trail": [
     {
@@ -700,6 +728,13 @@
       "why": "Retrospective appended to the durable AGENT_FEEDBACK.md with the three required signal sections. Three confirms applied; the constellation-scoped one logged recurrence debt and was PAID by export to CONSTELLATION_FEEDBACK.md with the originating lesson id, not confirmed into a permanent workaround. No unpaid ripe lessons remain. Two adds held out with a written reason: bank at cap 20, nothing ripe, and both findings have a durable home as tracker issues 331 and 333.",
       "mechanical": false,
       "ts": "2026-08-01T21:20:26.455882+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Closeout. Work area archived to .agent-work/archive/2026-08-01-299/ with the durable AGENT_FEEDBACK.md left at the .agent-work root; archive-phase invariant exit 0. Four commits pushed to epic-298/299, PR #334 open with CI check exit 0 read at source. Merge deliberately HELD for the Admiral: float F1 is unresolved and concerns the central label on the very data this PR carries. Baseline captured; pathway verdict NOT issued - that is #307's and Tommy's.",
+      "mechanical": false,
+      "ts": "2026-08-01T21:21:39.554861+00:00"
     }
   ]
 }
