@@ -114,6 +114,20 @@ critic blocked. That ruling is the Admiral's.
 
 Everything upstream of it is driven through the engine with the lease held throughout.
 
+## Post-return updates
+
+- **Q1 RULED (Tommy): candidate B is OUT.** Bootstrap stanza and its install lifecycle dropped from
+  scope entirely. Principle: placing content at a broader tier than its audience is a defect. The map is
+  orchestrator content, not implementer content.
+- **Zero-invocation reframed:** it was a defect in the measurement RIG (which launched generic agents),
+  not a delivery defect in the product. A Commander run does invoke the Commander. Candidate As reach
+  weakness largely evaporates.
+- **Discriminated baseline (commander-299):** orientation 0/5, use 4/4, citation 4/5. The map was
+  genuinely used - as verification after the seam was found, never as what found it. A SEQUENCING
+  failure, precisely and only.
+- **Necessity gate has zero discriminating power against the measured five**, and its only firing
+  (#716) would have been a false positive. Ships as a floor, not as the fix. See the brief.
+
 ## The deficiency, restated for my own use
 
 Not "no path exists." f1Brainz has an exact path in the always-loaded bootstrap. The gap is:
