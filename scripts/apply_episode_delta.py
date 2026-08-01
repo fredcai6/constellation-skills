@@ -10,8 +10,10 @@ write path into episodes/.
 Mirrors scripts/apply_lessons_delta.py's contract (validate-then-apply, all-or-nothing,
 retire-requires-reason, "- field: value" grammar) but is NOT the same store: see
 docs/EPISODE_STORE.md for the full contract this writer implements, and its section 7
-in particular for why the retirement-layout question is a genuinely open seam, not
-settled here.
+in particular for the retirement layout, ratified at gate g4 and bound in the seam block
+below — retirement MOVES the file from episodes/active/<id>.md to
+episodes/retired/<id>.md, and retired/ is an archive rather than a second live search
+space.
 
 Op vocabulary (this script's own choice — not fixed by EPISODE_STORE.md, which only
 fixes the record grammar and the store's obligations):
@@ -24,10 +26,13 @@ fixes the record grammar and the store's obligations):
                      changes only its lifecycle-standing and appends one history line.
                      Every sibling field, in this assertion and every other, is
                      untouched (EPISODE_STORE.md section 5).
-  retire           — mark an episode excluded from ordinary search, RETAINED in history,
-                     with a mandatory non-empty reason. Never touches any assertion's own
-                     lifecycle-standing (EPISODE_STORE.md section 7). Routes its
-                     layout-dependent effect through apply_retirement() alone.
+  retire           — move an episode out of ordinary search and into the archive,
+                     RETAINED in history, with a mandatory non-empty reason. Never
+                     touches any assertion's own lifecycle-standing (EPISODE_STORE.md
+                     section 7). The content half routes through apply_retirement()
+                     alone; the layout half (the move) through destination_for()
+                     alone. Both land in one write plan, so the store is never left
+                     half-retired.
 
 Determinism: same delta + same starting state -> same bytes. This writer never calls
 date.today() or any other wall-clock source — every free-text value that would carry a
@@ -416,21 +421,85 @@ def parse_episode(text: str) -> Episode:
 
 # --- seams (EPISODE_STORE.md section 7's seam table) --------------------------------
 #
-# The retirement layout is HELD OPEN — g4 binds it after human ratification. Every
-# layout-dependent concern routes through exactly one named function below, and each
-# implements BOTH candidate adapters behind a single switch, so binding the layout is a
-# one-constant flip, never a rewrite of callers. Do not inline a path, glob, or move
-# anywhere else in this module.
+# THE RETIREMENT LAYOUT IS BOUND (gate g4). Ratified by Tommy, verbatim:
+#
+#     "move the file, prefer to keep files clean of history unless they're historical.
+#      archives are available strats."
+#
+# That is section 7's Option A: retirement MOVES the file, episodes/active/<id>.md ->
+# episodes/retired/<id>.md. Option B (a `status` field filtered negatively, file never
+# moves) is REJECTED; its adapters and the switch that selected between them have been
+# removed, because a switch that can still select a rejected option is a decision that is
+# still open.
+#
+# The second half of the ruling is a design principle, not decoration: retired/ is a
+# genuine ARCHIVE, not a second live search space every query must remember to exclude.
+# Ordinary retrieval globs active/ and never looks at retired/; history-inclusive
+# retrieval is a separate, deliberate act (the include_retired=True argument below is the
+# only way to reach the archive, and no default supplies it).
+#
+# THE DIRECTORY NAMES BELOW ARE THE ONLY PLACE THEY MAY APPEAR. Every layout-dependent
+# concern routes through exactly one named function in this block; no other primitive, in
+# this module or in scripts/query_episodes.py, may inline a path, glob, or move.
+#
+# What binding Option A did NOT do: it made the OLD silent-omission trap (a positive
+# `status: active` allowlist dropping a legitimately-not-retired `disputed` episode)
+# structurally impossible — membership is now a directory fact, not a parsed field — but
+# it RELOCATED the class rather than removing it. Three traps now live here instead, and
+# each has an adversarial fixture in tests/test_episode_store.py:
+#   1. a glob that misses a subdirectory (episodes/*.md, after the layout gained
+#      active/ and retired/) — silently returns nothing, or only strays;
+#   2. a history-inclusive enumeration that forgets to union BOTH directories —
+#      silently returns only the active half;
+#   3. a stray file at the old flat path (episodes/<id>.md, in neither subdirectory) —
+#      it belongs to no set and must be surfaced as MALFORMED, not skipped. This is the
+#      live migration hazard: episodes/README.md already lives at the flat root, so the
+#      exclusion of non-episode strays has to be DELIBERATE, never an accident of a
+#      glob's shape.
+#   4. a NON-EPISODE FILE INSIDE A LAYOUT DIRECTORY — the mirror image of trap 3, and
+#      the one that actually shipped at first attempt. Membership moved from file
+#      CONTENT to file LOCATION, so anything a directory listing returns becomes an
+#      episode id; a `README.md` placed in active/ and retired/ to keep the layout in
+#      git therefore minted the phantom id `README` in BOTH sets and bricked every
+#      primitive. See episode_id_for() below for why the classifier is now derived
+#      rather than enumerated.
+#   5. a store root, or a layout directory, that is not there at all — Path.glob over a
+#      missing directory returns empty, which is trap 1's own failure description
+#      ("indistinguishable from an empty store") reached by a typo'd --store-root.
 
-_LAYOUT_OPTION_A = "A"  # file-move: episodes/active/<id>.md <-> episodes/retired/<id>.md
-_LAYOUT_OPTION_B = "B"  # status-field-in-place: episodes/<id>.md never moves
+ACTIVE_DIR = "active"  # the ordinary rhyme-search set
+RETIRED_DIR = "retired"  # the archive — reachable only history-inclusively
 
-# TODO(g4): bind after human ratification (docs/EPISODE_STORE.md section 7). This is a
-# PLACEHOLDER default, not a decision — Option B is chosen here only because it needs no
-# active/retired subdirectories to exist yet, matching the store's current flat layout
-# (episodes/README.md). Flipping this one constant to _LAYOUT_OPTION_A is g4's whole job
-# for every seam below.
-_LAYOUT_ADAPTER = _LAYOUT_OPTION_B
+# Non-episode files that legitimately sit at the store's FLAT ROOT. Scoped to that one
+# directory on purpose: it is the only place a hand-maintained list is unavoidable,
+# because a file there is outside the store's own naming grammar by definition (the
+# store's README is documentation for humans, not a record). Inside active/ and
+# retired/, membership is decided by episode_id_for() instead — see below.
+NON_EPISODE_FILENAMES = frozenset({"README.md"})
+
+
+def episode_id_for(path: Path) -> str | None:
+    """THE classifier: is this file an episode, and if so, which one? Returns the
+    episode id, or None for a file that is not an episode at all.
+
+    Derived from the store's OWN id grammar (ID_RE, section 2) rather than from a
+    hand-maintained list of filenames — and that is the whole point. The first attempt
+    at this gate used a named allowlist (NON_EPISODE_FILENAMES) consulted at the flat
+    root only, and it failed in the way hand-maintained enumerations always fail: the
+    layout gained two directories, membership moved from content to location, and the
+    classifier stayed behind. Its own placeholders then became the phantom id `README`.
+
+    An id grammar cannot drift from itself. `README`, `notes`, `CODEOWNERS`, `index`,
+    and every future `.gitkeep`-shaped afterthought are rejected by the same rule that
+    accepts `governor-268-001` — no edit required when someone adds a file, and no
+    silent acceptance of a real stray when someone forgets to. It is also the rule that
+    REFUSES a bad placeholder at authoring time rather than at first read.
+
+    Uniform in all three directories: episode-ness is a property of the name, so the
+    answer cannot depend on which directory asked."""
+    if path.suffix != ".md":
+        return None
+    return path.stem if ID_RE.fullmatch(path.stem) else None
 
 
 def store_root() -> Path:
@@ -442,56 +511,248 @@ def store_root() -> Path:
     return Path(__file__).resolve().parent.parent / "episodes"
 
 
-def iter_episode_ids(root: Path, include_retired: bool) -> list[str]:
-    """Base enumeration seam (section 7). TODO(g4): binds to whichever adapter below is
-    ratified; both are implemented now so the switch is real."""
-    if _LAYOUT_ADAPTER == _LAYOUT_OPTION_A:
-        ids = {p.stem for p in (root / "active").glob("*.md")} if (root / "active").exists() else set()
-        if include_retired and (root / "retired").exists():
-            ids |= {p.stem for p in (root / "retired").glob("*.md")}
-        return sorted(ids)
-    # Option B: flat glob; include_retired is a no-op for this adapter (status is not
-    # encoded in the path — see is_episode_in_ordinary_search below).
-    if not root.exists():
+def ensure_store_layout(root: Path) -> None:
+    """Create the store's two layout directories if they are absent — the WRITER's
+    bootstrap, and deliberately not a reader's.
+
+    Writing is a creating act, so `--store-root <somewhere-new>` legitimately makes a
+    store there. Reading is not: a reader that quietly created a missing directory would
+    then answer "0 episodes, exit 0" for a typo'd root, which is the silent-omission
+    class arriving through the back door. The read seams therefore REFUSE an absent
+    layout (see _require_store_layout) and only this function ever makes one."""
+    (root / ACTIVE_DIR).mkdir(parents=True, exist_ok=True)
+    (root / RETIRED_DIR).mkdir(parents=True, exist_ok=True)
+
+
+def _require_store_layout(root: Path) -> None:
+    """Every READ seam's first act: refuse a store that is not there.
+
+    Trap 5. `Path.glob` over a missing directory returns empty and raises nothing, so the
+    natural implementation answers `[]` — indistinguishable from "the store is empty",
+    which is trap 1's own failure description reached by a different route. A wrong
+    `--store-root`, or a layout that never got committed (git does not track empty
+    directories, and this layout is two directories), must fail visibly instead."""
+    if not root.is_dir():
+        raise EpisodeDeltaError(
+            f"missing store: {root} is not a directory. Enumerating a store that is not "
+            "there would return an empty candidate set, which reads exactly like an "
+            "empty store — so this is refused rather than answered. Check --store-root."
+        )
+    absent = [sub for sub in (ACTIVE_DIR, RETIRED_DIR) if not (root / sub).is_dir()]
+    if absent:
+        raise EpisodeDeltaError(
+            "missing store layout: "
+            + ", ".join(f"{root / sub}" for sub in absent)
+            + f" — the store is the two directories {ACTIVE_DIR}/ and {RETIRED_DIR}/, "
+            "and an absent one is not an empty one. Git does not track empty "
+            "directories, so a layout that was never committed arrives here; the writer "
+            "creates the layout (ensure_store_layout), readers refuse it."
+        )
+
+
+def stray_episode_paths(root: Path) -> list[Path]:
+    """Every Markdown file sitting at the store's FLAT root — i.e. in neither active/
+    nor retired/ — that is not one of the store's known non-episode files.
+
+    Trap 3 (see the seam-block header). Under the bound layout an episode is a member of
+    exactly one of two directories; a file at `episodes/<id>.md` is a member of neither,
+    so BOTH the ordinary and the history-inclusive enumerations would return an answer
+    that silently excludes it. That is the same silent-omission class the flat layout
+    had, wearing a migration's clothes: a pre-layout episode left behind by a partial
+    migration reads, to every query, as though it does not exist.
+
+    So it is surfaced rather than skipped — and the exclusion of the store's own
+    documentation is a NAMED allowlist (NON_EPISODE_FILENAMES), never a glob shape that
+    happens not to match it. The allowlist lives HERE and only here: inside the layout
+    directories the id grammar answers the same question without anyone maintaining a
+    list (episode_id_for).
+
+    Recursive, and the allowlist applies at the flat root ONLY (trap 6). A Markdown file
+    at `episodes/archive/<id>.md` is exactly as invisible to every one-level-deep scan as
+    one at the flat path, and "a directory nobody declared" is not a safer place to hide
+    a record than "the level above". Files inside active/ and retired/ are excluded here
+    because _layout_episode_ids() scans those two with its own, stricter rule."""
+    if not root.is_dir():
         return []
-    return sorted(p.stem for p in root.glob("*.md") if p.name != "README.md")
+    layout = (root / ACTIVE_DIR, root / RETIRED_DIR)
+    strays = []
+    for path in root.rglob("*.md"):
+        if not path.is_file() or any(d in path.parents for d in layout):
+            continue
+        if path.parent == root and path.name in NON_EPISODE_FILENAMES:
+            continue
+        strays.append(path)
+    return sorted(strays)
+
+
+def _reject_strays(root: Path) -> None:
+    strays = stray_episode_paths(root)
+    if strays:
+        raise EpisodeDeltaError(
+            "malformed store: "
+            + ", ".join(p.relative_to(root).as_posix() for p in strays)
+            + f" is in neither {ACTIVE_DIR}/ nor {RETIRED_DIR}/. "
+            "An episode belongs to exactly one of those two sets; a file anywhere else "
+            "under the store belongs to neither and would be silently omitted by every "
+            "enumeration. Move it into the directory it belongs in (or, if it is a "
+            "non-episode file at the store root, add it to NON_EPISODE_FILENAMES — an "
+            "allowlist that is scoped to the flat root and nowhere else)."
+        )
+
+
+def _layout_episode_ids(root: Path, sub: str) -> set[str]:
+    """Every episode id held by ONE layout directory — the only place a directory
+    listing becomes a set of ids.
+
+    Trap 4. A listing answers "what files are here", never "what episodes are here", and
+    under a location-based membership rule the gap between those two questions is where
+    a phantom id comes from. episode_id_for() closes it, and a `*.md` that is NOT a
+    well-formed episode id is REFUSED rather than skipped: inside active/ or retired/
+    such a file is either a misfiled record or a placeholder that should not have been
+    given a `.md` name, and both are things a human must look at. Skipping would be the
+    silent-omission class again, one directory deeper.
+
+    Recursive for the same reason stray_episode_paths() is (trap 6): a record at
+    `active/old/<id>.md` is a well-formed episode filename at the wrong DEPTH, and a scan
+    that only lists the top level omits it in silence. Depth is part of the name test
+    here, so both halves of "is this an episode of this set" are answered in one place."""
+    directory = root / sub
+    ids: set[str] = set()
+    misfiled: list[str] = []
+    for path in sorted(directory.rglob("*.md")):
+        if not path.is_file():
+            continue
+        episode_id = episode_id_for(path)
+        if episode_id is None or path.parent != directory:
+            misfiled.append(path.relative_to(root).as_posix())
+            continue
+        ids.add(episode_id)
+    if misfiled:
+        raise EpisodeDeltaError(
+            "malformed store: "
+            + ", ".join(misfiled)
+            + " is not a well-formed episode file at this level (<episode-id>.md "
+            f"directly inside {sub}/, where the id matches {ID_RE.pattern}). Inside "
+            f"{ACTIVE_DIR}/ and {RETIRED_DIR}/ every Markdown file IS an episode — "
+            "membership is the directory it sits in — so a name the store's own id "
+            "grammar does not recognize, or a record buried one level deeper, is either "
+            "misfiled or a non-episode file that must not carry a .md name. Refused "
+            "rather than skipped: skipping is how a filename becomes a phantom id, and "
+            "how a real record becomes invisible."
+        )
+    return ids
+
+
+def _reject_half_retired(live: set[str], archived: set[str]) -> None:
+    """An id present in BOTH directories is a retirement that half-happened: retired by
+    content, still in the ordinary-search set by directory.
+
+    _Transaction.commit() compensates for every failure the process survives to observe,
+    so this state cannot be produced by a failed retirement — but a hard kill or power
+    loss between the two placement steps runs no compensation at all, and
+    markdown-in-git provides no journal to close that. Rather than claim the residue is
+    impossible, this makes it LOUD: an ordinary enumeration would otherwise return the
+    id and its record would read `status: retired`, which is a wrong answer with nothing
+    signalling it."""
+    both = sorted(live & archived)
+    if both:
+        raise EpisodeDeltaError(
+            "half-retired store: "
+            + ", ".join(both)
+            + f" exists in BOTH {ACTIVE_DIR}/ and {RETIRED_DIR}/ — a retirement was "
+            "interrupted between placing the archived copy and removing the source. "
+            f"The {RETIRED_DIR}/ copy is the newer one; remove the {ACTIVE_DIR}/ copy to "
+            "complete the retirement, or the reverse to abandon it."
+        )
+
+
+def iter_episode_ids(root: Path, include_retired: bool) -> list[str]:
+    """Base enumeration seam (section 7), bound to Option A.
+
+    Ordinary enumeration is the ordinary set and nothing else — the archive is not a
+    second live search space that this function has to remember to exclude, which is
+    exactly the ruling's second half. `include_retired=True` is the deliberate
+    history-inclusive act: it UNIONS both directories. Trap 2 is forgetting that union
+    and returning only the active half, so the union is written once, here, and no caller
+    repeats it.
+
+    Two malformed-store conditions raise here rather than being answered around, because
+    both would otherwise produce a silently wrong candidate set — and because putting
+    them in the seam every reader AND the writer's own id-assignment scan already goes
+    through means no caller has to remember them:
+
+      * a stray at the flat root (trap 3) — it belongs to neither set, so every
+        enumeration omits it, and the writer would happily mint an id the stray holds;
+      * an id in both directories — an interrupted retirement (see _reject_half_retired).
+
+    The archive is listed even for an ordinary scan, solely to check the second
+    condition. That listing can only ever produce a REFUSAL; it never contributes a
+    candidate, so the archive remains an archive rather than a second search space.
+
+    Both directory listings go through _layout_episode_ids(), so a file that is not an
+    episode never becomes a candidate id here — the classifier is applied where the
+    membership rule is applied, which is the coupling whose absence bricked this store
+    the first time round."""
+    _require_store_layout(root)
+    _reject_strays(root)
+    live = _layout_episode_ids(root, ACTIVE_DIR)
+    archived = _layout_episode_ids(root, RETIRED_DIR)
+    _reject_half_retired(live, archived)
+    return sorted(live | archived if include_retired else live)
 
 
 def resolve_episode_path(episode_id: str, root: Path) -> Path | None:
-    """Fetch-by-id path-resolution seam (section 7). TODO(g4): binds to whichever
-    adapter is ratified. Returns None if the id does not exist under the active
-    adapter."""
-    if _LAYOUT_ADAPTER == _LAYOUT_OPTION_A:
-        for sub in ("active", "retired"):
-            candidate = root / sub / f"{episode_id}.md"
-            if candidate.exists():
-                return candidate
-        return None
-    candidate = root / f"{episode_id}.md"
-    return candidate if candidate.exists() else None
+    """Fetch-by-id path-resolution seam (section 7), bound to Option A: try active/,
+    then retired/. Returns None if the id does not exist.
+
+    At most one of the two SHOULD exist for any valid id — but "should" is the whole
+    point: the residual half-retired state is admitted to be possible (a hard kill
+    between two filesystem calls runs no compensation), so this function checks rather
+    than assuming. An earlier version of this docstring asserted "an episode is never in
+    both places at once" while the code below silently returned the active/ copy when it
+    was, which is the worst of both: a comment the next reader trusts instead of testing.
+
+    Fetch-by-id deliberately reaches into the archive: "where is this specific record"
+    is an addressed lookup, not a search, and the ruling excludes retired episodes from
+    *search*, never from retrieval by name.
+
+    Two refusals rather than answers, both because the alternative is a plausible wrong
+    answer: a store that is not there is not a store with no such episode (trap 5), and
+    an id present in BOTH directories is a half-retired store, not a choice between two
+    copies. The second one is what makes the half-retirement refusal reach fetch and the
+    writer, not only the scanning readers — this seam is the one they share."""
+    _require_store_layout(root)
+    found = [
+        root / sub / f"{episode_id}.md"
+        for sub in (ACTIVE_DIR, RETIRED_DIR)
+        if (root / sub / f"{episode_id}.md").exists()
+    ]
+    if len(found) > 1:
+        _reject_half_retired({episode_id}, {episode_id})
+    return found[0] if found else None
 
 
 def _new_episode_path(episode_id: str, root: Path) -> Path:
-    """Where a brand-new (always-active) episode is written. Not one of section 7's
-    five named seams (create is g2's own concern, not a retrieval primitive), but it is
-    exactly as layout-dependent as they are, so it is isolated here the same way —
-    TODO(g4)."""
-    if _LAYOUT_ADAPTER == _LAYOUT_OPTION_A:
-        return root / "active" / f"{episode_id}.md"
-    return root / f"{episode_id}.md"
+    """Where a brand-new (always-active) episode is written. Not one of section 7's five
+    named seams (create is g2's own concern, not a retrieval primitive), but it is
+    exactly as layout-dependent as they are, so it is isolated here the same way."""
+    return root / ACTIVE_DIR / f"{episode_id}.md"
 
 
 def is_episode_in_ordinary_search(episode_id: str, root: Path) -> bool:
-    """Per-id membership seam (section 7). Not exercised by the writer itself (this is
-    mostly g3's retrieval concern) — named and stubbed here per the seam table so no
-    caller ever needs to inline the check. TODO(g4)."""
-    if _LAYOUT_ADAPTER == _LAYOUT_OPTION_A:
-        return (root / "active" / f"{episode_id}.md").exists()
-    path = resolve_episode_path(episode_id, root)
-    if path is None:
-        return False
-    ep = parse_episode(read_text_exact(path))
-    return ep.status != "retired"
+    """Per-id membership seam (section 7), bound to Option A: a directory check.
+
+    This is the structural win the ruling buys. Membership is a filesystem fact, so a
+    malformed, hand-edited, or forged `- status: retired` line in a free-text field
+    cannot move an episode between sets — there is no field to parse and therefore no
+    parse to fool.
+
+    Like the other two read seams it refuses an absent store rather than answering about
+    one: "no, that episode is not in ordinary search" and "there is no store here" are
+    different facts, and a predicate that collapses them hands its caller a False that
+    means nothing."""
+    _require_store_layout(root)
+    return (root / ACTIVE_DIR / f"{episode_id}.md").exists()
 
 
 def apply_retirement(
@@ -502,14 +763,23 @@ def apply_retirement(
     consolidated_into: str = "",
     superseded_by: str = "",
 ) -> None:
-    """THE retirement write-side seam (section 7): the entire content effect of a
-    retire op, identical under either layout option. The writer must call this and
-    never inline a field-only write or a file-move at the call site — the layout
-    effect (does the FILE also move) is decided separately, in the write-plan built by
-    apply_delta(), which asks _new_retirement_path() (below) for the destination. This
-    function only ever mutates the in-memory Episode; it performs no I/O itself, so the
-    all-or-nothing guarantee (C4) never depends on ordering retirements before other
-    ops."""
+    """THE retirement write-side seam (section 7): the entire CONTENT effect of a retire
+    op. The writer must call this and never inline a field-only write or a file-move at
+    the call site — the layout effect (the file moves into the archive) is expressed
+    separately, in the write plan built by _Transaction.write_plan(), which asks
+    destination_for() (below) for the destination.
+
+    This function only ever mutates the in-memory Episode; it performs no I/O itself, so
+    the all-or-nothing guarantee (C4) never depends on ordering retirements before other
+    ops — and, since the field update and the move are two halves of ONE write plan
+    entry, no plan this writer builds can disagree with itself: "fields updated but file
+    not moved" (or the reverse) has no representation in it.
+
+    That is a claim about the PLAN, and it is as far as the claim goes. It does not say
+    the store can never be half-retired: a hard kill between the placement of the archived
+    copy and the removal of the source runs no compensation at all, which is why
+    _reject_half_retired() exists and why every read seam and the writer's own pre-flight
+    check for that residue rather than assuming it away."""
     episode.status = "retired"
     episode.retired_reason = reason
     episode.retired_at = retired_at
@@ -517,13 +787,22 @@ def apply_retirement(
     episode.superseded_by = superseded_by
 
 
-def _retirement_destination(episode_id: str, root: Path, current_path: Path) -> Path:
-    """The layout-dependent HALF of retiring: does the file move? TODO(g4): binds to
-    whichever adapter is ratified. Isolated from apply_retirement()'s field diff so the
-    two can be tested (and eventually bound) independently."""
-    if _LAYOUT_ADAPTER == _LAYOUT_OPTION_A:
-        return root / "retired" / f"{episode_id}.md"
-    return current_path  # Option B: the file never moves
+def destination_for(episode: Episode, root: Path, current_path: Path) -> Path:
+    """The layout-dependent HALF of retiring, bound to Option A: where should this
+    episode's file live NOW, given its current state and where it currently is?
+
+    The whole routing decision lives here, including the test on the episode's own
+    status, so no caller anywhere reads that field to decide a path. That containment is
+    the point: a caller that branched on `status` itself and then picked a directory
+    would be an inlined layout check wearing a delegation's clothes, and it is exactly
+    what §7's seam table exists to prevent.
+
+    Isolated from apply_retirement()'s field diff so the two stay independently testable,
+    and so the move is expressed once — the write plan then carries it, which is what
+    makes the field update and the move land or fail together (see _Transaction.commit)."""
+    if episode.status == "retired":
+        return root / RETIRED_DIR / f"{episode.episode_id}.md"
+    return current_path
 
 
 # --- id assignment (EPISODE_STORE.md section 2) -------------------------------------
@@ -695,6 +974,26 @@ def _validate_retire(op: dict) -> None:
 # --- apply (write-plan first, disk touched only once every op has succeeded) --------
 
 
+def _place(tmp_path: Path, final_path: Path) -> None:
+    """Move one staged temp file onto its final path. A single os.replace() is atomic on
+    both POSIX and Windows, and the temp file is created in the SAME directory as its
+    destination, so this is always a same-filesystem rename rather than a copy.
+
+    A named function rather than an inlined call so a test can inject a failure at
+    exactly this step — the same discipline the write step's write_text_exact() seam
+    already made possible."""
+    os.replace(tmp_path, final_path)
+
+
+def _remove_superseded(path: Path) -> None:
+    """Remove the source path a moved episode has left behind — the second half of a
+    retirement's move, and the only place in the module that deletes a live episode file.
+
+    Named for the same reason as _place(): this is the exact step whose failure would
+    leave an id in BOTH active/ and retired/, so a test has to be able to force it."""
+    path.unlink(missing_ok=True)
+
+
 class _Transaction:
     """Everything an apply_delta() run needs, kept in memory until every op in the
     delta has succeeded. Nothing under self.writes/self.deletes is touched on disk
@@ -730,16 +1029,21 @@ class _Transaction:
 
     def write_plan(self) -> tuple[dict[Path, str], set[Path]]:
         """Renders every touched episode to its FINAL destination path. Returns
-        (path -> text to write, paths to delete) — deletes only happen for a retire
-        under Option A, where the file moves and the old path must be removed."""
+        (path -> text to write, paths to delete) — deletes only happen for a retire,
+        where the file moves into the archive and the old active/ path must go.
+
+        C6, half-retirement, is answered here first and by construction: a retirement's
+        field update and its move are not two operations that could disagree. The updated
+        CONTENT is only ever rendered to the NEW path, so "fields updated but file not
+        moved" has no representation in this plan at all, and neither does "moved but
+        fields not updated" — there is exactly one entry, and it carries both halves.
+        What remains is only whether that entry, plus its paired delete, lands as a unit;
+        commit() below makes it do so."""
         writes: dict[Path, str] = {}
         deletes: set[Path] = set()
         for episode_id, ep in self.loaded.items():
             original_path = self.original_paths[episode_id]
-            if ep.status == "retired":
-                dest = _retirement_destination(episode_id, self.root, original_path)
-            else:
-                dest = original_path
+            dest = destination_for(ep, self.root, original_path)
             writes[dest] = render_episode(ep)
             if dest != original_path and original_path.exists():
                 deletes.add(original_path)
@@ -760,12 +1064,30 @@ class _Transaction:
         root, same filesystem) so the move below is a same-filesystem rename, never
         a cross-filesystem copy.
 
-        Honest limit: moving N staged files into place is NOT atomic as a whole —
-        only a SINGLE os.replace() call is atomic (on both POSIX and Windows). A
-        crash between the 1st and 2nd move can still leave a partial result on
-        disk. Nothing in EPISODE_STORE.md's markdown-in-git constraint provides a
-        journal/WAL to close that residual gap, so this is the best available
-        guarantee for the write step, not a claim of full multi-file atomicity."""
+        g4 (C6, half-retirement). Binding Option A gave the placement phase a SECOND
+        step — a retirement both writes `retired/<id>.md` and removes `active/<id>.md` —
+        and a failure between those two steps would leave the id present in BOTH
+        directories: retired by content, still in the ordinary-search set by directory.
+        That is precisely the half-retired store the gate must rule out, and the old
+        placement loop had no answer for it (it removed sources in an unguarded loop
+        after an unguarded replace loop).
+
+        So the placement phase now snapshots the prior bytes of every path it is about
+        to overwrite or remove, and on ANY failure restores all of them and deletes the
+        paths it newly created. A failed retirement therefore ends with the episode
+        wholly un-retired — active/<id>.md back with its original bytes, no
+        retired/<id>.md — rather than half of each. The compensating restore is
+        deliberately not silent: if it fails too, that exception propagates.
+
+        Honest limit, unchanged in kind: this is compensation, not atomicity. A hard
+        process kill or power loss BETWEEN two of these calls runs no compensation at
+        all, and nothing in EPISODE_STORE.md's markdown-in-git constraint provides a
+        journal/WAL to close that. What is closed is every failure the process itself
+        survives to observe — an OSError from a locked file, a permission denial, a full
+        disk — which is the class this store can actually defend against. The residue
+        that remains is made LOUD at every seam that could meet it: the enumeration seam
+        for scanning readers, resolve_episode_path() for fetch-by-id, and apply_delta()'s
+        own pre-flight scan for every write op — not only the ops that scan anyway."""
         writes, deletes = self.write_plan()
         staged: list[tuple[Path, Path]] = []
         try:
@@ -779,23 +1101,44 @@ class _Transaction:
                 tmp_path.unlink(missing_ok=True)
             raise
 
-        # Every staged write succeeded — move each into place. See the docstring
-        # above for why this loop, taken as a whole, is best-effort rather than
-        # atomic.
+        # Prior bytes of every path the placement phase can disturb. None means "did not
+        # exist", which the rollback below reads as "delete it again".
+        prior: dict[Path, bytes | None] = {
+            path: (path.read_bytes() if path.exists() else None)
+            for path in list(writes) + sorted(deletes)
+        }
+
         try:
             for tmp_path, final_path in staged:
-                os.replace(tmp_path, final_path)
+                _place(tmp_path, final_path)
+            for path in deletes:
+                _remove_superseded(path)
+        except Exception:
+            for path, original in prior.items():
+                if original is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(original)
+            raise
         finally:
             for tmp_path, _ in staged:
                 tmp_path.unlink(missing_ok=True)  # no-op once moved
 
-        for path in deletes:
-            path.unlink(missing_ok=True)
-
 
 def apply_delta(root: Path, delta: dict) -> list[str]:
     work_id, ops = validate_delta(delta)
+    # The writer, and only the writer, may bring the layout into being: a create into a
+    # store root that does not exist yet is how a store starts. Readers refuse instead
+    # (_require_store_layout), so a typo'd --store-root can never read as "empty".
+    ensure_store_layout(root)
     tx = _Transaction(root)
+    # Then check the store BEFORE applying any op, rather than only where an op happens
+    # to look. known_ids() is the full enumeration seam — strays, misfiled files, an id
+    # in both directories — so every op inherits the refusal, not just `create` (whose
+    # id assignment used to be the only caller). A retire that committed against a store
+    # already known to be corrupt was g4's F2: loud in one hand, silent in the other.
+    tx.known_ids()
     log: list[str] = []
 
     for op in ops:
@@ -930,9 +1273,14 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _dry_run_log(root: Path, delta: dict) -> list[str]:
-    """Validate and compute the write-plan, but never call commit()."""
+    """Validate and compute the write-plan, but never call commit().
+
+    Runs the same store pre-flight as apply_delta() so a dry run answers about the store
+    that is really there — but never creates the layout, because a dry run writes
+    nothing at all, including a directory."""
     work_id, ops = validate_delta(delta)
     tx = _Transaction(root)
+    tx.known_ids()
     log: list[str] = []
     for op in ops:
         kind = op["op"]

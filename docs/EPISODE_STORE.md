@@ -1,9 +1,10 @@
 # Episode Store
 
-Status of this document: **record grammar and store doctrine, frozen at gate g1 of issue
-#301.** It is the contract gates g2 (the validated writer) and g3 (retrieval) build
-against. This gate ships **no executable code and no tests** — everything here is prose
-plus the directory layout it describes.
+Status of this document: **record grammar and store doctrine.** Frozen at gate g1 of
+issue #301 as the contract gates g2 (the validated writer) and g3 (retrieval) built
+against; **updated at gate g4**, which bound the one question g1 deliberately left open —
+the retirement layout (§7) — and shipped the retirement-dependent retrieval §§8/10 had
+described in advance. Everything described here now exists.
 
 Ownership boundary, stated once up front because it recurs throughout: the episode store
 is the **mechanical** half of an episode memory. It captures, partitions, and makes
@@ -54,9 +55,24 @@ repo the moment a commit touches it, because that is what "tracked in git" means
 it would silently reintroduce a worktree-relative resolution path into code whose whole
 point is that no such resolution is needed. See §9 for the full cross-worktree argument.
 
-Because git does not track empty directories, this directory ships with one tracked
-file, `episodes/README.md`, so the directory itself is present the moment this gate's
-change is committed, before any episode exists.
+Because git does not track empty directories, the store ships tracked placeholders so the
+layout is present the moment the change is committed, before any episode exists:
+`episodes/README.md` at the flat root, and `episodes/active/.gitkeep` /
+`episodes/retired/.gitkeep` in the two scanned directories.
+
+**The two scanned directories deliberately hold `.gitkeep` and not `README.md`, and that is
+not a style preference.** Membership is decided by `episode_id_for()` (§7), which applies the
+store's own id grammar to every `*.md` it lists. A `README.md` inside `active/` or `retired/`
+is therefore a `*.md` whose stem is not a well-formed id — the classifier refuses it, as it
+should. `.gitkeep` sits outside the store's file grammar entirely, so it is never a candidate
+in the first place.
+
+The first attempt at this gate got exactly this wrong: it shipped `README.md` in all three
+directories and excluded them with a hand-maintained filename allowlist consulted only at the
+flat root. The result was that the store as shipped **could not be read by its own tooling** —
+the stem `README` became a phantom episode id in both scanned directories at once. See §7's
+trap 4. `NON_EPISODE_FILENAMES` survives for the flat root only, where there is no grammar to
+lean on.
 
 ## 2. Episode-id scheme
 
@@ -72,10 +88,9 @@ vocabulary the lessons machinery already uses (`governor-268`, `epic-226-lessons
 existing `<run>-*.md` basenames for the current maximum and incrementing; no counter file,
 no UUID, nothing that can drift from the directory's own contents. **The scan must cover
 every episode for that run regardless of retirement status** (a retired episode's sequence
-number is still taken) — under Option B that is one glob over `episodes/`; under Option A
-it is the union of `episodes/active/<run>-*.md` and `episodes/retired/<run>-*.md`. Either
-way this is a mechanical detail of g2's writer, not a design choice this document is
-making — see §7 for the layout question itself.
+number is still taken) — the union of `episodes/active/<run>-*.md` and
+`episodes/retired/<run>-*.md`, which the writer obtains from the base-enumeration seam
+(`iter_episode_ids(include_retired=True)`, §7) rather than globbing itself.
 
 The reasoning, independent of the panel split:
 
@@ -90,10 +105,9 @@ The reasoning, independent of the panel split:
   directory cannot collide with itself. A descriptive slug needs an explicit uniqueness
   check against existing filenames, which is machinery a run+sequence id does not need.
 - **The filename doubles as a query primitive for free.** `governor-268-*.md`
-  enumerates one run's episodes with a bare glob — no index, no parsing (under Option B
-  that glob is `episodes/governor-268-*.md`; under Option A it is the same pattern applied
-  under each of `episodes/active/` and `episodes/retired/`, per §7's seam — the property
-  "the id is a free run-lookup key" holds under either, only the glob's root changes). A
+  enumerates one run's episodes with a bare glob — no index, no parsing (the pattern
+  applies under each of `episodes/active/` and `episodes/retired/`, per §7's seam; which
+  of the two to scan is exactly the ordinary-vs-history choice §7 makes deliberate). A
   slug-only scheme loses this without also carrying the run id as a separate mechanical
   field (which it would, in `## Mechanical`, making the id itself redundant as a run-lookup
   key).
@@ -105,18 +119,16 @@ The reasoning, independent of the panel split:
 
 **Grammar**: `[a-z0-9][a-z0-9-]*-[0-9]{3,}` — a run-id (kebab-case, matching the
 work-id vocabulary already in use across the fleet) followed by a hyphen and a zero-padded
-sequence of at least 3 digits. The **basename** is the id, under either retirement-layout
-option (§7): `<id>.md`. The full path that basename lives at is layout-dependent and not
-settled here — under Option B (status field, in place) it is `episodes/<id>.md`; under
-Option A (file moves on retirement) it is `episodes/active/<id>.md` or
-`episodes/retired/<id>.md` depending on current status. Every example in this document
-that writes the flat form `episodes/<id>.md` is illustrating the id, not asserting a
-settled path — see §7 for the layout question itself.
+sequence of at least 3 digits. The **basename** is the id: `<id>.md`. Which directory
+holds it is its retirement status (§7) — `episodes/active/<id>.md` while it is in the
+ordinary rhyme-search set, `episodes/retired/<id>.md` once retired. A file at the flat
+`episodes/<id>.md` belongs to neither set and is **malformed**; §7 explains why that is
+refused rather than skipped.
 
 ## 3. Record grammar — a real worked episode, as it appears on disk
 
-`episodes/governor-268-003.md` — Option B's path, shown for concreteness; per §2's
-disclaimer, only the basename `governor-268-003.md` is settled, not this full path:
+`episodes/active/governor-268-003.md` — an episode in the ordinary rhyme-search set;
+retiring it moves the same file to `episodes/retired/governor-268-003.md` (§7):
 
 ```markdown
 <!-- episode-state: schema=1 id=governor-268-003 status=active -->
@@ -384,183 +396,275 @@ consolidated pattern episode:
 
 Nothing else in the file changes. `a1`–`a5` and `d1`–`d2` keep whatever
 `lifecycle-standing` they already had. The episode's **content** is never deleted or
-truncated by retirement — that much holds under either layout option below. Shown here
-**under Option B** (defined next): "retained in history" is one field flip on the same
-file at the same path, not a second data store to keep in sync — the file itself never
-moves. Under **Option A**, the identical field update happens (the same `status` /
-`retired-reason` / `retired-at` / `consolidated-into` diff shown above), but it is
-accompanied by a file **move** between `episodes/active/<id>.md` and
-`episodes/retired/<id>.md`. Content-preservation is settled; whether the file's *path*
-also stays fixed is exactly the layout question below, not a blanket property of
-retirement asserted here.
+truncated by retirement. The field diff above is the whole content effect; it is
+accompanied by a file **move** from `episodes/active/<id>.md` to
+`episodes/retired/<id>.md`, per the ratified layout below.
 
-**Layout — HELD OPEN, not chosen here.** Whether retiring an episode:
+**Layout — RATIFIED (2026-08-01), bound at gate g4.** Held open through gates g1–g3 for
+human ratification; ruled by Tommy, verbatim:
 
-- **(Option A) moves the file** between `episodes/active/<id>.md` and
-  `episodes/retired/<id>.md`, so "ordinary search" means globbing `active/` — the default
-  is correct by construction, and "which set is this episode in" is a filesystem fact,
-  structurally immune to a malformed or hand-edited `status` line; **or**
-- **(Option B) changes a `status` field** in place (as shown in the diff above) and
-  ordinary search filters it out negatively (files *without* `status: retired`) — the file
-  path never changes, so an id-based cross-reference (`consolidated-into:`,
-  `superseded-by:`) never needs re-resolving after a retirement, at the cost of ordinary
-  search being a content-parsing operation rather than a filesystem one, which is more
-  exposed to a silent-omission failure if a free-text agent-supplied field ever embeds a
-  line that looks like a status marker (see the single-line-enforcement note below).
+> *"move the file, prefer to keep files clean of history unless they're historical.
+> archives are available strats."*
 
-is a **named open seam**, deliberately **not resolved by this document**. Both options are
-live, real trade-offs (locality/testability favor A's structural immunity to
-content-parsing failure modes; a stable file path favors B's simpler cross-reference
-story) argued at length in `.agent-work/301/design-it-twice/COMPARISON.md` §7, where the
-Commander's own lean flipped once under a cold critic — itself evidence this is a genuine,
-live judgment call and not a foregone one. It is **held for human ratification** and will
-be **bound at gate g4**.
+**Option A binds: retiring an episode MOVES its file** between `episodes/active/<id>.md`
+and `episodes/retired/<id>.md`. "Ordinary search" means scanning `active/`, so the
+default is correct by construction, and "which set is this episode in" is a filesystem
+fact — structurally immune to a malformed, hand-edited, or forged `status` line, because
+nothing parses one to decide.
 
-**The retirement write-side seam — how g2's writer stays layout-agnostic too, not only
-g3's reads.** The worked diff above (`status`/`retired-reason`/`retired-at`/
-`consolidated-into`) is the entire **content** effect of a retire operation, and it is
-identical under either layout option — nothing about it depends on which one binds. What
-is *not* identical is the **layout effect**: whether that write is also accompanied by a
-file move. g2's writer (`scripts/apply_episode_delta.py`, §10) must route every retire op
-through exactly one seam, **`apply_retirement(episode_id, reason)`**, so that effect —
-like the read-side effects below — is bound at g4 by an adapter swap, never by a rewrite
-of the writer itself:
+**The archive principle** — the ruling's second half, which is a design rule and not
+decoration. *Files stay clean of history unless they are themselves historical, and an
+archive is a legitimate separate strategy.* So `episodes/retired/` is a **genuine
+archive, not a second live search space that every query has to remember to exclude**.
+Ordinary retrieval scans `active/` and never looks at `retired/`; history-inclusive
+retrieval is a deliberate, separate act. Mechanically (§8): every scanning primitive
+takes `include_retired`, defaulting to **False**. An opt-*out* default would turn every
+future caller's forgotten filter into a silent correctness bug — which is the failure
+class this whole store is written against.
 
-- **Option-A adapter** — performs the field diff above, then moves the file from
-  `episodes/active/<id>.md` to `episodes/retired/<id>.md`.
-- **Option-B adapter** — performs the field diff above only; the file's path never
-  changes.
+**Option B, and why it is recorded rather than deleted.** The rejected alternative
+changed a `status` field in place (the diff above) and had ordinary search filter it out
+negatively — files *without* `status: retired`. Its real advantage: the file path never
+changes, so an id-based cross-reference (`consolidated-into:`, `superseded-by:`) never
+needs re-resolving after a retirement. Its real cost, and the reason the seams below
+exist: ordinary search becomes a content-parsing operation rather than a filesystem one,
+which is exposed to a silent-omission failure if a free-text agent-supplied field ever
+embeds a line that looks like a status marker (see the single-line-enforcement note
+below). Both were live, real trade-offs, argued at length in
+`.agent-work/301/design-it-twice/COMPARISON.md` §7, where the Commander's own lean
+flipped once under a cold critic. **The reasoning is kept because it is why the seams
+exist** — a reader who finds four adapter functions and no record of the second candidate
+would reasonably conclude the indirection was unearned. Option A's cross-reference cost
+turned out to be small in practice: fetch-by-id resolves through `resolve_episode_path()`
+and reaches the archive, so a cross-reference to a retired episode never dangles.
 
-g2's writer calls `apply_retirement()` for every retire op and must not inline a file-move
-or an in-place-only write at the call site. Both adapters share the identical content
-update; only the layout effect differs, and only that half is what g4 binds.
+**What binding Option A did NOT do: it relocated the silent-omission class rather than
+removing it.** Option B's trap was a positive allowlist over a parsed field — enumerating
+`status: active` silently dropped a legitimately-not-retired `disputed` episode. That
+specific trap is now structurally impossible. Three others took its place, and each has
+an adversarial fixture in `tests/test_episode_store.py`:
 
-**The membership-predicate seam — how g1–g3 stay layout-agnostic in practice, not just in
-name.** Nothing in gates g1–g3 may assume either answer, and that has to be true of the
-*implementation* g3 writes, not merely of a primitive's caller-facing name. This document
-therefore names one seam, exactly parallel to §1's treatment of `durable_root()`:
-**`is_episode_in_ordinary_search(episode_id)`** — the single place any retrieval primitive
-asks "is this episode currently in the ordinary rhyme-search candidate set." Two adapters
-can satisfy that seam, one per layout option; g4 binds exactly one, and only one may exist
-at a time:
+1. **a glob that misses a subdirectory** — `episodes/*.md`, correct before the layout
+   gained `active/`/`retired/`, now silently returns nothing (indistinguishable from an
+   empty store) or only strays;
+2. **a history-inclusive enumeration that forgets to union both directories** — the
+   caller explicitly asked for history and silently gets half of it, in a non-empty
+   answer that looks plausible;
+3. **a stray file at the old flat path** (`episodes/<id>.md`) — it belongs to *neither*
+   set, so ordinary *and* history-inclusive retrieval both omit it while the file sits
+   there looking like a stored episode. This is the live migration hazard, and note that
+   `episodes/README.md` already lives at that flat root: the exclusion of the store's own
+   documentation is therefore a **named allowlist** (`NON_EPISODE_FILENAMES`), never a
+   glob shape that happens not to match it. A stray is **surfaced as malformed**, not
+   skipped — by the enumeration seam, so the writer's own id-assignment scan inherits the
+   refusal too and cannot mint an id a stray already holds;
+4. **a non-episode file INSIDE a layout directory** — the mirror image of (3), and the
+   one that actually shipped at the gate's first attempt. Membership moved from file
+   *content* to file *location*, so a directory listing became the candidate set and
+   anything sitting in the directory was minted into an id no record backs. The gate's
+   own tracked placeholders, `active/README.md` and `retired/README.md`, produced the
+   phantom id `README` in **both** sets and made the whole store unreadable by every
+   primitive it ships;
+5. **a store root or layout directory that is not there at all** — `Path.glob` over a
+   missing directory returns empty, so a typo'd `--store-root`, or a layout that was
+   never committed (git does not track empty directories, and this layout is two of
+   them), answers `count: 0, exit 0`. That is (1)'s own failure description reached by a
+   different route;
+6. **a Markdown file one level deeper** (`episodes/archive/<id>.md`,
+   `episodes/active/old/<id>.md`) — invisible to every one-level scan while looking, to a
+   human reading the tree, exactly like a stored record.
 
-- **Option-A adapter** — a directory check: does `episode_id`'s file resolve under
-  `episodes/active/` (as opposed to `episodes/retired/`)?
-- **Option-B adapter** — a status check: does the episode's `## Retirement` `status` field
-  read anything other than `retired` (line-anchored — see the single-line-enforcement
-  obligation below)?
+**The classifier is derived, not enumerated — this is the rule that keeps (3)–(6)
+closed.** "Is this file an episode?" is answered by the store's OWN id grammar (§2), in
+one named function, applied uniformly in all three directories:
+**`episode_id_for(path)`** returns the episode id for `<well-formed-id>.md` and `None` for
+everything else. A hand-maintained list of filenames cannot do this job: the first attempt
+used one, consulted at the flat root only, and it failed in the way such lists always fail
+— the layout gained two directories, membership moved with it, and the classifier stayed
+behind. An id grammar cannot drift from itself, needs no edit when someone adds a
+`.gitkeep` or a `CODEOWNERS`, and would have refused a bad placeholder **at authoring
+time** rather than at first read. `NON_EPISODE_FILENAMES` survives for the one place a
+grammar cannot help — the store's own README at the flat root — and is scoped to that
+directory and nowhere else.
 
-Every g3 retrieval primitive that needs to respect retirement (enumerate non-retired
-episodes, any select/neighbour-enumeration restricted to the ordinary-search set) **calls
-`is_episode_in_ordinary_search()`**; it must **not** inline a directory check or a status
-grep at the call site — that inlining is exactly what would turn "bind the layout at g4"
-into a retrieval rewrite instead of an adapter swap. Fetch-by-id (§8) needs no membership
-check at all — but it does need its own path-resolution seam, since which directory (if
-any) holds the file is exactly the layout question; see `resolve_episode_path()` below,
-which is a distinct concern from this seam, not a substitute for it. With the seam named
-this way, binding the layout at g4 means writing the chosen adapter (on the order of a
-handful of lines) and wiring it in at the seam — g3's primitives, and this document's §§6,
-8 description of them, do not change. **That is what makes "additive, not a rewrite" true
-of g3's actual retrieval code, not only of the primitive's name** — the distinction the
-seam exists to close.
+Consequently the tracked layout directories are kept alive by a **`.gitkeep`**, not a
+`README.md`: git needs a tracked file in each or the layout vanishes at commit, and inside
+`active/`/`retired/` a `.md` file that is not a well-formed episode is **refused as
+malformed**. What the two directories are for is documented in `episodes/README.md`, at
+the level where a non-episode file is legitimate.
 
-**The base-enumeration seam — the other half of "enumerate," not yet named above.** The
-membership seam above answers "is this one id in the ordinary-search set"; every g3
-primitive that scans the store also needs an answer to a prior question — "what candidate
-ids exist to ask that about in the first place" — and that half was, until now, only
-worked out for one caller (§2's id-sequence scan) and left unspecified for retrieval. This
-document names that second seam too, **`iter_episode_ids(include_retired)`**, parallel in
-kind to the membership seam and to §2's own already-worked treatment of its sibling case:
+**The retirement write-side seam.** The worked diff above (`status`/`retired-reason`/
+`retired-at`/`consolidated-into`) is the entire **content** effect of a retire operation.
+The **layout effect** — the file's move into the archive — is a separate concern, and the
+two are deliberately kept apart: `scripts/apply_episode_delta.py` routes the content half
+through **`apply_retirement(episode, reason)`** and the layout half through
+**`destination_for(episode, root, current_path)`**. The latter owns the test on the
+episode's own status too, so no call site reads that field to pick a path — a caller that
+branched on `status` itself and then chose a directory would be an inlined layout check
+wearing a delegation's clothes. No call site inlines either a field-only write or a file
+move.
 
-- **Option-A adapter** — lists `episodes/active/*.md`; when `include_retired` is true,
-  additionally unions in `episodes/retired/*.md` (exactly the union §2 already specifies
-  for the id-sequence scan, which always calls this seam with `include_retired=true`,
-  since a retired episode's sequence number is still taken).
-- **Option-B adapter** — lists `episodes/*.md` unconditionally; `include_retired` is a
-  no-op for this adapter's own filtering, because status is not encoded in the path — the
-  retired/active split is left entirely to the per-id membership seam above.
+**Half-retirement is ruled out by construction, not by care.** A retirement whose field
+update landed and whose move did not (or the reverse) is a corrupt store: it reads as
+retired while still sitting in the ordinary-search set, and nothing about it is loud. The
+writer makes that state unrepresentable rather than merely unlikely — the updated content
+is only ever rendered to the **new** path, so one write-plan entry carries both halves and
+there is no plan in which they can disagree. Placement then compensates: the transaction
+snapshots the prior bytes of every path it is about to disturb and, on any failure,
+restores them and deletes what it newly created, so an interrupted retirement ends
+*wholly un-retired* rather than half-applied. The honest residual — a hard process kill or
+power loss between two filesystem calls runs no compensation at all, and markdown-in-git
+offers no journal to close it — is made **loud** instead of denied, at every seam that can
+meet it rather than only at the ones that happen to scan:
 
-**Composition rule, so correctness never depends on which adapter is bound.** "Enumerate
-non-retired episodes" (§8) is `iter_episode_ids(include_retired=False)` followed by
-confirming each returned id through `is_episode_in_ordinary_search()` before including it
-— scan, then filter, always both steps, never one folded into the other. This is
-deliberate, not redundant-and-removable: under Option A the base scan already excludes
-`episodes/retired/` on its own, so the per-id confirmation is a no-op in practice — but
-g3's code does not special-case that; it always performs both steps, so the same code path
-stays correct regardless of which adapter g4 eventually binds. §2's id-sequence scan, by
-contrast, calls `iter_episode_ids(include_retired=True)` alone, with no membership filter
-afterward, because every episode's sequence number counts regardless of retirement — that
-existing treatment is now this seam's other caller, not a bespoke one-off.
+| caller | where the refusal comes from |
+|---|---|
+| `enumerate` / `select` / `neighbours`, both directions | the enumeration seam (`iter_episode_ids`) |
+| `fetch` by id | `resolve_episode_path()` — it checks both directories and refuses two, instead of preferring `active/` |
+| every writer op, including a `retire` of an unrelated episode | `apply_delta()`'s pre-flight scan, run before any op is applied |
 
-**The fetch-by-id path-resolution seam.** A "direct path read" (§8) is only actually
-direct once the reader knows which path to read, and that is exactly the layout question
-for an id whose retirement status is unknown to the caller. This document names a third
-seam, **`resolve_episode_path(episode_id)`**, returning the one on-disk path to read:
+The `fetch` and writer halves were **missing** in the gate's first attempt (g4 review, F2):
+a lookup by id silently returned the `active/` copy with `status: active`, and a retire
+committed against a store already known to be corrupt. Loud in one hand and silent in the
+other is worse than either, because the silent hand is the one #308's consolidation pass
+walks back through when it follows a `consolidated-into:` reference by id. One narrow
+limit is deliberate and stated rather than papered over: `fetch` refuses for the **affected
+id**, and does not scan the whole store on every addressed lookup — turning an O(1) lookup
+into an O(n) scan is a cost the store declines to pay for a residue that scanning readers
+and every write already refuse.
 
-- **Option-A adapter** — checks `episodes/active/<id>.md`; if absent, checks
-  `episodes/retired/<id>.md`. (Exactly one of the two exists for any valid id — an episode
-  is never in both places at once.)
-- **Option-B adapter** — always `episodes/<id>.md`; no check needed.
+**The membership-predicate seam.** **`is_episode_in_ordinary_search(episode_id)`** is the
+single place any retrieval primitive asks "is this episode currently in the ordinary
+rhyme-search candidate set." Bound to a **directory check**: does `episode_id`'s file
+resolve under `episodes/active/`?
 
-Fetch-by-id calls `resolve_episode_path()` and reads whatever path it returns; it never
-constructs a path itself. This answers "where is it," a distinct question from "is it in
-the ordinary-search set" above — fetch-by-id, needing no membership check, needs exactly
-this seam and nothing else.
+Every retrieval primitive that respects retirement calls it, and none inlines a directory
+check or a status grep at the call site. That containment mattered before the ruling
+because inlining would have turned "bind the layout at g4" into a retrieval rewrite; it
+still matters now, for a different reason — it is what keeps the bound layout in one place
+instead of scattered across call sites, so the archive discipline above is enforced by
+four adapters rather than by every future caller remembering it.
+`tests/test_episode_store.py` asserts the containment mechanically.
 
-**Single-line enforcement, named as an obligation on g2's writer and on the Option-B
-adapter specifically, regardless of whether Option B is the one eventually bound.** A
-negative "not retired" filter over `## Retirement`'s `status` field — the check the
-Option-B adapter above performs — is more exposed to a silent-omission bug than a positive
-allowlist would be: if an agent-supplied free-text field (e.g. `observed-behavior`) spans
-physical lines and a continuation line happens to read `- status: retired` — easy, if an
-agent pastes a transcript that itself discusses a retired episode — a naive line-oriented
-parser would match that line and silently exclude a fully active episode from ordinary
-search, with no error and no crash. (The Option-A adapter has no analogous exposure: a
-directory check never parses free text.) g2's writer must therefore enforce **single-line
-values on every agent-supplied free-text field** (reject a delta whose value spans
-physical lines outside a documented continuation convention), and the Option-B adapter,
-if bound, must **line-anchor** its filter (`-x` / `^...$`, not a bare substring match) —
-both stated here as obligations this record shape places on the gates that build on it,
-not implemented in this gate.
+**The base-enumeration seam.** **`iter_episode_ids(include_retired)`** answers the prior
+question — "what candidate ids exist to ask about in the first place." Bound to a
+**directory union**: it lists `episodes/active/*.md`, and when `include_retired` is true
+additionally unions in `episodes/retired/*.md` (exactly the union §2 specifies for the
+id-sequence scan, which always calls this seam with `include_retired=true`, since a
+retired episode's sequence number is still taken).
 
-**The full seam set, gathered in one place.** Five things in this store route through
-exactly one named mechanism each, and gates g1–g3 must call each by name — never inline
-the path, glob, grep, or move it stands for:
+Four malformed-store conditions are refused here rather than answered around — every one
+of them would otherwise yield a silently wrong candidate set, and putting them in the seam
+every reader *and* the writer already goes through means no caller has to remember them:
+an **absent store or layout directory** (trap 5), a **stray anywhere outside the two
+layout directories** (traps 3 and 6), a **`.md` file inside a layout directory that is not
+a well-formed episode, or is buried one level deeper** (traps 4 and 6), and an **id present
+in both directories** (an interrupted retirement). Both directory listings go through
+`episode_id_for()`, so a file never becomes a candidate id merely by being in the
+directory. The archive is listed even for an ordinary scan solely to check the last
+condition; that listing can only ever produce a refusal and never contributes a candidate,
+so the archive remains an archive rather than a second search space.
 
-| Concern | Named seam | Adapters (bound at g4) |
+**Composition rule.** "Enumerate the ordinary-search set" (§8) is
+`iter_episode_ids(include_retired=False)` followed by confirming each returned id through
+`is_episode_in_ordinary_search()` — scan, then filter, always both steps, never one folded
+into the other. Under the bound layout the second step cannot subtract anything from the
+first, so it is kept for a *different* reason than the one that introduced it: the scan
+and the membership predicate are two **independent** seams, and a change that updated only
+one of them is caught here. Their disagreement is therefore **raised**, never silently
+dropped — dropping is how a candidate set gets quietly shorter. §2's id-sequence scan, by
+contrast, calls `iter_episode_ids(include_retired=True)` alone with no membership filter,
+because every episode's sequence number counts regardless of retirement.
+
+**The fetch-by-id path-resolution seam.** **`resolve_episode_path(episode_id)`** returns
+the one on-disk path to read. Bound to: check `episodes/active/<id>.md` and
+`episodes/retired/<id>.md`, and return the one that exists. At most one *should* exist for
+any valid id — but "should" is the point, since the half-retired residue above is admitted
+to be possible, so this seam **checks** rather than preferring `active/`, and refuses when
+both are there. It refuses an absent store for the same reason (trap 5): "there is no
+store" and "there is no such episode" are different facts.
+
+Fetch-by-id calls it and reads whatever path it returns; it never constructs a path
+itself. It answers "where is it," a distinct question from "is it in the ordinary-search
+set" — and note that **fetch-by-id deliberately reaches into the archive**. An addressed
+lookup by name is not a search, and retirement excludes an episode from *search*, never
+from retrieval by name; without this, every `consolidated-into:` / `superseded-by:`
+cross-reference would dangle the moment its target was retired.
+
+**Single-line enforcement, retained as an obligation on the writer.** The rejected
+Option B needed this as a *defense*: a negative "not retired" filter over `##
+Retirement`'s `status` field is exposed to a silent-omission bug if an agent-supplied
+free-text field (e.g. `observed-behavior`) spans physical lines and a continuation line
+happens to read `- status: retired` — easy, if an agent pastes a transcript that itself
+discusses a retired episode. A naive line-oriented parser would match that line and
+silently exclude a fully active episode from ordinary search, with no error and no crash.
+
+Under the bound layout that exposure is **gone rather than mitigated** — a directory
+check never parses free text, so there is no status parse to fool. The obligation is kept
+anyway, for its own independent reason: a multi-line value silently truncates on the next
+`parse_episode()`, corrupting the record regardless of retirement. The writer enforces
+**single-line values on every agent-supplied free-text field**, rejecting a delta whose
+value contains any line boundary the parser's own `str.splitlines()` recognizes.
+`tests/test_episode_store.py` asserts that a forged `- status: retired` in free text
+cannot move an episode between sets — "structurally impossible" is a claim about an
+implementation, and implementations change.
+
+**The full seam set, gathered in one place.** Seven things in this store route through
+exactly one named mechanism each, and every caller must use the name — never inlining the
+path, glob, grep, or move it stands for:
+
+| Concern | Named seam | Bound implementation (g4) |
 |---|---|---|
-| Store root | the literal path `episodes/` (§1) | none — layout-invariant, same under either option |
-| Retirement write | `apply_retirement(episode_id, reason)` (above) | Option A: field diff + file move · Option B: field diff only |
-| Per-id membership | `is_episode_in_ordinary_search(episode_id)` (above) | Option A: directory check · Option B: status check |
-| Base enumeration | `iter_episode_ids(include_retired)` (above) | Option A: directory union · Option B: flat glob |
-| Fetch-by-id path resolution | `resolve_episode_path(episode_id)` (above) | Option A: try `active/`, then `retired/` · Option B: fixed path |
+| Store root | the literal path `episodes/` (§1) | layout-invariant; unaffected by the ruling |
+| Is this file an episode? | `episode_id_for(path)` (above) | the store's own id grammar (§2), uniform in all three directories |
+| Layout creation | `ensure_store_layout(root)` | the WRITER's bootstrap only; every read seam refuses an absent layout |
+| Retirement write | `apply_retirement()` + `destination_for()` (above) | field diff, plus a move into `retired/` |
+| Per-id membership | `is_episode_in_ordinary_search(episode_id)` (above) | directory check: does it resolve under `active/`? |
+| Base enumeration | `iter_episode_ids(include_retired)` (above) | `active/`, unioned with `retired/` when asked |
+| Fetch-by-id path resolution | `resolve_episode_path(episode_id)` (above) | `active/` or `retired/`, refusing both-at-once |
 
-The store root needs no adapter at all — it is unaffected by which option binds. The
-other four each carry exactly two adapters; binding the retirement layout at g4 means
-writing the four chosen adapters (one per layout-affected row, on the order of a handful
-of lines each) and wiring each in at its named seam. No primitive's shape, and no
-primitive's description anywhere in this document, changes when that binding happens —
-that is what "additive, not a rewrite" means for the whole store, not only for one seam
-in isolation.
+Binding the layout at g4 cost close to what the seams promised: four adapter bodies plus
+the removal of the rejected option's, and **no change to any primitive's shape**. What it
+did cost, and what the seam set did NOT protect against, is worth recording: moving
+membership from file content to file location silently invalidated the *classifier* —
+"which files are episodes" was answered somewhere else, by a hand-maintained list, and did
+not move with it. The seams keep a bound decision in one place; they do not tell you which
+other decision the binding just made stale. That question — what did membership stop being
+a property of? — is the one to ask at the next such binding.
+
+The seam set is not scaffolding to be dismantled
+now that the decision is made — it is what keeps the layout in one place, which is what
+the archive discipline above needs in order to be a property of the store rather than a
+convention every caller has to remember. `tests/test_episode_store.py` asserts that no
+retrieval primitive names either directory as a literal.
 
 ## 8. Mechanical only — no ranking, no similarity, no embedding
 
 This store never guesses. It exposes stable ids, enumerable fields, and exact-match /
-set-membership retrieval — nothing more. Concretely, every retrieval primitive this record
-shape supports is built entirely from the named seams in §7, never from an inlined path,
-glob, or grep at the call site:
+set-membership retrieval — nothing more. All of it ships in `scripts/query_episodes.py`,
+built entirely from the named seams in §7, never from an inlined path, glob, or grep at
+the call site:
 
-- **Fetch by id** resolves the on-disk path through `resolve_episode_path()` (§7) and
-  reads it directly — no scan, no membership check.
-- **Enumerate non-retired episodes** obtains its candidate id set from
-  `iter_episode_ids(include_retired=False)` (§7), then confirms each id through
-  `is_episode_in_ordinary_search()` (§7) before including it — the scan-then-filter
-  composition §7 specifies, never a filter that also does its own scanning.
-- **Select by exact field value restricted to the ordinary-search set**, and **enumerate
-  the neighbours of an episode by shared exact join key**, both scan the same
-  `iter_episode_ids(include_retired=False)` candidate set before applying their own
-  field/key match — identical composition to enumeration, just with an extra predicate
-  layered on top.
+- **Fetch by id** (`fetch_episode`) resolves the on-disk path through
+  `resolve_episode_path()` (§7) and reads it directly — no scan, no membership check. It
+  finds retired episodes too, deliberately: a lookup by name is not a search.
+- **Enumerate the ordinary-search set** (`enumerate_episode_ids` /`enumerate_episodes`)
+  obtains its candidate id set from `iter_episode_ids(include_retired=False)` (§7), then
+  confirms each id through `is_episode_in_ordinary_search()` (§7) before including it —
+  the scan-then-filter composition §7 specifies, never a filter that also does its own
+  scanning.
+- **Select by exact field value** (`select_episodes`) and **enumerate the neighbours of
+  an episode by shared exact join key** (`neighbours`) both scan the same candidate set
+  before applying their own field/key match — identical composition to enumeration, just
+  with an extra predicate layered on top.
+
+**Retirement-dependent retrieval, and where the default sits.** Every *scanning*
+primitive above takes `include_retired`, defaulting to **False**; the CLI spells it
+`--include-retired` on `enumerate`, `select`, and `neighbours`, and the JSON envelope
+reports which universe it answered from, so a caller cannot mistake an archive-excluding
+answer for a complete one. `fetch` carries no such flag — it has nothing to hide, and
+offering one would wrongly imply its default did. This is §7's archive principle made
+mechanical rather than advisory: history is reached by asking, and never by accident.
 
 None ranks, scores, embeds, or infers similarity. Finding that two
 episodes **rhyme** — the actually useful, actually hard question — is explicitly a
@@ -588,20 +692,36 @@ document.
 
 The store needs no daemon, no shared filesystem mount, and no `durable_root()` redirect,
 because sharing across worktrees is exactly what committing a tracked file to git already
-does. (As throughout this document, `episodes/<id>.md` below is the id's basename, not a
-settled path — see §2's disclaimer. This section's argument is about git's own
-commit/merge/fetch mechanics, not about which subdirectory a file lives under, so it holds
-unchanged under either retirement-layout option.) The steps:
+does. (This section's argument is about git's own commit/merge/fetch mechanics, not about
+which subdirectory a file lives under, so it held unchanged while the layout was open and
+holds unchanged now that it is bound.) The steps:
 
-1. A commander in worktree W writes `episodes/<id>.md` (via g2's future writer) and
-   commits it on its own branch, inside its own worktree — every commander only ever
+1. A commander in worktree W writes `episodes/active/<id>.md` (via the validated writer)
+   and commits it on its own branch, inside its own worktree — every commander only ever
    writes files inside the worktree it owns.
 2. That commit merges to `main` (ordinary PR/merge flow, the same path any other change in
    this repo takes).
-3. From that point on, `episodes/<id>.md` is visible in **every** worktree that has that
-   commit — a `git pull`/`git fetch` + checkout in any other linked worktree, and any
-   fresh `git clone` of the repo, sees the identical file content, because that is the
-   definition of a tracked path in a shared git history.
+3. From that point on, the episode is visible in **every** worktree that has that commit —
+   a `git pull`/`git fetch` + checkout in any other linked worktree, and any fresh
+   `git clone` of the repo, resolves **the same content at the same blob OID**, because
+   that is the definition of a tracked path in a shared git history.
+
+**Working-tree bytes are NOT the cross-worktree identity, and the distinction is
+load-bearing.** The claim above is exact at the *content* and *blob* level and would be
+wrong at the byte level. This repo's `.gitattributes` sets `* text=auto`, so checkout
+normalizes line endings per platform: the writer always emits LF-only bytes, and a
+worktree materialized on a machine with `core.autocrlf=true` (the Git-for-Windows
+default) gets CRLF. The record is identical, the blob OID is identical — git hashes the
+normalized index content — but `read_bytes()` in two worktrees can legitimately differ.
+
+This does not weaken cross-worktree durability: retrieval crosses the boundary intact
+either way, because the record is what the store promises. It does mean anything
+downstream wanting a stable content address for an episode must use git's blob hash and
+not a hash of the file in its own worktree — exactly what §8's `<ref>@<revision>` pinning
+already prescribes. A future consolidation/dedup pass (#308) that compared episodes by
+hashing working-tree bytes would be silently wrong on Windows, which is why
+`test_working_tree_bytes_are_not_the_cross_worktree_identity` pins it as a test rather
+than leaving it as prose. Context: issue **#319**.
 
 **This needs no `durable_root()`.** `durable_root()` exists to solve a narrower problem —
 redirecting *reads and writes of a gitignored, worktree-local directory* to one canonical
@@ -628,26 +748,40 @@ this store is achieved entirely downstream of that local write, through the ordi
 commit-and-merge path in point 2 above — never through any process reaching into another
 worktree's files directly.
 
-## 10. What this gate did not build
+## 10. What is built, and what is deliberately not
 
-No executable code, no tests. The obligations this document places on later gates, named
-so they are not rediscovered from scratch:
+**Built** (issue #301, gates g1–g4):
 
-- **g2** builds `scripts/apply_episode_delta.py`: the validated, all-or-nothing delta
-  writer (mirroring `apply_lessons_delta.py`'s contract) that is the **only** write path —
-  the LLM never writes an episode file directly. It enforces the partition allowlist
-  (§4), the mandatory non-empty retire reason (§7), and single-line enforcement on
-  agent-supplied free-text fields (§7). Its retire op routes through the
-  `apply_retirement()` seam (§7) — never an inlined file-move or in-place-only write.
-- **g3** builds deterministic retrieval (fetch by id, enumerate non-retired, exact/
-  set-membership select, neighbour enumeration) and the cross-session / cross-worktree
-  acceptance exercise: write from one process, read from a genuinely separate one sharing
-  nothing but the git working tree — extended to a real worktree boundary, not just a
-  process boundary, per this document's §9. Every primitive is built from the read-side
-  seams named in §7 (`resolve_episode_path`, `iter_episode_ids`,
-  `is_episode_in_ordinary_search`) — never from an inlined path, glob, or grep.
-- **g4** binds the retirement layout (§7) — file-move vs status-field — once Tommy
-  ratifies it, and updates this document's §7 to record the bound choice.
-- **#305** wires automated capture. **#308** builds the rhyme-detection sensor and the
-  consolidation/adjudication loop on top of what this store exposes (§8). Neither is
-  designed here.
+- **`scripts/apply_episode_delta.py`** — the validated, all-or-nothing delta writer
+  (mirroring `apply_lessons_delta.py`'s contract) that is the **only** write path; the LLM
+  never writes an episode file directly. It enforces the partition allowlist (§4), the
+  mandatory non-empty retire reason (§7), and single-line enforcement on agent-supplied
+  free-text fields (§7). Its retire op routes its content half through
+  `apply_retirement()` and its layout half through `destination_for()` (§7) —
+  never an inlined file move at a call site.
+- **`scripts/query_episodes.py`** — deterministic retrieval: fetch by id, enumerate,
+  exact/set-membership select, neighbour enumeration, each in an ordinary-search and a
+  history-inclusive form (§8). Every primitive is built from the seams named in §7
+  (`resolve_episode_path`, `iter_episode_ids`, `is_episode_in_ordinary_search`,
+  `episode_id_for`) — never from an inlined path, glob, or grep. A store that is absent,
+  malformed, or half-retired is REFUSED by every one of them rather than answered as empty.
+- **`episodes/`** — the tracked store: a `README.md` at the flat root (documentation, and
+  the one entry in `NON_EPISODE_FILENAMES`), plus `active/` and `retired/` each kept alive
+  by a tracked `.gitkeep`. Git does not track empty directories, so without a tracked file
+  in each the layout would vanish at commit — and the placeholder is deliberately NOT a
+  `.md` file, because inside those two directories every Markdown file is an episode and a
+  `README.md` there is refused as malformed (§7).
+- **`tests/test_episode_store.py`** — including the cross-session and cross-worktree
+  acceptance exercise (write from one process, read from a genuinely separate one across
+  a real `git worktree` boundary, per §9), the adversarial silent-omission fixtures (§7),
+  and the half-retirement fault injections (§7).
+
+**Deliberately not built here**, so it is not rediscovered from scratch:
+
+- **#305** wires automated capture — nothing writes to this store on its own yet.
+- **#308** builds the rhyme-detection sensor and the consolidation/adjudication loop on
+  top of what this store exposes (§8). The store makes consolidation *possible* — a
+  retired cluster member stays reachable by id, by history-inclusive scan, and from a
+  surviving member's neighbourhood — and implements none of it.
+- **#300**'s projection manifest. `context-manifest-ref` stays an opaque
+  `<ref>@<revision>` (§8).

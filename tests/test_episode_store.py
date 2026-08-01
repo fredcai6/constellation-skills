@@ -24,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "episodes"
+STORE_TEMPLATE = ROOT / "episodes"  # the REAL tracked store — read from, never written to
 WRITER_SCRIPT = ROOT / "scripts" / "apply_episode_delta.py"
 QUERY_SCRIPT = ROOT / "scripts" / "query_episodes.py"
 
@@ -42,6 +43,77 @@ def load_query():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def episode_path(root, episode_id, retired=False):
+    """The on-disk path of an episode under the layout ratified at g4: `active/` for the
+    ordinary-search set, `retired/` for the archive.
+
+    Tests name the directories literally on purpose — the shipped primitives may not
+    (close criterion C2 forbids any literal `active/`/`retired/` outside the seam block),
+    so a test that also went through the seam would be asserting the implementation
+    against itself. Here the literal IS the assertion."""
+    return Path(root) / ("retired" if retired else "active") / f"{episode_id}.md"
+
+
+def read_exact(path):
+    """Read a store file with newline translation disabled, as the store itself does.
+    Not Path.read_text(newline=...) — that kwarg is Python 3.13+ and CI pins 3.12."""
+    with Path(path).open(encoding="utf-8", newline="") as handle:
+        return handle.read()
+
+
+_CLASSIFIER = None
+
+
+def classifier():
+    """The store's own episode classifier (`episode_id_for`), loaded once.
+
+    Tests ask the SHIPPED classifier "is this file an episode?" rather than answering it
+    themselves. The g4 review found the opposite in this file — two helpers each carrying
+    an inline comparison of `p.name` against the literal README filename — and that
+    hand-filtering is exactly why no test
+    could see that the shipped store's own placeholders were being minted into a phantom
+    episode id. A test that re-implements the predicate under test is testing itself."""
+    global _CLASSIFIER
+    if _CLASSIFIER is None:
+        _CLASSIFIER = load()
+    return _CLASSIFIER
+
+
+def episode_files(root):
+    """Every episode file in the store, by name, across BOTH directories. Replaces the
+    pre-g4 `root.glob("*.md")` idiom, which under the ratified layout would silently
+    match nothing — trap 1, in the tests' own vocabulary. Non-episode files are excluded
+    by the store's classifier, never by a name this helper knows."""
+    root = Path(root)
+    if not root.exists():
+        return []
+    return sorted(
+        p.name for p in root.rglob("*.md") if classifier().episode_id_for(p) is not None
+    )
+
+
+def copy_store_scaffolding(dest):
+    """Reproduce the REAL tracked store's non-episode files inside a throwaway store
+    root, and return how many were copied.
+
+    Read from `episodes/` rather than hand-written here, so a test store carries whatever
+    scaffolding the repository actually ships — if someone adds, renames or removes a
+    placeholder, the tests inherit it instead of drifting away from it. Real episode files
+    (there are none today) are skipped so the temp store still starts empty. Copy only:
+    the real store is never written to by any test."""
+    dest = Path(dest)
+    copied = 0
+    for src in sorted(STORE_TEMPLATE.rglob("*")):
+        if not src.is_file() or classifier().episode_id_for(src) is not None:
+            continue
+        target = dest / src.relative_to(STORE_TEMPLATE)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, target)
+        copied += 1
+    classifier().ensure_store_layout(dest)
+    return copied
 
 
 def create_op(run="governor-268", **overrides):
@@ -96,6 +168,11 @@ class EpisodeStoreTestCase(unittest.TestCase):
         self.m = load()
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name) / "episodes"
+        # A temp store starts with the LAYOUT, exactly as the tracked store ships it: two
+        # directories and no episodes. Read seams refuse a store whose layout is absent
+        # (trap 5), so a test store that skipped this would be exercising a state the
+        # real store cannot be in. AbsentStoreTests covers the absent case deliberately.
+        self.m.ensure_store_layout(self.root)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -116,10 +193,9 @@ class EpisodeStoreTestCase(unittest.TestCase):
 class RoundTripTests(EpisodeStoreTestCase):
     def test_create_writes_well_formed_episode_and_round_trips(self):
         self.run_delta({"work_id": "issue-1", "ops": [create_op()]})
-        files = sorted(p.name for p in self.root.glob("*.md") if p.name != "README.md")
-        self.assertEqual(files, ["governor-268-001.md"])
+        self.assertEqual(episode_files(self.root), ["governor-268-001.md"])
 
-        path = self.root / "governor-268-001.md"
+        path = episode_path(self.root, "governor-268-001")
         text = path.open(encoding="utf-8", newline="").read()
 
         # header + heading
@@ -165,7 +241,7 @@ class RoundTripTests(EpisodeStoreTestCase):
             "  scripts/apply_episode_delta.py  ",
         ]
         self.run_delta({"work_id": "issue-1", "ops": [op]})
-        text = (self.root / "governor-268-001.md").open(encoding="utf-8", newline="").read()
+        text = episode_path(self.root, "governor-268-001").open(encoding="utf-8", newline="").read()
 
         self.assertIn("- artifact-ref: docs/EPISODE_STORE.md\n", text)
         self.assertIn("- artifact-ref: scripts/apply_episode_delta.py\n", text)
@@ -177,8 +253,9 @@ class RoundTripTests(EpisodeStoreTestCase):
     def test_second_create_same_run_increments_sequence(self):
         self.run_delta({"work_id": "issue-1", "ops": [create_op()]})
         self.run_delta({"work_id": "issue-2", "ops": [create_op()]})
-        files = sorted(p.name for p in self.root.glob("*.md") if p.name != "README.md")
-        self.assertEqual(files, ["governor-268-001.md", "governor-268-002.md"])
+        self.assertEqual(
+            episode_files(self.root), ["governor-268-001.md", "governor-268-002.md"]
+        )
 
     def test_create_rejects_explicit_id_in_op(self):
         # The writer assigns ids itself (EPISODE_STORE.md section 2, zero agent effort) —
@@ -197,7 +274,7 @@ class PartitionEnforcementTests(EpisodeStoreTestCase):
         # under ## Mechanical — the precise violation section 5 warns about.
         self.run_fixture("misfiled-field-delta.json", expect_rc=1)
         # nothing written
-        self.assertEqual(list(self.root.glob("*.md")) if self.root.exists() else [], [])
+        self.assertEqual(episode_files(self.root), [])
 
     def test_mechanical_field_under_agent_supplied_rejected(self):
         # The other direction: a mechanical field name (run) smuggled into the
@@ -240,7 +317,7 @@ class ContentGuardTests(EpisodeStoreTestCase):
         # quoting a transcript containing the literal line "- status: retired" must
         # never silently forge that line once rendered.
         self.run_fixture("newline-injection-delta.json", expect_rc=1)
-        self.assertEqual(list(self.root.glob("*.md")) if self.root.exists() else [], [])
+        self.assertEqual(episode_files(self.root), [])
 
     def test_newline_in_task_intent_statement_rejected(self):
         op = create_op()
@@ -319,7 +396,7 @@ class LineBoundaryGuardTests(EpisodeStoreTestCase):
         )
         self.run_delta({"work_id": "i1", "ops": [op]}, expect_rc=1)
         # nothing written -- the attack never lands on disk even transiently
-        self.assertEqual(list(self.root.glob("*.md")) if self.root.exists() else [], [])
+        self.assertEqual(episode_files(self.root), [])
 
     def test_u2028_forged_status_line_end_to_end_amend_history_rejected(self):
         # Same attack shape via amend-assertion's history field, which is also
@@ -342,7 +419,7 @@ class AllOrNothingAtomicTests(EpisodeStoreTestCase):
 
     def test_atomic_invalid_op_in_multi_op_delta_leaves_files_unchanged(self):
         self.run_delta({"work_id": "i0", "ops": [create_op()]})
-        path = self.root / "governor-268-001.md"
+        path = episode_path(self.root, "governor-268-001")
         before = path.read_bytes()
 
         # op1 is individually valid (a real dispute against the episode just created);
@@ -365,13 +442,11 @@ class AllOrNothingAtomicTests(EpisodeStoreTestCase):
         after = path.read_bytes()
         self.assertEqual(before, after, "file bytes changed despite the delta being rejected")
         # and no stray new file was created either
-        self.assertEqual(
-            sorted(p.name for p in self.root.glob("*.md")), ["governor-268-001.md"]
-        )
+        self.assertEqual(episode_files(self.root), ["governor-268-001.md"])
 
     def test_atomic_structurally_invalid_op_in_multi_op_delta_also_leaves_files_unchanged(self):
         self.run_delta({"work_id": "i0", "ops": [create_op()]})
-        path = self.root / "governor-268-001.md"
+        path = episode_path(self.root, "governor-268-001")
         before = path.read_bytes()
         ops = [create_op(), {"op": "retire", "id": "governor-268-001", "reason": "  "}]
         self.run_delta({"work_id": "i1", "ops": ops}, expect_rc=1)
@@ -456,13 +531,16 @@ class WritePhaseAtomicityTests(EpisodeStoreTestCase):
 
 
 class RetirementSeamTests(EpisodeStoreTestCase):
-    """C8 — the retire op's layout effect routes only through apply_retirement(); the
-    field diff matches EPISODE_STORE.md section 7's worked example under whichever
-    adapter is active, and no assertion's own lifecycle-standing is touched."""
+    """C8 — the retire op's CONTENT effect routes only through apply_retirement() and its
+    LAYOUT effect only through destination_for(); the field diff matches
+    EPISODE_STORE.md section 7's worked example, and no assertion's own
+    lifecycle-standing is touched."""
 
     def test_retire_field_diff_matches_worked_example(self):
         self.run_delta({"work_id": "i0", "ops": [create_op()]})
-        path = self.root / "governor-268-001.md"
+        # The content effect is asserted at the RATIFIED destination: under the bound
+        # layout the retired record only ever exists in the archive.
+        path = episode_path(self.root, "governor-268-001", retired=True)
 
         self.run_delta(
             {
@@ -493,31 +571,28 @@ class RetirementSeamTests(EpisodeStoreTestCase):
         # retirement never touches any assertion's own lifecycle-standing
         self.assertEqual(text.count("- lifecycle-standing: active"), 5)
 
-        # under the default (Option-B) adapter the file never moves
         self.assertTrue(path.exists())
 
-    def test_retire_under_option_a_adapter_moves_file_between_active_and_retired(self):
-        # Flips the module's own live switch (not the source file) to prove the seam is
-        # a REAL, swappable boundary -- two working adapters behind one call site, not
-        # a hypothetical one. g4's eventual binding is exactly this flip.
-        self.m._LAYOUT_ADAPTER = self.m._LAYOUT_OPTION_A
-        try:
-            self.run_delta({"work_id": "i0", "ops": [create_op()]})
-            active_path = self.root / "active" / "governor-268-001.md"
-            self.assertTrue(active_path.exists())
+    def test_retire_moves_the_file_from_active_into_retired(self):
+        # The ratified layout effect (was: a test that flipped an adapter switch to
+        # prove the seam was swappable; the decision is bound, so there is no switch and
+        # nothing to flip — this asserts the bound behavior directly).
+        self.run_delta({"work_id": "i0", "ops": [create_op()]})
+        active = episode_path(self.root, "governor-268-001")
+        self.assertTrue(active.exists())
 
-            self.run_delta(
-                {
-                    "work_id": "i1",
-                    "ops": [{"op": "retire", "id": "governor-268-001", "reason": "superseded"}],
-                }
-            )
-            retired_path = self.root / "retired" / "governor-268-001.md"
-            self.assertTrue(retired_path.exists(), "Option-A adapter did not move the file")
-            self.assertFalse(active_path.exists(), "old active/ path should be gone after the move")
-            self.assertIn("- status: retired", retired_path.open(encoding="utf-8", newline="").read())
-        finally:
-            self.m._LAYOUT_ADAPTER = self.m._LAYOUT_OPTION_B
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [{"op": "retire", "id": "governor-268-001", "reason": "superseded"}],
+            }
+        )
+        retired = episode_path(self.root, "governor-268-001", retired=True)
+        self.assertTrue(retired.exists(), "retirement did not move the file into the archive")
+        self.assertFalse(active.exists(), "the old active/ path should be gone after the move")
+        self.assertIn("- status: retired", retired.open(encoding="utf-8", newline="").read())
+        # Retained in history, never deleted or truncated: the whole record survives.
+        self.assertEqual(len(self.m.parse_episode(read_exact(retired)).agent_supplied), 5)
 
 
 def _assertion_block(text, aid):
@@ -539,7 +614,7 @@ class SurgicalDisputeTests(EpisodeStoreTestCase):
 
     def test_dispute_changes_only_the_named_assertion_sibling_untouched(self):
         self.run_delta({"work_id": "i0", "ops": [create_op()]})
-        path = self.root / "governor-268-001.md"
+        path = episode_path(self.root, "governor-268-001")
         before_text = path.open(encoding="utf-8", newline="").read()
         a3_before = _assertion_block(before_text, "a3")  # observed-behavior, untouched
         a4_before = _assertion_block(before_text, "a4")  # impact-cost, will be disputed
@@ -592,36 +667,34 @@ class SurgicalDisputeTests(EpisodeStoreTestCase):
     def test_dispute_targets_a_retired_episode_via_resolve_episode_path(self):
         # The g1 reviewer finding this handoff carries forward: amend must resolve its
         # target through resolve_episode_path() too, not just retire/fetch -- otherwise
-        # amending an already-retired episode breaks once Option A binds (the file may
-        # live under retired/, not the flat root).
-        self.m._LAYOUT_ADAPTER = self.m._LAYOUT_OPTION_A
-        try:
-            self.run_delta({"work_id": "i0", "ops": [create_op()]})
-            self.run_delta(
-                {"work_id": "i1", "ops": [{"op": "retire", "id": "governor-268-001", "reason": "superseded"}]}
-            )
-            # file now lives under retired/, not active/
-            self.assertFalse((self.root / "active" / "governor-268-001.md").exists())
-            self.assertTrue((self.root / "retired" / "governor-268-001.md").exists())
+        # amending an already-retired episode breaks now that Option A is bound (the file
+        # lives under retired/, not the flat root).
+        self.run_delta({"work_id": "i0", "ops": [create_op()]})
+        self.run_delta(
+            {"work_id": "i1", "ops": [{"op": "retire", "id": "governor-268-001", "reason": "superseded"}]}
+        )
+        # file now lives in the archive, not the ordinary-search set
+        self.assertFalse(episode_path(self.root, "governor-268-001").exists())
+        self.assertTrue(episode_path(self.root, "governor-268-001", retired=True).exists())
 
-            self.run_delta(
-                {
-                    "work_id": "i2",
-                    "ops": [
-                        {
-                            "op": "amend-assertion",
-                            "id": "governor-268-001",
-                            "assertion": "a3",
-                            "lifecycle-standing": "superseded",
-                            "history": "superseded 2026-08-06 (later-audit) — a newer episode covers this",
-                        }
-                    ],
-                }
-            )
-            text = (self.root / "retired" / "governor-268-001.md").open(encoding="utf-8", newline="").read()
-            self.assertIn("- lifecycle-standing: superseded", text)
-        finally:
-            self.m._LAYOUT_ADAPTER = self.m._LAYOUT_OPTION_B
+        self.run_delta(
+            {
+                "work_id": "i2",
+                "ops": [
+                    {
+                        "op": "amend-assertion",
+                        "id": "governor-268-001",
+                        "assertion": "a3",
+                        "lifecycle-standing": "superseded",
+                        "history": "superseded 2026-08-06 (later-audit) — a newer episode covers this",
+                    }
+                ],
+            }
+        )
+        text = read_exact(episode_path(self.root, "governor-268-001", retired=True))
+        self.assertIn("- lifecycle-standing: superseded", text)
+        # ...and amending an archived episode does not resurrect it into ordinary search.
+        self.assertFalse(episode_path(self.root, "governor-268-001").exists())
 
 
 # ===================================================================================
@@ -652,6 +725,13 @@ class QueryTestCase(EpisodeStoreTestCase):
         new = after - before
         self.assertEqual(len(new), 1, f"expected exactly one new episode, got {new}")
         return new.pop()
+
+    def retire(self, episode_id, reason="consolidated into a pattern episode"):
+        """Retire one episode through the only write path, and return its id."""
+        self.run_delta(
+            {"work_id": "retire", "ops": [{"op": "retire", "id": episode_id, "reason": reason}]}
+        )
+        return episode_id
 
     def run_query(self, *args, expect_rc=0):
         """Drive query_episodes.py's CLI in-process and return its parsed JSON envelope.
@@ -761,9 +841,7 @@ def naive_select_dict_collapse(root, field, value):
     assert that it was avoided.
     """
     matched = []
-    for path in sorted(Path(root).glob("*.md")):
-        if path.name == "README.md":
-            continue
+    for path in sorted((Path(root) / "active").glob("*.md")):
         text = path.open(encoding="utf-8", newline="").read()
         mechanical = {}
         for line in text.splitlines():
@@ -781,9 +859,7 @@ def naive_select_substring(root, field, value):
     the query (so a query for a value that is a prefix of another episode's value drags
     that episode in too). The exact-match primitive must do neither."""
     matched = []
-    for path in sorted(Path(root).glob("*.md")):
-        if path.name == "README.md":
-            continue
+    for path in sorted((Path(root) / "active").glob("*.md")):
         if f"- {field}: {value}" in path.open(encoding="utf-8", newline="").read():
             matched.append(path.stem)
     return sorted(matched)
@@ -915,11 +991,36 @@ class SilentOmissionTests(QueryTestCase):
         # misses every episode from any other run.
         governor = [self.seed(run="governor-268") for _ in range(2)]
         admiral = [self.seed(run="admiral-298")]
-        naive = sorted(p.stem for p in self.root.glob("governor-268-*.md"))
+        naive = sorted(p.stem for p in (self.root / "active").glob("governor-268-*.md"))
         ours = self.q.enumerate_episode_ids(self.root)
         self.assertEqual(naive, sorted(governor))
         self.assertEqual(ours, sorted(governor + admiral))
         self.assertTrue(set(naive) < set(ours))
+
+    def test_a_scanned_id_that_no_longer_resolves_is_raised_not_dropped(self):
+        """A third shape, found by sweeping for the class rather than by a review note.
+
+        enumerate_episodes() turned the scan's ids into records with an `if ep is not
+        None` filter on the end — so an id the scan returned and fetch could not resolve
+        left the candidate set between two lines of one function, silently. It means the
+        store changed underneath the query, or the enumeration and resolution seams
+        disagree; both are facts, neither is "no match"."""
+        live = self.seed()
+        vanishing = self.seed(run="admiral-298")
+        real_fetch = self.q.fetch_episode
+        self.q.fetch_episode = lambda eid, root: (
+            None if eid == vanishing else real_fetch(eid, root)
+        )
+        try:
+            with self.assertRaises(self.q.QueryError) as caught:
+                self.q.enumerate_episodes(self.root)
+            self.assertIn(vanishing, str(caught.exception))
+            # ...and the ids-only scan, which does not fetch, still answers.
+            self.assertEqual(
+                self.q.enumerate_episode_ids(self.root), sorted([live, vanishing])
+            )
+        finally:
+            self.q.fetch_episode = real_fetch
 
 
 def naive_neighbours_first_key_wins(query_module, root, episode_id):
@@ -1102,7 +1203,10 @@ class CrossSessionRetrievalTests(QueryTestCase, SeparateProcessMixin):
         """
         seed = self.seed_in_separate_process(self.root, self.tmp.name, create_op())
         empty_root = Path(self.tmp.name) / "somewhere-else"
-        empty_root.mkdir()
+        # A real, well-formed, EMPTY store — not a missing one. "The other store cannot
+        # answer" has to come from the store being empty, not from it being absent, which
+        # is now its own refusal (AbsentStoreTests).
+        self.m.ensure_store_layout(empty_root)
         query = self.run_in_separate_process(
             QUERY_SCRIPT,
             ["--store-root", str(empty_root), "fetch", seed["episode_id"]],
@@ -1172,10 +1276,12 @@ class CrossWorktreeSharingTests(QueryTestCase, SeparateProcessMixin):
         self.git("config", "user.email", "episode-store-test@example.invalid", cwd=self.origin)
         self.git("config", "user.name", "Episode Store Test", cwd=self.origin)
         self.git("config", "commit.gpgsign", "false", cwd=self.origin)
-        (self.origin / "episodes").mkdir()
-        (self.origin / "episodes" / "README.md").write_text(
-            "# episodes\n", encoding="utf-8", newline=""
-        )
+        # Seed the origin with the store's REAL scaffolding — its README and the tracked
+        # placeholders that keep active/ and retired/ alive in git — rather than a
+        # hand-written stand-in. Section 9's whole claim is about the tracked store
+        # crossing a worktree boundary, so the thing crossing it should be the shape the
+        # repository actually commits.
+        copy_store_scaffolding(self.origin / "episodes")
         self.git("add", "episodes", cwd=self.origin)
         self.git("commit", "-m", "seed the tracked episodes/ path", cwd=self.origin)
 
@@ -1245,7 +1351,7 @@ class CrossWorktreeSharingTests(QueryTestCase, SeparateProcessMixin):
         # The reader worktree STILL cannot see it — the commit has not reached it.
         still_absent = self.query_in(reader_wt, "enumerate")
         self.assertEqual(json.loads(still_absent["out"])["ids"], [])
-        self.assertFalse((reader_wt / "episodes" / f"{episode_id}.md").exists())
+        self.assertFalse(episode_path(reader_wt / "episodes", episode_id).exists())
         self.query_in(reader_wt, "fetch", episode_id, expect_rc=2)
 
         # --- the ordinary git path (section 9 steps 2-3) ---------------------------
@@ -1274,14 +1380,14 @@ class CrossWorktreeSharingTests(QueryTestCase, SeparateProcessMixin):
         #     content-addressable artifact under git can be pinned to its blob hash.
         #     Git hashes the NORMALIZED index content, so this holds regardless of what
         #     any worktree's checkout did to line endings.
-        writer_blob = self.git("rev-parse", f"HEAD:episodes/{episode_id}.md", cwd=writer_wt).strip()
-        reader_blob = self.git("rev-parse", f"HEAD:episodes/{episode_id}.md", cwd=reader_wt).strip()
+        writer_blob = self.git("rev-parse", f"HEAD:episodes/active/{episode_id}.md", cwd=writer_wt).strip()
+        reader_blob = self.git("rev-parse", f"HEAD:episodes/active/{episode_id}.md", cwd=reader_wt).strip()
         self.assertEqual(writer_blob, reader_blob)
         # (c) Raw WORKING-TREE bytes may legitimately differ, but only in line endings
         #     — see test_working_tree_bytes_are_not_the_cross_worktree_identity below,
         #     which is where that hazard is pinned down.
-        writer_bytes = (writer_wt / "episodes" / f"{episode_id}.md").read_bytes()
-        reader_bytes = (reader_wt / "episodes" / f"{episode_id}.md").read_bytes()
+        writer_bytes = episode_path(writer_wt / "episodes", episode_id).read_bytes()
+        reader_bytes = episode_path(reader_wt / "episodes", episode_id).read_bytes()
         self.assertEqual(
             writer_bytes.replace(b"\r\n", b"\n"), reader_bytes.replace(b"\r\n", b"\n")
         )
@@ -1317,8 +1423,8 @@ class CrossWorktreeSharingTests(QueryTestCase, SeparateProcessMixin):
         self.git("merge", "--no-edit", "eol-writer", cwd=self.origin)
         self.git("merge", "--no-edit", "main", cwd=reader_wt)
 
-        writer_bytes = (writer_wt / "episodes" / f"{episode_id}.md").read_bytes()
-        reader_bytes = (reader_wt / "episodes" / f"{episode_id}.md").read_bytes()
+        writer_bytes = episode_path(writer_wt / "episodes", episode_id).read_bytes()
+        reader_bytes = episode_path(reader_wt / "episodes", episode_id).read_bytes()
 
         # The writer's own output is always LF-only, on every platform.
         self.assertNotIn(b"\r\n", writer_bytes)
@@ -1329,7 +1435,7 @@ class CrossWorktreeSharingTests(QueryTestCase, SeparateProcessMixin):
             writer_bytes.replace(b"\r\n", b"\n"), reader_bytes.replace(b"\r\n", b"\n")
         )
         # And git's stored (index) content is LF either way — the stable identity.
-        eol_info = self.git("ls-files", "--eol", f"episodes/{episode_id}.md", cwd=reader_wt)
+        eol_info = self.git("ls-files", "--eol", f"episodes/active/{episode_id}.md", cwd=reader_wt)
         self.assertIn("i/lf", eol_info)
 
         if b"\r\n" in reader_bytes:
@@ -1355,8 +1461,8 @@ class CrossWorktreeSharingTests(QueryTestCase, SeparateProcessMixin):
 
         seed = self.seed_in_separate_process(writer_wt / "episodes", writer_wt, create_op())
         # Deliberately NOT committed.
-        self.assertTrue((writer_wt / "episodes" / f"{seed['episode_id']}.md").exists())
-        self.assertFalse((reader_wt / "episodes" / f"{seed['episode_id']}.md").exists())
+        self.assertTrue(episode_path(writer_wt / "episodes", seed["episode_id"]).exists())
+        self.assertFalse(episode_path(reader_wt / "episodes", seed["episode_id"]).exists())
         self.assertEqual(json.loads(self.query_in(reader_wt, "enumerate")["out"])["ids"], [])
 
 
@@ -1383,7 +1489,7 @@ class NonForeclosureTests(QueryTestCase):
 
     def test_disputing_one_assertion_leaves_its_siblings_byte_identical(self):
         episode_id = self.seed()
-        path = self.root / f"{episode_id}.md"
+        path = episode_path(self.root, episode_id)
 
         before_raw = path.read_bytes()
         before = self.q.fetch_episode(episode_id, self.root)
@@ -1447,7 +1553,7 @@ class NonForeclosureTests(QueryTestCase):
         # Section 5: a mechanical fact is never edited, and section 7: retirement and
         # lifecycle-standing are separate operations that a dispute never conflates.
         episode_id = self.seed(**{"artifact-ref": ["a.md", "b.md"]})
-        path = self.root / f"{episode_id}.md"
+        path = episode_path(self.root, episode_id)
         before_raw = path.read_bytes()
         mech_before = before_raw[before_raw.index(b"## Mechanical") : before_raw.index(b"## Agent-supplied")]
         retire_before = before_raw[before_raw.index(b"## Retirement") :]
@@ -1568,16 +1674,926 @@ class MechanicalOnlyRetrievalTests(QueryTestCase):
         self.assertEqual(self.q.neighbour_ids(self.root, anchor), sorted([strong, weak]))
 
 
-class LayoutIndependenceTests(QueryTestCase):
-    """The retirement layout (EPISODE_STORE.md section 7) is HELD OPEN for human
-    ratification and is bound at g4. This gate must not bind it — and that has to be
-    true of the retrieval CODE, not merely of a primitive's name."""
+class RatifiedLayoutTests(EpisodeStoreTestCase):
+    """g4 — the retirement layout is RATIFIED and BOUND. Tommy's ruling, verbatim:
+
+        "move the file, prefer to keep files clean of history unless they're
+        historical. archives are available strats."
+
+    So retirement MOVES the file: episodes/active/<id>.md -> episodes/retired/<id>.md
+    (EPISODE_STORE.md section 7, Option A). Option B — a `status` field filtered
+    negatively, with the file never moving — is rejected, and its adapters are gone.
+    These tests assert the BOUND behavior directly, with no adapter switch to flip,
+    because there is no longer a switch: a second adapter would re-open a decision the
+    human has closed."""
+
+    def test_a_new_episode_is_written_under_active(self):
+        self.run_delta({"work_id": "i0", "ops": [create_op()]})
+        self.assertTrue((self.root / "active" / "governor-268-001.md").exists())
+        # ...and NOT at the old flat path.
+        self.assertFalse((self.root / "governor-268-001.md").exists())
+
+    def test_retiring_moves_the_file_into_retired(self):
+        self.run_delta({"work_id": "i0", "ops": [create_op()]})
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [{"op": "retire", "id": "governor-268-001", "reason": "superseded"}],
+            }
+        )
+        self.assertTrue((self.root / "retired" / "governor-268-001.md").exists())
+        self.assertFalse((self.root / "active" / "governor-268-001.md").exists())
+
+    def test_the_layout_adapter_switch_is_gone(self):
+        # Removing the Option-B scaffolding is half of what this gate binds. A lingering
+        # switch would mean the store still behaves as if the decision were open.
+        for scaffolding in ("_LAYOUT_ADAPTER", "_LAYOUT_OPTION_A", "_LAYOUT_OPTION_B"):
+            self.assertFalse(
+                hasattr(self.m, scaffolding),
+                f"{scaffolding} still present — the held-decision scaffolding must come out",
+            )
+
+    def test_membership_is_a_directory_fact_not_a_parsed_field(self):
+        # The structural property the ruling buys: "which set is this episode in" is
+        # answered by the filesystem, so a malformed, hand-edited or forged `status`
+        # line cannot change it.
+        self.run_delta({"work_id": "i0", "ops": [create_op()]})
+        self.assertTrue(self.m.is_episode_in_ordinary_search("governor-268-001", self.root))
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [{"op": "retire", "id": "governor-268-001", "reason": "superseded"}],
+            }
+        )
+        self.assertFalse(self.m.is_episode_in_ordinary_search("governor-268-001", self.root))
+
+
+class RetirementDependentRetrievalTests(QueryTestCase):
+    """C3 — a retired episode is ABSENT from ordinary retrieval and PRESENT in
+    history-inclusive retrieval. Both directions, because either one alone is satisfiable
+    by a broken store: absence alone is also what deletion looks like, and presence alone
+    is also what "retirement did nothing" looks like. Together they are the operational
+    meaning of "excluded from ordinary rhyme-search, RETAINED in history"."""
+
+    def test_a_retired_episode_leaves_ordinary_retrieval_and_stays_in_history(self):
+        kept = self.seed()
+        gone = self.retire(self.seed())
+
+        # Direction 1 — ABSENT from ordinary retrieval.
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [kept])
+        # Direction 2 — PRESENT in history-inclusive retrieval.
+        self.assertEqual(
+            self.q.enumerate_episode_ids(self.root, include_retired=True), sorted([kept, gone])
+        )
+
+    def test_the_archive_is_opt_in_not_opt_out(self):
+        """The ruling's second half: retired/ is an archive, not a second live search
+        space every query has to remember to exclude. So the DEFAULT — what a caller gets
+        for asking nothing — is the ordinary set, and reaching the archive is a
+        deliberate act. A default that included the archive would make every future
+        caller's omission of a filter a silent correctness bug."""
+        self.retire(self.seed())
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [])
+        self.assertEqual(self.q.enumerate_episodes(self.root), [])
+
+    def test_retirement_is_a_move_not_a_deletion(self):
+        gone = self.retire(self.seed())
+        archived = self.q.fetch_episode(gone, self.root)
+        self.assertIsNotNone(archived, "retirement deleted the record")
+        self.assertEqual(len(archived.agent_supplied), 5)
+        self.assertEqual(archived.status, "retired")
+        self.assertEqual(archived.retired_reason, "consolidated into a pattern episode")
+
+    def test_fetch_by_id_reaches_the_archive_because_it_is_a_lookup_not_a_search(self):
+        # Retirement excludes an episode from SEARCH. An addressed lookup by name is not
+        # a search, and a cross-reference (consolidated-into:, superseded-by:) would
+        # dangle if it were.
+        gone = self.retire(self.seed())
+        self.assertIsNotNone(self.q.fetch_episode(gone, self.root))
+        self.assertEqual(self.run_query("fetch", gone)["ids"], [gone])
+
+    def test_select_and_neighbours_respect_retirement_in_both_directions(self):
+        kept = self.seed(**{"artifact-ref": ["shared.md"]})
+        gone = self.retire(self.seed(**{"artifact-ref": ["shared.md"]}))
+
+        self.assertEqual(self.q.select_episode_ids(self.root, "artifact-ref", ["shared.md"]), [kept])
+        self.assertEqual(
+            self.q.select_episode_ids(
+                self.root, "artifact-ref", ["shared.md"], include_retired=True
+            ),
+            sorted([kept, gone]),
+        )
+        self.assertEqual(self.q.neighbour_ids(self.root, kept), [])
+        self.assertEqual(self.q.neighbour_ids(self.root, kept, include_retired=True), [gone])
+
+    def test_the_cli_states_which_universe_it_answered_from(self):
+        kept = self.seed()
+        gone = self.retire(self.seed())
+
+        ordinary = self.run_query("enumerate")
+        self.assertEqual(ordinary["ids"], [kept])
+        self.assertIs(ordinary["include_retired"], False)
+
+        historical = self.run_query("enumerate", "--include-retired")
+        self.assertEqual(historical["ids"], sorted([kept, gone]))
+        self.assertIs(historical["include_retired"], True)
+        # An envelope that did not say would let a caller mistake an archive-excluding
+        # answer for a complete one — a silent omission at the consumer's end.
+
+    def test_retiring_the_only_episode_of_a_run_does_not_free_its_sequence_number(self):
+        # The id-assignment scan is history-inclusive on purpose (section 2): a retired
+        # episode's number is still taken, or a new episode would collide with an
+        # archived one and two records would share an id.
+        gone = self.retire(self.seed())
+        self.assertEqual(gone, "governor-268-001")
+        fresh = self.seed()
+        self.assertEqual(fresh, "governor-268-002")
+
+
+# --- the three RELOCATED silent-omission traps, one naive implementation each ---------
+#
+# Binding Option A made the ORIGINAL trap structurally impossible. Under Option B,
+# "ordinary search" was a positive allowlist over a parsed field — enumerate the files
+# whose `status` reads `active` — and that silently dropped an episode in any OTHER
+# legitimate lifecycle state (a `disputed` core assertion on a perfectly un-retired
+# episode). Membership is now a directory fact, so there is no field to enumerate and no
+# allowlist to be wrong about.
+#
+# The CLASS did not go away with it. It moved. These three naive implementations are each
+# a reasonable way to write the new code, and each is silently short.
+
+
+def naive_flat_glob_enumeration(root):
+    """Trap 1 — a glob that misses a subdirectory.
+
+    This is the pre-g4 enumeration, unchanged: scan `episodes/*.md`. It was correct under
+    the flat layout and is now silently, totally wrong — every episode lives one level
+    down, so this returns NOTHING (or, worse, only strays) and reports no error at all.
+    An empty candidate set is indistinguishable from "the store is empty", which is why
+    this failure mode ships instead of getting caught.
+
+    The naivety being modelled is the FLAT GLOB and nothing else, so non-episode files
+    are excluded through the store's real classifier rather than by a filename this
+    fixture knows — an inline comparison against the literal README filename here would
+    quietly make the fixture immune to the very defect it is supposed to model."""
+    return sorted(
+        eid
+        for eid in (classifier().episode_id_for(p) for p in Path(root).glob("*.md"))
+        if eid is not None
+    )
+
+
+def naive_history_inclusive_forgetting_the_union(root):
+    """Trap 2 — a history-inclusive enumeration that forgets to union both directories.
+
+    The tempting shape: "history-inclusive means I also want the archive", written as a
+    scan of the archive alone, or (as here) a scan that reaches for the ordinary set and
+    never adds the archive to it. The caller explicitly ASKED for history and gets half
+    of it back, silently. This one is nastier than trap 1 because the answer is
+    non-empty and looks plausible."""
+    return sorted(p.stem for p in (Path(root) / "active").glob("*.md"))
+
+
+def naive_layout_listing_as_ids(root):
+    """Trap 4 — a directory listing read as a list of episode ids.
+
+    The shipped defect, in one expression: `{p.stem for p in (root/"active").glob("*.md")}`.
+    Correct exactly while a layout directory holds nothing but episodes, and silently
+    wrong the moment it holds anything else — which it always does, because git needs a
+    tracked file in a directory to keep the directory at all. Every non-episode file then
+    becomes a phantom id that no record backs, and (when the same name appears in both
+    directories) trips the half-retirement guard on a store that was never retired."""
+    return sorted(
+        {p.stem for p in (Path(root) / "active").glob("*.md")}
+        | {p.stem for p in (Path(root) / "retired").glob("*.md")}
+    )
+
+
+def naive_status_grep_membership(root):
+    """The ORIGINAL trap, kept and adapted: ordinary search as a content-parsing
+    operation over the `status` field, the way the REJECTED Option-B adapter would have
+    had to do it. Unanchored, because that is how it gets written — and any episode whose
+    free text merely QUOTES a status line is then silently excluded from ordinary search
+    while being entirely active.
+
+    EPISODE_STORE.md §7 named this exposure as the reason Option B needed a line-anchored
+    filter. Option A needs no filter at all, so the exposure is gone rather than
+    mitigated. This function exists to demonstrate that difference, not to be used."""
+    kept = []
+    for path in sorted((Path(root) / "active").glob("*.md")):
+        if "- status: retired" not in read_exact(path):
+            kept.append(path.stem)
+    return sorted(kept)
+
+
+class HalfRetirementSafetyTests(QueryTestCase):
+    """C6 — the store is never left HALF-RETIRED.
+
+    A retirement has two halves: the field update (`status`, `retired-reason`, …) and the
+    file's move into the archive. A store where one landed and the other did not is
+    corrupt in a specific, nasty way — it reads as retired while still being in the
+    ordinary-search candidate set, or vice versa — and nothing about it is loud.
+
+    Two independent defenses, proven separately below:
+
+      1. **By construction.** The updated content is only ever rendered to the NEW path.
+         "Fields updated but file not moved" has no representation in the write plan at
+         all, and neither does its mirror image: there is one plan entry and it carries
+         both halves. This is asserted directly against write_plan(), not inferred.
+      2. **By compensation.** Binding the layout gave the placement phase a second step
+         (place the archived file, remove the source), so a failure BETWEEN them would
+         leave the id in both directories. Faults are injected at each step and the store
+         is asserted consistent afterwards.
+    """
+
+    def _sets(self):
+        """(ordinary-set ids, archive ids) read straight off the filesystem, without
+        going through the code under test — otherwise a bug in the seams could hide
+        itself from the very assertion meant to catch it."""
+        return (
+            sorted(p.stem for p in (self.root / "active").glob("*.md")),
+            sorted(p.stem for p in (self.root / "retired").glob("*.md")),
+        )
+
+    def assert_consistent(self, episode_id):
+        """The invariant, stated once: an id is in EXACTLY ONE of the two sets, and the
+        `status` recorded inside the file agrees with the directory holding it."""
+        live, archived = self._sets()
+        in_live, in_archive = episode_id in live, episode_id in archived
+        self.assertNotEqual(
+            in_live, in_archive,
+            f"{episode_id} is in {'both' if in_live else 'neither'} set — half-retired",
+        )
+        record = self.q.fetch_episode(episode_id, self.root)
+        self.assertIsNotNone(record)
+        expected = "retired" if in_archive else "active"
+        self.assertEqual(
+            record.status, expected,
+            f"{episode_id} sits in the {expected} set but its status field says "
+            f"{record.status!r} — the directory and the record disagree",
+        )
+        return expected
+
+    def test_the_write_plan_cannot_express_a_half_retirement(self):
+        # Defense 1, asserted against the plan itself rather than its effects.
+        self.seed()
+        tx = self.m._Transaction(self.root)
+        episode = tx.load("governor-268-001")
+        self.m.apply_retirement(episode, "consolidated")
+        writes, deletes = tx.write_plan()
+
+        self.assertEqual(
+            [p.name for p in writes], ["governor-268-001.md"], "expected exactly one plan entry"
+        )
+        (destination,) = writes
+        # The retired CONTENT is only ever rendered to the archive path...
+        self.assertEqual(destination.parent.name, "retired")
+        self.assertIn("- status: retired", writes[destination])
+        # ...and the ordinary-set path is only ever removed, never left holding it.
+        self.assertEqual([p.parent.name for p in deletes], ["active"])
+
+    def test_a_failure_placing_the_archived_file_leaves_the_episode_wholly_unretired(self):
+        live = self.seed()
+        before = read_exact(episode_path(self.root, live))
+
+        original = self.m._place
+
+        def failing_place(tmp_path, final_path):
+            raise OSError("simulated failure placing the archived file (e.g. locked file)")
+
+        self.m._place = failing_place
+        try:
+            self.run_delta(
+                {"work_id": "r", "ops": [{"op": "retire", "id": live, "reason": "consolidated"}]},
+                expect_rc=1,
+            )
+        finally:
+            self.m._place = original
+
+        self.assertEqual(self.assert_consistent(live), "active")
+        self.assertEqual(read_exact(episode_path(self.root, live)), before)
+
+    def test_a_failure_removing_the_source_rolls_the_retirement_back_whole(self):
+        """The window binding Option A actually opened, and the one this gate owes.
+
+        The archived file has already landed. If removing the source then fails, the
+        naive sequence leaves the id in BOTH directories: retired by content, still in
+        the ordinary-search set by directory. The placement phase compensates instead —
+        it restores the prior bytes of everything it disturbed and deletes what it newly
+        created, so the retirement is undone whole rather than left half-applied."""
+        live = self.seed()
+        before = read_exact(episode_path(self.root, live))
+
+        original = self.m._remove_superseded
+
+        def failing_remove(path):
+            # The archived file is already in place at this point — the assertion below
+            # proves the injection really did land in the gap between the two steps,
+            # rather than before the first one.
+            self.assertTrue(
+                episode_path(self.root, live, retired=True).exists(),
+                "fault injected too early: the archived file was not placed yet",
+            )
+            raise OSError("simulated failure removing the source (e.g. permission denied)")
+
+        self.m._remove_superseded = failing_remove
+        try:
+            self.run_delta(
+                {"work_id": "r", "ops": [{"op": "retire", "id": live, "reason": "consolidated"}]},
+                expect_rc=1,
+            )
+        finally:
+            self.m._remove_superseded = original
+
+        # Not half-retired: wholly un-retired, byte-for-byte as before.
+        self.assertEqual(self.assert_consistent(live), "active")
+        self.assertEqual(read_exact(episode_path(self.root, live)), before)
+        self.assertFalse(episode_path(self.root, live, retired=True).exists())
+        # No staged temp file left behind either.
+        self.assertEqual(
+            sorted(p.name for p in self.root.rglob("*") if p.is_file()),
+            [f"{live}.md"],
+        )
+
+    def test_a_half_retired_store_is_reported_rather_than_answered_around(self):
+        """Compensation covers every failure the process survives to observe; a hard kill
+        between the two steps runs no compensation at all, and markdown-in-git offers no
+        journal to close that. So the residual state is made LOUD rather than claimed
+        impossible: retrieval refuses instead of returning an answer that silently picks
+        one of the two copies."""
+        live = self.seed()
+        # Hand-build exactly the state an interrupted retirement would leave.
+        archived = episode_path(self.root, live, retired=True)
+        archived.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(episode_path(self.root, live), archived)
+
+        # Detection lives in the enumeration SEAM, so the writer inherits it too: a
+        # store in this state must not accept further deltas either.
+        for kwargs in ({}, {"include_retired": True}):
+            with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                self.q.enumerate_episode_ids(self.root, **kwargs)
+            self.assertIn("half-retired store", str(caught.exception))
+            self.assertIn(live, str(caught.exception))
+
+        self.run_query("enumerate", expect_rc=1)
+        self.assertIn("half-retired store", self.last_stderr)
+        self.run_delta({"work_id": "later", "ops": [create_op()]}, expect_rc=1)
+
+        # Completing the interrupted retirement by hand clears it, in the direction the
+        # error message names.
+        episode_path(self.root, live).unlink()
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [])
+        self.assertEqual(self.q.enumerate_episode_ids(self.root, include_retired=True), [live])
+
+    def test_a_half_retired_store_is_loud_for_the_seams_that_do_not_scan(self):
+        """The other half of "loud", and the half that was missing.
+
+        A scanning reader meets the enumeration seam and refuses. `fetch` does not scan —
+        it resolves one path — and the writer's `retire` does not scan either, so both
+        used to proceed against a store the store itself had already declared corrupt:
+        `fetch` silently returned the `active/` copy with `status: active`, and a retire
+        committed on top of it. Loud in one hand and silent in the other is worse than
+        either, because the silent hand is the one #308's consolidation pass walks back
+        through when it follows a `consolidated-into:` reference by id."""
+        live = self.seed()
+        other = self.seed(run="admiral-298")
+        other_before = read_exact(episode_path(self.root, other))
+
+        archived = episode_path(self.root, live, retired=True)
+        archived.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(episode_path(self.root, live), archived)
+
+        # The path-resolution seam refuses instead of preferring one copy...
+        with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+            self.m.resolve_episode_path(live, self.root)
+        self.assertIn("half-retired store", str(caught.exception))
+        self.assertIn(live, str(caught.exception))
+        # ...so fetch-by-id, which is built on it, refuses too — through the API and
+        # through the CLI, which used to answer 0 with `status: active`.
+        with self.assertRaises(self.m.EpisodeDeltaError):
+            self.q.fetch_episode(live, self.root)
+        self.run_query("fetch", live, expect_rc=1)
+        self.assertIn("half-retired store", self.last_stderr)
+
+        # And every writer op refuses, not only the ones whose own work happens to scan.
+        # A retire of a DIFFERENT episode is the case that used to commit.
+        self.run_delta(
+            {"work_id": "r", "ops": [{"op": "retire", "id": other, "reason": "unrelated"}]},
+            expect_rc=1,
+        )
+        self.run_delta(
+            {
+                "work_id": "a",
+                "ops": [
+                    {
+                        "op": "amend-assertion",
+                        "id": other,
+                        "assertion": "a4",
+                        "lifecycle-standing": "disputed",
+                        "history": "disputed 2026-08-05 (reviewer-audit)",
+                    }
+                ],
+            },
+            expect_rc=1,
+        )
+        self.run_delta({"work_id": "c", "ops": [create_op(run="reviewer-301")]}, expect_rc=1)
+
+        # The refusal happened before any write: the unrelated episode is byte-identical.
+        self.assertEqual(read_exact(episode_path(self.root, other)), other_before)
+
+        # Completing the interrupted retirement by hand clears every one of them.
+        episode_path(self.root, live).unlink()
+        self.assertIsNotNone(self.q.fetch_episode(live, self.root))
+        self.run_delta(
+            {"work_id": "r2", "ops": [{"op": "retire", "id": other, "reason": "now fine"}]}
+        )
+
+    def test_a_successful_retirement_is_whole(self):
+        # The positive control: without an injected fault, both halves land together.
+        live = self.seed()
+        self.retire(live)
+        self.assertEqual(self.assert_consistent(live), "retired")
+
+
+class RelocatedSilentOmissionTests(QueryTestCase):
+    """Option A relocated the silent-omission class; it did not remove it. One fixture per
+    relocated trap, each run against the SAME store as the real primitive, so the naive
+    answer's shortness is demonstrated rather than asserted."""
+
+    def test_trap1_a_flat_glob_misses_the_subdirectory_and_says_nothing(self):
+        ids = sorted([self.seed(), self.seed(run="admiral-298")])
+
+        naive = naive_flat_glob_enumeration(self.root)
+        ours = self.q.enumerate_episode_ids(self.root)
+
+        self.assertEqual(naive, [], "the naive flat glob should find nothing under the layout")
+        self.assertEqual(ours, ids)
+        # The whole defect in one line: no exception, no warning — just an empty answer
+        # that reads exactly like an empty store.
+        self.assertTrue(set(naive) < set(ours))
+
+    def test_trap2_history_inclusive_that_forgets_the_union_returns_half(self):
+        kept = self.seed()
+        archived = self.retire(self.seed())
+
+        naive = naive_history_inclusive_forgetting_the_union(self.root)
+        ours = self.q.enumerate_episode_ids(self.root, include_retired=True)
+
+        # The caller asked for history and the naive answer silently omits the one
+        # episode that is ONLY reachable historically — the exact record they asked for.
+        self.assertEqual(naive, [kept])
+        self.assertNotIn(archived, naive)
+        self.assertEqual(ours, sorted([kept, archived]))
+        self.assertTrue(set(naive) < set(ours))
+
+    def test_trap3_a_stray_at_the_old_flat_path_is_surfaced_not_skipped(self):
+        """The real migration hazard, and the one most likely to be missed.
+
+        A file at `episodes/<id>.md` is in NEITHER set. Ordinary retrieval does not see
+        it (it scans the ordinary set), and history-inclusive retrieval does not see it
+        either (it unions two directories this file is in neither of). It is therefore
+        invisible to every query while looking, to a human reading the directory, exactly
+        like a stored episode. Skipping it is a silent omission with a physical file
+        sitting right there as evidence."""
+        live = self.seed()
+        stray = self.root / "governor-268-777.md"
+        shutil.copyfile(episode_path(self.root, live), stray)
+
+        # A naive implementation of EITHER direction simply does not see it...
+        self.assertNotIn("governor-268-777", naive_history_inclusive_forgetting_the_union(self.root))
+        # ...while the file is unmistakably present.
+        self.assertTrue(stray.is_file())
+
+        # Ours refuses, naming the file, rather than answering around it.
+        for kwargs in ({}, {"include_retired": True}):
+            with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                self.q.enumerate_episode_ids(self.root, **kwargs)
+            self.assertIn("governor-268-777.md", str(caught.exception))
+            self.assertIn("malformed store", str(caught.exception))
+
+        # The CLI fails visibly too, rather than printing a short answer with exit 0.
+        self.run_query("enumerate", expect_rc=1)
+        self.assertIn("malformed store", self.last_stderr)
+
+        # And the writer refuses as well — otherwise it would mint governor-268-778 while
+        # a file claiming 777 sat unaccounted for, or worse, re-mint an id the stray
+        # already holds.
+        self.run_delta({"work_id": "post-stray", "ops": [create_op()]}, expect_rc=1)
+
+        # Once the stray is filed where it belongs, everything answers again.
+        shutil.move(str(stray), str(episode_path(self.root, "governor-268-777")))
+        self.assertEqual(
+            self.q.enumerate_episode_ids(self.root), sorted([live, "governor-268-777"])
+        )
+
+    def test_trap3_the_stores_own_readme_is_excluded_deliberately_not_by_accident(self):
+        """`episodes/README.md` already lives at the flat root, so the stray check above
+        would fire on it unless something excludes it. That exclusion is a NAMED
+        allowlist, not a glob shape — the test asserts the mechanism, because an accident
+        that currently works is one rename away from either refusing the whole store or
+        (worse) silently accepting a real stray."""
+        live = self.seed()
+        (self.root / "README.md").write_text("# episodes\n", encoding="utf-8")
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [live])
+
+        # The mechanism itself: the allowlist is what does it.
+        self.assertIn("README.md", self.m.NON_EPISODE_FILENAMES)
+        self.assertEqual(self.m.stray_episode_paths(self.root), [])
+
+        # Remove it from the allowlist and the very same file becomes a stray — proving
+        # the exclusion is coming from the allowlist and nowhere else.
+        original = self.m.NON_EPISODE_FILENAMES
+        self.m.NON_EPISODE_FILENAMES = frozenset()
+        try:
+            self.assertEqual(
+                [p.name for p in self.m.stray_episode_paths(self.root)], ["README.md"]
+            )
+        finally:
+            self.m.NON_EPISODE_FILENAMES = original
+
+    def test_trap4_a_non_episode_file_inside_a_layout_directory_is_refused(self):
+        """The mirror image of trap 3, and the one that actually shipped.
+
+        Trap 3 is an adversarial input: an episode id at a path where no episode belongs.
+        Trap 4 is the direction that was missed — a NON-episode file at a path where the
+        store treats everything as an episode. Membership moved from file content to file
+        location, so a directory listing became the candidate set, and anything sitting in
+        the directory (a README, a `.gitkeep`, a `CODEOWNERS`) is minted into an id that
+        no record backs."""
+        live = self.seed()
+        placeholder = self.root / "active" / "README.md"
+        placeholder.write_text("# active\n", encoding="utf-8")
+
+        # A listing-based implementation promotes the filename to an episode id...
+        self.assertIn("README", naive_layout_listing_as_ids(self.root))
+        # ...and everything built on the candidate set then dies on a record that is not
+        # there, or (with the same name in both directories) on a false half-retirement.
+        for kwargs in ({}, {"include_retired": True}):
+            with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                self.q.enumerate_episode_ids(self.root, **kwargs)
+            self.assertIn("malformed store", str(caught.exception))
+            self.assertIn("active/README.md", str(caught.exception))
+
+        self.run_query("enumerate", expect_rc=1)
+        self.assertIn("malformed store", self.last_stderr)
+        # The writer inherits the refusal through the same seam.
+        self.run_delta({"work_id": "post-placeholder", "ops": [create_op()]}, expect_rc=1)
+
+        placeholder.unlink()
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [live])
+
+    def test_trap6_a_markdown_file_in_a_nested_subdirectory_is_surfaced_not_omitted(self):
+        """Every scan in this store is one level deep, so anything a level further down
+        is invisible to all of them while looking exactly like a stored episode to a
+        human reading the tree. Two shapes, one class:
+
+          episodes/archive/<id>.md      — a directory nobody declared
+          episodes/active/old/<id>.md   — a subdirectory inside a layout directory
+
+        Neither is produced by anything today, which is precisely why it has to be
+        refused now: a hand-moved file, a half-finished migration, or a future tool is
+        what produces one, and by then the omission is silent and already shipped."""
+        live = self.seed()
+        source = episode_path(self.root, live)
+
+        for nested in (
+            self.root / "archive" / "governor-268-777.md",
+            self.root / "active" / "old" / "governor-268-778.md",
+        ):
+            nested.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, nested)
+
+            for kwargs in ({}, {"include_retired": True}):
+                with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                    self.q.enumerate_episode_ids(self.root, **kwargs)
+                self.assertIn("malformed store", str(caught.exception))
+                self.assertIn(nested.name, str(caught.exception))
+            self.run_query("enumerate", expect_rc=1)
+            self.run_delta({"work_id": "nested", "ops": [create_op()]}, expect_rc=1)
+
+            shutil.rmtree(nested.parent)
+            self.assertEqual(self.q.enumerate_episode_ids(self.root), [live])
+
+        # The flat-root allowlist is scoped to the flat root: a README one level down is
+        # not a store file anyone declared, so it is surfaced rather than assumed benign.
+        buried = self.root / "archive" / "README.md"
+        buried.parent.mkdir(parents=True, exist_ok=True)
+        buried.write_text("# archive\n", encoding="utf-8")
+        with self.assertRaises(self.m.EpisodeDeltaError):
+            self.q.enumerate_episode_ids(self.root)
+
+    def test_the_classifier_is_the_stores_id_grammar_not_a_list_of_filenames(self):
+        """The mechanism behind trap 4, asserted directly.
+
+        "Is this file an episode?" is DERIVABLE from the id grammar the store already
+        enforces at create time, so it is derived. A hand-maintained enumeration would
+        have to be edited whenever anyone adds a file and is silent in one direction (a
+        real stray accepted) and store-bricking in the other."""
+        m = self.m
+        for name in (
+            "README.md", "notes.md", "index.md", "CODEOWNERS.md",
+            "governor-268-1.md",       # too few digits to be an id
+            "Governor-268-001.md",     # not kebab-case
+            "governor-268-001.txt",    # not a Markdown record
+            ".gitkeep",                # the shipped placeholder shape
+        ):
+            self.assertIsNone(m.episode_id_for(Path(name)), f"{name} must not be an episode")
+        for name in ("governor-268-001.md", "epic-298-012.md", "a1-000.md"):
+            self.assertEqual(m.episode_id_for(Path(name)), name[: -len(".md")], name)
+
+        # And the flat-root allowlist has NO say inside a layout directory: adding a name
+        # to it cannot make a non-episode `.md` acceptable there.
+        original = m.NON_EPISODE_FILENAMES
+        m.NON_EPISODE_FILENAMES = frozenset({"README.md", "notes.md"})
+        try:
+            (self.root / "active").mkdir(parents=True, exist_ok=True)
+            (self.root / "active" / "notes.md").write_text("x\n", encoding="utf-8")
+            with self.assertRaises(m.EpisodeDeltaError) as caught:
+                self.q.enumerate_episode_ids(self.root)
+            self.assertIn("active/notes.md", str(caught.exception))
+        finally:
+            m.NON_EPISODE_FILENAMES = original
+
+    def test_the_original_trap_a_disputed_episode_is_not_a_retired_one(self):
+        """The fixture that started this whole thread, carried forward. An episode whose
+        core assertion is `disputed` is in a legitimate lifecycle state that is NEITHER
+        active nor retired, and it must still appear in ordinary search — retirement is
+        an episode-level search-visibility switch, `lifecycle-standing` is a per-assertion
+        epistemic judgement, and conflating them is what dropped the record."""
+        disputed = self.seed()
+        self.run_delta(
+            {
+                "work_id": "audit",
+                "ops": [
+                    {
+                        "op": "amend-assertion",
+                        "id": disputed,
+                        "assertion": "a3",
+                        "lifecycle-standing": "disputed",
+                        "history": "disputed 2026-08-05 (reviewer-audit) — re-read the transcript",
+                    }
+                ],
+            }
+        )
+        record = self.q.fetch_episode(disputed, self.root)
+        self.assertEqual(record.agent_supplied["observed-behavior"].lifecycle_standing, "disputed")
+        self.assertEqual(record.status, "active")
+        self.assertIn(disputed, self.q.enumerate_episode_ids(self.root))
+        self.assertTrue(self.m.is_episode_in_ordinary_search(disputed, self.root))
+
+    def test_a_forged_status_line_in_free_text_cannot_move_an_episode_between_sets(self):
+        """Under the rejected Option B this needed a defense (a line-anchored filter, plus
+        the writer's single-line enforcement). Under Option A it is structurally
+        impossible — there is no status parse to fool, because membership is the
+        directory. Asserted rather than assumed, because "structurally impossible" is a
+        claim about the implementation, and implementations change."""
+        forged = "the run kept quoting - status: retired at me from an old transcript"
+        op = create_op()
+        op["agent_supplied"]["observed-behavior"]["statement"] = forged
+        self.run_delta({"work_id": "forge", "ops": [op]})
+        episode_id = "governor-268-001"
+
+        # The forged text really is stored, verbatim, on a line of the file.
+        self.assertIn(forged, read_exact(episode_path(self.root, episode_id)))
+
+        # A content-parsing membership check — what Option B would have had to do —
+        # silently drops this entirely-active episode from ordinary search.
+        self.assertEqual(naive_status_grep_membership(self.root), [])
+        # Ours cannot: it never reads the file to decide.
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [episode_id])
+        self.assertTrue(self.m.is_episode_in_ordinary_search(episode_id, self.root))
+
+
+class AbsentStoreTests(QueryTestCase):
+    """Trap 5 — a store that is not there is REFUSED, never answered as empty.
+
+    `Path.glob` over a missing directory returns nothing, so the naive reading of an
+    absent store root is `count: 0, exit 0` — which is trap 1's own failure description
+    ("an empty candidate set is indistinguishable from 'the store is empty'") arriving
+    through a typo'd `--store-root` instead of through a wrong glob. It matters more
+    after the layout was bound than before it: the store now REQUIRES two subdirectories,
+    and git does not track empty directories, so "the layout never got committed" is a
+    real way to arrive here.
+
+    The writer is the deliberate exception: writing is a creating act, so it bootstraps
+    the layout. Reading is not, so no read seam ever creates anything."""
+
+    def test_a_store_root_that_does_not_exist_is_refused(self):
+        missing = Path(self.tmp.name) / "typo-in-the-store-root"
+        for kwargs in ({}, {"include_retired": True}):
+            with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                self.q.enumerate_episode_ids(missing, **kwargs)
+            # "the root is not there" is its own refusal, distinct from "the root is
+            # there but a layout directory is missing" — asserted by wording, because
+            # otherwise the two guards are indistinguishable and one of them is dead.
+            self.assertIn("is not a directory", str(caught.exception))
+
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            rc = self.q.main(["--store-root", str(missing), "enumerate"])
+        self.assertEqual(rc, 1, out.getvalue())
+        self.assertIn("missing store", err.getvalue())
+        # A fetch against a store that is not there is "there is no store", not "there
+        # is no such episode" — the two are different facts and only one is actionable.
+        with self.assertRaises(self.m.EpisodeDeltaError):
+            self.q.fetch_episode("governor-268-001", missing)
+
+    def test_a_missing_layout_directory_is_refused_rather_than_read_as_empty(self):
+        live = self.seed()
+        archived = self.retire(self.seed(run="admiral-298"))
+        shutil.rmtree(self.root / "active")
+
+        for kwargs in ({}, {"include_retired": True}):
+            with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                self.q.enumerate_episode_ids(self.root, **kwargs)
+            self.assertIn("missing store layout", str(caught.exception))
+            self.assertIn("active", str(caught.exception))
+        self.run_query("enumerate", expect_rc=1)
+        self.assertIn("missing store layout", self.last_stderr)
+        # The archived episode is still physically there; answering "0 episodes" would
+        # have hidden a store that still holds records.
+        self.assertTrue(episode_path(self.root, archived, retired=True).is_file())
+        self.assertNotEqual(live, archived)
+
+    def test_a_reader_never_creates_the_store_it_could_not_find(self):
+        missing = Path(self.tmp.name) / "not-a-store"
+        with self.assertRaises(self.m.EpisodeDeltaError):
+            self.q.enumerate_episode_ids(missing)
+        self.assertFalse(missing.exists(), "a read seam must not create the store")
+
+    def test_the_writer_bootstraps_a_brand_new_store_root(self):
+        """The other half of the rule: a create into a store root that does not exist yet
+        must still work, because that is how a store comes into being at all."""
+        fresh = Path(self.tmp.name) / "brand-new-store"
+        delta_path = Path(self.tmp.name) / "bootstrap-delta.json"
+        delta_path.write_text(
+            json.dumps({"work_id": "bootstrap", "ops": [create_op()]}), encoding="utf-8"
+        )
+        self.assertEqual(
+            self.m.main(["--delta", str(delta_path), "--store-root", str(fresh)]), 0
+        )
+        self.assertTrue((fresh / "active").is_dir())
+        self.assertTrue((fresh / "retired").is_dir())
+        self.assertEqual(self.q.enumerate_episode_ids(fresh), ["governor-268-001"])
+
+
+class ShippedStoreTests(QueryTestCase):
+    """The tests that would have caught the g4 BLOCK, and the reason they did not exist.
+
+    Every other test in this file builds its own store and then reads it. Not one of them
+    read the store this repository actually SHIPS — so `episodes/active/README.md` and
+    `episodes/retired/README.md`, placed by this same gate, made the tracked store
+    unreadable by its own tooling while a green suite said otherwise. Two tests close
+    that gap from both ends: one reproduces the shipped store's real non-episode files in
+    a temp root and drives every primitive over it, and one runs the shipped CLI against
+    the real `episodes/` directory itself."""
+
+    def test_the_shipped_stores_own_placeholders_read_end_to_end(self):
+        copied = copy_store_scaffolding(self.root)
+        self.assertGreater(
+            copied, 0, "the tracked store ships no non-episode files to reproduce"
+        )
+
+        # An empty store ANSWERS "empty" — it does not refuse, and it does not invent an
+        # id out of a placeholder's filename.
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [])
+        self.assertEqual(self.q.enumerate_episode_ids(self.root, include_retired=True), [])
+
+        live = self.seed()
+        archived = self.retire(self.seed(run="admiral-298"))
+
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [live])
+        self.assertEqual(
+            self.q.enumerate_episode_ids(self.root, include_retired=True),
+            sorted([live, archived]),
+        )
+        self.assertEqual(self.run_query("enumerate")["ids"], [live])
+        self.assertEqual(
+            self.run_query("enumerate", "--include-retired")["ids"], sorted([live, archived])
+        )
+        self.assertEqual(self.run_query("fetch", archived)["ids"], [archived])
+        self.assertEqual(
+            self.run_query("select", "--field", "role", "--value", "implementer")["ids"],
+            [live],
+        )
+        self.run_query("neighbours", live)
+        # ...and the writer can still add to it, which is what #305 will need to do.
+        self.run_delta({"work_id": "after", "ops": [create_op(run="reviewer-301")]})
+        self.assertEqual(len(self.q.enumerate_episode_ids(self.root)), 2)
+
+    def test_the_real_tracked_store_is_readable_by_the_tooling_that_ships_with_it(self):
+        """Read-only, against the REAL `episodes/` — no temp store, nothing written.
+
+        This is the one-command check that was missing: does the thing being shipped
+        work? A store whose own placeholders are indistinguishable from episodes fails
+        here in a single line, three roles earlier than it otherwise would."""
+        for extra in ([], ["--include-retired"]):
+            result = subprocess.run(
+                [sys.executable, str(QUERY_SCRIPT), "enumerate", *extra],
+                capture_output=True, text=True, cwd=str(ROOT), timeout=120,
+            )
+            self.assertEqual(
+                result.returncode, 0,
+                f"the shipped store cannot be read by its own tooling:\n{result.stderr}",
+            )
+            envelope = json.loads(result.stdout)
+            # Whatever is in the store, every id it reports is a well-formed episode id
+            # and resolves to a real record — never a phantom minted from a filename.
+            for episode_id in envelope["ids"]:
+                self.assertIsNotNone(
+                    self.m.ID_RE.fullmatch(episode_id),
+                    f"{episode_id!r} is not a well-formed episode id",
+                )
+                self.assertIsNotNone(self.q.fetch_episode(episode_id, ROOT / "episodes"))
+
+
+class ConsolidationCompanionTests(QueryTestCase):
+    """C5 — the #308 companion is not precluded.
+
+    Consolidation is issue #308's job and is deliberately NOT built here. What this gate
+    owes is that the store leaves it possible: with one member of a cluster retired, the
+    surviving members stay findable by ordinary retrieval, and the retired member stays
+    reachable — by id, by history-inclusive scan, and from its own neighbourhood.
+
+    The failure this guards against is subtle. If retiring one member cost the cluster
+    its findability, a consolidation pass would be a one-way door: consolidate once, and
+    the evidence for whether the consolidation was right becomes unreachable."""
+
+    def cluster(self, ref="docs/EPISODE_STORE.md"):
+        """Three episodes joined on a shared artifact-ref — the join key section 6 already
+        privileges, since a shared artifact is shared supporting evidence."""
+        return [self.seed(**{"artifact-ref": [ref, f"unique-{i}.md"]}) for i in range(3)]
+
+    def test_retiring_one_member_leaves_the_rest_findable_ordinarily(self):
+        a, b, c = self.cluster()
+        self.retire(c, reason="consolidated into cluster episode-store-retrieval-1")
+
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), sorted([a, b]))
+        self.assertEqual(
+            self.q.select_episode_ids(self.root, "artifact-ref", ["docs/EPISODE_STORE.md"]),
+            sorted([a, b]),
+        )
+        # ...and they are still each other's neighbours: retiring a third member does not
+        # break the join between the two that remain.
+        self.assertEqual(self.q.neighbour_ids(self.root, a), [b])
+
+    def test_the_retired_member_stays_reachable_three_ways(self):
+        a, b, c = self.cluster()
+        self.retire(c, reason="consolidated into cluster episode-store-retrieval-1")
+
+        # 1. by id — the addressed lookup a `consolidated-into:` cross-reference needs.
+        record = self.q.fetch_episode(c, self.root)
+        self.assertIsNotNone(record)
+        self.assertEqual(record.retired_reason, "consolidated into cluster episode-store-retrieval-1")
+        # 2. by a deliberate history-inclusive scan.
+        self.assertIn(c, self.q.enumerate_episode_ids(self.root, include_retired=True))
+        self.assertIn(
+            c, self.q.select_episode_ids(
+                self.root, "artifact-ref", ["docs/EPISODE_STORE.md"], include_retired=True
+            ),
+        )
+        # 3. from the neighbourhood of a surviving member, when history is asked for.
+        self.assertEqual(self.q.neighbour_ids(self.root, a, include_retired=True), sorted([b, c]))
+
+    def test_walking_back_from_an_archived_member_to_its_live_cluster(self):
+        """The move #308 actually needs: start from a retired episode (the anchor is
+        fetched by id, so retirement does not hide it from itself) and recover the live
+        members it was consolidated with."""
+        a, b, c = self.cluster()
+        self.retire(c)
+        self.assertEqual(self.q.neighbour_ids(self.root, c), sorted([a, b]))
+
+    def test_retiring_every_member_loses_nothing(self):
+        # Retirement is never deletion. A wholly-consolidated cluster is empty to
+        # ordinary search and completely intact in history.
+        cluster = self.cluster()
+        for episode_id in cluster:
+            self.retire(episode_id)
+        self.assertEqual(self.q.enumerate_episode_ids(self.root), [])
+        self.assertEqual(
+            self.q.enumerate_episode_ids(self.root, include_retired=True), sorted(cluster)
+        )
+        for episode_id in cluster:
+            self.assertEqual(len(self.q.fetch_episode(episode_id, self.root).agent_supplied), 5)
+
+
+class SeamContainmentTests(QueryTestCase):
+    """C2 — the ratified layout is bound at the seam set and NOWHERE else.
+
+    Pre-g4 this class read "the layout is held open, so nothing may bind it". The
+    decision is now bound, and the identical assertions carry a different but equally
+    load-bearing obligation: the binding lives in exactly ONE place. A retrieval call
+    site that inlines `episodes/active/...`, or greps for a `status: retired` line,
+    re-scatters the layout across the codebase — and it is precisely that inlining that
+    would have turned "bind the layout at g4" into a retrieval rewrite instead of a
+    four-adapter swap. The proof that it did not is that these bans still hold with the
+    decision bound and retirement-dependent retrieval shipped."""
 
     def test_query_module_inlines_no_status_check_and_no_directory_check(self):
         source = QUERY_SCRIPT.read_text(encoding="utf-8")
-        # Strip comments and docstrings: the module DISCUSSES retirement at length (it
-        # documents what g4 must do), and a naive grep over prose would either fire on
-        # the documentation or, worse, be quietly relaxed until it stopped firing.
+        # Strip comments and docstrings: the module DISCUSSES retirement at length, and
+        # a naive grep over prose would either fire on the documentation or, worse, be
+        # quietly relaxed until it stopped firing.
         code = "".join(
             line.split("#", 1)[0]
             for line in source.splitlines(keepends=True)
@@ -1585,11 +2601,11 @@ class LayoutIndependenceTests(QueryTestCase):
         code = re.sub(r'"""[\s\S]*?"""', "", code)
 
         # What is banned is the PREDICATE, not the word. Serializing the record's own
-        # `retired-reason` field is data (and is layout-invariant — section 7 keeps the
-        # same field diff under both options); comparing against the bare value
-        # "retired", or naming an active/ or retired/ directory, is the layout check
-        # that must live behind a seam. So the assertions target the exact literals a
-        # status check or a directory check would have to use.
+        # `retired-reason` field is data (the field diff is layout-invariant — section 7
+        # keeps it under either option); comparing against the bare value "retired", or
+        # naming an active/ or retired/ directory, is the layout check that must live
+        # behind a seam. So the assertions target the exact literals a status check or a
+        # directory check would have to use.
         # (assertTrue with a short message, not assertNotIn, so a failure names the
         # offending construct instead of dumping the whole module.)
         for banned in ('"retired"', "'retired'", '"active"', "'active'", "active/", "retired/"):
@@ -1597,8 +2613,9 @@ class LayoutIndependenceTests(QueryTestCase):
                 banned not in code,
                 f"layout check inlined in query_episodes.py: found {banned}",
             )
-        # Branching on status is the Option-B adapter's job, behind the membership
-        # seam. Reading .status to SERIALIZE it is data, and layout-invariant.
+        # Branching on status was the REJECTED Option-B adapter's job. With Option A
+        # bound there is no legitimate reason for retrieval to branch on it at all —
+        # membership is a directory fact. Reading .status to SERIALIZE it is data.
         branch = re.search(r"\.status\s*(==|!=|\bin\b)|if[^\n]*\.status", code)
         self.assertIsNone(branch, f"episode status branched on here: {branch.group(0) if branch else ''}")
         self.assertTrue(".glob(" not in code, "store scanning must go through iter_episode_ids()")
@@ -1606,45 +2623,101 @@ class LayoutIndependenceTests(QueryTestCase):
         for seam in ("resolve_episode_path", "iter_episode_ids", "parse_episode"):
             self.assertTrue(seam in code, f"{seam} seam not called")
 
-    def test_retrieval_survives_flipping_the_layout_adapter(self):
-        """The real proof that nothing is bound: run the identical retrieval under BOTH
-        candidate adapters. Option A stores episodes under active/ and retired/; Option
-        B keeps them flat. The primitives are told neither — they ask the seams — so the
-        same queries must return the same answers under both."""
-        results = {}
-        for adapter in (self.m._LAYOUT_OPTION_B, self.m._LAYOUT_OPTION_A):
-            original = self.m._LAYOUT_ADAPTER
-            self.m._LAYOUT_ADAPTER = adapter
-            root = Path(self.tmp.name) / f"store-{adapter}"
-            try:
-                op = create_op()
-                op["mechanical"]["artifact-ref"] = ["shared.md", "other.md"]
-                delta_path = Path(self.tmp.name) / f"d-{adapter}.json"
-                delta_path.write_text(json.dumps({"work_id": "o", "ops": [op]}), encoding="utf-8")
-                self.assertEqual(
-                    self.m.main(["--delta", str(delta_path), "--store-root", str(root)]), 0
+    def test_retrieval_reaches_the_layout_only_through_the_seams(self):
+        """The direct proof that the binding is contained: move the layout by replacing
+        the SEAMS ONLY — no source edit, no adapter switch — and retrieval follows it.
+
+        This is the successor to the pre-g4 test that flipped `_LAYOUT_ADAPTER` between
+        two candidate adapters. That switch is gone with the decision it existed for, but
+        the property it was proving is not: if any retrieval primitive had inlined the
+        real directory names, substituting the seams below would leave it reading the
+        wrong place and the assertions would fail.
+        """
+        root = Path(self.tmp.name) / "seam-store"
+        op = create_op()
+        op["mechanical"]["artifact-ref"] = ["shared.md", "other.md"]
+        delta_path = Path(self.tmp.name) / "seam-delta.json"
+        delta_path.write_text(json.dumps({"work_id": "o", "ops": [op]}), encoding="utf-8")
+        self.assertEqual(self.m.main(["--delta", str(delta_path), "--store-root", str(root)]), 0)
+        episode_id = self.q.enumerate_episode_ids(root)[0]
+
+        # Relocate the whole store under a directory neither seam-free code nor the
+        # ratified layout knows about, and re-point ONLY the seams at it.
+        moved = Path(self.tmp.name) / "somewhere-else"
+        moved.mkdir()
+        shutil.move(str(root / "active"), str(moved / "live"))
+
+        originals = {
+            name: getattr(self.m, name)
+            for name in ("iter_episode_ids", "resolve_episode_path", "is_episode_in_ordinary_search")
+        }
+        self.m.iter_episode_ids = lambda r, include_retired: sorted(
+            p.stem for p in (moved / "live").glob("*.md")
+        )
+        self.m.resolve_episode_path = lambda eid, r: (
+            (moved / "live" / f"{eid}.md") if (moved / "live" / f"{eid}.md").exists() else None
+        )
+        self.m.is_episode_in_ordinary_search = lambda eid, r: (
+            moved / "live" / f"{eid}.md"
+        ).exists()
+        try:
+            self.assertEqual(self.q.enumerate_episode_ids(root), [episode_id])
+            self.assertEqual(self.q.fetch_episode(episode_id, root).role, "implementer")
+            self.assertEqual(
+                self.q.select_episode_ids(root, "artifact-ref", ["shared.md"]), [episode_id]
+            )
+            self.assertEqual(self.q.neighbour_ids(root, episode_id), [])
+        finally:
+            for name, original in originals.items():
+                setattr(self.m, name, original)
+
+    def test_the_writer_names_the_directories_only_inside_the_seam_block(self):
+        """C2's other half. query_episodes.py may not name the directories at all; the
+        writer must — it is where the seams live — but only THERE. A path, glob, or move
+        that escaped into an op handler or the transaction would re-scatter the layout,
+        which is exactly what the seam table exists to prevent.
+
+        The record-grammar uses of the same two words are excluded by EXACT LINE, not by
+        a loosened pattern: `lifecycle-standing: active` and an episode's default `status`
+        are data that happen to share a vocabulary with the layout, and letting this check
+        drift into accepting them by shape would let a real inlined path through with
+        them."""
+        source = WRITER_SCRIPT.read_text(encoding="utf-8")
+        seam_start = source.index("# --- seams (EPISODE_STORE.md section 7's seam table)")
+        seam_end = source.index("# --- id assignment (EPISODE_STORE.md section 2)")
+        outside = source[:seam_start] + source[seam_end:]
+        code = re.sub(
+            r'"""[\s\S]*?"""',
+            "",
+            "".join(line.split("#", 1)[0] for line in outside.splitlines(keepends=True)),
+        )
+
+        grammar = (
+            'LIFECYCLE_STANDINGS = ("active", "disputed", "superseded", "rejected")',
+            'status: str = "active"',
+            'lifecycle_standing="active",',
+            '''"'active' and is never set here)"''',
+        )
+        banned = ('"active"', "'active'", '"retired"', "'retired'", "active/", "retired/",
+                  "ACTIVE_DIR", "RETIRED_DIR")
+        for line in code.splitlines():
+            stripped = line.strip()
+            if not stripped or any(ok in stripped for ok in grammar):
+                continue
+            for token in banned:
+                self.assertNotIn(
+                    token, stripped, f"layout literal {token} outside the seam block: {stripped}"
                 )
-                episode_id = self.q.enumerate_episode_ids(root)[0]
-                results[adapter] = {
-                    "ids": self.q.enumerate_episode_ids(root),
-                    "fetched": self.q.fetch_episode(episode_id, root).role,
-                    "selected": self.q.select_episode_ids(root, "artifact-ref", ["shared.md"]),
-                    "neighbours": self.q.neighbour_ids(root, episode_id),
-                }
-            finally:
-                self.m._LAYOUT_ADAPTER = original
+        # ...and the seam block really is where they live, so the exclusion above is not
+        # vacuously true because the module simply stopped naming them anywhere.
+        inside = source[seam_start:seam_end]
+        for token in ("ACTIVE_DIR", "RETIRED_DIR"):
+            self.assertIn(token, inside)
 
-        # Option A really did use a different on-disk layout...
-        self.assertTrue((Path(self.tmp.name) / "store-A" / "active").is_dir())
-        self.assertFalse((Path(self.tmp.name) / "store-B" / "active").exists())
-        # ...and retrieval could not tell.
-        self.assertEqual(results["A"], results["B"])
-
-    def test_the_membership_seam_is_left_for_g4_and_still_answers(self):
-        # Not called by any primitive here (no retirement-dependent retrieval is built
-        # at this gate), but named so g4's composition rule — scan with
-        # iter_episode_ids(), then confirm each id through is_episode_in_ordinary_search()
-        # — has both halves present and working when it is wired up.
+    def test_the_membership_seam_answers_for_both_sets(self):
+        # g4's composition rule — scan with iter_episode_ids(), then confirm each id
+        # through is_episode_in_ordinary_search() — needs both halves present and
+        # working. They are now wired up by the retirement-dependent primitives.
         episode_id = self.seed()
         self.assertTrue(self.m.is_episode_in_ordinary_search(episode_id, self.root))
         self.assertFalse(self.m.is_episode_in_ordinary_search("governor-268-999", self.root))

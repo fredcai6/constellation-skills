@@ -30,22 +30,44 @@ tests/test_episode_store.py:
      is what makes a typo'd field name a visible failure instead of a silent "no
      episodes matched".
 
-Layout independence (EPISODE_STORE.md section 7). The retirement layout — file-move
-(Option A) vs status-field-in-place (Option B) — is HELD OPEN for human ratification and
-is bound at gate g4. Nothing here may assume either answer, and that has to be true of
-this code, not merely of a function's name. So:
+Retirement (EPISODE_STORE.md section 7, ratified at gate g4). Retiring an episode MOVES
+its file out of the ordinary-search set and into the archive. The ruling's second half —
+"prefer to keep files clean of history unless they're historical; archives are available
+strats" — is a design principle this module implements literally:
 
-  * every path resolution goes through resolve_episode_path(), every store scan through
-    iter_episode_ids() — both g2's seams (scripts/apply_episode_delta.py). This module
-    inlines no path, no glob, and no grep;
-  * this module deliberately builds NO retirement-dependent variant. "Enumerate the
-    ordinary-search set" and "enumerate history-inclusively" are gate g4's, after the
-    layout is ratified. When they are built, section 7's composition rule is the
-    recipe — scan with iter_episode_ids(), then confirm each id through
-    is_episode_in_ordinary_search(), always both steps, never one folded into the
-    other — and neither may inline a status check or a directory check at the call
-    site. That is precisely the inlining that would turn "bind the layout at g4" into a
-    retrieval rewrite instead of a four-line adapter swap.
+  * **the archive is opt-in, never opt-out.** Ordinary retrieval scans the ordinary set
+    and never touches the archive, so it is not a second live search space that every
+    query has to remember to exclude. Every scanning primitive takes `include_retired`,
+    defaulting to False; history-inclusive retrieval is a deliberate, separate act.
+    A default that included the archive would make every future caller's *omission* of a
+    filter a silent correctness bug — the exact failure class this module exists against;
+  * **fetch-by-id is exempt, on purpose.** An addressed lookup by name is not a search;
+    retirement excludes an episode from search, never from retrieval by name. A
+    cross-reference (`consolidated-into:`, `superseded-by:`) would dangle otherwise.
+
+Store-level refusals. A store that is ABSENT (a typo'd --store-root, or a layout that was
+never committed), MALFORMED (a Markdown file outside the two layout directories, or one
+inside them whose name is not a well-formed episode id), or HALF-RETIRED (an id in both
+directories) is refused by every primitive here, with an exit code, rather than answered.
+Each of those would otherwise produce a plausible wrong answer — most often `count: 0`,
+which reads exactly like an empty store. The refusals live in the writer's seams, so
+retrieval inherits them instead of restating them.
+
+Layout containment. Every path resolution goes through resolve_episode_path(), every
+store scan through iter_episode_ids(), every membership question through
+is_episode_in_ordinary_search() — all three are the writer's seams
+(scripts/apply_episode_delta.py). This module inlines no path, no glob, and no grep, and
+tests/test_episode_store.py asserts it: with the layout bound, the containment is what
+keeps the binding in one place instead of scattered across call sites.
+
+Section 7's composition rule for the ordinary set — scan with
+iter_episode_ids(include_retired=False), then confirm each returned id through
+is_episode_in_ordinary_search(), always both steps, never one folded into the other — is
+followed here. Under the bound layout the second step cannot subtract anything from the
+first, so it is kept for a different reason than the one that introduced it: the scan and
+the membership predicate are two INDEPENDENT seams, and a change that updated only one of
+them is caught here. Their disagreement is therefore raised, never silently dropped —
+dropping is how a candidate set gets quietly shorter.
 
 Newline handling (Windows hazard): every read passes newline="" so a stored \r\n is
 never silently folded to \n, exactly as the writer does. Retrieval must see the bytes
@@ -144,20 +166,65 @@ def fetch_episode(episode_id: str, root: Path):
 # --- primitive 2: enumerate ----------------------------------------------------------
 
 
-def enumerate_episode_ids(root: Path) -> list[str]:
-    """Every episode id in the store, id-sorted for determinism.
-
-    Scans through the iter_episode_ids() seam (section 7) and applies no retirement
-    filter of its own: the ordinary-search-restricted and history-inclusive variants
-    are gate g4's, per this module's docstring. Under the placeholder adapter currently
-    bound, iter_episode_ids' include_retired argument does not change this answer."""
-    return sorted(writer().iter_episode_ids(root, include_retired=True))
+class HalfRetiredStore(QueryError):
+    """The base scan and the membership predicate disagree about one id. Under the bound
+    layout they are two reads of the same filesystem fact, so a disagreement means the
+    store is mid-move (an interrupted retirement) or the two seams have drifted apart.
+    Either way it is reported, never resolved by dropping the id — a candidate set that
+    quietly loses a record is the one outcome this module refuses."""
 
 
-def enumerate_episodes(root: Path) -> list:
-    """Every episode in the store as parsed records, id-sorted. The candidate set every
-    other scanning primitive is built from."""
-    return [ep for ep in (fetch_episode(eid, root) for eid in enumerate_episode_ids(root)) if ep is not None]
+def enumerate_episode_ids(root: Path, include_retired: bool = False) -> list[str]:
+    """Every episode id in the ordinary rhyme-search set, id-sorted for determinism.
+    Pass `include_retired=True` for the history-inclusive set — the archive is reached
+    deliberately or not at all.
+
+    Ordinary enumeration follows section 7's composition rule exactly: scan through the
+    iter_episode_ids() seam, then confirm each returned id through the
+    is_episode_in_ordinary_search() seam. Both steps, always, and a disagreement between
+    them raises rather than silently shortening the answer.
+
+    History-inclusive enumeration is the union of both sets and takes NO membership
+    filter — filtering here would re-exclude exactly what the caller asked to see, which
+    is the "forgot the union" trap arriving from the other direction."""
+    scanned = sorted(writer().iter_episode_ids(root, include_retired=include_retired))
+    if include_retired:
+        return scanned
+    denied = [eid for eid in scanned if not writer().is_episode_in_ordinary_search(eid, root)]
+    if denied:
+        raise HalfRetiredStore(
+            "the base scan returned "
+            + ", ".join(denied)
+            + " but the membership predicate denies them — the store is mid-move or the "
+            "two seams have drifted apart. Refusing to answer rather than returning a "
+            "candidate set that is silently short."
+        )
+    return scanned
+
+
+def enumerate_episodes(root: Path, include_retired: bool = False) -> list:
+    """Every episode in the ordinary set as parsed records, id-sorted — or the
+    history-inclusive set when asked. The candidate set every other scanning primitive is
+    built from.
+
+    An id that the scan returned but fetch cannot resolve RAISES. It is the same rule as
+    the composition check above, one layer out: an earlier version dropped such an id with
+    an `if ep is not None`, which is a candidate set getting quietly shorter between two
+    lines of the same function — exactly the outcome this module exists to refuse. The
+    condition means the store changed underneath the scan, or the enumeration and
+    resolution seams disagree; both are facts a caller needs, and neither is "no match"."""
+    episodes = []
+    for episode_id in enumerate_episode_ids(root, include_retired=include_retired):
+        episode = fetch_episode(episode_id, root)
+        if episode is None:
+            raise QueryError(
+                f"{episode_id} was returned by the store scan but no longer resolves to "
+                "a file — the store changed underneath this query, or the enumeration "
+                "and path-resolution seams disagree. Refusing to answer rather than "
+                "returning a candidate set that is silently one record short."
+            )
+        episodes.append(episode)
+    return episodes
 
 
 # --- field reading: the one place a field name becomes values ------------------------
@@ -185,6 +252,22 @@ _FIELD_READERS = {
 SELECTABLE_FIELDS = tuple(sorted(_FIELD_READERS))
 
 
+def _selectable_field_reader(field: str):
+    """The one place a field name is checked and the one place the refusal is worded.
+
+    Both `field_values()` (which reads a field off one episode) and `select_episodes()`
+    (which validates the caller's field before scanning anything) have to reject an
+    unknown name, and they used to carry the same sentence twice — two copies of a
+    contract that must not drift, since "your field name is wrong" has to read identically
+    whether the caller arrived through the CLI or through the API."""
+    reader = _FIELD_READERS.get(field)
+    if reader is None:
+        raise QueryError(
+            f"{field!r} is not a selectable field (selectable: {', '.join(SELECTABLE_FIELDS)})"
+        )
+    return reader
+
+
 def field_values(episode, field: str) -> list[str]:
     """Every value an episode carries for `field`, as strings — one element for a
     scalar, N for a repeated field like artifact-ref, zero if the episode carries none.
@@ -194,21 +277,17 @@ def field_values(episode, field: str) -> list[str]:
     field name RAISES: returning [] instead would make a typo indistinguishable from a
     genuine no-match, which is the silent-omission failure mode wearing a different
     hat."""
-    reader = _FIELD_READERS.get(field)
-    if reader is None:
-        raise QueryError(
-            f"{field!r} is not a selectable field (selectable: {', '.join(SELECTABLE_FIELDS)})"
-        )
-    return reader(episode)
+    return _selectable_field_reader(field)(episode)
 
 
 # --- primitive 3: select by exact field value / set membership ------------------------
 
 
-def select_episodes(root: Path, field: str, values) -> list:
+def select_episodes(root: Path, field: str, values, include_retired: bool = False) -> list:
     """Every episode whose `field` carries at least one of `values` — exact match, set
     membership. Nothing is ranked and nothing is scored; the answer is a complete,
-    unordered candidate set, returned id-sorted only for determinism.
+    unordered candidate set, returned id-sorted only for determinism. Restricted to the
+    ordinary-search set unless `include_retired` deliberately asks for the archive too.
 
     Matching compares whole parsed values with ==. It never searches the file text, so
     it can neither over-return on a prefix nor under-return on an unanchored line
@@ -232,19 +311,19 @@ def select_episodes(root: Path, field: str, values) -> list:
     wanted = set(values)
     if not wanted:
         raise QueryError("select requires at least one value to match")
-    if field not in _FIELD_READERS:
-        raise QueryError(
-            f"{field!r} is not a selectable field (selectable: {', '.join(SELECTABLE_FIELDS)})"
-        )
+    _selectable_field_reader(field)
     matched = []
-    for episode in enumerate_episodes(root):
+    for episode in enumerate_episodes(root, include_retired=include_retired):
         if wanted & set(field_values(episode, field)):
             matched.append(episode)
     return matched
 
 
-def select_episode_ids(root: Path, field: str, values) -> list[str]:
-    return [ep.episode_id for ep in select_episodes(root, field, values)]
+def select_episode_ids(root: Path, field: str, values, include_retired: bool = False) -> list[str]:
+    return [
+        ep.episode_id
+        for ep in select_episodes(root, field, values, include_retired=include_retired)
+    ]
 
 
 # --- primitive 4: enumerate neighbours -----------------------------------------------
@@ -286,7 +365,7 @@ def _join_key_values(episode) -> set[tuple[str, str]]:
     return keys
 
 
-def neighbours(root: Path, episode_id: str) -> list:
+def neighbours(root: Path, episode_id: str, include_retired: bool = False) -> list:
     """Every OTHER episode sharing at least one exact join key with `episode_id`.
 
     Complete by construction (a union over all of JOIN_KEYS), unranked (id-sorted for
@@ -294,20 +373,27 @@ def neighbours(root: Path, episode_id: str) -> list:
     one; counting shared keys would be scoring, which section 8 forbids), and self
     excluded. An unknown episode id raises rather than returning an empty
     neighbourhood: "this episode has no neighbours" and "there is no such episode" are
-    different answers."""
+    different answers.
+
+    The NEIGHBOURHOOD is the ordinary set unless `include_retired` asks otherwise; the
+    ANCHOR is fetched by id, so an already-retired episode's surviving neighbours are
+    still reachable — which is what #308's consolidation pass needs in order to walk back
+    from an archived member of a cluster."""
     anchor = fetch_episode(episode_id, root)
     if anchor is None:
         raise EpisodeNotFound(f"no such episode: {episode_id}")
     anchor_keys = _join_key_values(anchor)
     return [
         episode
-        for episode in enumerate_episodes(root)
+        for episode in enumerate_episodes(root, include_retired=include_retired)
         if episode.episode_id != episode_id and (anchor_keys & _join_key_values(episode))
     ]
 
 
-def neighbour_ids(root: Path, episode_id: str) -> list[str]:
-    return [ep.episode_id for ep in neighbours(root, episode_id)]
+def neighbour_ids(root: Path, episode_id: str, include_retired: bool = False) -> list[str]:
+    return [
+        ep.episode_id for ep in neighbours(root, episode_id, include_retired=include_retired)
+    ]
 
 
 # --- serialization -------------------------------------------------------------------
@@ -359,14 +445,20 @@ def episode_to_dict(episode) -> dict:
     }
 
 
-def _envelope(query: str, root: Path, episodes: list) -> dict:
+def _envelope(query: str, root: Path, episodes: list, include_retired: bool) -> dict:
     """The CLI's answer shape. `pid` names the OS process that produced this answer —
     provenance, and the thing that makes a cross-SESSION retrieval exercise able to
-    prove it really crossed a process boundary instead of calling a function twice."""
+    prove it really crossed a process boundary instead of calling a function twice.
+
+    `include_retired` states which universe the answer came from. Without it a caller
+    could mistake an archive-excluding answer for a complete one — a silent omission that
+    happens at the consumer's end rather than this module's, and is no less silent for
+    it."""
     return {
         "query": query,
         "store_root": str(root),
         "pid": os.getpid(),
+        "include_retired": include_retired,
         "count": len(episodes),
         "ids": [ep.episode_id for ep in episodes],
         "results": [episode_to_dict(ep) for ep in episodes],
@@ -390,13 +482,32 @@ def main(argv: list[str] | None = None) -> int:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    fetch_parser = sub.add_parser("fetch", help="fetch one episode by id")
+    # The archive flag, attached to every SCANNING subcommand and to none other. Not a
+    # top-level option: making it global would silently offer it on `fetch`, where it has
+    # no meaning (a lookup by id already reaches the archive) and would imply, wrongly,
+    # that fetch's default hides something.
+    def add_archive_flag(p):
+        p.add_argument(
+            "--include-retired",
+            action="store_true",
+            help=(
+                "also scan the archive of retired episodes. Off by default: retirement "
+                "means excluded from ordinary search, retained in history, so reaching "
+                "into history is a deliberate act"
+            ),
+        )
+        return p
+
+    fetch_parser = sub.add_parser(
+        "fetch",
+        help="fetch one episode by id (finds retired episodes too — a lookup is not a search)",
+    )
     fetch_parser.add_argument("episode_id")
 
-    sub.add_parser("enumerate", help="enumerate every episode in the store")
+    add_archive_flag(sub.add_parser("enumerate", help="enumerate every episode in the store"))
 
-    select_parser = sub.add_parser(
-        "select", help="select episodes by exact field value / set membership"
+    select_parser = add_archive_flag(
+        sub.add_parser("select", help="select episodes by exact field value / set membership")
     )
     # Deliberately NOT argparse `choices`: an unknown field must come back as this
     # module's own QueryError (exit 1, naming the selectable fields) rather than
@@ -411,13 +522,16 @@ def main(argv: list[str] | None = None) -> int:
         help="repeat for set membership: match any episode carrying ANY of these values",
     )
 
-    neighbours_parser = sub.add_parser(
-        "neighbours", help="every other episode sharing an exact join key with this one"
+    neighbours_parser = add_archive_flag(
+        sub.add_parser(
+            "neighbours", help="every other episode sharing an exact join key with this one"
+        )
     )
     neighbours_parser.add_argument("episode_id")
 
     args = parser.parse_args(argv)
     root = args.store_root if args.store_root is not None else store_root()
+    include_retired = getattr(args, "include_retired", False)
 
     try:
         if args.command == "fetch":
@@ -427,11 +541,13 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             episodes = [episode]
         elif args.command == "select":
-            episodes = select_episodes(root, args.field, args.values)
+            episodes = select_episodes(
+                root, args.field, args.values, include_retired=include_retired
+            )
         elif args.command == "neighbours":
-            episodes = neighbours(root, args.episode_id)
+            episodes = neighbours(root, args.episode_id, include_retired=include_retired)
         else:
-            episodes = enumerate_episodes(root)
+            episodes = enumerate_episodes(root, include_retired=include_retired)
     except EpisodeNotFound as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -439,10 +555,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except writer().EpisodeDeltaError as exc:
-        print(f"error: corrupt store: {exc}", file=sys.stderr)
+        # No prefix: every store-level refusal already names its own condition ("missing
+        # store", "missing store layout", "malformed store", "half-retired store"), and a
+        # blanket "corrupt store:" in front of them was wrong for the one that means the
+        # store is not there at all.
+        print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    print(json.dumps(_envelope(args.command, root, episodes), indent=2, sort_keys=False))
+    print(
+        json.dumps(
+            _envelope(args.command, root, episodes, include_retired),
+            indent=2,
+            sort_keys=False,
+        )
+    )
     return 0
 
 
