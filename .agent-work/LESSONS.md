@@ -1,6 +1,6 @@
 # Lessons Inbox
 
-<!-- playbook-state: run-tick=38 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303 -->
+<!-- playbook-state: run-tick=39 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299 -->
 
 Transitory inbox for between-audit workflow signal — **not** a playbook, and not a
 permanent home for any rule. Read the Active section at the Commander context step
@@ -37,7 +37,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-18 (epic-178)
 - last-confirmed: 2026-07-19 (epic-198-burndown)
-- runs-since-confirmed: 7
+- runs-since-confirmed: 8
 - history: confirmed 2026-07-19 (epic-198-burndown) — ADMIRAL_LOG PR#204 merge entry: #130 real-process-death test applied the concurrency-failsafe pattern again (kills a REAL runner process, concurrency-failsafe applied) on a new concurrent-I/O test — the lesson held and was needed a second time this epic.
 
 ### lesson:verify-launch-order-claims-against-code
@@ -46,18 +46,19 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - statement: A delegated commander must verify a launch order's NAMED defect/sub-fix against the current code (grep the named symbol/token) BEFORE planning, AND verify that any named EDIT TARGET (a section heading, file path, or anchor) actually exists at the named address — a headline mechanism already shipped becomes an honest-null, and a named-but-nonexistent edit target is a naming slip, not a build task. Recurred across two epics: 152/154 (mechanism-already-shipped, unnamed-sibling-token-pair); epic-226 wt-227 (mechanism-already-shipped, twice); epic-226 wt-230 (named edit target 'the Decision Anchors section of commander-core.md' does not exist under that name).
 - grounding: staged-feedback/152-engine-verbs/lessons-delta.json (delegated-verify-subfix-against-code) + staged-feedback/154-init-placeholder/lessons-delta.json (verify-launch-order-defect-against-code-before-planning, which itself cites 152 as data point 1)
 - bank-reason: Two data points this epic (waves 2 and 2B). Re-observe on a third delegated run whether launch-order baselines routinely overstate to-build work before promoting to a standing delegated-commander doctrine line.
-- mentions: 7
-- confirmed: 4
+- mentions: 8
+- confirmed: 5
 - disconfirmed: 0
 - status: active
 - added: 2026-07-19 (epic-198-burndown)
-- last-confirmed: 2026-08-01 (300)
-- runs-since-confirmed: 0
+- last-confirmed: 2026-08-01 (299)
+- runs-since-confirmed: 1
 - history: confirmed 2026-07-24 (epic-226-lessons-audit) — .agent-work/epic-226/verdicts/commander-227.md section 1 (item 1's imperative-elision and INV-2 purity halves already shipped at HEAD, caught by grep-before-plan)
 - history: confirmed 2026-07-24 (epic-226-lessons-audit) — .agent-work/epic-226/verdicts/commander-230.md 'Workflow feedback' point 1 — third data point, NEW failure mode: the launch order named 'the Decision Anchors section of commander-core.md', which does not exist under that name.
 - history: amended 2026-07-24 (epic-226-lessons-audit) — epic-226 wt-230's widening proposal (.agent-work/harvest-226/230/lessons-delta.json op confirm, field proposed-widening), corroborated by wt-227's confirm of the original mechanism-check half in the same wave. (was: A delegated commander must verify a launch order's NAMED defect/sub-fix against the current code (grep the named symbol/token) BEFORE planning — a headline mechanism already shipped becomes an honest-null, and the real live recurrence may be a different, unnamed sibling the prior fix never touched. Recurred across this epic: 152 heartbeat-on-mutate was already in #32 (honest-null caught by reconciling baseline vs code); 154's <epic-id> framing was already fixed by #173 while the real live defect was an unnamed token pair (<admiral-skill-dir>/<admiral-session-id>) found only by grepping the resolver vocabulary against shipped spine templates.)
 - history: confirmed 2026-08-01 (301) — .agent-work/301/evidence/problem-statement.md 'Baseline verified against code': grep -ril for episode/stratum/rhyme returned ZERO hits before planning, settling the already-shipped question as fact. Negative result (premise held), but the check is what made it known rather than assumed.
 - history: confirmed 2026-08-01 (300) — .agent-work/300/PROBLEM_STATEMENT.md section 'Baseline verified against code before planning': LAUNCH_ORDER-300 and the confirmed spec both describe 'the spine's existing gate-note loading' as the partially-grounded starting point to extend. Grepping first showed the grounding covers deterministic SELECTION only (engine `current` = render_human(state(cl)), spine-keyed, contract-versioned) and that ASSEMBLY does not exist at all -- canonical Markdown is named only inside imperative prose and opened by hand. Fourth data point, and a THIRD distinct failure mode alongside mechanism-already-shipped and named-but-nonexistent-edit-target: here the named baseline exists but is materially WEAKER than the order's framing implies, which would have produced an extension gate against a mechanism that was never there. Spec assumption 5 is correspondingly weaker than it reads.
+- history: confirmed 2026-08-01 (299) — .agent-work/299/PROBLEM_STATEMENT.md 'Baseline verified against code before planning' + BASELINE_RECORD.md section 'What this arm is'. FIFTH data point, and a FOURTH distinct failure mode: not mechanism-already-shipped, not named-but-nonexistent-target, not weaker-than-framed, but a settled/human pre-ruling whose LABEL is contradicted by the corpus itself. f1Brainz CLAUDE.md:7 already names docs/architecture/index.md as the canonical entrypoint, so the order's 'no canonical entrypoint' arm label is false and what the epic is actually testing is a contract, not an entrypoint. Also corrected: corpus size 5928 -> 6435, and the ruling's stated evidence (both docs/architecture mentions in commander doctrine are the absent-map fallback at reconcile, not an instruction to read a map).
 
 ### lesson:observe-midprocess-state-not-via-end-output
 - scope: handoff
@@ -71,7 +72,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-19 (epic-198-burndown)
 - last-confirmed: none
-- runs-since-confirmed: 7
+- runs-since-confirmed: 8
 
 ### lesson:verify-harness-field-and-drive-real-writer
 - scope: project
@@ -85,7 +86,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-19 (epic-198-burndown)
 - last-confirmed: 2026-07-27 (governor-268)
-- runs-since-confirmed: 3
+- runs-since-confirmed: 4
 - history: confirmed 2026-07-24 (epic-226-lessons-audit) — .agent-work/harvest-226/227/lessons-delta.json op confirm (INV-1 oracle hand-authored against verb bodies, not argparse-derived, avoiding self-confirmation)
 - history: confirmed 2026-07-24 (epic-226-lessons-audit) — .agent-work/harvest-226/232/lessons-delta.json op confirm (g2's regression test drives the real post-fix _write_meta to produce an actual meta.json, then truncates real bytes, independently reproduced by the reviewer in an isolated scratch tree)
 - history: confirmed 2026-07-27 (governor-261) — notes-261.md 'Empirical finding' section: docs confirmed cwd is present on every hook event, but a real (non-fixture) reproduction showed the field's SCOPE was wrong -- session-lifetime-fixed, not per-call-live -- for a Commander-in-worktree dispatch. Presence and liveness turned out to be different questions; verifying presence alone would have shipped a design (cwd-routing, considered and rejected mid-run per the Admiral's own ruling) that was a provable no-op. Two isolated real claim calls (one with no cd prefix, pwd-confirmed) established this, not a fixture.
@@ -104,7 +105,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-24 (epic-226-lessons-audit)
 - last-confirmed: 2026-08-01 (300)
-- runs-since-confirmed: 0
+- runs-since-confirmed: 1
 - history: confirmed 2026-07-24 (epic-226-lessons-audit) — .agent-work/epic-226/verdicts/commander-227.md 'crew-reported friction' g3-reviewer round-3 entry: Inv3ExclusionCheck claimed totality on the excluded-verb set while exercising only 4 of 10, surviving rounds 1-2 of the same rework loop hunting exactly this class of defect
 - history: confirmed 2026-08-01 (301) — Held twice, each time catching a real silent-wrong-answer that a green suite hid. g2: the line-boundary guard rejected only backslash-n and backslash-r while parse_episode() uses str.splitlines(), so a U+2028 value passed validation, forged the exact status line the guard existed to prevent, and silently truncated the record — found only because the reviewer was told to AUTHOR adversarial inputs rather than re-run the suite. g3: select_episodes() did set(values), so a bare string degraded to character membership and the most natural caller idiom returned the wrong episode.
 - history: confirmed 2026-08-01 (300) — .agent-work/300/PLAN_CRITIC_DISPOSITION.md finding S7 plus .agent-work/300/execute.json g2-implement.c3: the candidate plan had promoted a same-tree regenerate-and-compare round trip to a HARD postcondition while the discriminating cross-environment check was a `check: null` self-attestation -- check strength inverted against the plan's own stated evidence hierarchy, in a plan whose constraints array already quoted this very lesson. Third instance and a NEW failure mode: not a round-trip test that fails to catch a bug, but a round-trip test promoted ABOVE the discriminating evidence in the same plan that cites the lesson. Fixed by restating c3 as necessary-not-sufficient and making the cross-environment check mechanical.
@@ -122,7 +123,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: exported
 - added: 2026-07-24 (epic-226-lessons-audit)
 - last-confirmed: 2026-07-24 (epic-226-lessons-audit)
-- runs-since-confirmed: 6
+- runs-since-confirmed: 7
 - history: recurred 2026-07-24 (epic-226-lessons-audit) (constellation debt, not trust) — .agent-work/harvest-226/231/lessons-delta.json op add (id from-child-refusal-undiscoverable-from-error) -- SIBLING-FORK RESOLUTION applied here per the Admiral's own 2026-07-24 RULING: this is wt-231's independent rediscovery of the identical defect in the same wave, landed as a confirm (recurrence-debt) rather than a second add, preserving one stable identity for the recurrence counter.
 - history: exported 2026-07-24 (epic-226-lessons-audit) — Two independent worktrees (wt-228, wt-231) hit the identical defect in one wave -- graduation weight per the constellation counter semantics (confirm = debt, not trust). See the ready CONSTELLATION_FEEDBACK.md entry in this delta's accompanying prose (Queued for Human Review section) for the text to append.
 
@@ -139,7 +140,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: exported
 - added: 2026-07-24 (epic-226-lessons-audit)
 - last-confirmed: 2026-07-24 (epic-226-lessons-audit)
-- runs-since-confirmed: 6
+- runs-since-confirmed: 7
 - history: recurred 2026-07-24 (epic-226-lessons-audit) (constellation debt, not trust) — Second independent occurrence in the same evidence window: f1Brainz epic-601's real data-loss-narrowly-averted event, corroborating epic-226's own preventive workaround as more than an abundance of caution.
 - history: exported 2026-07-24 (epic-226-lessons-audit) — Two independent epics, two independent Admirals, same gap, in the same audit window -- see the ready CONSTELLATION_FEEDBACK.md entry in the Queued for Human Review section for the text to append.
 
@@ -149,14 +150,15 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - statement: Run the cold plan critic as MANDATORY, not bias-to-yes/optional, for any gate plan whose acceptance depends on a before/after measurement or a required round-trip/parser test. Two commanders this epic independently found it caught a plan-invalidating defect before any crew was dispatched: wt-227 (g3's over-read baseline would have been unproducible after g1/g2 overwrote the engine) and wt-230 (an undefined Markdown decision-line grammar would have broken the issue's own required round-trip test).
 - grounding: .agent-work/epic-226/verdicts/commander-227.md section 7 + .agent-work/epic-226/verdicts/commander-230.md 'Workflow feedback' point 3
 - bank-reason: Two convergent recommendations in one epic, but neither has a directly-attributable rework-count (both are pre-crew catches with no counterfactual). Re-observe a third convergent recommendation, or a case where skipping the cold critic on a measurement-dependent plan actually cost rework, before hardening plan-step doctrine.
-- mentions: 2
-- confirmed: 1
+- mentions: 3
+- confirmed: 2
 - disconfirmed: 0
 - status: active
 - added: 2026-07-24 (epic-226-lessons-audit)
-- last-confirmed: 2026-08-01 (300)
-- runs-since-confirmed: 0
+- last-confirmed: 2026-08-01 (299)
+- runs-since-confirmed: 1
 - history: confirmed 2026-08-01 (300) — .agent-work/300/PLAN_CRITIC_DISPOSITION.md, findings B1 and B4: the cold plan critic found TWO postconditions that returned exit 0 at HEAD with nothing built. B1's `! A || B` bound the bash negation to the collection probe rather than to the lint, so the one condition whose stated purpose was 'prove the guard fires on bad input' was satisfied by never writing the guard; B4's `grep -qi 'context' docs/CHECKLIST_SCHEMA.md` already matched 10 lines. Both reproduced independently by the Commander before acting. This is a third convergent data point and the first with a directly-attributable counterfactual: without the critic, issue #300's plan would have frozen with two vacuous acceptance checks. The plan's acceptance depends on a cross-environment determinism measurement and on lint/parser tests -- exactly the class the lesson names.
+- history: confirmed 2026-08-01 (299) — .agent-work/299/PLAN_CRITIC_DISPOSITION.md — 8 blocking + 9 serious findings on a frozen measurement rubric, 14 fixed before the freeze. FOURTH data point and the first where the critic caught a defect in the MEASURING INSTRUMENT rather than the plan: B4 (an absent source read recorded with the literal reserved for an absent map read, with the self-test asserting the defect) and B6 (field extraction exercised only against input.command while real transcripts use file_path/pattern) would together have turned total instrument failure into a clean-looking NO-MAP-READ finding across all five runs. Directly attributable counterfactual: without the critic this arm would have been captured, been unrecoverable, and read as a strong result.
 
 ### lesson:windows-subprocess-env-does-not-shadow-path-resolution
 - scope: project
@@ -170,7 +172,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-24 (epic-226-lessons-audit)
 - last-confirmed: none
-- runs-since-confirmed: 6
+- runs-since-confirmed: 7
 
 ### lesson:prove-command-fails-postcondition
 - scope: handoff
@@ -184,7 +186,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-24 (epic-226-lessons-audit)
 - last-confirmed: 2026-08-01 (303)
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 - history: confirmed 2026-08-01 (303) — execute.json gate m2-fixtures: 3 command postconditions using `! py scripts/verify_spec_confirmed.py <fixture> --phase confirm`, all satisfied on first advance (no rework); notes-303.md 'm2' section records the verbatim commands/exit codes/stderr the wrapper mechanically re-verified.
 
 ### lesson:canonical-routing-can-dissolve-a-file-fence
@@ -199,7 +201,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-24 (epic-226-lessons-audit)
 - last-confirmed: none
-- runs-since-confirmed: 6
+- runs-since-confirmed: 7
 
 ### lesson:crew-plan-file-shares-parent-gauge-directory
 - scope: commander
@@ -213,7 +215,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-27 (governor-261)
 - last-confirmed: none
-- runs-since-confirmed: 5
+- runs-since-confirmed: 6
 
 ### lesson:reviewer-old-vs-new-repro-without-mutating-file-under-review
 - scope: handoff
@@ -227,7 +229,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-27 (governor-261)
 - last-confirmed: none
-- runs-since-confirmed: 5
+- runs-since-confirmed: 6
 
 ### lesson:drill-scope-should-name-every-sibling-template
 - scope: admiral
@@ -241,7 +243,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-27 (governor-268)
 - last-confirmed: none
-- runs-since-confirmed: 3
+- runs-since-confirmed: 4
 
 ### lesson:lightweight-critic-catches-real-findings-on-bounded-issues
 - scope: commander
@@ -255,7 +257,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-27 (governor-265)
 - last-confirmed: none
-- runs-since-confirmed: 2
+- runs-since-confirmed: 3
 
 ### lesson:reviewer-fowler-template-path-wording-ambiguous
 - scope: constellation
@@ -270,7 +272,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-07-27 (governor-265)
 - last-confirmed: none
-- runs-since-confirmed: 2
+- runs-since-confirmed: 3
 
 ### lesson:guard-must-be-defined-by-the-consumer-not-a-character-list
 - scope: project
@@ -284,7 +286,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-01 (301)
 - last-confirmed: none
-- runs-since-confirmed: 0
+- runs-since-confirmed: 1
 
 ### lesson:a-panel-inherits-what-it-was-not-told-to-vary
 - scope: commander
@@ -298,7 +300,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-01 (301)
 - last-confirmed: 2026-08-01 (300)
-- runs-since-confirmed: 0
+- runs-since-confirmed: 1
 - history: confirmed 2026-08-01 (300) — Second independent instance, from #300's own 3-author panel rather than #301's four. Running the audit on my own panel retracted one of five reported convergences ('metadata only, never file content' was my own brief constraint echoed back, not independent agreement); found an unquestioned inherited declaration LOCATION whose per-work-area instantiation creates a legitimate committed-vs-instantiated disagreement a naive drift check would misreport (filed as an obligation onto #306); and found that all three authors had verified the blob-OID identity ONLY under the current '* text=auto' .gitattributes with no -text/binary exemption -- a silent-divergence hazard in the one primitive the whole manifest rests on, closed via the engine's amend verb as postcondition g1-implement.c7 and verified in both directions (exit 0 today, exit 1 after appending '*.md -text', tree restored). Evidence: .agent-work/300/DIT-COMPARISON.md ADDENDUM. Note the two sources of false convergence are DIFFERENT in the two instances: #301 inherited from PRIOR ART, #300 inherited from the BRIEF'S OWN fixed constraints -- so the failure mode is broader than either instance alone shows.
 
 ### lesson:a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed
@@ -307,13 +309,16 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - statement: A verification that cannot fail reports the same signal as one that genuinely passed, so it is worse than no verification - it consumes the attention a real check would have earned. Three instances in epic-298 alone, by three different mechanisms: (1) #301's floor-interpreter guard discovered an interpreter BY NAME, found none, and SKIPPED - green, zero coverage; (2) #300 found two postconditions that passed vacuously; (3) the standing round-trip lesson describes tests that only ever see clean shipped artifacts and so cannot catch a parser bug. The repair is the same in each case: require the check to demonstrate it actually ran against something that could have failed it. For the interpreter guard that meant accepting a candidate only if it REPORTS the floor version when asked, rather than merely existing; for a test it means an adversarial fixture; for a postcondition it means a bash-negation that proves the guard fires. Mutation-testing a guard - break the thing, watch it go red, restore - is the cheap general form.
 - grounding: #301 tests/test_episode_store.py FloorInterpreterPortabilityTests (first version skipped silently because `py` resolves to 3.12 in a shell and 3.14 inside a pytest subprocess); admiral epic-298 log recording #300's two vacuous postconditions; lesson:round-trip-tests-prove-artifacts-not-parsers
 - bank-reason: Constellation-scoped because it recurred across THREE separate agents and mechanisms in one epic, which makes it shared-machinery signal rather than a project quirk. Re-observe at the next epic whether vacuous-pass checks keep appearing; if so the fix belongs in the crew handoff templates (require every new guard to be mutation-verified) rather than in a lesson each run rediscovers.
-- mentions: 1
+- mentions: 2
 - confirmed: 0
 - disconfirmed: 0
-- status: active
+- recurrences: 1
+- status: exported
 - added: 2026-08-01 (301)
-- last-confirmed: none
-- runs-since-confirmed: 0
+- last-confirmed: 2026-08-01 (299)
+- runs-since-confirmed: 1
+- history: recurred 2026-08-01 (299) (constellation debt, not trust) — .agent-work/epic-298/baselines/extract_ordering.py self_test (33 checks) plus two verified mutations. FOURTH instance in this epic and a NEW shape: the mutation test itself was the check that could not fail. My first mutation attempt was a sed that silently did not match, the suite stayed green, and I nearly recorded that as 'mutant killed'. Only verifying that the mutation had ACTUALLY APPLIED (assert mut != src) exposed it. Second shape, same run: the self-test's synthetic fixtures used only input.command, so the extractor's real field-extraction path was never exercised until a real stream-json excerpt was checked in as a fixture.
+- history: exported 2026-08-01 (299) — .agent-work/CONSTELLATION_FEEDBACK.md 2026-08-01 entry for 299 — exported with the originating lesson id in its Lesson field so the upstream sweep groups recurrences on stable identity. Fourth recurrence in this epic, NEW shape: the lesson's own prescribed repair (mutation-test the guard) has a vacuous mode of its own. A sed-applied mutant silently did not match, the file was unchanged, the suite stayed green, and 'mutant killed' was the natural misreading; only a separate assert that the mutation had applied exposed it. Second shape same run: the guard's fixtures were all author-synthesized and encoded a guess at the input format (input.command), passing every check against a shape that does not occur in real stream-json transcripts. Suggested upstream edit: extend the repair clause to 'mutate, ASSERT THE MUTATION APPLIED, then watch it go red', and require a fixture captured from the real format for any guard over an external format.
 
 ### lesson:stale-description-has-two-shapes-and-only-one-yields-to-verification
 - scope: constellation
@@ -327,4 +332,4 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-01 (301)
 - last-confirmed: none
-- runs-since-confirmed: 0
+- runs-since-confirmed: 1
