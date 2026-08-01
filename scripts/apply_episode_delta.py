@@ -815,7 +815,7 @@ def _apply_create(tx: _Transaction, op: dict) -> str:
         reopens=mech["reopens"],
         rework_count=mech["rework-count"],
         failed_commands=mech["failed-commands"],
-        artifact_refs=list(mech.get("artifact-ref", [])),
+        artifact_refs=[ref.strip() for ref in mech.get("artifact-ref", [])],
         agent_supplied=agent_supplied,
         diagnosis=diagnosis,
     )
