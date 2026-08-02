@@ -149,6 +149,18 @@ def main() -> int:
     p.add_argument("--timeout", type=int, default=3600)
     p.add_argument("--attempt", type=int, default=1,
                    help="recorded verbatim; every attempt is archived, none is overwritten")
+    # THE ONLY CHANGE THIS SCRIPT TOOK FOR THE POST ARM (#307), and it is a LABEL.
+    #
+    # POST pairs with PRE-B, so POST must be measured BY THIS INSTRUMENT: rebuilding a
+    # runner would give any PRE-B/POST difference two candidate causes -- the treatment or
+    # the new code -- and the arm could not separate them. The one thing POST genuinely
+    # needs is to not claim in its own meta.json that it is PRE-B.
+    #
+    # Additive and default-preserving on purpose: the brief bytes, argv, env scrub, pin
+    # assertion, pristine-worktree assertion, no-worktree-corpus assertion, launch path and
+    # every recorded measure are untouched, and omitting the flag reproduces PRE-B exactly.
+    p.add_argument("--arm", default="PRE-B",
+                   help="arm label recorded in meta.json; the measured path does not read it")
     args = p.parse_args()
 
     worktree = Path(args.worktree).resolve()
@@ -198,8 +210,8 @@ def main() -> int:
 
     before = git_state()
     (run_dir / "meta.json").write_text(json.dumps({
-        "arm": "PRE-B",
-        "pairs_with": "POST",
+        "arm": args.arm,
+        "pairs_with": "PRE-B" if args.arm == "POST" else "POST",
         "does_not_pair_with": "PRE-A (#299) — different treatment, see PREB_RECORD.md",
         "issue": args.issue, "pin": PIN, "model": args.model,
         "attempt": args.attempt,

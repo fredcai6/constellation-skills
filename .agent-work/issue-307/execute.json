@@ -1,0 +1,103 @@
+{
+  "work_id": "issue-307",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-capture", "g2-score", "g3-pair"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against LAUNCH_ORDER-307 and .agent-work/issue-307/MISSION_FRAME.md. Confirm the five pinned f1Brainz worktrees exist at 3541d292, are pristine, and carry no .claude/skills copy; confirm the corpus BEFORE fingerprint is on disk. Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "plan intent and scope confirmed; five pinned pristine worktrees and the BEFORE fingerprint in place", "check": null, "satisfied": false}],
+      "constraints": [
+        "Corpus re-installs are standing pre-cleared; --wire-hooks is NOT. settings.json is Tommy's and stays untouched.",
+        "Never write the main checkout C:/Programs/constellation-skills — it holds uncommitted human WIP."
+      ],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-capture": {
+      "id": "g1-capture",
+      "title": "Capture the five POST runs and verify the treatment per run",
+      "imperative": "Run .agent-work/epic-298/post/run_all_post.py DETACHED (never inside a foreground tool call — that is the failure mode that cost the #331 probe a transcript), then poll actively inside this turn until all five captures land. The driver invokes the UNMODIFIED preb/capture_preb.py with --arm POST, and after each capture runs the FROZEN baselines/extract_ordering.py and preb/verify_treatment.py. A run whose treatment does not verify is a FAILED CAPTURE: report it, never silently retry or drop it. Do not touch the extractor or the rubric.",
+      "preconditions": [{"id": "p1", "statement": "e0-context confirmed: worktrees pinned and pristine, BEFORE fingerprint recorded", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "five POST captures exist, each at the frozen pin, each TREATMENT-VERIFIED, each write-clean with zero forbidden operations — enumerated, not asserted",
+         "check": {"kind": "command", "command": "python .agent-work/epic-298/post/verify_post_arm.py captures"},
+         "override_policy": {"allowed": true, "authority": "human", "reason_required": true},
+         "satisfied": false}
+      ],
+      "constraints": [
+        "One worktree per run. A reused worktree lets run N inherit run N-1's .agent-work/, which under a Commander treatment lets the subject skip the very steps under measurement.",
+        "The subject must not know it is being measured beyond what invoking the Commander requires."
+      ],
+      "anchors": {
+        "structural": [".agent-work/epic-298/preb/capture_preb.py — the arm runner, reused; .agent-work/epic-298/baselines/extract_ordering.py — frozen"],
+        "capability": ["measurement capture; treatment verification"],
+        "constraint": ["one variable: only the installed corpus differs from PRE-B", "the frozen extractor is not modified"],
+        "decision": ["post-runs-on-constellation-commander — matches PRE-B; delegated-variant re-capture declined @grade: settled/ruled · leans g1-capture · settle: Admiral ruling in LAUNCH_ORDER-307 Method requirements"],
+        "evidence": ["treatment-landed — Skill call to a Commander variant AND a matching 'Base directory for this skill:' line, per run"],
+        "confidence_flags": ["PRE-B predicts 5/5 headless completion with no stalls; a stall here is new information and must be reported, not retried around"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-score": {
+      "id": "g2-score",
+      "title": "Score both arms with the same unmodified code",
+      "imperative": "Run preb/discriminate.py over the POST runs, and the supplementary post/map_orient_audit.py over BOTH arms — PRE-B with --expect-zero as its own negative control. Score map_before_src as a BOOLEAN; raw indices are not comparable across arms and using them is a defect, not an approximation. Keep orientation, use and citation distinguished; collapsing them hides the finding.",
+      "preconditions": [{"id": "p1", "statement": "g1-capture closed: five verified captures on disk", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "both arms scored by identical code; the map_orient negative control reports zero on pre-#304 runs and enumerates the runs it looped over",
+         "check": {"kind": "command", "command": "python .agent-work/epic-298/post/verify_post_arm.py scores"},
+         "override_policy": {"allowed": true, "authority": "human", "reason_required": true},
+         "satisfied": false}
+      ],
+      "constraints": [
+        "Reuse PRE-B's scorers unmodified. A rebuilt scorer gives any PRE-B/POST difference two candidate causes and the arm cannot separate them.",
+        "Only the boolean map_before_src transfers between arms."
+      ],
+      "anchors": {
+        "structural": [".agent-work/epic-298/preb/discriminate.py — reused verbatim; .agent-work/epic-298/post/map_orient_audit.py — additive second witness, run over both arms"],
+        "capability": ["ordering scoring"],
+        "constraint": ["boolean only across arms", "the frozen extractor's corpus rule makes the mandated map_orient call invisible by construction — measured, not patched"],
+        "decision": ["post-pairs-with-preb-not-prea — three arms, two series @grade: settled/measured · leans g2-score · settle: settled by PREB_RECORD.md 'three arms, two series'"],
+        "evidence": ["orientation-order — map_before_src from the frozen extractor", "contract-actually-fired — map_orient invocation audit"],
+        "confidence_flags": ["the supplementary audit is new code and therefore suspect; its negative control on PRE-B is what makes its POST column readable at all"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-pair": {
+      "id": "g3-pair",
+      "title": "Prove the corpus and compile the paired evidence package",
+      "imperative": "Take the AFTER corpus fingerprint and compare BEFORE/AFTER (stability across the window) and POST/PRE-B (the treatment actually moved). Write POST_RECORD.md: the paired table, the three-way discrimination with the evidence for each branch, every failed capture, both fingerprints, and the declared limitations. Present BOTH readings wherever the evidence supports two. Do NOT adjudicate the verdict — that is Tommy's, and this gate's job is to make his adjudication possible, not to pre-empt it.",
+      "preconditions": [{"id": "p1", "statement": "g2-score closed: both arms scored", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "AFTER fingerprint taken; corpus stable across the window; POST corpus proven DIFFERENT from PRE-B's; paired record written — each assertion enumerated",
+         "check": {"kind": "command", "command": "python .agent-work/epic-298/post/verify_post_arm.py pairing"},
+         "override_policy": {"allowed": true, "authority": "human", "reason_required": true},
+         "satisfied": false}
+      ],
+      "constraints": [
+        "HITL: compile the evidence, do not self-adjudicate the B3 verdict.",
+        "Pin every number in prose to a revision, and at PR time to the PR number — this repo squash-merges.",
+        "A measured negative is a complete, successful deliverable — but only if it discriminates among sufficient / insufficient / irrelevant."
+      ],
+      "anchors": {
+        "structural": [".agent-work/epic-298/post/POST_RECORD.md — the deliverable; .agent-work/epic-298/preb/PREB_RECORD.md — the pairing arm's record"],
+        "capability": ["corpus identity; paired evidence compilation"],
+        "constraint": ["the degraded path is a different question and must not be mixed with the f1Brainz arm"],
+        "decision": ["enumerate-and-bound-writes — the zero-write standard is unachievable for a skill-loaded arm (#347) @grade: settled/ruled · leans g3-pair · settle: already ruled for PRE-B, governs POST too"],
+        "evidence": ["corpus-identity — BEFORE/AFTER fingerprints", "nothing-landed-in-f1brainz — every write enumerated with its resolved target"],
+        "confidence_flags": ["baselines/CORPUS_FINGERPRINT_{PRE,POST}_INSTALL.json are named in the launch order and ABSENT from the tree; this gate's own fingerprints replace them"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "run": "run-690",
+    "status": "ok",
+    "tool_call_count": 108,
+    "map_orient_invocation_count": 0,
+    "map_orient_indices": [],
+    "map_orient_subcommands": [],
+    "map_orient_verdicts": [],
+    "first_map_orient_index": "NO-MAP-ORIENT-CALL",
+    "first_src_read_index": 23,
+    "first_map_read_index": 36,
+    "map_orient_before_src": "NO-MAP-ORIENT-CALL",
+    "invocations": []
+  },
+  {
+    "run": "run-688",
+    "status": "ok",
+    "tool_call_count": 124,
+    "map_orient_invocation_count": 0,
+    "map_orient_indices": [],
+    "map_orient_subcommands": [],
+    "map_orient_verdicts": [],
+    "first_map_orient_index": "NO-MAP-ORIENT-CALL",
+    "first_src_read_index": 23,
+    "first_map_read_index": 27,
+    "map_orient_before_src": "NO-MAP-ORIENT-CALL",
+    "invocations": []
+  },
+  {
+    "run": "run-698",
+    "status": "ok",
+    "tool_call_count": 148,
+    "map_orient_invocation_count": 0,
+    "map_orient_indices": [],
+    "map_orient_subcommands": [],
+    "map_orient_verdicts": [],
+    "first_map_orient_index": "NO-MAP-ORIENT-CALL",
+    "first_src_read_index": 25,
+    "first_map_read_index": 57,
+    "map_orient_before_src": "NO-MAP-ORIENT-CALL",
+    "invocations": []
+  },
+  {
+    "run": "run-716",
+    "status": "ok",
+    "tool_call_count": 119,
+    "map_orient_invocation_count": 0,
+    "map_orient_indices": [],
+    "map_orient_subcommands": [],
+    "map_orient_verdicts": [],
+    "first_map_orient_index": "NO-MAP-ORIENT-CALL",
+    "first_src_read_index": "NO-SRC-READ",
+    "first_map_read_index": "NO-MAP-READ",
+    "map_orient_before_src": "NO-MAP-ORIENT-CALL",
+    "invocations": []
+  },
+  {
+    "run": "run-704",
+    "status": "ok",
+    "tool_call_count": 96,
+    "map_orient_invocation_count": 0,
+    "map_orient_indices": [],
+    "map_orient_subcommands": [],
+    "map_orient_verdicts": [],
+    "first_map_orient_index": "NO-MAP-ORIENT-CALL",
+    "first_src_read_index": 7,
+    "first_map_read_index": 23,
+    "map_orient_before_src": "NO-MAP-ORIENT-CALL",
+    "invocations": []
+  }
+]
