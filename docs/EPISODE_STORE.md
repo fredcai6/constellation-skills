@@ -21,19 +21,34 @@ under `.agent-work/episodes/`, and **not** resolved through `durable_root()`
 This is a deliberate departure from all four design-it-twice candidates
 (`.agent-work/301/design-it-twice/`), which placed the store at `.agent-work/episodes/`
 by inheriting the location from `.agent-work/LESSONS.md`. That inheritance was wrong for
-this store, for a reason verifiable at HEAD:
+this store, for a reason verifiable by command — **re-measured at issue #308, because the
+transcript this section originally carried went stale.**
 
 ```
-$ git check-ignore .agent-work/episodes/ ; echo $?     # 0  -> IGNORED
-$ git ls-files .agent-work/ | wc -l                    # 0  -> nothing under it is in git
+$ git check-ignore .agent-work/ ; echo $?              # 1  -> NOT ignored
+$ git ls-files .agent-work/ | wc -l                    # 1958
 $ git check-ignore episodes/ ; echo $?                 # 1  -> NOT ignored, trackable
 ```
 
-`.gitignore` line 1 is `.agent-work/`. Nothing under it is in git — not even
-`LESSONS.md` itself. `LESSONS.md` gets away with living there because it is a
-deliberately **transitory inbox**: "where lessons pass through, not where they live." A
-lesson that graduates is applied and deleted from the playbook; the playbook's job is to
-carry *open* problems, not a permanent record.
+**What changed, and why the ruling survives it.** When this section was frozen at issue #301
+gate g1, `.agent-work/` was gitignored and held nothing in git, and §1 used that as its
+illustrative contrast. Commit `b69e6c8` (issue #326, *"chore: track `.agent-work/` — run
+history is project history"*) reversed that for an unrelated reason, and nobody revisited
+this paragraph. Issue **#348** tracks it; the numbers above are pinned to `4cec87a`.
+
+The correction does **not** disturb the location decision, and the distinction is the point:
+the argument for `episodes/` never rested on `.agent-work/` being *ignored*. It rests on the
+store needing to be **tracked in git** so it survives worktree teardown and a fresh clone —
+which `episodes/` is, unchanged. What went stale was the contrast, not the ruling. A reader
+who found the old transcript and concluded the storage decision was unfounded would have been
+misled by a true-when-written claim, which is exactly the failure this store exists to make
+findable.
+
+`LESSONS.md` lives under `.agent-work/` because it is a deliberately **transitory inbox**:
+"where lessons pass through, not where they live." A lesson that graduates is applied and
+deleted from the playbook; the playbook's job is to carry *open* problems, not a permanent
+record. As of issue #308 that inbox is retired as a live-agent input entirely — see
+`docs/CONSTELLATION_OVERVIEW.md` § "Truth layers".
 
 The episode store is the **opposite**. Its entire purpose (§2 of the launch order's
 protected intent) is **durability past consolidation**: an episode must outlive its own

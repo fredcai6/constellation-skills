@@ -318,7 +318,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "constellation-commander-delegated + commander-core.md active in this context since run start; context headroom adequate at plan freeze."
         },
         {
           "id": "p2",
@@ -327,7 +328,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py issue-308"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -341,11 +343,23 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py issue-308",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -585,7 +599,7 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T19:23:24.450655+00:00",
-    "last_heartbeat": "2026-08-02T20:01:30.644651+00:00",
+    "last_heartbeat": "2026-08-02T20:02:29.906332+00:00",
     "claimed_by": "commander-308",
     "worktree": "C:/Programs/constellation-skills-wt/e298-308",
     "previous_session_id": null,

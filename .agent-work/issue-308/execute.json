@@ -27,13 +27,14 @@
           "id": "c1",
           "statement": "orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Context carried from the spine context step: ORCHESTRATOR_CONTEXT.md (the only docs/agents file present), 5 hash-pinned substitutes, no Cartographer packets (DEGRADED-NO-MAP, permanent for this skill-source repo). Frozen plan intent and scope confirmed against LAUNCH_ORDER-308."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -53,7 +54,8 @@
             "kind": "command",
             "command": "test -f docs/agents/CREW_CONTEXT.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-build-destination-1"
         },
         {
           "id": "c2",
@@ -62,7 +64,8 @@
             "kind": "command",
             "command": "grep -q 'docs/agents/CREW_CONTEXT.md' README.md && grep -q 'docs/agents/ORCHESTRATOR_CONTEXT.md' README.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-build-destination-2"
         },
         {
           "id": "c3",
@@ -71,7 +74,8 @@
             "kind": "command",
             "command": "grep -qiE '^.*(audience|tier)' docs/agents/CREW_CONTEXT.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-build-destination-3"
         },
         {
           "id": "c4",
@@ -80,7 +84,8 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-build-destination-4"
         }
       ],
       "constraints": [
@@ -89,11 +94,56 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-build-destination-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f docs/agents/CREW_CONTEXT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-build-destination-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'docs/agents/CREW_CONTEXT.md' README.md && grep -q 'docs/agents/ORCHESTRATOR_CONTEXT.md' README.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-build-destination-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qiE '^.*(audience|tier)' docs/agents/CREW_CONTEXT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-build-destination-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -111,12 +161,13 @@
       "postconditions": [
         {
           "id": "c1",
-          "statement": "ALL THREE false claims in EPISODE_STORE.md section 1 are gone, not just the first: the '0 -> IGNORED' transcript line, the 'wc -l # 0' line, and the prose asserting '.gitignore line 1 is .agent-work/' / 'Nothing under it is in git'",
+          "statement": "ALL THREE false claims in EPISODE_STORE.md section 1 are gone: the '0 -> IGNORED' transcript line, the 'wc -l # 0' assertion's prose, and the 'line 1 is .agent-work/' claim. NOTE: the first draft of this command wrapped a backticked pattern in DOUBLE quotes, so the shell executed the backticks and the check failed for the wrong reason -- the exact trap the launch order names. Single-quoted now.",
           "check": {
             "kind": "command",
-            "command": "! grep -qE \"0  -> IGNORED|Nothing under it is in git|\\`\\.gitignore\\` line 1 is\" docs/EPISODE_STORE.md"
+            "command": "! grep -qE '0  -> IGNORED|Nothing under it is in git|line 1 is' docs/EPISODE_STORE.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-doc-coherence-1"
         },
         {
           "id": "c2",
@@ -125,7 +176,8 @@
             "kind": "command",
             "command": "! git check-ignore .agent-work/"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-doc-coherence-2"
         },
         {
           "id": "c3",
@@ -134,7 +186,8 @@
             "kind": "command",
             "command": "grep -A25 '## Truth layers' docs/CONSTELLATION_OVERVIEW.md | grep -q 'episodes/'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-doc-coherence-3"
         },
         {
           "id": "c4",
@@ -143,7 +196,8 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-doc-coherence-4"
         }
       ],
       "constraints": [
@@ -152,11 +206,56 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-doc-coherence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -qE '0  -> IGNORED|Nothing under it is in git|line 1 is' docs/EPISODE_STORE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-doc-coherence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! git check-ignore .agent-work/",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-doc-coherence-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -A25 '## Truth layers' docs/CONSTELLATION_OVERVIEW.md | grep -q 'episodes/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-doc-coherence-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -593,5 +692,39 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "commander-308-e298",
+    "status": "active",
+    "claimed_at": "2026-08-02T20:02:38.399197+00:00",
+    "last_heartbeat": "2026-08-02T20:21:14.434974+00:00",
+    "claimed_by": "commander-308",
+    "worktree": "C:/Programs/constellation-skills-wt/e298-308",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-02T20:02:48.155800+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-build-destination",
+      "why": "docs/agents/CREW_CONTEXT.md created following f1Brainz's realized structure; both docs/agents files indexed from README under a new 'This repo's own agent context' section. Tier stated in the file's own header: crew = implementer/reviewer/prototyper.",
+      "mechanical": false,
+      "ts": "2026-08-02T20:13:54.428046+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-doc-coherence",
+      "why": "#348 corrected: section 1's stale gitignore transcript replaced with re-measured numbers pinned to 4cec87a, naming b69e6c8/#326 as the cause and preserving the ruling (the store needs TRACKED, not 'not-ignored-elsewhere'). #322 folded: truth-layer block gains episodes/ as raw observed history, plus the cutover flow and the explicit statement that LESSONS.md's absence is the ruling, not an omission.",
+      "mechanical": false,
+      "ts": "2026-08-02T20:21:14.434943+00:00"
+    }
+  ]
 }

@@ -178,6 +178,13 @@ To keep a consuming repo's project install fresh automatically, copy [`examples/
 
 Constellation assumes a Git repo, Markdown docs, and file-based workflow state. Charter clarifies issue tracker, structural map generation, CI, and runtime commands.
 
+## This repo's own agent context
+
+Constellation dogfoods itself. Agents working in **this** repo read these thin project deltas on top of their inherited global doctrine — layered, never merged. Each is tiered to its audience, and placing content at a broader tier than its audience is a defect rather than a delivery win.
+
+- [docs/agents/ORCHESTRATOR_CONTEXT.md](docs/agents/ORCHESTRATOR_CONTEXT.md) — planning and gate authority (Admiral, Commander)
+- [docs/agents/CREW_CONTEXT.md](docs/agents/CREW_CONTEXT.md) — implementation and review rules (Implementer, Reviewer, Prototyper)
+
 ## Structural map validation
 
 Build or check Cartographer map artifacts:

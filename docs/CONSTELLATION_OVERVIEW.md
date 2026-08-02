@@ -66,8 +66,11 @@ Two orthogonal axes. **Audience:** high-level (orchestrator) agents use project 
 Code, tests, configs, generated behavior:
   dense truth
 
-Structural map packets, agent context, glossary:
+Structural map packets, agent context (docs/agents/*), glossary:
   compressed durable truth
+
+episodes/active/ + episodes/retired/:
+  raw observed history — what actually happened on real runs
 
 Commander execute.json (frozen gate plan), crew handoffs, default checklists:
   workflow-local truth
@@ -75,6 +78,34 @@ Commander execute.json (frozen gate plan), crew handoffs, default checklists:
 Issues:
   future work
 ```
+
+### The episode store, and what replaces the playbook
+
+The episode store (`episodes/`, `docs/EPISODE_STORE.md`) is a layer the other four do not
+cover: **raw observed history**. A packet says what the system *is*; an episode says what
+happened *once*, on a named run, with the mechanical half captured from engine state at zero
+agent effort and the agent-supplied half carrying what only an agent can assert. It is
+tracked in git precisely so it outlives the worktree that wrote it.
+
+**The flow, as ruled at issue #308.** Episodes accumulate. A periodic pass — the curator's
+job — rhyme-searches them for recurring patterns, and a confirmed pattern is consolidated
+into **doctrine that agents actually read**: `docs/agents/ORCHESTRATOR_CONTEXT.md`,
+`docs/agents/CREW_CONTEXT.md`, the auto-loaded `CLAUDE.md`, or a role's own skill —
+whichever tier matches the audience. Consolidated episodes are retired, which **moves** the
+file into `episodes/retired/`; the archive stays reachable by id so a `consolidated-into:`
+reference never dangles.
+
+**`.agent-work/LESSONS.md` is not in this taxonomy, and that is the ruling, not an
+omission.** It was a curated playbook sitting between those two useful things — an
+accumulator and real doctrine updates — and it turned out to be a dead end: content parked
+there was neither raw history nor doctrine anyone reads. Live agents no longer read it. The
+accumulator is `episodes/`; the doctrine is `docs/agents/`; the middle is gone.
+
+Its retention story is hygiene rather than a cap. The 20-entry hard cap was removed because
+a cap does not cause cleanup — it causes *forgetting*, and then blocks capture outright.
+Measured at issue #308 before the removal: the bank sat at 20/20, so the writer refused
+every new entry, while 10 of those 20 had never once been reconfirmed. Regular curator
+cleanup replaces it.
 
 ### Reaching the compressed layer: the map-input contract
 
