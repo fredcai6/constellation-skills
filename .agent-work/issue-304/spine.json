@@ -430,17 +430,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "decision": "Run summary delivered as PR #378 and in the Commander return to the Admiral; the Admiral ratifies at the epic return boundary and Tommy holds the shipping decision on what primacy means, per Q2 PROVISIONAL GO"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -452,7 +464,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review complete; summary in PR 378 and the Commander return"
         }
       ],
       "postconditions": [
@@ -463,7 +476,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-304 --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         },
         {
           "id": "c2",
@@ -472,17 +486,41 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-304 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -494,7 +532,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "workflow feedback recorded and verified: verify_agent_feedback.py issue-304 --phase feedback returns ok"
         }
       ],
       "postconditions": [
@@ -563,7 +602,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -599,7 +638,7 @@
     "session_id": "commander-304-e298",
     "status": "active",
     "claimed_at": "2026-08-02T02:06:15.845360+00:00",
-    "last_heartbeat": "2026-08-02T05:45:00.376656+00:00",
+    "last_heartbeat": "2026-08-02T05:47:43.960704+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -654,6 +693,20 @@
       "why": "Filed to the tracker rather than banked worktree-locally, which the launch order pre-cleared and which this project has had to correct three times. One fix-now taken on a measured cost correction from the reviewer - three tests pinning the sentence turned out to be zero - and two candidates deliberately recorded rather than filed because filing a not-a-defect would be noise.",
       "mechanical": false,
       "ts": "2026-08-02T05:45:00.168458+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Summary delivered where the launch order asked for it - PR #378 carries the measured problem, the anchor-move diagnosis, what does and does not ship, the three honest nulls, and the falsifiability record, with the 0/4 and 0/1 numbers stated in the body rather than buried. Branch is PENDING, not merged: the merge gates on the CI status read at source, and Q2's shipping ruling on what primacy means is still Tommy's.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:45:57.853772+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Retrospective appended with the four signal sections the invariant requires. The transferable finding is that green tests are not evidence a deliverable landed - a call site is - and that the rule needs the self-test exclusion, because this module ships its own self-test as a subcommand and laundered dead code as live through a correctly-applied caller grep. Lessons gate clear, no ripe lesson awaiting apply-or-defer. Three signals routed to Charter refresh rather than filed, since a delegated commander has no latitude to edit shared doctrine.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:47:43.749965+00:00"
     }
   ]
 }
