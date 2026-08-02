@@ -226,6 +226,23 @@ def checklist(declaration=None, items=("context",), work_id="w-1"):
     return {"work_id": work_id, "type": "gated", "items": list(items), "tasks": tasks}
 
 
+def _dirty_key_paths(obj, prefix="") -> list:
+    """Every JSON-pointer-ish path at which a key named `dirty` occurs, at any
+    depth. Empty list means the field is genuinely gone rather than merely moved
+    somewhere the caller forgot to look (#327, #305 g4)."""
+    found = []
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            here = f"{prefix}/{key}"
+            if key == "dirty":
+                found.append(here)
+            found.extend(_dirty_key_paths(value, here))
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            found.extend(_dirty_key_paths(value, f"{prefix}/{index}"))
+    return found
+
+
 class ManifestEnvelope(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -861,7 +878,6 @@ class ProducerGuards(unittest.TestCase):
                 repo_state=lambda roots: {"commit": "deadbeef", "dirty": False},
             )
         self.assertEqual(m["repo_rev"], {"commit": "deadbeef"})
-        self.assertEqual(m["run"]["dirty"], False)
 
 
 class Serialisation(unittest.TestCase):
@@ -897,13 +913,20 @@ class RepoRevContent(unittest.TestCase):
     is untouched -- this is a second, coarser fact, not a replacement.
 
     Split in rework 1 (BLOCKER-1): `repo_rev` in content carries `commit` only,
-    which is canon-determined (identical for any checkout of that commit).
-    `dirty` -- a fact about the working tree that *produced* the manifest, not
-    the bytes it delivered -- lives in `run.dirty` instead. A review proved the
-    original placement (both fields inside content) wrong: two checkouts at the
-    same commit, delivering byte-identical declared canon, disagreed on
-    `repo_rev` solely because `git status --porcelain` is repo-wide and picked
-    up dirt on a file no declaration named."""
+    which is canon-determined (identical for any checkout of that commit). A
+    review proved the original placement (both `commit` and `dirty` inside
+    content) wrong: two checkouts at the same commit, delivering byte-identical
+    declared canon, disagreed on `repo_rev` solely because `git status
+    --porcelain` is repo-wide and picked up dirt on a file no declaration named.
+
+    `dirty` moved to the excluded `run` subtree then, and was removed outright in
+    #327 (#305 g4) once a real producing caller made its behaviour observable: it
+    is repo-wide, so what it reports is dominated by the run's own bookkeeping,
+    and it is computed before the manifest is written, so it reads its
+    predecessor's tree rather than its own. `test_dirty_appears_nowhere_in_the_manifest`
+    below is the guard on that removal; the `repo_state` fakes throughout this
+    class still SUPPLY the field, unchanged, because a consumer that ignores what
+    it is handed is exactly what is being asserted."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -937,26 +960,42 @@ class RepoRevContent(unittest.TestCase):
         m = self.build(repo_state=lambda roots: {"commit": "abc123", "dirty": True})
         self.assertEqual(sorted(m["repo_rev"]), ["commit"])
 
-    def test_dirty_lives_in_run_not_content(self):
-        # BLOCKER-1's fix, asserted directly: dirty is present in the manifest
-        # (nothing is deleted -- it is still useful provenance) but excluded from
-        # content, and it appears exactly where /run's other varying facts do.
+    def test_dirty_appears_nowhere_in_the_manifest(self):
+        # #327 (#305 g4), the removal's regression guard. The `repo_state` edge
+        # still SUPPLIES `dirty` -- that contract is unchanged, and it is what
+        # makes this test mean something: the consumer is handed the field and
+        # must drop it on the floor. Asserted at every depth, not just in `run`,
+        # so a future re-introduction anywhere in the envelope fails here.
         m = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": True})
-        self.assertIn("dirty", m["run"])
-        self.assertEqual(m["run"]["dirty"], True)
-        self.assertNotIn("dirty", cm.content(m))
+        self.assertNotIn("dirty", m["run"])
         self.assertNotIn("dirty", m["repo_rev"])
+        self.assertNotIn("dirty", cm.content(m))
+        self.assertEqual(_dirty_key_paths(m), [])
+        # And not smuggled in under another spelling of the same bytes: the
+        # encoded manifest must not contain the token at all.
+        self.assertNotIn("dirty", cm.encode(m))
 
     def test_content_is_unaffected_by_dirty_when_commit_is_equal(self):
-        # The regression this rework closes, in-process and fast: two repo_state
-        # fakes that agree on `commit` but disagree on `dirty` must still produce
-        # byte-identical content. `tests/test_context_determinism.py`'s
+        # The regression #300 g5 rework 1 closed, in-process and fast: two
+        # repo_state fakes that agree on `commit` but disagree on `dirty` must
+        # still produce byte-identical content. `tests/test_context_determinism.py`'s
         # `RealCheckoutSkew` covers the same property end-to-end, over real git
         # worktrees; this is the unit-level complement.
         m_clean = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": False})
         m_dirty = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": True})
         self.assertEqual(cm.content(m_clean), cm.content(m_dirty))
-        self.assertNotEqual(m_clean["run"]["dirty"], m_dirty["run"]["dirty"])
+        # Strengthened for #327: the property used to stop at `content()` because
+        # the two manifests genuinely differed inside the `run` subtree. With the
+        # field dropped on the floor, the WHOLE envelope is now insensitive to
+        # `dirty`, not just the compared part -- only `generated_at` may move.
+        self.assertEqual(
+            {k: v for k, v in m_clean["run"].items() if k != "generated_at"},
+            {k: v for k, v in m_dirty["run"].items() if k != "generated_at"},
+        )
+        self.assertEqual(
+            {k: v for k, v in m_clean.items() if k != "run"},
+            {k: v for k, v in m_dirty.items() if k != "run"},
+        )
 
     def test_repo_rev_does_not_replace_the_per_file_blob_oid(self):
         # The per-file row's `rev` -- tested exhaustively in RevIsGitBlobOid and
@@ -977,35 +1016,29 @@ class RepoRevContent(unittest.TestCase):
         self.assertEqual(len(seen), 1)
         self.assertIs(seen[0], self.roots)
         self.assertEqual(m["repo_rev"], {"commit": "injected-sha"})
-        self.assertEqual(m["run"]["dirty"], True)
 
-    def test_default_repo_state_on_a_non_git_directory_yields_none_none(self):
+    def test_default_repo_state_on_a_non_git_directory_yields_no_commit(self):
         # self.repo is a plain tempdir, never `git init`-ed.
         m = self.build()
         self.assertEqual(m["repo_rev"], {"commit": None})
-        self.assertIsNone(m["run"]["dirty"])
 
-    def test_default_repo_state_with_no_repo_root_mapped_yields_none_none(self):
+    def test_default_repo_state_with_no_repo_root_mapped_yields_no_commit(self):
         roots = {"skill": self.skill, "durable": self.repo}
         m = cm.build_manifest(
             checklist([{"root": "skill", "path": "references/doctrine.md", "required": True}]),
             roots,
         )
         self.assertEqual(m["repo_rev"], {"commit": None})
-        self.assertIsNone(m["run"]["dirty"])
 
-    def test_default_repo_state_against_the_real_repo_matches_git_oracles(self):
+    def test_default_repo_state_against_the_real_repo_matches_the_commit_oracle(self):
+        # Singular: the porcelain-status oracle went with `dirty` (#327). The
+        # commit half is the only one the manifest still carries.
         import subprocess
         commit_oracle = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
-        status_oracle = subprocess.run(
-            ["git", "status", "--porcelain"], cwd=str(ROOT),
-            capture_output=True, text=True, encoding="utf-8",
-        )
         self.assertEqual(commit_oracle.returncode, 0, commit_oracle.stderr)
-        self.assertEqual(status_oracle.returncode, 0, status_oracle.stderr)
 
         roots = {"skill": self.skill, "repo": ROOT, "durable": self.repo}
         m = cm.build_manifest(
@@ -1013,12 +1046,10 @@ class RepoRevContent(unittest.TestCase):
             roots,
         )
         self.assertEqual(m["repo_rev"]["commit"], commit_oracle.stdout.strip())
-        self.assertEqual(m["run"]["dirty"], bool(status_oracle.stdout.strip()))
 
     def test_repo_rev_survives_json_round_trip_untransformed(self):
         m = self.build(repo_state=lambda roots: {"commit": "deadbeef", "dirty": False})
         self.assertEqual(json.loads(json.dumps(m))["repo_rev"], m["repo_rev"])
-        self.assertEqual(json.loads(json.dumps(m))["run"]["dirty"], m["run"]["dirty"])
 
     def test_doctrine_version_is_the_repo_rev_field(self):
         # Named for gate g5's own -k selector ('repo_rev or doctrine_version'):

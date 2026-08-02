@@ -584,19 +584,20 @@ def repo_revision(base_dir: Path | None = None) -> dict:
     disproved that (#300 g5 rework 1): two checkouts at the same commit,
     delivering byte-identical declared canon, disagreed on content solely
     because `git status --porcelain` is repo-wide and picked up dirt on a file
-    no declaration named. The corrected placement is `context_manifest`'s to
-    make, not this function's: `commit` is canon-determined (identical for any
-    checkout of that commit) so it is safe as manifest *content*; `dirty`
-    describes the working tree that *produced* the manifest, not the bytes it
-    delivered, so it belongs in the manifest's excluded `run` subtree instead.
-    Splitting them does not reopen the honesty gap a bare SHA has -- the
-    per-file blob OID already answers "which bytes did this agent actually get"
-    for a dirty, untracked or out-of-repo file, which is the question `dirty`
-    was protecting; `commit` only ever had to be the coarse, human-facing
-    traceability stamp. This function still returns both fields together: it is
-    a general repo-facts primitive, not pre-shaped to one caller's content/run
-    boundary, and the split is made once, at `context_manifest.build_manifest`'s
-    assembly point.
+    no declaration named. What to do about that was `context_manifest`'s call,
+    not this function's: `commit` is canon-determined (identical for any
+    checkout of that commit) so it is safe as manifest *content*, and `dirty`
+    first moved to the manifest's excluded `run` subtree and was then dropped
+    altogether (#327, #305 g4) -- it is repo-wide, so it reports dirt on files no
+    declaration names, and once a real caller made that observable the field
+    turned out to be neither dependably constant nor informatively varying.
+    Neither move reopens the honesty gap a bare SHA has -- the per-file blob OID
+    already answers "which bytes did this agent actually get" for a dirty,
+    untracked or out-of-repo file, which is the question `dirty` was protecting;
+    `commit` only ever had to be the coarse, human-facing traceability stamp.
+    This function is unaffected and still returns both fields together: it is a
+    general repo-facts primitive, not pre-shaped to one caller's appetite, and
+    its one manifest consumer simply now uses `commit` only.
 
     Uses `_git()`, the same subprocess helper `_collect_changed_files` already
     relies on for git-change-policy -- so this stays the one place in the module

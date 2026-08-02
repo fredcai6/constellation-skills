@@ -537,13 +537,15 @@ class RealCheckoutSkew(unittest.TestCase):
 
         FAILS before the split fix: `repo_rev` carried `dirty` inside content, so
         `content()` differed between the two checkouts even though every declared
-        byte was identical. PASSES after: `dirty` moved to `/run`, so identical
-        canon means identical content regardless of undeclared dirt.
+        byte was identical. PASSES after: `dirty` left content, so identical canon
+        means identical content regardless of undeclared dirt.
 
-        Deliberately does NOT assert which subtree `dirty` lives in -- only that
-        `content()` agrees -- so this exact test body produces both the red
-        transcript (run against the pre-fix shape) and the green one (run after)
-        without being edited in between.
+        Deliberately does NOT assert where -- or whether -- `dirty` survives in
+        the manifest, only that `content()` agrees. That is why this exact test
+        body produces both the red transcript (run against the pre-fix shape) and
+        the green one without being edited in between, and why it also survived
+        #327 (#305 g4) removing the field from the manifest entirely: it was never
+        asserting the field's home, only content's insensitivity to it.
 
         No `unittest.SkipTest` environment guard here (unlike its siblings above
         in this file) per this round's explicit "introduce no skipTest"

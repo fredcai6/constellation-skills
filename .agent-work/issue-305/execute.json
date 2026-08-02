@@ -859,7 +859,8 @@
           "id": "p1",
           "statement": "g1 integrated \u2014 context_manifest.py's caller exists, so the docstring's successor line is true when written",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1181,13 +1182,13 @@
     }
   ],
   "engine_session": {
-    "session_id": "commander-305f",
+    "session_id": "commander-305g",
     "status": "active",
-    "claimed_at": "2026-08-02T16:34:30.614073+00:00",
-    "last_heartbeat": "2026-08-02T16:34:30.614073+00:00",
-    "claimed_by": "commander-305f",
+    "claimed_at": "2026-08-02T17:31:02.928364+00:00",
+    "last_heartbeat": "2026-08-02T17:31:02.928364+00:00",
+    "claimed_by": "commander",
     "worktree": "C:/Programs/constellation-skills-wt/e298-305",
-    "previous_session_id": null,
-    "takeover_reason": null
+    "previous_session_id": "commander-305f",
+    "takeover_reason": "Predecessor commander-305f died holding the lease; successor dispatched by Admiral to commit uncommitted g4 work and drive spine to terminal archive"
   }
 }

@@ -21,18 +21,27 @@ Three properties carry the whole design:
    doctrine-version stamp, #300 g5). `commit` alone is safe as content because it
    is **canon-determined**: identical in any checkout of that commit, anywhere, so
    two environments delivering the same declared bytes always agree on it.
-   `dirty` — *is that commit's tree honest right now* — is a different kind of
-   fact: it describes the working tree that **produced** this manifest, not the
-   bytes it delivered, so it lives in the excluded `run` subtree instead
-   (`run.dirty`; #300 g5 rework 1, after a review disproved the original
-   placement). The split is what keeps content genuinely canon-determined:
-   `git status --porcelain` is repo-wide, so an edit to a file no declaration
-   names would otherwise flip `dirty` and make two environments that delivered
-   byte-identical canon disagree on content. It does not reopen the honesty gap a
-   bare commit SHA has: content already carries the per-file blob OID as the
-   precise "which bytes did this agent actually get" answer for a dirty,
-   untracked or out-of-repo file, so `repo_rev.commit` only has to be the coarse,
-   human-facing traceability stamp, not the honesty marker too. Computed by
+   The `repo_state` edge also returns `dirty` — *is that commit's tree honest
+   right now* — and this module **drops it on the floor**. It is not merely
+   excluded from content; no manifest carries it at all any more (#327, #305 g4).
+   It reached the manifest first as content and then, when `git status
+   --porcelain`'s repo-wide reach was shown to make two environments delivering
+   byte-identical canon disagree, in the excluded `run` subtree (#300 g5 rework
+   1). Removal is what a real producing caller finally made visible: `dirty` is
+   repo-wide, so it reports dirt on files no declaration names — dominated, once
+   the manifest itself is written under a tracked `.agent-work/`, by the run's own
+   bookkeeping — and it is computed BEFORE the manifest is written, so it never
+   reads its own side effect but its predecessor's. Measured across the 49
+   manifests this producer has actually written here: 47 `true`, 1 `false`, 1
+   field-absent. So a reader can neither rely on a constant nor extract a signal
+   from a varying one — both readings are unavailable, which is why the field
+   went rather than being re-placed a third time. Content loses nothing: it
+   already carries the per-file blob OID as the precise "which bytes did this
+   agent actually get" answer for a dirty, untracked or out-of-repo file, and
+   per-declared-file dirtiness stays derivable from content alone by comparing
+   each row's `rev` against `git rev-parse <commit>:<path>` — scoped to the
+   declared set, which is strictly better than a repo-wide flag. `repo_rev.commit`
+   only has to be the coarse, human-facing traceability stamp. Computed by
    `checklist_engine.repo_revision()` — a real `git` subprocess, deliberately
    kept **out of this module's own source** so the guarantee above (no `git`
    subprocess **in this file**) stays literally true.
@@ -104,11 +113,10 @@ ROOT_TOKENS = ("skill", "repo", "durable")
 #: `repo_rev` is admitted deliberately, but only its `commit` sub-field: `commit`
 #: is a fact about *canon* (which commit doctrine is versioned at) and is
 #: identical for any checkout of that commit, so it never varies by run
-#: environment. `dirty` is the opposite kind of fact -- which working tree
-#: *produced* this manifest, not which bytes it delivered -- so it is excluded to
-#: `run.dirty` instead (#300 g5 rework 1: `git status --porcelain` is repo-wide,
-#: so it flips on an edit to a file no declaration names, which is exactly the
-#: case that must never reach content).
+#: environment. This tuple is UNCHANGED by #327 (#305 g4): `dirty` was never in
+#: it. That removal took the field out of the `run` subtree, not out of content,
+#: so nothing here had to move -- which is itself the evidence that admitting
+#: `repo_rev` by sub-field was the right shape.
 CONTENT_KEYS = ("contract", "step", "files", "repo_rev")
 
 
@@ -303,13 +311,15 @@ def default_repo_state(roots: Mapping[str, Any]) -> Mapping[str, Any]:
     only `skill`) yields `{"commit": None, "dirty": None}` rather than raising —
     the same "absence is normal" rule `read_bytes` follows for a missing file.
 
-    Returns **both** `commit` and `dirty` — this edge is not where the
-    content/`run` split happens. `build_manifest` is what splits the pair:
-    `commit` becomes the content field `repo_rev`; `dirty` becomes `run.dirty`
-    (#300 g5 rework 1). Keeping this function un-split keeps `repo_revision()` a
-    general repo-facts primitive, not one pre-shaped to this module's own
-    content/run boundary — a second caller with different needs is free to use
-    either half.
+    Returns **both** `commit` and `dirty`, deliberately. Only `commit` is
+    consumed: `build_manifest` takes it as the content field `repo_rev` and
+    **drops `dirty` on the floor** — since #327 (#305 g4) no manifest carries
+    that field anywhere, in content or in `run` (see the module docstring for
+    the measurement that settled it). Still returning both keeps
+    `repo_revision()` a general repo-facts primitive rather than one pre-shaped
+    to this module's needs — a second caller with different needs is free to use
+    either half, and shaping the primitive around this module's single-half
+    appetite would be the wrong seam.
     """
     base = roots.get("repo")
     if base is None:
@@ -317,26 +327,24 @@ def default_repo_state(roots: Mapping[str, Any]) -> Mapping[str, Any]:
     return repo_revision(Path(base))
 
 
-def run_facts(
-    roots: Mapping[str, Any], work_id: str | None = None, dirty: bool | None = None
-) -> dict:
+def run_facts(roots: Mapping[str, Any], work_id: str | None = None) -> dict:
     """The `/run` subtree: every legitimately-varying fact, and nothing else.
 
     Absolute roots, timestamps and host facts all live here. Nothing varying may
     live outside this subtree — that is what makes the determinism comparison a
     single-pointer exclusion instead of a maintained field list.
 
-    `dirty` joined this subtree in #300 g5 rework 1: whether the working tree
-    that produced this manifest was clean is a fact about the *producing
-    environment*, not about the bytes delivered, so it sits here beside
-    `roots`/`host` rather than inside the content field `repo_rev`. The caller
-    (`build_manifest`) is what supplies it — this function stays a plain
-    assembler of whatever run-environment facts it is handed.
+    A `dirty` flag lived here between #300 g5 rework 1 and #327 (#305 g4), when
+    it was removed outright — it is a fact about the producing environment's
+    noise (repo-wide, dominated by the run's own bookkeeping) rather than about
+    the bytes delivered, and it was neither dependable enough to rely on nor
+    varying informatively enough to read. Nothing replaced it: per-declared-file
+    dirtiness is derivable from content alone. Do not re-add it here without
+    reading the module docstring's measurement first.
     """
     return {
         "work_id": work_id,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "dirty": dirty,
         # ROOT_TOKENS order, not sorted() and not dict order — deterministic without
         # importing any ordering the declaration did not ask for.
         "roots": {t: Path(roots[t]).as_posix() for t in ROOT_TOKENS if t in roots},
@@ -364,12 +372,13 @@ def build_manifest(
     argument, and it would let a test assert against a step production never
     reaches.
 
-    `repo_state(roots)` returns `{commit, dirty}` and is split right here, not
-    upstream: `commit` becomes the content field `repo_rev` — canon-determined,
-    identical for any checkout of that commit; `dirty` becomes `run.dirty` — a
-    fact about the working tree that produced this manifest, excluded like every
-    other run-environment fact (#300 g5 rework 1; see `CONTENT_KEYS` and the
-    module docstring for why the two do not travel together).
+    `repo_state(roots)` returns `{commit, dirty}` and only `commit` is used —
+    canon-determined, identical for any checkout of that commit, so it is safe as
+    the content field `repo_rev`. `dirty` is read from the edge and discarded
+    here; it reached no part of the manifest after #327 (#305 g4). The edge is
+    still asked for the pair because it is a general repo-facts primitive; this
+    assembly point is simply the one consumer, and it consumes one half. See the
+    module docstring for the measurement behind the removal.
     """
     selected = active_id(checklist)
     if selected is None:
@@ -384,7 +393,7 @@ def build_manifest(
         "step": selected,
         "files": rows(declaration_of(task), roots, reader),
         "repo_rev": {"commit": state.get("commit")},
-        "run": run_facts(roots, work_id=checklist.get("work_id"), dirty=state.get("dirty")),
+        "run": run_facts(roots, work_id=checklist.get("work_id")),
     }
 
 
