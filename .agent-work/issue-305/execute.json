@@ -580,7 +580,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-2",
+          "attested": {
+            "evidence": "e-g3-implement-2",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -615,7 +620,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "reopen_reason": "Reviewer M1 and M5 proved two premise guards vacuous, verified by me in the code. test_control_records_nothing_agent_authored asserts only that issued VERBS are a subset of allowed verbs, which _run already enforces; the no-prose-flags invariant it claims lives in a COMMENT and is asserted nowhere, so rewriting advance --mechanical to --why with narrative prose still passes. test_every_field_has_a_named_independent_source scans the expectation SOURCE STRING for forbidden substrings, so an oracle whose code calls the composer passes as long as its description does not say so. Central control is sound; these two guards need teeth."
       },
@@ -637,6 +642,41 @@
             "reason": "Reviewer M1 and M5 proved two premise guards vacuous, verified by me in the code. test_control_records_nothing_agent_authored asserts only that issued VERBS are a subset of allowed verbs, which _run already enforces; the no-prose-flags invariant it claims lives in a COMMENT and is asserted nowhere, so rewriting advance --mechanical to --why with narrative prose still passes. test_every_field_has_a_named_independent_source scans the expectation SOURCE STRING for forbidden substrings, so an oracle whose code calls the composer passes as long as its description does not say so. Central control is sound; these two guards need teeth.",
             "ts": "2026-08-02T06:50:43.169808+00:00"
           }
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g3-implement-rework-result.md",
+            "verdict": "complete",
+            "blockers": "none",
+            "attempt": 2,
+            "commits": [
+              "9644fb3",
+              "283175b"
+            ],
+            "verified_by": "commander-305e, independently, against the SHIPPED file",
+            "verification_notes": ".agent-work/issue-305/notes-1.md",
+            "suite": "1487 passed, 2 skipped, 472 subtests (measured by commander-305e, twice)",
+            "restoration": "all six files blob-OID match HEAD; #319 honoured, never raw bytes",
+            "red_proofs_rerun": {
+              "V1_agent_prose_advance_and_attest": "RED - assert violations == [], 44 violations",
+              "V2_novel_unsanctioned_attest_evidence_flag": "RED - 8 violations, caught by the CLOSED-WORLD arm alone; --evidence is absent from AGENT_TEXT_FLAGS so a blacklist misses it",
+              "V3_oracle_self_comparison": "RED - 'the oracle called episode_capture.reopen_total'",
+              "method": "each asserted on its SPECIFIC assertion text, never a non-zero exit"
+            },
+            "gap_found_in_inherited_evidence": "the crew's red-proofs ran against intermediate revisions 49059be and fb9dfc2; neither is the shipped file 667b5e4, so the shipped artifact had never itself been red-proofed",
+            "defect_found_and_fixed": {
+              "what": "the census docstring claimed more than the code checked - claim --claimed-by is a SECOND agent-supplied string and _lease_role reads it into the `role` mechanical field, but --claimed-by was absent from AGENT_TEXT_FLAGS so the census could not see it",
+              "class": "Admiral ruling-1 corollary: assert against the behaviour, never against text describing it. NOT a vacuous guard - it fires hard on V1/V2/V3",
+              "V4_measured": "role constant replaced with a hand-written sentence -> 15 passed, exit 0 (blind)",
+              "V5_before_after": "same mutation, census test only: pre-fix PASSES, post-fix FAILS naming the composed string",
+              "fix": "commit 283175b - --claimed-by counted, PARENT_ROLE declared, census asserts exactly two constants, docstring corrected",
+              "supersedes": "the rework's 'no third vacuous guard found' sweep, and ratified ruling 2's wording"
+            }
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 1
@@ -1007,6 +1047,13 @@
       "reopen": true,
       "reason": "Reviewer M1 and M5 proved two premise guards vacuous, verified by me in the code. test_control_records_nothing_agent_authored asserts only that issued VERBS are a subset of allowed verbs, which _run already enforces; the no-prose-flags invariant it claims lives in a COMMENT and is asserted nowhere, so rewriting advance --mechanical to --why with narrative prose still passes. test_every_field_has_a_named_independent_source scans the expectation SOURCE STRING for forbidden substrings, so an oracle whose code calls the composer passes as long as its description does not say so. Central control is sound; these two guards need teeth.",
       "ts": "2026-08-02T06:50:43.169831+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g3-implement",
+      "why": "Rework verified rather than inherited: suite 1487/2/472 measured twice, restoration by blob OID, and all three red-proofs re-run against the SHIPPED file (the crew's ran against intermediates 49059be/fb9dfc2, neither of which shipped). My own sweep found what theirs missed - the census docstring claimed one agent-authored constant when claim --claimed-by is a second one feeding the role mechanical field; fixed in 283175b and proven by a pre/post mutation where the census passes before and fails after. Gate closes with the control falsifiable on its premise guards as well as its field comparison.",
+      "mechanical": false,
+      "ts": "2026-08-02T15:57:25.598544+00:00"
     }
   ],
   "amendments": [
@@ -1027,5 +1074,15 @@
         "rescoped g2-implement"
       ]
     }
-  ]
+  ],
+  "engine_session": {
+    "session_id": "commander-305e",
+    "status": "active",
+    "claimed_at": "2026-08-02T15:39:11.877674+00:00",
+    "last_heartbeat": "2026-08-02T15:57:25.598562+00:00",
+    "claimed_by": "commander-305e",
+    "worktree": "C:/Programs/constellation-skills-wt/e298-305",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
 }
