@@ -134,7 +134,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g1",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -145,7 +146,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -154,11 +160,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g1-review-result.md",
+            "verdict": "BLOCK",
+            "crew": "constellation/issue-305/g1-review/reviewer/attempt-1",
+            "verified": "fresh"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -672,6 +691,13 @@
       "why": "Seam landed at both sites and I reproduced the evidence: full suite 1435 passed / 2 skipped / 410 subtests, and the engine diff at 967493c..HEAD is an import shim, two one-line emit calls, and base_dir threading onto reopen -- no logic in the engine. The crew self-flagged that the literal 'import plus two call sites, nothing else' criterion was not achievable because reopen() had no route to the checklist's on-disk location; I accept the two plumbing lines under delegated structural latitude, since the alternatives (module global, or emitting from dispatch/_run_verb) are both worse and the latter is explicitly excluded. Recording a defect the crew's honesty covered for: m3's c3 postcondition was 'git diff --stat', which exits 0 whatever the diff says, so 'nothing else' was never mechanically checked -- I verified it by reading the diff instead. Three triage candidates banked, the sharpest being that install_constellation.py may not bundle episode_capture.py, which would make a skill emit no manifests and say nothing.",
       "mechanical": false,
       "ts": "2026-08-02T02:29:16.457299+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer returned BLOCK with two blockers, both at the boundaries of D1's claim rather than inside it. Criteria 2/3/4 passed under independent adversarial attack (17 case-verb pairs comparing stdout and stderr as well as exit code; the durable double-nesting trap disarmed at the resolved absolute path across all three durable_root branches; the all-null control asserting hand-computed content on both sides of the null boundary). Six mutants, five outside the implementer's set, all killed -- the tests have genuine falsifiability, and the ONE mutation with no killer is the packaging one, which is exactly why blocker 1a was invisible to both crews. Blocker 1a: install_constellation.SKILL_SCRIPT_BUNDLES ships checklist_engine.py to nine skills and episode_capture.py to none, so the installed engine takes the ImportError no-op and the feature is inert in production, fail-silent -- I confirmed the installed commander skill lacks both sidecars. Floated to the Admiral because it touches production packaging AND the main checkout has uncommitted work in that exact file. Blocker 1b: record() has no in-progress guard, so surveys consolidate with zero emits; D1 is sound but scoped to gated spines and the module docstring overreaches. Fixing the docstring myself; not widening the seam unasked. Also corrected: my own justification for the reopen plumbing lines was wrong -- reopen's emit is a no-op on every reachable production path since a complete gate necessarily passed start.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:53:12.536595+00:00"
     }
   ],
   "amendments": [

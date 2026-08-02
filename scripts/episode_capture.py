@@ -17,6 +17,17 @@ instead of every verb. It is also the semantically right place: the manifest's o
 docstring says it records what was available to the agent running *this step*, and
 step activation is exactly that moment.
 
+**That guarantee is scoped to gated checklists, and the scope is load-bearing.**
+A **survey** does not have it: `record()` carries no `in-progress` guard, so a
+survey is visited and consolidated straight from `pending` and this seam never
+fires. Reviewer, Cartographer, Scout and Curator all drive surveys, so surveys are
+not a corner case — they are simply outside what `start`/`reopen` can cover.
+Stated here because the honest claim is "unskippable on a gated spine", not
+"unskippable", and a reader who takes the wider reading will believe a survey run
+left a delivery record when none exists. Covering surveys means giving `record()`
+the same guard, which is a design change to the survey lifecycle and deliberately
+not made here.
+
 Three rules carry the design.
 
 **Write-if-absent, never overwrite.** The manifest is a per-step *delivery
