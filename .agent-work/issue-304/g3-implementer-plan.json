@@ -274,7 +274,8 @@
           "id": "p1",
           "statement": "the run happened and its output is captured",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "run captured at ab155d0"
         }
       ],
       "postconditions": [
@@ -282,7 +283,8 @@
           "id": "c1",
           "statement": "T1 through T5 each carry an outcome grounded in an actual observation, with the pre-registration SHA cited (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "T1 HELD (with a named near-miss: two pinning tests failed, both for the exempted literal-string reason, in files the handoff's constraint list did not enumerate). T2 HELD, observed not inferred - e0-context advanced first try. T3 split: the degraded-refusal clause HELD (one command discharged it, work continued); the mapped-repo clause UNTESTED because no mapped repo was reachable (f1Brainz is off-limits since orient WRITES a receipt) - scored as untested, not as held. T4 DID NOT FIRE; the deletion script carried its own refusal guard and the phrase count went 2 -> 1. T5 NOT DETERMINABLE at this gate and recorded as a measurement gap per the pre-registration's own instruction; what WAS established is that grep 'map_before_src' scripts/map_orient.py returns nothing, so the gate observes receipt content and never ordering."
         },
         {
           "id": "c2",
@@ -291,7 +293,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/TRIPWIRE_OUTCOMES.md && test $(grep -c '^## T' .agent-work/issue-304/TRIPWIRE_OUTCOMES.md) -eq 5 && echo OK"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
         }
       ],
       "constraints": [
@@ -299,11 +302,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/TRIPWIRE_OUTCOMES.md && test $(grep -c '^## T' .agent-work/issue-304/TRIPWIRE_OUTCOMES.md) -eq 5 && echo OK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m6": {
@@ -456,7 +471,7 @@
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T03:58:15.788379+00:00",
+    "last_heartbeat": "2026-08-02T04:00:31.241762+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -497,6 +512,13 @@
       "why": "The run is a real result in both directions. The contract REPORTS rather than passing silently: it refused the advance, named the missing receipt, named exactly what a degraded verdict still owed, and accepted only a discharge carrying a hash-pinned substitute plus the unmapped gap plus an escalation. And the deletion changed nothing mechanical: both checklists carry config_ref docs/agents/engine-config.json, that file does not exist, and the engine degraded it silently and correctly with no prose anywhere telling it to. The T5-relevant finding is a NEGATIVE with evidence: grep for map_before_src in map_orient.py returns nothing - the gate observes the RECEIPT's content, never tool ordering - so a run may still read fifty source files, then discharge orientation, then advance context. Better positioned, not enforcing.",
       "mechanical": false,
       "ts": "2026-08-02T03:58:15.788362+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "Two of five outcomes are honest negatives or non-results, and they are recorded as such rather than rounded to HELD: T3's mapped-repo clause is UNTESTED (no instrument), and T5 is NOT DETERMINABLE (a single scripted drive by the anchor's own author is not a behavioural sample). The pre-registration anticipated exactly this for T5 and asked for the gap to be named. The one forward-looking obligation this produces: POST must be designed to distinguish 'insufficient' from 'irrelevant', which needs runs under BOTH anchors - a POST that samples only the new anchor will return 'unchanged' and be unable to say which it saw.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:00:31.241741+00:00"
     }
   ],
   "amendments": [
