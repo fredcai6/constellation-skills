@@ -1,79 +1,74 @@
 # Crash-resume state note — issue-305
 
-- **step:** execute · gate **`g1-integrate` — HELD at a BLOCK verdict, waiting on an Admiral ruling**
-- **slug:** issue-305 · branch `epic-298/305` · worktree `C:/Programs/constellation-skills-wt/e298-305` · base `967493c`
+- **step:** execute · **`g1` is CLOSED** · gate **`g2-implement`** is next
+- **slug:** issue-305 · branch `epic-298/305` (**PUSHED to origin**) · worktree `C:/Programs/constellation-skills-wt/e298-305` · base `967493c`
 - **next command:** `cd "C:/Programs/constellation-skills-wt/e298-305" && python scripts/checklist_engine.py --file .agent-work/issue-305/execute.json current`
 - **pid:** none — foreground
-- **expected artifact:** the Admiral's ruling on issue **#362** (packaging), then either a g1 rework dispatch or `advance g1-integrate`
+- **expected artifact:** `.agent-work/issue-305/crew/g2-implement-result.md`
 
-**Everything is committed.** Latest: `epic-298/305` at the "scope the unskippability claim" commit. Nothing is at risk from a `git clean`.
+**Everything is committed AND pushed.** Nothing depends on this machine surviving.
 
-## Engine leases
+## Leases and engine
 
-Spine + gate plan lease: **`commander-305-e298`** — pass `--session-id commander-305-e298` on every
-mutating call against `spine.json`. (The gate plan `execute.json` has accepted calls without it.)
-Spine: `.agent-work/issue-305/spine.json` · Gate plan: `.agent-work/issue-305/execute.json`.
+Spine + gate plan lease: **`commander-305-e298`**. Spine `.agent-work/issue-305/spine.json`,
+gate plan `.agent-work/issue-305/execute.json`.
+**Drive the WORKTREE `scripts/checklist_engine.py`** — Admiral APPROVED this explicitly over the
+installed copy, because this run modifies the engine and driving a different copy would mean the
+change is never exercised by the run that makes it. If the emit path ever wedges a verb, **that is a
+finding to report, not a reason to switch engines and hide it.**
 
-**Drive the WORKTREE `scripts/checklist_engine.py`, never the installed copy.** This run modifies the
-engine; mixing binaries is the hazard.
+## Done
 
-## Where the run actually is
+- **g1 COMPLETE** (implement → review → **reopen for the ruled packaging rework** → re-review → integrate).
+  Seam emits at `start()`/`reopen()`, write-if-absent; the whole transitive closure
+  (`episode_capture.py`, `agent_work_root.py`, `context_manifest.py`) now ships to all ten
+  engine-carrying skills via `SCRIPT_RUNTIME_COMPANIONS`; a new detector sees plain `sys.path` +
+  sibling imports, which the old regex-only guard was structurally blind to.
+- **#362 verified fixed IN THE WORLD**, not just in the dict: installed the `implementer` skill
+  (bundle is `checklist_engine.py` *alone*) to a temp dest, all four companions landed, and in a fresh
+  process with cwd **outside** the repo the installed engine bound
+  `emit_step_manifest.__module__ == 'episode_capture'`, not the fallback.
+- **Return item 4 proven:** #300's AC1 can now fail. Pre-seam engine (extracted from `967493c` and
+  checked to genuinely lack `emit_step_manifest`) emits `manifests=[]`; post-seam emits `['g1.json']`.
 
-`plan` is **complete and frozen** (4 crew gates). Spine is at `execute [in-progress]`.
+## Next: g2 — read this before dispatching
 
-- `g1-implement` — **complete.** Seam wired at `start()` and `reopen()`.
-- `g1-review` — **complete.** Verdict **BLOCK**.
-- `g1-integrate` — **HELD.** See below.
-- `g2` / `g3` / `g4` — pending. `g2-implement` and `g2-review` were **amended** (`--authority admiral`)
-  to carry the refusals ruling and the independent-mutation bar.
+`g2-implement` was **amended twice** and both amendments are load-bearing:
 
-## Why g1-integrate is held — read this before doing anything
+1. **`refusals` IS in scope** (Admiral). Additive only; **`docs/CHECKLIST_SCHEMA.md` in the same PR**;
+   prove the counter can be wrong **and** that the test can fail on the *specific* assertion; **state
+   the #344 latency**. Also correct **`docs/EPISODE_STORE.md:781`** — it promises automated capture
+   that `_validate_create` forbids; #305 delivers a **mechanical snapshot**, not auto-created episodes.
+2. **`project` sourcing is CORRECTED — do NOT use `durable_root()`.** It returns the *worktree*
+   whenever an active Admiral epic lease exists (the condition this epic runs under), so `project`
+   would be `e298-305` — the exact per-epic drift D5 existed to prevent. Use the parent of
+   `git rev-parse --git-common-dir`; **refuse** rather than guess if git is absent. The stability test
+   **must run from a linked worktree under an active epic lease**, because a plain-checkout test
+   passes on the broken formula. Measured, not read.
 
-The reviewer returned **BLOCK** on two blockers. One is fixed; one needs a ruling.
+`g2-review` was amended to require an **independent mutation outside the implementer's shipped set**,
+the both-sides-of-the-boundary rule, and the case a one-sided test misses: **induce a successful verb
+and assert the counter did NOT move.**
 
-**Blocker 1a — NOT FIXED, floated, filed as #362.** `install_constellation.SKILL_SCRIPT_BUNDLES` ships
-`checklist_engine.py` to nine skills and `episode_capture.py`/`context_manifest.py` to **none**. The
-engine's `except ImportError` no-op therefore runs in production, so **the seam is inert everywhere it
-ships, silently**. Confirmed: the installed commander skill has the engine and neither sidecar.
+## Lessons harvested (for the feedback step — do not lose these)
 
-Floated because it is production packaging **and** because `C:/Programs/constellation-skills` has
-**uncommitted local changes to `scripts/install_constellation.py`** (Tommy's live work) — a real
-collision. My recommendation to the Admiral: scope it in, add the two files to every engine-carrying
-bundle, plus a test asserting the companion invariant.
+- **A vacuous check plus an honest crew reads exactly like a passing check plus a compliant crew.**
+  m3's "the engine diff is an import plus two call sites and nothing else" was checked by
+  `git diff --stat`, which exits 0 regardless. Authored by a **Commander into a crew's job file** —
+  the grader, not the graded. Sixth #337 costume.
+- **A revert-based red proves the assertion matches the tree; only a NOVEL module proves the detector
+  parses.** Belongs in the handoff template, not in a reviewer's initiative.
+- **`constellation-implementer` has no sanctioned resume or no-plan path**, so a rework dispatch
+  contradicts the skill's opening imperative and costs every implementer a judgment call.
+- Handoff error to fix: `--session-id` is **required** by `consolidate`, not rejected.
 
-**Blocker 1b — FIXED.** `record()` has no `in-progress` guard, so surveys consolidate from `pending`
-and never emit. D1's argument is sound but scoped to gated spines; the module docstring overreached.
-Corrected in `scripts/episode_capture.py` to state the real scope and name surveys as outside it.
-Covering surveys is a survey-lifecycle design change — filed as **#359**, deliberately not done here.
+## Issues filed
 
-## Rulings in force (do not reopen)
+**#362** packaging (FIXED this run, close it with the PR) · **#359** surveys bypass the seam
+(must travel in the PR body alongside the capability, per the Admiral) · **#360** doubled work-id
+manifest path — **confirmed live from this run's own artifacts** (`.agent-work/issue-305/issue-305/context/`)
+· **#361** unguarded `work_id` + duplicated place-and-write.
 
-Seam is `start()`+`reopen()`, write-if-absent. `refusals` **is in scope** (additive only;
-`docs/CHECKLIST_SCHEMA.md` in the same PR; prove the counter can be wrong *and* that the test can fail
-on the specific assertion; state the #344 latency). **Mechanical snapshot, not auto-created episodes**;
-`docs/EPISODE_STORE.md:781` is a defect to correct. #327 (`run.dirty`) stays in scope. Refuse, never
-fabricate. Read `PLAN_CRITIC_DISPOSITION.md` **before** `CONVERGENCE.md` — the disposition wins.
+**Suite: 1436 passed, 2 skipped, 471 subtests.** **Branch: PENDING** — pushed, no PR yet.
 
-## Two corrections to the record a successor should not re-derive
-
-- **m3's "nothing else" postcondition was vacuous**: the check was `git diff --stat -- scripts/checklist_engine.py`,
-  which exits 0 whatever the diff contains. It could not fail. The engine diff was verified by reading it.
-- **The `reopen` plumbing justification was wrong.** `reopen` refuses anything not `complete`, and a
-  complete gate necessarily passed `start`, so its manifest exists and write-if-absent returns early —
-  **`reopen`'s emit is a no-op on every reachable production path.** The two lines stay (free, symmetric,
-  and they do fire for a pre-#305 spine), but not for the reason originally given.
-
-## Issues filed this run
-
-**#362** packaging (the blocker) · **#359** surveys bypass the seam · **#360** phantom manifest
-directories for sub-checklists · **#361** unguarded `work_id` in the path + duplicated place-and-write.
-
-## Evidence standing
-
-Full suite **1435 passed, 2 skipped, 410 subtests**, reproduced independently by me. Reviewer ran six
-mutants (five outside the implementer's set), all killed. The seam dogfooded itself: `start g1-review`
-emitted `.agent-work/issue-305/context/g1-review.json`.
-
-**Branch status: PENDING.** Nothing pushed, no PR.
-
-_Updated: 2026-08-02T03:05:00Z_
+_Updated: 2026-08-02T04:05:00Z_
