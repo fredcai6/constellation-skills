@@ -386,7 +386,8 @@
           "id": "p1",
           "statement": "episodes filed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "episodes filed at fc1685a"
         }
       ],
       "postconditions": [
@@ -394,7 +395,8 @@
           "id": "c1",
           "statement": "figures derived from named git commands, consumer and successor-timing both stated (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every figure derived from a named git command with the command printed beside its output: 100 files / 63681 words corpus, 19 SKILL.md / 15831 words always-loaded (24.9%), per-role table, tests+scripts context, and g3's own delta (-82 spine, -86 execute, -168 corpus). Consumer NAMED as the next trend snapshot; successor expected at the close of the next epic that changes skills/, with the condition stated as epic-bound rather than calendar-bound and the reason given. Section 5 ranks what to compare first."
         },
         {
           "id": "c2",
@@ -403,17 +405,30 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/TREND_SNAPSHOT.md && grep -qi successor .agent-work/issue-304/TREND_SNAPSHOT.md && echo OK"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m7-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/TREND_SNAPSHOT.md && grep -qi successor .agent-work/issue-304/TREND_SNAPSHOT.md && echo OK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m8": {
@@ -486,7 +501,7 @@
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T04:02:46.553340+00:00",
+    "last_heartbeat": "2026-08-02T04:04:45.570375+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -541,6 +556,13 @@
       "why": "The store has no 'confirmed' standing (#342), so a tripwire that held and one never checked look identical in the store. That is exactly why each observed-behavior carries a specific quoted observation and the pre-registration SHA: the citation is doing the work the missing standing cannot. Episode -005 deliberately records NOT DETERMINABLE plus the forward measurement requirement rather than a verdict.",
       "mechanical": false,
       "ts": "2026-08-02T04:02:46.553319+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7",
+      "why": "The snapshot's baseline commit is a8d9467, g3's own starting point, NOT the pre-registration 0119fa4 - measuring from 0119fa4 would show the spine GROWING, because g2 landed several hundred words of verify-frame prose in between, and would silently attribute g2's addition to g3's deletion. The 172-deleted vs 168-corpus-moved gap is stated explicitly for the same reason: a successor that finds arithmetic that does not close will assume a miscount rather than the +4 retarget.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:04:45.570354+00:00"
     }
   ],
   "amendments": [
