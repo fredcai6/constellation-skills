@@ -418,7 +418,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q && python scripts/map_orient.py --self-test"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-1"
         },
         {
           "id": "c3",
@@ -427,17 +428,41 @@
             "kind": "command",
             "command": "grep -q 'substitute_label' C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g2-result.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m7-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q && python scripts/map_orient.py --self-test",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'substitute_label' C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g2-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -446,13 +471,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "g2-implementer-304b",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T03:12:56.498174+00:00",
-    "last_heartbeat": "2026-08-02T03:17:20.990269+00:00",
+    "last_heartbeat": "2026-08-02T03:26:20.828975+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T03:26:28.611444+00:00"
   },
   "why_trail": [
     {
@@ -503,6 +529,13 @@
       "why": "Mutation floor extended with three verify-frame mutations, the vacuous pass (an absent frame credited as a pass) being the one that matters, and all three are killed. Applied-before-red held on each: anchor unique = 1, gone after substitution = 0, replacement count delta exactly +1, evaluated BEFORE the floor was run, so a no-op mutation cannot be mistaken for a killed mutant. Required evidence green: 284 passed 419 subtests on the handoff command verbatim, 303 passed 433 subtests on the superset that also covers the new wiring file, self-test exit 0. IMPLEMENTER_RESULT written to .agent-work/issue-304/crew-handoffs/g2-result.md with all six deviations named, including the three red reconstructions and the one pre-existing self-test assertion I tightened. The addendum's offered free fix was declined with measured evidence: the {64} regex already rejects longer digests because of the end anchor, and {64,} would loosen it.",
       "mechanical": false,
       "ts": "2026-08-02T02:41:31.315182+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7",
+      "why": "g2 review BLOCK closed by Commander's first-choice adjudication: wire the label into reported output. render_verify_report now decodes each receipt substitute through substitute_label and emits a provenance line; verify-orientation is the honest home because it is the surface that genuinely reads a receipt back from disk, which is the only situation where the lenient-decode contract (an older receipt with no source key must read as agent-declared, never be upgraded by omission) is real. Both constraints honored: the source key on each receipt entry is untouched and still backs verify-frame, and orient still prints no anchor id - re-run rather than assumed, with a new test asserting the same of the surface I changed using a README that deliberately contains struct:app in prose. GENUINE TDD red observed in order: 5 failed, the report emitting no provenance at all, then 7 passed. Two new mutations pin the read path, including one the original g2 work could not have killed at all. Result narrative corrected: it named three dead helpers and fixed two, and the reason my main-rooted reachability pass missed the third is stated plainly - self-test as a subcommand launders dead code as live.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:26:20.828945+00:00"
     }
   ],
   "amendments": [
