@@ -13,6 +13,14 @@ All three send-backs are fixed, and I verified each by execution rather than by 
 The two falsifiability holes I found last pass are both closed. One minor mutation survives; it is
 filed as triage, not a blocker, for reasons given below.
 
+**The three send-backs, and how each was verified:**
+
+| | Send-back | How I verified it | Result |
+|---|---|---|---|
+| **B1** | `orient` discharged a DEGRADED record (exit 0) when a declared substitute could not be read — `content_hash: "unreadable"` passed as a pin | Ran `orient`/`verify-orientation` against a nonexistent and a real substitute; then wrote a NEW mutation pinning an unreadable path with the valid sha256 of empty content (a well-formed forgery) and ran the floor against it | **FIXED** — sentinel replaced by `null` + a real sha256 shape check; forgery mutation KILLED |
+| **B2** | My mutation M4 (`unmapped_declared` `not any` → `not all`) SURVIVED the floor | Re-applied M4 character-for-character through the harness's own `apply_mutation`/`run_floor` | **FIXED** — now KILLED by the new multi-element arms |
+| **B3** | The result artifact claimed `.agent-work/probe/` was removed; it was still on disk | `ls` on the path | **FIXED** — the directory is gone, so the claim is now true |
+
 Survey driven end to end: `.agent-work/issue-304/g1-review-2/review.json`, session `rev2-g1-304`,
 eight items, consolidated `verdict=APPROVE`, 2 triage candidates. Fowler record:
 `.agent-work/issue-304/g1-review-2/fowler-pass.json` (rail exit 0).
@@ -205,7 +213,7 @@ over-long one, so under the mutant a 128-char sha512 would pass as a sha256 pin.
 - Fix is one token in each of two existing tuples (`"a" * 128`), at `scripts/map_orient.py:999` and
   `tests/test_map_orient.py:513`.
 
-This is a coverage gap at a boundary, not a reachable false-satisfied. Filed as `tc1`.
+This is a coverage gap at a boundary, not a reachable false-satisfied. Filed as `tc1` (pass 2).
 
 ## Blockers
 
@@ -225,7 +233,7 @@ multi-element cases, which is what was missing.
 None. The rework is confined to the substitute-readability path (`CONTENT_HASH_RE`,
 `is_content_hash`, `substitute_problems`, `substitutes_declared`, `pin_substitutes`) plus new test
 arms and two added mutations. No `verify-frame`, no template wiring, no prose deletion, #341/#342
-untouched, `checklist_engine.py` untouched. `tc1` from my first review (`--receipt-dir`) correctly
+untouched, `checklist_engine.py` untouched. `tc1` (pass 1) from my first review (`--receipt-dir`) correctly
 left alone as out of scope. `notes-304.md` shows modified but has an empty diff (line-endings) and is
 commander-owned, not implementer output.
 
@@ -256,8 +264,15 @@ No divergence. The rework tightens one predicate inside an existing module; no n
 
 ## Out-of-scope observations
 
-- **`tc1` — pin the hash-shape check's upper bound.** The P2 survivor above; one token in two tuples.
-- **`tc2` — the module docstring's "Honest limits" is now stale.** It still says the module "can only
+**The two triage candidates flagged on THIS pass** (recorded in `g1-review-2/review.json`; note the
+first review's survey also had candidates numbered `tc1`/`tc2` — those are different items, listed
+separately further down):
+
+- **`tc1` (pass 2) — pin the hash-shape check's upper bound.** Add an over-long digest (e.g.
+  `"a" * 128`) to the bad-hash tuples at `scripts/map_orient.py:999` and `tests/test_map_orient.py:513`.
+  A `CONTENT_HASH_RE` `{64}` → `{64,}` mutation currently survives the floor. Minor: the tool never
+  emits more than 64 chars and an unreadable path still pins `None`.
+- **`tc2` (pass 2) — the module docstring's "Honest limits" is now stale.** It still says the module "can only
   check the three fields are present and are not filler", which understates the new sha256 shape
   validation and omits the unreadable-substitute case entirely. I raised this in the first pass and it
   did not get picked up. It matters more than a normal doc nit because that section is the module's
@@ -270,10 +285,16 @@ No divergence. The rework tightens one predicate inside an existing module; no n
 - **`pin_substitutes`' untested absolute-path branch survived the rework** (`map_orient.py:770,773`).
   I flagged it partly because it was the function that produced the B1 sentinel; the sentinel is gone
   but the unexercised branch remains, and `--substitute` is still documented as repo-relative.
-- **Carried forward, unchanged:** the harness's kill criterion is still class-level rather than
-  reason-level (my `tc2` from the first review). Not re-litigated — but note the mitigation is
-  currently *me*: I have now behaviorally verified all five shipped mutations by hand across two
-  passes, and nothing in the harness does that automatically.
+**Carried forward from the FIRST review's survey, still open** (these are the items numbered
+`tc1`/`tc2` in `g1-review/review.json` — distinct from the pass-2 candidates above):
+
+- **`tc1` (pass 1) — `orient` writes a receipt into any directory it is pointed at**, including a repo
+  it does not own and including one that FAILED the repo-root proof. Explicitly out of scope for this
+  rework and correctly left alone. Recommend `--receipt-dir` over a bare `--no-write`.
+- **`tc2` (pass 1) — the harness's kill criterion is class-level rather than reason-level.** Unchanged
+  and not re-litigated — but note the mitigation is currently *me*: I have now behaviorally verified
+  all five shipped mutations by hand across two passes, and nothing in the harness does that
+  automatically.
 
 ## Workflow Feedback
 

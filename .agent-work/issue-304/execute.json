@@ -182,7 +182,7 @@
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "REVIEW_RESULT-2 received: APPROVE, supersedes the earlier BLOCK. 8-item survey consolidated, 2 triage candidates."
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -241,6 +241,16 @@
             "cmd": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q",
             "exit": 0,
             "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-304/crew-handoffs/g1-review-result-2.md"
           },
           "produced_by": "engine",
           "ts": ""

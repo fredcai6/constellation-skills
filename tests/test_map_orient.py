@@ -639,5 +639,257 @@ class ContractShape(unittest.TestCase):
         )
 
 
+# =============================================================================
+# verify-frame -- the citation check
+# =============================================================================
+#
+# The seam: **anchor ids exist only in the map**, so citing one is set-membership
+# proof the map was read. That turns "did the map inform the plan" into a
+# question a machine can answer with no stochastic judgement.
+#
+# What it does NOT achieve, stated here so no reader has to infer it: measured
+# against this epic's baseline five runs, this check has sensitivity 0/4 and
+# specificity 0/1 -- four runs cited map artifacts while exhibiting the defect
+# (they would pass) and the one run that would fail it was correct to disengage.
+# It ships as a regression FLOOR so map-ignoring cannot silently return. It is
+# not the fix for the measured defect, which is map-LATENESS.
+
+
+GOOD_FRAME = """# Mission Frame
+
+## Intent
+Serve the API without breaking the canonical path.
+
+## Structural Anchors
+- `struct:app` — the container
+- `struct:app.api` — component
+
+## Affected Capabilities
+- `capability:serve_requests` — what changes
+
+## Decision Anchors
+- `decision:one_canonical_path` — what it fixed
+"""
+
+UNKNOWN_ANCHOR_FRAME = """# Mission Frame
+
+## Structural Anchors
+- `struct:app` — real
+- `struct:ghost_module` — invented; nothing in the map carries this id
+"""
+
+CODE_CUT_FRAME = """# Mission Frame
+
+## Intent
+Fix the solver.
+
+## Structural Anchors
+- `src/engine/solver.py` — where the maths lives
+- `scripts/run_solver.py` — the entrypoint I found by grepping
+- `src/engine/util.py` — helpers
+"""
+
+DEGRADED_FRAME = """# Mission Frame
+
+## Intent
+No map exists; this frame is cut from the doctrine I declared at orient time.
+
+## Substituted Reading
+- `README.md` — the repo's own doctrine, hash-pinned in the orientation receipt
+"""
+
+UUNDECLARED_FALLBACK_FRAME = """# Mission Frame
+
+## Substituted Reading
+- `README.md` — declared and pinned
+- `CLAUDE.md` — I also read this
+"""
+
+
+def frame(root: Path, text: str, work_id: str = "w") -> Path:
+    return write(root / ".agent-work" / work_id / "MISSION_FRAME.md", text)
+
+
+def verify_frame(root: Path, work_id: str = "w", *extra: str) -> subprocess.CompletedProcess:
+    return run_cli("verify-frame", "--root", str(root), "--work-id", work_id, *extra)
+
+
+def resolved_repo(case: unittest.TestCase) -> RepoFixture:
+    """A repo with a real map, already oriented -- the RESOLVED baseline."""
+    repo = RepoFixture(case)
+    repo.file("docs/architecture/index.md", REAL_INDEX)
+    proc = orient(repo.root)
+    case.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+    return repo
+
+
+class AbsentFrameRefuses(unittest.TestCase):
+    """THE load-bearing negative case of this gate.
+
+    A check that passes when the artifact it checks does not exist is not a
+    check -- it is a decoration that reports success for every run that skips
+    the work entirely. Everything else in `verify-frame` is downstream of this
+    one refusal, which is why it was written first.
+    """
+
+    def test_an_absent_frame_refuses_on_a_resolved_repo(self):
+        repo = resolved_repo(self)
+        proc = verify_frame(repo.root)
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual(verdict(proc), "FRAME-MISSING")
+
+    def test_an_absent_frame_refuses_on_a_degraded_repo_too(self):
+        """The degraded arm must not become the vacuous-pass back door."""
+        repo = RepoFixture(self)
+        repo.file("README.md", "doctrine\n")
+        orient(repo.root, "w", "--substitute", "README.md",
+               "--unmapped", "everything structural", "--escalation", "ask commander")
+        proc = verify_frame(repo.root)
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual(verdict(proc), "FRAME-MISSING")
+
+    def test_an_empty_frame_file_is_the_same_as_no_frame(self):
+        repo = resolved_repo(self)
+        frame(repo.root, "   \n\n")
+        self.assertEqual(verdict(verify_frame(repo.root)), "FRAME-MISSING")
+
+    def test_the_refusal_names_the_path_it_looked_for(self):
+        repo = resolved_repo(self)
+        proc = verify_frame(repo.root)
+        self.assertIn("MISSION_FRAME.md", proc.stdout + proc.stderr)
+
+    def test_a_frame_without_a_receipt_refuses_rather_than_passing(self):
+        """No orientation happened at all -- the frame cannot be checked
+        against anything, and 'cannot check' is never 'passes'."""
+        repo = RepoFixture(self)
+        frame(repo.root, GOOD_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertEqual(verdict(proc), "RECEIPT-MISSING")
+        self.assertEqual(proc.returncode, 12)
+
+
+class VerifyFrameResolved(unittest.TestCase):
+    def test_a_frame_citing_real_map_anchors_passes(self):
+        repo = resolved_repo(self)
+        frame(repo.root, GOOD_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual(verdict(proc), "FRAME-OK")
+
+    def test_an_anchor_that_does_not_resolve_refuses_and_names_it(self):
+        repo = resolved_repo(self)
+        frame(repo.root, UNKNOWN_ANCHOR_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual(verdict(proc), "FRAME-REFUSED")
+        self.assertIn("struct:ghost_module", proc.stdout + proc.stderr)
+        # ...and does NOT indict the anchor that does resolve.
+        self.assertNotIn("struct:app does not", proc.stdout + proc.stderr)
+
+    def test_a_frame_cut_from_source_paths_refuses(self):
+        repo = resolved_repo(self)
+        frame(repo.root, CODE_CUT_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual(verdict(proc), "FRAME-REFUSED")
+        self.assertIn("src/engine/solver.py", proc.stdout + proc.stderr)
+
+    def test_a_frame_with_no_citation_at_all_refuses(self):
+        repo = resolved_repo(self)
+        frame(repo.root, "# Mission Frame\n\nI thought about it a lot.\n")
+        self.assertNotEqual(verify_frame(repo.root).returncode, 0)
+
+    def test_placeholder_anchors_do_not_count_as_citations(self):
+        """An unfilled MISSION_FRAME scaffold must not satisfy the check."""
+        repo = resolved_repo(self)
+        frame(repo.root, "## Structural Anchors\n- `struct:<id>` — path/symbol, level\n")
+        self.assertNotEqual(verify_frame(repo.root).returncode, 0)
+
+    def test_the_shipped_mission_frame_template_itself_does_not_pass(self):
+        """The scaffold this repo ships, verbatim. Uses the real committed file
+        so it cannot rot into a fixture nobody maintains."""
+        template = ROOT / "skills/commander/templates/MISSION_FRAME.template.md"
+        self.assertTrue(template.is_file(), template)
+        repo = resolved_repo(self)
+        frame(repo.root, template.read_text(encoding="utf-8"))
+        self.assertNotEqual(verify_frame(repo.root).returncode, 0)
+
+
+class VerifyFrameContractShape(unittest.TestCase):
+    def test_orient_never_prints_an_anchor_id(self):
+        """LOAD-BEARING -- do not drop this test.
+
+        If `orient` echoed the ids it found, the citation check would be
+        self-satisfying: an agent could paste back what the tool told it and
+        never open the map. The proof that the map was read has to come from
+        somewhere the tool did not hand over.
+        """
+        repo = RepoFixture(self)
+        repo.file("docs/architecture/index.md", REAL_INDEX)
+        repo.file("docs/architecture/packets/physics.md", REAL_PACKET)
+        proc = orient(repo.root)
+        self.assertEqual(verdict(proc), "RESOLVED")
+        found = mo.ANCHOR_RE.findall(proc.stdout) if hasattr(mo.ANCHOR_RE, "findall") else []
+        self.assertEqual(found, [], f"orient leaked anchor ids on stdout: {proc.stdout!r}")
+        # Belt and braces: the raw token must not appear either.
+        for token in ("struct:app", "capability:serve_requests", "struct:physics"):
+            with self.subTest(token=token):
+                self.assertNotIn(token, proc.stdout)
+
+    def test_verify_frame_only_echoes_ids_the_frame_itself_cited(self):
+        """The same rule for the checker: naming the offending citation is
+        required, listing the valid inventory would hand over the answer."""
+        repo = resolved_repo(self)
+        frame(repo.root, UNKNOWN_ANCHOR_FRAME)
+        out = verify_frame(repo.root).stdout + verify_frame(repo.root).stderr
+        self.assertIn("struct:ghost_module", out)
+        # `capability:serve_requests` is in the map but NOT in the frame.
+        self.assertNotIn("capability:serve_requests", out)
+        self.assertNotIn("decision:one_canonical_path", out)
+
+    def test_every_verify_frame_first_line_is_a_reserved_literal(self):
+        repo = resolved_repo(self)
+        cases = [verify_frame(repo.root)]
+        frame(repo.root, GOOD_FRAME)
+        cases.append(verify_frame(repo.root))
+        frame(repo.root, CODE_CUT_FRAME)
+        cases.append(verify_frame(repo.root))
+        cases.append(verify_frame(repo.root, "never-oriented"))
+        for proc in cases:
+            with self.subTest(first=verdict(proc)):
+                self.assertIn(verdict(proc), mo.RESERVED_FIRST_LINES)
+                self.assertTrue(verdict(proc).strip())
+
+    def test_verify_frame_invents_no_new_exit_codes(self):
+        repo = resolved_repo(self)
+        seen = {verify_frame(repo.root).returncode}
+        frame(repo.root, GOOD_FRAME)
+        seen.add(verify_frame(repo.root).returncode)
+        frame(repo.root, CODE_CUT_FRAME)
+        seen.add(verify_frame(repo.root).returncode)
+        frame(repo.root, UNKNOWN_ANCHOR_FRAME)
+        seen.add(verify_frame(repo.root).returncode)
+        self.assertTrue(seen <= {mo.EXIT_OK, *mo.SEMANTIC_EXIT_CODES}, seen)
+
+    def test_an_unresolvable_root_receipt_never_lets_a_frame_pass(self):
+        repo = RepoFixture(self)
+        degraded_receipt(repo.root, "w", mode="UNRESOLVABLE-ROOT")
+        frame(repo.root, GOOD_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertEqual(proc.returncode, 11)
+
+    def test_report_only_is_the_flag_flip_between_gating_and_reporting(self):
+        """The gate-vs-report ruling must be a flag flip, not a rebuild -- and
+        the reported verdict must be unchanged, only its blocking-ness."""
+        repo = resolved_repo(self)
+        frame(repo.root, CODE_CUT_FRAME)
+        gating = verify_frame(repo.root)
+        reporting = verify_frame(repo.root, "w", "--report-only")
+        self.assertNotEqual(gating.returncode, 0)
+        self.assertEqual(reporting.returncode, 0)
+        self.assertEqual(verdict(gating), verdict(reporting))
+        self.assertIn("would exit", reporting.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

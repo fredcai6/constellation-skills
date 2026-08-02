@@ -131,7 +131,15 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
     "lessons-auditor": ("checklist_engine.py",),
     "charter": ("checklist_engine.py",),
-    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
+    # map_orient.py is invoked by COMMANDER_SPINE.template.json as a command
+    # postcondition at BOTH the context step (verify-orientation) and the plan
+    # step (verify-frame), so it must travel with the skill that serves that
+    # template -- an uninstalled script would surface as a confusing gate failure
+    # mid-run. It loads no sibling module at runtime (stdlib only), so it has no
+    # SCRIPT_RUNTIME_COMPANIONS entry; that is a checked fact, not an omission --
+    # tests/test_install_constellation.py pins companions against actual dynamic
+    # loads.
+    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py"),
     # workbench is the checklist engine's home skill, so it is the canonical (and
     # only) owner of the gauge WRITER hook -- the gauge exists solely to feed
     # checklist_engine.py's `current` advisory. Deliberately NOT a companion of

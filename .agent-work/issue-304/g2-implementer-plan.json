@@ -1,0 +1,344 @@
+{
+  "work_id": "issue-304-g2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5",
+    "m6"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the g2 handoff and the g1 artifacts it builds on (scripts/map_orient.py, tests/test_map_orient.py, tests/test_mutation_floor.py, skills/commander/templates/COMMANDER_SPINE.template.json). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + g1 artifacts loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "THE ANCHOR CHANGE: re-anchor tasks.context.imperative to the act, not the artifact",
+      "imperative": "Highest-value item in the gate. In skills/commander/templates/COMMANDER_SPINE.template.json, replace the late-anchored map-read sentence in tasks.context.imperative with an imperative anchored to 'Before you open any source file, resolve and read the map input' -- naming the orient command, the RESOLVED behaviour (read the entrypoint and packets, treat later source reads as CONFIRMING a map-given frame), and the DEGRADED behaviour (record substitutes, the unmapped gap, and an escalation BEFORE any source read). PRE-B measured the late-anchored form ('BEFORE authoring execute.json') producing exact compliance with zero orientation. Do NOT touch tasks.context.context_refs -- it is pinned as a literal by tests/test_context_manifest.py -- and keep every declared context_refs path verbatim in the imperative or tests/test_context_declaration_lint.py fails. Write the new wiring test file first, observe it RED, then make it green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff verified complete and g1 artifacts read"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the anchor assertions in tests/test_map_contract_wiring.py written and observed FAILING against the un-re-anchored template",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the context imperative is anchored before any source read; the three template-pinning suites stay green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_contract_wiring.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "no context_refs change",
+        "Windows: encoding='utf-8', newline='\\n'",
+        "no 3.13+-only APIs"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_contract_wiring.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "verify-frame in scripts/map_orient.py -- ABSENT frame refuses first",
+      "imperative": "Add the verify-frame subcommand reading .agent-work/<work-id>/MISSION_FRAME.md plus the receipt orient wrote. Write the ABSENT-frame refusal test FIRST (the single most important negative case: an absent frame must never vacuously pass), then the rest of the matrix: resolved-and-valid passes; an unknown anchor refuses NAMING it; an all-source-path frame refuses as cut-from-code. Reuse the frozen exit-code vocabulary from g1 -- no new codes -- and keep the reserved-first-line contract. Do not print the map inventory: only ids the frame itself cited may be echoed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "anchor change landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete: the context imperative is re-anchored and the template pinning suites are green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the absent-frame refusal test written and observed FAILING before verify-frame exists",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "verify-frame refuses an absent frame, an unknown anchor, and a code-cut frame; the g1 floor and self-test stay green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q && python scripts/map_orient.py --self-test"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "frozen exit codes 0/10/11/12/13 only",
+        "reserved literal on stdout line 0"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Partial independent oracle for the degraded case: the fixed fallback set",
+      "imperative": "Add a fixed, corpus-declared fallback search order (README.md, AGENTS.md, CLAUDE.md, a docs/ index) that orient PROBES on the filesystem and records in the receipt, and label each declared substitute known-fallback (in the set AND present on disk -- verified by an oracle the agent does not author) vs agent-declared (unverified). Wire the degraded arm of verify-frame to the hash-pinned substitutes: a degraded frame must cite at least one declared substitute, and citing a known-fallback path the receipt never declared refuses. Test BOTH labels. Do not describe this as closing the self-attestation gap -- it converts half of it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verify-frame exists",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: both-label and degraded-frame tests written and observed FAILING before the fallback probe exists",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "both substitute labels are produced and asserted; a degraded frame citing an undeclared substitute refuses while a declared one passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q && python scripts/map_orient.py --self-test"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "additive optional receipt fields only -- an unlabelled substitute reads as agent-declared (unverified), the conservative default"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Wire the contract into COMMANDER_SPINE.template.json -- asymmetrically",
+      "imperative": "verify-orientation becomes a command postcondition c2 on the CONTEXT step; verify-frame becomes a command postcondition on the PLAN step. verify-frame must NOT run at context -- no frame exists there, and making an absent frame pass at context would destroy m2's ABSENT-frame refusal. Record that reasoning in the imperative PROSE so a future implementer sees the road not to take. Use <repo-root>, never a relative path (#341 is out of scope). Give the plan check override_policy {allowed:true, authority:human, reason_required:true} so a trivial-change escape is a recorded waiver; keep the context check tighter (no policy). Keep gate-vs-report flag-flippable. Name the frame path the plan step must write so the check is satisfiable.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verify-frame implemented and green",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: wiring assertions (context c2 names verify-orientation, plan check names verify-frame, neither uses a relative root, verify-frame is absent from the context step) written and observed FAILING",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the two checks are wired as specified and every template-pinning suite stays green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_contract_wiring.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_init_work_area.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not touch reconcile",
+        "do not modify checklist_engine.py",
+        "no prose deletion (that is g3)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5": {
+      "id": "m5",
+      "title": "Register map_orient.py in install_constellation.py",
+      "imperative": "Add map_orient.py to SKILL_SCRIPT_BUNDLES for the commander bundle(s) that serve the spine. Check whether it needs a SCRIPT_RUNTIME_COMPANIONS entry -- if it loads no sibling module at runtime it needs none, and saying so explicitly is the honest answer, not an omission.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the script is wired into the template",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the bundle-membership assertion written and observed FAILING before the registration",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "map_orient.py installs with the commander bundle; the installer suite stays green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_install_constellation.py tests/test_map_contract_wiring.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6": {
+      "id": "m6",
+      "title": "Extend the mutation floor against verify-frame, then run the full required evidence",
+      "imperative": "Add at least one named mutation targeting verify-frame -- the vacuous-pass mutation (an absent frame credited as a pass) is the one that matters -- keeping the applied-before-red discipline: assert the anchor was unique, that it is gone afterwards, and that the replacement's count went UP by exactly one; a non-matching anchor must raise HarnessError, never be credited as a kill. Then run the handoff's required evidence commands verbatim and paste both outputs into the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all implementation slices are green",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new mutation observed KILLING (floor red) only after the applied-before-red assertions pass -- verified by running the new mutation test",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the handoff's full required evidence command is green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q && python scripts/map_orient.py --self-test"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/issue-304/crew-handoffs/g2-result.md with evidence pasted verbatim",
+          "check": {
+            "kind": "command",
+            "command": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g2-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never fabricate evidence",
+        "only claim a cleanup actually verified"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g2-implementer-304",
+    "status": "active",
+    "claimed_at": "2026-08-01T23:34:07.514730+00:00",
+    "last_heartbeat": "2026-08-01T23:39:46.650261+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff complete: task, protected intent, deliverables, allowed scope, exclusions, constraints, required evidence, stop conditions, return format all present. g1 artifacts read: map_orient.py (orient + verify-orientation, frozen exit codes 0/10/11/12/13, reserved stdout literals), its floor, the mutation harness, and the spine template's context/plan tasks.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:34:15.817035+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "Anchor change landed: tasks.context.imperative now anchors the map read to 'Before you open any source file', names map_orient.py orient with --root <repo-root> --work-id <work-id>, and spells out the RESOLVED (confirming, not building) and DEGRADED (declared before any source read) arms. RED observed first: 11 failures in tests/test_map_contract_wiring.py before the edit. m1's authored gate command runs the whole wiring file, so the template wiring and installer registration (m4/m5 substance) had to land here too -- recorded as a deviation.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:39:08.404454+00:00"
+    }
+  ]
+}

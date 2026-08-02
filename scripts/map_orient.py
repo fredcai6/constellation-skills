@@ -13,11 +13,24 @@ Subcommands
     map_orient.py orient             --root ABS --work-id ID [--entrypoint REL]
                                      [--substitute REL ...] [--unmapped TEXT ...]
                                      [--escalation TEXT]
-    map_orient.py verify-orientation --root ABS --work-id ID
+    map_orient.py verify-orientation --root ABS --work-id ID [--report-only]
+    map_orient.py verify-frame       --root ABS --work-id ID [--report-only]
     map_orient.py --self-test
 
-`verify-frame` is deliberately NOT here (it lands separately); this module
-resolves an entrypoint, writes the receipt, and gates the degraded record.
+`--report-only` is the gate-vs-report dial: the verdict printed is identical,
+only its blocking-ness moves, so a ruling to gate or un-gate a step is a flag
+flip in the template's command string rather than a rebuild here.
+
+Where the two checks are wired, and why ASYMMETRICALLY
+------------------------------------------------------
+`verify-orientation` is a command postcondition at the Commander spine's
+**context** step; `verify-frame` is one at the **plan** step. `verify-frame`
+must NEVER run at context: no frame exists there (context precedes `understand`
+and `plan`), and the only way to make it pass there is to let an ABSENT frame
+pass -- which is precisely the refusal the whole check is built on. The road not
+to take, recorded because the cheap symmetric resolution is tempting and a cold
+critic already BLOCKed one plan over it: if `verify-frame` ever has to be
+context-safe, give it a step-scoped mode; never a vacuous pass.
 
 Exit-code vocabulary (FROZEN)
 -----------------------------
@@ -35,12 +48,21 @@ indistinguishable from a truthful verdict:
 So every semantic code sits **above** the traceback/argparse range and
 **below** the shell range -- an occupied-code-free band:
 
-    0    contract satisfied: RESOLVED, or a DEGRADED record fully discharged
-    10   DEGRADED and the record is NOT discharged -- it is missing at least one
-         of `substitutes` / `unmapped` / `escalation`, or one of them is filler
+    0    contract satisfied: RESOLVED, or a DEGRADED record fully discharged,
+         or a frame whose citations resolve
+    10   the map contract is NOT discharged -- a DEGRADED record missing at
+         least one of `substitutes` / `unmapped` / `escalation` (or one of them
+         filler), or a frame whose citations do not resolve (`verify-frame`)
     11   UNRESOLVABLE-ROOT -- could not look: `--root` is not a proven repo root
-    12   the receipt is missing or unusable (`verify-orientation`)
+    12   a required INPUT DOCUMENT is missing or unusable: the receipt, or --
+         for `verify-frame` -- the mission frame itself
     13   `--self-test` falsification floor failed
+
+`verify-frame` adds NO new codes. Two of the frozen ones carry a slightly wider
+reading, stated here rather than left implicit: 12 was "the receipt is missing"
+and is now "a required input document is missing", and 10 was "the degraded
+record is undischarged" and is now "the map contract is undischarged". Both are
+the same verdict about the same contract, reached one document later.
 
 `0` is the only success code; `10`-`13` are the semantic verdicts; nothing this
 module returns can be confused with `1`, `2`, `126`, or `127`.
@@ -52,10 +74,16 @@ never a bare count:
 
     RESOLVED  DEGRADED-NO-MAP  DEGRADED-EMPTY-MAP  DEGRADED-UNPARSEABLE
     UNRESOLVABLE-ROOT                      (the five `orient` verdicts)
-    RECEIPT-MISSING                        (`verify-orientation`, no usable receipt)
+    RECEIPT-MISSING                        (no usable receipt)
+    FRAME-OK  FRAME-MISSING  FRAME-REFUSED (`verify-frame`)
 
 The agent runs `orient` itself, so stdout is real there. The engine only ever
 sees the exit code, which is why the table above carries the contract.
+
+`orient` never prints an anchor id, and `verify-frame` echoes back only ids the
+frame it is checking already contains. If the tool handed over the ids, citing
+one would stop being evidence the map was read -- an agent could paste back what
+the tool told it. The proof has to come from somewhere the tool did not give.
 
 Resolution rule (ordered; first hit wins; EVERY candidate is still recorded)
 ----------------------------------------------------------------------------
@@ -150,6 +178,9 @@ MODE_DEGRADED_EMPTY_MAP = "DEGRADED-EMPTY-MAP"
 MODE_DEGRADED_UNPARSEABLE = "DEGRADED-UNPARSEABLE"
 MODE_UNRESOLVABLE_ROOT = "UNRESOLVABLE-ROOT"
 RECEIPT_MISSING = "RECEIPT-MISSING"
+FRAME_OK = "FRAME-OK"
+FRAME_MISSING = "FRAME-MISSING"
+FRAME_REFUSED = "FRAME-REFUSED"
 
 ORIENT_MODES = (
     MODE_RESOLVED,
@@ -158,7 +189,12 @@ ORIENT_MODES = (
     MODE_DEGRADED_UNPARSEABLE,
     MODE_UNRESOLVABLE_ROOT,
 )
-RESERVED_FIRST_LINES = ORIENT_MODES + (RECEIPT_MISSING,)
+RESERVED_FIRST_LINES = ORIENT_MODES + (
+    RECEIPT_MISSING,
+    FRAME_OK,
+    FRAME_MISSING,
+    FRAME_REFUSED,
+)
 
 # --- frozen exit vocabulary (see the module docstring for why these values) ---
 EXIT_OK = 0
@@ -557,6 +593,243 @@ def verify_verdict(receipt: object, work_id: str) -> tuple[str, int, list[str]]:
     return (mode, exit_code_for(mode, complete), problems)
 
 
+# =============================================================================
+# Frame citation contract (`verify-frame`)
+# =============================================================================
+#
+# The seam: anchor ids exist ONLY in the map, so citing one is set-membership
+# proof the map was read. That turns "did the map inform the plan" into a
+# question a machine can answer with no stochastic judgement.
+#
+# Know what this does and does not achieve. Measured against epic-298's baseline
+# five runs, this check has **sensitivity 0/4 and specificity 0/1**: four runs
+# cited map artifacts while exhibiting the defect (they would pass) and the one
+# run that would fail it was correct to disengage. It ships as a **regression
+# floor** so map-*ignoring* cannot silently return. It is NOT the fix for the
+# measured defect, which is map-*lateness* and needs a harness hook the corpus
+# does not own. It also inherits the late-anchor defect it was built beside:
+# anchors-in-a-late-frame is compliance without sequence.
+
+FRAME_NAME = "MISSION_FRAME.md"
+
+# A path-shaped token in free markdown. Deliberately loose: everything it
+# over-matches (`e.g`, `struct:app.api`) fails both the source-suffix and the
+# fallback-set membership tests below and is silently ignored.
+PATH_TOKEN_RE = re.compile(r"[A-Za-z0-9_.\-]+(?:/[A-Za-z0-9_.\-]+)*\.[A-Za-z0-9]{1,8}\b")
+
+# Suffixes that make a cited path CODE. A frame whose only citations are these
+# is a frame cut from code, which is the shape this whole module exists to
+# refuse -- the map is what a frame is supposed to be cut from.
+SOURCE_SUFFIXES = frozenset(
+    {
+        ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".go", ".rs", ".java",
+        ".c", ".h", ".cc", ".cpp", ".hpp", ".cs", ".rb", ".php", ".sh", ".ps1",
+        ".sql", ".kt", ".swift", ".scala", ".lua", ".pl", ".r", ".vue", ".svelte",
+    }
+)
+
+# The FIXED, corpus-declared fallback search order for the degraded case.
+#
+# The degraded check's declared weakness is that substitutes are SELF-SELECTED:
+# it verifies the author cited what the author declared. Fixing the search order
+# in the corpus and probing it on the filesystem closes HALF of that -- whether
+# one of these resolved is answered by an oracle the agent does not author. It
+# does NOT make the degraded check sound: the agent still chooses what to
+# declare, and an agent-declared path outside this set stays labelled
+# unverified. Do not describe this as closing the gap; it converts part of it.
+KNOWN_FALLBACKS = ("README.md", "AGENTS.md", "CLAUDE.md", "docs/index.md", "docs/README.md")
+KNOWN_FALLBACK_SET = frozenset(p.lower() for p in KNOWN_FALLBACKS)
+
+#: A substitute found in KNOWN_FALLBACKS *and* present on disk -- the half an
+#: independent oracle (the filesystem) confirms.
+LABEL_KNOWN_FALLBACK = "known-fallback"
+#: Anything else the agent declared. Allowed, but labelled UNVERIFIED so the
+#: receipt distinguishes "resolved from the known fallback set" from "the agent
+#: said so". An absent or unrecognised label reads as this one: the
+#: conservative default, so an older receipt is never upgraded by omission.
+LABEL_AGENT_DECLARED = "agent-declared"
+SUBSTITUTE_LABELS = (LABEL_KNOWN_FALLBACK, LABEL_AGENT_DECLARED)
+
+
+def normalize_cited_path(value: str) -> str:
+    """PURE. Comparable form of a cited path: posix separators, lowercased."""
+    return value.strip().strip("`").replace("\\", "/").lstrip("./").lower()
+
+
+def cited_paths(text: str) -> list[str]:
+    """PURE. Unique path-shaped tokens in `text`, in first-seen order."""
+    seen: dict[str, None] = {}
+    for match in PATH_TOKEN_RE.finditer(text):
+        seen.setdefault(match.group(0), None)
+    return list(seen)
+
+
+def is_source_path(value: str) -> bool:
+    """PURE. True when a cited path names a code file."""
+    lowered = normalize_cited_path(value)
+    dot = lowered.rfind(".")
+    return dot != -1 and lowered[dot:] in SOURCE_SUFFIXES
+
+
+def cited_source_paths(text: str) -> list[str]:
+    """PURE. The cited paths that are code files."""
+    return [p for p in cited_paths(text) if is_source_path(p)]
+
+
+def classify_substitute(rel_path: str, exists: bool) -> str:
+    """PURE. Which oracle backs this substitute.
+
+    `known-fallback` requires BOTH corpus membership and filesystem presence --
+    membership alone would let a declared-but-absent `README.md` wear the
+    verified label, which is the self-attestation this labelling exists to
+    separate out.
+    """
+    if exists and normalize_cited_path(rel_path) in KNOWN_FALLBACK_SET:
+        return LABEL_KNOWN_FALLBACK
+    return LABEL_AGENT_DECLARED
+
+
+def substitute_label(entry: object) -> str:
+    """PURE. The label on a receipt substitute; unlabelled reads as unverified."""
+    if isinstance(entry, dict) and entry.get("source") in SUBSTITUTE_LABELS:
+        return entry["source"]
+    return LABEL_AGENT_DECLARED
+
+
+def declared_substitute_paths(receipt: dict) -> list[str]:
+    """PURE. Normalized paths of every substitute the receipt hash-pinned.
+
+    Only PINNED entries count: an entry with no real sha256 was never proven
+    read, so citing it in the frame proves nothing either.
+    """
+    entries = receipt.get("substitutes")
+    if not isinstance(entries, list):
+        return []
+    return [
+        normalize_cited_path(e["path"])
+        for e in entries
+        if isinstance(e, dict)
+        and isinstance(e.get("path"), str)
+        and not is_filler(e.get("path"))
+        and is_content_hash(e.get("content_hash"))
+    ]
+
+
+def frame_verdict(
+    receipt: dict, frame_text: str, inventory: Sequence[str]
+) -> tuple[str, int, list[str]]:
+    """PURE. (reserved first line, exit code, problems) for `verify-frame`.
+
+    The exit vocabulary is the FROZEN g1 one -- no new codes. Two of them carry
+    a slightly wider reading here, stated plainly rather than left implicit:
+
+        12  a required INPUT DOCUMENT is missing or unusable. In g1 that was
+            only the receipt; an absent mission frame is the same shape.
+        10  the map contract is NOT discharged. In g1 that was an undischarged
+            degraded record; a frame whose citations do not resolve is the same
+            verdict about the same contract.
+    """
+    mode = receipt.get("mode")
+    if mode == MODE_UNRESOLVABLE_ROOT:
+        return (
+            MODE_UNRESOLVABLE_ROOT,
+            EXIT_UNRESOLVABLE_ROOT,
+            [
+                "could not look: the root was never proven a repo root, so there is "
+                "nothing for a frame to be checked against. This is NOT 'the frame is fine'."
+            ],
+        )
+    if not frame_text.strip():
+        # THE load-bearing refusal. A check that passes when its artifact does
+        # not exist reports success for every run that skipped the work.
+        return (
+            FRAME_MISSING,
+            EXIT_RECEIPT_UNUSABLE,
+            [
+                f"no mission frame: .agent-work/<work-id>/{FRAME_NAME} is absent or empty. "
+                "An absent frame REFUSES -- it never vacuously passes."
+            ],
+        )
+
+    anchors = scan_anchors(frame_text)
+    sources = cited_source_paths(frame_text)
+    problems: list[str] = []
+
+    if mode == MODE_RESOLVED:
+        known = set(inventory)
+        if not known:
+            problems.append(
+                "the receipt says RESOLVED but its entrypoint yields no citable anchor "
+                "now -- the map moved under the run; re-run orient"
+            )
+        backing = [a for a in anchors if a in known]
+        for anchor in anchors:
+            if anchor not in known:
+                problems.append(
+                    f"{anchor} does not resolve against the map inventory -- anchor ids "
+                    "exist only in the map, so an id that is not in it was not read from it"
+                )
+    else:
+        declared = set(declared_substitute_paths(receipt))
+        cited = [normalize_cited_path(p) for p in cited_paths(frame_text)]
+        backing = [p for p in cited if p in declared]
+        for path in cited:
+            if path in KNOWN_FALLBACK_SET and path not in declared:
+                problems.append(
+                    f"the frame cites {path}, which the receipt never declared as a "
+                    "hash-pinned substitute -- declare what you read at orient time so the "
+                    "frame is compared against a committed prior, not a same-breath claim"
+                )
+        for anchor in anchors:
+            problems.append(
+                f"{anchor} cannot resolve: this run oriented {mode}, so no map was read "
+                "and there is nothing for a map anchor to be a member of"
+            )
+
+    if not backing:
+        if sources:
+            problems.append(
+                "this frame is cut from CODE: its only citations are source paths "
+                f"({', '.join(sources[:5])}) -- a mission frame is cut from the map, and "
+                "source reads are meant to CONFIRM that frame, not to build it"
+            )
+        elif mode == MODE_RESOLVED:
+            problems.append(
+                "the frame cites no anchor id that resolves against the map -- the map "
+                "resolved, so the frame has to be built from it"
+            )
+        else:
+            problems.append(
+                "the frame cites none of the substitutes the receipt hash-pinned -- a "
+                "degraded frame is built from the declared reading or from nothing"
+            )
+
+    if problems:
+        return (FRAME_REFUSED, EXIT_DEGRADED_UNDISCHARGED, problems)
+    return (FRAME_OK, EXIT_OK, [])
+
+
+def render_frame_report(
+    first_line: str, code: int, problems: Sequence[str], frame_rel: str, mode: str
+) -> list[str]:
+    """PURE. stdout lines; line 0 is always a reserved literal.
+
+    Deliberately prints NO part of the map inventory. `orient` never prints an
+    anchor id for the same reason: if the tool hands over the ids, citing one
+    stops being evidence the map was read. Only ids the frame itself already
+    contains are echoed back, and only to name an offender.
+    """
+    lines = [first_line, f"frame: {frame_rel}", f"orientation: {mode}"]
+    if code == EXIT_OK:
+        lines.append("frame citations resolve -- contract SATISFIED")
+    elif first_line == FRAME_MISSING:
+        lines.append("no mission frame to check -- REFUSED, never a vacuous pass")
+    else:
+        lines.append("frame citations do NOT resolve -- REFUSED")
+    lines.append(f"problems: {len(problems)}")
+    return lines
+
+
 def exit_code_for(mode: str, discharged: bool) -> int:
     """PURE. The frozen exit code for a verdict.
 
@@ -751,6 +1024,52 @@ def receipt_path(root: Path, work_id: str) -> Path:
     return root / ".agent-work" / work_id / "map-orientation.json"
 
 
+def frame_path(root: Path, work_id: str) -> Path:
+    return root / ".agent-work" / work_id / FRAME_NAME
+
+
+def map_inventory(root: Path, entrypoint: str | None) -> tuple[str, ...]:
+    """Impure edge: every anchor id the resolved entrypoint actually carries.
+
+    Recomputed from the map rather than read out of the receipt on purpose --
+    the receipt records a COUNT, and a count cannot answer set membership.
+    """
+    if not entrypoint:
+        return ()
+    target = root / entrypoint
+    texts: list[str] = []
+    if target.is_file():
+        texts.append(_read_text(target))
+    elif target.is_dir():
+        for pattern in ("*.md", "*.json"):
+            texts.extend(_read_text(p) for p in sorted(target.rglob(pattern)))
+    seen: dict[str, None] = {}
+    for text in texts:
+        for anchor in scan_anchors(text):
+            seen.setdefault(anchor, None)
+    return tuple(seen)
+
+
+def probe_fallbacks(root: Path) -> list[dict]:
+    """Impure edge: which of the FIXED fallback set actually exist on disk.
+
+    This is the independent half of the degraded record -- existence is settled
+    by the filesystem, not by the agent's account of what it read.
+    """
+    probed = []
+    for rel in KNOWN_FALLBACKS:
+        path = root / rel
+        exists = path.is_file()
+        probed.append(
+            {
+                "path": rel,
+                "exists": exists,
+                "content_hash": sha256_of(path) if exists else None,
+            }
+        )
+    return probed
+
+
 def write_receipt(path: Path, receipt: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
@@ -847,7 +1166,61 @@ def cmd_verify_orientation(args: argparse.Namespace) -> int:
     sys.stdout.flush()
     for problem in problems:
         print(f"  - {problem}", file=sys.stderr)
+    return _gate(args, code)
+
+
+def _gate(args: argparse.Namespace, code: int) -> int:
+    """The gate-vs-report dial, as a FLAG FLIP rather than a rebuild.
+
+    A ruling to gate or un-gate one of these checks should be an edit to the
+    command string in the template -- append `--report-only` -- not a change to
+    this module or to the checklist's shape. The verdict printed is identical
+    either way; only its blocking-ness moves.
+    """
+    if getattr(args, "report_only", False) and code != EXIT_OK:
+        print(f"report-only: NOT gating; would exit {code}")
+        sys.stdout.flush()
+        return EXIT_OK
     return code
+
+
+def cmd_verify_frame(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    path = receipt_path(root, args.work_id)
+    if not path.is_file():
+        print(RECEIPT_MISSING)
+        print(
+            f"no orientation receipt at {path.as_posix()} -- the frame cannot be checked "
+            "against a map nobody resolved; run `orient` at the context step first",
+            file=sys.stderr,
+        )
+        return _gate(args, EXIT_RECEIPT_UNUSABLE)
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(RECEIPT_MISSING)
+        print(f"receipt at {path.as_posix()} is unusable: {exc}", file=sys.stderr)
+        return _gate(args, EXIT_RECEIPT_UNUSABLE)
+
+    structural = receipt_problems(receipt, args.work_id)
+    if structural:
+        print(RECEIPT_MISSING)
+        for problem in structural:
+            print(f"  - {problem}", file=sys.stderr)
+        return _gate(args, EXIT_RECEIPT_UNUSABLE)
+
+    frame_file = frame_path(root, args.work_id)
+    frame_text = _read_text(frame_file) if frame_file.is_file() else ""
+    mode = receipt["mode"]
+    inventory = map_inventory(root, receipt.get("entrypoint")) if mode == MODE_RESOLVED else ()
+
+    first_line, code, problems = frame_verdict(receipt, frame_text, inventory)
+    for line in render_frame_report(first_line, code, problems, _rel(root, frame_file), mode):
+        print(line)
+    sys.stdout.flush()
+    for problem in problems:
+        print(f"  - {problem}", file=sys.stderr)
+    return _gate(args, code)
 
 
 # =============================================================================
@@ -1057,6 +1430,127 @@ def self_test() -> int:
     _check("UNRESOLVABLE-ROOT never passes, even fully declared", verify_verdict(unresolvable, "w")[1] == EXIT_UNRESOLVABLE_ROOT, failures)
     _check("verify line 0 is a reserved literal", render_verify_report(*verify_verdict(base_receipt, "w"), "r.json")[0] in RESERVED_FIRST_LINES, failures)
 
+    # --- verify-frame: the ABSENT frame must never vacuously pass ------------
+    resolved_receipt_for_frame = dict(resolved_receipt)
+    inventory = ("struct:app", "capability:serve_requests")
+    for empty in ("", "   ", "\n\n"):
+        line, code, _ = frame_verdict(resolved_receipt_for_frame, empty, inventory)
+        _check(f"absent frame {empty!r} refuses", code != EXIT_OK, failures)
+        _check(f"absent frame {empty!r} reports FRAME-MISSING", line == FRAME_MISSING, failures)
+    _check(
+        "an absent frame is NEVER FRAME-OK",
+        frame_verdict(resolved_receipt_for_frame, "", inventory)[0] != FRAME_OK,
+        failures,
+    )
+    good_frame = "cites `struct:app` and `capability:serve_requests`"
+    _check(
+        "a frame citing resolvable anchors passes",
+        frame_verdict(resolved_receipt_for_frame, good_frame, inventory)[1] == EXIT_OK,
+        failures,
+    )
+    unknown_frame = "cites `struct:app` and `struct:ghost`"
+    line, code, problems = frame_verdict(resolved_receipt_for_frame, unknown_frame, inventory)
+    _check("an unresolvable anchor refuses", code == EXIT_DEGRADED_UNDISCHARGED, failures)
+    _check("the refusal names the offending anchor", any("struct:ghost" in p for p in problems), failures)
+    _check("the refusal does not indict the resolvable anchor", not any("struct:app does not" in p for p in problems), failures)
+    code_frame = "- `src/engine/solver.py`\n- `scripts/run.py`\n"
+    line, code, problems = frame_verdict(resolved_receipt_for_frame, code_frame, inventory)
+    _check("a frame cut from source paths refuses", code == EXIT_DEGRADED_UNDISCHARGED, failures)
+    _check("the cut-from-code refusal names a source path", any("solver.py" in p for p in problems), failures)
+    _check(
+        "an UNRESOLVABLE-ROOT receipt never lets a frame pass",
+        frame_verdict(unresolvable, good_frame, inventory)[1] == EXIT_UNRESOLVABLE_ROOT,
+        failures,
+    )
+    for mode in (FRAME_OK, FRAME_MISSING, FRAME_REFUSED):
+        _check(f"{mode} is a reserved first line", mode in RESERVED_FIRST_LINES, failures)
+    _check(
+        "verify-frame invents no exit code outside the frozen vocabulary",
+        all(
+            frame_verdict(resolved_receipt_for_frame, text, inventory)[1]
+            in (EXIT_OK, *SEMANTIC_EXIT_CODES)
+            for text in ("", good_frame, unknown_frame, code_frame)
+        ),
+        failures,
+    )
+    _check(
+        "frame report line 0 is a reserved literal",
+        render_frame_report(FRAME_MISSING, EXIT_RECEIPT_UNUSABLE, [], "f.md", MODE_RESOLVED)[0]
+        in RESERVED_FIRST_LINES,
+        failures,
+    )
+
+    # --- source-path detection ----------------------------------------------
+    _check("a .py path is a source path", is_source_path("src/engine/solver.py"), failures)
+    _check("a backticked .py path is a source path", is_source_path("`scripts/run.py`"), failures)
+    _check("README.md is not a source path", not is_source_path("README.md"), failures)
+    _check("a docs packet is not a source path", not is_source_path("docs/architecture/packets/a.md"), failures)
+    _check("cited paths are found in markdown", "src/a.py" in cited_paths("- `src/a.py` — helper"), failures)
+
+    # --- the degraded arm: substitutes as a COMMITTED PRIOR ------------------
+    degraded_pinned = dict(base_receipt)
+    _check(
+        "a degraded frame citing a declared substitute passes",
+        frame_verdict(degraded_pinned, "built from `README.md`", ())[1] == EXIT_OK,
+        failures,
+    )
+    line, code, problems = frame_verdict(degraded_pinned, "built from `CLAUDE.md`", ())
+    _check("a degraded frame citing an UNDECLARED fallback refuses", code != EXIT_OK, failures)
+    _check("that refusal names the undeclared path", any("claude.md" in p for p in problems), failures)
+    _check(
+        "a degraded frame citing nothing declared refuses",
+        frame_verdict(degraded_pinned, "I thought about it", ())[1] != EXIT_OK,
+        failures,
+    )
+    _check(
+        "a degraded frame inventing a map anchor refuses -- there is no map to be a member of",
+        frame_verdict(degraded_pinned, "`README.md` and `struct:invented`", ())[1] != EXIT_OK,
+        failures,
+    )
+    _check(
+        "an UNPINNED substitute cannot back a degraded frame",
+        frame_verdict(
+            dict(degraded_pinned, substitutes=[{"path": "README.md", "content_hash": None}]),
+            "built from `README.md`",
+            (),
+        )[1]
+        != EXIT_OK,
+        failures,
+    )
+
+    # --- substitute labelling: filesystem oracle vs agent assertion ----------
+    _check(
+        "a present known fallback is labelled known-fallback",
+        classify_substitute("README.md", True) == LABEL_KNOWN_FALLBACK,
+        failures,
+    )
+    _check(
+        "an ABSENT known fallback is NOT labelled verified",
+        classify_substitute("README.md", False) == LABEL_AGENT_DECLARED,
+        failures,
+    )
+    _check(
+        "a path outside the fixed set is agent-declared even when present",
+        classify_substitute("docs/notes/whatever.md", True) == LABEL_AGENT_DECLARED,
+        failures,
+    )
+    _check(
+        "an unlabelled substitute reads as UNVERIFIED, never upgraded by omission",
+        substitute_label({"path": "README.md"}) == LABEL_AGENT_DECLARED,
+        failures,
+    )
+    _check(
+        "a bogus label reads as unverified",
+        substitute_label({"path": "README.md", "source": "trust-me"}) == LABEL_AGENT_DECLARED,
+        failures,
+    )
+    _check(
+        "a real known-fallback label survives",
+        substitute_label({"path": "README.md", "source": LABEL_KNOWN_FALLBACK})
+        == LABEL_KNOWN_FALLBACK,
+        failures,
+    )
+
     total = len(failures)
     if total:
         print(f"self-test FAILED: {total} check(s)", file=sys.stderr)
@@ -1111,8 +1605,27 @@ def build_parser() -> argparse.ArgumentParser:
     )
     verify.add_argument("--root", required=True, help="absolute repo root")
     verify.add_argument("--work-id", required=True, dest="work_id")
+    _add_report_only(verify)
+
+    frame = sub.add_parser(
+        "verify-frame",
+        help="gate check: does the mission frame cite anchors the map actually carries?",
+    )
+    frame.add_argument("--root", required=True, help="absolute repo root")
+    frame.add_argument("--work-id", required=True, dest="work_id")
+    _add_report_only(frame)
 
     return parser
+
+
+def _add_report_only(sub_parser: argparse.ArgumentParser) -> None:
+    sub_parser.add_argument(
+        "--report-only",
+        action="store_true",
+        dest="report_only",
+        help="print the verdict but always exit 0. The gate-vs-report dial: "
+        "un-gating a step is this flag, not a rebuild.",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1123,12 +1636,15 @@ def main(argv: list[str] | None = None) -> int:
     if not args.command:
         # argparse exits 2 here -- a usage error, distinct from every verdict.
         parser.error(
-            "a subcommand is required (orient | verify-orientation) unless --self-test"
+            "a subcommand is required (orient | verify-orientation | verify-frame) "
+            "unless --self-test"
         )
     if args.command == "orient":
         return cmd_orient(args)
     if args.command == "verify-orientation":
         return cmd_verify_orientation(args)
+    if args.command == "verify-frame":
+        return cmd_verify_frame(args)
     parser.error(f"unknown subcommand: {args.command}")
     return EXIT_OK  # unreachable; parser.error exits 2
 
