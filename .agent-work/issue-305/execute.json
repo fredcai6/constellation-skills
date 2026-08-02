@@ -871,7 +871,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -901,11 +902,28 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g4-implement-result.md",
+            "verdict": "complete",
+            "blockers": "none",
+            "commits": "35d2686",
+            "verified_by": "commander-305h, independently, against the SHIPPED tree",
+            "verification_checklist_engine": "docstring-only PROVEN by AST comparison of 35d2686^ vs 35d2686: raw bytes differ, full AST differs, AST-with-docstrings-stripped is EQUAL. Behaviour byte-unchanged.",
+            "verification_context_manifest": "diff read line by line: exactly three code changes (run_facts signature, returned dict key, build_manifest call site). CONTENT_KEYS untouched. All else prose.",
+            "implementer_self_waiver": "m6-suite-and-result.c3 on the implementer OWN plan, disclosed by it; adjudicated by me at g4-integrate"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -1160,6 +1178,13 @@
       "why": "g3 integrated. Reviewer returned APPROVE-WITH-FOLLOWUPS with no blockers after deriving its own baseline. c3 reproduced by me against current HEAD rather than accepted on report: composer replaced with constants -> RED, 'Left contains 10 more items, first extra item: run', all ten fields named, restored by blob OID. c2 waived as the #371 gate-plan defect with the real verdict on the record. F1 and F3 carried as tc1/tc2.",
       "mechanical": false,
       "ts": "2026-08-02T16:30:32.433252+00:00"
+    },
+    {
+      "id": "w-22",
+      "gate": "g4-implement",
+      "why": "Implementer returned complete, no blockers on the work, committed at 35d2686. I verified rather than inherited: the highest-consequence claim (checklist_engine.py docstring-only) is PROVEN by AST comparison across 35d2686^..35d2686 - raw bytes differ, full AST differs, AST-with-docstrings-stripped is equal, so behaviour is byte-unchanged. context_manifest.py carries exactly three code changes: run_facts loses the dirty parameter, its returned dict loses the key, and build_manifest stops passing state.get(dirty). CONTENT_KEYS untouched. The regression guard is depth-complete (recursive key sweep plus encoded-token check) and the repo_state fakes still supply dirty, so it asserts the consumer ignores what it is handed - a stronger claim than nobody supplying it. The implementer's one forced waiver is on its own sub-plan condition (c3 compared local HEAD to origin, which cannot pass without a push the handoff forbids) and is mine to adjudicate at g4-integrate, not a blocker here.",
+      "mechanical": false,
+      "ts": "2026-08-02T17:49:38.512279+00:00"
     }
   ],
   "amendments": [
@@ -1182,13 +1207,13 @@
     }
   ],
   "engine_session": {
-    "session_id": "commander-305g",
+    "session_id": "commander-305h",
     "status": "active",
-    "claimed_at": "2026-08-02T17:31:02.928364+00:00",
-    "last_heartbeat": "2026-08-02T17:31:02.928364+00:00",
+    "claimed_at": "2026-08-02T17:47:19.365760+00:00",
+    "last_heartbeat": "2026-08-02T17:49:38.512297+00:00",
     "claimed_by": "commander",
-    "worktree": "C:/Programs/constellation-skills-wt/e298-305",
-    "previous_session_id": "commander-305f",
-    "takeover_reason": "Predecessor commander-305f died holding the lease; successor dispatched by Admiral to commit uncommitted g4 work and drive spine to terminal archive"
+    "worktree": ".",
+    "previous_session_id": "commander-305g",
+    "takeover_reason": "commander-305g died mid-gate; successor dispatched by Admiral"
   }
 }
