@@ -1,0 +1,381 @@
+{
+  "work_id": "issue-305-g3-implement",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "m0-context",
+    "m1-topology-measure",
+    "m2-control",
+    "m3-red-proof",
+    "m4-retrieval",
+    "m5-suite-and-canon"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas if present, the g3-implement handoff in full, and the system under test (scripts/episode_capture.py, the seam in scripts/checklist_engine.py). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Capture the BEFORE blob-OID listing of episodes/active/. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete; BEFORE listing of episodes/active/ captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-topology-measure": {
+      "id": "m1-topology-measure",
+      "title": "Independently verify the MEASURED FINDING: claimed-parent vs unclaimed-child topology",
+      "imperative": "Do NOT inherit the handoff's measurement. In a temporary work area, drive a REAL parent->child gated run through the engine and measure mechanical_fields() on BOTH topologies: (a) claimed parent checklist, (b) unclaimed child gate-plan reached through the parent's child_checklist. Record, per topology, which of the ten mechanical fields are present and which are refused, and the structural cause. If the code disagrees with the handoff, the code wins -- say so.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both topologies measured from a real engine-driven parent->child run; per-topology present/refused field lists recorded with structural cause; handoff measurement confirmed or refuted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CONFIRMED independently on a from-scratch synthetic parent->child run in a temp git repo, AND cross-checked against the live production run. (a) claimed parent: refused=[] (all 9 required + artifact-ref present). (b) unclaimed child: refused=['role','refusals']. Cause read in code: _lease_role reads engine_session.claimed_by (episode_capture.py:223) and the child's engine_session is null; refusals is armed ONLY by claim (checklist_engine.py:964) and incremented ONLY in main()'s EngineError branch (:2617), so an unclaimed checklist never gets the key. Live run agrees: .agent-work/issue-305/execute.json has engine_session=null and no refusals key, and its emitted mechanical/g3-implement.json reports refused=['role','refusals']."
+        }
+      ],
+      "constraints": [
+        "read-only on scripts/",
+        "temp work area only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-control": {
+      "id": "m2-control",
+      "title": "The negative control: real spine, zero agent-authored records, independent ground truth",
+      "imperative": "Write tests/test_episode_negative_control.py. Drive a real spine through the real engine in a temp work area, issuing ONLY mechanically-required verbs (claim/attest/start/advance/reopen + induced failures) -- no --finding, no narrative attach, no agent-authored text. The harness maintains its OWN expected values, incremented at the moment it issues each triggering call. FORBIDDEN as oracle: mechanical_fields(), the emitted snapshot, reopen_total(), failed_command_count(), context_manifest.rev(). context-manifest-ref expectation is an independently computed git blob OID. Comparison returns a LIST OF MISMATCHED FIELD NAMES, not a boolean. Cover BOTH topologies from m1 and report each honestly; a refused field is asserted as refused-and-expected-to-be-refused with its reason, visibly distinct from an uncollected one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "topologies measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete; both topologies measured."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the control observed failing before it passes (manual attest; check MUST be null)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TDD red observed BEFORE green: first run of the control was 8 failed / 1 passed. The failure was real and diagnostic, not a stub: FileNotFoundError on .agent-work/ctl-parent/ctl-parent/context/g2.json -- I had derived the manifest path as <checklist dir>/<work-id>/context/, double-nesting the work-id. That is #360 exactly (manifest_root() is the checklist dir's PARENT and manifest_path re-appends the work-id), hit live. After correcting the derivation to <checklist dir>/context/: 9 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "control passes: all ten mechanical fields asserted present-and-correct or refused-and-expected, per topology, against independent ground truth",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-control-1"
+        }
+      ],
+      "constraints": [
+        "no agent-authored text in the control",
+        "independent oracle only",
+        "Windows: encoding='utf-8', newline='\\n' on every write",
+        "no Path.read_text(newline=...)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-control-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-red-proof": {
+      "id": "m3-red-proof",
+      "title": "Proof the control can FAIL, naming the specific field",
+      "imperative": "Two distinct breakages of the capture pipeline. R1 (blunt): composer returns hardcoded constants for the group -- control goes RED. R2 (sharp): drop EXACTLY ONE derivation (failed-commands) and confirm the control reports EXACTLY that one field as mismatched -- assert mismatches == ['failed-commands'], a per-field claim, never a non-zero exit. The discriminating red-proof lives in tests/, not only in .agent-work/. Restore after every mutation and PROVE restoration by blob OID vs HEAD or clean git status.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "control green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 control green, 9 passed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "R1 and R2 both observed RED against the live control; R2 named exactly the one broken field (manual attest of the observed output)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "R2 (sharp, load-bearing): failed_command_count mutated to 'return 0' in scripts/episode_capture.py. Repro RED naming EXACTLY ['failed-commands'] on BOTH topologies (expected 3, actual 0); in-suite assertion read 'assert [failed-commands] == []'. R1 (blunt): mechanical_fields mutated to return 10 hardcoded plausible constants. Repro RED naming ALL TEN field names. Both restored; git hash-object == git rev-parse HEAD:scripts/episode_capture.py = 8a38e33d1c12bb814d4383a42bfe389d6aee7e93, git status --porcelain scripts/ empty. Neither mutation repeats the three spent g2 reopen_total mutations -- both break the capture pipeline, different ground."
+        },
+        {
+          "id": "c2",
+          "statement": "an in-suite discriminating red-proof test exists and passes, asserting the per-field mismatch list",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-red-proof-1"
+        },
+        {
+          "id": "c3",
+          "statement": "every mutation restored and restoration proven by blob OID vs HEAD",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && test \"$(git hash-object scripts/episode_capture.py)\" = \"$(git rev-parse HEAD:scripts/episode_capture.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-red-proof-2"
+        }
+      ],
+      "constraints": [
+        "do not re-run the three spent g2 mutations",
+        "no mutation left in the tree"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-red-proof-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-red-proof-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && test \"$(git hash-object scripts/episode_capture.py)\" = \"$(git rev-parse HEAD:scripts/episode_capture.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-retrieval": {
+      "id": "m4-retrieval",
+      "title": "Cross-run retrieval survives consolidation; synthetic consolidation discarded",
+      "imperative": "Seed several episodes into a TEMPORARY store via the sanctioned writer apply_episode_delta.apply_delta (not hand-placed files), with overlapping key/value pairs so query_episodes.neighbours()/neighbour_ids() links them. Mark one cluster consolidated; confirm neighbours() STILL finds its neighbours afterwards. Record neighbours() before and after. Verify the synthetic consolidation is discarded -- temp store AND canon blob OIDs unchanged. Report the #321 observation: was the handed episode id validated?",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red-proof complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 red-proof complete; both mutations proven and restored."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "retrieval test passes: neighbours() finds the cluster's neighbours after consolidation, seeded through apply_delta into a temp store",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-retrieval-1"
+        },
+        {
+          "id": "c2",
+          "statement": "#321 observation recorded (handed id validated or not); before/after neighbours() results recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "neighbours() BEFORE consolidation: neighbour_ids(root,'cluster-002') == ['cluster-001','cluster-003']. AFTER retiring cluster-002 with consolidated-into=cluster-001: neighbour_ids(root,'cluster-002') == ['cluster-001','cluster-003'] -- UNCHANGED, the surviving-consolidation property holds because the anchor is fetched by id. From the other side: neighbour_ids('cluster-001') == ['cluster-003'] (ordinary set, consolidated member archived) and == ['cluster-002','cluster-003'] with include_retired=True, so 'it vanished' and 'it moved' stay distinguishable. Discrimination proven: outsider-001 has ZERO neighbours, so a full result and an empty result are both observable. #321 OBSERVATION: on the WRITE path a handed id is validated -- create REFUSES a supplied id outright (the writer assigns it) and retire validates its handed id against ID_RE before applying; the unvalidated handed id is on the READ path, where query_episodes.fetch_episode('NOT A VALID ID', root) returns None rather than refusing, so 'no such episode' and 'you handed me nonsense' read identically. Not fixed here."
+        }
+      ],
+      "constraints": [
+        "no real consolidation in episodes/active/ (#308 owns it)",
+        "normalized content or blob OIDs, never raw working-tree bytes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-retrieval-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-suite-and-canon": {
+      "id": "m5-suite-and-canon",
+      "title": "Full suite green; canon provably untouched",
+      "imperative": "Run the full suite and account for every delta from the asserted baseline 1472 passed / 2 skipped / 472 subtests (re-verify the baseline yourself rather than inheriting it). Capture the AFTER blob-OID listing of episodes/active/, paste both listings, and compare explicitly -- state whether the store was non-empty so empty-vs-empty cannot pass silently. Write the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "retrieval demonstrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green with every delta from baseline accounted for",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-and-canon-1"
+        },
+        {
+          "id": "c2",
+          "statement": "before/after episodes/active/ blob OID listings captured and explicitly compared; IMPLEMENTER_RESULT written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "BEFORE/AFTER git ls-files -s episodes/active/ captured and compared: IDENTICAL (3 paths, same 3 blob OIDs: 48d80e66/.gitkeep, bf4ac0b7/issue-309-001.md, 3e062589/issue-309-002.md); git status --porcelain episodes/ empty. Store is NON-EMPTY (two real episodes + .gitkeep), so this is not an empty-vs-empty pass. Baseline re-verified independently: 1472 passed / 2 skipped / 472 subtests with my file excluded; full suite 1485/2/472 = baseline + exactly my 13 new tests. IMPLEMENTER_RESULT written to .agent-work/issue-305/crew/g3-implement-result.md."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-suite-and-canon-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g3-implementer-e298-305",
+    "status": "released",
+    "claimed_at": "2026-08-02T05:49:07.247201+00:00",
+    "last_heartbeat": "2026-08-02T06:08:50.283502+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-02T06:08:56.000007+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff read in full and verified complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present). System under test read: episode_capture.mechanical_fields + REQUIRED_MECHANICAL_FIELDS, the seam at checklist_engine start:1663/reopen:1893, refusals armed at claim:964 and incremented only in main()'s EngineError branch:2617 (so refusals only move via the CLI, never the Python API). BEFORE listing of episodes/active/ captured: 3 tracked blobs, store NON-empty.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:50:10.155852+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-topology-measure",
+      "why": "Handoff's MEASURED FINDING is CONFIRMED, not refuted: the code agrees. Lease-topology dependence is real and structural. The control must therefore drive BOTH topologies and report per-topology; a single claimed standalone spine would be the vacuous shape the handoff warns about.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:52:41.884196+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-control",
+      "why": "Control drives a real parent->child gated run through the engine CLI (CLI, not the API, because refusals only moves in main()'s EngineError branch). Only claim/start/attest/advance/reopen issued; attest carries no note and advance uses --mechanical, so no agent-authored prose exists in the run. Independent tally incremented at issue time; the four counters land on 1/2/3/4 so no two can be swapped undetected. Both topologies asserted, refusals asserted as refusals.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:56:55.108458+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-red-proof",
+      "why": "The control is proven falsifiable at per-field granularity, not merely by exit code. Four in-suite monkeypatch red-proofs assert exact mismatch lists (all-ten, [failed-commands], [role], [reopens]); the [role] one is the important one because it proves the REFUSAL assertions can themselves go red, which is where a refusal-heavy control would otherwise be vacuous.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:59:09.155089+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-retrieval",
+      "why": "Cross-run retrieval demonstrated in a temp store seeded through apply_delta; the synthetic consolidation never touches canon (temp store + an in-suite assertion that episodes/ is clean and non-empty).",
+      "mechanical": false,
+      "ts": "2026-08-02T06:02:20.938203+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-suite-and-canon",
+      "why": "g3 complete. Control green on both topologies against an independent per-field oracle; proven red by two restored source mutations and four in-suite per-field red-proofs including one that falsifies the refusal assertions themselves; retrieval survives consolidation in a throwaway store; canon provably untouched by blob OID; suite green with the delta fully accounted.",
+      "mechanical": false,
+      "ts": "2026-08-02T06:08:50.283484+00:00"
+    }
+  ]
+}

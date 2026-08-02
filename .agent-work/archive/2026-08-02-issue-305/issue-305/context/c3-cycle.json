@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "c3-cycle",
+  "files": [],
+  "repo_rev": {
+    "commit": "9364efbcb1845c5001eae3f9c6ab535b361616a1"
+  },
+  "run": {
+    "work_id": "issue-305",
+    "generated_at": "2026-08-02T03:28:05Z",
+    "dirty": true,
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/e298-305",
+      "repo": "C:/Programs/constellation-skills-wt/e298-305",
+      "durable": "C:/Programs/constellation-skills-wt/e298-305"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-305"
+    }
+  }
+}

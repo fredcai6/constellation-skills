@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-control",
+  "mechanical": {
+    "run": "issue-305-g3-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-control",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-305-g3-implement-m2-control@7cd5cf47a05998369ccd25cb435bfcc0b634e970",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-305-g3-implement",
+    "generated_at": "2026-08-02T05:55:47Z"
+  }
+}

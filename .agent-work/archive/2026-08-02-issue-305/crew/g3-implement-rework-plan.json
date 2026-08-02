@@ -1,0 +1,330 @@
+{
+  "work_id": "issue-305-g3-implement-rework",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3
+  },
+  "items": [
+    "m0-context",
+    "m1-fix1-argv-census",
+    "m2-fix2-structural-independence",
+    "m3-fix3-declared-context-refs",
+    "m4-restore-and-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the g3 rework handoff in full, the g3 review result, the predecessor implement result, tests/test_episode_negative_control.py, scripts/episode_capture.py, scripts/context_manifest.py, and the engine's CLI flag table. Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + control test + composer + manifest producer + engine flag table read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix1-argv-census": {
+      "id": "m1-fix1-argv-census",
+      "title": "FIX 1 - make `records nothing agent-authored` assert over actual argv",
+      "imperative": "Record the FULL argv of every issued engine call, then rewrite test_control_records_nothing_agent_authored to assert a closed-world census over those argv: every flag token must be in a per-verb allow-list, every `advance` must carry `--mechanical`, no `attest` may carry `--note`, and the only free-text flag in the entire run must be `reopen --reason` with value == _ControlRun.REOPEN_REASON. State the bounded exception (reopen --reason DOES reach why_trail) in the docstring. Then reproduce reviewer mutation M1 (advance --mechanical -> --why <prose>, plus --note on every attest) and observe the guard RED naming it; restore.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "M1 red-proof observed: with --why prose on advance and --note on attest, the fixed guard FAILS naming the offending flags (manual attest; a command check would run a by-design-failing test)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "guard restored to green over the unmutated control",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix1-argv-census-1"
+        }
+      ],
+      "constraints": [
+        "do not re-cut the control; do not change --mechanical to --why in the control itself",
+        "verify any mutation actually applied by blob OID before trusting its red or its green"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix1-argv-census-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fix2-structural-independence": {
+      "id": "m2-fix2-structural-independence",
+      "title": "FIX 2 - make oracle independence structural, not declarative",
+      "imperative": "Rewrite test_every_field_has_a_named_independent_source so independence is proven by EXECUTION (approach a): build the expectations with mechanical_fields, reopen_total, failed_command_count, manifest_ref, _lease_role, _artifact_refs, context_manifest.rev/build_manifest, _ControlRun.compose/snapshot all patched to raise, and reads of the emitted snapshot file blocked. Add an AST-over-code scan as a second layer (approach b) so a module-level from-import cannot dodge the patch. Keep the prose check. Then reproduce reviewer mutation M5 (oracle sources a tally from the composer) and observe RED; restore.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "FIX 1 landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "M5 red-proof observed: an oracle that reads a tally from the composer FAILS the fixed guard (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "guard restored to green over the unmutated oracle",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix2-structural-independence-1"
+        }
+      ],
+      "constraints": [
+        "keep the prose check as documentation; it must no longer be the only thing standing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix2-structural-independence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fix3-declared-context-refs": {
+      "id": "m3-fix3-declared-context-refs",
+      "title": "FIX 3 - exercise the delivered-context half of the manifest",
+      "imperative": "Declare real context_refs on the control plan's active gate so a manifest with RESOLVABLE rows is actually produced, and compare those rows per-row against blob OIDs this harness computes itself. Then prove attack A3's condition is REACHABLE: drive the same declaration against absent files and assert deliberately what the control does - rows retained with rev null, and the per-row comparison naming every declared path, so an all-null manifest cannot read as success.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "FIX 2 landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a manifest with resolvable declared rows is produced and pasted into the result as evidence (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "row-level comparison green on the real control and discriminating on the all-null counterfactual",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-fix3-declared-context-refs-1"
+        }
+      ],
+      "constraints": [
+        "the counterfactual must run in a temp repo; canon must stay untouched"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-fix3-declared-context-refs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-restore-and-suite": {
+      "id": "m4-restore-and-suite",
+      "title": "Restoration proof and full suite",
+      "imperative": "Prove every mutation restored by blob OID (git hash-object vs git rev-parse HEAD:<path>), confirm git status --porcelain carries nothing but the intended change, and run the full suite accounting for every moved number against the 1485 passed / 2 skipped / 472 subtests baseline.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three fixes landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every mutated file's working-tree blob OID equals its HEAD blob OID",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import subprocess,sys; ps=['scripts/episode_capture.py','scripts/checklist_engine.py','scripts/context_manifest.py']; g=lambda a: subprocess.run(['git']+a,capture_output=True,text=True).stdout.strip(); bad=[p for p in ps if g(['hash-object',p])!=g(['rev-parse','HEAD:'+p])]; print('drifted:',bad); sys.exit(1 if bad else 0)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-restore-and-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-restore-and-suite-2"
+        }
+      ],
+      "constraints": [
+        "blob OIDs or normalized content, never raw working-tree bytes (#319)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-restore-and-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import subprocess,sys; ps=['scripts/episode_capture.py','scripts/checklist_engine.py','scripts/context_manifest.py']; g=lambda a: subprocess.run(['git']+a,capture_output=True,text=True).stdout.strip(); bad=[p for p in ps if g(['hash-object',p])!=g(['rev-parse','HEAD:'+p])]; print('drifted:',bad); sys.exit(1 if bad else 0)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-restore-and-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-305-g3-rework-2",
+    "status": "released",
+    "claimed_at": "2026-08-02T06:57:16.656399+00:00",
+    "last_heartbeat": "2026-08-02T07:11:45.873730+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-02T07:14:03.838078+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete on every field. Confirmed both vacuous guards by reading the code: issued only ever holds argv[0] (line 232), so no flag claim is asserted anywhere; and exp.source is a prose description string, so the forbidden-substring scan checks what the harness SAYS, not what it DOES. Engine flag table read from the argparse block (checklist_engine.py:2301-2397) - advance takes --why/--mechanical/--from-child, attest takes --cond/--which/--note/--evidence, reopen takes a required --reason - which gives a closed-world per-verb flag allow-list for FIX 1.",
+      "mechanical": false,
+      "ts": "2026-08-02T06:57:38.279595+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix1-argv-census",
+      "why": "Closed-world argv census, not a blacklist: ALLOWED_FLAGS is per-verb and any flag outside it fails, so a text-bearing flag the engine grows tomorrow is caught without this file naming it. M1 applied (OID 49059be -> 11a7a01, 9 substitutions, prose visible at 9 call sites) and went RED with 44 violations - per run 7 'advance carries un-sanctioned flag --why', 7 'advance without --mechanical', 4 'attest carries un-sanctioned flag --note', 4 'attest carries --note'. Restored to OID 49059be, 13 passed.",
+      "mechanical": false,
+      "ts": "2026-08-02T07:02:08.810534+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix2-structural-independence",
+      "why": "Chose approach (a) - behavioural - because it proves independence by execution and no indirection defeats it. Kept (b) as a second layer for the one hole (a) has: a name bound at import time, which no attribute patch can reach; (b) walks the AST rather than the text so the oracle's own docstring mentioning context_manifest.rev() is not mistaken for a call. Prose check kept as layer (c). M5 arm a (oracle calls episode_capture.reopen_total) RED via (a) and independently reported by (b) as ['episode_capture','reopen_total']; M5 arm b (oracle reads the seam's emitted mechanical/g2.json) RED via the snapshot-read guard. Both restored to OID fb9dfc2.",
+      "mechanical": false,
+      "ts": "2026-08-02T07:05:33.078060+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-fix3-declared-context-refs",
+      "why": "context_refs declared on BOTH gates (write-if-absent is per-step, so a declaration on only the ending step leaves the other manifest empty). Both topologies now emit files:[{repo,seed.txt,e31de1f3...},{repo,changed_by_the_run.txt,587be6b4...}], compared per row against blob OIDs this harness computes and cross-checked with git hash-object --no-filters. A3 is now reachable: with both declared files absent the rows are RETAINED with rev null, expected_rows() agrees independently, and compare_manifest_rows against a delivered expectation names both paths. context-manifest-ref itself stays correct under A3 because it pins bytes - asserted, not assumed.",
+      "mechanical": false,
+      "ts": "2026-08-02T07:08:13.187561+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-restore-and-suite",
+      "why": "No file under scripts/ was ever mutated - both red-proofs were confined to the test file itself, so the safety-classifier workaround was not needed. Restoration proven by blob OID on the mutated file: M1 49059be->11a7a01->49059be (9 substitutions each way), M5a fb9dfc2->d283443->fb9dfc2, M5b fb9dfc2->bd2ef8c->fb9dfc2. All three scripts/ files still equal their HEAD blobs. Suite 1487 passed / 2 skipped / 472 subtests against a 1485/2/472 baseline: +2 is exactly the two tests FIX 3 adds, nothing else moved.",
+      "mechanical": false,
+      "ts": "2026-08-02T07:11:45.873709+00:00"
+    }
+  ]
+}

@@ -778,7 +778,21 @@ worktree's files directly.
 
 **Deliberately not built here**, so it is not rediscovered from scratch:
 
-- **#305** wires automated capture — nothing writes to this store on its own yet.
+- **#305** wires automated capture of the **mechanical half only**, and that split is
+  not a shortfall — it is what §4's partition means in practice. The `## Mechanical`
+  group falls out of the engine with **zero agent effort**:
+  `scripts/episode_capture.py`'s composer reads every field of it out of engine state
+  and emits it as a snapshot beside each step's manifest, whether or not any agent
+  records anything. The `## Agent-supplied` half stays **agent-initiated**, because it
+  is irreducibly judgment: `_validate_create` requires all five assertion kinds with
+  non-empty statements, so a complete episode **cannot** exist without an agent
+  asserting what was intended, what was expected, what was observed, what it cost and
+  what was done about it. So nothing auto-*creates* an episode, and nothing should — an
+  auto-created one could only carry fabricated assertions. What #305 removes is the
+  mechanical bookkeeping an agent would otherwise have to remember; what it leaves is
+  the part only an agent can supply. A field that is not honestly readable from engine
+  state is **refused** rather than defaulted, so an absent mechanical line means "this
+  could not be read", never "this was zero".
 - **#308** builds the rhyme-detection sensor and the consolidation/adjudication loop on
   top of what this store exposes (§8). The store makes consolidation *possible* — a
   retired cluster member stays reachable by id, by history-inclusive scan, and from a

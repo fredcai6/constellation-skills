@@ -230,20 +230,43 @@ question than `rev` does — *which commit is canon versioned at* — and does n
 blob OID's *which bytes did this agent actually get*, which stays the identity answer for a dirty,
 untracked or out-of-repo file that a commit SHA alone cannot cover.
 
-`repo_revision()` also returns `dirty` — is that commit's tree honest right now — but it does **not**
-ship beside `commit` inside content. The original design shipped it there, reasoning that a bare
-commit SHA needs the caveat to stay honest; a review disproved that (BLOCKER-1, rework 1): two fresh
-checkouts at the same commit, delivering byte-identical declared canon, disagreed on `repo_rev`
-because `git status --porcelain` is repo-wide and picked up an edit to a file no declaration named.
-`commit` is canon-determined (identical for any checkout of that commit) so it is safe as content;
-`dirty` describes the working tree that *produced* the manifest, not the bytes it delivered, so it
-lives in `run.dirty` instead — a fact about the run, like `roots`/`host`, not about canon. The split
-does not reopen the honesty gap: the per-file blob OID already answers the "which bytes did this
-agent actually get" question for a dirty/untracked/out-of-repo file, which is what `dirty` was really
-protecting; `repo_rev.commit` only ever had to be the coarse, human-facing traceability stamp. The
-split is made once, at `build_manifest`'s assembly point — `repo_revision()`/`default_repo_state()`
-still return both fields together, as a general repo-facts primitive not pre-shaped to this one
-caller's content/run boundary.
+`repo_revision()` also returns `dirty` — is that commit's tree honest right now — and the manifest
+does not carry it at all. The original design shipped it beside `commit` inside content, reasoning
+that a bare commit SHA needs the caveat to stay honest; a review disproved that (BLOCKER-1, rework 1):
+two fresh checkouts at the same commit, delivering byte-identical declared canon, disagreed on
+`repo_rev` because `git status --porcelain` is repo-wide and picked up an edit to a file no
+declaration named. `commit` is canon-determined (identical for any checkout of that commit) so it is
+safe as content; `dirty` describes the working tree that *produced* the manifest, not the bytes it
+delivered, so rework 1 moved it into the excluded `run` subtree — a fact about the run, like
+`roots`/`host`, not about canon. Neither placement reopens the honesty gap: the per-file blob OID
+already answers the "which bytes did this agent actually get" question for a dirty/untracked/out-of-repo
+file, which is what `dirty` was really protecting; `repo_rev.commit` only ever had to be the coarse,
+human-facing traceability stamp. `repo_revision()`/`default_repo_state()` still return both fields
+together, as a general repo-facts primitive not pre-shaped to this one caller's appetite;
+`build_manifest` is the one consumer and now takes `commit` only.
+
+**#300's successor, and why the sequencing is deliberate (#305, #327).** #300 shipped this producer
+with **no caller**: nothing in the engine's own control flow built a manifest, so the field's runtime
+behaviour was unobserved and unobservable. #305 g1 wired the first one — `episode_capture.emit_step_manifest`,
+called from the engine's assembly point — and #305 g4 then **removed `dirty` from the manifest
+entirely** (#327). Having a caller is what revealed it: `git status --porcelain` is repo-wide, so with
+the manifest itself written under a tracked `.agent-work/` the flag reports the run's own bookkeeping
+rather than anything a declaration names, and because `build_manifest()` computes it *before*
+`write_manifest()` creates the file, each manifest reads its predecessor's tree, not its own. Measured
+**on the tree this removal was made on**, over the 49 manifests this producer had written in-tree:
+47 `true`, 1 `false`, 1 field-absent. **Both sides are given in full because the count is pinned to
+that moment deliberately and keeps growing as this producer runs**: 49 / 47 / 1 / 1 immediately
+before the removal, and 56 / 51 / 1 / 4 at the removal commit itself. (On the `epic-298/305` branch
+those were `35d2686^` and `35d2686`; the squash-merge does not carry either SHA into `main`, which is
+why the numbers rather than the refs are the durable anchor.) The lone `false` is the mechanism in
+miniature rather than an exception to it: it is `.agent-work/issue-305/context/g1-implement.json`,
+which exists at all only because g1 was **reopened**, and it reports clean because commit `2456130`
+cleaned the tree 2m16s before it was generated — that commit is what cleaned it. The manifest
+recorded the tree its predecessor `g1-review.json` had been followed by, eight minutes after that
+one reported `true`, rather than anything it was itself about to do. Neither reading is available to a
+consumer — not a constant to rely on, not a signal to interpret. The field was not an oversight in
+#300 and its removal is not a reversal of a mistake; it is what a first real caller made visible.
+`CONTENT_KEYS` is unchanged by the removal, because `dirty` was never content.
 
 **Downstream, not yet resolved here.** The manifest is consumed, not produced, by whatever issue
 turns out to build on it, and two questions are open across that interface. **Durability:** that

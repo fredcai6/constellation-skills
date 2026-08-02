@@ -22,6 +22,23 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    # The context-manifest assembly seam (#305). Imported here so `start`/`reopen`
+    # can emit. The sidecar and its closure now DO ship with every engine-carrying
+    # skill, declared in install_constellation.SCRIPT_RUNTIME_COMPANIONS — an
+    # earlier version of this comment said the opposite and treated the fallback
+    # as the normal installed case, which is precisely how the seam stayed inert
+    # everywhere it was installed (#362). The fallback is kept for a genuinely
+    # partial tree only, following the same "absence is normal, never raise" rule
+    # the manifest producer itself follows. It is NOT the expected path, and
+    # tests/test_install_constellation.py asserts an installed engine binds the
+    # real function rather than this one.
+    from episode_capture import emit_step_manifest  # noqa: E402
+except ImportError:  # pragma: no cover — only reachable from a partial install
+    def emit_step_manifest(*_args, **_kwargs):  # type: ignore[misc]
+        return None
+
 
 def _utf8_stdio() -> None:
     """Captured stdio on Windows falls back to cp1252; checklist text with
@@ -567,19 +584,20 @@ def repo_revision(base_dir: Path | None = None) -> dict:
     disproved that (#300 g5 rework 1): two checkouts at the same commit,
     delivering byte-identical declared canon, disagreed on content solely
     because `git status --porcelain` is repo-wide and picked up dirt on a file
-    no declaration named. The corrected placement is `context_manifest`'s to
-    make, not this function's: `commit` is canon-determined (identical for any
-    checkout of that commit) so it is safe as manifest *content*; `dirty`
-    describes the working tree that *produced* the manifest, not the bytes it
-    delivered, so it belongs in the manifest's excluded `run` subtree instead.
-    Splitting them does not reopen the honesty gap a bare SHA has -- the
-    per-file blob OID already answers "which bytes did this agent actually get"
-    for a dirty, untracked or out-of-repo file, which is the question `dirty`
-    was protecting; `commit` only ever had to be the coarse, human-facing
-    traceability stamp. This function still returns both fields together: it is
-    a general repo-facts primitive, not pre-shaped to one caller's content/run
-    boundary, and the split is made once, at `context_manifest.build_manifest`'s
-    assembly point.
+    no declaration named. What to do about that was `context_manifest`'s call,
+    not this function's: `commit` is canon-determined (identical for any
+    checkout of that commit) so it is safe as manifest *content*, and `dirty`
+    first moved to the manifest's excluded `run` subtree and was then dropped
+    altogether (#327, #305 g4) -- it is repo-wide, so it reports dirt on files no
+    declaration names, and once a real caller made that observable the field
+    turned out to be neither dependably constant nor informatively varying.
+    Neither move reopens the honesty gap a bare SHA has -- the per-file blob OID
+    already answers "which bytes did this agent actually get" for a dirty,
+    untracked or out-of-repo file, which is the question `dirty` was protecting;
+    `commit` only ever had to be the coarse, human-facing traceability stamp.
+    This function is unaffected and still returns both fields together: it is a
+    general repo-facts primitive, not pre-shaped to one caller's appetite, and
+    its one manifest consumer simply now uses `commit` only.
 
     Uses `_git()`, the same subprocess helper `_collect_changed_files` already
     relies on for git-change-policy -- so this stays the one place in the module
@@ -935,6 +953,16 @@ def claim(
             previous_id = existing.get("session_id")
             takeover_reason = reason or "stale lease reclaimed"
 
+    # #305: ARM the refusals counter. Armed here, at lease creation, so that a
+    # `refusals: 0` is a real reading — "an engine that counts refusals drove this
+    # run, and none happened" — rather than being ambiguous with "this file predates
+    # the counter". That is what keeps ABSENCE meaningful, which is what lets
+    # `episode_capture.mechanical_fields` REFUSE the field rather than report a
+    # fabricated 0. `setdefault`, so a re-claim never resets a live tally; and
+    # deliberately not on the idempotent-resume path above (which returns early),
+    # because resuming a pre-counter run must not backdate a 0 over refusals that
+    # really happened and were never recorded.
+    cl.setdefault("refusals", 0)
     cl["engine_session"] = {
         "session_id": session_id,
         "status": "active",
@@ -1633,6 +1661,7 @@ def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
                    for c in preconds if c["id"] in unmet],
         )
     t["status"] = "in-progress"
+    emit_step_manifest(cl, iid, base_dir)  # #305: AFTER the mutation — active_id() picks the step.
     return f"{iid} -> in-progress"
 
 
@@ -1820,7 +1849,8 @@ def _supersede_evidence(t: dict, iid: str, reason: str) -> None:
         ev["superseded"] = {"by": f"reopen:{iid}", "reason": reason, "ts": _now()}
 
 
-def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
+def reopen(cl: dict, iid: str, reason: str, cap: int | None = None,
+           base_dir: Path | None = None) -> str:
     """Reopen a complete gate for rework. Increments `rework_count`, escalates
     (blocks + bubbles, no reopen) when the cap is exceeded, and on the success
     path resets the gate's postconditions and CASCADES downstream: every later
@@ -1850,6 +1880,18 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
         return f"ESCALATED {iid}: rework cap {cap} reached; blocked and bubbled to parent (not reopened)"
     t["rework_count"] = t.get("rework_count", 0) + 1
     t["status"] = "in-progress"
+    # #305: AFTER the mutation — active_id() picks the in-progress step.
+    #
+    # This call is a BACKFILL, not a live emit: reopen refuses anything that is
+    # not `complete`, and a complete gate necessarily passed `start`, which
+    # already wrote this step's manifest — and emit_step_manifest is
+    # write-if-absent, so it returns early. On every reachable path in a spine
+    # created at or after #305 this is a no-op. It earns its keep only for a
+    # spine that predates the seam, where `start` ran before the emit existed
+    # and this is the first chance to write the manifest at all (observed live:
+    # reopening such a gate did emit). An earlier version of this comment
+    # justified the call as if it emitted normally; it does not.
+    emit_step_manifest(cl, iid, base_dir)
     t.setdefault("status_detail", {})["reopen_reason"] = reason
     _reset_conditions(t.get("postconditions", []))
     _supersede_evidence(t, iid, reason)
@@ -2445,7 +2487,8 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
     if v == "resume":
         return resume(cl, args.id, args.reason, getattr(args, "note", None))
     if v == "reopen":
-        return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)))
+        return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)),
+                      base_dir=base_dir)
     if v == "append":
         return append(cl, args.id, args.title, args.imperative)
     if v == "amend":
@@ -2556,6 +2599,25 @@ def main(argv: list[str] | None = None) -> int:
     except EngineError as exc:
         # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
         if not args.dry_run and args.verb != "current":
+            # #305: the ONE engine-state source for the `refusals` mechanical field.
+            # It has to live here because this is the only place a refusal is
+            # observable at all: the journal sidecar is success-only by construction
+            # (`append_journal_entry` sits after the `return 1` below), so a refusal
+            # left no trace anywhere and the field was secretly agent-dependent.
+            # Incremented INSIDE the persistence guard, not above it: a bump that is
+            # never saved is a tally that disagrees with its own file, and a dry-run
+            # is by definition not something that happened. Run-scoped rather than
+            # step-scoped, unlike `rework_count` — a refusal does not always name a
+            # task (an unknown item, a lease conflict, a malformed verb), and scoping
+            # it to a step would silently drop exactly those, which is the same class
+            # of fabrication as inventing a value.
+            # Only an ARMED counter is incremented. Creating it here on a pre-counter
+            # checklist would write `refusals: 1` onto a run whose real total is
+            # unknown and may be five — a plausible wrong number, which is worse than
+            # an absent one and is the one thing this field must never be.
+            armed = cl.get("refusals")
+            if isinstance(armed, int) and not isinstance(armed, bool):
+                cl["refusals"] = armed + 1
             save(path, cl)
         # Recovery (#227 gate g3, item a): a state-caused refusal names its exact
         # exit verb, composed HERE at the CLI boundary from the exception's

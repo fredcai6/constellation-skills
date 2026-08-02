@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-review",
+  "mechanical": {
+    "run": "issue-305",
+    "project": "constellation-skills",
+    "spine-step": "g3-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 2,
+    "context-manifest-ref": "ctx-issue-305-g3-review@993d1e17f080062853939bdf04d79622de2f9d45",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-305",
+    "generated_at": "2026-08-02T06:20:56Z"
+  }
+}

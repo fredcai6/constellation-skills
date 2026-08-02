@@ -42,9 +42,23 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "blockers": [],                   // stuck items, bubbled to the parent agent
   "amendments": [],                 // gated only: audit log of `amend` deltas (see Amend delta)
   "why_trail": [],                  // optional, append-only: the running-understanding trail (see Why-capture)
+  "refusals": 0,                    // optional: checklist-scoped refusal tally, ARMED by `claim` (see below)
   "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
 ```
+
+### `refusals` — this checklist's refusal tally
+
+A monotonic count of the refusals taken against this checklist: one per `EngineError` that reaches `main()`'s refusal path and is persisted there. Every **increment** happens at the CLI boundary — no verb function counts a refusal — while the initial arming write (`cl.setdefault("refusals", 0)`) sits inside `claim()`, deliberately, for the reason in the first bullet below. It is the **only** engine-state record that a refusal happened at all: the journal sidecar is success-only by construction (`append_journal_entry` runs after the refusal path has already returned), so before this counter a refusal left no trace in any file.
+
+Three properties are load-bearing, and each exists because the field feeds `docs/EPISODE_STORE.md`'s mechanical bin, where a plausible wrong number is worse than an absent one:
+
+- **Armed by `claim`, not created on first refusal.** A fresh, reclaimed or forced lease sets `refusals: 0` via `setdefault`; the idempotent same-session resume does not. So `0` reads as *"an engine that counts refusals drove this run and none happened"*, and **absence** reads as *"this checklist predates the counter"*. Those are different facts and they stay tellable apart. The arming write is the one piece of this counter that lives in a verb, and it has to: it must sit *after* `claim`'s idempotent-resume early return, or a same-session re-claim would backdate a `0` over refusals that really happened.
+- **Only an armed counter increments.** A refusal on a checklist with no `refusals` key leaves it absent rather than writing `1` onto a run whose real total is unknown.
+- **Checklist-scoped, not step-scoped** — unlike `rework_count`, which lives on the Task. A refusal does not always name a task (an unknown item id, a lease conflict), so a per-step tally would silently drop exactly those. A **malformed verb** is deliberately not in that list: argparse exits `2` before the checklist is ever loaded, so it is never counted.
+- **Scoped to the FILE, not to the leaseholder — and say it that way.** Measured, not theoretical: a refusal from a *foreign* session increments the owning run's tally (`start b --session-id SOMEONE-ELSE` against a held lease → exit `1`, `refusals: 1 → 2`). Any teammate, parent poll, or stale-lease retry against this checklist counts. So the honest reading is *"refusals taken against this checklist"*, not *"refusals this agent took"*. Filtering to the leaseholder's own session would be a change of meaning with its own under-count — a refusal where `--session-id` was simply forgotten is genuinely this run's — and is tracked as separate work rather than guessed at here.
+
+Fully backward compatible: no existing field changes meaning, and every reader works unchanged on a checklist that lacks the key.
 
 `triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up. `amendments` is a separate append-only audit log: each `amend` verb (gated only) appends one entry `{ts, reason, authority, ops:[...]}` recording an intentional mid-run re-plan (see *Amend delta — intentional mid-run re-planning*). The field is created lazily on the first amendment. `why_trail` is a separate append-only trail of running-understanding records, one appended per non-exempt `advance` (see *Why-capture — the running-understanding trail*); it too is created lazily on the first write.
 

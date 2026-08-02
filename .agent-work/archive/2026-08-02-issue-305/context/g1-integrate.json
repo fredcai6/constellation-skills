@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "250ec3c8720d54a29337ed28602fbc195c6f9eb3"
+  },
+  "run": {
+    "work_id": "issue-305",
+    "generated_at": "2026-08-02T03:34:21Z",
+    "dirty": true,
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/e298-305",
+      "repo": "C:/Programs/constellation-skills-wt/e298-305",
+      "durable": "C:/Programs/constellation-skills-wt/e298-305"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-305"
+    }
+  }
+}

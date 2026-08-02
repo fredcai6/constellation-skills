@@ -1,3 +1,4 @@
+import ast
 import importlib.util
 import contextlib
 import os
@@ -1172,6 +1173,57 @@ class InterpreterProbeTests(unittest.TestCase):
             self.assertEqual("py", sidecar["interpreter"])
 
 
+def _direct_runtime_siblings(module_path: Path, scripts_root: Path) -> set[str]:
+    """Sibling modules under scripts/ that `module_path` can reach at runtime.
+
+    Two reach mechanisms exist in this tree and BOTH have to be seen:
+
+    1. dynamic path load -- `Path(__file__).parent / "x.py"` + importlib
+       (`checklist_engine._load_gauge_reader()`).
+    2. `sys.path.insert(0, <own parent>)` followed by a PLAIN
+       `import x` / `from x import ...` (`checklist_engine` -> `episode_capture`,
+       #305). Deferred imports written inside a function to break an import
+       cycle (`episode_capture.emit_step_manifest` -> `context_manifest`) count
+       too, which is why this walks the AST rather than matching top-of-file
+       lines.
+
+    Mechanism 2 is the one the original regex-only detector was blind to, so the
+    #305 sidecar could be imported by the engine and shipped by nobody. A name
+    counts only if `scripts/<name>.py` actually exists -- that single test is
+    what separates a co-located sibling from stdlib/third-party without a
+    hand-kept denylist that could rot.
+    """
+    src = module_path.read_text(encoding="utf-8")
+    names = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', src))
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                names.add(alias.name.split(".")[0] + ".py")
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            names.add(node.module.split(".")[0] + ".py")
+    return {name for name in names if (scripts_root / name).is_file()}
+
+
+def engine_runtime_closure(entry: str, scripts_root: Path) -> set[str]:
+    """Everything `entry` drags in at runtime, TRANSITIVELY, minus itself.
+
+    Transitive because the shipping unit is the closure, not the first hop:
+    `episode_capture.py` alone would still crash on an install missing
+    `agent_work_root.py`. Cycles are normal here (`context_manifest` imports
+    `checklist_engine` back) and are absorbed by the visited set."""
+    seen = {entry}
+    queue = [entry]
+    reached: set[str] = set()
+    while queue:
+        for name in _direct_runtime_siblings(scripts_root / queue.pop(), scripts_root):
+            reached.add(name)
+            if name not in seen:
+                seen.add(name)
+                queue.append(name)
+    reached.discard(entry)
+    return reached
+
+
 class RuntimeCompanionBundleTests(unittest.TestCase):
     """A bundled script that loads a sibling at runtime must ship that sibling.
 
@@ -1182,44 +1234,86 @@ class RuntimeCompanionBundleTests(unittest.TestCase):
     derived from the engine's ACTUAL dynamic loads rather than a hand-kept list,
     so a newly-added companion cannot be forgotten the same way."""
 
-    # Modules checklist_engine.py loads by path at runtime. Kept here as the
-    # expected set so the parse below has something to assert against; the parse
-    # is what makes it honest.
-    ENGINE_RUNTIME_SIBLINGS = {"gauge_reader.py"}
+    # Modules checklist_engine.py reaches at runtime, transitively. Kept here as
+    # the expected set so the parse below has something to assert against; the
+    # parse is what makes it honest.
+    #   gauge_reader     -- dynamic `parent / "gauge_reader.py"` load (#256)
+    #   episode_capture  -- sys.path.insert + plain import (#305)
+    #   agent_work_root  -- episode_capture, module scope
+    #   context_manifest -- episode_capture, deferred inside emit_step_manifest
+    ENGINE_RUNTIME_SIBLINGS = {
+        "gauge_reader.py", "episode_capture.py",
+        "agent_work_root.py", "context_manifest.py",
+    }
+    SCRIPTS_ROOT = ROOT / "scripts"
 
-    def test_engine_dynamic_loads_are_declared_as_companions(self):
-        """Parse the engine source for `parent / "<name>.py"` sibling loads and
-        require each to be declared in SCRIPT_RUNTIME_COMPANIONS. Catches a NEW
-        dynamic load added without a matching bundle entry."""
+    def test_engine_runtime_siblings_are_declared_as_companions(self):
+        """Derive what checklist_engine.py reaches at runtime and require every
+        reached sibling to be declared in SCRIPT_RUNTIME_COMPANIONS.
+
+        This replaces a regex that only saw `parent / "<name>.py"` dynamic loads.
+        That regex returned exactly {'gauge_reader.py'} against an engine source
+        that ALREADY contained `from episode_capture import emit_step_manifest`,
+        so #305's capture seam shipped to nobody and no test noticed: the engine
+        wraps the import in `try/except ImportError` with a no-op fallback, so on
+        every installed skill the gate completed and emitted nothing. The point
+        of widening this is the NEXT sidecar attached the same way, not this one.
+        """
         installer = load_installer()
-        engine_src = (ROOT / "scripts" / "checklist_engine.py").read_text(encoding="utf-8")
-        siblings = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', engine_src))
+        reachable = engine_runtime_closure("checklist_engine.py", self.SCRIPTS_ROOT)
         self.assertEqual(
-            self.ENGINE_RUNTIME_SIBLINGS, siblings,
-            "checklist_engine.py's dynamic sibling loads changed; update "
+            self.ENGINE_RUNTIME_SIBLINGS, reachable,
+            "checklist_engine.py's runtime sibling closure changed; update "
             "SCRIPT_RUNTIME_COMPANIONS and this expectation together",
         )
         declared = set(installer.SCRIPT_RUNTIME_COMPANIONS.get("checklist_engine.py", ()))
-        self.assertEqual(siblings, declared)
+        undeclared = reachable - declared
+        self.assertEqual(
+            set(), undeclared,
+            f"checklist_engine.py imports {sorted(undeclared)} at runtime but "
+            "SCRIPT_RUNTIME_COMPANIONS['checklist_engine.py'] does not declare "
+            "them -- every skill bundling the engine installs a tree where that "
+            "import fails, and the engine's ImportError fallback makes the "
+            "feature no-op SILENTLY",
+        )
+        self.assertEqual(reachable, declared)
 
-    def test_every_skill_bundling_the_engine_also_gets_the_gauge_reader(self):
+    def test_every_skill_bundling_the_engine_also_gets_its_runtime_companions(self):
+        """Generalized from the gauge-reader-only form: assert the whole declared
+        companion tuple lands in every engine-carrying bundle, so adding a
+        companion to the dict automatically widens this test's coverage."""
         installer = load_installer()
+        companions = installer.SCRIPT_RUNTIME_COMPANIONS["checklist_engine.py"]
+        # the original #256 guarantee, still pinned by name so the generalization
+        # cannot quietly drop it
+        self.assertIn("gauge_reader.py", companions)
         engine_skills = [
             name for name, scripts in installer.SKILL_SCRIPT_BUNDLES.items()
             if "checklist_engine.py" in scripts
         ]
         self.assertTrue(engine_skills, "no skill bundles checklist_engine.py?")
         for name in engine_skills:
-            with self.subTest(skill=name):
-                expanded = installer.expand_script_bundle(
-                    installer.SKILL_SCRIPT_BUNDLES[name])
-                self.assertIn("gauge_reader.py", expanded)
+            expanded = installer.expand_script_bundle(
+                installer.SKILL_SCRIPT_BUNDLES[name])
+            for companion in companions:
+                with self.subTest(skill=name, companion=companion):
+                    self.assertIn(companion, expanded)
 
     def test_expansion_preserves_order_and_does_not_duplicate(self):
         installer = load_installer()
-        # already-present companion must not be added twice
-        out = installer.expand_script_bundle(("checklist_engine.py", "gauge_reader.py"))
-        self.assertEqual(("checklist_engine.py", "gauge_reader.py"), out)
+        # Derived from the dict, not a literal: this test is about the expansion
+        # MECHANISM, and pinning a literal companion list here made adding the
+        # #305 sidecars fail a test that has no opinion about them.
+        companions = installer.SCRIPT_RUNTIME_COMPANIONS["checklist_engine.py"]
+        # a companion also listed explicitly must not be added twice
+        out = installer.expand_script_bundle(("checklist_engine.py", companions[0]))
+        self.assertEqual(("checklist_engine.py", *companions), out)
+        self.assertEqual(len(out), len(set(out)))
+        # explicit entries keep their position; companions follow their owner
+        self.assertEqual(
+            (companions[0], "checklist_engine.py", *companions[1:]),
+            installer.expand_script_bundle((companions[0], "checklist_engine.py")),
+        )
         # a script with no companions passes through untouched
         self.assertEqual(("docent_freshness.py",),
                          installer.expand_script_bundle(("docent_freshness.py",)))
@@ -1246,6 +1340,56 @@ class RuntimeCompanionBundleTests(unittest.TestCase):
                 "Governor would be inert in this install",
             )
             self.assertTrue(hasattr(mod._gauge_reader, "thresholds_for"))
+
+    def test_installed_engine_binds_the_real_capture_seam_not_the_fallback(self):
+        """End-to-end for #305/#362: install a skill whose bundle is the engine
+        ALONE, then load the installed engine and prove `emit_step_manifest` is
+        the sidecar's, not the module-local `try/except ImportError` no-op.
+
+        Asserting the dict, or even the files on disk, cannot prove this: the
+        fallback is what makes the failure silent, so the only honest check is
+        which function the installed engine actually bound. `implementer` is the
+        deliberate choice of skill -- its bundle carries no companion by hand, so
+        everything here arrives through expand_script_bundle()."""
+        installer = load_installer()
+        companions = installer.SCRIPT_RUNTIME_COMPANIONS["checklist_engine.py"]
+        self.assertEqual(("checklist_engine.py",),
+                         installer.SKILL_SCRIPT_BUNDLES["implementer"],
+                         "test premise changed: implementer no longer bundles the "
+                         "engine alone, so this no longer exercises expansion")
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            rc = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "implementer"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, rc)
+            scripts_dir = dest / "constellation-implementer" / "scripts"
+            for companion in companions:
+                with self.subTest(companion=companion):
+                    self.assertTrue((scripts_dir / companion).is_file(),
+                                    f"{companion} did not ship")
+            # A stale sibling already in sys.modules would satisfy the engine's
+            # import from the REPO and green this test on a broken install.
+            sidecars = ("episode_capture", "agent_work_root", "context_manifest")
+            saved = {n: sys.modules.pop(n, None) for n in sidecars}
+            try:
+                mod = load_module("installed_engine_305", scripts_dir / "checklist_engine.py")
+                self.assertEqual(
+                    "episode_capture", mod.emit_step_manifest.__module__,
+                    "installed engine fell back to the no-op emit_step_manifest -- "
+                    "the #305 capture seam would be inert in this install",
+                )
+                bound = Path(sys.modules["episode_capture"].__file__).resolve()
+                self.assertEqual((scripts_dir / "episode_capture.py").resolve(), bound,
+                                 "engine bound a sidecar from outside the install")
+            finally:
+                for name, prior in saved.items():
+                    if prior is None:
+                        sys.modules.pop(name, None)
+                    else:
+                        sys.modules[name] = prior
 
 
 class HookScriptBundleTests(unittest.TestCase):

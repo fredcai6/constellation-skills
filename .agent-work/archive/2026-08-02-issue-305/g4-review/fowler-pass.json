@@ -1,0 +1,86 @@
+{
+  "work_id": "issue-305-g4-review",
+  "diff_ref": "35d2686^..35d2686, source surface only (the two later commits c582846/9fdb23b touch nothing outside .agent-work/, verified by git diff --name-only). Code surface is small and mostly subtractive: scripts/context_manifest.py (3 code edits, all deletions: run_facts signature, run_facts returned dict, build_manifest call site -- mechanically proved to be exactly three and no more), tests/test_context_manifest.py (new module-level _dirty_key_paths helper, one replaced test, one strengthened test, ~8 assertion removals, 4 renames), tests/test_context_determinism.py (docstring prose only, zero assertion changes), scripts/checklist_engine.py (repo_revision docstring only, behaviour byte-unchanged under an optimize=2 bytecode compare), docs/CHECKLIST_ENGINE_DESIGN.md (prose). Roughly 80 percent of the diff by line count is prose, which is what makes the prose-shaped smells the load-bearing ones here.",
+  "repo_standards_ref": "docs/agents/ORCHESTRATOR_CONTEXT.md is the ONLY project-delta doc that exists in this worktree -- there is no docs/agents/CREW_CONTEXT.md and no docs/agents/GLOSSARY.md, so every override below cites a standard that genuinely exists and none is invented. Also: the installed reviewer skill's references/global-crew.md (implementation discipline) and references/global-everyone.md (Universal posture, Deep-module vocabulary, the deletion test), and the ratified scope in .agent-work/issue-305/crew/g4-implement-handoff.md.",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Nothing in the diff is long, and the change is net-subtractive on this axis. run_facts' body is 13 lines and lost one entry; build_manifest's body is ~25 lines of one linear assembly and lost one keyword argument; the new _dirty_key_paths is 14 lines of a single recursive traversal with one job. The longest thing the diff adds is a 20-line class docstring, which is prose, not a method.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "Measured rather than eyeballed: RepoRevContent, the class that absorbs almost all the test edits, is 14 methods over 149 lines, and it SHRANK by one net method (one test replaced, none added). It is mid-pack in its own file -- ManifestEnvelope is 22 methods / 219 lines and ProducerGuards is 7 / 177 -- so it is not an outlier by the file's own established scale, and all 14 methods sit on one responsibility (what repo_rev carries and what it must not).",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "MEASURED, not suspected. The new module-level _dirty_key_paths (tests/test_context_manifest.py:229) is the SECOND hand-rolled recursive dict/list walker over the manifest structure in the same file: assert_json_native, nested inside test_manifest_survives_the_json_round_trip at :1092, is the first, and it has the identical traversal skeleton (isinstance dict -> iterate items and recurse; isinstance list -> iterate and recurse; else terminal check). I found it by AST-scanning every function in scripts/ and tests/ for a self-recursive body mentioning both dict and list; the whole repo has exactly five such functions and two of them are these, in one file, over one data structure. They differ only in the terminal predicate -- one collects a path when the key is 'dirty', the other asserts the leaf is JSON-native. Concrete cost: a third manifest-wide property (say, no absolute paths at any depth, which the file already checks NON-recursively a few lines later) will produce a third copy. Observation, not a blocker -- the cheap fix is one walker yielding (path, value) pairs that both callers filter. Deliberately NOT overridden: I looked for a repo standard sanctioning per-test traversal helpers and none exists.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_dirty_key_paths walks the plain dict that build_manifest returns, which IS this module's published interface -- build_manifest's contract is 'returns a dict of this shape', so walking it is testing through the interface, not reaching behind it (global-everyone.md: 'The interface is the test surface'). No method in the diff is more interested in another module's data than its own: build_manifest reads exactly one key off the repo_state edge and run_facts reads only roots and its own arguments. If anything the change REDUCES envy, since build_manifest now consumes one half of the edge's return instead of routing both.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "The pair {commit, dirty} travels together everywhere -- repo_revision returns it, default_repo_state returns it, the test fakes construct it inline at nine sites in RepoRevContent alone -- and is never objectified. A textbook clump, and the change makes it slightly worse in the sense that the pair is now passed whole to a consumer that wants one half.",
+      "override": {
+        "repo_standard": "global-everyone.md Universal posture, 'One canonical path; no speculative abstraction', read together with the ratified scope in .agent-work/issue-305/crew/g4-implement-handoff.md: 'checklist_engine.repo_revision() is out of scope and must not change: it stays a general repo-facts primitive returning {commit, dirty}.'",
+        "reason": "Objectifying the clump means introducing a RepoState type at a seam with exactly one producer and one consumer, which is the speculative abstraction the posture rule forbids, and it would require changing repo_revision, which this gate is explicitly forbidden from touching. The standard subordinates the smell twice over: the abstraction is unwarranted on its own merits AND is out of the ruled scope. Note this override covers the CLUMP only; the separate question of whether the unused half should exist at all is flagged under speculative-generality below rather than being swept up here."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "The change is net-subtractive here too: it removes a bare bool from the emitted envelope rather than adding one. The remaining primitives are a commit SHA string and a blob OID string, both of which are genuinely opaque identifiers with no behaviour worth wrapping. _dirty_key_paths returns list[str] of JSON-pointer-ish strings, which is mildly stringly-typed, but they exist only to be printed inside a failing assertion's message and are never parsed, so wrapping them would buy nothing.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Strictly improved by this diff: run_facts drops from three parameters to two. build_manifest still takes four (checklist, roots, reader, repo_state), but two of those are the module's deliberately injected impure edges, which is the design the file's own docstring and ProducerGuards exist to protect. Nothing in the diff lengthens a signature.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "The strongest structural signal in this diff, and I have measured its cost rather than merely naming it. Removing ONE boolean from ONE dict literal required coordinated edits in five files and rewrote the same rationale -- dirty is repo-wide, it is computed before the manifest is written, so it reads its predecessor's tree -- at SEVEN prose sites: the scripts/context_manifest.py module docstring, its CONTENT_KEYS comment block, and its default_repo_state, run_facts and build_manifest docstrings; scripts/checklist_engine.py's repo_revision docstring; docs/CHECKLIST_ENGINE_DESIGN.md's narrative plus its new successor paragraph; and tests/test_context_manifest.py's RepoRevContent class docstring. This is the field's SECOND move (it went content -> run in #300 g5 rework 1, run -> gone in #327) and both moves touched the same scattered set, which is exactly the repeat-pattern evidence Fowler asks for. The cost is not hypothetical: the measurement '49 manifests, 47 true / 1 false / 1 field-absent' is now written out in TWO shipped places (scripts/context_manifest.py:34-36 and the design-doc successor paragraph) with no single source, and my c5 and d3 findings are the direct consequence -- one of those two copies carries a causal parenthetical the tree refutes, and both are stated in an unanchored present tense against a tree that has already moved to 56/51/1/4. Replicated rationale drifted, in this very commit. Deliberately NOT overridden: global-crew.md's 'match the surrounding in-file documentation conventions' sanctions matching the house style, and ORCHESTRATOR_CONTEXT.md's rules say nothing about restating a rationale N times, so no documented standard covers restating one measurement in two shipped files. Observation and triage candidate, not a blocker -- the fix is to state the measurement once, in the design doc, and have the code point at it.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "scripts/context_manifest.py has exactly one axis of change here -- what the run subtree carries -- and the diff does not mix it with any second reason to change. CONTENT_KEYS, the content/run boundary, rows(), encode(), manifest_path() and write_manifest() are all untouched, which I verified mechanically (the only code objects that differ between the two revisions are run_facts and build_manifest).",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chain longer than one hop anywhere in the diff: state.get('commit'), checklist.get('work_id'), roots.get('repo'). The one multi-step expression, Path(roots[t]).as_posix(), is a conversion rather than a navigation through intermediaries, and it is untouched by this change.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "The sharpest Fowler call in this diff, and it is flagged rather than overridden because the repo's OWN inherited doctrine cuts against the retention rather than sanctioning it. repo_revision/default_repo_state deliberately keep returning both halves while exactly one consumer now uses exactly one half, and the justification written into the shipped docstrings is explicitly hypothetical: 'a second caller with different needs is free to use either half.' global-everyone.md Deep-module vocabulary states the rule directly -- 'One adapter = a hypothetical seam; two = a real one -- a boundary with a single implementer is a guess until a second proves it' -- and there is one consumer, so the generality is a guess by the repo's own definition. The same section's deletion test agrees: I deleted the 'dirty': None half of default_repo_state's early return and the FULL suite stayed green (1487 passed, 2 skipped, 472 subtests, zero failures), so the unused half is not merely unused, it is unpinned. Universal posture ('no speculative abstraction') and global-crew.md ('no speculative abstraction') say the same thing. I am NOT calling this a defect of this change: the g4-implement handoff put repo_revision's behaviour out of scope and this gate correctly obeyed that, and the primitive's own contract remains fully tested at tests/test_checklist_engine.py:1075-1110. But 'a documented standard makes it acceptable' is the bar for an override, and no documented standard does -- the documented standards lean the other way -- so the honest verdict is flagged, routed to triage for whoever owns the primitive, not quietly overridden here.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The diff adds several tombstone comments -- prose describing code that is no longer there. The clearest is run_facts' docstring, which now spends seven lines on a field the function does not mention at all ('A dirty flag lived here between #300 g5 rework 1 and #327 (#305 g4), when it was removed outright ... Do not re-add it here without reading the module docstring's measurement first'), and CONTENT_KEYS' comment block, which now explains why the tuple did NOT change. Read cold, that is the classic shape of a comment compensating for something the code cannot say.",
+      "override": {
+        "repo_standard": ".agent-work/issue-305/crew/g4-implement-handoff.md, the ratified scope for this gate: 'The prose must record that the field was removed and why ... not merely fall silent. A reader of main must not think it was never there. Reference #327.' Reinforced by global-everyone.md Universal posture, 'Keep Constellation context and architecture docs current when their meaning changes.'",
+        "reason": "The standard subordinates the smell because the comments are not compensating for unclear code -- the code is three deletions and reads perfectly without them -- they are carrying provenance that is genuinely unrecoverable from the code, and recording it was an explicit, ruled deliverable of this gate rather than an author's improvisation. Deodorant is a comment that exists BECAUSE the code is unclear; these exist because a reader of main would otherwise re-propose a field that has now been placed wrongly twice and measured out once. Scoped override: it covers the EXISTENCE of the tombstones, not their multiplicity -- that seven sites restate one rationale is a real cost and is flagged under shotgun-surgery above rather than being excused here."
+      }
+    }
+  ],
+  "rail_exception": null
+}
