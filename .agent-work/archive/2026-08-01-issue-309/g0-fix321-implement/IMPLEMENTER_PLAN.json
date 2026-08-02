@@ -1,0 +1,216 @@
+{
+  "work_id": "issue-309-g0-fix321",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-green",
+    "m3-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global-crew.md + global-everyone.md doctrine, the handoff at .agent-work/issue-309/g0-fix321-implement/HANDOFF.md, resolve_episode_path() in scripts/apply_episode_delta.py, and tests/test_episode_store.py's existing QueryFetchTests conventions. Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Confirm ID_RE's definition and confirm SKILL_INDEX.md exists at repo root. Record the pre-change baseline (full test_episode_store.py suite green).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff loaded; handoff complete; ID_RE confirmed; SKILL_INDEX.md existence confirmed; baseline 105 passed/1 skipped recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "TDD red: author the adversarial traversal test",
+      "imperative": "Add one new test class (e.g. PathTraversalGuardTests) to tests/test_episode_store.py, inserted after QueryFetchTests and before QueryEnumerateTests, with its own setUp anchoring the temp store root under the repo ROOT (tempfile.TemporaryDirectory(dir=str(ROOT))) so a fixed small number of '..' segments deterministically reaches ROOT/SKILL_INDEX.md regardless of system temp-dir depth. The test must: (1) assert SKILL_INDEX.md exists at repo root via Path.exists(), failing loudly with a clear message if not; (2) construct the traversal id inline the OLD (pre-fix) way -- root / 'active' / f'{episode_id}.md' -- and assert it resolves to that real file and .exists() is True, proving the exposure; (3) assert resolve_episode_path(episode_id, root) and fetch_episode(episode_id, root) both return None. Run the new test alone and OBSERVE it failing against the unmodified script (step 3's assertIsNone calls will fail because the unguarded function returns the traversed Path, not None).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new adversarial test authored; observed RED against unmodified resolve_episode_path() (evidence attached)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "TDD required",
+        "only tests/test_episode_store.py touched in this step",
+        "do not restructure the existing test file"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-green": {
+      "id": "m2-green",
+      "title": "TDD green: add the ID_RE guard to resolve_episode_path()",
+      "imperative": "In scripts/apply_episode_delta.py's resolve_episode_path(), add `if not ID_RE.fullmatch(episode_id): return None` as the FIRST check, before _require_store_layout() or any filesystem access. Do not change ID_RE itself, do not touch any other function or file. Run tests/test_episode_store.py -q and confirm green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_episode_store.py passes with the new test included",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-309 && python -m pytest tests/test_episode_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-green-1"
+        }
+      ],
+      "constraints": [
+        "minimal change",
+        "no new exception type -- None is the established not-found contract",
+        "do not weaken or change ID_RE's pattern",
+        "only resolve_episode_path() touched in apply_episode_delta.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-309 && python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-suite": {
+      "id": "m3-suite",
+      "title": "Full suite confirmation + evidence assembly",
+      "imperative": "Re-run the full tests/test_episode_store.py suite to confirm no regression vs the 105 passed / 1 skipped baseline (expect 106 passed / 1 skipped). Capture the exact diff to resolve_episode_path(), the new test's full source, and confirm SKILL_INDEX.md's Path.exists() result. Assemble IMPLEMENTER_RESULT.md per the handoff's Required Evidence section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "target test file green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_episode_store.py suite green, net +1 test / 0 regressions vs baseline",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-309 && python -m pytest tests/test_episode_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-309 && python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-309-g0-fix321",
+    "status": "released",
+    "claimed_at": "2026-08-01T22:00:44.053455+00:00",
+    "last_heartbeat": "2026-08-01T22:05:51.059039+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T22:07:29.666293+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "resolve_episode_path() at line 704 has zero id validation before filesystem access; ID_RE (line 113) is the store's existing grammar classifier reused, not redefined; SKILL_INDEX.md confirmed present at repo root; baseline tests/test_episode_store.py = 105 passed, 1 skipped",
+      "mechanical": false,
+      "ts": "2026-08-01T22:01:05.593015+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "New PathTraversalGuardTests added to tests/test_episode_store.py, anchored under repo ROOT via tempfile.TemporaryDirectory(dir=str(ROOT)) for deterministic 3-level traversal math. Ran alone: FAILED (1 failed) -- pre-fix resolve_episode_path() raises EpisodeDeltaError (half-retired false-positive, since active/retired are same-depth siblings so any pure-.. escape is symmetric) rather than returning None, proving no id validation exists. Inline old-style path construction confirms the traversal id resolves to the real SKILL_INDEX.md at repo root.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:04:44.749988+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-green",
+      "why": "Added ID_RE.fullmatch(episode_id) guard as the first line inside resolve_episode_path(), returning None immediately when the id doesn't match the store's grammar, before _require_store_layout() or any filesystem access. Full test_episode_store.py suite: 106 passed, 1 skipped (was 105 passed, 1 skipped) -- net +1 test, 0 regressions.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:05:18.428094+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-suite",
+      "why": "Final confirmation: tests/test_episode_store.py -q -> 106 passed, 1 skipped (baseline was 105 passed, 1 skipped; net +1 test, 0 regressions). SKILL_INDEX.md confirmed present at repo root via Path.exists() -> True. Diff to resolve_episode_path() captured; new PathTraversalGuardTests test class captured. IMPLEMENTER_RESULT.md assembled next.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:05:51.059020+00:00"
+    }
+  ]
+}

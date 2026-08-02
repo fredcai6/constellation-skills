@@ -792,6 +792,70 @@ class QueryFetchTests(QueryTestCase):
         self.assertEqual(payload["pid"], os.getpid())
 
 
+class PathTraversalGuardTests(unittest.TestCase):
+    """Issue #321 — resolve_episode_path() is the ONE seam every id-taking reader
+    (fetch_episode, neighbours' anchor fetch, the writer's own Transaction.load())
+    already routes through. Before this fix it built `root / sub / f"{episode_id}.md"`
+    from a caller-handed id with zero format validation, then only checked `.exists()`
+    — so a crafted id containing `..` segments could resolve outside episodes/
+    entirely and read an arbitrary file that happens to exist at the traversed
+    location. This proves the exposure existed AND that the ID_RE.fullmatch() guard
+    now closes it — not merely that a not-found id returns None (a well-formed absent
+    id already returned None before this fix too, which would be a check that cannot
+    fail)."""
+
+    TRAVERSAL_TARGET = ROOT / "SKILL_INDEX.md"
+
+    def setUp(self):
+        self.m = load()
+        self.q = load_query()
+        # Anchored directly under the repo root (dir=str(ROOT)), NOT the system
+        # tempdir the other tests' EpisodeStoreTestCase.setUp uses — so a fixed,
+        # small number of ".." segments deterministically reaches
+        # ROOT/SKILL_INDEX.md regardless of where the OS places its temp
+        # directory. self.root is 2 levels below ROOT (ROOT/tmpXXXX/episodes), so
+        # root/active is 3 levels below ROOT.
+        self.tmp = tempfile.TemporaryDirectory(dir=str(ROOT))
+        self.root = Path(self.tmp.name) / "episodes"
+        self.m.ensure_store_layout(self.root)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_traversal_id_would_have_escaped_the_store_and_the_guard_now_blocks_it(self):
+        # 0. The assumption this whole test rests on: a real, tracked file sits at
+        #    the repo root. Fail loudly rather than pass vacuously if that ever stops
+        #    holding.
+        self.assertTrue(
+            self.TRAVERSAL_TARGET.exists(),
+            f"{self.TRAVERSAL_TARGET} is assumed to exist at repo root for this "
+            "adversarial test to be meaningful, but it does not -- pick another "
+            "real, tracked file as the traversal target and update this test.",
+        )
+
+        episode_id = "../../../SKILL_INDEX"
+
+        # 1. Prove the exposure: joined the OLD (pre-fix) way -- root / sub /
+        #    f"{episode_id}.md", with no format check first -- the crafted id
+        #    resolves to that real file, outside episodes/ entirely.
+        old_style_path = self.root / "active" / f"{episode_id}.md"
+        self.assertEqual(old_style_path.resolve(), self.TRAVERSAL_TARGET.resolve())
+        self.assertTrue(old_style_path.exists())
+
+        # 2. Prove the fix: the real, current resolve_episode_path() refuses the
+        #    same id, for the same root, before returning any path for it. (Pre-fix,
+        #    this line does not merely return the wrong Path -- because active/ and
+        #    retired/ are same-depth sibling directories, a pure ".."-escape is
+        #    symmetric across both branches and instead trips the half-retired
+        #    guard, raising EpisodeDeltaError with the escaped path in its message.
+        #    That is a second, independent symptom of the identical root cause --
+        #    zero input validation -- and the guard below closes both at once.)
+        self.assertIsNone(self.m.resolve_episode_path(episode_id, self.root))
+
+        # 3. ...and the seam's caller-facing surface (fetch_episode) refuses it too.
+        self.assertIsNone(self.q.fetch_episode(episode_id, self.root))
+
+
 class QueryEnumerateTests(QueryTestCase):
     """Enumerate every episode — routed through the iter_episode_ids() seam, never a
     glob at the call site."""

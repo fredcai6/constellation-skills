@@ -1515,6 +1515,113 @@ BASELINE_RECORD Finding 4 and issue #333. No implementer/reviewer crews were dis
 gates were reasoning gates with stated waivers), so there is no gN-integrate crew feedback to
 harvest — confirmed after review of the gate plan, not assumed.
 
+## 2026-08-01 — issue-309
+
+Full spine driven (init through archive) under LAUNCH_ORDER-309.md, delegated mode, no
+reachable human. Mission: adversarial coherence sweep with seeded defects, plus a
+disposition of #321. Outcome: recall 4/4 (100%) on the findable seeded defects, noise 0/7
+from the two real sweep viewpoints, both the miss half and the false-positive half of
+`decision:prove-the-miss` demonstrated before either number was reported.
+
+**Friction / unclear**
+
+- **A plan premise I inherited from frozen doctrine turned out to be stale, and the
+  method that catches this (`lesson:verify-launch-order-claims-against-code`) does not by
+  itself catch a premise that was never a launch-order CLAIM — it was a project-doctrine
+  claim (`docs/EPISODE_STORE.md` section 1's own git-check-ignore transcript) the launch
+  order never restated.** My first-draft `MISSION_FRAME.md` said the seeded slice was safe
+  under `.agent-work/` "because it's gitignored," citing that section. `git check-ignore -v`
+  returned exit 1. `.agent-work/` was made TRACKED at #326, after that section was frozen.
+  The verify-against-code lesson is usually applied to the launch order's OWN claims; this
+  was a claim in a DIFFERENT, older, frozen doc that the launch order pointed me at as the
+  map substitute. Worth widening that lesson's statement to cover any doctrine a run relies
+  on, not only the launch order's own text.
+- **`git status --porcelain` over a directory that IS gitignored does not show it as
+  ignored by default** — it just omits it silently, the same way it omits any untracked
+  file outside `--ignored`. My first g1-seed postcondition used exactly this and the cold
+  critic caught that it passes vacuously whether or not the directory was ever populated.
+  A `test -f` on each expected file plus a real `git check-ignore -q` on an actual file
+  (not the bare directory) was the fix. Worth a standing note: `git status --porcelain`
+  alone is never sufficient to assert "this directory exists and is populated and
+  ignored" — it can be silently uninformative about all three.
+- **`run_crew.py --backend external` records the registry entry and expects the actual
+  dispatch to happen out-of-band** (via the ordinary Agent tool, since this session has no
+  separate headless CLI to spawn), which worked cleanly, but nothing in the command's own
+  `--help` text or the imperative that names it makes explicit that "external" is the
+  correct choice for an Agent-tool teammate dispatching its own subagents rather than
+  shelling out to a CLI. I inferred it correctly from the flag's description
+  ("out-of-band, e.g. as an Agent-tool subagent") but a first-time reader would have to
+  read that one help line carefully to avoid trying `--backend cli` (which would try to
+  spawn a `claude` subprocess this session doesn't have).
+- **Engine step-ordering refusals cost several round-trips**, same shape prior entries in
+  this file already note: attesting a precondition on a gate whose `start` had not yet run,
+  attesting `c1` before checking whether it was engine-checked (a `command`-kind
+  postcondition refuses `attest` outright — the recovery message names this correctly, but
+  I had to hit it once per gate rather than remembering it from the first refusal).
+
+**Crew-reported friction**
+
+- The **implementer** (g0-fix321-implement) reported one real friction point worth keeping:
+  the handoff's illustrative traversal-exploit failure shape ("the unguarded function
+  returns the wrong `Path`") was WRONG for this store's actual layout — `active/`/`retired/`
+  are always-present, same-depth sibling directories, so a pure `..`-escape id is
+  structurally symmetric across both and instead trips the half-retired guard
+  (`EpisodeDeltaError`), not a clean wrong-return. The implementer correctly treated this
+  as a stop-condition-adjacent judgment call (not a blocker — the handoff's own alternate
+  instruction, proving the exposure via inline path construction, still worked) and flagged
+  it rather than silently reconciling the mismatch. A future handoff describing this same
+  seam should name the half-retired-collision wrinkle up front.
+- The **reviewer** (g0-fix321-review) independently reproduced every piece of evidence from
+  scratch rather than trusting `IMPLEMENTER_RESULT.md`'s pasted transcripts — including a
+  `git stash`/re-run/`git stash pop` round-trip to reproduce the RED failure byte-for-byte
+  and confirm the working tree matched exactly afterward. No friction reported; this is the
+  handoff instruction working as intended.
+- Both crews correctly treated a doc-doesn't-mention-the-new-behavior gap
+  (`docs/EPISODE_STORE.md` section 7 silent about the new guard) as a triage candidate
+  rather than an in-scope fix, matching the handoff's stated exclusion. Filed as #348 at
+  the triage step, alongside the run's own separate `.agent-work/`-staleness discovery in
+  the same doc's section 1.
+
+**Improvement signals**
+
+- **A "prove the false positive" requirement needs a decoy the target lens's OWN guardrail
+  does not already name as an exclusion, or the demonstration can come back a null.** Both
+  real viewpoints were instructed not to flag "two skills legitimately choosing independent
+  process policy" as a contradiction — exactly the shape of the seeded decoy — so neither
+  took the bait, which is a *good* result for viewpoint discipline but left
+  `decision:prove-the-miss`'s noise half undemonstrated by the real sweep. Recovered with a
+  supplementary, explicitly-labeled low-bar probe against the decoy in isolation (not a
+  slice expansion), which did produce and then let me reject a genuine false positive. This
+  should be named as a standing methodology note for any future seeded-noise-control
+  design: a decoy the lens's own instructions are engineered to exclude proves lens
+  discipline, not noise-generation capacity, and the two are different questions.
+- **A recall/noise measurement over free-text subagent reports needs an explicit rule for
+  when two viewpoints cite the SAME underlying line pair via different framings** (here:
+  Viewpoint B's finding 2 cited SD1's injected line via a different quote pairing than
+  Viewpoint A's finding 1, but both are the same root-cause seeded defect). Scored as one
+  attributed item, not two, per a rule I had to invent mid-run (recorded in
+  `PLAN_CRITIC_DISPOSITION.md` item 8) rather than one the plan template names in advance.
+  Worth adding to a future coherence-sweep scoring template as a named scoring rule, not a
+  per-run improvisation.
+- **The cold plan critic (mandatory, per `lesson:cold-critic-mandatory-for-measurement-dependent-plans`)
+  again caught defects a self-review would plausibly have missed**: 2 BLOCKING vacuous
+  checks (a `git status --porcelain` postcondition that passed on an empty/never-seeded
+  directory; an adversarial test spec that could pass whether or not a fix existed) plus 3
+  SERIOUS issues (an unenforced ground-truth freeze, a `git diff` vs. index instead of HEAD,
+  an unnecessary gate dependency). Fourth+ convergent data point this epic for that lesson;
+  it is carrying real weight and the mandatory (not bias-to-yes) framing held up again.
+
+Crew workflow feedback harvested above from `IMPLEMENTER_RESULT.md` and `REVIEW_RESULT.md`
+directly (both gates dispatched real crews via `run_crew.py --backend external`, not
+reasoning-gate waivers).
+
+**Lessons bank at cap 20, nothing ripe**, same shape as the governor-261 entry above: the
+noise-decoy-must-not-be-excluded-by-the-target-lens-own-guardrail candidate (Improvement
+signals, above) could not be banked without evicting a lesson I had no grounds to retire.
+Filed as issue #349 instead of held locally, per Inherited Latitude's issue-filing
+pre-clearance — a cleaner outcome than a local hold file, since the tracker is durable and
+worktree-independent.
+
 ---
 
 ## issue-304 — Commander map-input contract (epic-298, B3)
@@ -1546,3 +1653,4 @@ harvest — confirmed after review of the gate plan, not assumed.
 - **Resuming a gate whose predecessor died mid-slice needs a sanctioned red-reconstruction recipe:** revert the implementation to the commit where it did not exist, observe the genuine red, restore, verify by **blob OID**, and record it as proving the tests *discriminate* — explicitly **not** that TDD order happened. Three of five conditions were satisfied this way and independently reproduced by the reviewer. → disposition: `route to Charter refresh (doctrine addition); recorded here for the epic harvest`.
 - **Windows CRLF has now cost six agents in one epic**, most recently on *writing* rather than reading. The warning alone is not working; the **recipe** belongs in every handoff constraint block — `git checkout HEAD -- <path>` plus a `hash-object`/`rev-parse` comparison, because `git status --porcelain` shows a phantom `M` while `git diff --quiet HEAD` returns 0. → disposition: `route to Charter refresh (shared windows doctrine), recorded for the epic harvest`.
 - **An imperative that points at "the command below" is invisible to an agent driven by `current`**, which never renders command text — and `current` alone is all a cold-started refresh agent has. → disposition: `filed as #374`.
+

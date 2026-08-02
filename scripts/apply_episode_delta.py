@@ -720,7 +720,18 @@ def resolve_episode_path(episode_id: str, root: Path) -> Path | None:
     answer: a store that is not there is not a store with no such episode (trap 5), and
     an id present in BOTH directories is a half-retired store, not a choice between two
     copies. The second one is what makes the half-retirement refusal reach fetch and the
-    writer, not only the scanning readers — this seam is the one they share."""
+    writer, not only the scanning readers — this seam is the one they share.
+
+    First check, before anything else touches the filesystem: the id must match the
+    store's own grammar (ID_RE, section 2). A caller-handed id (fetch/neighbours'
+    anchor fetch, and every other reader routed through this seam) is never validated
+    upstream the way a LISTED id is (iter_episode_ids -> _layout_episode_ids runs every
+    filename through episode_id_for() before it becomes a candidate) — without this
+    check, a crafted id containing `..` path-traversal segments would resolve outside
+    episodes/ entirely (issue #321). A malformed id can never legitimately exist, so
+    `None` is the correct, contract-preserving answer here — not a new exception type."""
+    if not ID_RE.fullmatch(episode_id):
+        return None
     _require_store_layout(root)
     found = [
         root / sub / f"{episode_id}.md"

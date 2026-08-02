@@ -1,0 +1,28 @@
+run #690: exit=0 timed_out=False elapsed=1033s git_unchanged=False
+run #698: exit=0 timed_out=False elapsed=1347s git_unchanged=False
+run #688: exit=0 timed_out=False elapsed=1443s git_unchanged=False
+run #716: exit=0 timed_out=False elapsed=1160s git_unchanged=False
+run #704: exit=0 timed_out=False elapsed=886s git_unchanged=False
+[corpus] BEFORE fcb6863163c97273 (19 skills, source_commit 74953936)
+[#690] launching  (15:21:00)
+[#688] launching  (15:21:00)
+[#698] launching  (15:21:00)
+[#690] capture exited rc=0 (+1035s)
+[#690] run-690: calls=108 first_map=36 first_src=23 corpus=1 subagents=0 forbidden=0
+[#690] run-690: TREATMENT-VERIFIED  calls=108 skill_calls=2 cmdr_at=[0] served_by=C:\Users\fredc\.claude\skills\constellation-commander writes=6 write_clean=True forbidden=0 map_credit_suppressed=2
+[#716] launching  (15:38:16)
+[#698] capture exited rc=0 (+1350s)
+[#698] run-698: calls=148 first_map=57 first_src=25 corpus=1 subagents=0 forbidden=0
+[#698] run-698: TREATMENT-VERIFIED  calls=148 skill_calls=2 cmdr_at=[0] served_by=C:\Users\fredc\.claude\skills\constellation-commander writes=13 write_clean=False forbidden=0 map_credit_suppressed=2
+[#704] launching  (15:43:31)
+[#688] capture exited rc=0 (+1445s)
+[#688] run-688: calls=124 first_map=27 first_src=23 corpus=1 subagents=0 forbidden=0
+[#688] run-688: TREATMENT-VERIFIED  calls=124 skill_calls=2 cmdr_at=[0] served_by=C:\Users\fredc\.claude\skills\constellation-commander writes=14 write_clean=True forbidden=0 map_credit_suppressed=1
+[#716] capture exited rc=0 (+2196s)
+[#716] run-716: calls=119 first_map=NO-MAP-READ first_src=NO-SRC-READ corpus=1 subagents=0 forbidden=0
+[#716] run-716: TREATMENT-VERIFIED  calls=119 skill_calls=2 cmdr_at=[0] served_by=C:\Users\fredc\.claude\skills\constellation-commander writes=13 write_clean=True forbidden=0 map_credit_suppressed=0
+[#704] capture exited rc=0 (+2241s)
+[#704] run-704: calls=96 first_map=23 first_src=7 corpus=1 subagents=0 forbidden=0
+[#704] run-704: TREATMENT-VERIFIED  calls=96 skill_calls=2 cmdr_at=[0] served_by=C:\Users\fredc\.claude\skills\constellation-commander writes=11 write_clean=True forbidden=0 map_credit_suppressed=1
+
+all captures done in 2241s
