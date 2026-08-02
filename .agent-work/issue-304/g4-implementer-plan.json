@@ -1,0 +1,226 @@
+{
+  "work_id": "issue-304-g4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the g4 handoff, and the prior-gate evidence (.agent-work/issue-304/TRIPWIRE_OUTCOMES.md and crew-handoffs/g3-result.md) so g4 EXTENDS g3's evidence rather than repeating it. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + g3 evidence loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md; docs/agents/ORCHESTRATOR_CONTEXT.md present (no CREW_CONTEXT.md/GLOSSARY.md here); g4 handoff, TRIPWIRE_OUTCOMES.md, g3-result.md read. Handoff complete: task, intent, scope, exclusions, evidence, constraints, stop conditions, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Materialize the EDITED spine template and prove the placeholders resolved",
+      "imperative": "Run scripts/init_work_area.py against the EDITED skills/commander/templates/COMMANDER_SPINE.template.json into a scratch work-id in this repo, then prove the materialized .agent-work/<scratch>/spine.json carries NO literal <commander-skill-dir>, <repo-root> or <work-id> token anywhere, and that the context c2 command carries a real resolved --root. A check whose materialized command still contains a literal placeholder never ran.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "materialized spine.json contains zero unresolved <...> placeholder tokens and the context c2 command's --root is an absolute path",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_resolved.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "scratch work-id only; do not disturb .agent-work/issue-304/",
+        "do not modify checklist_engine.py",
+        "do not point tooling at C:/Programs/f1Brainz"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_resolved.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Drive the MATERIALIZED spine through context end to end: degraded report, then honest discharge",
+      "imperative": "Drive the scratch spine through the engine's init and context steps, capturing the engine's own output verbatim with tee. Demonstrate (1) the context check REPORTS degraded rather than silently passing, (2) it is dischargeable WITHOUT --force or a waiver, and (3) context then advances to complete. Record the exit code at each stage, since stdout is discarded and the exit code is the only signal reaching the spine. If the only way past is --force or a waiver, STOP and report it as a finding.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "materialized spine exists with resolved placeholders",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "scratch spine's context task is complete, its receipt records DEGRADED-NO-MAP with substitutes/unmapped/escalation, and no waiver/force appears in the spine journal",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_discharged.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "capture the engine's own stdout verbatim, never paraphrase",
+        "no --force, no waiver"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Run the FULL suite and attribute any red by command",
+      "imperative": "Run the entire suite (python -m pytest -q, ~1160+ tests, several minutes; it has not hung) at the repo root and record the exact result line. If anything is red, attribute the distribution with a command such as uniq -c, never by reading the pytest tail. A local green is a local number, not the merge gate (local python is 3.14; CI pins 3.12).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "dogfood evidence captured",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full suite run to completion and its result line captured verbatim to evidence/g4-full-suite.txt",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py -m pytest",
+        "no filtered subset"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Clean up the scratch work area and deliver IMPLEMENTER_RESULT",
+      "imperative": "Remove the scratch work area and VERIFY its absence (only claim a cleanup you have verified). Confirm .agent-work/issue-304/ artifacts and TRIPWIRES.md are untouched. Write IMPLEMENTER_RESULT to .agent-work/issue-304/crew-handoffs/g4-result.md with evidence pasted verbatim and every deviation named.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "dogfood and full-suite evidence in hand",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "scratch work area absent, TRIPWIRES.md byte-identical to its pre-registration commit, g4-result.md written",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_closeout.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not rewrite TRIPWIRES.md",
+        "claim only verified cleanups"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g4-implementer-attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-02T04:39:53.095007+00:00",
+    "last_heartbeat": "2026-08-02T04:41:24.750907+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "context and prior-gate evidence loaded; the g4 delta is the check firing from the MATERIALIZED template",
+      "mechanical": false,
+      "ts": "2026-08-02T04:40:33.650531+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "materialized spine carries zero resolver-family placeholders; context c2 --root resolved to a real absolute path and --work-id to the scratch id",
+      "mechanical": false,
+      "ts": "2026-08-02T04:41:24.750890+00:00"
+    }
+  ]
+}

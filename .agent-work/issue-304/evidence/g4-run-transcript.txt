@@ -1,0 +1,26 @@
+=== g4 dogfood transcript: the MATERIALIZED spine, in a repo with docs/agents/ and NO docs/architecture/ ===
+$ date -u
+Sun Aug  2 04:40:54 UTC 2026
+
+$ ls -d docs/agents docs/architecture
+ls: cannot access 'docs/architecture': No such file or directory
+docs/agents
+### exit: 2
+
+$ git rev-parse --short HEAD
+4f9c6d1
+
+$ python scripts/init_work_area.py --spine skills/commander/templates/COMMANDER_SPINE.template.json --root C:/Programs/constellation-skills-wt/e298-304 g4-scratch-run
+work area ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-scratch-run
+spine ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-scratch-run\spine.json
+### exit: 0
+
+--- m1: placeholder resolution in the MATERIALIZED spine ---
+$ python .agent-work/issue-304/evidence/g4_assert_resolved.py
+unresolved resolver-family placeholder tokens in the materialized spine: 0 []
+materialized context.c2 command: python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run
+--root value: C:/Programs/constellation-skills-wt/e298-304   absolute=True   exists=True
+--work-id value: g4-scratch-run
+other angle-bracket tokens (informational, not resolver-owned): ['<date>', '<engine>', '<file>', '<path>', '<spine-template>', '<what you checked>']
+PLACEHOLDERS-RESOLVED
+### exit: 0
