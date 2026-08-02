@@ -330,7 +330,8 @@
           "id": "p1",
           "statement": "outcomes recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "outcomes recorded at 26b1092"
         }
       ],
       "postconditions": [
@@ -338,7 +339,8 @@
           "id": "c1",
           "statement": "five episodes filed, ids captured, one shown in full with its observed-behavior (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Five episodes filed via apply_episode_delta.py (dry-run first, then applied): issue-304-g3-001 (T1), -002 (T2), -003 (T3), -004 (T4), -005 (T5). Each observed-behavior states what actually happened in the m4 run and cites the pre-registration SHA (0119fa4 for T1-T4, 1662b90 for T5); none restates its prediction - 003 and 005 in particular record a non-result and a measurement gap. Full text of -004 pasted into g3-result.md."
         },
         {
           "id": "c2",
@@ -347,7 +349,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_episode_store.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-1"
         }
       ],
       "constraints": [
@@ -355,11 +358,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m7": {
@@ -471,7 +486,7 @@
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T04:00:31.241762+00:00",
+    "last_heartbeat": "2026-08-02T04:02:46.553340+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -519,6 +534,13 @@
       "why": "Two of five outcomes are honest negatives or non-results, and they are recorded as such rather than rounded to HELD: T3's mapped-repo clause is UNTESTED (no instrument), and T5 is NOT DETERMINABLE (a single scripted drive by the anchor's own author is not a behavioural sample). The pre-registration anticipated exactly this for T5 and asked for the gap to be named. The one forward-looking obligation this produces: POST must be designed to distinguish 'insufficient' from 'irrelevant', which needs runs under BOTH anchors - a POST that samples only the new anchor will return 'unchanged' and be unable to say which it saw.",
       "mechanical": false,
       "ts": "2026-08-02T04:00:31.241741+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6",
+      "why": "The store has no 'confirmed' standing (#342), so a tripwire that held and one never checked look identical in the store. That is exactly why each observed-behavior carries a specific quoted observation and the pre-registration SHA: the citation is doing the work the missing standing cannot. Episode -005 deliberately records NOT DETERMINABLE plus the forward measurement requirement rather than a verdict.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:02:46.553319+00:00"
     }
   ],
   "amendments": [
