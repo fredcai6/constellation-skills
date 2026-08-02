@@ -301,7 +301,8 @@
           "id": "p1",
           "statement": "g1 integrated: the manifest exists as a stable per-step snapshot, so the revision pin has something to pin",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -347,7 +348,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
