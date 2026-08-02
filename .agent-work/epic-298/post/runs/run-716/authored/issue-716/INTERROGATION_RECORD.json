@@ -1,0 +1,111 @@
+{
+  "goal": "Issue #716: two constellation shared-machinery scripts assume a work_id contains no internal '/', which breaks the nested Commander-under-Admiral convention (epic-<N>/<issue>). Fix with a single shared work_id-safe parsing/matching helper both scripts import. PLANNING ENGAGEMENT ONLY - understand + plan, no implementation.",
+  "mode": "delegated",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What capability is #716 changing, and where does the code that must change actually live?",
+      "status": "resolved",
+      "resolution": "Capability: the crew-recovery and feedback-invariant tooling resolves a work_id that may contain '/' path segments. The change target is the constellation-skills SOURCE repo, not f1Brainz and not the installed skill copies.",
+      "code_evidence": "C:/Programs/constellation-skills/scripts/run_crew.py and scripts/verify_agent_feedback.py are the only non-archive copies; C:/Users/fredc/.claude/skills/*/scripts/* are produced by scripts/install_constellation.py (SKILL_SCRIPT_BUNDLES, install_constellation.py:143-173); skills/CORPUS.json pins source_commit 3595955666."
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "Is the session-name -> work_id inverse unambiguous for multi-segment work ids?",
+      "status": "resolved",
+      "resolution": "Yes. work_id = '/'.join(parts[1:-3]) is an exact inverse, guarded by parts[0]=='constellation', len(parts)>=5, parts[-1].startswith('attempt-'). No --work-id override flag is needed.",
+      "code_evidence": "run_crew.py:83-88 session_name() = 'constellation/<work_id>/<gate>/<role>/attempt-<n>'; the defective parse is run_crew.py:936-939 (parts[1])."
+    },
+    {
+      "id": "q3",
+      "kind": "fact",
+      "question": "Which run_crew code paths are affected: launch or only recovery?",
+      "status": "resolved",
+      "resolution": "Only recovery. Launch passes args.work_id through untouched. One fix to load_registry_for_resume repairs all three recovery entry points (--verify-result, --resume, bare --abandon), not just the one the issue names.",
+      "code_evidence": "run_crew.py:864-865 (launch, no re-parse); call sites run_crew.py:824, 848, 867."
+    },
+    {
+      "id": "q4",
+      "kind": "fact",
+      "question": "How exactly does verify_agent_feedback break, and which of its other work_id uses are slash-safe?",
+      "status": "resolved",
+      "resolution": "_current_run_archive_dirs is unsatisfiable for a nested work_id (a single path NAME can never contain '/'), so it returns [] always: --phase archive then fails 'no archived run package found', and the leaked-AGENT_FEEDBACK/LESSONS scan silently checks nothing. Every other work_id use in the module is a Path join or a substring test and is already slash-safe.",
+      "code_evidence": "verify_agent_feedback.py:72-80 (defect); 121-137 (both consumers); slash-safe uses at 113, 117, 130, 150, 212, 93, 160, 29."
+    },
+    {
+      "id": "q5",
+      "kind": "fact",
+      "question": "Does any third script share the same assumption (is the blast radius really just two sites)?",
+      "status": "resolved",
+      "resolution": "No third site. The blast radius is exactly the two named functions.",
+      "code_evidence": "Grep for split('/') / '.name == work_id' / endswith('-'+work_id) across C:/Programs/constellation-skills/scripts returns only run_crew.py:936 and verify_agent_feedback.py:79; recover_crews.py:223,229 takes work_id as a CLI arg and calls run_crew.registry_path directly."
+    },
+    {
+      "id": "q6",
+      "kind": "fact",
+      "question": "Can a new shared sibling module actually reach both consumers in an INSTALL, and what wiring does that require?",
+      "status": "resolved",
+      "resolution": "Yes, via the existing sibling-import idiom, but ONLY if the new module is declared a runtime companion of BOTH consumers. explorer bundles run_crew.py without agent_work_root.py, so an undeclared sibling would break the explorer install; the existing closure test would not catch it because it only covers checklist_engine.py.",
+      "code_evidence": "verify_agent_feedback.py:12-13 (sys.path.insert + plain import of agent_work_root); install_constellation.py:88-109 (SCRIPT_RUNTIME_COMPANIONS) and 143-173 (SKILL_SCRIPT_BUNDLES: commander line 155 vs explorer line 168); tests/test_install_constellation.py:1250-1279 (engine-only closure test)."
+    },
+    {
+      "id": "q7",
+      "kind": "fact",
+      "question": "What archive-directory shapes actually occur on disk for a nested work id?",
+      "status": "resolved",
+      "resolution": "Two shapes are live: flat date-prefixed leaf names as written by real runs, and the nested path the spine's own archive imperative literally produces for a slash-bearing work_id. The matcher must recognize both.",
+      "code_evidence": "f1Brainz .agent-work/archive/2026-07-26-664-reference-laps and 2026-07-27-epic-659-closeout; COMMANDER_SPINE.template.json archive imperative ('.agent-work/archive/<date>-<work-id>/'); .agent-work/staged-feedback/epic-659/665/CONSTELLATION_FEEDBACK.md:5-23 (the forced archive.c1 waive)."
+    },
+    {
+      "id": "d1",
+      "kind": "decision",
+      "question": "Fix the constellation-skills SOURCE repo (and reinstall), or patch the installed copies under ~/.claude/skills?",
+      "status": "resolved",
+      "resolution": "Source repo only. Installed copies are build output; reinstall is a post-merge operator step named as a handover note, not a gate deliverable. f1Brainz gets zero source changes from this issue.",
+      "human_answer": "Delegated to the commander by the engagement prompt, verbatim: 'No human is reachable for this engagement, so wherever a step calls for a human decision, record what you would have asked, decide it yourself, and carry on rather than waiting.' Standing instruction from the repo owner; the issue text itself pre-routes the fix ('route to wherever constellation-commander's scripts are maintained')."
+    },
+    {
+      "id": "d2",
+      "kind": "decision",
+      "question": "One shared helper module both scripts import, or two independent local patches?",
+      "status": "resolved",
+      "resolution": "One shared module, scripts/work_id_paths.py, holding the work_id contract in one place. Rejected: folding the helpers into agent_work_root.py (different concern; explorer bundles run_crew.py without it).",
+      "human_answer": "Delegated per the engagement prompt (see d1). The issue text already states the owner's preference: 'a single shared work_id-safe parsing/matching helper both scripts import'."
+    },
+    {
+      "id": "d3",
+      "kind": "decision",
+      "question": "Which archive-dir naming is canonical for a nested work id, and must the matcher accept more than one shape?",
+      "status": "resolved",
+      "resolution": "The matcher is a recognizer, not a namer: accept the nested form AND the flattened form, normalize separators, and legislate no naming convention in this issue.",
+      "human_answer": "Delegated per the engagement prompt (see d1). Grounded in q7: both shapes already exist in the field, so a single-shape matcher guarantees a second forced waive."
+    },
+    {
+      "id": "d4",
+      "kind": "decision",
+      "question": "Does #716 also amend doctrine (spine archive imperative, commander-core.md) to state that a work_id may contain path segments?",
+      "status": "resolved",
+      "resolution": "No. Code + tests + the helper's docstring contract only; the doctrine note becomes a triage candidate at the run's triage step.",
+      "human_answer": "Delegated per the engagement prompt (see d1). A spine-template imperative edit changes what every future run executes and is a human call, not a side effect of a bug fix."
+    },
+    {
+      "id": "d5",
+      "kind": "decision",
+      "question": "How much regression protection: targeted unit tests only, or also widen the installer companion-closure guard past checklist_engine.py?",
+      "status": "resolved",
+      "resolution": "Both, with the widening kept narrow and data-driven: extend the existing runtime-sibling closure test to every script named in SKILL_SCRIPT_BUNDLES, in the test file that already owns the mechanism.",
+      "human_answer": "Delegated per the engagement prompt (see d1). Grounded in q6: this change reintroduces exactly the drift that guard exists to prevent, and explorer is the concrete bundle that would break."
+    }
+  ],
+  "signoff": {
+    "by": "Repo owner (engagement prompt, standing delegation) — recorded by the commander under that delegation; no live human exchange was available this engagement.",
+    "statement": "'This is a PLANNING engagement only... No human is reachable for this engagement, so wherever a step calls for a human decision, record what you would have asked, decide it yourself, and carry on rather than waiting.' Questioning is complete for the planning scope: seven facts resolved from source, five decisions asked-and-ruled under that delegation, each ruling recorded with the question it answers so the owner can overturn any of them at the implementation engagement."
+  },
+  "consolidated": true,
+  "rail_exception": {
+    "reviewer_cosign": "",
+    "log": "No independent reviewer co-sign is claimed. The finish gate is met by the standing written delegation quoted in signoff.statement, not by an exception. Honest limitation: the sign-off is a pre-authorization, not a live confirmation that the owner agrees with each ruling — every decision is written as 'would have asked' + ruling precisely so it can be overturned cheaply."
+  }
+}

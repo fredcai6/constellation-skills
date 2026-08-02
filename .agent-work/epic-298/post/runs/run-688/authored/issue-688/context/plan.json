@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "files": [],
+  "repo_rev": {
+    "commit": "3541d2929b19de37107ae13e56776b7162d07255"
+  },
+  "run": {
+    "work_id": "issue-688",
+    "generated_at": "2026-08-02T20:38:52Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/f1bwt/post688",
+      "durable": "C:/Programs/f1Brainz"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/f1bwt/post688"
+    }
+  }
+}

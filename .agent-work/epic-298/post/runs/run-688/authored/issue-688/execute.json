@@ -1,0 +1,291 @@
+{
+  "work_id": "issue-688",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement", "g1-review", "g1-integrate",
+    "g2-implement", "g2-review", "g2-integrate",
+    "g3-implement", "g3-review", "g3-integrate",
+    "g4-implement", "g4-review", "g4-integrate",
+    "g5-contract"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context and confirm the rebase base",
+      "imperative": "Read the inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and docs/architecture/packets/physics.md's grip-G stage-D subsection. Then do the thing this plan cannot proceed without: CONFIRM THE BASE. This plan was authored against main 3cf79f78; the planning worktree HEAD (3541d292) is 9 commits behind and does NOT contain #680, so the issue's own named symbol (rain_flag_from_raw) is legacy. Additionally #688 is W2 chain STEP 6 and lands BEHIND #679 (flying-lap gate), #678 (sign gate, V1 reparameterization WITH the GripEstimateRecord re-key, |D| prior) and #687 (physical-sigma gate). Run: git log --oneline -1 main; git merge-base --is-ancestor d4cd4b79 HEAD. Then check whether #679/#678/#687 have landed (git log --oneline --grep='#679' --grep='#678' --grep='#687' main). Record which of them are in the base. If #678 step 3's record re-key HAS landed, re-read GripEstimateRecord's CURRENT field set before g3 and treat this plan's field names as additive to it, never as a re-key. If it has NOT landed, that is a sequencing decision to surface to the principal, not a licence to proceed silently. Attest c1 with the answers.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "doctrine + project deltas + grip-G packet loaded; the working base is confirmed to contain #680, and the landed/unlanded status of #679/#678/#687 is recorded with its consequence for g3's field set", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "Plan against main, never against the planning worktree's HEAD.",
+        "Use py (Python Launcher), not python."
+      ],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 measure-before-fixing: wetness coverage + the pre-change baseline",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py (--dispatch external + --verify-result in this harness). TASK: ship a read-only measurement script and its findings doc that establish, on the real season DBs, the four numbers every later gate's constants and claims depend on. (a) session_surface_features.wet_lap_fraction population by (year, session_type) -- the planning run measured 22/22 for R and 0/22 for Q in BOTH 2022 and 2023; reproduce or refute it on the current base. (b) Every rain-flagged session bucketed by its compound-proxy wet-lap fraction (share of laps on INTERMEDIATE/WET), so the ramp's two constants are chosen against a real histogram rather than a guess -- the planning run found ~5 of ~35 flagged sessions under 20% wet. (c) Session-retention under three rules: any-session-wet WEEKEND rule, per-session binary flag, per-session graded -- the planning run measured 59% / 84% / 85-86%, i.e. granularity is worth ~25 points and thresholding ~1-2. (d) The PRE-CHANGE band distribution (median, p90, vacuous count, plausible-|D| count) over the stored grip records, which is the baseline g4's delta is measured against. NO production code changes in this gate. The findings doc must state its frame explicitly: 2022-2023 only, because that is the only surface-features coverage that exists (2018 0/105, 2021 22/110, 2024 24/120) -- and must NOT generalize past it. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "base confirmed at e0-context", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "DB-only: read data/f1_data_<year>.db read-only (mode=ro). No FastF1/Jolpica, no writes.",
+        "Evidence-only gate: no src/ change. The project's 'diagnose before fixing when the premise is uncertain' planning invariant is why this gate exists first -- the issue's premise was measurably wrong in three places.",
+        "State the measurement frame with every number; a number without its frame is not evidence here.",
+        "Cold-critic lens (intent-fit): every number produced must be one a later gate actually consumes. Drop any that is not."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.layer2 — src/physics/layer2/, component: the grip-G leaf whose records are measured", "struct:data — src/data/, container: owns session_surface_features, read-only here", "struct:sqlite_db — the canonical data/f1_data_<year>.db artefact"],
+        "capability": ["Grip-baseline session uncertainty (pipeline stage D) — measured, not changed, in this gate"],
+        "constraint": ["constraint:physics_region_no_evo_import — no evo/latent_power/compound_prior import", "Canonical-data constraint (ORCHESTRATOR_CONTEXT) — SQLite is the only authoritative source"],
+        "decision": ["decision pressure: the ramp's two constants (WETNESS_DRY_FLOOR, WETNESS_WET_CEILING) — this gate produces the histogram they are chosen against; it does not choose them"],
+        "evidence": ["W2 stream amendment T7/IF15 — the band-distribution report (median/p90/vacuous/plausible-|D|) is a separately scored acceptance artefact recomputed at each chain step", "W2 stream amendment T20 — the retained-session fraction is reported beside every band distribution"],
+        "confidence_flags": ["struct:physics.layer2 grip-G leaf — recorded honest measured-NULL (g4 +155.5% RMS, g5 31.9% separability): this gate measures the null's current shape, and must not report improving it", "surface-features coverage is 2022/2023 only — every claim states that frame"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. The reviewer independently RE-RUNS the script and reproduces the four number sets rather than reading them off the doc, and checks that every stated number carries its 2022-2023 frame. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "Check the verdict. On APPROVE, re-run the verification command yourself and confirm the numbers reproduce in your hands before advancing. On BLOCK, return for rework. Log out-of-scope finds as triage candidates. Harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the measurement script runs clean and its findings doc exists; touched paths pass the project limits check", "check": {"kind": "command", "command": "py scripts/measure_grip_wetness_coverage.py --seasons 2022 2023 && test -f docs/physics/688-wetness-coverage.md && py -m src.utils.simplification_limits scripts/measure_grip_wetness_coverage.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 the graded-wetness resolver: one home, two adapters",
+      "imperative": "Fill the implementer handoff and dispatch. TASK: create src/physics/layer2/session_wetness.py -- the single home for 'how wet was this session', returning a CONTINUOUS severity plus its provenance, for ANY session type. Contract: resolve_session_wetness(db_path, session_id) -> SessionWetness(severity: Optional[float], source: str). PRIMARY branch: session_surface_features.wet_lap_fraction when populated. FALLBACK branch: the physics-local compound proxy -- this session's fraction of laps on INTERMEDIATE/WET -- which exists because #575's populator is R-only and the column is therefore NULL for every FP/Q/S/SQ session today (measured 0/22 for Q in 2022 and 2023). UNKNOWN: severity=None with source='unknown' -- NEVER 0.0, because 0.0 means 'measured dry' and None means 'not populated'; #680 established this exact discipline and it must not be softened. source is one of 'surface_features' | 'compound_proxy' | 'unknown'. THEN make damage_batch.is_wet_race DELEGATE to this resolver, preserving its bool return and threshold=0.1 default EXACTLY -- it is today's second implementation of this same read, which is what makes this a real seam rather than a speculative one. Write the resolver so the proxy branch stops firing on its own when #728's backfill lands: the primary branch simply starts winning and wetness_source records the switch, with no physics change. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "g1's histogram exists — the resolver's shape is settled but its consumers' thresholds are calibrated on g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "constraint:physics_region_no_evo_import — the new module imports no evo/latent_power/compound_prior.",
+        "Physics READS the wetness column; it does not recompute or write it. src/data/ owns session_surface_features. The compound proxy is a fallback for an unpopulated read (precedented by damage_batch.is_wet_race), not a competing derivation.",
+        "Missingness is explicit: None, never 0.0. A test must pin that a session with an unpopulated column and no laps returns None with source='unknown'.",
+        "MANDATORY re-run of the consumed module's OWN pre-existing guard tests: tests/unit/physics/layer2/test_damage_batch.py already covers the S/Q NULL-fallback case explicitly. Passing only the new tests while breaking that file is the exact failure lesson:consumed-frozen-module-run-guard-tests names.",
+        "is_wet_race's public behaviour is byte-identical after delegation. If it cannot delegate without changing its bool semantics, STOP: the seam is wrong and that is a decision to surface, not to work around.",
+        "Cold-critic lens (simplicity/YAGNI): the resolver returns severity + source and nothing else. Do not add a threshold, a policy, or a caller-specific convenience to it -- those belong to the callers.",
+        "Cold-critic lens (testability): every branch (primary / proxy / unknown) must be independently exercisable from a unit test with a synthetic DB, without going through either adapter."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.layer2 — src/physics/layer2/, component: new module session_wetness.py + the damage_batch.py adapter", "struct:data — src/data/, container: session_surface_features is read-only from here"],
+        "capability": ["Grip-baseline session uncertainty (stage D) — this gate builds its input, not yet its behaviour"],
+        "constraint": ["constraint:physics_region_no_evo_import", "Missingness is explicit and configured, not guessed away (ORCHESTRATOR_CONTEXT planning invariant)", "assumption: wet-tyre lap fraction stands in for dry-lap-sample contamination — it is NOT rain intensity and reads 0 for a damp-but-slick-shod session; record this as a module-level known limit, do not assume it away silently"],
+        "decision": ["decision pressure: where the graded read lives — one home with two adapters vs a private copy in grip_baseline. Recommended one home; two implementers exist today, so the seam is real, not hypothetical. @grade: guess · leans g2-implement · settle: the deletion test — if is_wet_race cannot delegate without changing its bool semantics, the seam is wrong", "decision pressure: the unknown-wetness policy — fail conservative. @grade: settled/inherited · leans g2-implement,g3-implement · this is grip_baseline's Protected Intent ('never falsely confident'), not a free choice"],
+        "evidence": ["tests/unit/physics/layer2/test_damage_batch.py — pre-existing guard tests for the R-only NULL fallback; a REQUIRED re-run, not optional", "src/physics/burn_rate_calibration.py WET_EXCLUDE_THRESHOLD=0.05 — the named-threshold-with-rationale idiom this repo already uses over the same column"],
+        "confidence_flags": ["src/physics/layer2/damage_batch.py is a consumed module — touching it widens blast radius; its guard tests are the mitigation and are pinned in the constraints above"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Fill the reviewer handoff and dispatch. The reviewer must independently confirm: (a) the three branches are separately exercised by tests; (b) unknown returns None and never 0.0; (c) is_wet_race's behaviour is unchanged, verified by running its OWN pre-existing test file, not only the new one; (d) no evo-region import. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "Check the verdict; on APPROVE re-run the verification command yourself before advancing. On BLOCK, return for rework. Log out-of-scope finds as triage candidates; harvest Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the resolver's three branches pass AND damage_batch's pre-existing guard tests still pass AND the touched paths clear the limits check", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/test_session_wetness.py tests/unit/physics/layer2/test_damage_batch.py -q && py -m src.utils.simplification_limits src/physics/layer2/session_wetness.py src/physics/layer2/damage_batch.py tests/unit/physics/layer2/test_session_wetness.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 wire the graded sigma into the grip fit + persist the severity",
+      "imperative": "Fill the implementer handoff and dispatch. TASK, two files. (1) src/physics/layer2/grip_baseline.py: fit_session_grip_baseline resolves the graded severity via g2's resolver alongside the existing rain_read_from_surface_features call, and the fixed binary multiplier is replaced by a MONOTONE RAMP. Add two named constants with written rationale beside RAIN_SIGMA_INFLATION -- WETNESS_DRY_FLOOR (recommended 0.05, matching burn_rate_calibration.WET_EXCLUDE_THRESHOLD's precedent over the same column) and WETNESS_WET_CEILING (recommended 0.20, above which g1's histogram shows the flagged population sits) -- and a small pure helper wetness_inflation(severity, rain_flag) -> float returning 1.0 at/below the floor, EXACTLY RAIN_SIGMA_INFLATION (4.0) at/above the ceiling, linear between, and the FULL 4.0 whenever severity is None and rain_flag is True. Both the ok path and the thin_fallback path use it; the thin-session composition with THIN_SESSION_SIGMA_INFLATION is unchanged in structure. (2) src/physics/layer2/grip_store.py: GripEstimateRecord gains wetness_severity: Optional[float] and wetness_source: Optional[str], both nulled in error_record. No migration code is needed -- _migrate_missing_columns is additive and dataclass-driven -- but a round-trip assertion IS. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "g2's resolver is landed and green; e0-context recorded whether #678's record re-key is in the base", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "FROZEN (#663 Mission): rain must have a real, tested widening effect, never an inert stored flag. The ramp must reach EXACTLY RAIN_SIGMA_INFLATION at full wetness, and a test must pin that equality. Only the marginal end relaxes.",
+        "Protected intent: a thin or rain session must NEVER silently produce a falsely-confident (small-sigma) estimate. The ramp is monotone non-decreasing in severity, and never returns below 1.0.",
+        "Fail conservative on unknown: severity=None with rain_flag=True keeps the full 4.0. A test must pin this.",
+        "No session is ever dropped -- ok / thin_fallback / error remain the only outcomes.",
+        "ADDITIVE to decision:grip_estimate_record_session_level_pk. Do NOT change the record's primary key. If #678 step 3's in-data-coordinate re-key has landed, add these fields to the CURRENT record; if a per-constructor or re-keyed expectation appears to conflict, STOP and float to the epic tier -- that anchor is @grade: settled/inherited.",
+        "Do not touch the curve form, session_offset, the thin-session fallback logic, or get_grip_at's propagation algebra.",
+        "grip_baseline.py is 705/999 lines at main -- keep the added surface small; the read logic lives in g2's module, not here.",
+        "Expect, and do not report as a regression, the R2->R3 rain-flag x sigma-inflation interaction the owner pre-declared as 'named and latent until the re-fit'.",
+        "Cold-critic lens (intent-fit): the deliverable is an HONEST band, not a narrower one. A gate that only makes sigmas smaller has failed step 6.",
+        "Cold-critic lens (testability): the ramp is a pure function and must be unit-tested at floor, ceiling, midpoint, above-ceiling, and None, independently of any DB."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.layer2 — src/physics/layer2/grip_baseline.py (fit + constants) and grip_store.py (record fields), component-level"],
+        "capability": ["Grip-baseline session uncertainty (stage D) — THIS is the gate that changes the behaviour: binary step -> monotone ramp"],
+        "constraint": ["constraint:physics_region_no_evo_import", "FROZEN #663 Mission: rain must widen, really and testably", "Protected intent: never falsely confident", "Tunable thresholds belong in named constants with rationale, not inline literals (ORCHESTRATOR_CONTEXT planning invariant)"],
+        "decision": ["decision:grip_estimate_record_session_level_pk — the record is keyed per (year, gp_name, session_type), not per constructor @grade: settled/inherited · leans g3-implement · a conflicting expectation floats to the epic tier, it is never re-keyed here", "decision pressure: the ramp's shape and its two constants — recommended linear between WETNESS_DRY_FLOOR=0.05 and WETNESS_WET_CEILING=0.20. @grade: guess · leans g3-implement · settle: g1's measured histogram plus g4's band-distribution delta; the floor must not admit a session the compound proxy says ran materially wet", "decision pressure: persisting wetness_source as a provenance discriminator so #712's consumer can tell a measured dry from a proxied dry. @grade: guess · leans g3-implement · settle: whether g4 can partition the band distribution by source without it — if not, it is load-bearing"],
+        "evidence": ["tests/unit/physics/layer2/test_grip_baseline.py — the pinned rain x dry sigma equality and the rain-composes-with-thin case; both must survive at full wetness and be deliberately re-expressed at the marginal end", "tests/unit/physics/layer2/test_grip_store.py — additive-field round-trip through GripStore"],
+        "confidence_flags": ["#678 step 3 re-keys GripEstimateRecord to in-data coordinates and may land before this gate — e0-context records its status and this gate re-reads the CURRENT field set before editing", "struct:physics.layer2 grip-G leaf is a recorded measured-NULL: this gate must not be written or reported as discharging it"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Fill the reviewer handoff and dispatch. The reviewer must independently confirm: (a) the ramp equals EXACTLY RAIN_SIGMA_INFLATION at and above the ceiling, verified by running the pinned test; (b) it is monotone non-decreasing and never below 1.0; (c) severity=None with rain_flag=True yields the full 4.0; (d) the record's primary key is untouched and the two new fields round-trip through GripStore; (e) no curve/offset/thin-fallback/get_grip_at behaviour changed. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "Check the verdict; on APPROVE re-run the verification command yourself before advancing. Note the check is scoped to the grip layer2 suite plus the two direct downstream consumers, per lesson:scope-self-authored-regression-to-import-graph -- a blanket full-suite run on this numerics-heavy repo gets reaped. On BLOCK, return for rework. Log out-of-scope finds as triage candidates; harvest Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the grip layer2 suite and the real downstream consumers of get_grip_at are green, and the touched paths clear the limits check", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/ tests/unit/physics/test_class_utilization_observable.py -q && py -m src.utils.simplification_limits src/physics/layer2/grip_baseline.py src/physics/layer2/grip_store.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 acceptance: band distribution, retained fraction, per-step delta, H5 held-out",
+      "imperative": "Fill the implementer handoff and dispatch. TASK: produce the W2 stream's binding acceptance artefact for step 6. (a) Recompute the band distribution -- median, p90, vacuous count, plausible-|D| count -- on the stamped substrate, AFTER g3, and report it against g1's pre-change baseline as an explicit PER-STEP DELTA (amendment T19). (b) Report the RETAINED-SESSION FRACTION beside it (amendment T20): the denominator is under experimenter control and a 'majority' must not be manufactured by exclusion. (c) Score H5 -- do condition regressors absorb a measurable share of the inter-session offset -- by running #663's held-out harness WITH and WITHOUT the wetness grading and comparing held-out log-score. (d) Fix the stream-wide harness-validity amendment T7/IF15 if it is still open on the base: tests/unit/physics/layer2/test_grip_heldout.py currently calls pytest.skip when the main-checkout DB is absent, and the amendment requires the harnesses to HARD-FAIL, not skip -- 'harnesses pass' carries zero evidence otherwise. CONDITIONAL ON THE BASE: if #679 (step 1) already shipped a band-distribution reporter, REUSE it and add only the wetness arm; if it did not, ship the minimal reusable version here. State in the result which of the two happened. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "g3 landed and green; g1's pre-change baseline exists to delta against", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "The deficit scale (0.1-0.2 s) is an ASPIRATION, not an acceptance bar (owner ruling). Falling short after the repair is a FINDING about where the remaining inflation lives, not a failure of this gate. Harness VALIDITY failures, by contrast, are stop-the-line.",
+        "The grip node is a recorded honest measured-NULL. A null that stays null is a PASS here; reporting this gate as discharging #663's null is a misreport.",
+        "Report the frame with every number: 2022-2023 only. No claim generalizes past the surface-features coverage that exists.",
+        "Do not tighten any gate parameter to improve a headline fraction. Pre-register what is measured before measuring it.",
+        "Cold-critic lens (intent-fit): the honest reading includes the possibility that grading buys almost nothing on sigma, because g1 measured only ~5 of ~35 flagged sessions as marginal. Say so plainly if that is what the delta shows.",
+        "Scope the regression check to the real import graph, not the full suite (lesson:scope-self-authored-regression-to-import-graph)."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.layer2 — src/physics/layer2/, the fitted records under measurement", "struct:physics.utilization — src/physics/utilization/, the real downstream consumer of the band via get_grip_at (regression surface, not a change surface)", "struct:physics.pilot — src/physics/pilot/, read-only consumer of the grip slot (regression surface)"],
+        "capability": ["Grip-baseline session uncertainty (stage D) — this gate measures whether the change made the band more honest"],
+        "constraint": ["W2 amendment T7/IF15 — harnesses hard-fail, never pytest.skip, when the store is absent", "W2 amendment T19 — per-step deltas recorded so a later round can tell which link did the work", "W2 amendment T20 — retained-session fraction reported beside every band distribution", "Owner ruling — deficit scale is aspiration, not bar"],
+        "decision": ["decision pressure: whether the graded severity is worth its complexity at all — this gate produces the evidence for that verdict and must be willing to return a null"],
+        "evidence": ["H5 (scoreable) — condition regressors absorb a measurable share of inter-session offset; confirm/deny by held-out log-score with and without, per #663's harnesses", "tests/unit/physics/layer2/test_grip_heldout.py — #663's g4 held-out reconciliation harness (currently skips on absent DB; amendment T7 requires hard-fail)"],
+        "confidence_flags": ["the W2 band-distribution reporter is NOT in committed code on the planning base — this gate's imperative is conditional on whether #679 shipped one, and the result must say which path was taken", "test_grip_heldout.py's pytest.skip is a live harness-validity defect against amendment T7/IF15"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4: review",
+      "imperative": "Fill the reviewer handoff and dispatch. The reviewer independently re-runs the band-distribution report and the held-out harness, confirms the retained-session fraction is reported beside the distribution, confirms the harness now hard-fails rather than skipping on an absent store, and confirms no number is stated without its 2022-2023 frame. A null result correctly reported is an APPROVE. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g4-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4: integrate",
+      "imperative": "Check the verdict; on APPROVE re-run the verification command yourself before advancing. On BLOCK, return for rework. Log out-of-scope finds as triage candidates; harvest Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the held-out and band-distribution harnesses run (hard-failing, not skipping, on an absent store) and the acceptance report exists", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/test_grip_heldout.py -q && py scripts/grip_band_distribution.py --seasons 2022 2023 && test -f docs/physics/688-wetness-acceptance.md"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g5-contract": {
+      "id": "g5-contract",
+      "title": "G5 the durable contract note + decision candidates (REASONING GATE — no crew)",
+      "imperative": "REASONING GATE, driven in the Commander's own context. Crew waiver reason: the deliverable is a document whose whole content is the run's accumulated context (what the sigma now means, which branch produced it, and what is still not known); a crew dispatched onto a pure design note is shallower, not safer. Write docs/physics/688-graded-wetness.md as the durable contract for whoever picks up #712: (a) the sigma semantics BEFORE and AFTER, stated as a contract not a changelog; (b) the wetness_source discriminator and what each value licenses a consumer to assume; (c) the R-only limitation and its #728 exit condition, stated as a known limit with an owner; (d) the assumption that wet-tyre lap fraction stands in for dry-lap-sample contamination, and where it reads wrong (a damp-but-slick-shod session grades 0); (e) the measured frame, 2022-2023 only. Then update docs/architecture/packets/physics.md's grip-G stage-D subsection so the map's description of the rain treatment is not left stale. Finally, record the run's decision candidates for the spine's reconcile step, where Cartographer decides whether any becomes a durable anchor -- do NOT mint a decision anchor file here.",
+      "preconditions": [{"id": "p1", "statement": "g4's measured delta is in hand — the contract states what the sigma now means, which is not knowable before it is measured", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "PRE-AUTHORED INVARIANT CHAIN (doc-only gate, verified as a frozen chain rather than a grep-shaped proxy): the note names wetness_source and all three of its values; it names the R-only limitation AND #728 as its exit condition; it states the compound-proxy assumption AND the damp-but-slick-shod case where it reads wrong; it states the 2022-2023 frame; it does NOT claim #663's measured-NULL is discharged; and the packet's grip-G subsection no longer describes the rain treatment as binary.", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "decision candidates recorded for the reconcile step (resolver seam placement; ramp shape + its two constants; wetness_source as persisted provenance), each with its working grade — and no decision-anchor file minted here", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "gate outcome accepted", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
+      ],
+      "constraints": [
+        "Docs describe current truth, not archaeology (ORCHESTRATOR_CONTEXT, Documentation Authority).",
+        "Do not mint docs/architecture/decisions/*.md here — surfacing candidates is the Commander's job; Cartographer decides at reconcile whether one becomes an anchor.",
+        "Cold-critic lens (simplicity/YAGNI): this is one document plus one packet paragraph. If it grows a schema section, the schema belongs in the packet, not here."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.layer2 — the grip-G stage-D subsection of docs/architecture/packets/physics.md describes this component's rain treatment"],
+        "capability": ["Grip-baseline session uncertainty (stage D) — this gate documents the changed contract, it changes no behaviour"],
+        "constraint": ["Keep documentation current when contracts, ownership, data flow, commands, or failure meaning change (engine-config rules_root) — the meaning of session_offset_sigma changed, so this is required, not optional"],
+        "decision": ["decision:grip_estimate_record_session_level_pk — the packet subsection that carries this anchor is the one being updated @grade: settled/inherited · leans g5-contract · the update describes the added fields, it does not restate or revise the key"],
+        "evidence": ["g4's acceptance report is the source of every number this note states; the note cites it rather than restating numbers from memory"],
+        "confidence_flags": ["the packet's grip-G subsection predates #680 and this run — it currently describes the pre-swap, pre-grading treatment and is stale the moment g3 lands"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "summary": "Consolidate the THIRD wetness derivation: src/data/weather_features.py::_session_rain_flag still computes an all-or-nothing flag from three OR'd sources. After #688 the physics region reads a graded severity, so the binary flag's remaining job is only 'was there any rain at all'. Worth a look at whether the data region should expose the graded value directly instead.",
+      "route": "recommend-and-defer"
+    },
+    {
+      "id": "tc2",
+      "summary": "Candidate C from PLAN_ALTERNATIVES.md: extend weather_features.populate_wet_features_for_db past its session_type='R' filter so wet_lap_fraction is populated for every session type, retiring the compound proxy in physics entirely. Correct long-run shape; rejected for #688 because it is a data-region change requiring a repopulation of every season DB and it collides with #728, which is already cut and sequenced.",
+      "route": "recommend-and-defer",
+      "related": "#728"
+    },
+    {
+      "id": "tc3",
+      "summary": "src/physics/layer2/grip_baseline.py is 705/999 lines at main before this run adds to it. Not yet a violation, but the headroom is thin enough that the next addition to the grip fit should plan a split rather than discover the limit at a gate boundary.",
+      "route": "recommend-and-defer"
+    },
+    {
+      "id": "tc4",
+      "summary": "The W2 band-distribution reporter (median/p90/vacuous/plausible-|D| + retained-session fraction) is mandated at every chain step by amendments T7/IF15/T19/T20 but exists in no committed code on the planning base. Whichever W2 issue ships it first should ship it as a shared, reusable script rather than a per-issue one-off.",
+      "route": "recommend-and-defer",
+      "related": "#679"
+    },
+    {
+      "id": "tc5",
+      "summary": "This planning worktree (post688) sits 9 commits behind main and does not contain #680, which is why the issue body names a symbol that is already legacy. Worth a standing check that per-issue worktrees are rebased before an issue is picked up, so an issue's own premise is not read against a stale tree.",
+      "route": "recommend-and-defer"
+    }
+  ],
+  "blockers": []
+}

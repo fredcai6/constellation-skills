@@ -371,48 +371,82 @@ identical code — so the hits are classified by an additive adjudicator applied
 any hit that is neither class stays REAL and fails the gate. PRE-B raised zero hits, so the
 adjudicator is a no-op there.
 
-## 11.5 What this archive contains, and the 15,456 files it deliberately does not
+## 11.5 What this archive contains, what it drops, and the criterion that was corrected
 
-**The first version of this branch would have added 15,591 files and ~3.4M lines to the
-repository permanently, and almost none of it was evidence.** Caught by the Admiral before merge
-— on a direct question from Tommy, not by any check — and pruned in a normal removal commit on
-top (**history is not rewritten**, so the dropped tree stays recoverable on this branch and
-simply never reaches `main` through the squash-merge).
+**The first version of this branch would have added 15,496 files and ~3.4M lines permanently,
+and almost none of it was evidence.** Caught by the Admiral before merge — on a direct question
+from Tommy, not by any check. **Then the first prune criterion turned out to be over-broad and
+was itself corrected before merge.** Both passes are recorded, because a prune whose rationale
+is written down can be re-litigated and a silent one cannot.
 
 | | files |
 |---|---|
-| under `post/runs/` before the cut | **15,496** |
-| of which `run-*/authored/**` | **15,456** — dropped |
-| actual evidence | **40** — 8 per run, kept |
+| under `post/runs/` as first committed | **15,496** |
+| kept after the corrected cut | **161** = 40 evidence + **121 the runs themselves authored** |
+| dropped | **15,335** |
 
-**The criterion, stated so it is recorded rather than eyeballed:**
+### The first criterion was wrong, and why
 
-- **KEEP** — the derived scoring artifacts and the transcripts they derive from: everything the
-  ordering claim rests on and everything needed to re-derive it. Per run: `brief.md`,
-  `brief_diff.md`, `corpus-at-launch.json`, `meta.json`, `ordering.json`, `stderr.txt`,
-  `stream.ndjson`, `treatment.json`. Plus all of `POST_RECORD.md`, the scripts, the fingerprints,
-  `spine-materialization*.json`, and the whole `runs-VOID-double-driver/` set.
-- **DROP** — `run-*/authored/**`: **the measured agent's own output, which the arm never reads.**
-  Because f1Brainz *tracks* `.agent-work/`, each copy included ~13 work areas belonging to
-  unrelated host issues (`623-headless-deadlock`, `601-stage1-pregrease`, …). One file,
-  `verify_prefix.json`, is **60,716 lines and landed five times**.
+It was *"drop `runs/run-*/authored/**` entirely"*, reasoning from a **file count** without
+checking **what the directory held**. That would have destroyed the measured agents' own output
+and **broken comparability with PRE-B, whose `authored/` is on `main` and is deliberate
+evidence** (62 files across the same five runs). It is the same defect as §2.1 in the
+instruction meant to fix §2.1: *a conclusion asserted from a proxy without inspecting the
+subject.*
 
-**Verified rather than asserted**, since a prune reporting success is not a prune that did the
-right thing:
+### The corrected boundary, and the discriminator that makes it checkable
 
-- **15,456 removed, 40 remaining**, and all 40 are **byte-identical by blob OID** to before the cut.
-- **All three gates re-run and PASS** after the prune — so nothing the arm reads lived under
-  `authored/`. `discriminate.py` and `map_orient_audit.py` **re-derive output identical to the
-  committed artifacts** from the pruned tree, and the audit self-test is still 7/7.
-- PRE-B's archive holds **62** files for the same five runs. This one held 15,456. **The entire
-  difference is undeclared collection scope**, not a different measurement.
+**KEEP** — the 8 per-run evidence files (`brief.md`, `brief_diff.md`, `corpus-at-launch.json`,
+`meta.json`, `ordering.json`, `stderr.txt`, `stream.ndjson`, `treatment.json`), everything
+outside `authored/`, the whole `runs-VOID-double-driver/` set, **and each run's OWN work-item
+directory** under `authored/` — the run's actual output, and the direct analogue of what PRE-B
+archives.
 
-**Root cause fixed, not just cleaned:** `collect_authored.py` now identifies the subject's own
-work area **positively** — the directory that did not exist at the pin, which
-`git status --porcelain` reports as untracked — instead of copying everything it could see. The
-same fix closes §2.1's vacuous witness, since both defects are the same missing declaration.
-**A capture with no declared scope is the collection-side twin of an assertion with no declared
-subject.** Filed as **#401**.
+**DROP** — every other directory under `authored/`: `archive/` (2,679 files alone), `epic-659/`,
+`epic-601/`, `staged-feedback/`, `templates/`, `628-driver-utility/`, `623-headless-deadlock/`,
+`513-fp-followup/`, `644-physics-fit-headless-hang/`, `601-stage1-pregrease/`,
+`epic-601-lessons-audit/`, `epic-659-lessons-audit/`, `explore-driver-observable/`.
+
+**The discriminator is the pin, not the name:** *did this run create it, or was it already
+there?* Answered mechanically with
+`git ls-tree -r 3541d292 -- .agent-work`, which enumerates every directory present **before**
+any subject ran. Each run has **exactly one** directory absent from that list.
+
+| run | its own directory | files kept | host dirs dropped |
+|---|---|---|---|
+| 690 | `issue-690` | 16 | 13 |
+| 688 | `issue-688` | 24 | 13 |
+| 698 | **`cmdr-698`** | 39 | 13 |
+| 716 | `issue-716` | 25 | 13 |
+| 704 | `issue-704` | 17 | 13 |
+
+**Run-698's directory is `cmdr-698`, not `issue-698`.** A name-pattern rule would have deleted
+that run's entire output while reporting success — which is why the pin baseline, and not the
+naming convention, is the criterion.
+
+**A note on layout, since it matters for anyone comparing the arms:** POST has **zero** flat
+files directly under `authored/` — its collector archived whole directories, where PRE-B's
+archived the *contents* of the subject's own work area. So PRE-B's flat files and POST's
+own-directory contents are the **same thing in different shapes**, and keeping the own directory
+is what restores parity (PRE-B 62 files / POST 121 across the same five runs).
+
+### Verified, because a prune reporting success is not a prune that did the right thing
+
+- **15,335 dropped, 161 kept**, and **all 161 are byte-identical by blob OID** to their
+  pre-prune state — checked as `(oid, path)` pairs, with **0** mismatches.
+- **All three gates re-run and PASS** after the cut; `discriminate.py` re-derives output
+  **identical** to the committed artifact from the pruned tree; the audit self-test is 7/7.
+- **History is not rewritten.** The dropped tree remains recoverable on this branch and simply
+  never reaches `main` through the squash-merge.
+
+### Root cause fixed
+
+`collect_authored.py` now identifies the subject's own work area **positively** — the directory
+that did not exist at the pin, which `git status --porcelain` reports as untracked — and scopes
+both the copy and every witness `rglob` to it, recording how many host files it excluded. The
+same fix closes §2.1's vacuous witness: both defects are one missing declaration. **A capture
+with no declared scope is the collection-side twin of an assertion with no declared subject.**
+Filed as **#401**.
 
 ## 12. Reproduction
 
