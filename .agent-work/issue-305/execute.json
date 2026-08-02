@@ -1080,6 +1080,36 @@
       "id": "tc3",
       "from": "g3-review",
       "statement": "Crew doctrine: the spent-mutation rule should read 'not a repeat under the same conditions' rather than 'no repeats' - both of the g3 reviewer's re-runs of spent mutations were load-bearing because the tree had changed under them. And add: a mutation battery whose failures are EXCEPTIONS rather than assertions is broken, not a result - the reviewer's first N2 ran live, went red, and was worthless."
+    },
+    {
+      "id": "tc4",
+      "from": "g4-review",
+      "statement": "FU-1: tests/test_context_manifest.py, test_dirty_appears_nowhere_in_the_manifest - the comment above assertNotIn('dirty', cm.encode(m)) does not warn that the check matches VALUES as well as keys. Add one line. DO NOT narrow the token: the reviewer's mutation M3 proves the value-matching behaviour is the only layer that catches a value-shaped re-introduction, so narrowing would remove real coverage."
+    },
+    {
+      "id": "tc5",
+      "from": "g4-review",
+      "statement": "FU-2 (SURVIVING MUTANT, measured not suspected): scripts/context_manifest.py:326, default_repo_state's no-repo-root early return {'commit': None, 'dirty': None} - the dirty half now has NO test. Deleting it leaves the full suite green (1487 passed, 2 skipped, 472 subtests, zero failures; mutated blob 446fc1e86091188e3db680c5612a3f16fdbfdc68). The module docstring explicitly justifies returning BOTH halves; that decision should have a test. One assertion fixes it: cm.default_repo_state({'skill': ...}) == {'commit': None, 'dirty': None}. Note this is the exact edge shape the Admiral ruled deliberately unchanged - nothing currently stops a future agent deleting it."
+    },
+    {
+      "id": "tc6",
+      "from": "g4-review",
+      "statement": "FU-4: FOWLER duplicated-code - tests/test_context_manifest.py now has TWO hand-rolled recursive dict/list walkers over the same manifest structure (the new module-level _dirty_key_paths at :229, and the pre-existing one). Fix shape: one walker yielding (path, value) pairs that both callers filter."
+    },
+    {
+      "id": "tc7",
+      "from": "g4-review",
+      "statement": "FU-5: FOWLER shotgun-surgery, and the ROOT CAUSE of this gate's only BLOCK - the '49 manifests, 47 true / 1 false / 1 field-absent' measurement is written out in TWO shipped places with no single source (scripts/context_manifest.py and docs/CHECKLIST_ENGINE_DESIGN.md), and removing one boolean rewrote the same rationale at seven prose sites. Two copies with no single source is how they came to disagree. Fix shape: state it once and point at it."
+    },
+    {
+      "id": "tc8",
+      "from": "g4-review",
+      "statement": "FU-6: FOWLER speculative-generality, for the OWNER of checklist_engine.repo_revision and explicitly NOT this gate - the primitive returns {commit, dirty} while exactly one consumer uses exactly one half, and the shipped docstring justifies the generality by a hypothesised second caller. Either produce the second caller or shrink the primitive; do not leave the hypothesis in shipped prose as if settled."
+    },
+    {
+      "id": "tc9",
+      "from": "g4-review",
+      "statement": "Pre-existing, unrelated to #327, deliberately NOT fixed here: docs/CHECKLIST_ENGINE_DESIGN.md:187 states build_manifest(checklist, roots, ...) -> {contract, step, files, run}, omitting repo_rev. Stale since #300 g5 added repo_rev."
     }
   ],
   "why_trail": [
@@ -1289,7 +1319,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T18:31:48.567529+00:00",
+    "last_heartbeat": "2026-08-02T18:36:14.264351+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
