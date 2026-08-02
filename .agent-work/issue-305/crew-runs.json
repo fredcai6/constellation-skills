@@ -138,5 +138,29 @@
     "abandoned": false,
     "dispatch": "external",
     "model": "opus"
+  },
+  {
+    "crew_id": "constellation/issue-305/g2-review/reviewer/attempt-1",
+    "work_id": "issue-305",
+    "gate": "g2-review",
+    "role": "reviewer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/issue-305/g2-review/reviewer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/e298-305",
+    "handoff": ".agent-work/issue-305/crew/g2-review-handoff.md",
+    "result": ".agent-work/issue-305/crew/g2-review-result.md",
+    "stdout": ".agent-work/issue-305/crew-runs/g2-review-reviewer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-305/crew-runs/g2-review-reviewer-attempt-1.stderr.txt",
+    "started_at": "2026-08-02T04:27:57.087934+00:00",
+    "last_heartbeat": "2026-08-02T04:44:32.387868+00:00",
+    "completed_at": "2026-08-02T04:44:32.387868+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
