@@ -73,4 +73,12 @@ The g4 review returned a genuine **BLOCK**, which is also on the record. It bloc
 
 ## Suite
 
-`1487 passed, 2 skipped, 472 subtests`, measured on the shipped tree.
+`1620 passed, 2 skipped, 543 subtests`, measured on the shipped tree **after merging `origin/main`**. (Before the merge, on this branch alone: `1487 passed, 2 skipped, 472 subtests` — `main` brought 133 further tests.)
+
+`tests/test_context_manifest.py` was touched on both sides and auto-merged, so the suite was re-run after the merge rather than before it.
+
+**CI has never run on this branch.** The launch order states plainly that neither local interpreter reproduces CI (`py` is 3.12.13 matching CI's pin but has no pytest; `python` is 3.14.3 with pytest 9.0.2), and `Path.read_text(newline=...)` being 3.13+ cost PR #320 thirty-nine CI failures after a clean local green. **A local green is not the gate here.**
+
+## Branch status: PENDING
+
+Not merged. Per the Admiral's dispatch — which narrows the standing launch-order latitude that would otherwise pre-clear merge to the Commander — the merge decision is the Admiral's. Read the CI **status text** for `pass`; `gh pr checks` has been observed exiting 0 on a *pending* check.

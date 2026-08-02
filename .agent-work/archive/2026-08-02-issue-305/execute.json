@@ -1383,12 +1383,13 @@
   ],
   "engine_session": {
     "session_id": "commander-305h",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
     "last_heartbeat": "2026-08-02T18:56:55.138599+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
-    "takeover_reason": "commander-305g died mid-gate; successor dispatched by Admiral"
+    "takeover_reason": "commander-305g died mid-gate; successor dispatched by Admiral",
+    "released_at": "2026-08-02T19:10:16.157508+00:00"
   }
 }

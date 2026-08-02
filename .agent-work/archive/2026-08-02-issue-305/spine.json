@@ -510,19 +510,22 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-305 --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch epic-298/305 committed and pushed. a847897 -> 2c40a77 (merge of origin/main, suite re-run after because tests/test_context_manifest.py was touched on both sides and auto-merged: 1620 passed, 2 skipped, 543 subtests) -> 5d9b43f (work-area archive rename). PR #389 opened against main: https://github.com/fredcai6/constellation-skills/pull/389. NOT MERGED - PENDING, per the Admiral's dispatch, which narrows the launch order's standing merge pre-clearance."
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Lease release is the final journaled action and follows this advance, per the engine's own rail - releasing before the closing advance would leave archive's closeout entries after the release and fail the terminal provenance check."
         },
         {
           "id": "c4",
@@ -557,22 +560,46 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-305 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -581,13 +608,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "commander-305h",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T18:33:47.659123+00:00",
-    "last_heartbeat": "2026-08-02T19:00:55.663612+00:00",
+    "last_heartbeat": "2026-08-02T19:09:56.859487+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305-e298",
-    "takeover_reason": "commander-305d/e/g lineage dead; commander-305h dispatched by the Admiral to drive the spine to terminal"
+    "takeover_reason": "commander-305d/e/g lineage dead; commander-305h dispatched by the Admiral to drive the spine to terminal",
+    "released_at": "2026-08-02T19:10:16.506995+00:00"
   },
   "why_trail": [
     {
@@ -652,6 +680,13 @@
       "why": "Feedback appended to the work-area-root AGENT_FEEDBACK.md and both gates pass: the invariant check confirms the durable log exists, mentions issue-305 and sits outside the work area and archive; the lessons gate is clear with no ripe lesson awaiting apply-or-defer. No fencing waiver was needed - the durable root resolves inside my own worktree, so the staged-trio path did not apply. Improvement signals were filed to the tracker rather than banked locally, per LAUNCH_ORDER-305:92.",
       "mechanical": false,
       "ts": "2026-08-02T19:00:42.009694+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work area archived as a pure rename (166 files, 0 insertions, 0 deletions), AGENT_FEEDBACK.md deliberately left at the work-area root outside the archive so the learning survives independently of this worktree - the archive-phase invariant check confirms both. Branch pushed and PR #389 opened, declared PENDING not FINAL: I did not merge, because the Admiral's dispatch reserves that decision even though the launch order would have pre-cleared it to me. CI has never run on this branch and a local green is explicitly not the gate here, so the merge gate is the CI status TEXT reading pass, not an exit code.",
+      "mechanical": false,
+      "ts": "2026-08-02T19:09:56.859459+00:00"
     }
   ],
   "refusals": 0
