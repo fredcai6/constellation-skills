@@ -690,7 +690,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -701,7 +702,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -710,13 +716,48 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "g3-implement"
       },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g3-review-rework-result.md",
+            "verdict": "APPROVE-WITH-FOLLOWUPS",
+            "blockers": "none",
+            "survey": ".agent-work/issue-305/g3-review-rework/review.json (17 checks, all visited, consolidated, lease released last; Fowler rail exit 0)",
+            "reviewed_tree": "8bff6a8",
+            "baseline_derived_by_reviewer": "1487 passed, 2 skipped, 472 subtests; identical after 11 mutation batteries; all touched files OID-identical to HEAD",
+            "attacks": {
+              "A1_composer_to_constants": "RED - all ten fields named, first extra 'run'; seam test red too, so the mutation reached the subprocess",
+              "A2_delete_ground_truth_tally": "RED - names refusals/reopens/rework-count/failed-commands; R1-R4 all red",
+              "A3_all_null_manifest": "RED - compare_manifest_rows names every declared path; A3b (declaration dropped) proves test_a3 itself falsifiable",
+              "N1_aliased_import": "GREEN -> F1",
+              "N1c_unaliased_control": "caught - the independence guard is NARROWED, not vacuous. This decided the verdict",
+              "N2_hand_typed_work_id_into_run_field": "GREEN -> F2, proven at the seam snapshot",
+              "N3_N4_N5_N6": "all caught (shrink MECHANICAL_GROUP, drive less, --prefixed value, artifact-ref truncation with 2 staged paths)"
+            },
+            "followups_not_blocking": {
+              "F1": "FIX 2 layer (b) is defeated by an aliased import (`... as _alias`), which its own docstring names as the case it covers",
+              "F2": "the 'exactly TWO agent-supplied strings' claim is false; --cond is a third, sanctioned for attest and named by nothing. Of 31 engine flags, --cond/--evidence/--type/--from are unnamed; the last three are covered by the closed-world arm, --cond by nothing",
+              "F3": "the fixture stages one artifact-ref path; staging a second turns M8 red - cheapest fix in the file"
+            },
+            "commander_disposition": {
+              "F2": "FIXED at 83becc8, docstring only, per the reviewer's explicit 'fix the sentence, not the machinery'. Post-dates the reviewed tree and is disclosed as such; no assertion changed, control file 15 passed",
+              "F1_F3": "recorded as triage candidates, not fixed - reviewer states neither makes a conclusion unsupported"
+            },
+            "defect_found_in_commander_handoff": "my A3 row named test_a3_a_null_manifest_does_not_read_as_success as the assertion answering A3; it cannot be, since its repo has no files and it is null-vs-null. The discriminating test is test_declared_context_is_delivered_and_pinned. Asserting only against the test I named would have produced a false 'A3 green'",
+            "verified_by": "commander-305e accepted the verdict; the reviewer derived its own baseline and re-ran the suite after every battery"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -920,7 +961,23 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g3-review",
+      "statement": "F1: the independence guard's static layer (b) is defeated by an aliased import ('from episode_capture import reopen_total as _alias') - the exact case its own docstring names as what it covers. Measured GREEN by the g3 reviewer. Fix shape: match on the aliased binding, or resolve import aliases when walking the AST."
+    },
+    {
+      "id": "tc2",
+      "from": "g3-review",
+      "statement": "F3: the control's fixture stages ONE artifact-ref path, so the handoff's multi-element-collection constraint is unmet for that field and mutation M8 (truncate to out[:1]) passes. Measured: staging a second path turns M8 red. Cheapest remaining fix in the file."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-review",
+      "statement": "Crew doctrine: the spent-mutation rule should read 'not a repeat under the same conditions' rather than 'no repeats' - both of the g3 reviewer's re-runs of spent mutations were load-bearing because the tree had changed under them. And add: a mutation battery whose failures are EXCEPTIONS rather than assertions is broken, not a result - the reviewer's first N2 ran live, went red, and was worthless."
+    }
+  ],
   "why_trail": [
     {
       "id": "w-1",
@@ -1054,6 +1111,13 @@
       "why": "Rework verified rather than inherited: suite 1487/2/472 measured twice, restoration by blob OID, and all three red-proofs re-run against the SHIPPED file (the crew's ran against intermediates 49059be/fb9dfc2, neither of which shipped). My own sweep found what theirs missed - the census docstring claimed one agent-authored constant when claim --claimed-by is a second one feeding the role mechanical field; fixed in 283175b and proven by a pre/post mutation where the census passes before and fails after. Gate closes with the control falsifiable on its premise guards as well as its field comparison.",
       "mechanical": false,
       "ts": "2026-08-02T15:57:25.598544+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g3-review",
+      "why": "APPROVE-WITH-FOLLOWUPS, no blockers, and the reviewer derived its own baseline rather than inheriting mine. Three named attacks all RED with their specific assertions; six novel mutations, of which two scored green and became F1/F2. F2 proved my own corrected sentence still false - --cond is a third harness-authored string - so the docstring was cut back to what the census actually checks at 83becc8, docstring only, per the reviewer's 'fix the sentence, not the machinery'. It also caught a real defect in my handoff: the test I named as answering A3 is null-vs-null and cannot. F1 and F3 recorded as triage candidates; neither leaves a conclusion unsupported.",
+      "mechanical": false,
+      "ts": "2026-08-02T16:26:06.550228+00:00"
     }
   ],
   "amendments": [
@@ -1079,7 +1143,7 @@
     "session_id": "commander-305e",
     "status": "active",
     "claimed_at": "2026-08-02T15:39:11.877674+00:00",
-    "last_heartbeat": "2026-08-02T15:57:25.598562+00:00",
+    "last_heartbeat": "2026-08-02T16:26:22.317718+00:00",
     "claimed_by": "commander-305e",
     "worktree": "C:/Programs/constellation-skills-wt/e298-305",
     "previous_session_id": null,
