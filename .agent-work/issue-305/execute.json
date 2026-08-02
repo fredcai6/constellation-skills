@@ -152,7 +152,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g1",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -163,7 +164,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -172,7 +178,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "g1-implement"
       },
@@ -195,6 +201,17 @@
             "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
             "ts": "2026-08-02T03:00:53.041298+00:00"
           }
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g1-review-rework-result.md",
+            "verdict": "APPROVE",
+            "crew": "constellation/issue-305/g1-review/reviewer/attempt-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -208,7 +225,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g1",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -224,7 +242,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
         },
         {
           "id": "c2",
@@ -236,17 +255,41 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-305/crew/g1-review-rework-result.md",
+            "reproduced_by_commander": "yes"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-implement": {
@@ -739,6 +782,20 @@
       "why": "Packaging rework landed per the Admiral's ruling. I reproduced the red myself rather than accepting it: reverting the companion tuple to pre-fix turns BOTH new guards red, and the binding test catches the no-op in the act (emit_step_manifest.__module__ == 'installed_engine_305', the fallback, not 'episode_capture'). That second guard is the one that matters -- a dict-derived check structurally cannot catch an UNdeclared dependency, so the two fail for different reasons and neither subsumes the other. Closure is transitive and cycle-safe (episode_capture -> agent_work_root + deferred context_manifest -> checklist_engine), verified through expand_script_bundle across all ten engine-carrying skills; agent_work_root was previously hand-listed on only two of them. Detector is not overfitted -- neither helper names episode_capture. Crew also found a second false comment I had not assigned: the engine's import-site comment asserted the sidecar is NOT bundled and named the wrong dict, which deliverable 1 made exactly backwards. Suite 1436 passed / 2 skipped / 471 subtests.",
       "mechanical": false,
       "ts": "2026-08-02T03:16:03.303908+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g1-review",
+      "why": "APPROVE, and the mutation is the reason I trust it. The reviewer did not repeat the revert-red I had already reproduced -- it built modules that did not exist when the detector was written, reached at hop 3 (deeper than the real tree, which bottoms out at hop 2) through AST nesting the tree never exercises, declared neither, and the detector named both. It also killed the realistic bad fix of widening only the expectation set. That establishes the guard is a parser, not a hardcoded assertion wearing a parser's clothes -- which was the whole reason this gate was re-reviewed. Criterion 5 also held: all three rewritten tests strictly subsume their predecessors, gauge_reader.py is still pinned by name, and dropping it turns three tests red including an untouched end-to-end loader. I verified the production claim in my own hands rather than accepting it: installed the implementer skill (bundle is checklist_engine.py ALONE) to a temp dest, all four companions landed, and in a fresh process with cwd OUTSIDE the repo the installed engine bound emit_step_manifest.__module__ == 'episode_capture', not the fallback. #362 is fixed in the world, not just in the dict.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:34:06.552979+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g1-integrate",
+      "why": "APPROVE integrated. Both postconditions verified in my hands, not accepted: the engine ran the pytest command postcondition itself, and I had already reproduced the suite green (1436 passed / 2 skipped / 471 subtests) plus the production binding proof in a fresh process outside the repo. g1 now delivers what the gate promised AND ships it -- the seam emits at start()/reopen() write-if-absent, and its whole transitive closure reaches all ten engine-carrying skills through expand_script_bundle. Harvested for the lesson pool: (a) a vacuous check plus an honest crew reads exactly like a passing check plus a compliant crew, and the vacuous check here was authored by a Commander into a crew's job file -- the grader, not the graded; (b) a revert-based red proves the assertion matches the tree, only a NOVEL module proves the detector parses, which belongs in the handoff template not in a reviewer's initiative; (c) constellation-implementer has no sanctioned resume or no-plan path, so a rework dispatch contradicts the skill's opening imperative and costs every implementer a judgment call. Triage: reviewer's tc3 confirms my #360 live from this run's own artifacts -- surveys placed one level deeper wrote to .agent-work/issue-305/issue-305/context/, and two skills disagree about the layout while the seam absorbs it silently.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:35:44.141593+00:00"
     }
   ],
   "amendments": [
