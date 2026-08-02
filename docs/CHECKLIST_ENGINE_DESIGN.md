@@ -259,9 +259,9 @@ it: it is `.agent-work/issue-305/context/g1-implement.json`, the **second** mani
 context directory (`g1-review.json` preceded it by eight minutes, reporting `true`), and it reports
 clean because commit `2456130` cleaned the tree 2m16s before it was generated. It recorded what its
 predecessor left behind, not what it was itself about to do. Neither reading is available to a
-consumer — not a constant to rely on, not a signal to interpret. The field was not an oversight in #300 and its removal is not a
-reversal of a mistake; it is what a first real caller made visible. `CONTENT_KEYS` is unchanged by the
-removal, because `dirty` was never content.
+consumer — not a constant to rely on, not a signal to interpret. The field was not an oversight in
+#300 and its removal is not a reversal of a mistake; it is what a first real caller made visible.
+`CONTENT_KEYS` is unchanged by the removal, because `dirty` was never content.
 
 **Downstream, not yet resolved here.** The manifest is consumed, not produced, by whatever issue
 turns out to build on it, and two questions are open across that interface. **Durability:** that
