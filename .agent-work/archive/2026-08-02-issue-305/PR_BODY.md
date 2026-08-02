@@ -82,3 +82,31 @@ The g4 review returned a genuine **BLOCK**, which is also on the record. It bloc
 ## Branch status: PENDING
 
 Not merged. Per the Admiral's dispatch — which narrows the standing launch-order latitude that would otherwise pre-clear merge to the Commander — the merge decision is the Admiral's. Read the CI **status text** for `pass`; `gh pr checks` has been observed exiting 0 on a *pending* check.
+
+---
+
+## How the claims here were checked, and why that is part of the deliverable
+
+**"Docstring-only, behaviour unchanged" was made decidable rather than asserted.** `scripts/prove_docstring_only.py` ships with this PR. It is the instrument used on `scripts/checklist_engine.py` — the engine every gate in the fleet drives — and it returns a three-way result where each leg rules out a different way of being wrong: raw bytes differ (the edit applied), full AST differs (a docstring really changed), docstring-stripped AST equal (no behaviour changed). **Any two of those are satisfiable by a change that is not docstring-only**, which is why all three are required.
+
+It has a real negative control: run against `scripts/context_manifest.py` at the same revision pair it **correctly fails**, because that file genuinely did change code. A checker that cannot be made to fail proves nothing.
+
+**Agreement between two instruments is evidence; agreement between an instrument and itself is not.** The reviewer re-derived every confirmed claim with a *different* instrument than the one that produced it — `optimize=2` bytecode comparison against the AST strip, and a layer nobody had run: `repo_revision.__doc__` is read nowhere, and the only `__doc__` consumer is argparse on the *module* docstring, which did not move. Where a code object genuinely did differ (`DeclarationError.co_code`, operand `162→166`, matching a line move of `+4`), it reported the exception and explained it rather than rounding to "identical".
+
+**Bind per-blob, not per-tree.** HEAD moved four times during review. A bare tree-OID check would have **failed** and been the wrong instrument, because `.agent-work/` commits change the tree without touching a single reviewed source blob. This is the sharpened form of #381.
+
+**The pin was checked for circularity.** `git show 35d2686:scripts/context_manifest.py` contains **zero** occurrences of either SHA — the file names an ancestor that already existed when the naming was written, so the pin is not self-referential and not hollow. Nobody asked for that check.
+
+**Claims are bounded to what was actually inspected.** "No `permanently true` claim survives in the prose *I read*" is the honest form; "in the prose" would not have been. That precision is the through-line of this whole issue.
+
+**A closed finding was deliberately not carried forward.** The reviewer's FU-3 — the unanchored present-tense measurement — was closed by the rework, so it was **not** filed. Filing it would have put a phantom on the tracker: a record reporting a state nobody re-read, which is exactly #339's defect, caught before creation rather than after.
+
+## Followups filed, not banked
+
+`LAUNCH_ORDER-305.md:92` makes filing a requirement, not a permission: *"file findings directly, never bank them worktree-locally."*
+
+- **#384** — a **surviving mutant**: deleting `"dirty": None` from `default_repo_state`'s early return leaves the full suite green. The deliberateness of that shape is recorded only in prose and in an Admiral's message, and **both are unreachable from the test suite**. (See #345.)
+- **#385** — the removal rationale ships in **two prose copies with no single source**, and they already diverged during the gate that created them. This is the root cause of this PR's only BLOCK.
+- **#386** — test hygiene: the encode-token check matches *values* as well as keys (document it; **do not narrow the token** — it is the only layer catching a value-shaped re-introduction), plus a duplicated recursive walker.
+- **#387** — `repo_revision`'s unused half is justified by a *hypothesised* second caller stated as settled prose; and `docs/CHECKLIST_ENGINE_DESIGN.md:187` omits `repo_rev` from the stated return shape.
+- **#388** — crew doctrine: "spent mutation" means *not under the same conditions*, and a battery failing by exception rather than assertion is broken, not a result.
