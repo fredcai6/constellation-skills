@@ -543,7 +543,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT at g3-result.md verified fresh; deletion and T4 survivor verified by the Commander"
         }
       ],
       "postconditions": [
@@ -563,7 +564,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,

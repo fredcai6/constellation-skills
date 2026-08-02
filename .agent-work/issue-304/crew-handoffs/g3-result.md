@@ -544,9 +544,51 @@ have surfaced. **Flagged, not edited:**
 
 ---
 
+## Post-review edit (m9) — trend snapshot successor date
+
+**g3 was APPROVED** by the reviewer with no blockers. This one scoped edit followed, and it is a
+reconciliation rather than rework.
+
+`TREND_SNAPSHOT.md` §0 shipped the successor as owed *"at the close of the next epic that changes
+`skills/`"* — the epic **after** #298. The **ratified** Admiral amendment that put the successor clause
+into the gate plan names **epic-298 close**. The amendment's *substance* (name the consumer, name the
+successor, state the retire-if-unread rule) reached the g3 handoff; its *named date* did not, so the
+snapshot derived a looser date instead of carrying the ratified one. **The divergence is the handoff's,
+not the reviewed work's** — the reviewer and Commander both scoped it that way.
+
+**The edit:** the successor is now **owed at epic-298 close**, with the broader formulation kept as the
+**standing rule thereafter**. The file states which clause binds and why (the near date is what was
+ratified; the epoch-bound rule is the general case, because a calendar cadence would report false
+stability on a quiet month), so a successor understands the rule rather than obeying a date.
+
+**Verified unchanged, not asserted unchanged:** the consumer (*the next snapshot*), the retire-if-unread
+rule, §5's ranked comparison, and **every figure**. The engine check compares all numeric tokens from
+`## 1. Corpus size` onward against the approved commit `be14616` and asserts the whole diff is a
+**single hunk**, which lands inside §0 (§1 begins at line 44):
+
+```
+$ git diff -U0 be14616 -- .agent-work/issue-304/TREND_SNAPSHOT.md | grep '^@@'
+@@ -17,5 +17,19 @@ preamble, it is the point of the file.
+
+$ diff <(figures from section 1 onward @ be14616) <(figures from section 1 onward @ HEAD)
+FIGURES-UNCHANGED-EDIT-CONFINED-TO-ONE-HUNK
+```
+
+**Mechanics:** appended as gate `m9` via the engine's `amend --op add` (`append` is survey-only on a
+gated plan) rather than reopening — a one-clause wording change invalidates nothing upstream, and
+reopening would cascade-reset closed work for no reason. One further deviation, recorded: `m9.c3`'s
+check as first written compared *every* numeric token in the file, so the ruling's own prose — which
+cites epic 298 and issue 304 — failed it. That was the check being wrong, not the edit; it was
+retargeted at the figures via `retext-check` and **strengthened** with the hunk-count assertion above,
+not weakened.
+
+---
+
 ## Unresolved blockers
-**None.** Two items need a **Commander ruling, not a fix**: (1) whether Deviation 1's two out-of-scope
-test edits are accepted or reverted for re-adjudication; (2) routing the two flagged triage candidates.
+**None.** One item needs a **Commander action, not a fix**: routing the two flagged triage candidates.
+(Deviation 1 — the two out-of-scope test edits — was **ruled a forced re-point** at review: HEAD
+templates against `a8d9467` sentinels produced exactly 2 failures in 1538 tests, both the ones named,
+with whole-file assert totals unchanged at 154 and 33.)
 
 Only cleanups actually verified are claimed: the scratch work area was removed and its absence checked
 (`ls -d .agent-work/g3-scratch-run` → no such directory, in the transcript); `.agent-work/issue-304/` was

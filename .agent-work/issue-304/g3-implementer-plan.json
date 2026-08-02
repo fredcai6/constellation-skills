@@ -11,7 +11,8 @@
     "m5",
     "m6",
     "m7",
-    "m8"
+    "m8",
+    "m9"
   ],
   "tasks": {
     "m0-context": {
@@ -508,6 +509,97 @@
         }
       ],
       "rework_count": 0
+    },
+    "m9": {
+      "id": "m9",
+      "title": "Reconcile the trend snapshot's successor clause against the ratified Admiral amendment",
+      "imperative": "Commander ruling after g3 APPROVE. The Admiral amendment that put the successor clause into the gate plan names EPIC-298 CLOSE as when the successor is owed; the g3 handoff carried the amendment's substance (name the consumer, name the successor, state the retire-if-unread rule) but not its named date, so the snapshot shipped the looser 'next epic that changes skills/' reading. Make the successor OWED AT EPIC-298 CLOSE, and keep the broader formulation as the standing rule thereafter (each subsequent epic that changes skills/). State in the file WHY the near date binds - it is what was ratified - and WHY the standing rule is the general case, so a successor understands both rather than merely obeying a date. Nothing else changes: the consumer stays 'the next snapshot', the retire-if-unread rule stays, section 5's ranked comparison stays, and every number stays. Then append a short note to g3-result.md recording the edit and that it came from a ratified amendment the handoff under-specified. Commit.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TREND_SNAPSHOT.md names epic-298 close as the binding successor date, preserves the standing rule as the general case, and explains why each is which; consumer, retire-if-unread rule, section 5 and every figure unchanged (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TREND_SNAPSHOT.md section 0 now names epic-298 close as the binding successor date, keeps 'each subsequent epic that changes skills/' as the standing rule thereafter, and states which binds and why: the near date is what was RATIFIED, the epoch-bound rule is the general case because a calendar cadence reports false stability on a quiet month. Consumer ('the NEXT trend snapshot'), retire-if-unread rule, section 5's ranked comparison and every figure unchanged - the diff is a single hunk at lines 17-35, entirely inside section 0, and section 1 begins at line 44."
+        },
+        {
+          "id": "c2",
+          "statement": "the file names epic-298 close and still declares a successor and a consumer",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && grep -q 'epic-298 close' .agent-work/issue-304/TREND_SNAPSHOT.md && grep -qi successor .agent-work/issue-304/TREND_SNAPSHOT.md && grep -q 'Consumer: the NEXT trend snapshot' .agent-work/issue-304/TREND_SNAPSHOT.md && echo OK"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-1"
+        },
+        {
+          "id": "c3",
+          "statement": "every figure in the snapshot is unchanged from the reviewed version - verified by diffing the numeric lines against the approved commit be14616, not by assertion",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && git show be14616:.agent-work/issue-304/TREND_SNAPSHOT.md | sed -n '/^## 1. Corpus size/,$p' | grep -oE '[0-9]+' | sort > /tmp/g3_fig_before.txt && sed -n '/^## 1. Corpus size/,$p' .agent-work/issue-304/TREND_SNAPSHOT.md | grep -oE '[0-9]+' | sort > /tmp/g3_fig_after.txt && diff /tmp/g3_fig_before.txt /tmp/g3_fig_after.txt && test $(git diff -U0 be14616 -- .agent-work/issue-304/TREND_SNAPSHOT.md | grep -c '^@@') -eq 1 && echo FIGURES-UNCHANGED-EDIT-CONFINED-TO-ONE-HUNK"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-2"
+        },
+        {
+          "id": "c4",
+          "statement": "g3-result.md carries the note recording this edit and its provenance",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && grep -q 'ratified' .agent-work/issue-304/crew-handoffs/g3-result.md && grep -q 'Post-review edit' .agent-work/issue-304/crew-handoffs/g3-result.md && echo OK"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-3"
+        }
+      ],
+      "constraints": [
+        "scoped edit only - g3 is APPROVED and this is not rework",
+        "no figure changes; no reopening of closed items"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && grep -q 'epic-298 close' .agent-work/issue-304/TREND_SNAPSHOT.md && grep -qi successor .agent-work/issue-304/TREND_SNAPSHOT.md && grep -q 'Consumer: the NEXT trend snapshot' .agent-work/issue-304/TREND_SNAPSHOT.md && echo OK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && git show be14616:.agent-work/issue-304/TREND_SNAPSHOT.md | sed -n '/^## 1. Corpus size/,$p' | grep -oE '[0-9]+' | sort > /tmp/g3_fig_before.txt && sed -n '/^## 1. Corpus size/,$p' .agent-work/issue-304/TREND_SNAPSHOT.md | grep -oE '[0-9]+' | sort > /tmp/g3_fig_after.txt && diff /tmp/g3_fig_before.txt /tmp/g3_fig_after.txt && test $(git diff -U0 be14616 -- .agent-work/issue-304/TREND_SNAPSHOT.md | grep -c '^@@') -eq 1 && echo FIGURES-UNCHANGED-EDIT-CONFINED-TO-ONE-HUNK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && grep -q 'ratified' .agent-work/issue-304/crew-handoffs/g3-result.md && grep -q 'Post-review edit' .agent-work/issue-304/crew-handoffs/g3-result.md && echo OK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     }
   },
   "consolidation": null,
@@ -527,13 +619,13 @@
   "engine_session": {
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "released",
-    "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T04:08:09.207228+00:00",
+    "claimed_at": "2026-08-02T04:33:54.131086+00:00",
+    "last_heartbeat": "2026-08-02T04:36:07.288568+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
     "takeover_reason": null,
-    "released_at": "2026-08-02T04:08:15.409984+00:00"
+    "released_at": "2026-08-02T04:36:20.907108+00:00"
   },
   "why_trail": [
     {
@@ -598,6 +690,13 @@
       "why": "Gate complete and honest in both directions. Three tripwires held, T3 is split (degraded clause held, mapped-repo clause untested for want of a reachable mapped repo), T5 is NOT DETERMINABLE and is reported as a measurement gap with the forward requirement POST must meet. Two deviations named rather than smoothed: two out-of-scope test files whose prose sentinels quoted the deleted block, and one engine-recorded plan-check rescope. The single ruling the Commander owes is whether Deviation 1 is accepted or reverted for re-adjudication - it is isolated in two commits and nothing depends on it.",
       "mechanical": false,
       "ts": "2026-08-02T04:08:09.207209+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9",
+      "why": "A ratified date outranks a derived one, and the gap was in the handoff rather than the work - so this is a reconciliation appended as a new gate, not rework reopening closed items. The edit is pinned by a check that proves what matters (figures identical from section 1 onward, whole diff one hunk) rather than by my assertion that nothing else moved.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:36:07.288545+00:00"
     }
   ],
   "amendments": [
@@ -607,6 +706,22 @@
       "authority": "implementer (self; check-text scope correction, no scope added)",
       "ops": [
         "retext-check m1.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-02T04:34:26.266655+00:00",
+      "reason": "g3 APPROVED with one scoped edit: the Admiral amendment naming epic-298 close as the successor date did not reach the handoff, which carried only the amendment's substance. A one-clause wording reconciliation invalidates nothing upstream, so this is appended as a new gate rather than reopening closed work.",
+      "authority": "Admiral amendment (ratified), relayed by commander-304c after g3 review",
+      "ops": [
+        "added m9"
+      ]
+    },
+    {
+      "ts": "2026-08-02T04:35:17.117928+00:00",
+      "reason": "c3 as written compared EVERY numeric token in the file, so the ruling's own prose - which cites epic 298, issue 304 and gate g3 - failed it. That is the check being wrong, not the edit: the property c3 exists to protect is that the FIGURES are unchanged. Retargeted at the figures (section 1 onward) and strengthened with a hunk-count assertion proving the edit is confined to section 0.",
+      "authority": "implementer (self; check-text correction, property strengthened not weakened)",
+      "ops": [
+        "retext-check m9.c3"
       ]
     }
   ]

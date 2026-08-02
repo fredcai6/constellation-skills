@@ -14,11 +14,25 @@ preamble, it is the point of the file.
 - **Consumer: the NEXT trend snapshot.** Not a human reading it once, not this issue's review. Its job is
   to run the *same commands* against a later commit and subtract. Nothing else consumes this file, and
   it should be deleted rather than maintained if that successor is never taken.
-- **When the successor is expected: at the close of the next epic that changes `skills/`.** That is the
-  binding condition, not a date — the corpus only moves when an epic moves it, so a calendar cadence
-  would produce identical numbers on a quiet month and read as false stability. Epic #298 is the current
-  one; the successor is owed at the **close of the epic that follows it**, whichever that turns out to
-  be.
+- **When the successor is expected: at EPIC-298 CLOSE.** That is the binding date, and #304 sits *inside*
+  epic #298, so it is genuinely close — the first successor is owed at the close of the epic this
+  snapshot was taken during, not the one after it.
+
+  **After that, the standing rule: each subsequent epic that changes `skills/`.**
+
+  Both clauses schedule a successor, which is the point; they differ only in how soon the first one
+  falls due. Which is binding, and why, stated so a successor understands the rule rather than merely
+  obeying a date:
+
+  - **`epic-298 close` binds because it is what was ratified.** It comes from the Admiral amendment that
+    put this successor clause into the gate plan in the first place. This file originally shipped only
+    the looser rule below, because the amendment's *substance* (name the consumer, name the successor,
+    state the retire-if-unread rule) reached the g3 handoff while its *named date* did not. A ratified
+    date outranks a derived one; the near date wins.
+  - **The standing rule is the general case, and it is epoch-bound on purpose.** The corpus only moves
+    when an epic moves it, so a calendar cadence would produce identical numbers on a quiet month and
+    read as false stability. Once the epic-298 successor is taken, that is the rule that carries the
+    series forward.
 - **What the successor must do to be a successor at all:** re-run §1–§3 verbatim against its own HEAD,
   paste both numbers, and state the delta. A successor that reports only its own figures is a second
   baseline, not a trend.
