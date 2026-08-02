@@ -1182,12 +1182,13 @@
   ],
   "engine_session": {
     "session_id": "commander-305e",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T15:39:11.877674+00:00",
     "last_heartbeat": "2026-08-02T16:30:32.433285+00:00",
     "claimed_by": "commander-305e",
     "worktree": "C:/Programs/constellation-skills-wt/e298-305",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T16:32:00.542725+00:00"
   }
 }
