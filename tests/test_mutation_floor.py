@@ -132,6 +132,59 @@ MUTATIONS = (
         ),
         expect_kills="UnreadableSubstitute",
     ),
+    # ---- g2: mutations against verify-frame --------------------------------
+    Mutation(
+        name="an ABSENT mission frame credited as a pass",
+        why=(
+            "THE vacuous pass. A check that reports success when the artifact it "
+            "checks does not exist is not a check -- it reports success for every "
+            "run that skipped the work entirely, which is the single failure mode "
+            "the whole citation contract is built on refusing. Note the shape of "
+            "this mutant: it does not crash and it does not go quiet, it returns "
+            "the SATISFIED verdict on an empty repo, so nothing but an explicit "
+            "absent-frame test can tell it from the real thing."
+        ),
+        subs=(
+            (
+                "        return (\n            FRAME_MISSING,\n            EXIT_RECEIPT_UNUSABLE,\n",
+                "        return (\n            FRAME_OK,\n            EXIT_OK,\n",
+            ),
+        ),
+        expect_kills="AbsentFrameRefuses",
+    ),
+    Mutation(
+        name="the undeclared-substitute refusal disabled",
+        why=(
+            "Degraded frames would then be checked against nothing but themselves: "
+            "an agent could cite any known fallback it never declared at orient "
+            "time, which collapses the comparison against a COMMITTED PRIOR back "
+            "into the same-breath assertion the hash-pinning exists to replace."
+        ),
+        subs=(
+            (
+                "            if norm in KNOWN_FALLBACK_SET and norm not in declared:\n",
+                "            if False:\n",
+            ),
+        ),
+        expect_kills="VerifyFrameDegraded",
+    ),
+    Mutation(
+        name="the known-fallback label granted on set membership alone",
+        why=(
+            "Drops the filesystem half of the partial oracle. A declared-but-ABSENT "
+            "README.md would wear the verified label, so the receipt's distinction "
+            "between 'resolved from the known fallback set' and 'the agent said so' "
+            "would be decoration -- the label would be re-derived from the agent's "
+            "own declaration, which is precisely what it exists to be independent of."
+        ),
+        subs=(
+            (
+                "    if exists and normalize_cited_path(rel_path) in KNOWN_FALLBACK_SET:\n",
+                "    if normalize_cited_path(rel_path) in KNOWN_FALLBACK_SET:\n",
+            ),
+        ),
+        expect_kills="SubstituteLabels",
+    ),
 )
 
 
@@ -217,6 +270,16 @@ class MutationFloor(unittest.TestCase):
     def test_5_mutation_sentinel_accepted_as_a_hash_pin_is_killed(self):
         """Regression: the B1 blocker, pinned so it cannot come back."""
         self._assert_mutation_is_killed(MUTATIONS[4])
+
+    def test_6_mutation_absent_frame_credited_as_a_pass_is_killed(self):
+        """THE vacuous pass -- the one mutation this gate exists to pin."""
+        self._assert_mutation_is_killed(MUTATIONS[5])
+
+    def test_7_mutation_undeclared_substitute_refusal_disabled_is_killed(self):
+        self._assert_mutation_is_killed(MUTATIONS[6])
+
+    def test_8_mutation_known_fallback_label_on_membership_alone_is_killed(self):
+        self._assert_mutation_is_killed(MUTATIONS[7])
 
     # -- the shared harness -------------------------------------------------
 

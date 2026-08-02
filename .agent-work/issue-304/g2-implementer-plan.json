@@ -328,7 +328,8 @@
           "id": "p1",
           "statement": "all implementation slices are green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "all implementation slices are green: m2, m3, m4 and m5 all advanced to complete; tests/test_map_contract_wiring.py plus tests/test_install_constellation.py report 120 passed, 308 subtests passed, and map_orient.py --self-test exits 0."
         }
       ],
       "postconditions": [
@@ -336,7 +337,8 @@
           "id": "c1",
           "statement": "TDD red: the new mutation observed KILLING (floor red) only after the applied-before-red assertions pass -- verified by running the new mutation test",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "GENUINE observation, no reconstruction. Three new mutations added against verify-frame. For the vacuous-pass mutant the applied-before-red assertions were checked FIRST and pasted: anchor unique in original = 1, anchor gone after sub = 0, replacement count delta 0 -> 1 (exactly +1). ONLY THEN was the floor run against the mutant: returncode 1, killed by AbsentFrameRefuses test_an_absent_frame_refuses_on_a_resolved_repo, test_an_absent_frame_refuses_on_a_degraded_repo_too, test_an_empty_frame_file_is_the_same_as_no_frame, plus ContractShape test_self_test_floor_passes. All three new mutants killed: 6 passed, 9 subtests passed. HarnessSelfCheck still proves a non-matching anchor raises HarnessError rather than being credited as a kill."
         },
         {
           "id": "c2",
@@ -363,7 +365,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -378,7 +380,7 @@
     "session_id": "g2-implementer-304b",
     "status": "active",
     "claimed_at": "2026-08-02T02:13:28.493043+00:00",
-    "last_heartbeat": "2026-08-02T02:28:14.990797+00:00",
+    "last_heartbeat": "2026-08-02T02:30:40.364002+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "g2-implementer-304",
