@@ -313,7 +313,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1",
+          "attested": {
+            "evidence": "e-g2-implement-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -348,11 +353,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g2-implement-result.md",
+            "crew": "constellation/issue-305/g2-implement/implementer/attempt-1",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
@@ -797,6 +814,13 @@
       "why": "APPROVE integrated. Both postconditions verified in my hands, not accepted: the engine ran the pytest command postcondition itself, and I had already reproduced the suite green (1436 passed / 2 skipped / 471 subtests) plus the production binding proof in a fresh process outside the repo. g1 now delivers what the gate promised AND ships it -- the seam emits at start()/reopen() write-if-absent, and its whole transitive closure reaches all ten engine-carrying skills through expand_script_bundle. Harvested for the lesson pool: (a) a vacuous check plus an honest crew reads exactly like a passing check plus a compliant crew, and the vacuous check here was authored by a Commander into a crew's job file -- the grader, not the graded; (b) a revert-based red proves the assertion matches the tree, only a NOVEL module proves the detector parses, which belongs in the handoff template not in a reviewer's initiative; (c) constellation-implementer has no sanctioned resume or no-plan path, so a rework dispatch contradicts the skill's opening imperative and costs every implementer a judgment call. Triage: reviewer's tc3 confirms my #360 live from this run's own artifacts -- surveys placed one level deeper wrote to .agent-work/issue-305/issue-305/context/, and two skills disagree about the layout while the seam absorbs it silently.",
       "mechanical": false,
       "ts": "2026-08-02T03:35:44.141593+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g2-implement",
+      "why": "Composer landed; suite 1470 passed / 2 skipped / 472 subtests (+34 = exactly the new tests), committed and pushed. The anti-constant proof is the real deliverable and it is genuine: validate_delta ACCEPTED nine hardcoded constants reading zero engine state, and those same constants drove 9 of 13 tests red, three of them asserting ABSENCE -- which is where a constant composer cannot hide and which validate_delta structurally cannot express. The project fix is proven live from a linked worktree under an active epic lease, the exact condition that breaks the old formula, and the pin equals git hash-object on the manifest. DEVIATION ADJUDICATED - I ACCEPT the two-witness reconciliation for reopens: the literal row is genuinely unimplementable at the seam because append_journal_entry runs AFTER the verb returns, so the in-flight verb has no journal line and a run's first mutating verb has no journal file at all. The handoff's justification for that row was MINE and it was wrong -- it described failed-commands, not reopens. BUT ITS STATED INVARIANT IS FALSE AND I VERIFIED THAT AT SOURCE: 'neither witness can over-count' is contradicted by the crew's own triage item 3 -- an escalated reopen (rework cap breached) returns ESCALATED WITHOUT incrementing rework_count yet still journals as a successful reopen, so the journal over-counts and the max takes the wrong reading. Narrow, but it fabricates a mechanical fact in exactly the case refuse-never-fabricate forbids. Handing it to g2-review as a named hunt rather than fixing it myself.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:16:04.450899+00:00"
     }
   ],
   "amendments": [
