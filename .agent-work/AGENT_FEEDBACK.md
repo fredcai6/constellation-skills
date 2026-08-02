@@ -10,6 +10,39 @@ Newest entries on top.
 
 ---
 
+## `2026-08-02` — `issue-307`
+
+**Run shape:** `commander (delegated, under LAUNCH_ORDER-307)` · 10/10 spine steps + 4/4 execute items (`e0-context`, `g1-capture`, `g2-score`, `g3-pair` — all command-checked, no crew gates) closed · opus commander, one opus cold plan critic, five opus measured subjects. Two capture attempts: the first **void**, the second clean.
+
+**Instruction adherence:** `followed, with one self-inflicted failure`
+- Drove the spine and `execute.json` end to end through the engine; no hand-editing of any checklist JSON. Reused PRE-B's instruments rather than rebuilding them, and declared the single additive change (`--arm`) **in writing to the Admiral before the first run**, as the order required.
+- **The failure was mine and it cost a full capture set.** I launched the detached driver twice and two drivers raced into the same run directories. See below — it is the most transferable thing in this entry.
+
+**Friction / unclear:**
+- **A backgrounded process outlives the compound command that launched it, so a launcher reporting failure is not evidence that nothing started.** My first launch was `cd X && nohup python driver.py > log &` followed by lines that errored on the wrong cwd. The tool call reported `No such file or directory` and an empty log; the driver was already running. I read the error as "nothing happened" and retried. **Nothing in the execute imperative's detach guidance says to verify a detach by looking for the process rather than by reading the launcher's exit status**, and the state-note discipline (which I followed) records the PID *I believed* I had started. Filed as #396.
+- **Two independent CRLF false alarms, each of which looked exactly like a real defect.** (1) Comparing instrument digests working-tree-to-blob reported all nine scorers CHANGED — including the frozen rubric and the frozen issue snapshot. (2) The brief-identity check reported all five briefs differing from PRE-B's. Both were git checking out CRLF against LF-written files; blob-to-blob and newline-normalized comparisons showed **byte-identical** in both cases. On a measurement run a false "your frozen instrument changed" is expensive precisely because the correct response to a true one is to stop.
+- **`verify-frame` and `MISSION_FRAME.template.md` contradict each other on the degraded path.** The template mandates graded typed decision anchors; under `DEGRADED` the gate refuses every typed anchor unconditionally, so the only passing degraded frame is a weaker one. Hit live, since this repo has no map at all. Filed as #394.
+- **`attest --cond` vs `--check`**: the recovery text says `--cond`, the mental model says "check". One refused call. Minor, but it is the same papercut a 2026-07-12 entry already recorded for preconditions — the pattern being that the engine's error strings are the fastest teacher and the imperatives are not.
+
+**Crew-reported friction:**
+- Cold plan critic: **24 findings, 5 blocking, and it was worth more than every other review artifact in this run.** It found that the corpus-identity gate compared a digest that structurally cannot see the treatment (#395), that the scoring gate could not tell the two arms apart, that the new instrument counted *reading* the tool as *running* it, and — the best one — that the primary measure's strongest success value is a reserved literal, not `True`, so a perfect result and a total failure would print the same headline number.
+- **Its most urgent finding was wrong**, and checking rather than accepting it mattered: it claimed issue text was fetched live from GitHub. `capture_baseline.fetch_issue` reads a frozen snapshot. I adopted its suggested byte-comparison anyway, because asserting identity beats arguing it — which is how a wrong finding still improved the run.
+
+**What worked:**
+- **Pre-registering the reading before any number existed.** `PRE_REGISTRATION.md` was committed while three captures were still in flight, and it called two traps in advance: that #716 is a literal row so the denominator is 4 not 5, and that `NO-SRC-READ` is the contract's *strongest* outcome rather than a missing datum. When the numbers came in at 4/4 it was impossible for me to have chosen a flattering denominator, and that is checkable from git history rather than from my word.
+- **Making the prior arm the control for the new instrument.** The supplementary `map_orient` audit is new code in a reuse-disciplined experiment. Running it over PRE-B first — 0 invocations across 5 runs / 595 calls — plus a 7/7 self-test with three mutants that must *not* count, is what makes its POST column readable. Its first version counted a `Read` of `map_orient.py` as an orientation call, which alone would have flipped the verdict from *irrelevant* to *insufficient*.
+- **Adjudicating a shared instrument's false positives additively instead of fixing it.** `verify_treatment.py` flagged 5 forbidden operations in one run; all five were false positives (`git merge-base` matching `git merge`, and `Write` *content* being pattern-matched). Editing it would have rescored PRE-B under different code and destroyed the pairing. Classifying the hits in separate code applied to both arms kept the pairing intact and still filed the defect (#397).
+
+**Improvement signals**
+
+- **A launcher's exit status is not a witness for a detached process.** The only witness is the process. This generalises past this arm: every detached capture, crew dispatch, or background driver in this fleet shares the shape, and the corruption it produced here was invisible to `exit_code`, to elapsed time, and to the existing truncation check. What exposed it was counting `system/init`, `result`, and distinct `session_id` per transcript — one subject produces exactly one of each. **That check is four lines and belongs next to the truncation check permanently.**
+- **"The treatment is installed" and "the treatment reached the agent" are different claims, and this epic has been conflating them.** `TREATMENT-VERIFIED` proves a skill loaded. The contract under test lives *only* in a spine template; the skill's own `SKILL.md` contains zero occurrences of the word "map". So a subject can load the Commander and never meet the imperative. Filed as #393. **Any future arm measuring a corpus change needs a delivery hop between "installed" and "obeyed", or its null is unattributable** — which is exactly the failure mode #331 and #344 already cost this epic two arms to learn.
+- **A digest that omits the directory where the behaviour lives is a claim about names, not behaviour.** The corpus fingerprint's headline value covers only `SKILL.md` files; every template and script — the entire contract — is outside it. It would report "stable" through a re-install that rewrote the treatment. The deep digest was already being computed and simply was not the thing being compared.
+
+**Lessons bank:** no threshold-ripe lesson left unpaid at this run's close. All five findings were **filed to the tracker at the moment of discovery** (#393–#397) rather than banked worktree-locally, per `LAUNCH_ORDER-307` ("Issue filing is REQUIRED, not permitted").
+
+---
+
 ## `2026-07-12` — `issue-141`
 
 **Run shape:** `commander (delegated, under Admiral launch order commander-141)` · 10/10 spine steps + 5/5 execute items (g1 crew gate: implement/review/integrate; g2 reasoning gate: live probes) closed · opus commander, opus implementer + opus reviewer.

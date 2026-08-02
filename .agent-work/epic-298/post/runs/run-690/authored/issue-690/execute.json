@@ -1,0 +1,297 @@
+{
+  "work_id": "issue-690",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement", "g1-review", "g1-integrate",
+    "g2-implement", "g2-review", "g2-integrate",
+    "g3-implement", "g3-review", "g3-integrate",
+    "g4-implement", "g4-review", "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context and VERIFY THE BRANCH BASE",
+      "imperative": "Read the inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md) and the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/architecture/packets/physics.md (the struct:physics.utilization, struct:physics.layer2 grip and struct:physics.fingerprint sections). Read .agent-work/issue-690/PROBLEM_STATEMENT.md, MISSION_FRAME.md and PLAN_DECISIONS.md; confirm the frozen plan's intent and scope. THEN verify the branch base (critic finding F4): this plan is cut against main POST-#721. If the working tree still has hypot(mu, sigma) in onesided_sigma_from_grip, or the builder still calls grip_lookup(..., 0), the branch was cut from the wrong base (e.g. the detached 3541d292 planning worktree) and every gate below is written against code that is not present. STOP and re-base rather than adapting the plan. c1 is the machine check; attest c2 after the reading.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "branch base is post-#721: onesided_sigma_from_grip takes sigma only, and the builder's production grip lookup passes None (not 0)", "check": {"kind": "command", "command": "grep -q 'def onesided_sigma_from_grip(sigma: float)' src/physics/utilization/class_utilization_observable.py && grep -q 'grip_lookup(inputs.year, inputs.gp_name, inputs.session_type, None)' scripts/build_class_utilization_observables.py && ! grep -q 'math.hypot' src/physics/utilization/class_utilization_observable.py"}, "override_policy": {"allowed": false, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "orchestrator context + glossary + physics packet loaded; plan intent and scope confirmed", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "Planning artifacts under .agent-work/issue-690/ are the frozen plan; execute.json is never hand-edited (amend/reopen through the engine only).",
+        "Never commit .agent-work/LESSONS.md, AGENT_FEEDBACK.md, CONSTELLATION_FEEDBACK.md, or this work area on the mission branch (lesson:shared-files-not-on-mission-branch)."
+      ],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 per-class sigma-plus law (pure numeric core): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK: make the one-sided grip sigma-plus a PER-CLASS quantity in the pure numeric core. (a) src/physics/utilization/class_ledger.py — add ONE additive field to ClassDeficits: time_by_class_s, the real lap's per-class transit time, which class_deficits already computes as W.T @ dt_real_seg and currently discards. No other behaviour change; the field is additive and defaults are not needed because the dataclass is constructed in one place. (b) src/physics/utilization/class_utilization_observable.py — add a pure function per_class_sigma_plus(sigma_lap, time_share_by_class) -> np.ndarray implementing the LINEAR common-mode law sigma_plus_c = w_c * sigma_lap (ruling D2: the grip sigma is ONE session-level scalar, so its per-class contributions are perfectly correlated and SUM to the lap value; quadrature would encode a false independence claim and must not be used). Derive w_c inside compute_class_utilization_observable from deficits.time_by_class_s (ruling D3: the DRIVER'S REAL lap, and by construction the same dt_real_seg integral the deficit came from). Give each OneSidedGripBand its own scale, and add a sigma_plus_by_class array field to ClassUtilizationObservable. KEEP the existing scalar g_sigma_onesided field as the LAP-LEVEL scale with unchanged meaning (critic finding F3 — the lap value must stay recoverable). Write the rationale into the module docstring's binding pre-ruling section: what the whole-lap-sigma-into-a-per-class-band mismatch was, why time share is the unit-coherent bridge, why linear and not quadrature, and that per_class_sigma_plus is the single documented swap point for #712's consumer-contract decision. (c) tests/unit/physics/test_class_utilization_observable.py — the WIDTH-SHAPE test set the issue's acceptance names: monotone in time share; sum over classes equals the lap sigma exactly; every per-class width <= the lap sigma; a single populated class recovers the lap sigma; sigma_lap = 0 gives all-zero widths; grip=None unchanged; AND (critic finding F2) an explicit case pinning that the width is INDEPENDENT of deficit magnitude — a large deficit in a thin-time-share class does NOT widen its band. Also assert the point deficits (speed_deficit_by_class, time_deficit_by_class, lap_time_deficit_s) are byte-identical with and without the grip wrap.",
+      "preconditions": [{"id": "p1", "statement": "e0-context complete: branch base verified post-#721", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "The POINT DEFICIT IS UNTOUCHED — byte-identical with and without the G wrap. This is the #628 anti-circularity contract.",
+        "mu stays at zero. Moving the band's centre is #678, out of scope. A gate that wants to move mu STOPS and floats.",
+        "G is CONSUMED, never re-fit. Do not touch grip_baseline.py, and do not change get_grip_at's caller-chosen-x contract.",
+        "No argmax 'dominant class' collapse — the sigma weights come through the same W-reduction as every other class quantity (decision:class-attribution-membership-faithful).",
+        "The observable stays a PURE NUMERIC CORE — no DB/session/store I/O. Weights come from the arrays already passed in, never fetched from reference_laps.",
+        "No policy/protocol/enum weighting layer (PLAN_DECISIONS candidate C rejected — one implementation is a hypothetical seam). ONE named function, that is all.",
+        "class_ledger.py is a consumed frozen module: re-run its OWN existing tests unchanged (lesson:consumed-frozen-module-run-guard-tests)."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization — src/physics/utilization/class_utilization_observable.py (the wrap point, pipeline stage E) and class_ledger.py (g1, supplies the time shares), component level",
+          "struct:physics.layer2 — src/physics/layer2/grip_store.py, READ-ONLY dependency (stage D); must need zero edits"
+        ],
+        "capability": [
+          "purposes.yml physics_utilization (child of physics_estimation) — the per-class utilization observable's uncertainty channel; the deficit channel is untouched"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import — no evo/latent_power/compound_prior import appears anywhere in this gate",
+          "anti-circularity (#628, module-level) — every deficit stays ABSOLUTE, never a ratio; the weight is a time SHARE applied to sigma only",
+          "pure-core assumption — no DB/session/store I/O in class_utilization_observable.py"
+        ],
+        "decision": [
+          "decision:class-attribution-membership-faithful — attribution is membership-faithful through W, never argmax @grade: settled/measured · leans g1-implement",
+          "decision:grip_estimate_record_session_level_pk — grip is keyed at session level, which is WHY sigma arrives as one whole-lap scalar; not re-keyed here (that is #678) @grade: settled/measured · leans g1-implement",
+          "packets/physics.md g-one-sided-directed-uncertainty — one-sided, mu=0, heavy-tailed; this gate changes the SCALE only, never the posture @grade: settled/inherited · leans g1-implement",
+          "decision pressure: the weight definition (class transit-time share vs. a grip-sensitivity weighting that zeroes straights) — ruled D1 as time share; the grip-sensitivity variant is a modelling claim belonging to #712/#686, recorded as an untaken road, and per_class_sigma_plus is its documented swap point",
+          "decision pressure: the composition law (linear common-mode vs. quadrature independent) — ruled D2 as linear; durable, it fixes what the widths mean and which invariant holds"
+        ],
+        "evidence": [
+          "packets/physics.md claim deficits-sum-to-lap — re-confirmed untouched (byte-identical deficits); this gate proves its direct sibling, widths-sum-to-lap-sigma",
+          "packets/physics.md claim attribution-robust — unchanged; W is reused, not re-derived"
+        ],
+        "confidence_flags": [
+          "struct:physics.layer2 grip leaf carries a map-recorded honest-NULL (g4 held-out +155.5% RMS, g5 separability 31.9% FAIL) — the sigma being re-scaled may itself be untrustworthy, so acceptance is the SCALING and its invariant, never the number the band lands at"
+        ]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 per-class sigma-plus law: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Re-derive independently, do not trust the implementer: (1) confirm the point deficits are byte-identical before/after by running the module both ways yourself; (2) confirm the summation invariant holds on a non-trivial fixture you construct, not only on the implementer's; (3) confirm quadrature was NOT used anywhere (grep for sqrt/hypot over the weights); (4) confirm grip_store.py and grip_baseline.py show a zero diff; (5) confirm no store/DB import entered class_utilization_observable.py; (6) confirm the F2 deficit-magnitude-independence test genuinely fails if the law is made deficit-dependent (mutate it and watch it go red).",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 per-class sigma-plus law: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself and confirm the IMPLEMENTER_RESULT is fresh, then advance (the command postcondition re-runs on advance; it cannot be attested). BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the lesson pool.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "per-class sigma-plus law lands with its width-shape tests; the class_ledger and fingerprint-fit guard suites stay green unchanged", "check": {"kind": "command", "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/test_class_utilization_observable.py tests/unit/physics/test_class_ledger.py tests/unit/physics/fingerprint/test_fit.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "simplification limits pass on the two touched src files", "check": {"kind": "command", "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m src.utils.simplification_limits src/physics/utilization/class_utilization_observable.py src/physics/utilization/class_ledger.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 producer writes per-class sigma + store provenance: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK: carry G1's per-class widths through the producer and mark the persisted column's semantic change. (a) scripts/build_class_utilization_observables.py — the row builder currently writes the scalar float(obs.g_sigma_onesided) into EVERY class row; write that class's own width instead (obs.sigma_plus_by_class[j], equivalently obs.bands[j].sigma_plus). Update the per-driver log line so it reports the LAP-level sigma and the per-class min/max range rather than one number that is no longer the whole story. Touch nothing else in compose_and_persist_weekend — its complexity debt is #722 and is explicitly out of scope. (b) src/physics/utilization/reference_utilization_store.py — update the g_sigma_onesided column comment and the DriverClassObservableRow docstring to state the new per-class semantics and the summation property (summing the column over a driver's classes recovers the lap-level sigma), and bump FORMAT_VERSION from \"1\" to \"2\". Verify first, in the diff, that nothing READS format_version as a gate (it is written at three sites and gated nowhere) so the bump is a provenance marker and not a compatibility fork. (c) tests — extend tests/unit/physics/test_build_class_utilization_observables.py to pin that distinct classes receive DISTINCT widths for a fixture whose time shares differ, and that the written widths sum to the lap sigma; extend tests/unit/physics/test_reference_utilization_store.py for the FORMAT_VERSION bump and the round-trip of per-class values.",
+      "preconditions": [{"id": "p1", "statement": "g1 integrated: the observable exposes sigma_plus_by_class and per-class band scales", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "No new SQL column and no schema migration — rows are ALREADY per (year, session_type, gp_name, round_idx, constructor, driver, class, map_version). This is a value change plus a provenance marker (ruling D4, one canonical path).",
+        "Do not touch src/physics/fingerprint/fit.py. It consumes the column per (driver, class) cell and should need ZERO code change; if it needs one, that is a finding to surface, not a silent edit.",
+        "Do not refactor compose_and_persist_weekend (#722). Its pre-existing simplification_limits violation is known, filed, and must be shown byte-identical before/after by an A/B check.",
+        "GRIP_EVAL_LAPS_FRACTION and the laps=None evaluation-point logic are #721's, already landed, and are NOT in scope."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization — scripts/build_class_utilization_observables.py (the sole producer call site) and reference_utilization_store.py (persists the column), component level",
+          "struct:physics.fingerprint — src/physics/fingerprint/fit.py, the committed consumer reading the column per (driver, class) cell; behaviour changes, code must not"
+        ],
+        "capability": [
+          "purposes.yml physics_utilization — the persisted per-class observable that stages G and PANEL read"
+        ],
+        "constraint": [
+          "overlays/constraints.yml db_only_data_access — the producer reads canonical stores only",
+          "project rule: a persisted-shape change updates producer + committed consumers + its schema documentation in the SAME gate (here the schema doc is the store module's own docstring; the architecture packet is the reconcile step's)"
+        ],
+        "decision": [
+          "decision:c1_driver_utilization_design — single canonical sim/observable path; no second path for the new value @grade: settled/measured · leans g2-implement",
+          "decision pressure: column semantics — repurpose g_sigma_onesided per-class with a FORMAT_VERSION bump, vs. adding a second column. Ruled D4 as repurpose-plus-bump; a second column would create the dual-reader situation ORCHESTRATOR_CONTEXT forbids without a tracked exit"
+        ],
+        "evidence": [
+          "the store round-trip tests and the builder smoke tests — re-confirmed green; the fingerprint fit suite re-confirmed green with NO edit to fit.py"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 producer + store provenance: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Re-derive independently: (1) confirm by reading the diff that fit.py is untouched and its suite is green; (2) confirm nothing anywhere reads format_version as a gate (grep the whole repo yourself, do not trust the claim); (3) re-run the A/B simplification_limits check on compose_and_persist_weekend via your own git show <parent>:<path> swap and confirm the violation is byte-identical pre-existing; (4) confirm the written per-class values actually differ across classes on a fixture and sum to the lap sigma; (5) confirm no SQL schema statement changed.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 producer + store provenance: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification commands yourself, confirm freshness, then advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "producer writes per-class widths and the store marks the semantic change; the utilization + fingerprint suites stay green", "check": {"kind": "command", "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/test_build_class_utilization_observables.py tests/unit/physics/test_reference_utilization_store.py tests/unit/physics/test_class_utilization_observable.py tests/unit/physics/fingerprint -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "the utilization determinism integration guard is green", "check": {"kind": "command", "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/integration/test_utilization_determinism.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 band-distribution reporter (W2's scored artifact): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. FIRST, a plan-authored precondition: search src/, scripts/ and tests/ for an existing band-distribution reporter. At planning time none existed and every sibling W2 issue (#679/#678/#687/#686/#688) was still open, so this gate mints it — but if one has since landed, EXTEND it and report the divergence rather than minting a second (one canonical path). TASK: create scripts/report_grip_band_distribution.py — a read-only reporter over a reference-utilization store that emits W2's separately scored artifact per the confirmed spec's T7/IF15/T19/T20 amendments: median, p90, vacuous count (band > 10 s, the threshold #721's own measurement used), and plausible-|D| count (band <= the 0.1-0.2 s deficit scale) over the per-class widths; PLUS the retained-session fraction and a substrate-provenance block naming the store path, its session/row counts and its format_version (critic finding F5). It must ALSO be able to report the analytic re-scale of a format_version=1 store — reading driver_class_observables together with reference_laps.time_shares_json and applying w_c * sigma_lap — so the same tool gives a before/after on a store built by the old code and can be re-run at every later W2 chain step (T19 per-step deltas). It opens SQLite read-only (mode=ro) and NEVER writes to an input store. On an ABSENT or unreadable store it HARD-FAILS with a non-zero exit and a message naming the missing path — it must never skip, never soft-degrade to an empty report, and never emit numbers that read as evidence when none were computed (T7: 'harnesses pass' carries zero evidence otherwise). Author tests/unit/physics/test_grip_band_distribution_report.py: synthetic-store fixtures for each statistic, a per-class breakdown assertion, and an explicit test that an absent store HARD-FAILS rather than skipping.",
+      "preconditions": [{"id": "p1", "statement": "g2 integrated: stores can now be written with per-class widths, and the format_version marker distinguishes the two conventions", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "Read-only over every input store: open with mode=ro; copy to scratch before anything that could write.",
+        "HARD-FAIL, never pytest.skip, on an absent store (spec amendment T7). A skip that hides a missing substrate is the exact failure this artifact exists to prevent.",
+        "The report states its own scope: which numbers came from stored per-class values and which from the analytic re-scale. No number may be presented without that provenance.",
+        "No acceptance threshold is asserted as a gate — the 0.1-0.2 s deficit scale is an ASPIRATION, not a bar (owner ruling, #724). The reporter REPORTS; it does not pass or fail the round.",
+        "Physics-region script: no evo/latent_power/compound_prior import."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization — reads the reference-utilization store's driver_class_observables + reference_laps tables; a new non-map CLI sibling of scripts/build_class_utilization_observables.py"
+        ],
+        "capability": [
+          "purposes.yml physics_utilization — the measurement surface over the per-class observable"
+        ],
+        "constraint": [
+          "overlays/constraints.yml db_only_data_access — canonical stores only, read-only",
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision pressure: whether the band-distribution report is minted here or inherited from an earlier W2 step — ruled D5 as mint-here-defensively, with an explicit extend-don't-duplicate precondition in this gate's imperative"
+        ],
+        "evidence": [
+          "the new artifact IS the evidence surface: median / p90 / vacuous / plausible-|D| / retained-session fraction / substrate provenance"
+        ],
+        "confidence_flags": [
+          "the W0-stamped substrate does not exist yet (W0's store rebuild is unrun) — the reporter must therefore be substrate-agnostic and re-runnable, and must name the substrate it actually read"
+        ]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 band-distribution reporter: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Re-derive independently: (1) point the reporter at a deliberately absent path and confirm a NON-ZERO exit with a message naming the path — no skip, no empty report; (2) recompute median/p90/vacuous/plausible counts by hand from a fixture store and match them; (3) confirm every input connection is mode=ro and no input store's mtime changes across a run; (4) confirm the analytic re-scale path reproduces w_c*sigma_lap on a store you build yourself; (5) confirm the provenance block cannot be emitted empty.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 band-distribution reporter: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself, confirm freshness, then advance. BLOCK: rework or blocker.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "reporter and its tests land; the absent-store case hard-fails rather than skipping", "check": {"kind": "command", "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/test_grip_band_distribution_report.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "the reporter contains no pytest.skip-style soft-degrade on a missing store", "check": {"kind": "command", "command": "! grep -nE 'skip|pass  # missing|return \\{\\}' scripts/report_grip_band_distribution.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 measure on the real substrate + end-to-end smoke: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK, in two halves that must BOTH be done. (a) ANALYTIC MEASUREMENT: copy the archived real production stores to scratch (.agent-work/archive/2026-07-27-670-season-run/artifacts/scratch/refutil_season_2023.db, plus grip_estimates.db and segment_maps.db beside it) and run the G3 reporter to produce the BEFORE (as-stored, format_version=1, whole-lap width in every class row) and AFTER (per-class re-scale) distributions, with the per-class breakdown so the thin-time-share classes are visible (critic finding F2 — severity:2023:v1:c1 holds ~0.1% of lap time). Record the per-step delta explicitly (spec amendment T19) and the retained-session fraction (T20). (b) END-TO-END SMOKE, MANDATORY (critic finding F1, lesson:mandatory-full-chain-smoke-before-unattended-run): rebuild ONE weekend through the real production path, scripts/build_class_utilization_observables.py -> compose_and_persist_weekend, against a scratch DB, and read the rows back to prove the shipped chain actually writes DISTINCT per-class widths that sum to the lap sigma and that format_version is 2. An analytic re-scale is not proof that the production path works. Write .agent-work/issue-690/BAND_DISTRIBUTION_REPORT.md: the two distributions, the delta, the per-class breakdown, the substrate-provenance block, the smoke evidence, and an explicit Tested / NOT-tested section saying which numbers are analytic and which are end-to-end.",
+      "preconditions": [{"id": "p1", "statement": "g3 integrated: the reporter exists and its hard-fail behaviour is proven", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "NEVER write to the archived stores. Copy to scratch first; verify the source mtimes are unchanged afterwards and paste that as evidence.",
+        "The measurement is a PRE-W0 reading. It may not be presented as W2's acceptance verdict, and it may not claim H4 — W0's stamped rebuild has not run (critic finding F5).",
+        "The deficit scale is an ASPIRATION, not a bar (owner ruling D7). Falling short of 0.1-0.2 s is a finding about where the remaining inflation lives, not a failure of this gate. Harness VALIDITY failures, by contrast, are stop-the-line.",
+        "Use the absolute interpreter path C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe for any scientific script — the Bash-tool py lacks scipy.",
+        "Poll long work in-turn; never end a turn to wait (lesson:crew-idle-strands-deliverable). The report file IS the deliverable."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization — the producer chain under measurement (scripts/build_class_utilization_observables.py -> reference_utilization_store)",
+          "struct:physics.fingerprint — the downstream consumer whose sigma_cell inflation motivated the change; named as the beneficiary, not modified"
+        ],
+        "capability": [
+          "purposes.yml physics_utilization — measured end-to-end on real 2023-Q production data"
+        ],
+        "constraint": [
+          "overlays/constraints.yml db_only_data_access — archived canonical stores, read-only, copied before use"
+        ],
+        "decision": [
+          "decision pressure: which substrate the measurement runs on — ruled D6 as the archived real #670 season-run stores, with the pre-W0 caveat carried in the artifact itself"
+        ],
+        "evidence": [
+          "BAND_DISTRIBUTION_REPORT.md — the run's scored artifact; the before/after distributions, the per-step delta (T19), the retained-session fraction (T20), and the end-to-end smoke"
+        ],
+        "confidence_flags": [
+          "the grip node's map-recorded honest-NULL means the underlying sigma may still be untrustworthy — the report describes the BAND, and must not be read as a verdict on the grip fit"
+        ]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 measurement + smoke: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Re-derive independently: (1) re-run the reporter yourself on your own scratch copy and match the report's headline numbers; (2) confirm the archived source stores are untouched (compare mtimes and a hash); (3) confirm the end-to-end smoke ACTUALLY RAN — a real weekend, real rows read back, distinct per-class widths, format_version 2 — rather than being described; a built-but-unrun artifact is the known failure shape here; (4) confirm the Tested/NOT-tested section honestly separates analytic from end-to-end; (5) confirm no claim of W2 acceptance or of H4 appears anywhere in the artifact.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g4-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 measurement + smoke: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself, confirm the report artifact is fresh (produced by this attempt, not a leftover), then advance. BLOCK: rework or blocker. This is the last gate — carry any residue (the grip-sensitivity weighting variant, the packet-anchor map-model gap, anything the measurement surfaces) into the spine's triage step.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the band-distribution report exists and carries its substrate-provenance block and its Tested/NOT-tested section", "check": {"kind": "command", "command": "test -f .agent-work/issue-690/BAND_DISTRIBUTION_REPORT.md && grep -q 'substrate' .agent-work/issue-690/BAND_DISTRIBUTION_REPORT.md && grep -qi 'NOT tested' .agent-work/issue-690/BAND_DISTRIBUTION_REPORT.md"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "the full touched-region suite is green end to end", "check": {"kind": "command", "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/test_class_utilization_observable.py tests/unit/physics/test_class_ledger.py tests/unit/physics/test_build_class_utilization_observables.py tests/unit/physics/test_reference_utilization_store.py tests/unit/physics/test_grip_band_distribution_report.py tests/unit/physics/fingerprint tests/unit/physics/layer2/test_grip_store.py tests/unit/physics/layer2/test_grip_batch.py tests/unit/physics/layer2/test_grip_heldout.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    "Grip-sensitivity weighting variant (zero out `straight`, renormalise over braking_zone + corner classes) — a modelling claim, not a unit reconciliation. Belongs to #712's consumer-contract decision / #686. Settling experiment: per-class band medians under time-share vs. grip-sensitivity weighting on the same substrate.",
+    "Map-model gap: packet-level decision/claim anchor ids (e.g. the g-one-sided-directed-uncertainty bullet, the deficits-sum-to-lap claim) are invisible to the index-scoped map_orient verify-frame inventory, so a frame citing them is REFUSED even though they are real and were read. Cartographer/Charter question, raised here not fixed here.",
+    "Re-run the band-distribution report against the W0-stamped store once W0's rebuild lands — the numbers in this run's artifact are a pre-W0 reading by construction."
+  ],
+  "blockers": []
+}

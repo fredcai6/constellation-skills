@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "issue-690",
+    "project": "f1Brainz",
+    "role": "commander-690",
+    "refusals": 2,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-690-understand@586572ea5c41008de0994ed559d8396ad2909b8b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-690",
+    "generated_at": "2026-08-02T20:27:33Z"
+  }
+}

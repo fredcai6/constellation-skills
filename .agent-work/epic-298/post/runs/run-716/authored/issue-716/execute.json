@@ -1,0 +1,241 @@
+{
+  "work_id": "issue-716",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate", "g2-implement", "g2-review", "g2-integrate", "g3-implement", "g3-review", "g3-integrate", "g4-verify"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context and pre-flight the OTHER repo",
+      "imperative": "Read the inherited doctrine (commander skill references/global-orchestrator.md, references/global-everyone.md) and this repo's docs/agents/ORCHESTRATOR_CONTEXT.md, then re-read .agent-work/issue-716/MISSION_FRAME.md, PLAN_ALTERNATIVES.md and PLAN_CRITIC.md so the frozen intent and its critic dispositions are in hand. THEN pre-flight the change target, which is a DIFFERENT REPO from the one hosting this run (critic F5): (a) confirm `git -C C:/Programs/constellation-skills rev-parse --show-toplevel` resolves to that repo; (b) confirm its working tree is clean and record the current HEAD; (c) cut the work branch there (fix/716-work-id-slash-safe) per that repo's convention; (d) re-read the two defect sites and confirm they are still exactly as the frame describes -- run_crew.py load_registry_for_resume (session.split('/')[1]) and verify_agent_feedback.py _current_run_archive_dirs (path.name == work_id or endswith('-'+work_id)); (e) confirm this repo (C:/Programs/f1bwt/post716) has no source/test/doc modifications and will get none. If any of (a)-(d) does not hold, STOP and surface it rather than adapting silently -- a moved defect site invalidates the frame's line references and the plan is re-cut, not patched. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "doctrine + frame + alternatives + critic loaded; constellation-skills repo confirmed as the change target with a clean tree, recorded HEAD, work branch cut, and BOTH defect sites re-verified present; f1Brainz confirmed unmodified", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "f1Brainz gets ZERO source/test/doc changes from this issue (decision:change-target-is-the-source-repo)",
+        "the installed tree at C:/Users/fredc/.claude/skills is BUILD OUTPUT: never edited directly"
+      ],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "g1 shared work_id helper module: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. TASK: create C:/Programs/constellation-skills/scripts/work_id_paths.py -- the single shared statement of the work_id contract -- plus C:/Programs/constellation-skills/tests/test_work_id_paths.py. NOTHING imports the module in this gate (that is deliberate: an unimported new file cannot break any install, so this gate boundary is trivially green -- critic F3). API, exactly two public functions: (1) work_id_from_session_name(session: str) -> str, the EXACT inverse of run_crew.session_name()'s 'constellation/<work_id>/<gate>/<role>/attempt-<n>' grammar: validate parts[0] == 'constellation', len(parts) >= 5, and no empty segment, then return '/'.join(parts[1:-3]); do NOT hard-require the literal 'attempt-' prefix (critic F1) and raise a ValueError naming the expected grammar on refusal (the run_crew caller translates it to CrewLaunchError, so no new exception type crosses that seam). (2) archive_dirs_for_work_id(archive_root: Path, work_id: str) -> list[Path], the segment-aware recognizer: normalize separators (a Windows-authored 'epic-659\\\\665' reads identically to 'epic-659/665'), let k = number of work_id segments, enumerate archive_root directories at depth EXACTLY k, and accept a candidate when its archive-relative POSIX path equals work_id or ends with '-' + work_id -- and apply the same two tests to the flattened form (segments joined with '-') so BOTH the nested '<date>-epic-659/665' and the flattened '<date>-epic-659-665' shapes are recognized (decision:archive-matcher-is-a-recognizer-not-a-namer). Return ALL matches, never 'the first' (critic F2). The module docstring is the contract: state plainly that a work_id MAY contain '/' path segments, that this is the nested Commander-under-Admiral convention, and that resolving to the WRONG work area is worse than refusing. TESTS (unittest.TestCase, collected by pytest, NO skips -- CI runs scripts/verify_skip_guard.py, critic F6): round-trip work_id_from_session_name(session_name(w,g,r,n)) == w for a single-segment id AND for 'epic-659/665'; the real field string 'constellation/epic-659/665/g1-implement/implementer/attempt-1' -> 'epic-659/665'; refusal on a bad prefix, on too few segments, and on an empty segment; archive recognition for nested, flattened, and plain single-segment dated names; non-recognition when the depth is wrong; the known leaf-collision case pinned as documented behavior (critic F2); a missing archive_root returning [].",
+      "preconditions": [{"id": "p1", "statement": "e0-context complete: change target pre-flighted, branch cut, defect sites re-verified", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "stdlib only (every script in that repo's scripts/ is stdlib-only)",
+        "no consumer imports this module in this gate",
+        "fail visibly: never resolve a malformed name to a plausible work_id"
+      ],
+      "anchors": {
+        "structural": [
+          "C:/Programs/constellation-skills/scripts/work_id_paths.py -- NEW module, level: module",
+          "C:/Programs/constellation-skills/scripts/run_crew.py::session_name (l.83-88) -- the grammar being inverted, level: function",
+          "C:/Programs/constellation-skills/scripts/agent_work_root.py -- precedent for a shared stdlib-only sibling module, level: module"
+        ],
+        "capability": ["capability: crew recovery by session name", "capability: feedback/archive invariant verification"],
+        "constraint": [
+          "constraint: fail visibly, never a hidden fallback",
+          "assumption: gate/role/attempt segments never contain '/' -- verified against session_name()'s construction",
+          "constraint: no behavior change for single-segment work ids"
+        ],
+        "decision": [
+          "decision:one-shared-helper-module -- both defects are fixed through one imported module, not two local patches @grade: settled/human · leans g1-implement,g2-implement,g3-implement",
+          "decision:archive-matcher-is-a-recognizer-not-a-namer -- accept nested AND flattened dated shapes, legislate no naming convention @grade: settled/human · leans g1-implement,g3-implement"
+        ],
+        "evidence": ["claim: the session-name inverse is exact (round-trip test + refusal tests)"],
+        "confidence_flags": ["the whole change area is OUT of this repo's resolved map -- every line reference in this gate is re-verified at e0-context, not trusted from the frame"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "g1 shared work_id helper module: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify against the gate's own anchors, not the implementer's narrative: the inverse is EXACT (not a heuristic) and provably so for k-segment ids; refusal is visible and typed; the recognizer returns ALL matches at the correct depth and handles both nested and flattened shapes plus separator normalization; the module is stdlib-only and imported by nobody yet; the docstring actually states the contract. Confirm no existing test was edited. BLOCK on any silent-resolution path.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "g1 shared work_id helper module: integrate",
+      "imperative": "Verify the crew's side-effects against the world (read the new files, re-run the command yourself, confirm the IMPLEMENTER_RESULT is fresh via run_crew.py --verify-result). APPROVE -> advance. BLOCK -> rework. Log out-of-scope finds as triage candidates; harvest the crew's Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the shared helper exists with its own green tests, and the rest of the suite is unaffected", "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills && py -m pytest tests/test_work_id_paths.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "g2 run_crew consumer + install wiring: implement",
+      "imperative": "Fill the implementer handoff and dispatch. TASK, three files, ONE gate on purpose (critic F3 -- an import must never ship a gate ahead of the install declaration that makes it resolvable): (1) C:/Programs/constellation-skills/scripts/run_crew.py -- add the sibling import idiom already used at verify_agent_feedback.py:12-13 (sys.path.insert(0, str(Path(__file__).resolve().parent)) then 'from work_id_paths import work_id_from_session_name'), and rewrite load_registry_for_resume (l.933-940) to call it, translating ValueError into the existing CrewLaunchError with a message of the same shape. Change NOTHING else in that file -- the launch path (l.864-865) is already slash-safe. Note in the handoff that this single call site also repairs --resume (l.848) and bare --abandon (l.867), which is inherent, not scope creep (critic F8). (2) C:/Programs/constellation-skills/scripts/install_constellation.py -- add SCRIPT_RUNTIME_COMPANIONS entries declaring work_id_paths.py a runtime companion of BOTH run_crew.py AND verify_agent_feedback.py (declare both here so this file has exactly one owning gate and g3's import lands with its sibling already declared), with a comment saying why: 'explorer' bundles run_crew.py WITHOUT agent_work_root.py, so an undeclared sibling ships an install whose import raises. (3) C:/Programs/constellation-skills/tests/ -- add to test_crew_launcher.py a nested-work_id registry test that stages .agent-work/epic-659/665/crew-runs.json and asserts load_registry_for_resume finds the entry for 'constellation/epic-659/665/g1-implement/implementer/attempt-1' (the exact string that failed four times in the field), plus the two refusal cases; and in test_install_constellation.py WIDEN the runtime-sibling closure guard (currently checklist_engine.py-only, l.1250-1279) to be data-driven over every script named in SKILL_SCRIPT_BUNDLES. PROBE-WITH-FALLBACK, mandatory (critic F4): run the widened guard first; if it fails ONLY for scripts unrelated to this issue, narrow it to run_crew.py + verify_agent_feedback.py, keep the fix moving, and report the residue as a triage candidate -- do not repair unrelated bundles inside this issue. Do not edit any existing test assertion (critic F7).",
+      "preconditions": [{"id": "p1", "statement": "g1 closed: the shared helper exists and is green", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "the import must NOT be wrapped in try/except -- a missing sibling here fails loudly, never silently no-ops",
+        "no new CLI flag (a --work-id override for --verify-result is explicitly out of scope)",
+        "unittest.TestCase, no pytest skips (CI skip-guard)"
+      ],
+      "anchors": {
+        "structural": [
+          "C:/Programs/constellation-skills/scripts/run_crew.py::load_registry_for_resume (l.933-940) -- DEFECT 1, level: function",
+          "C:/Programs/constellation-skills/scripts/run_crew.py call sites l.824 (--verify-result), l.848 (--resume), l.867 (--abandon), level: function",
+          "C:/Programs/constellation-skills/scripts/install_constellation.py::SCRIPT_RUNTIME_COMPANIONS (l.88-109) and SKILL_SCRIPT_BUNDLES (l.143-173), level: module",
+          "C:/Programs/constellation-skills/tests/test_crew_launcher.py, tests/test_install_constellation.py (l.1250-1279), level: module"
+        ],
+        "capability": ["capability: crew recovery by session name", "capability: skill install bundling"],
+        "constraint": [
+          "constraint: an installed script must find its siblings -- 'explorer' bundles run_crew.py without agent_work_root.py",
+          "constraint: fail visibly, never a hidden fallback",
+          "constraint: no behavior change for single-segment work ids"
+        ],
+        "decision": [
+          "decision:one-shared-helper-module @grade: settled/human · leans g2-implement",
+          "decision:widen-the-companion-closure-guard -- generalize the installer's runtime-sibling test rather than leaving it engine-only @grade: guess · leans g2-implement · settle: run the widened guard; if it reds only unrelated bundles, narrow to the two consumers and file the residue"
+        ],
+        "evidence": [
+          "claim: --verify-result resolves the right registry for a nested work_id",
+          "claim: no install ships a script that cannot import its sibling"
+        ],
+        "confidence_flags": ["decision:widen-the-companion-closure-guard is a GUESS -- the gate carries its own fallback rather than assuming the widening lands clean"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "g2 run_crew consumer + install wiring: review",
+      "imperative": "Fill the reviewer handoff and dispatch. Verify: load_registry_for_resume now resolves multi-segment work ids and STILL refuses malformed names with CrewLaunchError; nothing else in run_crew.py changed; the companion declaration covers BOTH consumers and the widened guard actually fails when a companion is removed (ask for that fault-injection evidence -- a guard that cannot fail proves nothing); the import is unwrapped; no existing assertion was edited. If the probe-fallback was taken, confirm the narrowing is recorded with its reason and a triage candidate.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "g2 run_crew consumer + install wiring: integrate",
+      "imperative": "Verify side-effects against the world (re-run the command, re-read the diff, confirm the result artifact is fresh). APPROVE -> advance. BLOCK -> rework. Harvest Workflow Feedback; log triage candidates (including any unrelated bundle residue the probe surfaced).",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "crew recovery resolves a nested work_id, and no bundled script can lose its runtime sibling", "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills && py -m pytest tests/test_crew_launcher.py tests/test_install_constellation.py tests/test_work_id_paths.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "g3 archive-gate consumer: implement",
+      "imperative": "Fill the implementer handoff and dispatch. TASK, two files: (1) C:/Programs/constellation-skills/scripts/verify_agent_feedback.py -- import work_id_paths alongside the existing agent_work_root import (l.12-13) and reduce _current_run_archive_dirs (l.72-80) to a call to archive_dirs_for_work_id, deleting the depth-1 iterdir + name-equality logic. Its companion declaration already shipped in g2, so this import is resolvable in every install the moment it lands. Change nothing else: every other work_id use in that module (l.113, 117, 130, 150, 212, 93, 160, 29) is already slash-safe and must be left alone. (2) C:/Programs/constellation-skills/tests/test_verify_agent_feedback.py -- add the paired archive-phase tests for a nested work_id 'epic-659/665', all three of which must hold: a correctly-archived nested package PASSES --phase archive; the same work_id with NO package still FAILS with 'no archived run package found'; and a leaked AGENT_FEEDBACK.md or LESSONS.md INSIDE the nested package is still CAUGHT. That third case is the real regression target -- the old matcher made the leak scan pass vacuously by never finding a package to scan, so a fix that only makes the gate pass would replace a false red with a false green. Add the flattened-name variant too. Do not edit any existing test.",
+      "preconditions": [{"id": "p1", "statement": "g2 closed: the helper is imported by a real consumer and the install wiring is proven", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "do not touch the staged-feedback / durable-log logic",
+        "the archive gate must keep REFUSING when it should -- a passing gate is not the goal, a truthful gate is",
+        "unittest.TestCase, no pytest skips"
+      ],
+      "anchors": {
+        "structural": [
+          "C:/Programs/constellation-skills/scripts/verify_agent_feedback.py::_current_run_archive_dirs (l.72-80) -- DEFECT 2, level: function",
+          "C:/Programs/constellation-skills/scripts/verify_agent_feedback.py consumers l.121-137 (leak scan + archive-phase existence check), level: function",
+          "C:/Programs/constellation-skills/tests/test_verify_agent_feedback.py, level: module"
+        ],
+        "capability": ["capability: feedback/archive invariant verification"],
+        "constraint": [
+          "constraint: fail visibly, never a hidden fallback -- and never a VACUOUS PASS",
+          "constraint: no behavior change for single-segment work ids"
+        ],
+        "decision": [
+          "decision:archive-matcher-is-a-recognizer-not-a-namer @grade: settled/human · leans g3-implement",
+          "decision:no-doctrine-or-template-edit-this-issue -- the spine's archive imperative and commander-core.md are NOT edited here @grade: settled/human · leans g3-implement,g4-verify"
+        ],
+        "evidence": ["claim: the archive gate is satisfiable, and still refuses when it should (three paired tests)"],
+        "confidence_flags": ["residual leaf-collision looseness is retained deliberately and pinned by a test (critic F2) -- routed to triage, not fixed here"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "g3 archive-gate consumer: review",
+      "imperative": "Fill the reviewer handoff and dispatch. Verify above all that the gate did not become permissive: run the negative cases yourself (no package -> still fails; leaked trio file inside a nested package -> still caught). Confirm the untouched work_id uses stayed untouched, the helper does the matching, and no existing test was edited.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "g3 archive-gate consumer: integrate",
+      "imperative": "Verify side-effects against the world. APPROVE -> advance. BLOCK -> rework. Harvest Workflow Feedback; log triage candidates.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the archive invariant is satisfiable for a nested work_id and still catches leaks and missing packages", "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills && py -m pytest tests/test_verify_agent_feedback.py tests/test_work_id_paths.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g4-verify": {
+      "id": "g4-verify",
+      "title": "g4 field reproduction + full suite + handover (REASONING GATE -- no crew)",
+      "imperative": "REASONING GATE, crew deliberately waived: this gate produces no new production code, only executable evidence over code two crews have already reviewed, and the commander holds the full field-failure context needed to judge it. Drive it in this context. (1) Reproduce BOTH original epic-659/665 failures end-to-end against the fixed scripts, in a scratch tree, and write the transcript to .agent-work/issue-716/REPRO_EVIDENCE.md: register a crew under work_id 'epic-659/665' and confirm run_crew.py --verify-result now resolves and completes it (the call that refused 4/4 times), and run verify_agent_feedback.py 'epic-659/665' --phase archive against a correctly-archived nested package and confirm it passes -- the check that was force-waived. (2) Run the full suite and the skip guard, exactly as CI does. (3) Write the handover note into the same file: the fix is in the SOURCE repo, so it reaches this machine only after `py scripts/install_constellation.py` is re-run -- name that as the operator's post-merge step, and say plainly that until it runs, this box still carries the broken installed copies. (4) Record the triage candidates this run accumulated (residual leaf-collision looseness; the doctrine note that a work_id may contain path segments; any unrelated bundle residue from the g2 probe). Pre-authored invariant chain -- attest each only on observed output, never on expectation.",
+      "preconditions": [{"id": "p1", "statement": "g1, g2 and g3 closed with APPROVE verdicts", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "field failure 1 reproduced as FIXED: run_crew.py --verify-result resolves and completes a crew whose work_id is 'epic-659/665' (transcript in REPRO_EVIDENCE.md)", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "field failure 2 reproduced as FIXED: verify_agent_feedback.py 'epic-659/665' --phase archive PASSES against a correctly-archived nested package (transcript in REPRO_EVIDENCE.md)", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "the archive gate still REFUSES a missing package and still CATCHES a leaked durable file under the same nested work_id -- the anti-vacuous-pass check, observed in the transcript", "check": null, "satisfied": false},
+        {"id": "c4", "statement": "full suite green, exactly as CI runs it", "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills && py -m pytest tests/ -q --junitxml=junit-report.xml"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c5", "statement": "no undocumented pytest skip (CI's skip guard)", "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills && py scripts/verify_skip_guard.py junit-report.xml"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c6", "statement": "handover note written: the reinstall step is named as the operator's post-merge action, and the triage candidates are recorded", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "reproduction runs in a scratch tree -- never against this repo's real .agent-work/",
+        "no production code changes in this gate; a failure here reopens g1/g2/g3, it is not patched in place"
+      ],
+      "anchors": {
+        "structural": ["C:/Programs/constellation-skills/tests/ (full suite), scripts/verify_skip_guard.py, .agent-work/issue-716/REPRO_EVIDENCE.md"],
+        "capability": ["capability: crew recovery by session name", "capability: feedback/archive invariant verification"],
+        "constraint": ["constraint: fail visibly, never a hidden fallback", "constraint: verify claimed side-effects against the world"],
+        "decision": ["decision:change-target-is-the-source-repo -- so rollout is a NAMED operator step, not a silent assumption @grade: settled/human · leans g4-verify"],
+        "evidence": [
+          "claim: --verify-result resolves the right registry for a nested work_id",
+          "claim: the archive gate is satisfiable, and still refuses when it should",
+          "claim: single-segment behavior is unchanged (existing suites green, unmodified)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    "Residual leaf-collision looseness in archive matching ('659/665' can match a package for 'epic-659/665') -- retained for compatibility and pinned by a test in this run; narrowing the match rule is a separate change with its own blast radius (critic F2).",
+    "Doctrine note (deliberately NOT taken in this issue, per decision:no-doctrine-or-template-edit-this-issue): state in commander doctrine that a work_id MAY contain '/' path segments and that nested archive directories are legal, so the convention is written down rather than inferred from tooling behavior.",
+    "Any unrelated undeclared-sibling residue surfaced by the g2 widened companion-closure probe -- repaired outside this issue (critic F4).",
+    "f1Brainz-side: the epic-659/665 forced waive of archive.c1 stays on the record; no retroactive repair is attempted."
+  ],
+  "blockers": []
+}

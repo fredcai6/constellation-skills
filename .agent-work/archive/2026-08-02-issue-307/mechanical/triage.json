@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "issue-307",
+    "project": "constellation-skills",
+    "role": "commander-307",
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-307-triage@853b9bb95ae7336cc5f0db20c3691a7cd280608c",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-307",
+    "generated_at": "2026-08-02T21:11:46Z"
+  }
+}

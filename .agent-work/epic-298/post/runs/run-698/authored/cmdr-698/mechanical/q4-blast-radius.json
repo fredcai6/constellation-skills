@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q4-blast-radius",
+  "mechanical": {
+    "run": "cmdr-698",
+    "project": "f1Brainz",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q4-blast-radius",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cmdr-698-q4-blast-radius@b252fa0c48bb896837272f0455381532bbfa79d9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cmdr-698",
+    "generated_at": "2026-08-02T20:27:47Z"
+  }
+}

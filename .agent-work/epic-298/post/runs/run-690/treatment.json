@@ -1,0 +1,92 @@
+{
+  "run": "run-690",
+  "captured": true,
+  "transcript_complete": true,
+  "verdict": "TREATMENT-VERIFIED",
+  "treatment_verified": true,
+  "tool_call_count": 114,
+  "skill_invocations": 1,
+  "skill_calls": [
+    {
+      "index": 0,
+      "skill": "constellation-commander",
+      "input": {
+        "skill": "constellation-commander",
+        "args": "issue #690"
+      }
+    }
+  ],
+  "commander_invocation_indices": [
+    0
+  ],
+  "commander_served_by": [
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-commander",
+      "skill": "constellation-commander",
+      "after_call_index": 0
+    }
+  ],
+  "all_skill_loads": [
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-commander",
+      "skill": "constellation-commander",
+      "after_call_index": 0
+    }
+  ],
+  "init_constellation_entries": 18,
+  "init_duplicated_names": 0,
+  "write_audit": {
+    "count": 6,
+    "calls": [
+      {
+        "index": 77,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post690\\.agent-work\\issue-690\\PROBLEM_STATEMENT.md"
+      },
+      {
+        "index": 89,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post690\\.agent-work\\issue-690\\MISSION_FRAME.md"
+      },
+      {
+        "index": 95,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post690\\.agent-work\\issue-690\\MISSION_FRAME.md"
+      },
+      {
+        "index": 99,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post690\\.agent-work\\issue-690\\PLAN_DECISIONS.md"
+      },
+      {
+        "index": 103,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post690\\.agent-work\\issue-690\\execute.json"
+      },
+      {
+        "index": 112,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post690\\.agent-work\\issue-690\\STATE_NOTE.md"
+      }
+    ],
+    "writes_outside_own_worktree": [],
+    "writes_inside_worktree_but_outside_agent_work": [],
+    "clean": true
+  },
+  "forbidden_operations": [],
+  "map_credit_suppressed_by_corpus_rule": [
+    {
+      "index": 93,
+      "tool": "Bash",
+      "target": "cd \"C:/Programs/f1bwt/post690\" && py -c \"\nimport sys, pathlib\nsys.path.insert(0,'C:/Users/fredc/.claude/skills/constellation-commander/scripts')\nimport map_orient as m\nroot=pathlib.Path('C:/Programs/f"
+    }
+  ],
+  "tool_histogram": {
+    "Bash": 99,
+    "Read": 7,
+    "Write": 6,
+    "Skill": 1,
+    "PowerShell": 1
+  },
+  "final_answer_chars": 5568
+}

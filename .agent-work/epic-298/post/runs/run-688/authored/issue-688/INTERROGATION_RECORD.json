@@ -1,0 +1,99 @@
+{
+  "goal": "Issue #688 — grip-fit rain treatment is all-or-nothing ('any wet sample'), throwing away dry running the cross-weekend grip fit cannot afford to lose. Resolve to a common understanding what #688 actually changes, against current main (3cf79f78) and the governing #724/W2 routing, before any plan is authored.",
+  "mode": "delegated",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What capability is #688 adding or changing, stated in behaviour terms?",
+      "status": "resolved",
+      "resolution": "The grip-baseline fit's treatment of session wetness changes from a BINARY presence flag to a GRADED severity: the uncertainty the fit attaches to a session's grip offset becomes proportional to how much of that session's running was actually wet, instead of jumping to a fixed 4x penalty on any trace of rain. Nothing is added to, or removed from, the set of sessions fitted. Ontology: capability=grip-baseline session uncertainty; event=none new (no boundary signal crosses); constraint=the FROZEN 'rain must have a real widening effect' requirement; assumption=wet-tyre lap fraction is a usable stand-in for how contaminated the dry-lap sample is.",
+      "code_evidence": "src/physics/layer2/grip_baseline.py (main) lines 114-120 RAIN_SIGMA_INFLATION=4.0 and its FROZEN note; lines 481-482 and 548-549 apply it; docs/architecture/packets/physics.md:1511-1543 (stage D, honest measured-NULL)."
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "The issue body says the rain rule is an 'exclusion' that 'drops' weekends. Does the grip fit actually exclude or drop anything on rain?",
+      "status": "resolved",
+      "resolution": "NO — the issue's framing is wrong about the producer. grip_baseline never drops a session; its own docstring says so explicitly ('never drops a session'). Rain's ONLY effect on the fit path is a multiplicative widening of session_offset_sigma by RAIN_SIGMA_INFLATION=4.0, composable with the thin-session fallback's own 3.0. Wet laps are additionally already absent from the fit input because the clean-lap reader restricts to dry compounds. So the defect to repair is a falsely-wide sigma on sessions whose timed running was in fact dry — not a dropped session.",
+      "code_evidence": "src/physics/layer2/grip_baseline.py (main): docstring of fit_grip_baseline_from_laps ('never drops a session'); rain branch at 481-482 (ok path) and 548-549 (thin path); _read_clean_session_laps SQL `AND lt.compound IN ('SOFT','MEDIUM','HARD')`."
+    },
+    {
+      "id": "q3",
+      "kind": "fact",
+      "question": "The issue names `rain_flag_from_raw` as the rule. Is that still the live rain source?",
+      "status": "resolved",
+      "resolution": "NO — it is LEGACY as of #680 (R2 read-swap), which is on main but NOT in this worktree's checkout. The live path now calls rain_read_from_surface_features(db_path, session_id), reading session_surface_features.session_rain_flag (canonical) and session_surface_features.wet_lap_fraction (continuous, exposed but deliberately unused). rain_flag_from_raw is retained only as a blob decoder for audits. Planning must therefore be done against main, not this checkout.",
+      "code_evidence": "git log HEAD..main => d4cd4b79 'fix(#680): swap grip module's rain read to session_surface_features (R2)', merged 23c3e1f9; `git merge-base --is-ancestor d4cd4b79 HEAD` => NOT ancestor; main:src/physics/layer2/grip_baseline.py rain_read_from_surface_features + the 'LEGACY -- see module note above' docstrings."
+    },
+    {
+      "id": "q4",
+      "kind": "fact",
+      "question": "Did #680's source swap already fix the 'any wet sample' defect?",
+      "status": "resolved",
+      "resolution": "NO — the defect survived the swap, it only moved. The new canonical source session_surface_features.session_rain_flag is itself all-or-nothing: it returns 1 if sessions.rainfall > 0, OR the summed weather-sample rainfall > 0, OR ANY lap in the session was on WET/INTERMEDIATE. One stray wet sample still sets it. #680's own docstring says so and hands the loosening to #688 by name ('USING it to loosen the binary exclusion is #688's follow-on, not this change -- the binary rain_flag alone still drives session_offset_sigma inflation').",
+      "code_evidence": "src/data/weather_features.py:162-181 `_session_rain_flag`; main:src/physics/layer2/grip_baseline.py `rain_read_from_surface_features` docstring."
+    },
+    {
+      "id": "q5",
+      "kind": "fact",
+      "question": "Is the continuous signal (`wet_lap_fraction`) actually available on the session types the coverage crux is about (thin/missing Q)?",
+      "status": "resolved",
+      "resolution": "NO — and this is the single most plan-shaping fact. wet_lap_fraction is populated for RACE sessions only (#575's populator iterates session_type='R'). Measured on the real DBs: 2022 R 22/22 populated, 2023 R 22/22 populated, and 0/0 populated for FP1, FP2, FP3, Q, S and SQ in BOTH seasons. So a naive 'wire wet_lap_fraction into the fit' recovers exactly nothing for quali — the session type #678 identified as the crux. Any #688 design that does not carry a non-R fallback is a no-op where it matters.",
+      "code_evidence": "src/data/weather_features.py:210-231 populate_wet_features_for_db (`db.get_sessions(session_type='R')`); measured by .agent-work/issue-688/probe_coverage.py against data/f1_data_2022.db and data/f1_data_2023.db (read-only), output recorded in .agent-work/issue-688/MISSION_FRAME.md."
+    },
+    {
+      "id": "q6",
+      "kind": "fact",
+      "question": "Is there an in-repo precedent for a graded wetness read that survives the R-only gap, or must one be designed?",
+      "status": "resolved",
+      "resolution": "YES, and it is in the SAME package. damage_batch.is_wet_race reads session_surface_features.wet_lap_fraction, thresholds it, and — precisely because '(the population script is R-only), so it is NULL for every S/Q/SQ session today' — falls back to a physics-local compound-based proxy: this session's fraction of laps on INTERMEDIATE/WET. Its docstring even names the case it rescues (Belgium/Austria S 2023, 403/480 laps on inters). A second precedent sets the threshold idiom: burn_rate_calibration.WET_EXCLUDE_THRESHOLD = 0.05, a named constant with a written rationale, read from the same stored column. #688 should generalize is_wet_race's pattern from a bool to a fraction, not invent a new one.",
+      "code_evidence": "src/physics/layer2/damage_batch.py:137-175 `is_wet_race` (threshold=0.1 + compound-proxy fallback); src/physics/burn_rate_calibration.py:698-706 `WET_EXCLUDE_THRESHOLD` and 709-745 `session_wet_fraction`."
+    },
+    {
+      "id": "q7",
+      "kind": "fact",
+      "question": "Where in the code does the rule that 'drops ~55% of weekends' actually live?",
+      "status": "resolved",
+      "resolution": "Nowhere in committed code. session_rain_flag has no committed consumer outside the data region that populates it and grip_baseline that reads it; no committed grip consumer gates on rain_flag at all (class_utilization_observable and the pilot consume grip only via get_grip_at). The weekend-grain drop was in the #678 G-pooling spike's own read-only candidate-weekend selection. Consequence for scope: #688 cannot 'stop the dropping' by editing a consumer, because there is no such consumer to edit — it can only make the graded signal exist, be honest, and be persisted for whoever builds the pooling gate.",
+      "code_evidence": "grep of `rain_flag`/`session_rain_flag` across src/ and scripts/: hits only in src/data/weather_features.py, src/data/database/*, src/models/data_models.py, src/physics/layer2/grip_baseline.py and grip_store.py; src/physics/utilization/class_utilization_observable.py:77,188 and src/physics/pilot/pipeline.py:725-768 consume grip via get_grip_at/GripStore with no rain reference."
+    },
+    {
+      "id": "q8",
+      "kind": "fact",
+      "question": "Which lever actually recovers usable coverage: loosening the threshold, or moving the treatment to the session grain?",
+      "status": "resolved",
+      "resolution": "GRANULARITY, by more than an order of magnitude. Measured over 2022+2023 (220 sessions, 44 weekends): under an any-session-wet WEEKEND rule 59% of sessions survive; under a per-session binary flag 84% survive (+25 points); adding a graded <5%-wet threshold on top takes it to 85-86% (+1-2 points more). Separately, at the session grain the flag is mostly HONEST: of ~35 rain-flagged sessions across the two seasons only ~5 have under 20% wet laps. So the issue's own proposed acceptance ('loosen to a fraction-of-wet-samples threshold') is real but small; the recoverable coverage is in refusing to let one genuinely-wet session condemn its four dry siblings. This is also why a graded signal is the right shape: it makes the session-grain distinction expressible at all.",
+      "code_evidence": ".agent-work/issue-688/probe_weekend_grain.py and probe_coverage.py, run read-only against data/f1_data_2022.db and data/f1_data_2023.db; numbers reproduced in .agent-work/issue-688/MISSION_FRAME.md."
+    },
+    {
+      "id": "q9",
+      "kind": "decision",
+      "question": "Does #688 change the CONSUMER's gating (the thing that actually drops weekends), or only the producer's signal and the sigma it drives?",
+      "status": "resolved",
+      "resolution": "Producer-side only. #688 wires continuous wetness into the grip fit's own sigma treatment and persists the graded value; it does NOT author or rewrite a consumer gate. The consumer contract is the W2 stream's TERMINAL item (#712), taken by the owner on the measured evidence.",
+      "human_answer": "Owner (fredcai6), #724 routing comment posted on issue #688: 'This issue specifically — W2 chain STEP 6 (continuous wetness) ... Step 6 wires it in place of the current all-or-nothing exclusion'; and, in the chain table, 'terminal | The σ consumer + the owner's consumer-contract decision at this stream's close | #712'. Reinforced in the epic #724 body: 'the final consumer contract remains the owner's decision at this stream's close, taken on the measured evidence'."
+    },
+    {
+      "id": "q10",
+      "kind": "decision",
+      "question": "Does #688 land standalone, or behind #679 / #678 / #687 in the W2 chain?",
+      "status": "resolved",
+      "resolution": "Behind them. #688 is STEP 6 of a seven-step ordered chain and lands after the flying-lap gate (#679, step 1), the D<=0 sign gate and the V1 reparameterization WITH the GripEstimateRecord re-key (#678, steps 2-3, 5) and the physical-sigma acceptance gate (#687, step 4). Consequence carried into the plan: #688 must be authored as ADDITIVE to a re-keyed record, must not itself re-key, and its acceptance is a DELTA against the step-5 band distribution, not against today's.",
+      "human_answer": "Owner (fredcai6), #724 routing comment on #688, 'The chain, in the proven order' table (step 1 #679; steps 2/3/5 #678; step 4 #687; step 6 #686,#688; terminal #712), plus the stream-wide amendment 'Per-step deltas are recorded (T19) so a later round can tell which link did the work' and epic #724: 'W2 is an ordered fix-chain'."
+    },
+    {
+      "id": "q11",
+      "kind": "decision",
+      "question": "May the graded treatment make a rain-flagged session's sigma NARROWER than today's fixed 4x? That is the point of the change, but it cuts against #663's FROZEN 'rain must have a real, tested widening effect, never an inert stored flag'.",
+      "status": "resolved",
+      "resolution": "YES for marginally-wet sessions, NO at the wet end. The graded multiplier replaces the step function with a monotone ramp that still reaches the existing 4x at full wetness, so the FROZEN requirement is preserved exactly where it was written to bite (a genuinely wet session) and relaxed only where it was over-firing (a session with a trace of wet running and dry timed laps). Threshold loosening BEYOND what the continuous signal supports stays out of scope.",
+      "human_answer": "Owner (fredcai6), #724 routing comment on #688: 'Step 6 wires it in place of the current all-or-nothing exclusion, which drops ~55% of weekends on any wet sample.' Scope bound, same comment: 'threshold loosening BEYOND what R2's continuous wetness enables is out of scope for this round — that is a modelling decision, not part of the chain', echoed in the epic #724 out-of-scope list ('#688 threshold loosening beyond what R2's continuous wetness enables'). Latent-interaction warning, same comment: 'the R2 → R3 rain-flag × σ-inflation interaction is named and latent until the re-fit. Expect it; it is not a regression.'"
+    }
+  ],
+  "signoff": {
+    "by": "Owner (fredcai6), via the frozen governing artifacts for this delegated run: the #724 routing comment posted on issue #688, and the confirmed DESIGN_SPEC embedded in epic #724 (per-section owner approval recorded 2026-08-01).",
+    "statement": "The counterpart's scope for this issue is frozen and explicit: 'This issue specifically — W2 chain STEP 6 (continuous wetness). R2's continuous wetness is already exposed — the rain-source fix merged in the W0 wave (fix/680-grip-rain-source, d4cd4b79) produced 14/110 rain flips and made a continuous wetness signal available. Step 6 wires it in place of the current all-or-nothing exclusion, which drops ~55% of weekends on any wet sample. Scope boundary (spec out-of-scope list): threshold loosening BEYOND what R2's continuous wetness enables is out of scope for this round — that is a modelling decision, not part of the chain. Latent interaction to watch: the R2 → R3 rain-flag × σ-inflation interaction is named and latent until the re-fit. Expect it; it is not a regression.' Every question above is closed against that scope, against epic #724's W2 section, or against code read at main; none remain open. Two corrections to the issue's own body are recorded rather than carried forward: the grip fit performs no exclusion (it inflates sigma, and never drops a session), and the symbol the body names (rain_flag_from_raw) is legacy as of #680. Neither changes the scope the counterpart set; both change where the work lands."
+  },
+  "consolidated": true
+}
