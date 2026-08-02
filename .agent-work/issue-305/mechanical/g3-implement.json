@@ -5,9 +5,9 @@
     "run": "issue-305",
     "project": "constellation-skills",
     "spine-step": "g3-implement",
-    "rework-count": 0,
+    "rework-count": 1,
     "failed-commands": 0,
-    "reopens": 2,
+    "reopens": 3,
     "context-manifest-ref": "ctx-issue-305-g3-implement@a4d5592110de770447c268107caa24e07583da87",
     "artifact-ref": []
   },
@@ -17,6 +17,6 @@
   ],
   "run": {
     "work_id": "issue-305",
-    "generated_at": "2026-08-02T05:45:10Z"
+    "generated_at": "2026-08-02T06:50:43Z"
   }
 }
