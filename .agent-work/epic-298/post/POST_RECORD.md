@@ -66,8 +66,47 @@ without materializing a spine never encounters the contract at all.
 | hop | what it establishes | witness | result |
 |---|---|---|---|
 | 0 | the Commander skill loaded | `verify_treatment.py` | **5 of 5** |
-| 1 | the spine was materialized, so the contract text reached the subject | `contract_delivered` (transcript) **and** `spine-materialization.json` (filesystem) | **5 of 5**, two independent oracles agreeing |
-| 2 | the contract's instrument actually ran and returned | `map_orient` calls confirmed by a verdict token in the tool result | **5 of 5**, 32 invocations, every first call `RESOLVED` |
+| 1 | the spine was materialized, so the contract text reached the subject | `contract_delivered` (transcript) **and** `spine-materialization-CORRECTED.json` (filesystem — **read §2.1 before citing this**) | **5 of 5** |
+| 2 | the contract's instrument actually ran and returned | `map_orient` calls confirmed by a verdict token in the tool result, **and** a `map-orientation.json` receipt on disk | **5 of 5**, 32 invocations, every first call `RESOLVED` |
+
+### 2.1 The filesystem witness was VACUOUS as first written — my defect, corrected here
+
+**Three of the four filesystem-witness booleans could not fail.** `collect_authored.py`
+computed them by `rglob` over the **entire** `.agent-work/` of each pinned worktree, and
+f1Brainz **tracks** `.agent-work/`. At the pin, that tree already contains:
+
+| file | instances at pin `3541d292` | witness as first written |
+|---|---|---|
+| `spine.json` | **113** | `spine_materialized` — **vacuous** |
+| `execute.json` | **98** | `execute_json_written` — **vacuous** |
+| `MISSION_FRAME.md` | **35** | `frame_written` — **vacuous** |
+| `map-orientation.json` | **0** | `map_orientation_receipt` — **sound** |
+
+So `spine_materialized` was `bool(81 paths)` on every run **regardless of what the subject
+did**. That is *a check that cannot fail* — this epic's own costume family — and I committed it
+**inside the instrument built to detect delivery failures**, in the same run that filed #393 for
+a verification claiming more than its body checks. It is the sharpest instance of the pattern in
+this record precisely because it is aimed at the rig rather than at a test.
+
+**Recovered without re-running anything, from data the same file already recorded.** The vacuous
+*booleans* were recomputed from the *path arrays* by filtering to each subject's own work
+directory (`issue-690`, `issue-688`, `cmdr-698`, `issue-716`, `issue-704`):
+
+| task | `spine.json` in worktree | **in the subject's own dir** | receipt in own dir |
+|---|---|---|---|
+| all five | 81 | **exactly 1** | **exactly 1** |
+
+**hop 1 = 5/5 and hop 2 = 5/5 still hold** — the check was wrong, the answer was right, and the
+correction is derived from archived paths rather than re-asserted. Written to
+`spine-materialization-CORRECTED.json` with the reasoning; the original is kept unedited beside
+it.
+
+**What legitimately changes:** the *strength* of hop 1's corroboration, not its verdict. Hop 1's
+transcript oracle (`contract_delivered`) was always sound — it reads the subject's own tool
+calls. The filesystem half is sound only as re-derived. **Hop 2 is the more strongly witnessed
+of the two**, because `map-orientation.json` has **zero** instances at the pin and therefore
+could only have been produced by the subject — the one field here that was load-bearing exactly
+as originally written.
 
 **This is what makes the arm's verdict attributable.** PRE-B also scores `contract_delivered`
 5 of 5 — its subjects drove spines to `plan` too — with **zero** `map_orient` calls, because
@@ -332,6 +371,49 @@ identical code — so the hits are classified by an additive adjudicator applied
 any hit that is neither class stays REAL and fails the gate. PRE-B raised zero hits, so the
 adjudicator is a no-op there.
 
+## 11.5 What this archive contains, and the 15,456 files it deliberately does not
+
+**The first version of this branch would have added 15,591 files and ~3.4M lines to the
+repository permanently, and almost none of it was evidence.** Caught by the Admiral before merge
+— on a direct question from Tommy, not by any check — and pruned in a normal removal commit on
+top (**history is not rewritten**, so the dropped tree stays recoverable on this branch and
+simply never reaches `main` through the squash-merge).
+
+| | files |
+|---|---|
+| under `post/runs/` before the cut | **15,496** |
+| of which `run-*/authored/**` | **15,456** — dropped |
+| actual evidence | **40** — 8 per run, kept |
+
+**The criterion, stated so it is recorded rather than eyeballed:**
+
+- **KEEP** — the derived scoring artifacts and the transcripts they derive from: everything the
+  ordering claim rests on and everything needed to re-derive it. Per run: `brief.md`,
+  `brief_diff.md`, `corpus-at-launch.json`, `meta.json`, `ordering.json`, `stderr.txt`,
+  `stream.ndjson`, `treatment.json`. Plus all of `POST_RECORD.md`, the scripts, the fingerprints,
+  `spine-materialization*.json`, and the whole `runs-VOID-double-driver/` set.
+- **DROP** — `run-*/authored/**`: **the measured agent's own output, which the arm never reads.**
+  Because f1Brainz *tracks* `.agent-work/`, each copy included ~13 work areas belonging to
+  unrelated host issues (`623-headless-deadlock`, `601-stage1-pregrease`, …). One file,
+  `verify_prefix.json`, is **60,716 lines and landed five times**.
+
+**Verified rather than asserted**, since a prune reporting success is not a prune that did the
+right thing:
+
+- **15,456 removed, 40 remaining**, and all 40 are **byte-identical by blob OID** to before the cut.
+- **All three gates re-run and PASS** after the prune — so nothing the arm reads lived under
+  `authored/`. `discriminate.py` and `map_orient_audit.py` **re-derive output identical to the
+  committed artifacts** from the pruned tree, and the audit self-test is still 7/7.
+- PRE-B's archive holds **62** files for the same five runs. This one held 15,456. **The entire
+  difference is undeclared collection scope**, not a different measurement.
+
+**Root cause fixed, not just cleaned:** `collect_authored.py` now identifies the subject's own
+work area **positively** — the directory that did not exist at the pin, which
+`git status --porcelain` reports as untracked — instead of copying everything it could see. The
+same fix closes §2.1's vacuous witness, since both defects are the same missing declaration.
+**A capture with no declared scope is the collection-side twin of an assertion with no declared
+subject.** Filed as **#401**.
+
 ## 12. Reproduction
 
 ```
@@ -355,6 +437,7 @@ Cost and timing: five runs, **2207 s wall at 3-way concurrency**, 73–141 tool 
 | **#395** | the corpus fingerprint's headline digest is blind to `templates/` and `scripts/` — where the contract lives |
 | **#396** | a backgrounded process survives a compound command that reports failure, and meta-level checks cannot see the resulting corruption |
 | **#397** | `verify_treatment.py`'s forbidden-operation patterns match `git merge-base` and search `Write` content |
+| **#401** | capture rigs collect with no declared scope — 15,456 files of host debris, and a filesystem witness that could not fail (§2.1, §11.5) |
 
 ## 14. Open for the Admiral and Tommy
 

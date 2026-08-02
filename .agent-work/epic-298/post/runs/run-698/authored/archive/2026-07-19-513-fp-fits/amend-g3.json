@@ -1,4 +1,0 @@
-{"ops":[{"op":"rescope","id":"g3-integrate","postconditions":[
-  {"id":"c1","statement":"physics region unit suite passes (tests live under tests/unit/physics/layer2/)","check":{"kind":"command","command":"py -m pytest tests/unit/physics -q"},"override_policy":{"allowed":true,"authority":"human","reason_required":true},"satisfied":false},
-  {"id":"c2","statement":"reviewer verdict is APPROVE","check":{"kind":"artifact","evidence_type":"review-result","match":{"verdict":"APPROVE"}},"satisfied":false}
-]}]}

@@ -1,1 +1,0 @@
-F12 held-out-circuit stability: PASS (n_pass=5/5, mean_stat=0.5402, min=0.3055, max=0.8557, threshold=1.0, n_circuits=22, n_rows=612615) -> .agent-work\625-segmentation-substrate\artifacts\f12_holdout_stability.json

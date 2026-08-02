@@ -16,12 +16,31 @@ Two reasons, and the second is the load-bearing one.
 
 The worktrees are swept at archive, so this must run BEFORE the sweep. It copies; it never
 moves, and it never writes into the worktree.
+
+SCOPE IS DECLARED — AND THE FIRST VERSION DID NOT DECLARE IT. That cost 15,456 files.
+    f1Brainz TRACKS `.agent-work/`, so a worktree at the pin already contains ~13 work areas
+    belonging to unrelated issues (`623-headless-deadlock`, `601-stage1-pregrease`, ...). The
+    first version copied EVERY directory under `.agent-work/`, so each run archived the whole
+    work area it happened to be sitting in — handoffs, implementer plans and verification JSON
+    for issues this arm never touched. One file, `verify_prefix.json`, is 60,716 lines and
+    landed five times. **None of that is evidence about map ordering; it is the debris of the
+    repository the subject was working in.**
+
+    PRE-B's archive holds 62 files for the same five runs. This one held 15,456. **The entire
+    difference is undeclared scope** — not a different measurement, just a collector that took
+    everything it could see.
+
+    So the subject's OWN work area is now identified POSITIVELY: it is the directory that did
+    not exist at the pin, which `git status --porcelain` reports as untracked. Everything else
+    belongs to the host repo and is not this arm's to archive. **A capture with no declared
+    scope is the collection-side twin of an assertion with no declared subject.**
 """
 from __future__ import annotations
 
 import argparse
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -44,21 +63,51 @@ def main() -> int:
         row: dict = {"issue": n, "worktree": str(wt), "worktree_exists": wt.is_dir()}
 
         aw = wt / ".agent-work"
-        work_dirs = sorted(d for d in aw.iterdir() if d.is_dir()) if aw.is_dir() else []
-        row["agent_work_dirs"] = [d.name for d in work_dirs]
+        present = sorted(d for d in aw.iterdir() if d.is_dir()) if aw.is_dir() else []
 
-        spines = sorted(str(s.relative_to(wt)).replace("\\", "/")
-                        for s in aw.rglob("spine.json")) if aw.is_dir() else []
+        # DECLARED SCOPE: only what this subject CREATED. Untracked == did not exist at the
+        # pin == authored by the run. Everything else is the host repo's own tracked content.
+        untracked = subprocess.run(
+            ["git", "-C", str(wt), "status", "--porcelain", "--", ".agent-work"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        ).stdout
+        authored_names = {
+            line[3:].strip().strip('"').replace("\\", "/").split("/")[1]
+            for line in untracked.splitlines()
+            if line.startswith("??") and "/" in line[3:]
+        }
+        work_dirs = [d for d in present if d.name in authored_names]
+
+        row["agent_work_dirs_present"] = len(present)
+        row["agent_work_dirs_authored"] = [d.name for d in work_dirs]
+        row["agent_work_dirs_skipped_as_host_content"] = len(present) - len(work_dirs)
+
+        # THE WITNESS IS SCOPED TO THE SUBJECT'S OWN DIRECTORIES, and the first version was
+        # NOT — it rglob'd the whole `.agent-work/`, which at this pin already contains 113
+        # `spine.json`, 98 `execute.json` and 35 `MISSION_FRAME.md` belonging to the HOST repo.
+        # So `spine_materialized` was `bool(81 paths)` on every run no matter what the subject
+        # did: **a check that could not fail**, sitting inside the instrument built to detect
+        # delivery failures. It is this epic's own costume family, aimed at the measuring rig.
+        #
+        # `map-orientation.json` is the exception and the reason the arm survived it: there are
+        # ZERO at the pin, so that field could only ever have been produced by the subject. It
+        # is the one witness here that was load-bearing as originally written.
+        def _own(pattern: str) -> list[str]:
+            hits: list[str] = []
+            for d in work_dirs:
+                hits += [str(s.relative_to(wt)).replace("\\", "/") for s in d.rglob(pattern)]
+            return sorted(hits)
+
+        spines = _own("spine.json")
         row["spine_json_paths"] = spines
-        # THE WITNESS: a spine on disk means the template was materialized, so the contract
-        # text reached this subject. Absent, hop 1 did not happen and a zero map_orient count
-        # means "never delivered", not "delivered and ignored".
         row["spine_materialized"] = bool(spines)
-        row["frame_written"] = bool(list(aw.rglob("MISSION_FRAME.md"))) if aw.is_dir() else False
-        row["execute_json_written"] = bool(list(aw.rglob("execute.json"))) if aw.is_dir() else False
-        row["map_orientation_receipt"] = sorted(
-            str(s.relative_to(wt)).replace("\\", "/")
-            for s in aw.rglob("map-orientation.json")) if aw.is_dir() else []
+        row["frame_written"] = bool(_own("MISSION_FRAME.md"))
+        row["execute_json_written"] = bool(_own("execute.json"))
+        row["map_orientation_receipt"] = _own("map-orientation.json")
+        # Recorded so a future reader can see the check is scoped rather than trust that it is.
+        row["host_files_excluded_from_witness"] = {
+            "spine.json": len(list(aw.rglob("spine.json"))) - len(spines) if aw.is_dir() else 0,
+        }
 
         if run_dir.is_dir() and work_dirs:
             dest = run_dir / "authored"

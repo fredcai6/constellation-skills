@@ -1,8 +1,0 @@
-case            : 2023 Bahrain VER
-n_race_laps     : 57
-first_clean_lap : 3
-resolved rate   : 1.7236 kg/lap  (source=session)
-default rate    : 1.8000 kg/lap
-mass_kg[0] BEFORE (flat 1.8) : 897.0000 kg
-mass_kg[0] AFTER  (resolved) : 892.7959 kg
-delta           : -4.2041 kg

@@ -1,3 +1,0 @@
-2026-07-19 00:03:20,346 - root - INFO - Logging configured successfully
-2026-07-19 00:03:20,351 - root - INFO - FastF1 cache directory set to: C:\Programs\f1-628\data\telemetry
-2026-07-19 00:19:25,100 - src.physics.session_fit - WARNING - fit_best_lap_trace failed ALB: no_accel_samples: fit_stint_hp could not find valid HPs (too few samples or degenerate window)

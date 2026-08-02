@@ -1,8 +1,0 @@
-{
-  "by": "fredcai6",
-  "decision": "confirmed",
-  "statement": "working on epic 601. take the next bite of work. you are approved to use subagents",
-  "interpreted_scope": "Issue 616 through a ready pull request; merge, issue closure, destructive cleanup, scope expansion, and architecture-changing decisions remain surfaced.",
-  "contract": ".agent-work/epic-601/LATITUDE_CONTRACT.md",
-  "date": "2026-07-14"
-}

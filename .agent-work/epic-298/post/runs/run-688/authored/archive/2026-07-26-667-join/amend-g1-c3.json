@@ -1,1 +1,0 @@
-{"ops": [{"op": "retext-check", "id": "g1-integrate", "which": "postconditions", "cond": "c3", "command": "\"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" src/utils/simplification_limits.py --paths src/physics/fingerprint/join.py tests/unit/physics/fingerprint/test_join.py"}]}
