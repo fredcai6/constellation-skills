@@ -580,8 +580,8 @@
   "engine_session": {
     "session_id": "commander-304-e298",
     "status": "active",
-    "claimed_at": "2026-08-01T23:25:40.051634+00:00",
-    "last_heartbeat": "2026-08-01T23:25:40.051634+00:00",
+    "claimed_at": "2026-08-02T02:06:15.845360+00:00",
+    "last_heartbeat": "2026-08-02T02:06:15.845360+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

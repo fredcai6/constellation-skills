@@ -267,7 +267,8 @@
           "id": "p1",
           "statement": "g1 integrated: the resolver, its receipt schema, and the executed mutation floor exist",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1 integrated: resolver, receipt schema and executed mutation floor exist at commit 6d35fe2; re-review verdict 8/8 APPROVE, 0 blockers, in g1-review-2/review.json"
         }
       ],
       "postconditions": [
@@ -312,7 +313,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,

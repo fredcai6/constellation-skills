@@ -112,7 +112,8 @@
           "id": "c1",
           "statement": "TDD red: the absent-frame refusal test written and observed FAILING before verify-frame exists",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "red reconstructed against 6d35fe2 (a tree without the verify-frame subcommand), not observed in TDD order - attempt-1 died before attesting; 5 failures pasted, root cause 'argument command: invalid choice: verify-frame (choose from orient, verify-orientation)'. Restore to fdec654 verified by blob OID: git diff --quiet HEAD exit 0, git status --porcelain empty; 5 passed after restore."
         },
         {
           "id": "c2",
@@ -121,7 +122,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q && python scripts/map_orient.py --self-test"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
         }
       ],
       "constraints": [
@@ -130,11 +132,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q && python scripts/map_orient.py --self-test",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m3": {
@@ -316,14 +330,14 @@
   "triage_candidates": [],
   "blockers": [],
   "engine_session": {
-    "session_id": "g2-implementer-304",
+    "session_id": "g2-implementer-304b",
     "status": "active",
-    "claimed_at": "2026-08-01T23:34:07.514730+00:00",
-    "last_heartbeat": "2026-08-01T23:39:46.650261+00:00",
-    "claimed_by": "implementer",
+    "claimed_at": "2026-08-02T02:13:28.493043+00:00",
+    "last_heartbeat": "2026-08-02T02:17:25.949328+00:00",
+    "claimed_by": "agent",
     "worktree": ".",
-    "previous_session_id": null,
-    "takeover_reason": null
+    "previous_session_id": "g2-implementer-304",
+    "takeover_reason": "attempt-1 died on a session usage limit"
   },
   "why_trail": [
     {
@@ -339,6 +353,13 @@
       "why": "Anchor change landed: tasks.context.imperative now anchors the map read to 'Before you open any source file', names map_orient.py orient with --root <repo-root> --work-id <work-id>, and spells out the RESOLVED (confirming, not building) and DEGRADED (declared before any source read) arms. RED observed first: 11 failures in tests/test_map_contract_wiring.py before the edit. m1's authored gate command runs the whole wiring file, so the template wiring and installer registration (m4/m5 substance) had to land here too -- recorded as a deviation.",
       "mechanical": false,
       "ts": "2026-08-01T23:39:08.404454+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "verify-frame audited against deliverable 1 rather than trusted: all four refusal arms verified present and green (absent frame FRAME-MISSING exit 12, unknown anchor named, code-cut refused, no-receipt refused), frozen g1 exit vocabulary reused with codes 10 and 12 widened by documented reading only. c1 red was reconstructed against 6d35fe2, not observed in TDD order - recorded as a deviation. AUDIT GAP FOUND for a later slice: probe_fallbacks is dead code, never called by cmd_orient, and pin_substitutes writes no source label, so the receipt does not record which known fallback resolved; the degraded-arm frame fixtures DEGRADED_FRAME and UUNDECLARED_FALLBACK_FRAME are defined in tests but never used.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:17:25.949298+00:00"
     }
   ]
 }
