@@ -769,7 +769,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -785,7 +786,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c2",
@@ -797,23 +799,55 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1",
+          "waived": {
+            "authority": "Admiral launch order LAUNCH_ORDER-305 ruling 5 (pre-authorized)",
+            "reason": "GATE-PLAN DEFECT, not a satisfied condition. c2 demands literal verdict == APPROVE, but the sanctioned verdict for this epic is APPROVE-WITH-FOLLOWUPS, which the Admiral ruled is not a soft BLOCK. The REAL verdict on the record is APPROVE-WITH-FOLLOWUPS with NO blockers (e-g3-review-1, .agent-work/issue-305/crew/g3-review-rework-result.md). Identical wedge to g2-integrate.c2, filed as #371. No APPROVE was fabricated.",
+            "evidence": "e-g3-integrate-1",
+            "forced": true
+          }
         },
         {
           "id": "c3",
           "statement": "the negative control was demonstrated RED against a deliberately incomplete capture, asserting the specific failed field \u2014 reproduced by me, not accepted on report",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2",
+            "authority": "Admiral launch order LAUNCH_ORDER-305 ruling 5 (pre-authorized)",
+            "reason": "GATE-PLAN DEFECT, not a satisfied condition. c2 demands literal verdict == APPROVE, but the sanctioned verdict for this epic is APPROVE-WITH-FOLLOWUPS, which the Admiral ruled is not a soft BLOCK. The REAL verdict on the record is APPROVE-WITH-FOLLOWUPS with NO blockers (e-g3-review-1, .agent-work/issue-305/crew/g3-review-rework-result.md). Identical wedge to g2-integrate.c2, filed as #371. No APPROVE was fabricated.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -1118,6 +1152,13 @@
       "why": "APPROVE-WITH-FOLLOWUPS, no blockers, and the reviewer derived its own baseline rather than inheriting mine. Three named attacks all RED with their specific assertions; six novel mutations, of which two scored green and became F1/F2. F2 proved my own corrected sentence still false - --cond is a third harness-authored string - so the docstring was cut back to what the census actually checks at 83becc8, docstring only, per the reviewer's 'fix the sentence, not the machinery'. It also caught a real defect in my handoff: the test I named as answering A3 is null-vs-null and cannot. F1 and F3 recorded as triage candidates; neither leaves a conclusion unsupported.",
       "mechanical": false,
       "ts": "2026-08-02T16:26:06.550228+00:00"
+    },
+    {
+      "id": "w-21",
+      "gate": "g3-integrate",
+      "why": "g3 integrated. Reviewer returned APPROVE-WITH-FOLLOWUPS with no blockers after deriving its own baseline. c3 reproduced by me against current HEAD rather than accepted on report: composer replaced with constants -> RED, 'Left contains 10 more items, first extra item: run', all ten fields named, restored by blob OID. c2 waived as the #371 gate-plan defect with the real verdict on the record. F1 and F3 carried as tc1/tc2.",
+      "mechanical": false,
+      "ts": "2026-08-02T16:30:32.433252+00:00"
     }
   ],
   "amendments": [
@@ -1143,7 +1184,7 @@
     "session_id": "commander-305e",
     "status": "active",
     "claimed_at": "2026-08-02T15:39:11.877674+00:00",
-    "last_heartbeat": "2026-08-02T16:26:22.317718+00:00",
+    "last_heartbeat": "2026-08-02T16:30:32.433285+00:00",
     "claimed_by": "commander-305e",
     "worktree": "C:/Programs/constellation-skills-wt/e298-305",
     "previous_session_id": null,
