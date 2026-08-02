@@ -341,7 +341,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT at .agent-work/issue-304/crew-handoffs/g2-result.md, verified fresh via run_crew.py --verify-result; rework slice m7 appended and closed at 9d57e9b"
         }
       ],
       "postconditions": [
@@ -352,7 +353,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
         }
       ],
       "constraints": [],
@@ -361,11 +363,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g2-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -377,7 +390,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT round 2 at .agent-work/issue-304/crew-handoffs/g2-review-result-2.md, verdict APPROVE, 0 findings; round 1 BLOCK at g2-review-result.md preserved as a separate file"
         }
       ],
       "postconditions": [
@@ -393,7 +407,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
         },
         {
           "id": "c2",
@@ -405,17 +420,40 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g2-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -750,6 +788,20 @@
       "why": "Attempt-1 died on a session usage limit; attempt-2 audited its unreviewed work rather than trusting it and found the m3 oracle was dead code - probe_fallbacks/classify_substitute/substitute_label existed, were self-tested, and were never called from cmd_orient, so every receipt was green while recording none of the independent fallback oracle. Fixed, plus a self-test that was pinning a lowercasing defect in the undeclared-substitute refusal. I reproduced the evidence myself: 303 passed, 433 subtests, self-test exit 0. Three of five TDD-red conditions were reconstructed against 6d35fe2 rather than observed in order - that proves the tests discriminate, not TDD authoring order, and the reviewer must devise a mutation outside the shipped set.",
       "mechanical": false,
       "ts": "2026-08-02T02:47:51.280585+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Round 1 returned BLOCK on one finding - substitute_label reachable only from self_test - found by a reviewer-devised mutation plus an AST reachability pass with self_test blocked as a traversal node, which is the mechanism that had laundered the dead code as live. I adjudicated wire-it over delete-it and explicitly refused documenting it as a decoder. Round 2 APPROVE, 0 findings, on three further mutations of its own against the new output path, all red. Across both rounds the reviewer devised seven mutations outside the shipped set, attacked the absent-frame refusal with 12 variants for zero vacuous passes, reproduced all three reconstructed reds, and proved the no-3.13-API claim under py 3.12.13. I re-ran the close criteria in my own hands: 312 passed, 435 subtests, self-test exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:38:29.741686+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Verified in my own hands, not on report: the asymmetric wiring reads verify-orientation at context c2 with no override policy and verify-frame at plan c6 with a human-authority override, both using the absolute repo-root placeholder rather than a relative path, read straight from the template JSON. Close criteria re-run by me at 312 passed, 435 subtests, self-test exit 0. The rework call site is at map_orient.py:958, outside its own def and outside self_test (which spans 1306-1637 after the edit), with tests asserting both provenance labels in real subprocess stdout including a negative case. Reviewer APPROVE round 2 after a correct BLOCK round 1.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:42:08.200167+00:00"
     }
   ]
 }

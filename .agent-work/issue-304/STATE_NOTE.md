@@ -1,12 +1,36 @@
 # Crash-resume state note - issue-304
 
-- **step:** execute - gate g2-implement (in-progress; relaunching implementer attempt-2)
+- **step:** execute - **g2 is CLOSED**; gate g3-implement is next
 - **slug:** `issue-304` - branch `epic-298/304` - worktree `C:/Programs/constellation-skills-wt/e298-304`
 - **next command:** `py C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-304/execute.json current`
-- **pid:** none - foreground commander; g2 implementer attempt-2 dispatched as an Agent subagent named `impl-304-g2b`
-- **expected artifact:** `.agent-work/issue-304/crew-handoffs/g2-result.md` (IMPLEMENTER_RESULT)
+- **pid:** none - foreground commander; g3 implementer dispatched as an in-process Agent subagent
+- **expected artifact:** `.agent-work/issue-304/crew-handoffs/g3-result.md` (IMPLEMENTER_RESULT)
 
-_Updated: 2026-08-02T02:15:00Z_
+_Updated: 2026-08-02T03:50:00Z_
+
+## g2 IS CLOSED — implement, review, integrate all complete
+
+Reviewer round 1 **BLOCK** on one finding (`substitute_label` reachable only from `self_test`), reworked
+as appended slice `m7` at `9d57e9b`, reviewer round 2 **APPROVE, 0 findings**. Across both rounds the
+reviewer devised **seven** mutations outside the shipped set, all red; attacked the absent-frame refusal
+with 12 variants for zero vacuous passes; reproduced all three reconstructed reds; and proved the
+no-3.13+-API claim by compiling under `py` 3.12.13.
+
+Close criteria re-run by the Commander, not taken on report: **312 passed, 435 subtests**, `--self-test`
+exit 0. Wiring verified from the template JSON directly: `verify-orientation` at context `c2` (no
+override policy), `verify-frame` at plan `c6` (`override_policy` human/reason-required), both on the
+absolute `<repo-root>` placeholder.
+
+**Settled:** the `CONTENT_HASH_RE {64}` survivor is a **false positive** — `$` already rejects longer
+digests and `{64,}` would let a 128-char sha512 pass as a sha256 pin. Close it as not-a-defect.
+
+**Filed to the tracker this session:** **#363** (reviewer skill directs the Fowler pass to be written
+into the *installed template*, mutating the shared install), **#364** (the caller-grep doctrine misses
+dead code in any module shipping its own self-test as a subcommand — needs "outside the def AND outside
+the self-test").
+
+**g3's implementer handoff is already written and committed** at
+`.agent-work/issue-304/crew-handoffs/g3-implementer-handoff.md`. It survives a session death.
 
 ## RESUMED AFTER A DOUBLE SESSION-LIMIT DEATH
 
