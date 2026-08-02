@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-308",
+  "root": "C:/Programs/constellation-skills-wt/e298-308",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/EPISODE_STORE.md",
+      "content_hash": "6daf4ff9d30bb72c32ca707e3d276aa41b8314ba92a7093e8b510f7a0bfd3aec",
+      "source": "agent-declared"
+    },
+    {
+      "path": "episodes/README.md",
+      "content_hash": "a93aab0f8d64572e691dce6e421ea7fb45106e8574c9728124d10bd9a4bab71e",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CONSTELLATION_OVERVIEW.md",
+      "content_hash": "3df08380867fa48692abb6cd3ca4afe8a5bf7e135823f1159bc8a3fbe4e8fae0",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/LESSONS.md",
+      "content_hash": "34774cba14fc64ed66e040750c0a7ed33dca47dff7895b1f7c5e580ebefd2f95",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "e890012f0ab7448fc5ead29063664693147c268db3a5c1358bd0774d5a55ad89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This is a skill-source repo: no docs/architecture/ packet map, no generated map.json, no decision-anchor overlays. Structural truth for the episode store and the lessons machinery lives in prose docs plus the scripts themselves; there is no anchor set to inherit into the mission frame."
+  ],
+  "escalation": "Escalated to the Admiral (team-lead) in the proof-of-life report: DEGRADED-NO-MAP is expected and permanent for this repo, not a transient staleness. The mission frame will be built from the four prose substitutes above, and docs/CONSTELLATION_OVERVIEW.md's truth-layer taxonomy is itself an in-scope deliverable (#322 folds into this issue), so the substitute is also an edit target.",
+  "emitted_at": "2026-08-02T19:24:46.437774+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
