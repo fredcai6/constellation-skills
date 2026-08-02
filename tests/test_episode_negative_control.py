@@ -42,10 +42,17 @@ error and an empty test selection all exit non-zero too.
 
 from __future__ import annotations
 
+import ast
+import builtins
+import contextlib
 import hashlib
+import inspect
+import io
 import json
+import os
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -54,6 +61,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ENGINE = REPO_ROOT / "scripts" / "checklist_engine.py"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
+import context_manifest  # noqa: E402
 import episode_capture  # noqa: E402
 
 #: The mechanical group under test. `REQUIRED_MECHANICAL_FIELDS` is what
@@ -61,6 +69,60 @@ import episode_capture  # noqa: E402
 #: in that tuple (list-shaped and optional) but IS part of the mechanical bin, so the
 #: control covers it too.
 MECHANICAL_GROUP = tuple(episode_capture.REQUIRED_MECHANICAL_FIELDS) + ("artifact-ref",)
+
+#: Every engine flag whose value is a free-text string an agent composes, read off
+#: `checklist_engine.py`'s argparse block rather than guessed: `--why` (advance),
+#: `--note` (attest/resume), `--finding` (record), `--reason` (claim/release/skip/
+#: resume/reopen/amend/waive), `--statement` (flag-candidate), `--verdict`/`--summary`/
+#: `--override-reason` (consolidate), `--blocker`/`--next`/`--authority` (block/waive/
+#: amend), `--title`/`--imperative` (append), `--payload`/`--payload-file`/`--field`
+#: (attach). Naming them is what lets the census say "this run contains exactly one
+#: agent-authored string" instead of "no forbidden flag I happened to think of".
+AGENT_TEXT_FLAGS = frozenset({
+    "--why", "--note", "--finding", "--reason", "--statement", "--verdict",
+    "--summary", "--override-reason", "--blocker", "--next", "--authority",
+    "--title", "--imperative", "--payload", "--payload-file", "--field",
+})
+
+#: CLOSED-WORLD: the only flags this control may pass, per verb. Closed rather than a
+#: blacklist, and that is the whole point of the guard below — a flag missing from its
+#: verb's set fails the census whether or not `AGENT_TEXT_FLAGS` ever heard of it, so a
+#: text-bearing flag added to the engine tomorrow is caught without this file being
+#: updated. A blacklist is what let mutation M1 (`advance --why <prose>` plus `--note`
+#: on every `attest`) pass a guard named "records nothing agent authored".
+ALLOWED_FLAGS = {
+    "claim": frozenset({"--session-id", "--claimed-by", "--worktree"}),
+    "start": frozenset({"--session-id"}),
+    "attest": frozenset({"--cond", "--which", "--session-id"}),
+    "advance": frozenset({"--mechanical", "--session-id"}),
+    "reopen": frozenset({"--reason", "--session-id"}),
+}
+
+#: `store_true` flags: the token after one of these is NOT its value.
+VALUELESS_FLAGS = frozenset({"--mechanical", "--force", "--dry-run"})
+
+
+def _flag_pairs(argv: tuple[str, ...]) -> list[tuple[str, str | None]]:
+    """`(flag, value)` for every flag in one issued argv, positionals dropped.
+
+    A value that itself begins with `--` would be mis-read as a flag; no engine verb
+    takes one, and the census is strictly *more* likely to fire in that case (an
+    unknown flag), never less — so the parse cannot turn a violation into a pass.
+    """
+    pairs: list[tuple[str, str | None]] = []
+    i = 1
+    while i < len(argv):
+        token = argv[i]
+        if not token.startswith("--"):
+            i += 1
+            continue
+        if token in VALUELESS_FLAGS or i + 1 >= len(argv) or argv[i + 1].startswith("--"):
+            pairs.append((token, None))
+            i += 1
+        else:
+            pairs.append((token, argv[i + 1]))
+            i += 2
+    return pairs
 
 
 class _Refused:
@@ -117,6 +179,99 @@ def compare_fields(expected: dict[str, Expect], actual: dict) -> list[str]:
     return mismatches
 
 
+#: Every producer the oracle must not consult, as `(module, attribute)`. These are the
+#: things the control is *testing*; an expectation sourced from any of them compares the
+#: thing to itself. `emit_*` are here because the seam's own output is the same reading
+#: by another route.
+FORBIDDEN_PRODUCERS = tuple(
+    (episode_capture, name)
+    for name in (
+        "mechanical_fields", "reopen_total", "failed_command_count", "manifest_ref",
+        "_lease_role", "_artifact_refs", "project_name", "snapshot_path",
+        "emit_mechanical_snapshot", "emit_step_manifest",
+    )
+) + tuple(
+    (context_manifest, name) for name in ("rev", "build_manifest", "rows", "content")
+)
+
+#: The same names as bare identifiers, for the static pass. `compose`/`snapshot` are the
+#: harness's own accessors for the reading under test, so they belong here too.
+FORBIDDEN_IDENTIFIERS = frozenset(
+    {name for _, name in FORBIDDEN_PRODUCERS}
+    | {"compose", "snapshot", "episode_capture", "context_manifest", "cm", "active_id"}
+)
+
+
+@contextlib.contextmanager
+def _independence_harness():
+    """Make every producer under test UNCALLABLE, and the emitted snapshot UNREADABLE.
+
+    Independence proven by execution rather than by declaration. Inside this block the
+    oracle either builds its expectation from its own tallies and the manifest file, or
+    it raises — there is no third outcome, and no description string is consulted to
+    decide which happened.
+
+    File reads are guarded rather than the whole filesystem blocked, because the oracle
+    legitimately reads ONE file: the context manifest whose own bytes it pins. What it
+    may not read is anything under a `mechanical/` directory — that is the seam's
+    emitted snapshot, which is the reading under test wearing a different hat.
+    """
+    saved: list[tuple[object, str, object]] = []
+
+    def patch(obj: object, attr: str, value: object) -> None:
+        saved.append((obj, attr, getattr(obj, attr)))
+        setattr(obj, attr, value)
+
+    def raiser(label: str):
+        def boom(*_args, **_kwargs):
+            raise AssertionError(
+                f"the oracle called {label}: the expectation is NOT independent of the "
+                f"thing under test — it would be comparing the thing to itself"
+            )
+
+        return boom
+
+    def guard(target) -> None:
+        try:
+            parts = Path(os.fspath(target)).parts
+        except TypeError:  # an fd, not a path
+            return
+        if "mechanical" in parts:
+            raise AssertionError(
+                f"the oracle read the seam's emitted snapshot ({target}): that is the "
+                f"reading under test, not an independent source"
+            )
+
+    for module, name in FORBIDDEN_PRODUCERS:
+        patch(module, name, raiser(f"{module.__name__}.{name}"))
+    patch(_ControlRun, "compose", raiser("_ControlRun.compose"))
+    patch(_ControlRun, "snapshot", raiser("_ControlRun.snapshot"))
+
+    real_open, real_text, real_bytes = builtins.open, Path.read_text, Path.read_bytes
+
+    def guarded_open(file, *args, **kwargs):
+        guard(file)
+        return real_open(file, *args, **kwargs)
+
+    def guarded_read_text(self, *args, **kwargs):
+        guard(self)
+        return real_text(self, *args, **kwargs)
+
+    def guarded_read_bytes(self, *args, **kwargs):
+        guard(self)
+        return real_bytes(self, *args, **kwargs)
+
+    patch(builtins, "open", guarded_open)
+    patch(io, "open", guarded_open)  # what `Path.open` actually calls
+    patch(Path, "read_text", guarded_read_text)
+    patch(Path, "read_bytes", guarded_read_bytes)
+    try:
+        yield
+    finally:
+        for obj, attr, original in reversed(saved):
+            setattr(obj, attr, original)
+
+
 def blob_oid(data: bytes) -> str:
     """Git blob OID over `data`'s own bytes, computed here.
 
@@ -131,6 +286,59 @@ def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["git", *args], cwd=str(cwd), capture_output=True, text=True, encoding="utf-8"
     )
+
+
+#: The control's OWN `context_refs`, declared on every gate of its plan. Two entries,
+#: both under the `repo` root of the temp repository this module builds, and both real
+#: files at the moment the manifest is taken — so the delivered-context half of the
+#: manifest is actually EXERCISED rather than skipped.
+#:
+#: Before this existed the plan declared nothing, every manifest carried `files: []`, and
+#: attack A3 ("make every declared ref resolve to a missing file") passed through a hole
+#: rather than being caught: with no row declared, there was no row that could go null.
+#: `test_a3_a_null_manifest_does_not_read_as_success` is what reaches that condition now.
+DECLARED_CONTEXT = (
+    {"root": "repo", "path": "seed.txt"},
+    {"root": "repo", "path": "changed_by_the_run.txt"},
+)
+
+
+def expected_rows(repo: Path) -> list[dict]:
+    """What the delivered-context rows MUST say, computed HERE from the files' bytes.
+
+    `blob_oid`, never `context_manifest.rev()` and never the manifest itself — the same
+    independence rule the field expectations follow. `rev: null` is the correct reading
+    for a declared file that is not there, and it is produced here the same way, so the
+    absent case is expected rather than special-cased.
+    """
+    out: list[dict] = []
+    for entry in DECLARED_CONTEXT:
+        target = repo / entry["path"]
+        out.append({
+            "root": entry["root"],
+            "path": entry["path"],
+            "rev": blob_oid(target.read_bytes()) if target.exists() else None,
+        })
+    return out
+
+
+def compare_manifest_rows(expected: list[dict], manifest: dict) -> list[str]:
+    """Mismatched declared PATHS, in declaration order — a list of names, never a bool,
+    for exactly the reason `compare_fields` is.
+
+    A row that is missing, out of declaration order, or carrying the wrong `rev` — which
+    includes `null` where a file really was delivered — is named. That is what stops an
+    all-null manifest reading as success.
+    """
+    actual = manifest.get("files")
+    if not isinstance(actual, list):
+        return [entry["path"] for entry in expected]
+    mismatches = [
+        want["path"]
+        for index, want in enumerate(expected)
+        if index >= len(actual) or actual[index] != want
+    ]
+    return mismatches + [row.get("path") for row in actual[len(expected):]]
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -165,6 +373,10 @@ def _plan(work_id: str, ok_flag: Path, child: str | None) -> dict:
             "id": gid,
             "title": gid,
             "imperative": gid,
+            # Declared on BOTH gates: the manifest is written per-step, write-if-absent,
+            # so a declaration on only the step the control happens to end on would
+            # leave the other manifest empty and half the seam unexercised.
+            "context_refs": [dict(entry) for entry in DECLARED_CONTEXT],
             "preconditions": [],
             "postconditions": posts,
             "constraints": [],
@@ -200,11 +412,10 @@ class _ControlRun:
     never move the counter and would be measuring a field that production does move.
     """
 
-    #: Every engine verb this control is allowed to issue. `attest` carries NO note and
-    #: `advance` uses `--mechanical` rather than `--why`, so the run contains not one
-    #: character of agent-authored prose. `reopen`'s `--reason` is a required flag of a
-    #: required verb; it is a fixed constant here, feeds no mechanical field, and is
-    #: disclosed rather than hidden.
+    #: Every engine verb this control is allowed to issue. What each call may CARRY is
+    #: `ALLOWED_FLAGS`, and `test_control_records_nothing_agent_authored` asserts it over
+    #: the recorded argv — a claim about flags that lives only in a comment is a claim
+    #: nothing checks, which is exactly how mutation M1 got through.
     VERBS = ("claim", "start", "attest", "advance", "reopen")
 
     REOPEN_REASON = "control"
@@ -214,7 +425,8 @@ class _ControlRun:
         self.repo = repo
         self.work_id = work_id
         self.role = role  # None => never claimed => no lease
-        self.issued: list[str] = []
+        self.issued: list[str] = []  # verb names only, for the count-shaped assertions
+        self.calls: list[tuple[str, ...]] = []  # the FULL argv of every issued call
         # --- the independent tally, all incremented at issue time ---
         self._refusals: int | None = None  # None until `claim` ARMS the counter
         self._reopens = 0  # run-scoped: every honored reopen on this checklist
@@ -230,6 +442,10 @@ class _ControlRun:
             encoding="utf-8",
         )
         self.issued.append(argv[0])
+        # The whole argv, not just the verb: every claim this control makes about what
+        # it did NOT record is a claim about flags, and a flag it never wrote down is a
+        # flag no assertion can reach.
+        self.calls.append(tuple(argv))
         assert argv[0] in self.VERBS, f"control issued a non-sanctioned verb: {argv[0]}"
         if refused:
             assert proc.returncode != 0, f"expected a refusal, got success: {proc.stdout}"
@@ -374,6 +590,16 @@ class _ControlRun:
         checklist = json.loads(self.path.read_text(encoding="utf-8"))
         return episode_capture.mechanical_fields(checklist, base_dir=self.path.parent)
 
+    def manifest(self, step: str = "g2") -> dict:
+        """The step's delivery manifest, as the seam wrote it (#360, see `expectations`).
+
+        Read as bytes and decoded here rather than through `Path.read_text`, for the same
+        reason `expectations` does: the file's own bytes are what `context-manifest-ref`
+        pins, and a text read on Windows would not be them.
+        """
+        with open(self.path.parent / "context" / f"{step}.json", "rb") as handle:
+            return json.loads(handle.read().decode("utf-8"))
+
     def snapshot(self) -> dict:
         """What the SEAM wrote on its own, with no test asking it to."""
         path = self.path.parent / "mechanical" / "g2.json"  # #360, see `expectations`
@@ -423,14 +649,65 @@ def control(tmp_path_factory):
 # The control
 # --------------------------------------------------------------------------- #
 def test_control_records_nothing_agent_authored(control):
-    """`zero agent effort` is literal: only mechanically-required verbs were issued."""
-    for run in (control["parent"], control["child"]):
-        assert set(run.issued) <= set(_ControlRun.VERBS), sorted(set(run.issued))
-    # No `--finding`, no narrative `attach`, no `--why`, no hand-written episode: the
-    # only verbs above are claim/start/attest/advance/reopen, `attest` was passed no
-    # note, and `advance` was passed `--mechanical`.
-    assert "attach" not in control["parent"].issued
-    assert "flag-candidate" not in control["parent"].issued
+    """`zero agent effort` is literal — asserted over the ACTUAL argv of every call.
+
+    **The honest claim, stated exactly as it is:** the only agent-authored text in the
+    entire control is ONE fixed constant — `reopen --reason "control"` — and it feeds no
+    mechanical field. It is deliberately NOT the stronger claim "nothing agent-authored
+    was recorded": `reopen --reason` does write its string into the checklist's
+    `why_trail`, which is disclosed here rather than hidden, and the assertion below is
+    written to match the claim rather than the other way round.
+
+    The previous version of this test asserted only that the issued VERB NAMES were a
+    subset of `VERBS` — something `_ControlRun._run` already asserts on every call — and
+    left every claim about flags in a comment. Mutation M1 (rewrite every
+    `advance --mechanical` to `advance --why "<prose>"` and add a `--note` to every
+    `attest`) passed it cleanly while four rows of agent prose landed in `why_trail` and
+    `satisfied_by`. A guard that cannot fail is the thing this whole gate exists to
+    detect, so it is now a CLOSED-WORLD census over `run.calls`: every flag token must
+    be sanctioned for its verb, `advance` must positively carry `--mechanical`, `attest`
+    must positively carry no `--note`, and the free-text census must come back holding
+    exactly the one permitted constant.
+    """
+    violations: list[str] = []
+    text_bearing: set[tuple[str, str, str | None]] = set()
+    advances = 0
+
+    assert set(ALLOWED_FLAGS) == set(_ControlRun.VERBS), sorted(ALLOWED_FLAGS)
+
+    for key in ("parent", "child"):
+        run = control[key]
+        assert run.calls, f"{key} issued nothing at all; the census would be vacuous"
+        assert [c[0] for c in run.calls] == run.issued, key
+        for argv in run.calls:
+            verb = argv[0]
+            if verb not in ALLOWED_FLAGS:
+                violations.append(f"{key}: non-sanctioned verb {verb!r} in {argv!r}")
+                continue
+            pairs = _flag_pairs(argv)
+            flags = [flag for flag, _ in pairs]
+            for flag, value in pairs:
+                if flag not in ALLOWED_FLAGS[verb]:
+                    violations.append(
+                        f"{key}: {verb} carries un-sanctioned flag {flag}={value!r}"
+                    )
+                if flag in AGENT_TEXT_FLAGS:
+                    text_bearing.add((verb, flag, value))
+            if verb == "advance":
+                advances += 1
+                if "--mechanical" not in flags:
+                    violations.append(f"{key}: advance without --mechanical: {argv!r}")
+            if verb == "attest" and "--note" in flags:
+                violations.append(f"{key}: attest carries --note: {argv!r}")
+
+    assert violations == [], violations
+    # The census is only meaningful if it actually saw the calls it is about.
+    assert advances >= 8, advances
+    # ...and the whole run holds exactly ONE agent-authored string, whose value is the
+    # declared constant rather than anything composed at issue time.
+    assert text_bearing == {("reopen", "--reason", _ControlRun.REOPEN_REASON)}, sorted(
+        text_bearing
+    )
 
 
 def test_claimed_parent_topology_yields_the_full_mechanical_group(control):
@@ -474,14 +751,136 @@ def test_the_seam_emits_the_same_group_unasked(control):
 
 
 def test_every_field_has_a_named_independent_source(control):
-    """C3: the control must be able to say, per field, what the independent source was."""
-    expected = control["parent"].expectations(control["staged"])
+    """C3: the control must be able to say, per field, what the independent source was —
+    and the saying must be BACKED, in three layers of decreasing strength.
+
+    The previous version had only the third layer: a substring scan over `exp.source`,
+    which is a human-readable DESCRIPTION. That checks what the harness says about
+    itself, never what it does, so mutation M5 — rewiring the oracle to read its tallies
+    back out of `mechanical_fields` while leaving the description untouched — passed
+    cleanly. It was also a substring scan over prose, which is the "assert against the
+    FIELD, never a substring of the serialized record" trap one level up.
+
+    **(a) Behavioural, and the one that actually carries the claim.** The expectation is
+    rebuilt with every producer under test patched to raise and the seam's emitted
+    snapshot made unreadable. If the oracle touches any of them it raises, and the test
+    fails naming what it touched. This proves independence by execution.
+
+    **(b) Static over CODE, not prose.** (a) is defeated by exactly one thing: a name
+    bound at import time (`from episode_capture import reopen_total`), which no attribute
+    patch can reach. So the expectation-building code is parsed and every identifier it
+    mentions is checked against `FORBIDDEN_IDENTIFIERS`. Over the AST rather than the
+    text, so a docstring saying "never `context_manifest.rev()`" — which the oracle's own
+    sources do say — is not mistaken for a call to it.
+
+    **(c) The prose check, kept.** It is cheap, it documents intent, and it catches a
+    description that has drifted from its value. It is no longer the only thing standing.
+    """
+    # (a) --------------------------------------------------------------- behavioural
+    with _independence_harness():
+        expected = control["parent"].expectations(control["staged"])
     assert sorted(expected) == sorted(MECHANICAL_GROUP)
+
+    # (b) ------------------------------------------------------- static, over the AST
+    mentioned: set[str] = set()
+    for func in (_ControlRun.expectations, blob_oid, _git):
+        tree = ast.parse(textwrap.dedent(inspect.getsource(func)))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                mentioned.add(node.id)
+            elif isinstance(node, ast.Attribute):
+                mentioned.add(node.attr)
+    assert mentioned, "no identifiers parsed; the static pass would be vacuous"
+    assert not (FORBIDDEN_IDENTIFIERS & mentioned), sorted(FORBIDDEN_IDENTIFIERS & mentioned)
+
+    # (c) ------------------------------------------------------------ prose, retained
     for name, exp in expected.items():
         assert exp.source.strip(), name
         for forbidden in ("mechanical_fields", "reopen_total", "failed_command_count",
                           "cm.rev(", "the emitted snapshot"):
             assert forbidden not in exp.source, (name, forbidden)
+
+
+def test_declared_context_is_delivered_and_pinned(control):
+    """The delivered-context half of the manifest, EXERCISED and compared per row.
+
+    `context-manifest-ref` is a byte-pin over the manifest's own bytes, so it stays
+    correct however the rows inside come out — which is right, and is also why it can
+    never be the thing that tells you the rows are wrong. This is what covers the rows:
+    each declared entry must come back in declaration order, under the root token it was
+    declared with, carrying a `rev` equal to a blob OID this harness computed from the
+    file's own bytes.
+    """
+    repo = control["parent"].repo
+    want = expected_rows(repo)
+    # If every expected rev were null the comparison would be null-vs-null and prove
+    # nothing, so the fixture's own premise is asserted first.
+    assert all(row["rev"] for row in want), want
+
+    for entry, row in zip(DECLARED_CONTEXT, want):
+        witness = _git(
+            ["hash-object", "--no-filters", str(repo / entry["path"])], repo
+        ).stdout.strip()
+        assert witness == row["rev"], (entry, witness, row)
+
+    for key in ("parent", "child"):
+        manifest = control[key].manifest()
+        assert compare_manifest_rows(want, manifest) == [], (key, manifest["files"])
+
+
+def test_a3_a_null_manifest_does_not_read_as_success(tmp_path):
+    """Attack A3, now REACHABLE: every declared ref resolves to a missing file.
+
+    A3 scored green before this existed, but it passed through a hole — the control's
+    plan declared no `context_refs` at all, so there was no row that *could* go null. A
+    fixture that cannot reach the failing condition is as vacuous as a predicate that
+    cannot discriminate, so the condition is reached here deliberately and what happens
+    is asserted rather than assumed.
+
+    **The deliberate finding, stated in full.** `context-manifest-ref` remains CORRECT
+    under A3, and that is not a gap: the field is a byte-pin over the manifest's own
+    bytes, the bytes really did change, and the harness's independently computed OID
+    tracks them. What A3 was reaching for is a level down — whether the manifest's ROWS
+    are honest — and that is covered here by (1) and (2), not by the pin.
+    """
+    repo = tmp_path / "a3-repo"
+    repo.mkdir()
+    _git(["init", "-q", "-b", "main"], repo)
+    _git(["config", "user.email", "control@example.invalid"], repo)
+    _git(["config", "user.name", "control"], repo)
+    # Deliberately absent: neither declared file is created in this repo.
+    for entry in DECLARED_CONTEXT:
+        assert not (repo / entry["path"]).exists(), entry
+
+    path = repo / ".agent-work" / "a3-null" / "spine.json"
+    _write_json(path, _plan("a3-null", tmp_path / "ok.flag", child=None))
+    run = _ControlRun(path, repo, "a3-null", role="commander")
+    session = ["--session-id", "sess-a3-null"]
+    run._run("claim", *session, "--claimed-by", "commander", "--worktree", ".")
+    run._run("start", "g1", *session)  # the seam emits g1's manifest right here
+    manifest = run.manifest("g1")
+
+    # (1) The declaration was HONOURED, not dropped. "declared but not delivered" and
+    #     "never declared" are different facts, and only the row keeps them apart.
+    assert [(r["root"], r["path"], r["rev"]) for r in manifest["files"]] == [
+        ("repo", "seed.txt", None),
+        ("repo", "changed_by_the_run.txt", None),
+    ], manifest["files"]
+    assert expected_rows(repo) == manifest["files"]  # the harness agrees, independently
+
+    # (2) And it does NOT read as success. Compared against what the rows would say had
+    #     the files been delivered, every declared path is named.
+    delivered = [dict(entry, rev="a" * 40) for entry in DECLARED_CONTEXT]
+    assert compare_manifest_rows(delivered, manifest) == [
+        "seed.txt", "changed_by_the_run.txt",
+    ]
+
+    # (3) The pin itself is still correct, asserted rather than left implied.
+    checklist = json.loads(path.read_text(encoding="utf-8"))
+    fields = episode_capture.mechanical_fields(checklist, base_dir=path.parent)
+    with open(path.parent / "context" / "g1.json", "rb") as handle:
+        raw = handle.read()
+    assert fields["context-manifest-ref"] == f"ctx-a3-null-g1@{blob_oid(raw)}"
 
 
 # --------------------------------------------------------------------------- #
