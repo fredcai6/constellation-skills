@@ -12,9 +12,7 @@
     "g4-disposition-lessons",
     "g5-cut-intake-implement",
     "g5-review",
-    "g5-integrate",
-    "g6-land-consolidation",
-    "g7-retire-sources"
+    "g5-integrate"
   ],
   "tasks": {
     "e0-context": {
@@ -390,22 +388,22 @@
     },
     "g4-disposition-lessons": {
       "id": "g4-disposition-lessons",
-      "title": "Give all 20 active lessons a terminal disposition -- nothing stays active",
-      "imperative": "REASONING GATE (crew waived: 20 individual routing judgments over doctrine this Commander has read in full; a crew would re-read context this agent already holds). Every entry in LESSONS.md's Active section gets a TERMINAL disposition: graduate to docs/agents/ (naming the tier and why that audience) or to the doc that owns it, or delete with a stated reason. Nothing stays active. Retirement is the deletion path; a graduation is a paired edit-plus-retire whose retire reason names the destination. Write every op through apply_lessons_delta.py -- NEVER hand-edit LESSONS.md. Record the itemized disposition table in notes-308.md. Verify by READING BACK. CRITICAL CARVE-OUT (cold plan critic, BLOCKING 1): lesson:verify-launch-order-claims-against-code states cluster A's own pattern. Disposing it REQUIRES Tommy's bin ruling -- graduating it to docs/agents/ IS bin 2, so doing it here would be self-ruling, and if Tommy rules BIN 1 two consolidations would land, violating decision:one-consolidation-not-many. So this gate disposes the OTHER 19 and leaves exactly that one active, by id. g6 disposes it as part of the consolidation. If the ruling never arrives, that lesson stays active, Half 2 is honestly incomplete on one entry, and the branch is handed up PENDING saying so.",
+      "title": "Migrate every active lesson into an episode -- nothing is lost and nothing is judged",
+      "imperative": "REASONING GATE (crew waived: this is transcription of 20 lesson records this Commander has read in full, under a non-fabrication rule a fresh crew would have to be taught from scratch; the risk being managed here is invented content, and a crew maximizes it). MIGRATE every entry in LESSONS.md's Active section into an episode via scripts/apply_episode_delta.py. A lesson ALREADY IS an observation -- what happened plus how someone worked around it. Migrate it; do NOT judge it. NO graduation to docs/agents/, NO doctrine lines, NO deletion: deletion survives only as merging a genuine duplicate, and a merge MUST preserve the recurrence signal because two records of one thing are evidence of frequency. Record what is KNOWN and mark what is not as UNKNOWN IN-FIELD. NEVER back-fill a plausible-sounding observed-behavior to satisfy a required field (#342) -- an explicit 'unknown' naming the source lesson is a record; an invented incident is a corruption. Where a lesson already carries a severity or cause claim, carry it VERBATIM AND ATTRIBUTED inside the five agent-supplied statements; do NOT promote it into the diagnosis bin, because suspected-cause/proposed-remedy solicit the judgement by name. Each episode carries '- artifact-ref: lesson:<id>' as its provenance marker -- that marker is what c1 counts. THEN retire each migrated lesson through apply_lessons_delta.py with a reason naming the episode it became; never hand-edit LESSONS.md. Verify by READING BACK. Record in notes-308.md: the per-lesson migration table, the MIGRATION COUNT, and the NUMBER OF EPISODES CARRYING AN UNKNOWN FIELD -- those two numbers are this issue's deliverable, and the unknown count is a headline number, not a defect.",
       "preconditions": [],
       "postconditions": [
         {
           "id": "c1",
-          "statement": "exactly ONE lesson remains active and it is the carved-out cluster-A lesson, asserted BY ID so no other entry can satisfy the count",
+          "statement": "ZERO active lessons AND every id in the pre-migration snapshot is reachable in the episode store by its provenance marker -- both halves, because retirement alone is not migration and a count-to-zero check alone would be satisfied by deleting the file",
           "check": {
             "kind": "command",
-            "command": "python .agent-work/issue-308/checks/dispositions_done.py"
+            "command": "python .agent-work/issue-308/checks/migration_done.py"
           },
           "satisfied": false
         },
         {
           "id": "c2",
-          "statement": "all 20 dispositions itemized with destination-or-reason in notes-308.md",
+          "statement": "notes-308.md carries the per-lesson migration table plus the two deliverable numbers: the migration count and the count of episodes carrying an unknown field",
           "check": null,
           "satisfied": false
         },
@@ -420,8 +418,9 @@
         }
       ],
       "constraints": [
-        "NEVER hand-edit LESSONS.md; all writes via apply_lessons_delta.py.",
-        "Every graduation names its tier and justifies the audience (decision:tier-must-be-justified).",
+        "NEVER hand-edit LESSONS.md or an episode file; all writes via apply_lessons_delta.py / apply_episode_delta.py.",
+        "Never invent content to satisfy a required field; an honest in-field 'unknown' naming the source lesson is the only permitted filler, and any schema that refuses an honest gap gets FILED as a finding.",
+        "No graduation, no doctrine line, no deletion. A duplicate merges and preserves the recurrence signal.",
         "Verify by reading back, not by having written."
       ],
       "directives": null,
@@ -571,123 +570,6 @@
         "docs/CONSTELLATION_OVERVIEW.md",
         ".agent-work/LESSONS.md"
       ]
-    },
-    "g6-land-consolidation": {
-      "id": "g6-land-consolidation",
-      "title": "Land the ONE consolidation for cluster A -- BLOCKED ON TOMMY'S RULING",
-      "imperative": "BLOCKED pending the two-bin routing ruling (.agent-work/issue-308/ROUTING_QUESTION.md). Does not start until the Admiral relays Tommy's bin. On BIN 1 (mechanize): build the doc-transcript checker, wire it into the suite, with a rationale pointer to this cluster. On BIN 2 (instruct): land the doctrine line in docs/agents/ at BOTH ORCHESTRATOR_CONTEXT.md and CREW_CONTEXT.md (the cluster hit both roles), WITH a tripwire and a pre-registered expected-improvement record. Either way land exactly ONE (decision:one-consolidation-not-many) and FILE the other. If the ruling has not arrived this gate stays pending and the branch is handed up PENDING -- do not self-rule.",
-      "preconditions": [],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "Tommy's bin ruling received and cited",
-          "check": null,
-          "satisfied": false
-        },
-        {
-          "id": "c2",
-          "statement": "exactly one consolidation landed, its tier named and justified",
-          "check": null,
-          "satisfied": false
-        },
-        {
-          "id": "c3",
-          "statement": "the not-chosen bin filed as an issue, number recorded",
-          "check": null,
-          "satisfied": false
-        },
-        {
-          "id": "c4",
-          "statement": "full suite green",
-          "check": {
-            "kind": "command",
-            "command": "python -m pytest -q"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "The routing ruling is Tommy's. Do NOT self-rule if the answer has not arrived.",
-        "decision:one-consolidation-not-many."
-      ],
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0,
-      "anchors": [
-        "docs/EPISODE_STORE.md",
-        "episodes/README.md",
-        "docs/agents/ORCHESTRATOR_CONTEXT.md",
-        "docs/CONSTELLATION_OVERVIEW.md",
-        ".agent-work/LESSONS.md"
-      ]
-    },
-    "g7-retire-sources": {
-      "id": "g7-retire-sources",
-      "title": "Mark the source episodes consolidated -- verified by reading back",
-      "imperative": "Retire the three cluster-A source episodes (issue-304-g3-001, issue-304-g3-003, issue-309-002) through scripts/apply_episode_delta.py with a non-empty retire reason naming this consolidation and consolidated-into naming the cluster. Per decision:retirement-moves-the-file the files MOVE into episodes/retired/. The #342 workaround applies and is named in notes-308.md: the store has no confirmed/consolidated standing, so consolidation is represented by file LOCATION plus consolidated-into plus retired-reason. VERIFY BY READING BACK, and compare by blob OID or normalized content, never raw working-tree bytes (#319: * text=auto makes CRLF legitimate). Depends on g6.",
-      "preconditions": [],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "all three source episodes resolve under episodes/retired/, none left in active/",
-          "check": {
-            "kind": "command",
-            "command": "test $(ls episodes/retired/ | grep -cE '^(issue-304-g3-001|issue-304-g3-003|issue-309-002)[.]md$') -eq 3 && ! ls episodes/active/ | grep -qE '^(issue-304-g3-001|issue-304-g3-003|issue-309-002)[.]md$'"
-          },
-          "satisfied": false
-        },
-        {
-          "id": "c2",
-          "statement": "each retired episode carries a non-empty consolidated-into, read back from disk",
-          "check": {
-            "kind": "command",
-            "command": "test $(grep -l 'consolidated-into: ..*' episodes/retired/issue-304-g3-001.md episodes/retired/issue-304-g3-003.md episodes/retired/issue-309-002.md | wc -l) -eq 3"
-          },
-          "satisfied": false
-        },
-        {
-          "id": "c3",
-          "statement": "each retired episode is FETCHABLE BY ID and parses -- enumerate exits 0 even on a corrupted or half-retired store (verified by the cold critic against a scratch copy), so fetch-by-id is the check that can actually fail",
-          "check": {
-            "kind": "command",
-            "command": "python scripts/query_episodes.py fetch issue-304-g3-001 && python scripts/query_episodes.py fetch issue-304-g3-003 && python scripts/query_episodes.py fetch issue-309-002"
-          },
-          "satisfied": false
-        },
-        {
-          "id": "c4",
-          "statement": "full suite green",
-          "check": {
-            "kind": "command",
-            "command": "python -m pytest -q"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "Verify by reading back, never by having performed the write.",
-        "Compare by blob OID or normalized content, never raw working-tree bytes (#319)."
-      ],
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0,
-      "anchors": [
-        "docs/EPISODE_STORE.md",
-        "episodes/README.md",
-        "docs/agents/ORCHESTRATOR_CONTEXT.md",
-        "docs/CONSTELLATION_OVERVIEW.md",
-        ".agent-work/LESSONS.md"
-      ]
     }
   },
   "consolidation": null,
@@ -698,9 +580,9 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T20:02:38.399197+00:00",
-    "last_heartbeat": "2026-08-02T20:21:14.434974+00:00",
-    "claimed_by": "commander-308",
-    "worktree": "C:/Programs/constellation-skills-wt/e298-308",
+    "last_heartbeat": "2026-08-02T20:36:24.055319+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
     "previous_session_id": null,
     "takeover_reason": null
   },
@@ -725,6 +607,18 @@
       "why": "#348 corrected: section 1's stale gitignore transcript replaced with re-measured numbers pinned to 4cec87a, naming b69e6c8/#326 as the cause and preserving the ruling (the store needs TRACKED, not 'not-ignored-elsewhere'). #322 folded: truth-layer block gains episodes/ as raw observed history, plus the cutover flow and the explicit statement that LESSONS.md's absence is the ruling, not an omission.",
       "mechanical": false,
       "ts": "2026-08-02T20:21:14.434943+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-02T20:36:24.055288+00:00",
+      "reason": "Tommy re-scoped #308 mid-run: an episode is an observation, not a diagnosis -- 'just go to episodes. no doctrine updates.' g4's disposition scope (graduate/delete) is withdrawn and replaced by migration; g6 (the two-bin consolidation) and g7 (retiring its source episodes) are WITHDRAWN, not blocked -- no bin ruling exists or is coming, so leaving them pending would falsely represent the run as waiting on a decision. g4's c1 check (dispositions_done.py) asserted the OPPOSITE of the new requirement (exactly ONE surviving lesson, failing on zero); it is corrected rather than waived, because a waived check leaves a landmine and a corrected one is the acceptance test this gate needs anyway.",
+      "authority": "Tommy, relayed via the frozen epic-298 Admiral launch order and the 2026-08-02 re-scope comment on issue #308",
+      "ops": [
+        "rescoped g4-disposition-lessons",
+        "dropped g6-land-consolidation",
+        "dropped g7-retire-sources"
+      ]
     }
   ]
 }

@@ -599,9 +599,9 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T19:23:24.450655+00:00",
-    "last_heartbeat": "2026-08-02T20:02:29.906332+00:00",
-    "claimed_by": "commander-308",
-    "worktree": "C:/Programs/constellation-skills-wt/e298-308",
+    "last_heartbeat": "2026-08-02T20:30:35.770854+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
     "previous_session_id": null,
     "takeover_reason": null
   },
