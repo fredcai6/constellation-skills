@@ -24,6 +24,7 @@ Each run gets its OWN pinned worktree, for the same reason PRE-B did: a leftover
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -43,7 +44,36 @@ MAX_CONCURRENT = 3
 WORKTREE = "C:/Programs/f1bwt/post{n}"
 
 
+def acquire_lock() -> Path:
+    """Refuse to start if another driver is already running. EARNED, not precautionary.
+
+    The first POST attempt was launched twice: a shell one-liner whose backgrounded `nohup`
+    SUCCEEDED while a later line in the same compound command failed, so the launch *looked*
+    like it had failed and was retried. Two drivers then raced into the same run directories
+    and the same log. The damage was not subtle and it was not obvious either — three
+    transcripts ended up with TWO distinct `session_id`s, TWO `result` events and malformed
+    JSON lines apiece, while `meta.json` reported `exit=0` and a plausible elapsed time.
+
+    A capture that two processes wrote is not a capture. `O_CREAT|O_EXCL` makes the second
+    driver die loudly at second zero instead of silently corrupting an $57 arm.
+    """
+    lock = HERE / "run_all_post.lock"
+    try:
+        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        raise SystemExit(
+            f"REFUSED: {lock} exists — another driver is running (or died holding it).\n"
+            f"  Its contents: {lock.read_text(encoding='utf-8', errors='replace').strip()}\n"
+            "  Two drivers writing one run directory produce transcripts with two session_ids\n"
+            "  and two result events. If you are certain no driver is alive, delete the lock."
+        )
+    os.write(fd, f"pid={os.getpid()} started={time.strftime('%Y-%m-%dT%H:%M:%S')}\n".encode())
+    os.close(fd)
+    return lock
+
+
 def main() -> int:
+    lock = acquire_lock()
     before_fp = HERE / "corpus-fingerprint-BEFORE.json"
     if not before_fp.is_file():
         raise SystemExit(f"missing {before_fp} — take the BEFORE fingerprint first")
@@ -106,6 +136,7 @@ def main() -> int:
                 print(f"[#{n}] {r.stdout.strip() or r.stderr.strip()}")
 
     print(f"\nall captures done in {time.time() - started_at:.0f}s")
+    lock.unlink(missing_ok=True)
     return 0
 
 

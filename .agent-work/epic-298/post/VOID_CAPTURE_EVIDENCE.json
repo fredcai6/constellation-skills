@@ -1,0 +1,81 @@
+{
+  "what": "VOID capture set - two run_all_post.py drivers raced into shared run dirs",
+  "detected_by": "counting system/init, result and distinct session_id per transcript",
+  "decisive_evidence": "runs 688/690/698 each carry TWO distinct session_ids and TWO result events plus malformed JSON lines; 704/716 were killed mid-flight with zero result events",
+  "note": "meta.json reported exit=0 and plausible elapsed times for the three doubled runs - the corruption is invisible from meta alone",
+  "rows": [
+    {
+      "run": "run-688",
+      "distinct_session_ids": 2,
+      "session_ids": [
+        "7bd41c60-350a-4947-851e-8623ec8c7f89",
+        "cb66179a-559a-4260-a9d7-3f43dde5c079"
+      ],
+      "result_events": 2,
+      "system_init_events": 1,
+      "malformed_json_lines": 3,
+      "meta_status": "finished",
+      "meta_exit_code": 0,
+      "meta_elapsed_seconds": 1333.3,
+      "void_reason": "two driver processes wrote this run directory concurrently"
+    },
+    {
+      "run": "run-690",
+      "distinct_session_ids": 2,
+      "session_ids": [
+        "67385b49-d33e-40b9-a220-eb8566fee360",
+        "e9fb06ae-691b-4188-8e55-409ead431d84"
+      ],
+      "result_events": 2,
+      "system_init_events": 1,
+      "malformed_json_lines": 1,
+      "meta_status": "finished",
+      "meta_exit_code": 0,
+      "meta_elapsed_seconds": 1096.5,
+      "void_reason": "two driver processes wrote this run directory concurrently"
+    },
+    {
+      "run": "run-698",
+      "distinct_session_ids": 2,
+      "session_ids": [
+        "2f83a442-ed9b-4bbe-8118-8952812288ac",
+        "c6a8beb1-2d64-4897-9f9c-d1eb5d329836"
+      ],
+      "result_events": 2,
+      "system_init_events": 1,
+      "malformed_json_lines": 1,
+      "meta_status": "finished",
+      "meta_exit_code": 0,
+      "meta_elapsed_seconds": 1243.2,
+      "void_reason": "two driver processes wrote this run directory concurrently"
+    },
+    {
+      "run": "run-704",
+      "distinct_session_ids": 1,
+      "session_ids": [
+        "ba5b8b1d-f2cd-4c9d-b5ca-b80305e398c0"
+      ],
+      "result_events": 0,
+      "system_init_events": 1,
+      "malformed_json_lines": 0,
+      "meta_status": "finished",
+      "meta_exit_code": 4294967295,
+      "meta_elapsed_seconds": 273.7,
+      "void_reason": "two driver processes wrote this run directory concurrently"
+    },
+    {
+      "run": "run-716",
+      "distinct_session_ids": 1,
+      "session_ids": [
+        "88ac96d3-cc98-4a9a-92b6-3a5c935e4fa3"
+      ],
+      "result_events": 0,
+      "system_init_events": 1,
+      "malformed_json_lines": 0,
+      "meta_status": "finished",
+      "meta_exit_code": 4294967295,
+      "meta_elapsed_seconds": 485.9,
+      "void_reason": "two driver processes wrote this run directory concurrently"
+    }
+  ]
+}
