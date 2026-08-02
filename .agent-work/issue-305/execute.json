@@ -648,7 +648,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, verified fresh via run_crew.py --verify-result, and independently reproduced by me: 13/13 green, plus two of my own mutations outside the crew set each caught naming exactly the broken field."
         }
       ],
       "postconditions": [
@@ -668,7 +669,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,

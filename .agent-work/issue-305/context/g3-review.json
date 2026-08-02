@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "g3-review",
+  "files": [],
+  "repo_rev": {
+    "commit": "53f54e54a6dcd853355ccd3d7ec7e7600db2be49"
+  },
+  "run": {
+    "work_id": "issue-305",
+    "generated_at": "2026-08-02T06:20:56Z",
+    "dirty": true,
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/e298-305",
+      "repo": "C:/Programs/constellation-skills-wt/e298-305",
+      "durable": "C:/Programs/constellation-skills-wt/e298-305"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-305"
+    }
+  }
+}
