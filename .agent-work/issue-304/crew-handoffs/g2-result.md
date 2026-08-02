@@ -37,6 +37,25 @@ independent oracle the handoff's "ALSO ADDED" section asked for. The two degrade
 Fixed: `cmd_orient` now calls `probe_fallbacks(root)`; every receipt carries `fallbacks_probed`;
 `pin_substitutes` stamps `source` on each entry.
 
+> **CORRECTION (rework m7) — my audit was incomplete, and I reported it as complete.**
+> The paragraph above names **three** dead helpers and then lists fixes for only **two**.
+> `probe_fallbacks` and `classify_substitute` got call sites; **`substitute_label` did not.** It
+> stayed reachable only from `self_test()`, so the `source` key was written to every receipt and read
+> back by nothing — no output surface, no test outside the module's own harness. The g2 review caught
+> it and returned BLOCK. Closed in m7 below.
+>
+> **Why my reachability pass missed it, stated plainly:** I grepped for call sites rooted at `main`
+> as the entrypoint. `main` reaches `self_test` via the `--self-test` subcommand, so every
+> self-tested helper came back "reachable" — including one whose only caller was the test harness.
+> **A module that ships its own test harness as a subcommand launders dead code as live.** The
+> reviewer re-ran the same pass with `self_test` blocked as a traversal node and it fell out
+> immediately.
+>
+> This is the identical defect class I had just flagged in attempt-1's work and called a BLOCK-level
+> trap. Finding it once did not stop me from reproducing it, because I fixed the *instance* and never
+> fixed the *method*. The corrected rule is in Workflow Feedback: **a call site outside the def AND
+> outside the self-test.**
+
 A second defect surfaced while writing m3's tests: the undeclared-substitute refusal **renamed the
 offender to lowercase** (`CLAUDE.md` reported as `claude.md`), and `--self-test` was asserting the
 lowercased form — the self-test was pinning the defect. Both fixed; matching stays case-insensitive,
@@ -369,6 +388,130 @@ as-cited spelling alongside the comparable one, with the suite green either side
    change pass. Flagging it explicitly because "changed a test to green" is exactly the shape a
    reviewer must not have to discover on their own.
 6. **The "free fix" from the addendum was NOT taken — the finding is a false positive.** See below.
+7. **(m7) An incomplete audit was reported as complete.** See the CORRECTION block above. The
+   narrative named three dead helpers and fixed two; the third, `substitute_label`, was closed only
+   after the review returned BLOCK.
+8. **(m7) The plan was amended, not appended to.** Commander directed `append` a slice rather than
+   `reopen m3` (correct: `reopen` cascade-resets m4–m6, whose work this finding does not touch and
+   which were independently verified). The engine **refused** `append`: `REFUSED: append only on
+   survey checklists`. This is a gated plan. I used the sanctioned gated re-planning verb instead —
+   `amend --delta <ops> --authority "commander-304c (relaying g2 review BLOCK)"` with an `add` op
+   inserting `m7` after `m6`. Same effect Commander asked for, different verb; recorded because the
+   instruction named a verb this controller type does not have. Engine gap noted in Workflow Feedback.
+
+## Rework m7 — the g2 review BLOCK, closed
+
+**Finding:** `substitute_label()` (`scripts/map_orient.py:704`) was reachable only from `self_test()`.
+The `source` key it decodes was written at `cmd_orient` and never read back by any output surface or
+test. Dead **read**-side code — the write side was correctly wired, so real receipts did carry
+`source` and `fallbacks_probed`. Verified independently before acting: `grep -n substitute_label`
+returned the def plus three call sites at `:1575`, `:1580`, `:1585`, all inside `self_test` (`:1274`).
+
+**Resolution taken: wire it into the reported output** (Commander's first-choice adjudication; the
+delete-instead fallback was not needed, and the "document it as a receipt decoder" third path was
+explicitly refused and not taken).
+
+`render_verify_report()` now decodes each receipt substitute through `substitute_label()` and emits a
+provenance line. `verify-orientation` is the honest home: it is the surface that genuinely reads a
+receipt back **from disk**, which is the only situation in which `substitute_label`'s lenient-decode
+contract is real — a receipt written by an older version carries no `source` and must read as the
+conservative `agent-declared`, never be upgraded by omission.
+
+Both constraints honored:
+- The `source` key on each receipt entry **stays** — untouched. It remains the committed prior
+  declaration `verify-frame` checks a frame against.
+- **`orient` still never prints an anchor id.** Re-run, not assumed: `test_orient_never_prints_an_anchor_id`
+  passes, and a new `test_the_report_still_prints_no_anchor_id` asserts the same of the surface I
+  changed, using a `README.md` that deliberately contains `struct:app` in its prose.
+
+### m7 TDD evidence — GENUINE red, observed in order (no reconstruction)
+
+Test class `SubstituteProvenanceIsReported` written **outside `self_test`** first, then run:
+
+```bash
+python -m pytest tests/test_map_orient.py -q -k "SubstituteProvenanceIsReported"
+```
+
+```
+E       AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .agent-work/w/map-orientation.json\norientation contract SATISFIED\nproblems: 0\n'
+FAILED tests/test_map_orient.py::SubstituteProvenanceIsReported::test_BOTH_labels_appear_in_one_real_report
+FAILED tests/test_map_orient.py::SubstituteProvenanceIsReported::test_a_present_known_fallback_is_REPORTED_as_known_fallback
+FAILED tests/test_map_orient.py::SubstituteProvenanceIsReported::test_a_receipt_with_no_source_key_reports_as_agent_declared
+FAILED tests/test_map_orient.py::SubstituteProvenanceIsReported::test_an_agent_declared_substitute_is_REPORTED_as_unverified
+FAILED tests/test_map_orient.py::SubstituteProvenanceIsReported::test_an_unrecognised_source_value_reports_as_agent_declared
+5 failed, 2 passed, 80 deselected in 1.79s
+```
+
+The red is the report itself: `problems: 0` and **no provenance line at all**. After wiring:
+
+```
+7 passed, 80 deselected in 1.58s
+```
+
+**Reachability re-verified** with the reviewer's own method — `substitute_label` is now called at
+`map_orient.py:958`, inside `render_verify_report` (defined `:923`), which `cmd_verify_orientation`
+calls. That is well outside `self_test`, which begins at `:1274`.
+
+### m7 — both labels in real command output
+
+```bash
+python scripts/map_orient.py orient --root <fixture> --work-id demo \
+  --substitute README.md --substitute docs/notes/mine.md \
+  --unmapped "everything structural" --escalation "ask commander for a map"
+python scripts/map_orient.py verify-orientation --root <fixture> --work-id demo
+```
+
+```
+DEGRADED-NO-MAP
+receipt: .agent-work/demo/map-orientation.json
+orientation contract SATISFIED
+problems: 0
+substitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk
+substitute: docs/notes/mine.md [agent-declared] -- UNVERIFIED -- declared by the agent, not corroborated by the filesystem
+EXIT=0
+```
+
+That `README.md` contains `struct:app` in its prose; no anchor id reaches the output.
+
+### m7 — two new mutations pin the read side
+
+Because the original defect was precisely "a helper nothing reads," the floor now attacks the read
+path itself. Both killed, applied-before-red discipline unchanged:
+
+- **"every substitute reported as known-fallback"** — the dangerous direction: an agent-declared
+  substitute silently wearing the verified label. **The original g2 work could not have killed this
+  mutation at all**, because no output surface read the label back.
+- **"the provenance line dropped from the report"** — reverts the BLOCK exactly: receipt still
+  carries the provenance, no reader is ever shown it.
+
+```bash
+python -m pytest tests/test_mutation_floor.py -q -k "test_9 or test_10 or HarnessSelfCheck"
+```
+
+```
+5 passed, 9 deselected, 11 subtests passed in 26.51s
+```
+
+### m7 — full close-criteria suite
+
+```bash
+python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q
+python scripts/map_orient.py --self-test
+```
+
+```
+............................................................................................................................................................................... [ 56%]
+.............................................. [ 70%]
+...........................................................................................                                              [100%]
+312 passed, 435 subtests passed in 200.00s (0:03:20)
+PYTEST_EXIT=0
+=== SELF-TEST ===
+self-test OK
+SELFTEST_EXIT=0
+```
+
+**Result:** `pass`. 312 passed vs 303 at the pre-rework result — the delta is m7's 7 new
+provenance-report tests plus 2 new mutation tests. The suite did not hang (200s).
 
 ## The addendum's offered free fix — declined, with evidence
 
@@ -440,5 +583,34 @@ g1's re-review survivor should be closed as **not a defect**.
   `grep -n 'probe_fallbacks' scripts/map_orient.py` shows a call site outside its own def." That
   single line would have collapsed my whole audit phase into three commands.
 
+### Added at rework (m7) — the two that actually cost a review round-trip
+
+- **The reachability rule I wrote above was WRONG, and it is the reason the BLOCK happened.** I said
+  "a call site outside its own def." That is insufficient for any module that ships its own test
+  harness as a subcommand: `--self-test` makes `self_test` reachable from `main`, so every
+  self-tested helper passes an "outside its own def" grep while being dead to every real caller.
+  **Corrected rule, worth promoting to doctrine:** *a call site outside the def **and outside the
+  self-test*** — equivalently, run the reachability pass with `self_test` blocked as a traversal
+  node. This defect class has now been found **twice in the same gate** (attempt-1's
+  `probe_fallbacks`, then my own `substitute_label`), which is the signal that the *method* needed
+  fixing, not just each instance. A module that self-tests in-process should probably carry this
+  warning at the `self_test` def itself.
+- **Engine gap: `append` is survey-only, but the rework instruction assumed it works on a gated
+  plan.** Commander correctly directed "`append` a new slice rather than `reopen m3`" — `reopen`
+  would cascade-reset m4–m6, forcing re-attestation of reds that cannot honestly be re-observed. The
+  engine refused: `REFUSED: append only on survey checklists`. The gated equivalent exists but is
+  named differently and takes a JSON delta file: `amend --delta <ops.json> --reason --authority`
+  with an `add` op. Two asks: (1) the `append` refusal message should **name the gated alternative**
+  ("use `amend` with an `add` op") instead of only stating what is not allowed, since the agent
+  hitting it always wants the same thing; (2) orchestrator-tier doctrine on rework should say
+  "append (survey) / amend-add (gated)" rather than "append", because the verb genuinely differs by
+  controller type and the instruction as written is unrunnable half the time.
+
 ## Return status
-`complete`
+`complete` — including rework m7, which closes the g2 review's single BLOCK finding.
+
+Rework summary for the reviewer: `substitute_label()` is now read by `render_verify_report()` and
+asserted by 7 tests outside `self_test`, plus 2 new mutations attacking the read path. The `source`
+receipt key is unchanged. `orient` still prints no anchor id (re-run, not assumed). The audit
+narrative above is corrected with the reason my `main`-rooted reachability pass missed it. Full
+close-criteria suite: 312 passed, 435 subtests, `--self-test` exit 0.

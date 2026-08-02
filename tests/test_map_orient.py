@@ -1034,5 +1034,92 @@ class VerifyFrameDegraded(unittest.TestCase):
         self.assertNotEqual(verify_frame(repo.root).returncode, 0)
 
 
+# =============================================================================
+# The provenance label must be REPORTED, not merely stored
+# =============================================================================
+#
+# g2 review BLOCK: `substitute_label()` was reachable ONLY from `self_test()`.
+# The `source` key was written to every receipt and read back by nothing -- no
+# output surface, no test outside the module's own harness. A module that ships
+# its own test harness as a subcommand launders dead code as live: a caller-grep
+# rooted at `main` finds `self_test` via `--self-test`, so every self-tested
+# helper comes back reachable.
+#
+# These tests live OUTSIDE `self_test` on purpose. That is the whole point: the
+# label is only real if a reader who never runs `--self-test` can see it.
+
+
+class SubstituteProvenanceIsReported(unittest.TestCase):
+    def degraded_with(self, files: dict, *substitutes: str) -> subprocess.CompletedProcess:
+        """Orient a mapless repo declaring `substitutes`, then report on it."""
+        repo = RepoFixture(self)
+        for rel, text in files.items():
+            repo.file(rel, text)
+        args = []
+        for sub in substitutes:
+            args += ["--substitute", sub]
+        orient(repo.root, "w", *args, "--unmapped", "everything structural",
+               "--escalation", "ask commander for a map")
+        return verify(repo.root, "w")
+
+    def test_a_present_known_fallback_is_REPORTED_as_known_fallback(self):
+        proc = self.degraded_with({"README.md": "doctrine\n"}, "README.md")
+        self.assertIn("README.md", proc.stdout)
+        self.assertIn(mo.LABEL_KNOWN_FALLBACK, proc.stdout)
+
+    def test_an_agent_declared_substitute_is_REPORTED_as_unverified(self):
+        proc = self.degraded_with(
+            {"docs/notes/whatever.md": "my notes\n"}, "docs/notes/whatever.md"
+        )
+        self.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)
+        self.assertIn("UNVERIFIED", proc.stdout)
+
+    def test_BOTH_labels_appear_in_one_real_report(self):
+        """The distinction is only useful if a reader can see both at once."""
+        proc = self.degraded_with(
+            {"README.md": "doctrine\n", "docs/notes/mine.md": "notes\n"},
+            "README.md",
+            "docs/notes/mine.md",
+        )
+        self.assertIn(mo.LABEL_KNOWN_FALLBACK, proc.stdout)
+        self.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)
+
+    def test_a_receipt_with_no_source_key_reports_as_agent_declared(self):
+        """Forward compatibility in the CONSERVATIVE direction: a receipt from
+        before the label existed must never be UPGRADED by omission."""
+        repo = RepoFixture(self)
+        repo.file("README.md", "doctrine\n")
+        degraded_receipt(repo.root, "w")  # COMPLETE_RECORD carries no `source`
+        proc = verify(repo.root, "w")
+        self.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)
+        self.assertNotIn(mo.LABEL_KNOWN_FALLBACK, proc.stdout)
+
+    def test_an_unrecognised_source_value_reports_as_agent_declared(self):
+        repo = RepoFixture(self)
+        degraded_receipt(
+            repo.root, "w",
+            substitutes=[{"path": "README.md", "content_hash": "a" * 64, "source": "trust-me"}],
+        )
+        proc = verify(repo.root, "w")
+        self.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)
+        self.assertNotIn("trust-me", proc.stdout)
+
+    def test_the_report_still_prints_no_anchor_id(self):
+        """The anti-leak rule survives the new output. A substitute path is not
+        an anchor id -- and it was declared BY the agent, so echoing it back
+        hands over nothing the agent did not already write."""
+        repo = RepoFixture(self)
+        repo.file("README.md", "doctrine mentioning `struct:app` in prose\n")
+        orient(repo.root, "w", "--substitute", "README.md",
+               "--unmapped", "structure", "--escalation", "commander")
+        proc = verify(repo.root, "w")
+        self.assertEqual(mo.ANCHOR_RE.findall(proc.stdout), [], proc.stdout)
+
+    def test_the_provenance_line_is_never_line_zero(self):
+        """The reserved-first-line contract outranks the new output."""
+        proc = self.degraded_with({"README.md": "doctrine\n"}, "README.md")
+        self.assertIn(verdict(proc), mo.RESERVED_FIRST_LINES)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -9,7 +9,8 @@
     "m3",
     "m4",
     "m5",
-    "m6"
+    "m6",
+    "m7"
   ],
   "tasks": {
     "m0-context": {
@@ -396,6 +397,48 @@
         }
       ],
       "rework_count": 0
+    },
+    "m7": {
+      "id": "m7",
+      "title": "Rework: surface the substitute provenance label in reported output",
+      "imperative": "g2 review returned BLOCK on one finding: substitute_label() is reachable ONLY from self_test(), so the source key written by cmd_orient is never read back by any output surface or test. A module that ships its own test harness as a subcommand launders dead code as live. Commander adjudication: wire the label into the REPORTED output where the degraded verdict is reported, and add a test OUTSIDE self_test asserting BOTH labels appear in real command output. The source key on each receipt entry STAYS -- it is the committed prior declaration verify-frame checks a frame against. orient must still NEVER print an anchor id: re-run that assertion rather than assuming it. If wiring genuinely drags, the sanctioned fallback is to DELETE substitute_label and its self-test cases and say plainly that the provenance distinction now lives only in the receipt; a third path (documenting it as a receipt decoder with a contract test) is explicitly refused, because it keeps a decoder nothing decodes. Also correct the g2-result.md narrative: it named three dead helpers and then listed fixes for only two.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: a test outside self_test asserting BOTH provenance labels appear in real verify-orientation output, written and observed FAILING before any output surface emits the label",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "GENUINE TDD red, observed in order - no reconstruction. Class SubstituteProvenanceIsReported written OUTSIDE self_test first, then run: 5 failed, 2 passed, 80 deselected. Verbatim failure: AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\\nreceipt: .agent-work/w/map-orientation.json\\norientation contract SATISFIED\\nproblems: 0\\n' - the report emitted no provenance at all. After wiring render_verify_report to decode via substitute_label: 7 passed, 80 deselected. Reachability re-verified: substitute_label is now called at map_orient.py:958 inside render_verify_report (defined :923), which cmd_verify_orientation calls - well outside self_test, which begins at :1274."
+        },
+        {
+          "id": "c2",
+          "statement": "both labels appear in real command output, orient still prints no anchor id, and the full close-criteria suite plus --self-test stay green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q && python scripts/map_orient.py --self-test"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "g2-result.md carries the rework evidence AND the corrected audit narrative naming the third helper the audit missed, with the reason the main-entrypoint reachability pass did not catch it",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'substitute_label' C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g2-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
@@ -403,14 +446,13 @@
   "blockers": [],
   "engine_session": {
     "session_id": "g2-implementer-304b",
-    "status": "released",
-    "claimed_at": "2026-08-02T02:13:28.493043+00:00",
-    "last_heartbeat": "2026-08-02T02:41:31.315212+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-02T03:12:56.498174+00:00",
+    "last_heartbeat": "2026-08-02T03:17:20.990269+00:00",
     "claimed_by": "agent",
     "worktree": ".",
-    "previous_session_id": "g2-implementer-304",
-    "takeover_reason": "attempt-1 died on a session usage limit",
-    "released_at": "2026-08-02T02:41:53.128253+00:00"
+    "previous_session_id": null,
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -461,6 +503,16 @@
       "why": "Mutation floor extended with three verify-frame mutations, the vacuous pass (an absent frame credited as a pass) being the one that matters, and all three are killed. Applied-before-red held on each: anchor unique = 1, gone after substitution = 0, replacement count delta exactly +1, evaluated BEFORE the floor was run, so a no-op mutation cannot be mistaken for a killed mutant. Required evidence green: 284 passed 419 subtests on the handoff command verbatim, 303 passed 433 subtests on the superset that also covers the new wiring file, self-test exit 0. IMPLEMENTER_RESULT written to .agent-work/issue-304/crew-handoffs/g2-result.md with all six deviations named, including the three red reconstructions and the one pre-existing self-test assertion I tightened. The addendum's offered free fix was declined with measured evidence: the {64} regex already rejects longer digests because of the end anchor, and {64,} would loosen it.",
       "mechanical": false,
       "ts": "2026-08-02T02:41:31.315182+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-02T03:13:56.714547+00:00",
+      "reason": "g2 review returned BLOCK on one finding: substitute_label is dead read-side code reachable only from self_test. Commander adjudicated the fix and directed append-a-slice rather than reopen m3, because reopen would cascade-reset m4-m6 whose work is unaffected and independently verified.",
+      "authority": "commander-304c (relaying g2 review BLOCK)",
+      "ops": [
+        "added m7"
+      ]
     }
   ]
 }

@@ -185,6 +185,40 @@ MUTATIONS = (
         ),
         expect_kills="SubstituteLabels",
     ),
+    # ---- g2 rework: the label must stay REPORTED, not merely stored ---------
+    Mutation(
+        name="every substitute reported as known-fallback",
+        why=(
+            "The dangerous direction: an agent-declared substitute silently wearing "
+            "the verified label. This is the mutation the ORIGINAL g2 work could not "
+            "have killed at all, because `substitute_label` was reachable only from "
+            "`self_test` -- no output surface read it back, so no test outside the "
+            "module's own harness could tell the two labels apart. Pinned here so the "
+            "read side cannot rot back into dead code."
+        ),
+        subs=(
+            (
+                '        return entry["source"]\n    return LABEL_AGENT_DECLARED\n',
+                '        return entry["source"]\n    return LABEL_KNOWN_FALLBACK\n',
+            ),
+        ),
+        expect_kills="SubstituteProvenanceIsReported",
+    ),
+    Mutation(
+        name="the provenance line dropped from the report",
+        why=(
+            "Reverts the g2 review BLOCK exactly: the receipt still CARRIES the "
+            "provenance and no reader is ever shown it. A distinction no output "
+            "surface emits is a distinction that does not exist."
+        ),
+        subs=(
+            (
+                '        lines.append(f"substitute: {path if path else \'(no path)\'} [{label}] -- {note}")\n',
+                "        pass\n",
+            ),
+        ),
+        expect_kills="SubstituteProvenanceIsReported",
+    ),
 )
 
 
@@ -280,6 +314,13 @@ class MutationFloor(unittest.TestCase):
 
     def test_8_mutation_known_fallback_label_on_membership_alone_is_killed(self):
         self._assert_mutation_is_killed(MUTATIONS[7])
+
+    def test_9_mutation_every_substitute_reported_as_verified_is_killed(self):
+        """g2 review BLOCK regression: the label must stay READ, not just written."""
+        self._assert_mutation_is_killed(MUTATIONS[8])
+
+    def test_10_mutation_provenance_line_dropped_is_killed(self):
+        self._assert_mutation_is_killed(MUTATIONS[9])
 
     # -- the shared harness -------------------------------------------------
 

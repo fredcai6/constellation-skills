@@ -921,9 +921,29 @@ def render_orient_report(orientation: Orientation, receipt_rel: str | None) -> l
 
 
 def render_verify_report(
-    first_line: str, code: int, problems: Sequence[str], receipt_rel: str
+    first_line: str,
+    code: int,
+    problems: Sequence[str],
+    receipt_rel: str,
+    substitutes: Sequence[object] = (),
 ) -> list[str]:
-    """PURE. stdout lines; line 0 is always a reserved literal."""
+    """PURE. stdout lines; line 0 is always a reserved literal.
+
+    Reports each substitute's PROVENANCE, not merely its path. The receipt
+    distinguishes "resolved from the known fallback set" (the filesystem
+    agreed) from "the agent said so", and a distinction no reader is ever shown
+    is a distinction that does not exist -- this is the REPORTED half of
+    reported-degraded-mode, which is the whole point of the mode.
+
+    Decoding is deliberately lenient (`substitute_label`): a receipt written
+    before the label existed, or carrying an unrecognised value, reads as the
+    conservative `agent-declared`. An omission can therefore never be read as
+    verification -- the failure direction is always toward "unverified".
+
+    No anchor id can reach this output: a substitute is a PATH, and it was
+    declared by the agent in the first place, so echoing it back hands over
+    nothing the tool was not already given.
+    """
     lines = [first_line, f"receipt: {receipt_rel}"]
     if code == EXIT_OK:
         lines.append("orientation contract SATISFIED")
@@ -934,6 +954,14 @@ def render_verify_report(
     else:
         lines.append("receipt unusable")
     lines.append(f"problems: {len(problems)}")
+    for entry in substitutes:
+        label = substitute_label(entry)
+        path = entry.get("path") if isinstance(entry, dict) else None
+        if label == LABEL_KNOWN_FALLBACK:
+            note = "found in the fixed fallback set and present on disk"
+        else:
+            note = "UNVERIFIED -- declared by the agent, not corroborated by the filesystem"
+        lines.append(f"substitute: {path if path else '(no path)'} [{label}] -- {note}")
     return lines
 
 
@@ -1195,7 +1223,11 @@ def cmd_verify_orientation(args: argparse.Namespace) -> int:
         return EXIT_RECEIPT_UNUSABLE
 
     first_line, code, problems = verify_verdict(receipt, args.work_id)
-    for line in render_verify_report(first_line, code, problems, _rel(root, path)):
+    declared = receipt.get("substitutes") if isinstance(receipt, dict) else None
+    for line in render_verify_report(
+        first_line, code, problems, _rel(root, path),
+        declared if isinstance(declared, list) else [],
+    ):
         print(line)
     sys.stdout.flush()
     for problem in problems:
