@@ -6,7 +6,9 @@ Rewrite this **before** launching any detached or multi-hour process, and again 
 
 > **REBUILT 2026-08-02 after being destroyed.** `.agent-work/` was gitignored at `b69e6c8`; fast-forwarding local `main` to `4cec87a` (where #326 made it tracked) overwrote this file and `ADMIRAL_LOG.md` with main's wave-0 versions. The log was recovered (292 entries; scratchpad + session transcript) and **committed at `3595955`**. This note was rewritten from live state, not recovered. **Both files are TRACKED now, so a future clobber shows in `git status`.**
 
-- **step:** `execute` · **9 of 12 issues CLOSED.** Remaining: **#307** (commander live), **#308** (commander live), **#310** (not started, final B2 gate), then `closeout`.
+- **step:** `execute` · **9 of 12 issues CLOSED.** Remaining: **#307** (**ARM COMPLETE — awaiting Tommy's verdict**), **#308** (commander-308b live, migrating), **#310** (not started; **launch order written and committed**), then `closeout`.
+
+**#307 RESULT, awaiting Tommy — do NOT merge on my authority, the verdict precedes the merge:** `map_before_src` **PRE-B 0/4 → POST 4/4** (per task, first map/first source: #690 36/23→17/25 · #688 27/23→21/37 · #698 57/25→29/46 · #704 23/7→19/22 · #716 a literal row in both arms). **BUT `read_at_bootstrap` is 0/4 in BOTH arms** — first map reads land at calls 17/21/29/19, not 0-2, because the spine runs `init` before `context`. **"Map-first" as delivered means FIRST-AMONG-CONTENT, not FIRST-AMONG-ACTIONS.** **Limitation stated first:** the manipulation is `74953936`→`3595955`, **8 days and +31 files, not #304 alone** — containment proven, exclusivity not. Record: `.agent-work/epic-298/post/POST_RECORD.md`. **The open question is Tommy's: does first-among-content satisfy *"use the map first to orient yourself"*, or does he want the map instruction moved ahead of `init`?**
 - **slug:** epic-298 · main checkout `C:/Programs/constellation-skills`, local `main` now **== `origin/main` (`4cec87a`)** plus the log-recovery commit.
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-298/spine.json current`
 - **pid:** harness-tracked Agent dispatches, no OS pid. **LIVENESS = filesystem mtime under the worktree, never the engine heartbeat.**
@@ -18,7 +20,7 @@ Rewrite this **before** launching any detached or multi-hour process, and again 
 |---|---|---|
 | `../constellation-skills-wt/e298-307` | `epic-298/307` | **commander-307 LIVE** — POST measurement arm |
 | `../constellation-skills-wt/e298-308` | `epic-298/308` | **commander-308 LIVE** — collation + playbook retirement |
-| `../constellation-skills-wt/e298-305` | `epic-298/305` | **DONE, merged.** Trio verified byte-identical to main — **do NOT re-harvest.** `worktree remove` fails `Permission denied` (file lock); retry at closeout |
+| ~~`e298-305`~~ | — | **SWEPT.** The earlier `Permission denied` had already unregistered it; `prune` finished the job. **Its two stranded commits were recovered via PR #391, merged `8ab0173e` — `scripts/prove_docstring_only.py` is on `main`, verified.** |
 | `governor-262`, `governor-264` | — | stale, from abandoned epic-267. **Not mine to sweep** |
 
 ## Tommy's WIP — AWAITING HIS CALL
