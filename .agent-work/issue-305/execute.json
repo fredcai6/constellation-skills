@@ -63,12 +63,7 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": true,
-          "satisfied_by": "e-g1-implement-1",
-          "attested": {
-            "evidence": "e-g1-implement-1",
-            "note": null
-          }
+          "satisfied": false
         }
       ],
       "constraints": [
@@ -105,8 +100,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
-      "status_detail": {},
+      "status": "in-progress",
+      "status_detail": {
+        "reopen_reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import."
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -120,10 +117,15 @@
             "blockers": "none"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
+            "ts": "2026-08-02T03:00:53.041283+00:00"
+          }
         }
       ],
-      "rework_count": 0
+      "rework_count": 1
     },
     "g1-review": {
       "id": "g1-review",
@@ -134,8 +136,7 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g1",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "attested"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -146,12 +147,7 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": true,
-          "satisfied_by": "e-g1-review-1",
-          "attested": {
-            "evidence": "e-g1-review-1",
-            "note": null
-          }
+          "satisfied": false
         }
       ],
       "constraints": [],
@@ -160,8 +156,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
-      "status_detail": {},
+      "status": "pending",
+      "status_detail": {
+        "superseded_by_reopen": "g1-implement"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -175,7 +173,12 @@
             "verified": "fresh"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
+            "ts": "2026-08-02T03:00:53.041298+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -699,6 +702,20 @@
       "why": "Reviewer returned BLOCK with two blockers, both at the boundaries of D1's claim rather than inside it. Criteria 2/3/4 passed under independent adversarial attack (17 case-verb pairs comparing stdout and stderr as well as exit code; the durable double-nesting trap disarmed at the resolved absolute path across all three durable_root branches; the all-null control asserting hand-computed content on both sides of the null boundary). Six mutants, five outside the implementer's set, all killed -- the tests have genuine falsifiability, and the ONE mutation with no killer is the packaging one, which is exactly why blocker 1a was invisible to both crews. Blocker 1a: install_constellation.SKILL_SCRIPT_BUNDLES ships checklist_engine.py to nine skills and episode_capture.py to none, so the installed engine takes the ImportError no-op and the feature is inert in production, fail-silent -- I confirmed the installed commander skill lacks both sidecars. Floated to the Admiral because it touches production packaging AND the main checkout has uncommitted work in that exact file. Blocker 1b: record() has no in-progress guard, so surveys consolidate with zero emits; D1 is sound but scoped to gated spines and the module docstring overreaches. Fixing the docstring myself; not widening the seam unasked. Also corrected: my own justification for the reopen plumbing lines was wrong -- reopen's emit is a no-op on every reachable production path since a complete gate necessarily passed start.",
       "mechanical": false,
       "ts": "2026-08-02T02:53:12.536595+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-implement",
+      "reopen": true,
+      "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
+      "ts": "2026-08-02T03:00:53.041307+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-review",
+      "reopen": true,
+      "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
+      "ts": "2026-08-02T03:00:53.041310+00:00"
     }
   ],
   "amendments": [
