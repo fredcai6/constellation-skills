@@ -664,24 +664,28 @@ def control(tmp_path_factory):
 def test_control_records_nothing_agent_authored(control):
     """`zero agent effort` is literal — asserted over the ACTUAL argv of every call.
 
-    **The honest claim, stated exactly as it is:** the control hands the engine exactly
-    TWO agent-supplied strings, both fixed constants declared at module level rather than
-    composed at issue time:
+    **The honest claim, stated exactly as it is:** the control supplies the engine no
+    agent-authored NARRATIVE. Every string it hands over is a fixed identifier declared in
+    this module — the work id, the temp repo's directory name, `PARENT_ROLE`, the
+    condition ids, and one `reopen --reason` — and nothing composed at issue time. No
+    `--why`, no `--note`, no `--finding`.
 
-    * `claim --claimed-by PARENT_ROLE`, which **is** the `role` mechanical field — a
-      lease records who claimed it, and `_lease_role` reads `claimed_by` straight back
-      out. This one is disclosed rather than hidden precisely because it *does* feed the
-      group under test. It cannot be otherwise: `role` must be some supplied string, so a
-      guard demanding that no string reach it would be unfalsifiable theatre.
-    * `reopen --reason "control"`, required by the verb, which writes into `why_trail`
-      and feeds no mechanical field.
+    The mechanical fields that echo those identifiers — `run`, `project`, `role` — are
+    echoing what the run is *made of*, not prose an agent wrote *about* the run, and it
+    cannot be otherwise: a run must have an id, a project and a lease holder. A guard
+    demanding that no supplied string reach them would be unfalsifiable theatre.
 
-    It is deliberately NOT the stronger claim "nothing agent-authored was recorded", and
-    it is no longer the earlier claim "only ONE fixed constant, and it feeds no mechanical
-    field" — that sentence was false in both halves while `--claimed-by` sat outside the
-    census, and the assertion below is written to match the claim rather than the other
-    way round. What stays falsifiable is the count: a THIRD agent-supplied string
-    anywhere in the run fails this test, which is what the red-proofs exercise.
+    **What the assertion below actually checks, which is narrower than that claim:** the
+    argv census. Every flag is sanctioned for its verb (closed-world), `advance` carries
+    `--mechanical`, `attest` carries no `--note`, and the flags named in
+    `AGENT_TEXT_FLAGS` hold exactly the two declared constants. Identifiers passed
+    positionally, and `--cond`, are outside its reach — stated here because the whole
+    point of this gate is that a docstring must not claim more than its code checks. Two
+    earlier versions of this docstring did exactly that: "nothing agent-authored was
+    recorded" (false — `reopen --reason` writes to `why_trail`), then "exactly ONE fixed
+    constant, and it feeds no mechanical field" (false in both halves — `--claimed-by` is
+    a second one and it *is* the `role` field). Each was corrected only after a mutation
+    proved it false, which is the lesson: the sentence is not evidence, the census is.
 
     The previous version of this test asserted only that the issued VERB NAMES were a
     subset of `VERBS` — something `_ControlRun._run` already asserts on every call — and
