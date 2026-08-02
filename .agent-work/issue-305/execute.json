@@ -1041,7 +1041,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g4: APPROVE-WITH-FOLLOWUPS, BLOCKER-1 discharged, no blockers, attached as e-g4-review-2 and g4-review advanced. Reviewer bound its verdict to e61578b by per-blob equality after re-deriving that HEAD had moved past the commit I named. Followups FU-A/B/C fixed by me (e61578b, 87827a4); FU-1..FU-6 carried to triage as tc4-tc9."
         }
       ],
       "postconditions": [
@@ -1057,7 +1058,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
         },
         {
           "id": "c2",
@@ -1069,17 +1071,48 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1",
+          "waived": {
+            "authority": "Admiral launch order LAUNCH_ORDER-305 (pre-authorized) + Admiral dispatch to commander-305h, binding ruling 2",
+            "reason": "GATE-PLAN DEFECT (#371), not a satisfied condition. c2 demands the literal verdict string APPROVE. The sanctioned verdict on this epic is APPROVE-WITH-FOLLOWUPS, which the Admiral ruled is a first-class verdict and NOT a soft BLOCK. The REAL verdict on the record is APPROVE-WITH-FOLLOWUPS with NO blockers and BLOCKER-1 discharged (e-g4-review-2, .agent-work/issue-305/crew/g4-review-rework-result.md). NO APPROVE WAS FABRICATED. This is the identical wedge already waived at g2-integrate.c2 and g3-integrate.c2; g4 is the fourth occurrence and the fifth consecutive commander to work around it correctly. My reviewer handoff explicitly instructed the reviewer NOT to deflate to a bare APPROVE to make this gate easier to close, and it did not - it withheld APPROVE for a substantive reason (FU-A) which I then fixed.",
+            "evidence": "e-g4-integrate-1",
+            "forced": true
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2",
+            "authority": "Admiral launch order LAUNCH_ORDER-305 (pre-authorized) + Admiral dispatch to commander-305h, binding ruling 2",
+            "reason": "GATE-PLAN DEFECT (#371), not a satisfied condition. c2 demands the literal verdict string APPROVE. The sanctioned verdict on this epic is APPROVE-WITH-FOLLOWUPS, which the Admiral ruled is a first-class verdict and NOT a soft BLOCK. The REAL verdict on the record is APPROVE-WITH-FOLLOWUPS with NO blockers and BLOCKER-1 discharged (e-g4-review-2, .agent-work/issue-305/crew/g4-review-rework-result.md). NO APPROVE WAS FABRICATED. This is the identical wedge already waived at g2-integrate.c2 and g3-integrate.c2; g4 is the fourth occurrence and the fifth consecutive commander to work around it correctly. My reviewer handoff explicitly instructed the reviewer NOT to deflate to a bare APPROVE to make this gate easier to close, and it did not - it withheld APPROVE for a substantive reason (FU-A) which I then fixed.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -1320,6 +1353,13 @@
       "why": "Rework 1 verdict is APPROVE-WITH-FOLLOWUPS with BLOCKER-1 discharged, and the reviewer confirmed the FU-A/B/C fix re-binds to e61578b. Two things I did not inherit: it re-bound the verdict itself after finding HEAD had moved past the commit I named, verifying PER-BLOB rather than tree equality and noting a tree-OID check would have failed wrongly because my .agent-work/ commits move the tree without touching a reviewed blob; and it caught that main squash-merges, so the SHAs my FU-A fix named would not exist for a reader of main. I fixed that at 87827a4 by making both counts explicit and demoting the SHAs to a locator. I am disclosing that 87827a4's bytes were not themselves re-reviewed: they close two observations the reviewer raised and specified the direction of, they are prose-only and AST-proven docstring-only, and a fourth round was disproportionate - but the disclosure belongs on the record rather than in my head.",
       "mechanical": false,
       "ts": "2026-08-02T18:53:24.557635+00:00"
+    },
+    {
+      "id": "w-28",
+      "gate": "g4-integrate",
+      "why": "Verdict checked and reproduced rather than accepted: APPROVE-WITH-FOLLOWUPS, BLOCKER-1 discharged, no blockers. c2 waived --force as the #371 gate-plan defect with the real verdict attached; no APPROVE was fabricated, and this is the fourth occurrence of that wedge in this issue. FU-A/B/C were fixed rather than filed because they were the same defect class this gate exists to fix and cost one clause each; FU-1 through FU-6 are carried to triage as tc4-tc9 for filing to the tracker, per LAUNCH_ORDER-305:92 which requires findings be filed directly and never banked worktree-locally. #327's closure rides on the PR body's Closes #327 rather than a manual close, because the fix is not on main until the Admiral merges - closing it now would mark an issue fixed against a branch. Its correction comment is posted separately, because #327's own TITLE asserts the claim this gate measured false, and closing it silently would ratify that claim.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:56:55.138563+00:00"
     }
   ],
   "amendments": [
@@ -1345,7 +1385,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T18:53:24.557651+00:00",
+    "last_heartbeat": "2026-08-02T18:56:55.138599+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
