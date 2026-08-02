@@ -2,13 +2,46 @@
 
 - **step:** execute · **`g1` CLOSED · `g2` CLOSED (implement + review + integrate)** · gate
   **`g3-implement`** is next, `pending`
-- **slug:** issue-305 · branch `epic-298/305` (**PUSHED** through `c48b48a`) · worktree
+- **slug:** issue-305 · branch `epic-298/305` (**PUSHED** through `85ce553`) · worktree
   `C:/Programs/constellation-skills-wt/e298-305` · base `967493c`
 - **next command:** `cd "C:/Programs/constellation-skills-wt/e298-305" && python scripts/checklist_engine.py --file .agent-work/issue-305/execute.json current`
-- **pid:** none — foreground, stopped deliberately at a clean gate boundary
+- **holder:** `commander-305d` — **fourth** holder of lease `commander-305-e298`
+- **pid:** none — foreground
 - **expected artifact:** `.agent-work/issue-305/crew/g3-implement-result.md`
 
 **Everything is committed AND pushed. Tree clean.** Nothing depends on this machine.
+
+## READ THIS BEFORE RESUMING — confirm-dead is a TWO-READING measurement
+
+A double-dispatch happened at this boundary: the Admiral sent `commander-305c` a new ruling
+*after* it had handed off (which re-opened it), then dispatched `commander-305d` against the
+same ruling. Both agents were correct; the dispatcher collided with itself.
+
+`305d` caught it and refused to claim. **Every static signal said "dead" and every one was
+wrong:** clean tree, crew registry all `completed`, a committed handoff note, a held lease,
+last journal write preceding the handoff commit. The occupant was committing and pushing.
+
+**What discriminated — and it is the only thing that did:**
+
+> **Observe twice, separated in time, and require both readings to agree.**
+> A single observation of a changing system tells you nothing about whether it is changing.
+> **The second reading is the measurement; the first is only a value.**
+
+Snapshot HEAD + SHA-256 of `STATE_NOTE.md`/`execute.json` + journal line count + newest
+worktree mtime; wait; take them again. Live looked like: HEAD `3f787a3`→`85ce553` and the note's
+hash `420D79B0…`→`5156A7ED…` inside 64s. Dead looked like: three readings over 50s **byte-identical**,
+newest write 5.5min stale, plus a stated stand-down. **A first mtime bump alone proves nothing** —
+content can be byte-identical to HEAD at that instant and read as a no-op rewrite.
+
+## `py` IS BROKEN UNDER THE POWERSHELL TOOL — a green is indistinguishable from a no-op
+
+`py` is a shim at `C:\Users\fredc\.local\bin\py`. Under the **PowerShell** tool it produces
+**no output and no exit code at all** — `$LASTEXITCODE` comes back *empty*, not non-zero.
+**Run `py` through the Bash tool.** This matters most for the very first command every launch
+order mandates: `py scripts/verify_worktree_isolation.py --here …`. Through PowerShell that
+isolation check — the one guarding against cross-worktree data loss — **silently proves nothing**.
+Through Bash it correctly returns `worktree OK: in C:/Programs/constellation-skills-wt/e298-305`,
+exit 0. Reported to the Admiral, who is filing it. `python` works fine in both.
 
 ## Leases and engine
 
