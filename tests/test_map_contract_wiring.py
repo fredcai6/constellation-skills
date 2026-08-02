@@ -118,9 +118,16 @@ class ContextImperativeAnchor(unittest.TestCase):
                 self.assertIn(entry["path"], prose)
 
     def test_the_prose_rules_a_path_list_cannot_express_survive_the_rewrite(self):
+        # "sanctioned degradation" was a phrase of the
+        # config_ref-is-absent-by-design block, deleted at #304 as falsified in
+        # both directions (docs/agents/ EXISTS here, and Charter ships a task
+        # that WRITES docs/agents/engine-config.json). The sentinel is
+        # re-pointed at a surviving degraded-mode rule; the property under test
+        # -- prose rules a path list cannot express survive the rewrite -- is
+        # unchanged.
         prose = imperative("context")
         self.assertIn("record the substitution", prose)
-        self.assertIn("sanctioned degradation", prose)
+        self.assertIn("degraded is a declared reading, never a licence to start from code", prose)
 
 
 # =============================================================================

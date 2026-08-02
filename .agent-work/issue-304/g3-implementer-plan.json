@@ -105,7 +105,8 @@
           "id": "p1",
           "statement": "m1 deletion landed and committed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "block (a) deleted and committed at ea52b2f"
         }
       ],
       "postconditions": [
@@ -113,7 +114,8 @@
           "id": "c1",
           "statement": "TDD red: the EXECUTE_PLAN absence assertion written and observed FAILING before the deletion (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED observed before the deletion: python -m pytest tests/test_prose_deletions.py::ExecutePlanDeadPathProseAbsent -q -> '4 failed, 1 passed in 0.19s'."
         },
         {
           "id": "c2",
@@ -122,7 +124,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_prose_deletions.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_map_contract_wiring.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
         }
       ],
       "constraints": [
@@ -130,11 +133,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_prose_deletions.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_map_contract_wiring.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m3": {
@@ -394,13 +409,24 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m2",
+      "statement": "scripts/verify_context_declaration.py docstring (lines 10-11) still quotes the now-deleted clause 'a missing engine-config is a sanctioned degradation, do NOT create the overlay file' as its illustration of prose a path list cannot express. Illustrative only (the lint does not enforce it), but it now cites text that exists nowhere in the corpus. Out of this gate's allowed scope."
+    },
+    {
+      "id": "tc2",
+      "from": "m2",
+      "statement": "docs/superpowers/drills/dogfood-context-paths-absent.md lines 43/79-80 quote the deleted clause as observed run behaviour. It is a historical record of a past run and editing it would falsify that record; a dated note that the quoted doctrine was deleted at #304 may be the right treatment. Needs a doc owner's call, not an implementer's."
+    }
+  ],
   "blockers": [],
   "engine_session": {
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T03:51:37.331113+00:00",
+    "last_heartbeat": "2026-08-02T03:53:42.417640+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -420,6 +446,13 @@
       "why": "Block (a) deleted by offset-bounded raw-text slice (wc -w = 86 words). T4 did NOT fire: the overlay phrase count went 2 -> 1 and the surviving occurrence is asserted to sit inside the substitute-and-record sentence. docs/agents/engine-config.json still appears in the imperative (the intake sentence names it), so the context_refs stop condition is not triggered. UNANTICIPATED CONFLICT, resolved and named as a deviation: test_context_manifest.py pinned 'sanctioned degradation' and 'do NOT create the overlay file' as prose sentinels - both phrases OF THE DELETED BLOCK. Its sentinels were re-pointed at surviving degraded-mode prose, intent and count unchanged. That file is outside the handoff's allowed scope; the edit is forced by the assigned deletion and is reported as a deviation.",
       "mechanical": false,
       "ts": "2026-08-02T03:51:37.331093+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "Block (b) deleted the same offset-bounded way; wc -w over both deleted blocks reports 86 + 86 = 172, matching the handoff's corrected count exactly and derived from a command rather than asserted. A SECOND out-of-scope sentinel surfaced: test_map_contract_wiring.py also pinned 'sanctioned degradation'. Same minimal intent-preserving fix, same named deviation. A corpus-wide sweep for the deleted phrases found two remaining live references, both flagged rather than edited: scripts/verify_context_declaration.py's docstring (illustrative, not enforcing) and docs/superpowers/drills/dogfood-context-paths-absent.md (a historical run record that would be falsified by editing).",
+      "mechanical": false,
+      "ts": "2026-08-02T03:53:33.387840+00:00"
     }
   ],
   "amendments": [
