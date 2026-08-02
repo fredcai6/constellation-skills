@@ -440,7 +440,8 @@
           "id": "p1",
           "statement": "all prior items closed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m0-m7 all complete"
         }
       ],
       "postconditions": [
@@ -448,7 +449,8 @@
           "id": "c1",
           "statement": "required evidence command run and its real output pasted into the result (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Required evidence command run verbatim from the handoff: 149 passed, 97 subtests passed in 12.10s. Pasted into g3-result.md section 6 along with the derived word count (86+86=172 by wc -w), the engine's own init/context transcript excerpts with exit codes 12->10->0, the five episode ids and episode -004 in full showing its observed-behavior, and the T4 survivor proof (3 passed, offset 262)."
         },
         {
           "id": "c2",
@@ -457,7 +459,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_prose_deletions.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_map_contract_wiring.py tests/test_init_work_area.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m8-1"
         },
         {
           "id": "c3",
@@ -466,7 +469,8 @@
             "kind": "command",
             "command": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g3-result.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m8-2"
         }
       ],
       "constraints": [
@@ -475,11 +479,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m8-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_prose_deletions.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_map_contract_wiring.py tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g3-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -499,13 +526,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T04:04:45.570375+00:00",
+    "last_heartbeat": "2026-08-02T04:08:09.207228+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T04:08:15.409984+00:00"
   },
   "why_trail": [
     {
@@ -563,6 +591,13 @@
       "why": "The snapshot's baseline commit is a8d9467, g3's own starting point, NOT the pre-registration 0119fa4 - measuring from 0119fa4 would show the spine GROWING, because g2 landed several hundred words of verify-frame prose in between, and would silently attribute g2's addition to g3's deletion. The 172-deleted vs 168-corpus-moved gap is stated explicitly for the same reason: a successor that finds arithmetic that does not close will assume a miscount rather than the +4 retarget.",
       "mechanical": false,
       "ts": "2026-08-02T04:04:45.570354+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8",
+      "why": "Gate complete and honest in both directions. Three tripwires held, T3 is split (degraded clause held, mapped-repo clause untested for want of a reachable mapped repo), T5 is NOT DETERMINABLE and is reported as a measurement gap with the forward requirement POST must meet. Two deviations named rather than smoothed: two out-of-scope test files whose prose sentinels quoted the deleted block, and one engine-recorded plan-check rescope. The single ruling the Commander owes is whether Deviation 1 is accepted or reverted for re-adjudication - it is isolated in two commits and nothing depends on it.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:08:09.207209+00:00"
     }
   ],
   "amendments": [
