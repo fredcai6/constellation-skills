@@ -76,6 +76,29 @@ Issues:
   future work
 ```
 
+### Reaching the compressed layer: the map-input contract
+
+The compressed layer only helps if an agent reads it **before** it starts building a picture from code.
+Naming a map is not the same as orienting from one: five measured Commander runs against a repo whose
+always-loaded bootstrap named an exact map path read source *first* in every run that read source at
+all, reaching the map only to confirm a hypothesis they had already formed.
+
+So Commander's `context` step carries a resolved contract rather than a pathless request. It resolves a
+canonical entrypoint (`scripts/map_orient.py orient`), and when it cannot, it enters a **REPORTED
+degraded mode**: the run records what it read *instead* of a map — hash-pinned, and labelled by whether
+the file came from a fixed corpus-declared fallback set (verified by filesystem existence) or was merely
+agent-declared — plus the unmapped gap and an escalation, before any source read. `verify-orientation`
+enforces that record at `context`; `verify-frame` checks at `plan` that the mission frame cites anchors
+which actually resolve, against that earlier committed declaration rather than a same-breath assertion.
+
+**What this does and does not buy, stated plainly because the measurement says so.** The genuinely new
+thing is the degraded arm: a repo with no map previously had *no contract at all* — a silent crawl and
+no record. The citation check ships as a **regression floor** against map-*ignoring*; against the
+baseline five its measured sensitivity is 0/4 and its specificity 0/1, so it is **not** the fix for
+map-*lateness*. Ordering is not mechanizable by the corpus — enforcing "map before code" needs a
+harness-level pre-tool hook this corpus does not own. The known bypass is measured, not hypothetical:
+crawl source first, then write the anchors into the frame afterwards.
+
 ## Authority transfer
 
 Agent action traces to one of:

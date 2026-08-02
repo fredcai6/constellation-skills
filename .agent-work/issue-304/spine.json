@@ -298,13 +298,14 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All four gate triads closed with integrated evidence: g1 resolver plus receipt plus mutation floor (re-review 8/8), g2 the anchor change plus verify-frame plus asymmetric wiring (BLOCK then APPROVE), g3 the 172-word deletion plus the actual run plus five episodes (APPROVE), g4 the dogfood from the materialized template plus the full suite (APPROVE twice). Full suite 1538 passed, 2 skipped, 481 subtests re-run by me."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -332,7 +333,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete, all four gates closed"
         }
       ],
       "postconditions": [
@@ -340,13 +342,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No packet map exists in this repo - docs/architecture is absent, which is the degraded case this issue is about - so I reconciled the structural record directly per the absent-map path. Folded the contract into docs/CONSTELLATION_OVERVIEW.md as a new subsection under Truth layers, since reaching the compressed layer is exactly what changed; it states the measured 0/4 sensitivity and 0/1 specificity, the regression-floor framing, the non-mechanizability of ordering, and the measured bypass, so the overview cannot be read as overclaiming. Reasoned no-op recorded for docs/CHECKLIST_SCHEMA.md and docs/CHECKLIST_ENGINE_DESIGN.md: no new check kind, no new evidence type and no engine change - the two new checks are ordinary command postconditions. The receipt schema and exit-code vocabulary are documented in the map_orient.py module docstring, verified by the g2 reviewer."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -362,7 +365,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
         }
       ],
       "postconditions": [
@@ -370,7 +374,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every candidate routed. FILED: #363 Fowler pass written into the installed template, #364 caller-grep doctrine misses self-test-laundered dead code, #374 an imperative pointing at the command below is invisible via current, #375 no engine shape for a scoped re-confirmation round, #376 required-evidence stale by construction plus the wiring-grep ask, #377 map_orient shape and the single-file bundle contract. FIXED-NOW: the substitute note that called a present hash-pinned file not corroborated by the filesystem, taken rather than deferred because it was an honesty defect inside this issue's own honesty feature and cost one string literal with zero test churn. COMMENTED: #336 carries the 317-by-subtraction note. RECORDED not filed: the g1 review survivor CONTENT_HASH_RE closes as NOT-A-DEFECT on measurement - the end anchor already rejects longer digests and 64-comma would loosen the pin; and g4_assert_discharged.py's substring assertion is a named harness weakness, non-blocking because the conclusion is over-determined by lines two agents reproduced independently."
         },
         {
           "id": "c2",
@@ -379,17 +384,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "decision": "issue filing on fredcai6/constellation-skills is pre-cleared and delegated; six issues filed and one comment posted under that latitude, with the Admiral ratifying at the epic return boundary"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -401,7 +418,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: 6 filed, 1 fixed now, 1 comment, 2 recorded"
         }
       ],
       "postconditions": [
@@ -418,7 +436,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -581,7 +599,7 @@
     "session_id": "commander-304-e298",
     "status": "active",
     "claimed_at": "2026-08-02T02:06:15.845360+00:00",
-    "last_heartbeat": "2026-08-02T02:06:15.845360+00:00",
+    "last_heartbeat": "2026-08-02T05:45:00.376656+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -615,6 +633,27 @@
       "why": "Plan approved by the Admiral after triaging all 15 cold-critic findings directly. Two amendments folded in: the mutation harness must prove the mutation APPLIED before asserting red (a no-op mutation and a killed mutant both yield green), and the trend snapshot must name its consumer and successor. Shipping reframed on the discriminated baseline: the necessity gate is a REGRESSION FLOOR with measured sensitivity 0 of 4 and specificity 0 of 1, never the fix for the measured defect; the genuinely new value is reported degraded mode, since a repo without a map currently has no contract at all. Candidate B ruled out - the map is orchestrator content, not implementer content.",
       "mechanical": false,
       "ts": "2026-08-01T22:20:15.239414+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "The gated tail is done. Across four gates the crews devised thirteen mutations outside every shipped set, all red, and two independent BLOCKs were returned and closed - both on the same defect class, code shipped but never wired. The contract now reports degraded rather than crawling silently, demonstrated from the materialized template rather than asserted. Three honest nulls stand: T3's mapped-repo clause untested, T5 not determinable and recorded as a measurement gap, and the necessity gate ships as a regression floor at sensitivity 0/4 and specificity 0/1, never as the fix for map-lateness.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:41:59.635846+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Absent-map reconcile path taken deliberately and recorded as compliant rather than blocked. The structural fact that changed is how an agent reaches the compressed truth layer, so that is where it landed in the overview, with the honest limits welded to the claim rather than left to a reader to discover.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:43:25.316248+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Filed to the tracker rather than banked worktree-locally, which the launch order pre-cleared and which this project has had to correct three times. One fix-now taken on a measured cost correction from the reviewer - three tests pinning the sentence turned out to be zero - and two candidates deliberately recorded rather than filed because filing a not-a-defect would be noise.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:45:00.168458+00:00"
     }
   ]
 }
