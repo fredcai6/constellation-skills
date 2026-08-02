@@ -76,12 +76,20 @@ MECHANICAL_GROUP = tuple(episode_capture.REQUIRED_MECHANICAL_FIELDS) + ("artifac
 #: resume/reopen/amend/waive), `--statement` (flag-candidate), `--verdict`/`--summary`/
 #: `--override-reason` (consolidate), `--blocker`/`--next`/`--authority` (block/waive/
 #: amend), `--title`/`--imperative` (append), `--payload`/`--payload-file`/`--field`
-#: (attach). Naming them is what lets the census say "this run contains exactly one
-#: agent-authored string" instead of "no forbidden flag I happened to think of".
+#: (attach), `--claimed-by` (claim). Naming them is what lets the census say "this run
+#: contains exactly these agent-supplied strings" instead of "no forbidden flag I
+#: happened to think of".
+#:
+#: `--claimed-by` is here because leaving it out made the census under-report. It is a
+#: string the harness composes and hands the engine, and `_lease_role` reads it back out
+#: of the lease as the `role` MECHANICAL field — so it is the one agent-supplied string
+#: that does feed the group under test. Omitting it let an entire second constant sit
+#: outside a census whose docstring claimed there was only one.
 AGENT_TEXT_FLAGS = frozenset({
     "--why", "--note", "--finding", "--reason", "--statement", "--verdict",
     "--summary", "--override-reason", "--blocker", "--next", "--authority",
     "--title", "--imperative", "--payload", "--payload-file", "--field",
+    "--claimed-by",
 })
 
 #: CLOSED-WORLD: the only flags this control may pass, per verb. Closed rather than a
@@ -100,6 +108,11 @@ ALLOWED_FLAGS = {
 
 #: `store_true` flags: the token after one of these is NOT its value.
 VALUELESS_FLAGS = frozenset({"--mechanical", "--force", "--dry-run"})
+
+#: The role the parent run declares. A module constant rather than a literal buried in
+#: the fixture because the census below asserts the exact set of agent-supplied strings,
+#: and a value that assertion names should be declared where the claim about it is.
+PARENT_ROLE = "commander"
 
 
 def _flag_pairs(argv: tuple[str, ...]) -> list[tuple[str, str | None]]:
@@ -636,7 +649,7 @@ def control(tmp_path_factory):
     _write_json(parent_path, _plan("ctl-parent", ok_flag, child="ctl-child"))
     _write_json(child_path, _plan("ctl-child", ok_flag, child=None))
 
-    parent = _ControlRun(parent_path, repo, "ctl-parent", role="commander")
+    parent = _ControlRun(parent_path, repo, "ctl-parent", role=PARENT_ROLE)
     child = _ControlRun(child_path, repo, "ctl-child", role=None)
     parent.drive(ok_flag)
     ok_flag.unlink()  # the child must induce its own failures, not inherit the parent's
@@ -651,12 +664,24 @@ def control(tmp_path_factory):
 def test_control_records_nothing_agent_authored(control):
     """`zero agent effort` is literal — asserted over the ACTUAL argv of every call.
 
-    **The honest claim, stated exactly as it is:** the only agent-authored text in the
-    entire control is ONE fixed constant — `reopen --reason "control"` — and it feeds no
-    mechanical field. It is deliberately NOT the stronger claim "nothing agent-authored
-    was recorded": `reopen --reason` does write its string into the checklist's
-    `why_trail`, which is disclosed here rather than hidden, and the assertion below is
-    written to match the claim rather than the other way round.
+    **The honest claim, stated exactly as it is:** the control hands the engine exactly
+    TWO agent-supplied strings, both fixed constants declared at module level rather than
+    composed at issue time:
+
+    * `claim --claimed-by PARENT_ROLE`, which **is** the `role` mechanical field — a
+      lease records who claimed it, and `_lease_role` reads `claimed_by` straight back
+      out. This one is disclosed rather than hidden precisely because it *does* feed the
+      group under test. It cannot be otherwise: `role` must be some supplied string, so a
+      guard demanding that no string reach it would be unfalsifiable theatre.
+    * `reopen --reason "control"`, required by the verb, which writes into `why_trail`
+      and feeds no mechanical field.
+
+    It is deliberately NOT the stronger claim "nothing agent-authored was recorded", and
+    it is no longer the earlier claim "only ONE fixed constant, and it feeds no mechanical
+    field" — that sentence was false in both halves while `--claimed-by` sat outside the
+    census, and the assertion below is written to match the claim rather than the other
+    way round. What stays falsifiable is the count: a THIRD agent-supplied string
+    anywhere in the run fails this test, which is what the red-proofs exercise.
 
     The previous version of this test asserted only that the issued VERB NAMES were a
     subset of `VERBS` — something `_ControlRun._run` already asserts on every call — and
@@ -703,11 +728,13 @@ def test_control_records_nothing_agent_authored(control):
     assert violations == [], violations
     # The census is only meaningful if it actually saw the calls it is about.
     assert advances >= 8, advances
-    # ...and the whole run holds exactly ONE agent-authored string, whose value is the
-    # declared constant rather than anything composed at issue time.
-    assert text_bearing == {("reopen", "--reason", _ControlRun.REOPEN_REASON)}, sorted(
-        text_bearing
-    )
+    # ...and the whole run holds exactly the TWO declared constants above, rather than
+    # anything composed at issue time. The child never claims, so `--claimed-by` appears
+    # once across both topologies.
+    assert text_bearing == {
+        ("claim", "--claimed-by", PARENT_ROLE),
+        ("reopen", "--reason", _ControlRun.REOPEN_REASON),
+    }, sorted(text_bearing)
 
 
 def test_claimed_parent_topology_yields_the_full_mechanical_group(control):
