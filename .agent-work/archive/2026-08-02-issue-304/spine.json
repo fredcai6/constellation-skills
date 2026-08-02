@@ -544,19 +544,22 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-304 --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "branch epic-298/304 committed and pushed; PR 378 open against main"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "lease commander-304-e298 is released as the last journaled action, immediately after this final advance, per the archive ordering rule"
         },
         {
           "id": "c4",
@@ -591,22 +594,46 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-304 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -636,13 +663,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "commander-304-e298",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T02:06:15.845360+00:00",
-    "last_heartbeat": "2026-08-02T05:47:43.960704+00:00",
+    "last_heartbeat": "2026-08-02T06:14:22.174335+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T06:14:29.304368+00:00"
   },
   "why_trail": [
     {
@@ -707,6 +735,13 @@
       "why": "Retrospective appended with the four signal sections the invariant requires. The transferable finding is that green tests are not evidence a deliverable landed - a call site is - and that the rule needs the self-test exclusion, because this module ships its own self-test as a subcommand and laundered dead code as live through a correctly-applied caller grep. Lessons gate clear, no ripe lesson awaiting apply-or-defer. Three signals routed to Charter refresh rather than filed, since a delegated commander has no latitude to edit shared doctrine.",
       "mechanical": false,
       "ts": "2026-08-02T05:47:43.749965+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work area archived to .agent-work/archive/2026-08-02-issue-304, branch pushed, PR 378 open. Branch status is PENDING, not FINAL, and deliberately so: CI reads success at source for 2f59ba2, which carries one hundred percent of the product change, but the current head 5e21a87 adds only work-area artifacts and GitHub has triggered no check for it after nearly twenty minutes, so there is no pass status text on the head to gate on. Separately, Q2's shipping ruling on what primacy means is still Tommy's, so self-merging would take a decision that was never delegated.",
+      "mechanical": false,
+      "ts": "2026-08-02T06:14:22.174335+00:00"
     }
   ]
 }
