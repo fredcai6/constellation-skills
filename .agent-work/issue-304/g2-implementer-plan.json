@@ -274,7 +274,8 @@
           "id": "p1",
           "statement": "the script is wired into the template",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "the script is wired into the template: m4 closed complete, and tests/test_map_contract_wiring.py asserts context c2 and plan c6 both invoke <commander-skill-dir>/scripts/map_orient.py - 19 passed, 14 subtests passed."
         }
       ],
       "postconditions": [
@@ -282,7 +283,8 @@
           "id": "c1",
           "statement": "TDD red: the bundle-membership assertion written and observed FAILING before the registration",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "red reconstructed against 6d35fe2 (a tree without the bundle registration), not observed in TDD order - attempt-1 died before attesting; 1 failed with SUBFAILED(skill='commander') and the verbatim message 'map_orient.py' not found in the expanded commander bundle tuple. Restore to fdec654 verified by blob OID: git diff --quiet HEAD exit 0, git status --porcelain empty; 120 passed, 308 subtests passed after restore. No SCRIPT_RUNTIME_COMPANIONS entry is needed and that is a checked fact, not an omission: grep for import_module, spec_from_file_location, __import__ and exec( over scripts/map_orient.py returns nothing, and its import block is stdlib only."
         },
         {
           "id": "c2",
@@ -291,17 +293,30 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_install_constellation.py tests/test_map_contract_wiring.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_install_constellation.py tests/test_map_contract_wiring.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m6": {
@@ -363,7 +378,7 @@
     "session_id": "g2-implementer-304b",
     "status": "active",
     "claimed_at": "2026-08-02T02:13:28.493043+00:00",
-    "last_heartbeat": "2026-08-02T02:26:35.717573+00:00",
+    "last_heartbeat": "2026-08-02T02:28:14.990797+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "g2-implementer-304",
@@ -404,6 +419,13 @@
       "why": "Wiring audited against deliverable 2 rather than trusted, and it holds: verify-orientation is context c2 with no override_policy, verify-frame is plan c6 with the human-authority recorded-waiver policy, both use <repo-root>, and verify-frame is asserted ABSENT from context so the anti-vacuity property of m2's absent-frame refusal survives. Gate-vs-report stays a flag flip via --report-only, proven by CLI test not just by prose. The three template-pinning suites (context_manifest, context_declaration_lint, context_determinism) stay green because no context_refs entry was added. c1 red was reconstructed against 6d35fe2 - recorded as a deviation.",
       "mechanical": false,
       "ts": "2026-08-02T02:26:35.717553+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "map_orient.py is registered on the commander bundle, the only bundle whose template invokes it, and the bundle-membership assertion is driven off the template rather than hardcoded so the two cannot drift apart. The companion question was answered by checking rather than by assuming: the module makes no dynamic sibling load and imports stdlib only, so it needs no SCRIPT_RUNTIME_COMPANIONS entry - stated explicitly in a code comment so the absence reads as a decision. c1 red reconstructed against 6d35fe2 - recorded as a deviation.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:28:14.990768+00:00"
     }
   ]
 }
