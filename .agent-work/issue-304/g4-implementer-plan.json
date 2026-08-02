@@ -144,7 +144,8 @@
           "id": "p1",
           "statement": "dogfood evidence captured",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "dogfood evidence captured in .agent-work/issue-304/evidence/g4-run-transcript.txt"
         }
       ],
       "postconditions": [
@@ -155,7 +156,8 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
         }
       ],
       "constraints": [
@@ -164,11 +166,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4": {
@@ -215,7 +229,7 @@
     "session_id": "g4-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T04:39:53.095007+00:00",
-    "last_heartbeat": "2026-08-02T04:44:15.380478+00:00",
+    "last_heartbeat": "2026-08-02T04:51:41.565093+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -242,6 +256,13 @@
       "why": "the materialized check reported degraded (engine REFUSED exit 1, check exit 12 then 10) and was discharged in one command to exit 0; context advanced with no --force and no waiver",
       "mechanical": false,
       "ts": "2026-08-02T04:44:15.380459+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "full suite green locally under python 3.14: 1538 passed, 2 skipped, 481 subtests passed in 202.12s; the engine re-runs it as the gate",
+      "mechanical": false,
+      "ts": "2026-08-02T04:51:41.565063+00:00"
     }
   ]
 }
