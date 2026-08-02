@@ -130,3 +130,115 @@ What this does NOT give, stated plainly: there is no way to distinguish "retired
 consolidated" from "retired for any other reason" **except by reading `retired-reason`
 prose**. That is a real residual limitation of the store as shipped, and it is #301's to
 close, not mine.
+
+---
+
+# Run log — gates g1, g2 (complete), and what g4 needs
+
+Pinned to `c2d7414` on `epic-298/308`.
+
+## Cold plan critic: 2 BLOCKING, both mine, both real
+
+The launch order made the critic mandatory ("has caught a blocking defect in every plan
+this epic"). It held again.
+
+**BLOCKING 1 — g4's postcondition was unreachable before g6.** g4 demanded zero active
+lessons and ran four items before g6. But `lesson:verify-launch-order-claims-against-code`
+*states cluster A's own pattern*, so disposing it IS the routing decision: graduating it to
+`docs/agents/` is bin 2. Three bad options and no fourth — self-rule, destroy the bank's
+most-confirmed entry, or leave g4 unreachable. Fixed by carving that one lesson out **by
+id** (`checks/dispositions_done.py`), with g6 disposing it as part of the consolidation.
+I did not see this. The plan would have deadlocked at g4.
+
+**BLOCKING 2 — my intake guard matched 2 of 6 real sites.**
+`! grep -rn 'Active section of .agent-work/LESSONS.md' skills/` matches only the two spine
+JSONs. The other four phrase it differently. Editing the two would have turned the guard
+green while the Admiral doctrine, the launch-order inherited-context block and the Charter
+agent guide all still fed lessons to live agents.
+
+### The recurrence I committed while planning its own consolidation
+
+**This is the sharpest finding of the run and it is against me.**
+
+Cluster A is *an under-inclusive or stale secondhand claim taken as premise*. While planning
+its consolidation I committed it **twice**:
+
+1. My g5 imperative enumerated **5** intake sites as though complete. A command over the
+   corpus finds **6 across 5 files** — I missed the one in `ADMIRAL_SPINE.template.json`,
+   and it sits in the `latitude` task, not `context`, so a reader checking `context` would
+   also have missed it. This is `issue-304-g3-001` exactly: *enumerating suites, not
+   assertions*.
+2. Then, **one revision later, in the very guard written to fix it**, I used
+   `[^.\n]{0,40}` — a character class that excludes the dot, so it could never match any
+   phrase containing `.agent-work/`. It went green against three live intake sites. That is
+   `lesson:guard-must-be-defined-by-the-consumer-not-a-character-list`, committed inside the
+   file whose own docstring cites that lesson.
+
+Recorded rather than quietly fixed, because it is evidence, not embarrassment: **prose did
+not stop an agent that had just read the cluster, was actively consolidating it, and had the
+remedy in front of it.** That is a real argument for **bin 1** and against my own stated
+lean in `ROUTING_QUESTION.md`. It should be weighed in Tommy's ruling.
+
+## Gates closed
+
+| gate | what landed | evidence |
+|---|---|---|
+| `g1-build-destination` | `docs/agents/CREW_CONTEXT.md` (f1Brainz's structure, not invented); both files indexed from README under "This repo's own agent context"; tier stated in the file header | c1-c3 green, full suite green |
+| `g2-doc-coherence` | **#348**: section 1's transcript re-measured at `4cec87a`, cause named (`b69e6c8` / #326), ruling preserved. **#322**: taxonomy gains `episodes/` plus the cutover and why LESSONS.md's absence is the ruling | c1-c3 green, full suite green |
+
+**g2 c1 was mutation-verified**, not merely observed green: green, then append the false
+line, then **red**, then restore, then green. The check demonstrably fires.
+
+Two shell traps hit, both named in the launch order and both real:
+
+- **Backticks inside a double-quoted string are executed.** My first g2 c1 command died with
+  `.gitignore\: Not a directory` — a refusal for entirely the wrong reason, which would have
+  read as a failing gate. Single-quoted now.
+- **`git checkout <file>` to undo a test mutation reverted the real edit too.** Snapshot to a
+  scratch copy instead. Cost one redo of the whole section-1 edit.
+
+## PROPOSED dispositions for g4 — analysis only, NOT executed
+
+g4 has not run. This is left so a successor does not re-derive 20 judgments from scratch.
+**Every graduation names its tier** (`tier-must-be-justified`). Writes go through
+`apply_lessons_delta.py`; a graduation is a paired edit-plus-retire whose retire reason names
+the destination.
+
+| # | lesson | proposed disposition | tier justification |
+|---|---|---|---|
+| 1 | test-harness-concurrency-failsafe | GRADUATE to `CREW_CONTEXT.md` | test-authoring discipline; its own bank-reason says it lacked a home — that home now exists |
+| 2 | verify-launch-order-claims-against-code | **CARVED OUT to g6** | disposing it IS the routing decision |
+| 3 | observe-midprocess-state-not-via-end-output | GRADUATE to `CREW_CONTEXT.md` | test-authoring; crew writes the tests |
+| 4 | verify-harness-field-and-drive-real-writer | GRADUATE to `CREW_CONTEXT.md` | confirmed 5x; crew-tier testing rule |
+| 5 | round-trip-tests-prove-artifacts-not-parsers | RETIRE — **already graduated at g1** | already in CREW_CONTEXT.md's verification section |
+| 6 | checklist-engine-from-child-relative-path-and-gated-vs-survey | DELETE | constellation-scoped, already `exported`; debt is paid upstream, not by banking |
+| 7 | harvest-before-sweep-enforcement-gap | DELETE | same — already `exported` |
+| 8 | cold-critic-mandatory-for-measurement-dependent-plans | GRADUATE to `ORCHESTRATOR_CONTEXT.md` | planning/gate authority is orchestrator-tier. **This run is a 6th confirmation** |
+| 9 | windows-subprocess-env-does-not-shadow-path-resolution | GRADUATE to `CREW_CONTEXT.md` | Windows section; crew writes the subprocess probes |
+| 10 | prove-command-fails-postcondition | GRADUATE to `ORCHESTRATOR_CONTEXT.md` | postcondition authoring is gate authority |
+| 11 | canonical-routing-can-dissolve-a-file-fence | GRADUATE to `ORCHESTRATOR_CONTEXT.md` | launch-order / fence authoring is orchestrator-tier |
+| 12 | crew-plan-file-shares-parent-gauge-directory | GRADUATE to `ORCHESTRATOR_CONTEXT.md` | crew-dispatch mechanics; the dispatcher is the orchestrator |
+| 13 | reviewer-old-vs-new-repro-without-mutating-file-under-review | GRADUATE to `CREW_CONTEXT.md` | a reviewer technique; reviewer is crew |
+| 14 | drill-scope-should-name-every-sibling-template | GRADUATE to `docs/superpowers/drills/` | the doc that owns drills owns this; NOT docs/agents — wrong audience |
+| 15 | lightweight-critic-catches-real-findings-on-bounded-issues | DELETE | subsumed by #8; keeping both graduates one rule twice |
+| 16 | reviewer-fowler-template-path-wording-ambiguous | FILE AN ISSUE, then DELETE | a fixable wording defect in `skills/reviewer/`, which **this repo owns** — a lesson is the wrong container for a fix |
+| 17 | guard-must-be-defined-by-the-consumer-not-a-character-list | RETIRE — **already graduated at g1** | already in CREW_CONTEXT.md |
+| 18 | a-panel-inherits-what-it-was-not-told-to-vary | GRADUATE to `ORCHESTRATOR_CONTEXT.md` | design-it-twice is an orchestrator activity |
+| 19 | a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed | RETIRE — **already graduated at g1**; cluster B filed as **#392** | already in CREW_CONTEXT.md |
+| 20 | stale-description-has-two-shapes-and-only-one-yields-to-verification | **FLAGGED — do not dispose without checking it against the ruling** | its shape 1 overlaps cluster A; shape 2 (agent-to-agent drift) does not. A successor must confirm graduating it is not a second consolidation in disguise |
+
+**Row 20 is a genuine open question, not a recommendation.** Its own bank-reason warns
+against graduating one half and declaring the class closed — precisely the risk if cluster
+A's consolidation lands separately.
+
+Count check: 20 rows = 1 carved out + 3 already-graduated + 4 deletes + 11 graduations + 1
+flagged. `checks/dispositions_done.py` requires exactly the carve-out to survive.
+
+## Honest status of the two halves
+
+- **Half 1** — rhyme-search done and NOT a null; cluster selected; routing question posed
+  with both bins argued. The consolidation itself (g6) and the source-episode retirement
+  (g7) are **not landed**; they await Tommy's ruling.
+- **Half 2** — the destination is built (g1) and the two coherence defects are closed (g2).
+  The cap removal (g3), the dispositions (g4) and the intake cut (g5) are **planned and
+  gated but not executed**.
