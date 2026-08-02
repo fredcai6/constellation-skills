@@ -1,0 +1,177 @@
+{
+  "work_id": "issue-304",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-falsifiability"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Re-review of gate g1 after rework. Loaded global doctrine, both handoffs, my own g1-review-result.md, the updated g1-result.md, and re-read the three changed files (map_orient.py 1045->1137, test_map_orient.py 533->643, test_mutation_floor.py 291->333). Shipped mutation count 3 -> 5.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three send-backs fixed, verified independently. B1: pin_substitutes no longer emits a sentinel -- an unreadable path gets content_hash: null, and the new is_content_hash requires a real sha256 shape (CONTENT_HASH_RE = ^[0-9a-f]{64}$, correctly anchored at BOTH ends). Refuses for the RIGHT reason: stderr names the offending path ('substitutes[0] docs/NOPE.md is not hash-pinned (content_hash=None)') and does NOT blame unmapped or escalation; with one real + one missing substitute it exits 10 and blames only the missing one. Positive control genuine, proven two ways: a real substitute gives orient 0 / verify 0 with a content_hash equal to the sha256 of the actual bytes on disk, AND mutating is_content_hash to always-False kills 7 tests including test_one_real_substitute_still_discharges -- so a refuse-everything fix would not have passed. B2: M4 now dies. B3: .agent-work/probe/ is gone.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No drift. Same allowed four files plus the adjudicated additive test_init_work_area.py. Rework is confined to the substitute-readability path (is_content_hash, CONTENT_HASH_RE, substitute_problems, pin_substitutes) plus new floor arms; no verify-frame, no template wiring, no prose deletion, #341/#342 untouched, checklist_engine.py untouched, and tc1 (--receipt-dir) correctly left alone as out of scope. notes-304.md shows modified in git status but has an empty diff (line-ending only) and is commander-owned, not implementer output.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every number re-run from scratch, not read off the report. Required suite: 91 passed, 38 subtests, exit 0 (was 80/26). Self-test: 'self-test OK', exit 0. FULL suite run to completion by me: 1470 passed, 2 skipped, 448 subtests in 133.33s, exit 0 -- no collection error, no failures. This matters because the commander's own rework poll fired on a partial state; my run is complete and clean. B3 confirmed: .agent-work/probe/ no longer exists, so the previously-false cleanup claim is now true.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints hold. 3.13+-only API scan across all five files: CLEAN -- no Path.read_text(newline=), no itertools.batched, no typing.override, no datetime.UTC, no os.walk/glob(root_dir=). Still datetime.now(timezone.utc) and open(..., encoding='utf-8', newline='\\n'). Local 3.14.3 vs CI 3.12 is safe. CONTENT_HASH_RE is '^[0-9a-f]{64}$' -- correctly anchored at BOTH ends, so .match() cannot be fooled by a trailing suffix. Fowler pass at .agent-work/issue-304/g1-review-2/fowler-pass.json, rail exits 0 (12 smells, 5 flagged, 3 overridden with logged standards). Nothing blocking; the useful finds are the bad-hash list drift (which is exactly why P2 survived) and the 'Honest limits' docstring not being updated for the unreadable case.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence. The rework adds no new structural surface -- it tightens one predicate inside the existing module and adds test arms. Map Impact claims from the original run remain accurate; the receipt schema is unchanged in shape, with content_hash now nullable, which g2 must treat as 'not pinned' rather than as a missing field. That nullability is the only cross-gate contract detail worth carrying forward to g2, and it is documented in pin_substitutes' docstring.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Pass recorded, rail exit 0. Five flagged, none blocking. Most consequential: shotgun-surgery/duplicated-code on the two hand-maintained bad-hash tuples (map_orient.py:999 vs test_map_orient.py:513) which have already drifted in case and content -- and NEITHER carries an over-long digest, which is precisely the P2 mutation that survived. comments-as-deodorant newly flagged: the 'Honest limits' docstring still claims the module 'can only check the three fields are present and are not filler', which understates the new shape check and omits the unreadable case -- the same doc gap I raised last pass. speculative-generality: pin_substitutes' untested absolute-path branch survived the rework.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r7-falsifiability": {
+      "id": "r7-falsifiability",
+      "title": "CAN THIS CHECK FAIL? (re-execution: M4 retest + a NEW mutation on the B1 fix)",
+      "imperative": "Re-apply M4 verbatim; devise and apply ONE NEW mutation against the B1 fix itself; re-verify count-delta and the non-matching-anchor refusal on the grown floor.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ANSWER: YES, and the two holes I found last pass are now closed. (1) M4 RE-APPLIED VERBATIM -- now KILLED: floor exit=1, 50 passed, killed by PartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list with the individual multi-element subtests failing (['none',real], [real,'n/a'], [real,'',real]) plus ContractShape::test_self_test_floor_passes, so BOTH layers grew the case. Semantically earned: the mutant discharges (exit 0) a record whose unmapped list mixes a real entry with 'n/a', where the original exits 10. (2) MY NEW MUTATION against the B1 fix -- pin an unreadable substitute with the real sha256 of EMPTY CONTENT, a VALID-SHAPED fake that defeats any mere is-it-well-formed check: KILLED, floor exit=1, 48 passed, by exactly the three UnreadableSubstitute tests (nonexistent_path_refuses, not_pinned_with_a_sentinel, refusal_names_the_offending_substitute). The fix is pinned against a well-formed forgery, not just against the literal string 'unreadable'. (3) POSITIVE CONTROL IS LOAD-BEARING: mutating is_content_hash to always-False kills 7 tests including test_one_real_substitute_still_discharges and test_positive_control_a_complete_record_passes, so a refuse-everything fix could not have passed -- this answers the commander's specific concern. (4) ONE SURVIVOR, minor: CONTENT_HASH_RE {64} -> {64,} SURVIVED (floor exit=0, 51 passed). Both hand-maintained bad-hash tuples test the too-short bound ('a'*63) but neither tests an over-long one, so a 128-char sha512 would pass as a sha256 pin. NOT a blocker: the tool itself only ever emits a 64-char digest, an unreadable path still pins None which the isinstance guard refuses regardless of the quantifier, and g2's comparison would mismatch anyway. One-token fix to the existing tuples. (5) HARNESS INTACT after growing 3 -> 5 mutations: count-delta still load-bearing (2 substitutions whose replacement pre-exists, so assertIn stays vacuous there); non-matching anchors still raise a loud HarnessError -- including the now-stale pre-fix B1 anchor, which is the rot-detection the applied-assertion exists for; the no-op (old==new) mutation is still refused at STEP 1 with 'HARNESS ERROR ... a red run would be a lie'. Both newly-shipped mutations verified SEMANTICALLY earned, not collateral: #4 discharges a filler-poisoned unmapped list at exit 0; #5 makes a hand-written 'unreadable' sentinel pass as a hash-pin (verify exit 10 -> 0). All 5 shipped mutations have now been behaviorally verified across the two passes.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All three send-backs fixed and independently verified by execution. B1: the sentinel is gone (unreadable -> content_hash null) and is_content_hash requires a real, correctly-anchored sha256; it refuses for the right reason (names the offending path, does not blame unmapped/escalation, blames only the bad entry in a mixed list) and the positive control is genuine (proven by an always-False mutation killing 7 tests). B2: M4 re-applied verbatim now DIES, killed by the new multi-element arms, semantically. B3: probe/ removed. My NEW mutation against the B1 fix -- an unreadable substitute pinned with the valid sha256 of empty content, a well-formed forgery -- was KILLED by the three UnreadableSubstitute tests, so the fix is pinned against forgery and not just against the literal sentinel. Suite re-run from scratch: 91 required, 1470 full (2 skipped), self-test green, no 3.13+ APIs. Harness intact after growing to 5 mutations; all 5 verified semantically earned across the two passes. One minor survivor (CONTENT_HASH_RE upper bound unpinned) and one stale docstring, both filed as triage rather than blockers."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r7-falsifiability",
+      "statement": "Pin the hash-shape check's UPPER bound: add an over-long digest (e.g. 'a'*128) to the bad-hash tuples at scripts/map_orient.py:999 and tests/test_map_orient.py:513. A CONTENT_HASH_RE {64} -> {64,} mutation currently survives the floor. Minor: the tool never emits >64 chars and an unreadable path still pins None."
+    },
+    {
+      "id": "tc2",
+      "from": "r6-fowler",
+      "statement": "Update the module docstring's 'Honest limits' section: it still says the module 'can only check the three fields are present and are not filler', which understates the new sha256 shape validation and omits the unreadable-substitute case entirely. Raised in the first review pass and still open."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "rev2-g1-304",
+    "status": "released",
+    "claimed_at": "2026-08-01T23:16:52.937233+00:00",
+    "last_heartbeat": "2026-08-01T23:25:35.319627+00:00",
+    "claimed_by": "constellation-reviewer",
+    "worktree": "C:/Programs/constellation-skills-wt/e298-304",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T23:27:04.429323+00:00"
+  }
+}

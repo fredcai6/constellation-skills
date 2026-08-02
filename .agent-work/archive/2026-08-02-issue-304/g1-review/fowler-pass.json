@@ -1,0 +1,89 @@
+{
+  "work_id": "issue-304",
+  "diff_ref": "issue-304 gate g1: scripts/map_orient.py (new, 1045L), tests/test_map_orient.py (new, 533L), tests/test_mutation_floor.py (new, 291L), scripts/init_work_area.py (resolve_spine <repo-root> placeholder + guard regex), tests/test_init_work_area.py (additive RepoRootPlaceholder class)",
+  "repo_standards_ref": "references/global-crew.md, references/global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md, the g1 implementer handoff's House-style constraint ('module docstring stating modes and honest limits, _utf8_stdio(), pure decision functions separated from impure edges, main(argv) + raise SystemExit(main()), a --self-test falsification floor') and its two-bin rule. NOTE: docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md do not exist in this repo.",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "self_test() spans scripts/map_orient.py:820-975 -- ~155 lines and 77 _check calls in one function. By ordinary Fowler reading this is a textbook Long Method and would be extracted into per-property helpers.",
+      "override": {
+        "repo_standard": "The g1 implementer handoff's house-style constraint for scripts/ requires 'a --self-test falsification floor', and the module docstring documents it as the in-process falsification floor. Prior art (.agent-work/epic-298/baselines/extract_ordering.py) carries the same single-function shape.",
+        "reason": "The floor is deliberately one flat, linearly-readable sequence of assertions with no control flow to hide a skipped check; extracting it into helpers would add call sites that can be silently dropped, which is precisely the failure mode (#300, a check structurally unable to fail) this gate exists to prevent. Readability of a falsification floor is served by flatness, not by decomposition. The standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No class exceeds its remit. The three dataclasses (Candidate, RootProof, Orientation) are narrow value objects; the test classes are cohesive one-property-per-class groupings (ResolutionMatrix, DegradedReasons, CitableContent, CouldNotLookDiscriminator, PartialFillMatrix, VerifyOrientation, ContractShape).",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The three-way discharge rule is expressed twice in full: once in scripts/map_orient.py self_test() (lines 927-947) and once in tests/test_map_orient.py PartialFillMatrix (lines 350-410), with the same COMPLETE_RECORD fixture literal duplicated at map_orient.py:928-932 and test_map_orient.py:317-321. The two copies have already drifted: self_test()'s filler list includes '<placeholder>' while the floor's does not. Observation, not a blocker -- the redundancy is partly deliberate (the floor must be able to run against a mutated copy whose self_test is itself suspect), but the drift shows the duplication is not being maintained in step.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The pure predicates (substitutes_declared, unmapped_declared, escalation_declared, receipt_problems) read the receipt dict they are handed and nothing else; candidate_outcome and candidate_is_citable operate on their own Candidate. No function reaches preferentially into another object's data.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "(substitutes, unmapped, escalation) travel together as a clump through build_receipt(), cmd_orient(), degraded_record_is_complete() and missing_degraded_fields(), and would ordinarily be extracted into a DegradedDeclaration value object.",
+      "override": {
+        "repo_standard": "The handoff freezes the receipt schema as a flat JSON document ('substitutes, unmapped, escalation' as sibling top-level keys) and makes it a cross-gate contract that g2's frame check reads.",
+        "reason": "The clump IS the frozen wire format. Introducing a value object would put a mapping layer between the schema and the predicates that validate it, adding a place for the two to diverge on a contract g2 depends on. The frozen-schema standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Verdicts are bare `str` constants (MODE_RESOLVED, MODE_DEGRADED_NO_MAP, ...) and exit codes are bare `int` constants rather than an Enum/IntEnum, which is the canonical primitive-obsession shape.",
+      "override": {
+        "repo_standard": "The handoff freezes both vocabularies as external contracts: 'stdout first line is always one reserved literal' and 'Exit-code vocabulary -- FROZEN'. The engine records only {cmd, exit, shell} and discards stdout.",
+        "reason": "These primitives are the serialized contract itself, not an under-modelled domain concept -- the string IS what crosses the process boundary and the int IS what the engine records. Wrapping them in an Enum would add a .value unwrap at every boundary without making an illegal value less reachable, since the values arrive from disk and from subprocess exit codes. Both vocabularies are already constrained by named constants, ORIENT_MODES/RESERVED_FIRST_LINES/SEMANTIC_EXIT_CODES tuples, and mechanical assertions in self_test() and ContractShape. The frozen-contract standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "build_receipt() (scripts/map_orient.py:531-538) takes six positional parameters (work_id, orientation, substitutes, unmapped, escalation, emitted_at). It is called twice in production and four times inside self_test(), and the self_test call sites pass all six positionally on one line (e.g. line 950-952, line 964), which is where the arity actually costs readability. Minor; a parameter object would collide with the frozen-schema reasoning recorded under data-clumps, so the honest disposition is 'noted, not worth churn'.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Adding one filler token today requires edits in three places that must stay in step: FILLER_VALUES (scripts/map_orient.py:386), self_test()'s filler loop (line 938), and PartialFillMatrix's filler tuples (tests/test_map_orient.py:381, 388). The drift already visible ('<placeholder>' present in one list, absent in the other) is the symptom. Observation-level; the same underlying duplication flagged above.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "scripts/map_orient.py has one axis of change (the orientation contract). scripts/init_work_area.py's edit is confined to resolve_spine() and the one guard regex that owns the same token family -- the placeholder addition touches exactly the two places that define a resolver-owned token, which is cohesion rather than divergence.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Longest chains are ordinary pathlib idiom -- Path(args.root).expanduser().resolve() and Path(root).resolve().as_posix() -- which are fluent-builder calls on one type, not navigation through a chain of distinct collaborators.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "Two spots. (a) main() ends with `parser.error(f'unknown subcommand: {args.command}')` followed by `return EXIT_OK  # unreachable; parser.error exits 2` (lines 1040-1041) -- a dead branch guarding a case argparse's subparser dispatch already forecloses. (b) pin_substitutes() carries an absolute-path branch (line 723, 726) that no caller, test, or documented workflow exercises: --substitute is documented as 'repo-relative'. The absolute branch is untested generality, and it is the same code path that produces the content_hash='unreadable' sentinel this review blocks on. Both are minor in isolation; (b) is worth removing while fixing the blocker.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "Comments explain WHY, not what a tangle does: the falsification-floor pointers on candidate_is_citable/determine_mode/exit_code_for name which mutation pins the branch; the receipt_problems comment explains why an empty candidates_tried is truthful for one mode; the init_work_area comment explains the JSON-escape reason for as_posix(). None substitute for clarity the code fails to provide. The module docstring's 'Honest limits' section is required by the repo's house style, not deodorant -- though note it omits the 'unreadable' substitute case, which is the blocker.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

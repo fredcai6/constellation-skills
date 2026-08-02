@@ -1,0 +1,379 @@
+{
+  "work_id": "issue-304-g4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the g4 handoff, and the prior-gate evidence (.agent-work/issue-304/TRIPWIRE_OUTCOMES.md and crew-handoffs/g3-result.md) so g4 EXTENDS g3's evidence rather than repeating it. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + g3 evidence loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md; docs/agents/ORCHESTRATOR_CONTEXT.md present (no CREW_CONTEXT.md/GLOSSARY.md here); g4 handoff, TRIPWIRE_OUTCOMES.md, g3-result.md read. Handoff complete: task, intent, scope, exclusions, evidence, constraints, stop conditions, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Materialize the EDITED spine template and prove the placeholders resolved",
+      "imperative": "Run scripts/init_work_area.py against the EDITED skills/commander/templates/COMMANDER_SPINE.template.json into a scratch work-id in this repo, then prove the materialized .agent-work/<scratch>/spine.json carries NO literal <commander-skill-dir>, <repo-root> or <work-id> token anywhere, and that the context c2 command carries a real resolved --root. A check whose materialized command still contains a literal placeholder never ran.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "materialized spine.json contains zero unresolved <...> placeholder tokens and the context c2 command's --root is an absolute path",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_resolved.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "scratch work-id only; do not disturb .agent-work/issue-304/",
+        "do not modify checklist_engine.py",
+        "do not point tooling at C:/Programs/f1Brainz"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_resolved.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Drive the MATERIALIZED spine through context end to end: degraded report, then honest discharge",
+      "imperative": "Drive the scratch spine through the engine's init and context steps, capturing the engine's own output verbatim with tee. Demonstrate (1) the context check REPORTS degraded rather than silently passing, (2) it is dischargeable WITHOUT --force or a waiver, and (3) context then advances to complete. Record the exit code at each stage, since stdout is discarded and the exit code is the only signal reaching the spine. If the only way past is --force or a waiver, STOP and report it as a finding.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "materialized spine exists with resolved placeholders",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "materialized spine at .agent-work/g4-scratch-run/spine.json with placeholders resolved"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "scratch spine's context task is complete, its receipt records DEGRADED-NO-MAP with substitutes/unmapped/escalation, and no waiver/force appears in the spine journal",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_discharged.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
+        }
+      ],
+      "constraints": [
+        "capture the engine's own stdout verbatim, never paraphrase",
+        "no --force, no waiver"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_discharged.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Run the FULL suite and attribute any red by command",
+      "imperative": "Run the entire suite (python -m pytest -q, ~1160+ tests, several minutes; it has not hung) at the repo root and record the exact result line. If anything is red, attribute the distribution with a command such as uniq -c, never by reading the pytest tail. A local green is a local number, not the merge gate (local python is 3.14; CI pins 3.12).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "dogfood evidence captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "dogfood evidence captured in .agent-work/issue-304/evidence/g4-run-transcript.txt"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full suite run to completion and its result line captured verbatim to evidence/g4-full-suite.txt",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py -m pytest",
+        "no filtered subset"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Clean up the scratch work area and deliver IMPLEMENTER_RESULT",
+      "imperative": "Remove the scratch work area and VERIFY its absence (only claim a cleanup you have verified). Confirm .agent-work/issue-304/ artifacts and TRIPWIRES.md are untouched. Write IMPLEMENTER_RESULT to .agent-work/issue-304/crew-handoffs/g4-result.md with evidence pasted verbatim and every deviation named.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "dogfood and full-suite evidence in hand",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "dogfood transcript and full-suite output on disk"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "scratch work area absent, TRIPWIRES.md byte-identical to its pre-registration commit, g4-result.md written",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_closeout.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
+        }
+      ],
+      "constraints": [
+        "do not rewrite TRIPWIRES.md",
+        "claim only verified cleanups"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_closeout.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5": {
+      "id": "m5",
+      "title": "Fix-now triage: the substitute report line, and the harness weakness the reviewer found",
+      "imperative": "Reword map_orient.py's substitute note from 'not corroborated by the filesystem' to 'not in the fixed fallback set' -- the classification and the UNVERIFIED label stay exactly as they are; only the explanatory sentence changes. Then fix g4_assert_discharged.py's degraded assertion to read the receipt's STRUCTURED mode rather than substring-scanning the whole document (the reviewer showed the substring is satisfied by the agent's own escalation prose -- a check that cannot fail, inside this gate's own evidence). Prove the corrected assertion REJECTS a RESOLVED receipt. Re-run --self-test and tests/test_map_orient.py, and correct the overstated test-pin count in g4-result.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 APPROVED; Commander routed this as a fix-now triage call, not rework",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 APPROVED by commander-304c; routed as fix-now triage, not rework"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map_orient.py --self-test and tests/test_map_orient.py both pass after the reword",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/map_orient.py --self-test && python -m pytest tests/test_map_orient.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the corrected harness assertion reads the structured mode and REJECTS a RESOLVED receipt that the old substring scan accepted",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-2"
+        }
+      ],
+      "constraints": [
+        "keep the UNVERIFIED label and the classification logic byte-identical -- only the explanatory sentence changes",
+        "one string literal; zero test churn expected"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/map_orient.py --self-test && python -m pytest tests/test_map_orient.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g4-implementer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-02T05:21:35.739572+00:00",
+    "last_heartbeat": "2026-08-02T05:24:45.582671+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-02T05:26:37.617380+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "context and prior-gate evidence loaded; the g4 delta is the check firing from the MATERIALIZED template",
+      "mechanical": false,
+      "ts": "2026-08-02T04:40:33.650531+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "materialized spine carries zero resolver-family placeholders; context c2 --root resolved to a real absolute path and --work-id to the scratch id",
+      "mechanical": false,
+      "ts": "2026-08-02T04:41:24.750890+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "the materialized check reported degraded (engine REFUSED exit 1, check exit 12 then 10) and was discharged in one command to exit 0; context advanced with no --force and no waiver",
+      "mechanical": false,
+      "ts": "2026-08-02T04:44:15.380459+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "full suite green locally under python 3.14: 1538 passed, 2 skipped, 481 subtests passed in 202.12s; the engine re-runs it as the gate",
+      "mechanical": false,
+      "ts": "2026-08-02T04:51:41.565063+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "scratch removed and absence verified; prior-gate artifacts and TRIPWIRES.md unchanged by blob OID; IMPLEMENTER_RESULT written",
+      "mechanical": false,
+      "ts": "2026-08-02T04:54:50.211771+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "one string literal in map_orient.py:963 (1 insertion, 1 deletion), UNVERIFIED and the classification untouched; self-test OK and test_map_orient 87 passed with zero test churn; harness predicate now reads the structured mode and rejects a RESOLVED receipt the old substring scan accepted",
+      "mechanical": false,
+      "ts": "2026-08-02T05:24:45.582642+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-02T05:22:16.986743+00:00",
+      "reason": "g4 review APPROVED with a MAJOR cheap defect routed as fix-now: the degraded report line overclaims against a present, hash-pinned substitute, in this issue's own signature output surface. Plus a one-line fix to the evidence harness weakness the reviewer found.",
+      "authority": "commander-304c (g4 review adjudication)",
+      "ops": [
+        "added m5"
+      ]
+    }
+  ]
+}

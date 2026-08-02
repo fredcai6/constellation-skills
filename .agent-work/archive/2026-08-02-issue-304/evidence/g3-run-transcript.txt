@@ -1,0 +1,384 @@
+==============================================================================
+issue-304 gate g3, STEP 3 RUN - verbatim transcript
+A fresh Commander spine materialized in THIS repo (docs/agents/ present,
+docs/architecture/ ABSENT - the degraded common case) and driven through
+init and context with the engine. Every block below is the engine's own
+stdout/stderr, captured by tee, not a description of it.
+repo:    C:/Programs/constellation-skills-wt/e298-304
+HEAD:    baf09f2  g3 m3(#304): retarget the last pathless "current map" phrase, at plan
+engine:  C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py
+==============================================================================
+
+$ ls -d docs/agents docs/architecture
+ls: cannot access 'docs/architecture': No such file or directory
+docs/agents
+
+------------------------------------------------------------------------------
+$ python scripts/init_work_area.py --spine skills/commander/templates/COMMANDER_SPINE.template.json --root C:/Programs/constellation-skills-wt/e298-304 g3-scratch-run
+------------------------------------------------------------------------------
+work area ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g3-scratch-run
+spine ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g3-scratch-run\spine.json
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json claim --session constellation/issue-304/g3/scratch-run
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance init`.
+
+claimed lease constellation/issue-304/g3/scratch-run -> active
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json current
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance init`.
+
+LEASE active: constellation/issue-304/g3/scratch-run (by agent, heartbeat 2026-08-02T03:56:21.361433+00:00)
+ACTIVE init [pending] — Run: python scripts/init_work_area.py g3-scratch-run. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) — use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: <engine> claim --session-id commander-g3-scratch-run --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason "resuming this run"). From here on, pass --session-id commander-g3-scratch-run on every mutating engine call against this spine.
+postconditions:
+  c1 [unmet] command — work area scaffolded
+  c2 [unmet] null — engine session lease claimed for this spine (commander owns the state)
+0/2 met
+next: start init
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json start init --session-id constellation/issue-304/g3/scratch-run
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance init`.
+
+init -> in-progress
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json attest init --cond c2 --which postconditions --session-id constellation/issue-304/g3/scratch-run --note scratch run for issue-304 g3 STEP 3; work area materialized by init_work_area.py --spine
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance init`.
+
+attested init.c2
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json advance init --session-id constellation/issue-304/g3/scratch-run --mechanical
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 9 steps from done. Next: Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution — do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs — condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Before you open any source file, resolve and read the map input: run python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map — it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order — README.md, AGENTS.md, CLAUDE.md, a docs/ index — and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly — that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.. Run it.
+
+init -> complete
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json current
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 9 steps from done. Next: Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution — do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs — condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Before you open any source file, resolve and read the map input: run python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map — it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order — README.md, AGENTS.md, CLAUDE.md, a docs/ index — and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly — that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.. Run it.
+
+LEASE active: constellation/issue-304/g3/scratch-run (by agent, heartbeat 2026-08-02T03:56:22.242063+00:00)
+ACTIVE context [pending] — Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution — do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs — condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Before you open any source file, resolve and read the map input: run python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map — it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order — README.md, AGENTS.md, CLAUDE.md, a docs/ index — and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly — that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.
+postconditions:
+  c1 [unmet] null — orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist
+  c2 [unmet] command — the map input was resolved BEFORE any source file was opened, and the orientation contract is satisfied: RESOLVED, or a DEGRADED verdict discharged with hash-pinned substitutes AND the unmapped gap AND an escalation. Gate-vs-report is a flag flip: append --report-only to the command below to turn this gate into a non-blocking report without rewiring the step.
+0/2 met
+next: start context
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json start context --session-id constellation/issue-304/g3/scratch-run
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 9 steps from done. Next: Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution — do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs — condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Before you open any source file, resolve and read the map input: run python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map — it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order — README.md, AGENTS.md, CLAUDE.md, a docs/ index — and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly — that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.. Run it.
+
+context -> in-progress
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json attest context --cond c1 --which postconditions --session-id constellation/issue-304/g3/scratch-run --note doctrine + docs/agents/ORCHESTRATOR_CONTEXT.md read; docs/agents/GLOSSARY.md and docs/agents/engine-config.json absent in this repo
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 9 steps from done. Next: Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution — do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs — condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Before you open any source file, resolve and read the map input: run python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map — it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order — README.md, AGENTS.md, CLAUDE.md, a docs/ index — and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly — that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.. Run it.
+
+attested context.c1
+### exit: 0
+
+==============================================================================
+THE MOMENT UNDER TEST: advancing context runs the verify-orientation command
+check. No orient receipt exists yet. Does the contract REPORT, or pass silently?
+==============================================================================
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json advance context --session-id constellation/issue-304/g3/scratch-run --why scratch run: does the post-deletion context step still advance, and does verify-orientation report or pass silently in a repo with no docs/architecture/
+------------------------------------------------------------------------------
+RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+
+REFUSED: context: postconditions unmet ['c2'] Recovery: fix the underlying issue so postcondition c2 passes, then retry advance context. Do not edit the JSON — use the engine.
+### exit: 1
+
+==============================================================================
+The refusal above is the gate. What did the check itself say? Run it directly.
+==============================================================================
+
+------------------------------------------------------------------------------
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run
+------------------------------------------------------------------------------
+no receipt at C:/Programs/constellation-skills-wt/e298-304/.agent-work/g3-scratch-run/map-orientation.json -- run `orient` first
+RECEIPT-MISSING
+### exit: 12
+
+==============================================================================
+Now follow the imperative's own recovery path: resolve the map input.
+==============================================================================
+
+------------------------------------------------------------------------------
+$ python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run
+------------------------------------------------------------------------------
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/g3-scratch-run/map-orientation.json
+degraded and NOT discharged -- still owed:
+  - substitutes (what you read INSTEAD of a map, each hash-pinned)
+  -     substitutes is empty -- a degraded run read SOMETHING instead of the map
+  - unmapped (what stayed unmapped, stated plainly)
+  - escalation (what you are escalating, and to whom)
+### exit: 10
+
+==============================================================================
+DEGRADED expected (no docs/architecture/). Re-run declaring the substitute,
+the unmapped gap, and the escalation - the imperative's exact instruction.
+==============================================================================
+
+------------------------------------------------------------------------------
+$ python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run --substitute README.md --unmapped No docs/architecture/ exists in this repo, so no packets, overlays or decision anchors are available for any area; structure was taken from README.md and docs/ index prose alone. --escalation Escalating to the Commander for issue-304: this repo ships the Cartographer that BUILDS docs/architecture/ but carries no map of itself, so every Commander run here is structurally degraded.
+------------------------------------------------------------------------------
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/g3-scratch-run/map-orientation.json
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g3-scratch-run
+------------------------------------------------------------------------------
+DEGRADED-NO-MAP
+receipt: .agent-work/g3-scratch-run/map-orientation.json
+orientation contract SATISFIED
+problems: 0
+substitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk
+### exit: 0
+
+==============================================================================
+Retry the advance the contract refused.
+==============================================================================
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json advance context --session-id constellation/issue-304/g3/scratch-run --why Degraded discharged on the record: README.md hash-pinned as the substitute, the unmapped gap named, the escalation named. Retrying the advance the contract refused.
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 8 steps from done. Next: In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral — float a decision outside latitude, or query for missing context — per Stop Conditions. See the commander skill's Delegated/autonomous mode.. Run it.
+
+context -> complete
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/spine.json current
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 8 steps from done. Next: In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral — float a decision outside latitude, or query for missing context — per Stop Conditions. See the commander skill's Delegated/autonomous mode.. Run it.
+
+LEASE active: constellation/issue-304/g3/scratch-run (by agent, heartbeat 2026-08-02T03:56:46.769041+00:00)
+ACTIVE understand [pending] — In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral — float a decision outside latitude, or query for missing context — per Stop Conditions. See the commander skill's Delegated/autonomous mode.
+preconditions:
+  p1 [unmet] null — baseline context loaded
+postconditions:
+  c1 [unmet] artifact — problem statement and protected intent confirmed
+0/2 met
+next: attest understand --cond p1 --which preconditions
+DIGEST: Degraded discharged on the record: README.md hash-pinned as the substitute, the unmapped gap named, the escalation named. Retrying the advance the contract refused.
+### exit: 0
+
+==============================================================================
+T2's own observation, one level down: instantiate execute.json from the
+post-deletion EXECUTE_PLAN template and drive e0-context. Its config_ref is
+docs/agents/engine-config.json, which does NOT exist in this repo - the
+condition the deleted prose used to describe. Does the engine still degrade
+it mechanically now that nothing in the prose says it will?
+==============================================================================
+
+$ ls -l docs/agents/engine-config.json
+ls: cannot access 'docs/agents/engine-config.json': No such file or directory
+### exit: 2
+instantiated: .agent-work/g3-scratch-run/execute.json | work_id: g3-scratch-run | config_ref: docs/agents/engine-config.json
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json claim --session constellation/issue-304/g3/scratch-run-execute
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance e0-context`.
+
+claimed lease constellation/issue-304/g3/scratch-run-execute -> active
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json current
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance e0-context`.
+
+LEASE active: constellation/issue-304/g3/scratch-run-execute (by agent, heartbeat 2026-08-02T03:57:21.578039+00:00)
+ACTIVE e0-context [pending] — Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant Cartographer packet(s) for the bounded problem. Confirm the frozen plan's intent and scope, then attest c1.
+postconditions:
+  c1 [unmet] null — orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed
+0/1 met
+next: start e0-context
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json start e0-context --session-id constellation/issue-304/g3/scratch-run-execute
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance e0-context`.
+
+e0-context -> in-progress
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json attest e0-context --cond c1 --which postconditions --session-id constellation/issue-304/g3/scratch-run-execute --note doctrine + docs/agents/ORCHESTRATOR_CONTEXT.md read; no GLOSSARY.md and no Cartographer packets exist in this repo; scope confirmed against the g3 handoff
+------------------------------------------------------------------------------
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance e0-context`.
+
+attested e0-context.c1
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json advance e0-context --session-id constellation/issue-304/g3/scratch-run-execute --why T2: does e0-context still advance with its config_ref absent, now that the prose promising graceful degradation is gone
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.. Run it.
+
+e0-context -> complete
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json current
+------------------------------------------------------------------------------
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.. Run it.
+
+LEASE active: constellation/issue-304/g3/scratch-run-execute (by agent, heartbeat 2026-08-02T03:57:22.331105+00:00)
+ACTIVE g1-implement [pending] — Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.
+preconditions:
+  p1 [unmet] null — <qualitative dependency on a prior gate, or none>
+postconditions:
+  c1 [unmet] artifact — IMPLEMENTER_RESULT returned with no unresolved blockers
+0/2 met
+next: attest g1-implement --cond p1 --which preconditions
+DIGEST: T2: does e0-context still advance with its config_ref absent, now that the prose promising graceful degradation is gone
+### exit: 0
+
+$ ls -l docs/agents/engine-config.json   # T1/T2 fires-if: did the run create it?
+ls: cannot access 'docs/agents/engine-config.json': No such file or directory
+### exit: 2
+
+------------------------------------------------------------------------------
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g3-scratch-run/execute.json release --session-id constellation/issue-304/g3/scratch-run-execute
+------------------------------------------------------------------------------
+released lease constellation/issue-304/g3/scratch-run-execute
+### exit: 0
+
+------------------------------------------------------------------------------
+$ python <engine> --file .agent-work/g3-scratch-run/spine.json release --session-id constellation/issue-304/g3/scratch-run
+------------------------------------------------------------------------------
+released lease constellation/issue-304/g3/scratch-run
+### exit: 0
+
+==============================================================================
+T5's question: does the context gate observe ORDERING, or only the receipt?
+==============================================================================
+
+$ grep -n 'map_before_src' scripts/map_orient.py
+### exit: 1 (1 = no match: the metric PRE-B measured is not observed anywhere in the tool)
+
+$ cat .agent-work/g3-scratch-run/map-orientation.json   # the receipt the run produced
+{
+  "schema_version": 1,
+  "work_id": "g3-scratch-run",
+  "root": "C:/Programs/constellation-skills-wt/e298-304",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "e890012f0ab7448fc5ead29063664693147c268db3a5c1358bd0774d5a55ad89",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "e890012f0ab7448fc5ead29063664693147c268db3a5c1358bd0774d5a55ad89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture/ exists in this repo, so no packets, overlays or decision anchors are available for any area; structure was taken from README.md and docs/ index prose alone."
+  ],
+  "escalation": "Escalating to the Commander for issue-304: this repo ships the Cartographer that BUILDS docs/architecture/ but carries no map of itself, so every Commander run here is structurally degraded.",
+  "emitted_at": "2026-08-02T03:56:46.229564+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
+
+==============================================================================
+Scratch work area cleaned up:
+$ rm -rf .agent-work/g3-scratch-run && ls -d .agent-work/g3-scratch-run
+ls: cannot access '.agent-work/g3-scratch-run': No such file or directory
+==============================================================================
