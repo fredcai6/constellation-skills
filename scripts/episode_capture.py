@@ -287,71 +287,10 @@ def failed_command_count(task: Mapping[str, Any]) -> int:
     return total
 
 
-def find_spine_path(checklist: Mapping[str, Any], base_dir: Any) -> Path | None:
-    """The checklist file `checklist` was loaded from, identified from `base_dir`.
-
-    The seam is handed the checklist's DIRECTORY, not its path, and a work area can
-    hold several checklists (`spine.json` and a gate plan side by side, sharing a
-    `work_id`). So the candidate is identified rather than guessed: each
-    `*.json.journal` names its own checklist, and the one whose `work_id` AND `items`
-    both match the live checklist is it. Anything else — no match, or more than one —
-    returns `None`, because a journal read off the wrong checklist would silently
-    report another run's reopens as this one's.
-    """
-    if base_dir is None:
-        return None
-    try:
-        candidates = sorted(Path(base_dir).glob("*.json.journal"))
-    except OSError:
-        return None
-    matches: list[Path] = []
-    for journal in candidates:
-        spine = Path(str(journal)[: -len(".journal")])
-        try:
-            with open(spine, encoding="utf-8") as handle:
-                data = json.load(handle)
-        except (OSError, ValueError):
-            continue
-        if (data.get("work_id") == checklist.get("work_id")
-                and data.get("items") == checklist.get("items")):
-            matches.append(spine)
-    return matches[0] if len(matches) == 1 else None
-
-
-def journal_reopens(spine_path: Any, step: str | None = None) -> int | None:
-    """Successful `reopen` verbs in the journal sidecar — the whole run, or one step.
-
-    The journal is preferred over the checklist's own `why_trail`, which cannot serve:
-    `reopen` appends a why-marker for the target AND for every cascaded downstream
-    gate, so counting markers would report reopens against gates nobody reopened. The
-    journal records only the verb's actual `--id`.
-
-    `None` when there is no journal at all. (A `reopen` that ESCALATED on a breached
-    rework cap is a successful verb invocation and is therefore counted here; telling
-    it apart is not possible from the journal alone, and that is recorded rather than
-    silently decided.)
-    """
-    if spine_path is None:
-        return None
-    journal = _engine().journal_path(Path(spine_path))
-    try:
-        lines = [ln for ln in journal.read_text(encoding="utf-8").splitlines() if ln.strip()]
-    except OSError:
-        return None
-    total = 0
-    for line in lines:
-        try:
-            entry = json.loads(line)
-        except ValueError:
-            continue  # a corrupt line degrades the tally, never the verb
-        if entry.get("verb") == "reopen" and (step is None or entry.get("task") == step):
-            total += 1
-    return total
-
-
-def reopen_total(checklist: Mapping[str, Any], spine_path: Any) -> int | None:
-    """`reopens` — how many times this RUN has been reopened, from two independent
-    engine-written witnesses.
+def reopen_total(checklist: Mapping[str, Any]) -> int | None:
+    """`reopens` — how many times this RUN has been reopened, summed from the
+    per-task `rework_count` that the engine's `reopen` verb writes and nothing else
+    in the engine touches.
 
     **Run-scoped, where `rework-count` is step-scoped**, and that is what keeps the
     store's two field names two facts rather than one written twice: a run may have
@@ -359,30 +298,30 @@ def reopen_total(checklist: Mapping[str, Any], spine_path: Any) -> int | None:
     worked example in `docs/EPISODE_STORE.md` §3 (`reopens: 1`, `rework-count: 1`) is
     the ordinary case where they coincide, not evidence that they are the same number.
 
-    **Two witnesses, and the larger wins — this is reconciliation, not a fallback.**
-    The journal sidecar records one line per successful `reopen`; each task's own
-    `rework_count` is incremented by that same verb and by nothing else in the engine.
-    Both can only ever UNDER-count (the journal is written by `main()` AFTER the verb
-    returns, so during the verb that is emitting this record its own line does not
-    exist yet; a `rework_count` can be dropped by an `amend` that removes a gate).
-    Neither can over-count. So the larger reading is the best-corroborated one and is
-    never a guess — which is what lets this field be answered at the seam at all.
-    A journal-only source cannot: at the first mutating verb of a run there is no
-    journal file yet, so the group would be permanently incomplete at exactly the
-    moment the seam fires. Measured, not reasoned — that is the defect this
-    reconciliation was written to fix.
+    **The journal sidecar is deliberately NOT a second witness, and the reason is
+    measured rather than argued.** An earlier version of this field took
+    `max(journal_reopen_lines, rework_total)`, resting on the claim that both
+    witnesses could only ever UNDER-count. **That claim is false.** `reopen()`'s
+    rework-cap branch blocks the gate and bubbles it to the parent WITHOUT
+    incrementing `rework_count`, and it returns an ordinary string rather than
+    raising — so `main()` takes the success path and, because `reopen` is a
+    `MUTATING_VERB`, journals a `reopen` line for a reopen its own message says did
+    not happen (*"blocked and bubbled to parent (not reopened)"*). The journal
+    therefore over-counts by one per escalation, and `max` is exactly the operator
+    that prefers the inflated reading: a run with ONE real reopen emitted
+    `"reopens": 2`. Under `decision:refuse-never-fabricate` a fabricated mechanical
+    fact is the worst outcome available to this composer, so the over-counting
+    witness is gone rather than compensated for. `rework_count` cannot over-count:
+    the same branch that fabricates a journal line pointedly leaves it alone.
 
-    `None` only when neither witness can be read, which means the checklist itself is
-    malformed.
+    **The cost, stated rather than hidden: this can now UNDER-count.** An `amend`
+    that drops a `pending` gate carrying `rework_count > 0` takes its reopens with
+    it, and that is the recovery the second witness existed for. It is accepted
+    deliberately — under-counting is the direction this field's doctrine already
+    concedes, and over-counting fabricates.
+
+    `None` only when the checklist is malformed enough to have no `tasks` mapping.
     """
-    witnesses = [w for w in (journal_reopens(spine_path), _rework_total(checklist))
-                 if w is not None]
-    return max(witnesses) if witnesses else None
-
-
-def _rework_total(checklist: Mapping[str, Any]) -> int | None:
-    """The run's total `rework_count` — the second reopen witness. `reopen` is the only
-    thing in the engine that increments it, exactly once per successful reopen."""
     tasks = checklist.get("tasks")
     if not isinstance(tasks, dict):
         return None
@@ -422,7 +361,7 @@ def manifest_ref(checklist: Mapping[str, Any], step: str, base_dir: Any) -> str 
 
 
 def mechanical_fields(
-    checklist: Mapping[str, Any], base_dir: Any = None, spine_path: Any = None
+    checklist: Mapping[str, Any], base_dir: Any = None
 ) -> dict[str, Any]:
     """The mechanical field group for the checklist's ACTIVE step, from engine state.
 
@@ -449,10 +388,19 @@ def mechanical_fields(
     if role:
         fields["role"] = role
 
-    # `refusals` is run-scoped, unlike its step-scoped neighbours, because a refusal
-    # does not always name a task. It is present only once `claim` has ARMED it, so
-    # absence means "this run predates the counter" and is refused rather than
-    # reported as 0 — the arming is what makes that distinction readable at all.
+    # `refusals` is CHECKLIST-scoped, unlike its step-scoped neighbours, because a
+    # refusal does not always name a task. Checklist-scoped, not run-scoped, and the
+    # difference is measured: the counter moves on every refused mutating verb against
+    # this file, including one from a FOREIGN session — a teammate's stale-lease retry
+    # takes a lease conflict and increments this run's tally. So read it as "refusals
+    # taken against this checklist", which is what it honestly is. Narrowing it to the
+    # leaseholder's own session is a semantics change with its own under-count (a
+    # refusal where `--session-id` was forgotten is genuinely this run's), filed
+    # separately rather than guessed at here.
+    #
+    # It is present only once `claim` has ARMED it, so absence means "this run predates
+    # the counter" and is refused rather than reported as 0 — the arming is what makes
+    # that distinction readable at all.
     refusals = checklist.get("refusals")
     if isinstance(refusals, int) and not isinstance(refusals, bool) and refusals >= 0:
         fields["refusals"] = refusals
@@ -468,10 +416,7 @@ def mechanical_fields(
 
         fields["failed-commands"] = failed_command_count(task)
 
-        reopens = reopen_total(
-            checklist,
-            spine_path if spine_path is not None else find_spine_path(checklist, base_dir),
-        )
+        reopens = reopen_total(checklist)
         if reopens is not None:
             fields["reopens"] = reopens
 

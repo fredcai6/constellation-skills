@@ -123,7 +123,7 @@
     "gate": "g2-implement",
     "role": "implementer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/issue-305/g2-implement/implementer/attempt-1",
     "backend": "external",
     "pid": null,
@@ -133,11 +133,13 @@
     "stdout": ".agent-work/issue-305/crew-runs/g2-implement-implementer-attempt-1.stdout.txt",
     "stderr": ".agent-work/issue-305/crew-runs/g2-implement-implementer-attempt-1.stderr.txt",
     "started_at": "2026-08-02T03:38:14.131757+00:00",
-    "last_heartbeat": "2026-08-02T03:38:14.131757+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-02T04:49:37.163279+00:00",
+    "completed_at": "2026-08-02T04:49:37.163279+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   },
   {
     "crew_id": "constellation/issue-305/g2-review/reviewer/attempt-1",
@@ -162,5 +164,27 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/issue-305/g2-implement/implementer/attempt-2",
+    "work_id": "issue-305",
+    "gate": "g2-implement",
+    "role": "implementer",
+    "attempt": 2,
+    "status": "running",
+    "session_name": "constellation/issue-305/g2-implement/implementer/attempt-2",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/e298-305",
+    "handoff": ".agent-work/issue-305/crew/g2-implement-rework-handoff.md",
+    "result": ".agent-work/issue-305/crew/g2-implement-rework-result.md",
+    "stdout": ".agent-work/issue-305/crew-runs/g2-implement-implementer-attempt-2.stdout.txt",
+    "stderr": ".agent-work/issue-305/crew-runs/g2-implement-implementer-attempt-2.stderr.txt",
+    "started_at": "2026-08-02T04:49:42.526232+00:00",
+    "last_heartbeat": "2026-08-02T04:49:42.526232+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus"
   }
 ]

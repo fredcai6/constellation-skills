@@ -326,15 +326,17 @@ class LiveSpine:
         return json.loads(self.path.read_text(encoding="utf-8"))
 
     def fields(self):
-        return ec.mechanical_fields(self.load(), base_dir=self.dir, spine_path=self.path)
+        return ec.mechanical_fields(self.load(), base_dir=self.dir)
 
 
 class ReopensFieldTests(unittest.TestCase):
-    """`reopens` comes from the JOURNAL, not from the checklist's own why_trail.
+    """`reopens` sums the tasks' own `rework_count`, which only `reopen` writes.
 
-    The why_trail would over-count: `reopen` appends a marker for the target AND for
-    every cascaded downstream gate, so a gate nobody reopened would report reopens.
-    The journal records only the verb's actual `--id`.
+    Neither of the two obvious alternatives can serve. The checklist's `why_trail`
+    over-counts: `reopen` appends a marker for the target AND for every cascaded
+    downstream gate, so gates nobody reopened would report reopens. The journal
+    sidecar over-counts too, for a subtler reason — see
+    `EscalatedReopenIsNotAReopenTests`, which is the test that killed it.
     """
 
     def setUp(self):
@@ -380,12 +382,15 @@ class ReopensFieldTests(unittest.TestCase):
         self.assertEqual(both["reopens"], 2)
         self.assertEqual(both["rework-count"], 1)
 
-    def test_a_missing_journal_is_covered_by_the_second_witness(self):
-        """The journal is written by `main()` AFTER the verb returns, so it cannot be
-        the only witness: at the seam, the in-flight verb's own line does not exist
-        yet. `rework_count` is incremented by the same verb and by nothing else, so
-        the two reconcile — and neither can over-count, which is why the larger
-        reading is corroboration rather than a guess."""
+    def test_the_journal_sidecar_is_not_consulted_at_all(self):
+        """The journal is NOT a witness, and this pins that it has not crept back in.
+
+        It once was, reconciled by `max()` on the claim that neither witness could
+        over-count. That claim was false — an escalated `reopen` journals a line
+        without incrementing `rework_count` — so the journal witness was removed
+        rather than compensated for. Deleting the sidecar outright must therefore
+        leave the field completely unmoved, at a real non-zero value.
+        """
         engine = load("checklist_engine")
         self.spine.complete("s1")
         self.assertEqual(self.spine.verb("reopen", "s1", "--reason", "r").returncode, 0)
@@ -394,13 +399,172 @@ class ReopensFieldTests(unittest.TestCase):
         engine.journal_path(self.spine.path).unlink()
         self.assertEqual(self.spine.fields()["reopens"], 1)
 
-    def test_reopens_is_refused_only_when_no_witness_can_be_read(self):
-        """Tested on the helper directly: a checklist malformed enough to lose BOTH
-        witnesses cannot produce an active step either, so `mechanical_fields` would
-        never reach this branch. It is kept because a partial read must still refuse
-        rather than answer 0."""
-        self.assertIsNone(ec.reopen_total({"tasks": "not a mapping"}, None))
-        self.assertEqual(ec.reopen_total({"tasks": {}}, None), 0)
+    def test_reopens_is_refused_only_when_the_witness_cannot_be_read(self):
+        """Tested on the helper directly: a checklist malformed enough to lose its
+        `tasks` mapping cannot produce an active step either, so `mechanical_fields`
+        would never reach this branch. It is kept because a partial read must still
+        refuse rather than answer 0."""
+        self.assertIsNone(ec.reopen_total({"tasks": "not a mapping"}))
+        self.assertEqual(ec.reopen_total({"tasks": {}}), 0)
+
+
+class EscalatedReopenIsNotAReopenTests(unittest.TestCase):
+    """An ESCALATED `reopen` is journalled as a `reopen` but never was one.
+
+    This is the case a journal-witness `reopens` gets WRONG, and the reason the
+    field now reads the per-task `rework_count` witness alone. `reopen()`'s
+    rework-cap branch blocks and bubbles WITHOUT incrementing `rework_count`, and
+    it returns a normal string rather than raising — so `main()` takes the success
+    path and journals a `reopen` line for a reopen that its own message says did
+    not happen. Ground truth is `rework_count`; the journal is inflated by exactly
+    one line per escalation.
+
+    **Both seams are exercised, and that is not belt-and-braces.** The journal line
+    for the in-flight verb is written by `main()` AFTER the verb returns, so the
+    journal witness read at a seam is short by one: the inflation is `E` at a
+    `start` seam but `E-1` at a `reopen` seam. A single escalation is therefore
+    exactly cancelled at a `reopen` seam, and a test that exercises only that seam
+    PASSES on the journal-witness code it is supposed to catch. The `reopen`-seam
+    case below needs two escalations to bite.
+
+    Everything runs through the real CLI so the journal sidecar is written by
+    `main()` exactly as in production. Nothing here hand-edits a journal: the
+    escalation is reached the only way it can be reached, and `skip` is the only
+    continuation past a cap-escalated gate (`resume` refuses it by design, `reopen`
+    refuses a blocked gate, and `start` refuses because a blocked gate is
+    non-terminal so `active_id()` keeps returning it).
+    """
+
+    SESSION = "sess-esc"
+    CAP = 1
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        # `<root>/<work-id>/spine.json`: `snapshot_path` is
+        # `manifest_root(base_dir)/<work-id>/mechanical/<step>.json` and
+        # `manifest_root` is the checklist directory's PARENT, so the emit lands
+        # back in this directory only because it is named for the work id.
+        self.dir = Path(self.tmp.name) / "esc"
+        self.dir.mkdir(parents=True)
+        self.path = self.dir / "spine.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def build(self, items):
+        tasks = {
+            iid: {
+                "id": iid, "title": iid, "imperative": f"do {iid}",
+                "preconditions": [],
+                "postconditions": [{"id": "c1", "statement": "done", "check": None,
+                                    "satisfied": False}],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            }
+            for iid in items
+        }
+        self.path.write_text(
+            json.dumps({"work_id": "esc", "type": "gated",
+                        "config": {"rework_cap": self.CAP},
+                        "items": list(items), "tasks": tasks, "consolidation": None,
+                        "triage_candidates": [], "blockers": []}, indent=2) + "\n",
+            encoding="utf-8", newline="\n",
+        )
+        out = self.verb("claim", "--claimed-by", "implementer")
+        self.assertEqual(out.returncode, 0, out.stderr)
+
+    def verb(self, *args):
+        return subprocess.run(
+            [sys.executable, str(ENGINE), "--file", str(self.path), *args,
+             "--session-id", self.SESSION],
+            capture_output=True, text=True, encoding="utf-8",
+        )
+
+    def say(self, out):
+        """The verb's own last line — the engine's message, not our paraphrase."""
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return ((out.stdout or out.stderr).strip().splitlines() or [""])[-1]
+
+    def complete(self, iid):
+        self.say(self.verb("start", iid))
+        self.say(self.verb("attest", iid, "--cond", "c1", "--which",
+                           "postconditions", "--note", "ok"))
+        self.say(self.verb("advance", iid, "--why", f"{iid} done"))
+
+    def rework(self, iid, reason):
+        """Reopen, satisfy again, advance — leaving `iid` complete and reopenable."""
+        line = self.say(self.verb("reopen", iid, "--reason", reason))
+        self.assertTrue(line.startswith(f"{iid} reopened"), line)
+        self.say(self.verb("attest", iid, "--cond", "c1", "--which",
+                           "postconditions", "--note", "ok"))
+        self.say(self.verb("advance", iid, "--why", f"{iid} reworked"))
+
+    def escalate(self, iid):
+        """Breach the cap. The engine's OWN message is the ground truth here."""
+        line = self.say(self.verb("reopen", iid, "--reason", "over the cap"))
+        self.assertTrue(line.startswith(f"ESCALATED {iid}"), line)
+        self.assertIn("not reopened", line)
+        self.say(self.verb("skip", iid, "--reason", "escalation resolved: OBE"))
+
+    def snapshot(self, step):
+        """The record the SEAM emitted, not a value we asked the composer for."""
+        return json.loads((self.dir / "mechanical" / f"{step}.json")
+                          .read_text(encoding="utf-8"))
+
+    def journal_reopen_lines(self):
+        entries = [json.loads(ln) for ln
+                   in (self.dir / "spine.json.journal").read_text(encoding="utf-8")
+                   .splitlines() if ln.strip()]
+        return sum(1 for e in entries if e.get("verb") == "reopen")
+
+    def rework_total(self):
+        return sum(t.get("rework_count", 0)
+                   for t in json.loads(self.path.read_text(encoding="utf-8"))
+                   ["tasks"].values())
+
+    def test_an_escalation_does_not_inflate_reopens_at_a_start_seam(self):
+        """ONE real reopen plus one escalation, read at a `start` seam.
+
+        Inflation is `E` = 1 here: the journal carries two `reopen` lines for one
+        reopen, and it is fully written by the time `start b` fires the seam.
+        """
+        self.build(["a", "b"])
+        self.complete("a")
+        self.rework("a", "the one real reopen")   # T = 1
+        self.escalate("a")                        # E = 1, then skipped
+        self.say(self.verb("start", "b"))         # <- the seam emits here
+
+        # The fixture really does reproduce the divergence it exists to catch.
+        # Without this the test could go green on a run where the witnesses agree.
+        self.assertEqual(self.journal_reopen_lines(), 2, "fixture no longer diverges")
+        self.assertEqual(self.rework_total(), 1)
+
+        self.assertEqual(self.snapshot("b")["mechanical"]["reopens"], 1)
+
+    def test_escalations_do_not_inflate_reopens_at_a_reopen_seam(self):
+        """THREE real reopens plus two escalations, read at a `reopen` seam.
+
+        Two escalations are required. At a `reopen` seam the in-flight verb's own
+        journal line does not exist yet, so the journal witness is `T + E - 1`;
+        with `E = 1` that equals `T` and a journal-witness implementation passes
+        by coincidence. With `E = 2` it reads 4 against a true 3.
+        """
+        self.build(["a", "b", "c"])
+        for iid in ("a", "b"):
+            self.complete(iid)
+            self.rework(iid, f"real reopen of {iid}")   # T += 1
+            self.escalate(iid)                          # E += 1, then skipped
+        self.complete("c")
+        line = self.say(self.verb("reopen", "c", "--reason", "real reopen of c"))
+        self.assertTrue(line.startswith("c reopened"), line)   # T = 3, seam emits
+
+        # 5 lines AFTER the verb returned; the seam ran one line earlier, so the
+        # witness the composer would have read is 4 against a ground truth of 3.
+        self.assertEqual(self.journal_reopen_lines(), 5, "fixture no longer diverges")
+        self.assertEqual(self.rework_total(), 3)
+
+        self.assertEqual(self.snapshot("c")["mechanical"]["reopens"], 3)
 
 
 class FailedCommandsFieldTests(unittest.TestCase):
