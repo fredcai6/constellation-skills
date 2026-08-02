@@ -397,13 +397,14 @@
           "id": "c1",
           "statement": "reviewer verdict recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT at .agent-work/issue-308/crew-handoffs/g3-review-result.md, verdict ACCEPT (engine APPROVE; survey g3-review/review.json, 11 checks, 0 findings). Both hunted classes searched for and NOT FOUND, each established by construction rather than by a green: three renamed-cap mutants all satisfy the gate's own c2 grep while behaving as caps, so that grep is necessary-not-sufficient; acceptance rests on a behavioural probe (300 adds on a fresh file, 200 past a legacy cap=20 header, 500 in one delta -- refusals empty and count == adds issued in all three, so silent truncation would also have surfaced). The replacement test was mutation-proved against three scratch copies -- a renamed _BANK_BUDGET refusal, a cap=20 round-tripped into the header, and adds silently dropped at rc=0 -- each going red. The grammar renumbering I flagged as my own uncertainty was cleared by exercising all 16 optional-field presence combinations against distinct sentinels plus a live negative control. Suite 1621 passed / 2 skipped reproduced independently. One triage candidate my handoff failed to scope: docs/RECURSIVE_IMPROVEMENT_DESIGN.md:402,414-415 still asserts in the present tense that the apply script enforces a hard cap."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -427,7 +428,8 @@
           "id": "c1",
           "statement": "verdict integrated; evidence reproduced in the Commander's own hands",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Verdict ACCEPT integrated. Acceptance reproduced in my own hands, not from a transcript: cap_is_gone.py exit 0 at 6a7dcbd, and the full suite re-run by me (1621 passed, 2 skipped, 543 subtests, 406.61s). Both crew results verified fresh via run_crew.py --verify-result and by mtime -- implement 14:11, review 14:50, both after their dispatches. Acted on the one gap the review found that my handoff had missed: docs/RECURSIVE_IMPROVEMENT_DESIGN.md asserted in the present tense at :402 that the apply script enforces a cap, and section 5.3's design record described the cap as live. Corrected both -- :402 now says it enforced one until #308, and 5.3 carries a SUPERSEDED-IN-PART banner naming the Curator's regular cleanup as the replacement and preserving the original paragraph intact. Reviewer's O1-O4 (positional regex groups, the twinned preamble, the shotgun surgery, legacy tolerance resting on one test) are recorded as observations and left alone -- they are refactors, not defects in this change."
         },
         {
           "id": "c2",
@@ -436,17 +438,30 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -645,12 +660,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 1,
+  "refusals": 2,
   "engine_session": {
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T20:02:38.399197+00:00",
-    "last_heartbeat": "2026-08-02T21:36:11.014558+00:00",
+    "last_heartbeat": "2026-08-02T22:07:12.294623+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -684,6 +699,20 @@
       "why": "The cap is gone at the level of BEHAVIOUR, not of source text: cap_is_gone.py drives the real writer against a frozen 20-entry fixture and was red at 752a62f (exit 1, 'active cap 20 reached') and green after. The removal reached the grammar, not just the refusal branch -- DEFAULT_CAP, the Playbook.cap field, the cap= capture group and the rendered header are all gone, with a tolerated-and-discarded non-capturing group left so the many legacy files still carrying cap=N keep parsing. That grammar removal is what stops the cap becoming a stale claim that enforces nothing, which is the failure class this epic has been closing all week. The refusal test was rewritten rather than deleted -- a delete would have made the suite green by removing the only assertion that could have failed -- and red-proved against a HEAD writer snapshot swapped in from scratch, with the mutation asserted applied and the restore cmp-verified. Suite 1621 passed / 2 skipped, run by me, not read from the crew's transcript.",
       "mechanical": false,
       "ts": "2026-08-02T21:36:11.014524+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g3-review",
+      "why": "The reviewer's value was not the verdict but the demonstration that this gate's own c2 grep could not have carried it -- three renamed-cap mutants satisfy that grep while behaving as caps. Acceptance therefore rests on a behavioural probe and three killed mutants, not on a green. The one thing my handoff failed to scope, RECURSIVE_IMPROVEMENT_DESIGN.md's present-tense claim that the script enforces a cap, is a stale claim of exactly the class g2 fixed for #348; I take it at integrate rather than deferring it, because deferring is how it became stale in the first place.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:52:28.477157+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-integrate",
+      "why": "g3 is done and the cap is gone behaviourally, in the grammar, and in the prose that described it. The integration's real content was the doc correction the review surfaced: leaving a design record asserting a live cap would have reproduced exactly the #348 defect this run fixed at g2 -- a document accurate when written, false when read. Next is g4, the migration, where the 23 records already built and dry-run-validated get written to the store.",
+      "mechanical": false,
+      "ts": "2026-08-02T22:07:12.294596+00:00"
     }
   ],
   "amendments": [

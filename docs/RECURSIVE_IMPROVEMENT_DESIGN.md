@@ -399,8 +399,9 @@ Commander LLM-editing LESSONS.md — Generator and Curator collapsed, the exact
 failure the Reflector split prevents. Revision: the LLM (auditor or Commander)
 emits structured operations — `ADD` / `AMEND <id>` / `RETIRE <id>` with
 justification and grounding citation — and a script (`apply_lessons_delta.py`,
-sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing cap,
-uniqueness, and counter rules. The LLM never writes the playbook directly.
+sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing
+uniqueness and counter rules (it enforced a cap too, until #308 removed it — see
+5.3). The LLM never writes the playbook directly.
 Shipped hardening: a threshold-ripe `apply` op against a doctrine target additionally
 requires a reproduction-drill record (`drill` field referencing
 `docs/superpowers/drills/<lesson-id>.md`; enforced in `apply_lessons_delta.py`) — the
@@ -409,6 +410,18 @@ never opens the drill or judges its quality (mechanism, not quality), and non-ri
 code-target applies are exempt.
 
 ### 5.3 Hard-bounded playbook with dormancy (severity 2)
+
+> **SUPERSEDED IN PART by #308 (2026-08-02): the hard cap no longer exists.**
+> `apply_lessons_delta.py` carries no `DEFAULT_CAP`, no active-entry refusal branch,
+> and no `cap=` field in the `playbook-state` grammar — the header field is tolerated
+> and discarded so legacy files keep parsing. Everything else in this section —
+> dormancy, the `ticked-work-ids` ring, the same-epoch guard — still stands as
+> described. What replaces the cap is the **Curator's regular cleanup pass**, not
+> another number. Tommy's reason: *"the hard cap was intended to not let things hang
+> out, but it just leads to forgetting when it's not cleaned up."* Measured at removal
+> time the effect was worse than forgetting: at 20/20 the writer refused **every** add,
+> so the cap had become a closed intake rather than an untidy bank. The paragraph below
+> is the original design record and is left intact.
 
 Reflexion bounds memory at 1–3 reflections; ACE prunes; "revisit at ~30" had no
 grounding. Revisions: hard cap (start 15–20, enforced by the apply script);
