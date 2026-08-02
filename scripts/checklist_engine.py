@@ -1833,7 +1833,8 @@ def _supersede_evidence(t: dict, iid: str, reason: str) -> None:
         ev["superseded"] = {"by": f"reopen:{iid}", "reason": reason, "ts": _now()}
 
 
-def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
+def reopen(cl: dict, iid: str, reason: str, cap: int | None = None,
+           base_dir: Path | None = None) -> str:
     """Reopen a complete gate for rework. Increments `rework_count`, escalates
     (blocks + bubbles, no reopen) when the cap is exceeded, and on the success
     path resets the gate's postconditions and CASCADES downstream: every later
@@ -1863,6 +1864,7 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None) -> str:
         return f"ESCALATED {iid}: rework cap {cap} reached; blocked and bubbled to parent (not reopened)"
     t["rework_count"] = t.get("rework_count", 0) + 1
     t["status"] = "in-progress"
+    emit_step_manifest(cl, iid, base_dir)  # #305: AFTER the mutation — active_id() picks the step.
     t.setdefault("status_detail", {})["reopen_reason"] = reason
     _reset_conditions(t.get("postconditions", []))
     _supersede_evidence(t, iid, reason)
@@ -2458,7 +2460,8 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
     if v == "resume":
         return resume(cl, args.id, args.reason, getattr(args, "note", None))
     if v == "reopen":
-        return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)))
+        return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)),
+                      base_dir=base_dir)
     if v == "append":
         return append(cl, args.id, args.title, args.imperative)
     if v == "amend":

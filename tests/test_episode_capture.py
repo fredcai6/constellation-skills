@@ -421,13 +421,72 @@ class FailSoft(unittest.TestCase):
             ec.emit_step_manifest(cl, "g1", spine.parent)
             self.assertEqual(Path(written).read_bytes(), before)
 
-    def test_failsoft_swallows_an_arbitrary_producer_crash(self):
+    def test_failsoft_an_arbitrary_producer_crash_leaves_a_stub_not_silence(self):
         """Broad-except is the deliberate choice here, so prove it against something
-        other than the errors the producer is known to raise."""
+        other than the errors the producer is known to raise — and prove it is
+        fail-SOFT without being fail-SILENT.
+
+        Writing nothing is the easy swallow and the wrong one. A vanished manifest
+        is indistinguishable from a step nobody ever started, and those are
+        different facts about the run. So the crash path must still leave the
+        reading it failed to take: a stub carrying the exception type."""
         with tempfile.TemporaryDirectory() as tmp:
             spine, cl = work_area(tmp)
+            # Not one of the producer's deliberate raises — `active_id` will index a
+            # string, which nothing in `context_manifest` anticipates.
             cl["tasks"] = "not a mapping"
-            self.assertIsNone(ec.emit_step_manifest(cl, "g1", spine.parent))
+            written = ec.emit_step_manifest(cl, "g1", spine.parent)
+            self.assertIsNotNone(written, "a swallowed crash wrote nothing at all")
+            self.assertTrue(Path(written).exists(), f"no stub at {written}")
+            stub = json.loads(Path(written).read_text(encoding="utf-8"))
+            self.assertEqual(stub["step"], "g1")
+            self.assertEqual(stub["emit_error"]["error"], "TypeError")
+            self.assertTrue(stub["emit_error"]["message"])
+            self.assertIsNone(stub["files"])
+
+    def test_stub_files_null_is_not_the_same_reading_as_empty_files(self):
+        """`files: []` and `files: null` are the two readings that must never
+        collide. `[]` is a *complete* reading — "this step declared no context
+        refs". `null` is the *absence* of a reading — "the record could not be
+        taken". A consumer that conflated them would report a step as having been
+        delivered nothing when in truth nothing is known about what it was
+        delivered.
+
+        Both sides are produced from real emits and both are read, so this cannot
+        pass on an empty-vs-empty or missing-vs-missing coincidence — and the last
+        three assertions pin the trap directly: BOTH values are falsy, so any
+        consumer discriminating on truthiness loses the distinction. Only
+        `is None` separates them."""
+        with tempfile.TemporaryDirectory() as tmp:
+            empty_spine, declares_nothing = work_area(tmp, work_id="declares-nothing")
+            broken_spine, cannot_read = work_area(
+                tmp, work_id="cannot-read",
+                declaration=[{"root": "vendor", "path": "x.md"}],
+            )
+            real = json.loads(
+                Path(ec.emit_step_manifest(declares_nothing, "g1", empty_spine.parent))
+                .read_text(encoding="utf-8")
+            )
+            stub = json.loads(
+                Path(ec.emit_step_manifest(cannot_read, "g1", broken_spine.parent))
+                .read_text(encoding="utf-8")
+            )
+
+            # Both files were really written and really read — the distinction
+            # below is between two present readings, not between one and a gap.
+            self.assertEqual(real["step"], "g1")
+            self.assertEqual(stub["step"], "g1")
+
+            self.assertEqual(real["files"], [])           # read it, found nothing declared
+            self.assertNotIn("emit_error", real)
+            self.assertIsNone(stub["files"])              # could not read it at all
+            self.assertIn("emit_error", stub)
+
+            # The trap, pinned: both are falsy, and they are still not the same.
+            self.assertFalse(bool(real["files"]))
+            self.assertFalse(bool(stub["files"]))
+            self.assertNotEqual(real["files"], stub["files"])
+            self.assertIsNot(real["files"], None)
 
 
 # --------------------------------------------------------------------------- #
