@@ -63,7 +63,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2",
+          "attested": {
+            "evidence": "e-g1-implement-2",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -100,7 +105,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "reopen_reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import."
       },
@@ -123,6 +128,17 @@
             "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
             "ts": "2026-08-02T03:00:53.041283+00:00"
           }
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g1-implement-rework-result.md",
+            "crew": "constellation/issue-305/g1-implement/implementer/attempt-3",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 1
@@ -716,6 +732,13 @@
       "reopen": true,
       "reason": "Admiral ruled the packaging fix in scope (#362): a capture that does not ship is not captured. Rework adds episode_capture.py + its dependency closure to SCRIPT_RUNTIME_COMPANIONS and extends the companion detector, which today cannot see a plain sibling import.",
       "ts": "2026-08-02T03:00:53.041310+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g1-implement",
+      "why": "Packaging rework landed per the Admiral's ruling. I reproduced the red myself rather than accepting it: reverting the companion tuple to pre-fix turns BOTH new guards red, and the binding test catches the no-op in the act (emit_step_manifest.__module__ == 'installed_engine_305', the fallback, not 'episode_capture'). That second guard is the one that matters -- a dict-derived check structurally cannot catch an UNdeclared dependency, so the two fail for different reasons and neither subsumes the other. Closure is transitive and cycle-safe (episode_capture -> agent_work_root + deferred context_manifest -> checklist_engine), verified through expand_script_bundle across all ten engine-carrying skills; agent_work_root was previously hand-listed on only two of them. Detector is not overfitted -- neither helper names episode_capture. Crew also found a second false comment I had not assigned: the engine's import-site comment asserted the sidecar is NOT bundled and named the wrong dict, which deliverable 1 made exactly backwards. Suite 1436 passed / 2 skipped / 471 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:16:03.303908+00:00"
     }
   ],
   "amendments": [
