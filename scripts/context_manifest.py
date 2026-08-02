@@ -39,9 +39,11 @@ Three properties carry the whole design:
    **Both sides are given in full because the count is pinned to that moment
    deliberately and keeps growing as this producer runs**: 49 / 47 / 1 / 1
    immediately before the removal, 56 / 51 / 1 / 4 at the removal commit
-   itself. The numbers rather than any SHA are the durable anchor — the
-   squash-merge does not carry this branch's commits into `main`. So a reader
-   can neither rely on a constant nor extract a signal from a varying one — both readings are unavailable, which is why the field
+   itself — measured at `35d2686^` and `35d2686` on `epic-298/305`, landed as
+   #389. The squash-merge carries neither SHA into `main`, so the SHAs settle
+   this on the branch and `#389` settles it afterwards. So a reader can neither
+   rely on a constant nor extract a signal from a varying one — both readings
+   are unavailable, which is why the field
    went rather than being re-placed a third time. Content loses nothing: it
    already carries the per-file blob OID as the precise "which bytes did this
    agent actually get" answer for a dirty, untracked or out-of-repo file, and
