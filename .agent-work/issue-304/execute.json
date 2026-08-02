@@ -679,7 +679,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -708,11 +709,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g4-result.md",
+            "verdict": "COMPLETE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -875,6 +887,13 @@
       "why": "Ran the verification myself: 111 passed, 69 subtests. Deletion verified independently - the overlay phrase is down to one occurrence at offset 262 inside the load-bearing sentence, both dead-path blocks gone, TRIPWIRES.md byte-identical to its pre-registration. One adjudication landed after the review: the trend snapshot bound its successor to the next epic that changes skills, while the ratified Admiral amendment names epic-298 close. I ruled for the ratified date and had the implementer keep its broader rule as the standing convention thereafter, committed at 4d95b6c. That divergence was my handoff under-specifying the amendment, not an implementer defect.",
       "mechanical": false,
       "ts": "2026-08-02T04:37:06.574357+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-implement",
+      "why": "Dogfooded from the materialized template in the degraded common case, which is what g3 did not isolate. Exit path 12 then 10 then 10 then 0: no receipt refuses, a receipt present but UNDISCHARGED still refuses and enumerates all three absent map candidates by path, and one orient re-run with substitutes, unmapped and escalation discharges it. The scratch spine's journal verbs are advance, attest, start - no waive, no force - so the gate is dischargeable honestly rather than only bypassable. Full suite 1538 passed, 2 skipped, 481 subtests, exit 0, local only; CI pins 3.12 and remains the merge gate. Zero product-code changes. Two findings reported and deliberately not fixed, one of which - a hash-pinned on-disk substitute labelled not corroborated by the filesystem - undercuts this issue's own honest-reporting deliverable in its wording and goes to the reviewer for a severity.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:57:21.060088+00:00"
     }
   ]
 }
