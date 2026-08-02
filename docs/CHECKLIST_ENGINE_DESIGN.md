@@ -253,12 +253,15 @@ entirely** (#327). Having a caller is what revealed it: `git status --porcelain`
 the manifest itself written under a tracked `.agent-work/` the flag reports the run's own bookkeeping
 rather than anything a declaration names, and because `build_manifest()` computes it *before*
 `write_manifest()` creates the file, each manifest reads its predecessor's tree, not its own. Measured
-**at the point of removal**, over the 49 manifests this producer had written in-tree: 47 `true`,
-1 `false`, 1 field-absent. The lone `false` is the mechanism in miniature rather than an exception to
-it: it is `.agent-work/issue-305/context/g1-implement.json`, the **second** manifest added to that
-context directory (`g1-review.json` preceded it by eight minutes, reporting `true`), and it reports
-clean because commit `2456130` cleaned the tree 2m16s before it was generated. It recorded what its
-predecessor left behind, not what it was itself about to do. Neither reading is available to a
+**as of `35d2686^`, the tree the removal was made on**, over the 49 manifests this producer had
+written in-tree: 47 `true`, 1 `false`, 1 field-absent. The revision is named rather than described
+because the arithmetic is pinned to that moment deliberately and the live count keeps growing as this
+producer runs — at `35d2686` itself it already reads 56 / 51 / 1 / 4. The lone `false` is the
+mechanism in miniature rather than an exception to it: it is
+`.agent-work/issue-305/context/g1-implement.json`, which exists at all only because g1 was
+**reopened**, and it reports clean because commit `2456130` cleaned the tree 2m16s before it was
+generated. It recorded what its predecessor left behind — `g1-review.json`, eight minutes earlier,
+reporting `true` — not what it was itself about to do. Neither reading is available to a
 consumer — not a constant to rely on, not a signal to interpret. The field was not an oversight in
 #300 and its removal is not a reversal of a mistake; it is what a first real caller made visible.
 `CONTENT_KEYS` is unchanged by the removal, because `dirty` was never content.

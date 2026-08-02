@@ -31,13 +31,15 @@ Three properties carry the whole design:
    repo-wide, so it reports dirt on files no declaration names — dominated, once
    the manifest itself is written under a tracked `.agent-work/`, by the run's own
    bookkeeping — and it is computed BEFORE the manifest is written, so it never
-   reads its own side effect but its predecessor's. Measured **at the point of
-   removal**, across the 49 manifests this producer had actually written here:
-   47 `true`, 1 `false`, 1 field-absent — and the lone `false` was written
-   2m16s after a commit cleaned the tree, so it is the read-your-predecessor
-   mechanism in miniature rather than an exception to it (the arithmetic is
-   pinned to that moment deliberately; the live count keeps growing as this
-   producer runs). So a reader can neither rely on a constant nor extract a signal
+   reads its own side effect but its predecessor's. Measured **as of
+   `35d2686^`, the tree the removal was made on**, across the 49 manifests this
+   producer had actually written here: 47 `true`, 1 `false`, 1 field-absent —
+   and the lone `false` was written 2m16s after a commit cleaned the tree, so it
+   is the read-your-predecessor mechanism in miniature rather than an exception
+   to it. The revision is named rather than described because the arithmetic is
+   pinned to that moment deliberately and the live count keeps growing as this
+   producer runs; at `35d2686` itself it already reads 56 / 51 / 1 / 4. So a
+   reader can neither rely on a constant nor extract a signal
    from a varying one — both readings are unavailable, which is why the field
    went rather than being re-placed a third time. Content loses nothing: it
    already carries the per-file blob OID as the precise "which bytes did this
