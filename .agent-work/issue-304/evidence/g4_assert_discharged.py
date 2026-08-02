@@ -33,9 +33,23 @@ print("context task status: %s" % ctx_status)
 if ctx_status != "complete":
     problems.append("context did not reach complete (got %r)" % ctx_status)
 
+def receipt_is_degraded(receipt: dict) -> bool:
+    """Read the receipt's STRUCTURED verdict field, never the document as a string.
+
+    This assertion was originally ``"DEGRADED" in json.dumps(receipt).upper()``, which
+    the g4 reviewer showed is satisfied by the agent's OWN escalation prose
+    ("...structurally degraded until a map exists") and so evaluates True even on a
+    ``mode: RESOLVED`` receipt -- a check that cannot fail, the #300 class, inside the
+    very gate whose job was to prove that checks fire. ``build_receipt`` writes the
+    verdict to ``mode``; that field, and only that field, is the oracle.
+    ``g4_assert_harness_discriminates.py`` pins the discrimination.
+    """
+    return str(receipt.get("mode", "")).upper().startswith("DEGRADED")
+
+
 receipt = json.loads(io.open(RECEIPT, encoding="utf-8").read())
-verdict = receipt.get("verdict") or receipt.get("status") or ""
-degraded = "DEGRADED" in json.dumps(receipt).upper()
+verdict = receipt.get("mode") or ""
+degraded = receipt_is_degraded(receipt)
 subs = receipt.get("substitutes") or []
 print("receipt degraded: %s   substitutes: %d   unmapped: %d   escalation: %s"
       % (degraded, len(subs), len(receipt.get("unmapped") or []),

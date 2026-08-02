@@ -960,7 +960,7 @@ def render_verify_report(
         if label == LABEL_KNOWN_FALLBACK:
             note = "found in the fixed fallback set and present on disk"
         else:
-            note = "UNVERIFIED -- declared by the agent, not corroborated by the filesystem"
+            note = "UNVERIFIED -- declared by the agent, not in the fixed fallback set"
         lines.append(f"substitute: {path if path else '(no path)'} [{label}] -- {note}")
     return lines
 

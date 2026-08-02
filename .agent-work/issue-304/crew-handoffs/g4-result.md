@@ -11,8 +11,10 @@ All three deciding questions answered by command, in this order: it **reported**
 exit 1; check exit 12, then 10), it was **discharged without `--force` and without a waiver** (one
 `orient` command with three flags, check exit 0, `context -> complete`), and the placeholders
 **resolved** (zero resolver-family tokens survive; `--root` is a real absolute path). Full suite
-green locally: **1538 passed, 2 skipped, 481 subtests passed in 202.12s**. Zero product-code changes —
-this gate was demonstration, exactly as scoped. Three deviations named below, one of them mine to own.
+green locally: **1538 passed, 2 skipped, 481 subtests passed in 202.12s**. Zero product-code changes in
+m1–m4 — this gate was demonstration, exactly as scoped. Three deviations named below, one of them mine
+to own. **§6 records a post-review slice `m5`**: after g4 was APPROVED, the Commander routed one of the
+two reported findings as fix-now, so the final tree carries **one string literal** of product change.
 
 ## Completed slice
 
@@ -24,10 +26,11 @@ this gate was demonstration, exactly as scoped. Three deviations named below, on
 4. Removed the scratch work area and verified its absence; verified the prior gates' artifacts and
    `TRIPWIRES.md` unchanged by **blob OID**, not by `git status`.
 
-**Evidence on disk:** `.agent-work/issue-304/evidence/g4-run-transcript.txt` (163 lines, the engine's
-and the tool's own output via `tee`), `.agent-work/issue-304/evidence/g4-full-suite.txt`, and three
-executable assertions (`g4_assert_resolved.py`, `g4_assert_discharged.py`, `g4_assert_closeout.py`)
-that are the plan's own command checks — the engine ran each of them itself.
+**Evidence on disk:** `.agent-work/issue-304/evidence/g4-run-transcript.txt` (the engine's
+and the tool's own output via `tee`), `.agent-work/issue-304/evidence/g4-full-suite.txt`, and **four**
+executable assertions (`g4_assert_resolved.py`, `g4_assert_discharged.py`, `g4_assert_closeout.py`,
+`g4_assert_harness_discriminates.py`) that are the plan's own command checks — the engine ran each of
+them itself.
 
 **Commits:**
 
@@ -35,14 +38,17 @@ that are the plan's own command checks — the engine ran each of them itself.
 40e7122 g4 m1(#304): materialize the EDITED spine, prove the placeholders resolved
 a90262e g4 m2(#304): drive the MATERIALIZED spine through context - reported, then discharged
 137beac g4 m3(#304): full suite green locally - 1538 passed, 2 skipped, 481 subtests
+4e7a42c g4 m4(#304): IMPLEMENTER_RESULT - dogfood proven, cleanup verified, plan driven to done
+        g4 m5(#304): post-review fix-now triage (see §6)
 ```
 
 ## Scope
 
-**Files changed:** evidence and plan artifacts only, all under `.agent-work/issue-304/`. **No file
-under `skills/`, `scripts/`, `tests/` or `docs/` was touched.** `git diff 4f9c6d1..HEAD --stat`
-outside `.agent-work/` is empty — the dogfood did **not** turn into an edit, which is itself the
-result the handoff asked to be told about.
+**Files changed (m1–m4, the gate as reviewed):** evidence and plan artifacts only, all under
+`.agent-work/issue-304/`. **No file under `skills/`, `scripts/`, `tests/` or `docs/` was touched.**
+`git diff 4f9c6d1..4e7a42c --stat` outside `.agent-work/` is empty — the dogfood did **not** turn into
+an edit, which is itself the result the handoff asked to be told about. **m5 adds exactly one line of
+`scripts/map_orient.py`** (§6), on the Commander's post-review ruling.
 
 **Specific exclusions touched:** none. g1/g2/g3 not re-opened; `TRIPWIRES.md` not rewritten (verified
 by OID below); #341, #342, #344, #363, #364 not fixed; `checklist_engine.py` not modified; no
@@ -343,8 +349,21 @@ more.
    fixed set is agent-declared even when present"*), and that design is right — membership of the
    fixed fallback set is an oracle the agent does not author. It is only the **note text** that
    overclaims: the accurate sentence is *"not in the fixed fallback set"*, since presence plainly was
-   corroborated. **Triage candidate**, wording only. Left alone deliberately: three tests assert on
-   these labels and this gate is scoped to demonstration.
+   corroborated. **Triage candidate**, wording only.
+
+   > **CORRECTION, and now FIXED — see §6.** As first written, this paragraph said the fix was left
+   > alone partly because *"three tests assert on these labels."* **That count was wrong, and an
+   > overestimate of a fix's cost is exactly how a cheap must-fix becomes a permanent deferral.**
+   > Measured rather than recalled:
+   >
+   > ```
+   > $ grep -rn "UNVERIFIED\|corroborated" tests/
+   > tests/test_map_orient.py:1075:        self.assertIn("UNVERIFIED", proc.stdout)
+   > ```
+   >
+   > **Zero** tests pin the sentence; **one** pins the word `UNVERIFIED`, which the accurate rewording
+   > keeps. One string literal, zero test churn. The Commander routed it fix-now on that basis and it
+   > is done.
 
 ## Map Impact
 
@@ -366,7 +385,7 @@ more.
   gave (no map here; `f1Brainz` is off-limits because `orient` *writes* a receipt into its `--root`).
   T3's mapped-repo clause is still unfalsified and unconfirmed. Unchanged by g4, and stated so it is
   not read as covered.
-- **Triage candidates:** the two findings above.
+- **Triage candidates:** finding 1 (open). Finding 2 was routed fix-now by the Commander and is fixed in m5 (§6).
 
 ## Workflow Feedback
 
@@ -390,6 +409,121 @@ more.
   transcript meant this run added the missing stage (B: the undischarged receipt) rather than repeating
   g3's two.
 
+---
+
+# 6. Post-review slice m5 — the fix-now triage from the g4 review
+
+**g4 was APPROVED with no blockers.** The Commander then routed reported finding 2 as **fix-now**
+rather than deferred, on the ground that an honesty defect *in the honesty feature* is the wrong thing
+to defer, and that my own cost estimate was an overestimate. Appended as gate `m5` via the engine's
+`amend --op add` (authority: `commander-304c (g4 review adjudication)`) after a `claim --force
+--reason "fix-now triage from g4 review: overclaiming substitute label"` — **appended, not reopened**:
+nothing upstream is invalidated by a wording change.
+
+## 6a. The reword — one string literal
+
+```
+$ git diff --stat scripts/map_orient.py
+ scripts/map_orient.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git diff scripts/map_orient.py
+@@ -960,7 +960,7 @@ def render_verify_report(
+         if label == LABEL_KNOWN_FALLBACK:
+             note = "found in the fixed fallback set and present on disk"
+         else:
+-            note = "UNVERIFIED -- declared by the agent, not corroborated by the filesystem"
++            note = "UNVERIFIED -- declared by the agent, not in the fixed fallback set"
+         lines.append(f"substitute: {path if path else '(no path)'} [{label}] -- {note}")
+```
+
+`UNVERIFIED` is kept; `substitute_label` and the `LABEL_*` constants are untouched; the neighbouring
+comments were checked and were **already** accurate (*"the receipt distinguishes 'resolved from the
+known fallback set' from 'the agent said so'"*), so nothing else needed changing. `grep -rn
+"corroborated" scripts/ tests/ skills/ docs/` now returns no hit in this tool.
+
+**The reworded line, live** — same repo, same present-and-hash-pinned substitute that produced the
+finding:
+
+```
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-fix-check
+DEGRADED-NO-MAP
+receipt: .agent-work/g4-fix-check/map-orientation.json
+orientation contract SATISFIED
+problems: 0
+substitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk
+substitute: docs/agents/ORCHESTRATOR_CONTEXT.md [agent-declared] -- UNVERIFIED -- declared by the agent, not in the fixed fallback set
+### exit: 0
+```
+
+The `g4-fix-check` scratch area was removed and its absence verified (`ls -d` → *No such file or
+directory*), same as the main scratch.
+
+## 6b. The two required re-runs
+
+```
+$ python scripts/map_orient.py --self-test
+self-test OK
+### exit: 0
+
+$ python -m pytest tests/test_map_orient.py -q
+.......................................................................................                   [100%]
+87 passed, 39 subtests passed in 11.96s
+### exit: 0
+```
+
+**Zero test churn**, as the reviewer's measurement predicted. Both were also re-run by the engine as
+m5's own `c1` check before it would write `m5 -> complete`.
+
+## 6c. The harness weakness the reviewer found — fixed, because it was one line
+
+The reviewer found that `g4_assert_discharged.py` asserted the degraded verdict with
+`"DEGRADED" in json.dumps(receipt).upper()` — a substring scan over the whole document, satisfied by
+**my own escalation prose** (*"…structurally degraded until a map exists"*) while the structured
+verdict was fetched and discarded. It returns True on a `mode: RESOLVED` receipt. **That is the #300
+failure class — a check that cannot fail — sitting inside the very gate whose job was to prove that
+checks fire, and it is the sharpest single finding of this review.** It was mine, and the reviewer had
+to find it because I did not.
+
+The Commander's instruction was: fix it if it is one line, otherwise record it. **It was one line** —
+`build_receipt` writes the verdict to a structured `mode` field, so the predicate now reads
+`str(receipt.get("mode", "")).upper().startswith("DEGRADED")` and nothing else.
+
+A repair asserted only in the direction we want would be the same defect wearing a fix's clothes, so
+the repair is pinned by an executable discriminator (`g4_assert_harness_discriminates.py`, m5's `c2`
+check) that loads the corrected predicate **out of the shipped source by `ast`** — not a copy — and
+runs it against the reviewer's own adversarial receipt in all three directions:
+
+```
+$ python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py
+OLD substring predicate on a RESOLVED receipt: True   <- the defect
+NEW structured predicate on the same receipt:  False   <- the repair
+NEW structured predicate on a DEGRADED receipt: True  <- no over-correction
+HARNESS-PREDICATE-DISCRIMINATES
+### exit: 0
+```
+
+**Named plainly, so nobody later cites the original assertion as if it carried weight:** the
+`receipt degraded: True` line quoted in §3 above was, at the time it was printed, produced by a
+predicate that could not have printed anything else. **The §3 conclusion does not rest on it** — it
+rests on the exit path 12 → 10 → 10 → 0, the journal verbs `['advance','attest','start']`, and the
+reviewer's two independent wiring mutations, all of which the reviewer reproduced himself. The line is
+now backed by a predicate that can fail, but the reason the conclusion survived was over-determination,
+not the assertion.
+
+## 6d. What m5 did NOT change
+
+Finding 1 (`current` renders no command text) is **still open and still not fixed** — it belongs to
+whoever owns the gate-vs-report flip. The classification logic, the `UNVERIFIED` label, the mutation
+pins, and every g4 conclusion above are unchanged. Full suite was **not** re-run for m5; the scoped
+re-runs the Commander asked for are in §6b, and the last full-suite number in this document remains
+the one from §4.
+
+**m5 commit:** see `git log`; the plan reached `DONE: no open items` again and the lease was released
+as the last journaled action.
+
+---
+
 ## Unresolved blockers
-**None.** Two triage candidates await a Commander routing decision, and the Commander should note that
+**None.** One triage candidate (finding 1) awaits a Commander routing decision, and the Commander should note that
 its own engine state rode along in commit `a90262e` (Deviation 1).

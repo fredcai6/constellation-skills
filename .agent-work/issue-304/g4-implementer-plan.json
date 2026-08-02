@@ -7,7 +7,8 @@
     "m1",
     "m2",
     "m3",
-    "m4"
+    "m4",
+    "m5"
   ],
   "tasks": {
     "m0-context": {
@@ -234,6 +235,77 @@
         }
       ],
       "rework_count": 0
+    },
+    "m5": {
+      "id": "m5",
+      "title": "Fix-now triage: the substitute report line, and the harness weakness the reviewer found",
+      "imperative": "Reword map_orient.py's substitute note from 'not corroborated by the filesystem' to 'not in the fixed fallback set' -- the classification and the UNVERIFIED label stay exactly as they are; only the explanatory sentence changes. Then fix g4_assert_discharged.py's degraded assertion to read the receipt's STRUCTURED mode rather than substring-scanning the whole document (the reviewer showed the substring is satisfied by the agent's own escalation prose -- a check that cannot fail, inside this gate's own evidence). Prove the corrected assertion REJECTS a RESOLVED receipt. Re-run --self-test and tests/test_map_orient.py, and correct the overstated test-pin count in g4-result.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 APPROVED; Commander routed this as a fix-now triage call, not rework",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 APPROVED by commander-304c; routed as fix-now triage, not rework"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map_orient.py --self-test and tests/test_map_orient.py both pass after the reword",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/map_orient.py --self-test && python -m pytest tests/test_map_orient.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the corrected harness assertion reads the structured mode and REJECTS a RESOLVED receipt that the old substring scan accepted",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-2"
+        }
+      ],
+      "constraints": [
+        "keep the UNVERIFIED label and the classification logic byte-identical -- only the explanatory sentence changes",
+        "one string literal; zero test churn expected"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/map_orient.py --self-test && python -m pytest tests/test_map_orient.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     }
   },
   "consolidation": null,
@@ -242,13 +314,13 @@
   "engine_session": {
     "session_id": "g4-implementer-attempt-1",
     "status": "released",
-    "claimed_at": "2026-08-02T04:39:53.095007+00:00",
-    "last_heartbeat": "2026-08-02T04:54:50.211791+00:00",
+    "claimed_at": "2026-08-02T05:21:35.739572+00:00",
+    "last_heartbeat": "2026-08-02T05:24:45.582671+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
     "takeover_reason": null,
-    "released_at": "2026-08-02T04:55:01.294905+00:00"
+    "released_at": "2026-08-02T05:26:37.617380+00:00"
   },
   "why_trail": [
     {
@@ -285,6 +357,23 @@
       "why": "scratch removed and absence verified; prior-gate artifacts and TRIPWIRES.md unchanged by blob OID; IMPLEMENTER_RESULT written",
       "mechanical": false,
       "ts": "2026-08-02T04:54:50.211771+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "one string literal in map_orient.py:963 (1 insertion, 1 deletion), UNVERIFIED and the classification untouched; self-test OK and test_map_orient 87 passed with zero test churn; harness predicate now reads the structured mode and rejects a RESOLVED receipt the old substring scan accepted",
+      "mechanical": false,
+      "ts": "2026-08-02T05:24:45.582642+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-02T05:22:16.986743+00:00",
+      "reason": "g4 review APPROVED with a MAJOR cheap defect routed as fix-now: the degraded report line overclaims against a present, hash-pinned substitute, in this issue's own signature output surface. Plus a one-line fix to the evidence harness weakness the reviewer found.",
+      "authority": "commander-304c (g4 review adjudication)",
+      "ops": [
+        "added m5"
+      ]
     }
   ]
 }

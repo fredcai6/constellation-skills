@@ -175,3 +175,74 @@ result file g4-result.md exists: True
 CLEANUP-VERIFIED-PRIOR-GATES-UNTOUCHED-RESULT-WRITTEN
 ### exit: 0
 
+--- m5: fix-now triage from the g4 review ---
+$ git diff --stat scripts/map_orient.py
+ scripts/map_orient.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git diff scripts/map_orient.py
+diff --git a/scripts/map_orient.py b/scripts/map_orient.py
+index dbac779..bc1d79f 100644
+--- a/scripts/map_orient.py
++++ b/scripts/map_orient.py
+@@ -960,7 +960,7 @@ def render_verify_report(
+         if label == LABEL_KNOWN_FALLBACK:
+             note = "found in the fixed fallback set and present on disk"
+         else:
+-            note = "UNVERIFIED -- declared by the agent, not corroborated by the filesystem"
++            note = "UNVERIFIED -- declared by the agent, not in the fixed fallback set"
+         lines.append(f"substitute: {path if path else '(no path)'} [{label}] -- {note}")
+     return lines
+ 
+
+$ python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py
+OLD substring predicate on a RESOLVED receipt: True   <- the defect
+NEW structured predicate on the same receipt:  False   <- the repair
+NEW structured predicate on a DEGRADED receipt: True  <- no over-correction
+HARNESS-PREDICATE-DISCRIMINATES
+### exit: 0
+
+--- m5: the reworded line, live ---
+$ python scripts/init_work_area.py --root C:/Programs/constellation-skills-wt/e298-304 g4-fix-check
+work area ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-fix-check
+### exit: 0
+
+$ python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-fix-check --substitute README.md --substitute docs/agents/ORCHESTRATOR_CONTEXT.md --unmapped no docs/architecture/ in this repo --escalation standing map gap, escalated to the issue-304 Commander
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/g4-fix-check/map-orientation.json
+### exit: 0
+
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-fix-check
+DEGRADED-NO-MAP
+receipt: .agent-work/g4-fix-check/map-orientation.json
+orientation contract SATISFIED
+problems: 0
+substitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk
+substitute: docs/agents/ORCHESTRATOR_CONTEXT.md [agent-declared] -- UNVERIFIED -- declared by the agent, not in the fixed fallback set
+### exit: 0
+
+$ rm -rf .agent-work/g4-fix-check
+### exit: 0
+
+$ ls -d .agent-work/g4-fix-check
+ls: cannot access '.agent-work/g4-fix-check': No such file or directory
+### exit: 2
+
+--- m5: the two required re-runs ---
+$ python scripts/map_orient.py --self-test
+self-test OK
+### exit: 0
+
+$ python -m pytest tests/test_map_orient.py -q
+.......................................................................................                   [100%]
+87 passed, 39 subtests passed in 11.96s
+### exit: 0
+
