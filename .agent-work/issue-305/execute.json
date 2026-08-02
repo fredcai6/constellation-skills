@@ -1,0 +1,652 @@
+{
+  "work_id": "issue-305",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the frozen plan inputs for this run: .agent-work/issue-305/PROBLEM_STATEMENT.md, MISSION_FRAME.md, design-it-twice/CONVERGENCE.md and \u2014 most important \u2014 PLAN_CRITIC_DISPOSITION.md, which REVERSES the convergence's seam choice and voids its negative control. Where CONVERGENCE.md and PLAN_CRITIC_DISPOSITION.md disagree, the DISPOSITION wins: it is later and it is evidence-backed. This checklist's config_ref is absent-by-design in this skill-source repo; the engine degrades to built-in defaults. Do NOT create the overlay. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan inputs read; disposition-over-convergence precedence understood; intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan inputs read and precedence understood: PLAN_CRITIC_DISPOSITION.md supersedes CONVERGENCE.md on the seam (start/reopen, not dispatch) and on the negative control (independently-tallied ground truth, not validate_delta as oracle). config_ref absent-by-design; overlay NOT created."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Assembly seam: the manifest becomes a byproduct of starting a step",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. THE CHANGE: emit the #300 context manifest from checklist_engine.start() and reopen() \u2014 the two and only two sites that set status 'in-progress' (:1635, :1852), which advance() at :1644 requires. That is what makes emission unskippable WITHOUT touching the shared dispatch() chokepoint. Write-if-absent, never overwrite: the manifest is a per-step delivery snapshot, and rewriting it on later verbs would destroy the record it exists to be. All logic lives in a NEW module scripts/episode_capture.py; the engine gains an import and one call per site. Roots resolved mechanically, no CLI flag: 'repo' from the worktree root; 'durable' from agent_work_root.durable_root() \u2014 the CHECKOUT root, NOT durable_agent_work(), because the one shipped declaration is {root: durable, path: .agent-work/LESSONS.md} and the wrong helper double-nests it to .agent-work/.agent-work/LESSONS.md; 'skill' from the installed skill dir. FAIL-SOFT BUT NOT SILENT: the emit must never change any verb's exit code (build_manifest() legitimately raises ValueError on a terminal checklist, and a crash here breaks every verb for every concurrent commander) \u2014 but a failed emit writes a stub manifest recording the failure. A non-reading must be visibly distinct from an uncollected one; a vanished manifest is forbidden. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e0-context complete; the start/reopen seam (not dispatch) is the ratified placement per PLAN_CRITIC_DISPOSITION D1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete; start/reopen seam ratified per PLAN_CRITIC_DISPOSITION D1, verified at source (advance :1644 requires in-progress; only :1635/:1852 set it)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Engine command postconditions pass NO cwd= and DISCARD stdout \u2014 only the exit code reaches the spine. Any authored check is an exit-code vocabulary with absolute paths.",
+        "Windows: explicit encoding='utf-8', newline='\\n' on every write. Path.read_text(newline=...) is 3.13+ and FAILS CI \u2014 do not use it.",
+        "Never overwrite an existing manifest for a step; write-if-absent is load-bearing for the revision pin in g2.",
+        "The emit may never raise into a verb. Broad except is a documented, deliberate exception to narrow-except style here."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:checklist_engine.start \u2014 :1635, one of two in-progress setters",
+          "struct:checklist_engine.reopen \u2014 :1852, the other",
+          "struct:context_manifest.produce \u2014 :434, the uncalled producer this gate gives its first caller",
+          "struct:episode_capture \u2014 NEW module, all logic"
+        ],
+        "capability": [
+          "capability:context-projection \u2014 shipped and complete; this gate wires it",
+          "capability:engine-verb-integrity \u2014 every verb of every concurrent commander must keep working"
+        ],
+        "constraint": [
+          "constraint:no-cwd-no-stdout \u2014 engine check facts verified at :713 and :755",
+          "assumption:start-is-unskippable \u2014 advance() refuses unless in-progress (:1644) and only start/reopen set it"
+        ],
+        "decision": [
+          "decision:manifest-is-a-byproduct \u2014 assembly emits the manifest; nothing calls a write-the-manifest step @grade: settled/human \u00b7 leans g1-implement,g1-integrate",
+          "decision:seam-is-start-not-dispatch \u2014 emit at step activation, not the verb chokepoint @grade: settled/measured \u00b7 leans g1-implement \u00b7 settle: verified advance() requires in-progress at :1644 and only :1635/:1852 set it"
+        ],
+        "evidence": [
+          "claim:no-production-caller \u2014 grep -rn context_manifest skills/ returns nothing at base; this gate is what changes that"
+        ],
+        "confidence_flags": [
+          "docs/EPISODE_STORE.md section 1 carries a STALE git check-ignore transcript (invalidated by #326 making .agent-work/ tracked) \u2014 re-run the commands, never quote the transcript"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Assembly seam: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Hunt these specifically, they are not generic: (1) can an agent still reach 'advance' on a gate without ever triggering the emit? Try to construct the sequence. (2) Does the emit ever change a verb's exit code \u2014 test a terminal checklist, an unmapped root token, and a non-git directory. (3) Is the 'durable' root the checkout root, resolving .agent-work/LESSONS.md WITHOUT double-nesting? Check the resolved absolute path, not the code. (4) Does a manifest with every row rev:null pass as success? It must not read as a healthy manifest. AUTHOR ADVERSARIAL INPUTS; do not merely re-run the suite \u2014 a round-trip over shipped artifacts proves the artifacts, not the tool. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Assembly seam: integrate",
+      "imperative": "Check the verdict. APPROVE: re-run the verification yourself before advancing \u2014 the crew's claim is a pointer to evidence you reproduce, never an accepted fact. BLOCK: return for rework. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green: manifest emitted at start/reopen, no verb's exit code changed",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Mechanical composer: the field group from engine state alone",
+      "imperative": "Fill the handoff and dispatch constellation-implementer. THE CHANGE: a composer that fills the frozen mechanical field group from engine state with zero agent effort, emitted as a snapshot at the SAME seam as g1 so a run where the agent records nothing still yields the full group. Field sourcing is ADJUDICATED, not the implementer's choice: run=cl['work_id']; project=the MAIN CHECKOUT's name via durable_root(), NOT Path(worktree).name which yields 'e298-305' and would give the same repo a different project every epic; role=the lease's claimed_by; spine-step=active_id(cl), the one selector, imported never re-derived; context-manifest-ref='ctx-<work-id>-<step>@<rev>' where rev is context_manifest.rev() over the manifest's own bytes \u2014 this satisfies EPISODE_STORE.md:679-689's <manifest-ref>@<revision> contract verbatim ('pinning to its own blob hash at capture time') and is why g1's write-if-absent is load-bearing; rework-count from task['rework_count']; reopens from the journal's reopen entries; failed-commands from evidence type command-output with payload.exit != 0 \u2014 these survive a refusal because the evidence item is appended BEFORE the raise and main() persists on the error path; artifact-ref from _collect_changed_files() (:607), which already returns REPO-RELATIVE paths matching the shipped episodes' shape \u2014 do NOT invent an 'artifact-ref' evidence type, it has zero occurrences across ~900 evidence items and would be a second secretly-agent-dependent field. REFUSALS: pending the Admiral's ruling on float #1. If ruled in scope, increment a counter on main()'s except EngineError path, which already calls save(). If ruled out, the composer REFUSES rather than emitting a silent 0 \u2014 a 0 on a run that was actually refused is a fabricated mechanical fact, worse than an absent one. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated: the manifest exists as a stable per-step snapshot, so the revision pin has something to pin",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never fabricate a mechanical value. An unresolvable field REFUSES; it never defaults to 0 or to a placeholder string.",
+        "Do not modify apply_episode_delta.py's field group, allowlist, or validation. It is a frozen contract this gate FILLS.",
+        "reopens vs rework-count scoping is NOT defined in EPISODE_STORE.md \u2014 grep confirms only an example, no prose. Pick one reading, state it in the code, and file the ambiguity; do not present the choice as settled."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:episode_capture.mechanical_fields \u2014 the composer",
+          "struct:apply_episode_delta._validate_create \u2014 :866, the frozen allowlist this feeds",
+          "struct:query_episodes._FIELD_READERS \u2014 :240, the eleven fields, frozen"
+        ],
+        "capability": [
+          "capability:mechanical-capture \u2014 the deliverable"
+        ],
+        "constraint": [
+          "constraint:frozen-field-group \u2014 the group is not mine to redesign"
+        ],
+        "decision": [
+          "decision:zero-agent-effort-is-literal \u2014 a field an agent can omit by forgetting is not mechanically captured @grade: settled/human \u00b7 leans g2-implement,g3-implement",
+          "decision:episode-store-is-301s \u2014 write into episodes/active/ as shipped; no second store @grade: settled/inherited \u00b7 leans g2-implement",
+          "decision pressure: whether refusals gets an engine counter \u2014 floated to the Admiral, NOT decided here"
+        ],
+        "evidence": [
+          "claim:refusals-has-no-engine-source \u2014 main() persists on the refusal path (:2558) but records nothing that a refusal occurred; the journal is success-only (:2469)"
+        ],
+        "confidence_flags": [
+          "float #1 (refusals scope) OPEN at plan time \u2014 this gate is authored so the ruling changes this gate only, not the plan shape"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Mechanical composer: review",
+      "imperative": "Fill the reviewer handoff and dispatch constellation-reviewer. THE DEFECT CLASS TO HUNT, stated exactly: a composer that returns plausible constants and reads no engine state at all would pass a presence-based check. Verify each field is DERIVED \u2014 trace it to the state it came from, and construct a run where the true value is non-default (a real reopen, a real failed command) and confirm the composer reports the real number, not 0. Also verify: project is the main checkout's name and not the worktree's; context-manifest-ref actually pins the manifest's own bytes and dereferences; artifact-ref entries are repo-relative and match shipped episode shape. AUTHOR ADVERSARIAL INPUTS. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Mechanical composer: integrate",
+      "imperative": "Check the verdict. APPROVE: reproduce the evidence yourself before advancing. BLOCK: rework. Harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green with the composer wired",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Negative control, proof it can fail, and cross-run retrieval",
+      "imperative": "Fill the handoff and dispatch constellation-implementer. THE CONTROL: drive a real spine where the agent records NOTHING beyond what postconditions mechanically require, then assert the full mechanical field group is present AND CORRECT. Correctness is asserted against an INDEPENDENTLY-TALLIED GROUND TRUTH \u2014 the harness records each induced event at the moment it issues the triggering call, then compares field by field. DO NOT use apply_episode_delta.validate_delta() as the oracle: it is type-and-presence only (isinstance(str) and value.strip() for every string field), so a composer returning nine hardcoded constants passes it, and so does the delete-one-field red-proof, because deleting a key from a dict is independent of how the dict was filled. That control proves the validator rejects incomplete input, never that capture works. The validator stays in the pipeline as a shape check on the way to the writer; it is not the oracle. PROOF THE CONTROL CAN FAIL: run it against a deliberately incomplete capture \u2014 revert the composer to constants, or drop one derivation \u2014 and confirm it goes RED, asserting the SPECIFIC failed field, not merely non-zero exit. A wrapper that maps any non-zero to red also reports red for an import error or a collection failure; assert the specific assertion. Then CROSS-RUN RETRIEVAL: seed episodes, mark one cluster consolidated, confirm rhyme-search still finds its neighbours, and DISCARD the synthetic consolidation \u2014 a test artifact must never become canon; confirm the discard by normalized content or blob OID, never raw working-tree bytes (#319). Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 integrated: there is a real composer to run the control against",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "A check that cannot fail is indistinguishable from one that passed. Prove you read BOTH things, then compare \u2014 empty-vs-empty, missing-vs-missing and skipped-vs-skipped all pass a naive equality check.",
+        "The red-proof must assert the SPECIFIC failure, not non-zero exit: import errors, collection errors and empty test selection all exit non-zero.",
+        "Comparisons use normalized content or blob OIDs, never raw working-tree bytes \u2014 episode bytes differ across worktrees under core.autocrlf (#319).",
+        "The synthetic consolidation is THROWAWAY and must be discarded, verified. The real first consolidation is #308.",
+        "HONEST NULL: if the control legitimately fails, that is this issue's most valuable output. Report which fields are secretly agent-dependent. Do NOT engineer around it."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:query_episodes \u2014 retrieval under test",
+          "struct:episodes/active \u2014 the store, as shipped"
+        ],
+        "capability": [
+          "capability:cross-run-retrieval \u2014 the acceptance surface"
+        ],
+        "constraint": [
+          "constraint:throwaway-consolidation",
+          "constraint:no-raw-worktree-bytes"
+        ],
+        "decision": [
+          "decision:throwaway-consolidation \u2014 the synthetic consolidation is discarded; a test artifact must never become canon @grade: settled/inherited \u00b7 leans g3-implement",
+          "decision:zero-agent-effort-is-literal \u2014 the control is the TEST of this, not a formality @grade: settled/human \u00b7 leans g3-implement"
+        ],
+        "evidence": [
+          "claim:negative-control-can-fail \u2014 REQUIRED before any green is trusted; the check most at risk in this issue"
+        ],
+        "confidence_flags": [
+          "This gate is the one most likely to be vacuous \u2014 four costumes already in this epic (#337), and my own first draft of it was the fifth. Scrutinize accordingly."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Negative control: review",
+      "imperative": "Fill the reviewer handoff and dispatch constellation-reviewer. YOUR PRIMARY JOB is to try to make the negative control pass while testing nothing. Specifically: replace the composer with hardcoded constants and confirm the control goes RED; delete the ground-truth tally and confirm it goes RED; make every declared context ref resolve to a missing file and confirm an all-null manifest does NOT read as success. If any of those still scores green, the control is vacuous and the gate BLOCKS. Also verify the synthetic consolidation was genuinely discarded, by blob OID or normalized content, not by the implementer's say-so. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Negative control: integrate",
+      "imperative": "Check the verdict. APPROVE: reproduce the RED run yourself, not just the green one \u2014 the red is the evidence that matters here. BLOCK: rework. Harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green including the negative control",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the negative control was demonstrated RED against a deliberately incomplete capture, asserting the specific failed field \u2014 reproduced by me, not accepted on report",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Drop run.dirty (#327) and record the sequencing on main",
+      "imperative": "Fill the handoff and dispatch constellation-implementer. THE CHANGE: remove run.dirty from context_manifest.py \u2014 removal, not repair, per a settled/human ruling. It is permanently, self-causedly true: the producer writes its manifest into .agent-work/, #326 (c2e16a8) made .agent-work/ tracked, and git status --porcelain is repo-wide, so producing a manifest dirties the tree and the flag reads its own side effect. Per-declared-file dirtiness stays derivable from content alone (each row's rev vs git rev-parse <commit>:<path>), which is strictly better because it is scoped to the declared set. Drop the parameter from run_facts(), stop build_manifest() reading state.get('dirty'), update the ~25 assertion sites in tests/test_context_manifest.py, and correct the module docstring prose \u2014 stale prose describing a removed field is worse than no prose. CONTENT_KEYS is unchanged: dirty was never content. ALSO: add a successor line to #300's shipped design doc so a reader of main can tell deliberate sequencing from oversight \u2014 the producer had no caller until #305 wired it. Close #327 with the removal. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated \u2014 context_manifest.py's caller exists, so the docstring's successor line is true when written",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "CONTENT_KEYS must not change. dirty was never content; this removal does not touch the determinism boundary.",
+        "Do not delete the two regression guards that pin repo-wide dirt OUT of content() without replacing their coverage \u2014 the invariant survives the field.",
+        "default_repo_state still calls repo_revision(), which still runs a repo-wide git status --porcelain nobody consumes. That waste is REAL and is filed as triage, NOT fixed here \u2014 it is outside this issue's ratified scope."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:context_manifest.run_facts \u2014 :320, drops the dirty parameter",
+          "struct:context_manifest.build_manifest \u2014 :351, stops splitting dirty out",
+          "struct:tests/test_context_manifest.py \u2014 ~25 assertion sites"
+        ],
+        "capability": [
+          "capability:manifest-determinism \u2014 must be unchanged by this removal"
+        ],
+        "constraint": [
+          "constraint:content-keys-frozen"
+        ],
+        "decision": [
+          "decision:drop-run-dirty \u2014 remove it, do not repair it; #327 closes with the removal @grade: settled/human \u00b7 leans g4-implement"
+        ],
+        "evidence": [
+          "claim:dirty-is-self-caused \u2014 the producer writes into .agent-work/, which #326 made tracked, and porcelain is repo-wide"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Drop run.dirty: review",
+      "imperative": "Fill the reviewer handoff and dispatch constellation-reviewer. Verify: the determinism boundary is genuinely unchanged (CONTENT_KEYS identical, the cross-environment comparison still discriminating); no test was weakened to assertNotIn where it previously asserted a real invariant; the docstring no longer describes a field that does not exist; the #300 successor line is accurate as written against main. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Drop run.dirty: integrate",
+      "imperative": "Check the verdict. APPROVE: reproduce the verification yourself, then advance. BLOCK: rework. File #327's closure. Harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green with run.dirty removed",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context loaded. The plan I am driving is the post-panel plan, not the convergence.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:31:41.841007+00:00"
+    }
+  ]
+}

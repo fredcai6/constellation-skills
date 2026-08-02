@@ -1,0 +1,347 @@
+{
+  "work_id": "issue-305-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-roots",
+    "m2-emit",
+    "m3-seam",
+    "m4-failsoft",
+    "m5-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the seam premise",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then the handoff and the two modules in play (scripts/context_manifest.py, scripts/agent_work_root.py). Verify the handoff is complete AND verify at source the handoff's load-bearing claim: that advance() requires in-progress and that only start()/reopen() reach it. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff loaded; handoff complete; seam premise verified at source in checklist_engine.py",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine + handoff read. Seam premise VERIFIED at source: advance() :1644 refuses unless in-progress; grep for the literal assignment finds exactly :1635 (start) and :1852 (reopen). NUANCE FOUND: resume() :1795 also lands in-progress via t['status']=prior, but only restores a status the gate already held, so every path to advance still passes start/reopen at least once -- premise intact."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-roots": {
+      "id": "m1-roots",
+      "title": "Root resolution, asserted on the resolved absolute path",
+      "imperative": "Create scripts/episode_capture.py with resolve_roots(base_dir) returning {skill, repo, durable}. skill = parent of scripts/; repo = git worktree root; durable = agent_work_root.durable_root() (CHECKOUT ROOT, never durable_agent_work()). Write tests/test_episode_capture.py asserting the RESOLVED ABSOLUTE PATH of each token -- specifically that durable resolves so .agent-work/LESSONS.md lands at the checkout root and NOT at <root>/.agent-work/.agent-work/LESSONS.md. Red then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: root-resolution tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: collection error FileNotFoundError scripts/episode_capture.py. Then 2 real failures from the adversarial fixture."
+        },
+        {
+          "id": "c2",
+          "statement": "three root tokens resolve to asserted absolute paths; double-nesting trap covered",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k roots"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-roots-1"
+        }
+      ],
+      "constraints": [
+        "no CLI flag for roots",
+        "do not modify scripts/context_manifest.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-roots-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k roots",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-emit": {
+      "id": "m2-emit",
+      "title": "emit_step_manifest writes once, never overwrites",
+      "imperative": "Add emit_step_manifest(checklist, iid, base_dir) to scripts/episode_capture.py: build the active step's manifest via context_manifest.build_manifest, resolve the destination via context_manifest.manifest_path, and write ONLY if absent. Test: a start-shaped checklist produces a valid manifest with a non-null rev; a second call does not change the bytes. Red then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "roots resolve correctly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "roots proven"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: emit + write-if-absent tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed for the Emit slice at the same collection error as m1; write-if-absent and non-null-rev assertions authored before the implementation existed."
+        },
+        {
+          "id": "c2",
+          "statement": "manifest written with non-null rev; second emit leaves bytes unchanged",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest \"tests/test_episode_capture.py::Emit\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-emit-1"
+        }
+      ],
+      "constraints": [
+        "write-if-absent, never overwrite",
+        "encoding='utf-8', newline='\\n' on every write",
+        "no Path.read_text(newline=...) -- 3.13+"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-emit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest \"tests/test_episode_capture.py::Emit\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-seam": {
+      "id": "m3-seam",
+      "title": "Wire the seam into start() and reopen()",
+      "imperative": "Add to scripts/checklist_engine.py an import plus exactly one call per site, in start() and reopen(), placed AFTER the status mutation so active_id() selects the right step. Test end to end through the real engine CLI: start writes a manifest, reopen writes one, and the engine diff is an import plus two call sites and nothing else.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "emit_step_manifest proven in isolation",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "emit proven in isolation"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: end-to-end start/reopen seam tests written and observed failing",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "a real engine start and a real engine reopen each emit a manifest",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k seam"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "checklist_engine.py diff is an import plus two call sites, nothing else",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && git diff --stat -- scripts/checklist_engine.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not touch dispatch(), main(), or any other verb",
+        "do not touch apply_episode_delta.py or query_episodes.py",
+        "do not remove run.dirty"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-failsoft": {
+      "id": "m4-failsoft",
+      "title": "Fail-soft but not silent",
+      "imperative": "Prove no verb's exit code changes across the three named cases (a fully terminal checklist, a declaration naming an unmapped root, a directory that is not a git repo), and that a FAILED emit leaves a failure-recording stub manifest rather than silence. Capture the real exit codes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "seam wired and proven",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: fail-soft and stub tests written and observed failing",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "exit codes unchanged in all three cases; a failed emit leaves a failure-recording stub",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k \"failsoft or stub\""
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "broad except is deliberate here and must be commented as such",
+        "a non-reading must be visibly distinct from an uncollected one"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-suite": {
+      "id": "m5-suite",
+      "title": "Full suite green and evidence integrated",
+      "imperative": "Run the full suite (python -m pytest tests/ -q) and integrate every piece of required evidence: the three resolved root paths from a real run, a real manifest with a non-null rev, the three fail-soft exit codes, and the before/after write-if-absent bytes. Write the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all implementation slices green",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written with all required evidence pasted, not summarized",
+          "check": {
+            "kind": "command",
+            "command": "test -f \"C:/Programs/constellation-skills-wt/e298-305/.agent-work/issue-305/crew/g1-implement-result.md\""
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "a local green is never the gate -- neither interpreter reproduces CI"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-305-g1",
+    "status": "active",
+    "claimed_at": "2026-08-01T23:36:59.216408+00:00",
+    "last_heartbeat": "2026-08-01T23:44:01.388051+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete on all seven fields; seam premise reproduced at source; the two shipped modules read end to end.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:37:19.695699+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-roots",
+      "why": "Adversarial fixture found a REAL defect the handoff did not predict: durable_root() returns its start argument UNCHANGED on every fallback path, so handing it the spine directory (not the repo root) double-nests LESSONS.md. Fixed by resolving durable from repo_root().",
+      "mechanical": false,
+      "ts": "2026-08-01T23:42:28.275567+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-emit",
+      "why": "emit_step_manifest builds via build_manifest, writes via manifest_path/write_manifest, and returns early when the destination exists so the snapshot is never rewritten. base_dir=None writes nothing, which keeps in-process engine calls from scattering manifests.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:43:54.536297+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-01T23:43:25.019039+00:00",
+      "reason": "The -k emit filter also selects the Seam class's *_emits_* tests, which are m3's red. Narrow to the Emit class so this gate's check measures this gate's slice.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m2-emit.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-01T23:43:43.524493+00:00",
+      "reason": "pytest -k matches case-insensitively, so -k Emit still selected the Seam class. Use the class node id.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m2-emit.c2"
+      ]
+    }
+  ]
+}

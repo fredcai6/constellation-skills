@@ -22,6 +22,18 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    # The context-manifest assembly seam (#305). Imported here so `start`/`reopen`
+    # can emit; the sidecar is NOT bundled into every engine-carrying skill
+    # (install_constellation.SKILL_SCRIPT_BUNDLES), so its absence degrades to a
+    # no-op rather than breaking the engine — the same "absence is normal, never
+    # raise" rule the manifest producer itself follows.
+    from episode_capture import emit_step_manifest  # noqa: E402
+except ImportError:  # pragma: no cover — only reachable from a partial install
+    def emit_step_manifest(*_args, **_kwargs):  # type: ignore[misc]
+        return None
+
 
 def _utf8_stdio() -> None:
     """Captured stdio on Windows falls back to cp1252; checklist text with
@@ -1633,6 +1645,7 @@ def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
                    for c in preconds if c["id"] in unmet],
         )
     t["status"] = "in-progress"
+    emit_step_manifest(cl, iid, base_dir)  # #305: AFTER the mutation — active_id() picks the step.
     return f"{iid} -> in-progress"
 
 
