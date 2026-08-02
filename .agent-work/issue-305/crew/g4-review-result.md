@@ -403,3 +403,21 @@ untouched, still at `b69e6c8` with exactly the WIP it started with.
 - **Shell hazard worth recording:** backticks inside a `--finding` string are command-substituted by
   bash and silently delete the quoted word. It ate the word `assert` from my c1 finding. Findings
   should be written without backticks, or passed via a file.
+
+---
+
+# Rework 1 verdict — SUPERSEDES the BLOCK above
+
+**BLOCKER-1 (the only blocker in this document) is DISCHARGED** by `f6acc1e` + `5ccae87`.
+
+**Rework verdict: `APPROVE-WITH-FOLLOWUPS`.**
+
+Full rework result — the five attacked claims, the atom-by-atom verification, the counts table
+showing `35d2686^` reproduces 49/47/1/1 exactly, the re-wrap word-identity proof, the rework Fowler
+pass, and three remaining followups — is in:
+
+**`.agent-work/issue-305/crew/g4-review-rework-result.md`**
+
+Do not act on the `BLOCK` verdict at the top of this file without reading that one first. Everything
+else in this document — claims 1-4 CONFIRMED, the four gate criteria, the evidence reproduction, the
+round-1 Fowler pass, and followups FU-1 through FU-6 — stands unchanged and is not superseded.
