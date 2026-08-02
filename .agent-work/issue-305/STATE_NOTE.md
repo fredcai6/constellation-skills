@@ -52,7 +52,32 @@ mutation outside the implementer's shipped set** — the implementer cannot audi
 Also verify: `project` refuses (not guesses) with no git; the `#344` latency claim; that
 `docs/CHECKLIST_SCHEMA.md` matches the implementation exactly.
 
-## Open item the crew raised and I did NOT rule on
+## HUNT 3 — an asymmetry the g2 refactor introduced
+
+Collapsing `emit_step_manifest`'s early return means `emit_mechanical_snapshot` now runs on **both**
+paths — including when the manifest **already exists**, where the old early return had returned first.
+
+So the manifest is **write-if-absent** (a frozen delivery record) while the mechanical snapshot
+apparently is **not** — the crew states *"only a `reopen(X)` refreshes them"*, implying rewrite. That
+asymmetry is probably *correct* (frozen manifest, live counters, `context-manifest-ref` still pinning
+the original bytes) — but it is the kind of thing that is right by accident as often as by design.
+**Confirm it is intentional and documented, and that a reopen does not silently overwrite a snapshot
+someone needed.** Check whether `snapshot_path` collides across a start/reopen pair.
+
+## The crew's scope question — RULED APPROVED, and verified
+
+It asked whether "do not touch the seam logic" forbade that one added call, and proceeded on its own
+reading when no answer came. **Its reading was right.** "Seam logic" meant g1's *ratified decisions*
+(when it fires, write-if-absent, fail-soft-not-silent, the stub), not the file. The snapshot cannot
+live anywhere else: `context-manifest-ref` pins the manifest's own bytes, so it must run strictly
+*after* the manifest exists, and that tail is the only place that is both "the same seam" and not a
+new engine call site.
+
+**I verified the semantics rather than accepting them:** `context_manifest.write_manifest` returns
+`Path(path)`, so the collapsed branch returns the same value, and `if not destination.exists()` is the
+same write-if-absent rule inverted. `start()`/`reopen()` and `tests/test_episode_capture.py` untouched.
+
+_(superseded note below, retained)_
 
 It added one call inside `emit_step_manifest`'s `try` (semantics identical — `cm.write_manifest`
 returns the same `destination` the early branch returned). It asked whether "do not touch the seam
