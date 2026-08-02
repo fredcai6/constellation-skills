@@ -961,7 +961,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT for rework 1 received and attached as e-g4-implement-2; g4-implement advanced. Rework committed at f6acc1e + 5ccae87."
         }
       ],
       "postconditions": [
@@ -981,7 +982,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {
         "superseded_by_reopen": "g4-implement"
       },
@@ -1319,7 +1320,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T18:36:14.264351+00:00",
+    "last_heartbeat": "2026-08-02T18:48:42.707602+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
