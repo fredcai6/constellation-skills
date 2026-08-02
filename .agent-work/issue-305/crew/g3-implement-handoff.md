@@ -62,6 +62,54 @@ Green-first is meaningless here. A control that cannot fail is indistinguishable
 Existing fixtures to learn from, not to duplicate: `tests/test_episode_capture.py`,
 `tests/test_episode_fields.py`.
 
+## MEASURED FINDING — read this before designing the control; it changes the design
+
+I measured this **in this worktree, today**, on my own live run. It is measured, not asserted.
+
+Starting `g3-implement` fired the seam and wrote
+`.agent-work/issue-305/mechanical/g3-implement.json`, which reports:
+
+```json
+"refused": ["role", "refusals"]
+```
+
+Running the composer directly against both checklists in this run:
+
+| checklist | `engine_session` | `role` | `refusals` key | refused |
+|---|---|---|---|---|
+| `spine.json` (parent, **claimed**) | active lease | `commander-305d …` | present, `0` | `['context-manifest-ref']` |
+| `execute.json` (child, **never claimed**) | `null` | `None` | **absent** | `['role', 'refusals']` |
+
+**Why:** `_lease_role()` reads the lease off the checklist, and `refusals` is ARMED by `claim`
+(`checklist_engine.py:955`). The child gate-plan **never gets claimed** — that is #357 — so on the
+child both are structurally unavailable. **No agent action can change this.** It is not
+agent-dependence; it is lease-topology dependence, which is worse, because it is invisible and
+permanent.
+
+**And the gates — where all the real work happens — live in the CHILD.**
+
+### What this means for your control — this is the vacuity trap of this gate
+
+**A control that drives one standalone claimed spine will report all nine fields green and prove
+nothing about the seam that actually fires in production.** It would be the eighth costume of a check
+that cannot fail: passing honestly, on the wrong topology.
+
+So, **required**: your control must exercise **both topologies**, and report them separately:
+
+- **(a) claimed parent checklist** — expect the full group.
+- **(b) unclaimed child gate-plan reached through a real parent→child gated run** — this is the
+  production shape, and it is where I measured `role` and `refusals` refused.
+
+Then **report the honest result per topology.** If (b) genuinely cannot yield the full group, **that
+is this issue's most valuable output** — name the fields, name the cause, and STOP. Do **not** fix it
+by claiming the child, do **not** widen the seam, do **not** paper it with defaults. The scoped null
+is *"`role` and `refusals` cannot be captured from engine state at the child-gate seam as currently
+structured, because the child checklist never receives a lease (#357)"* — **never** *"mechanical
+capture is infeasible."*
+
+Confirm or refute my measurement independently rather than inheriting it. If I am wrong, say so —
+**the code wins over this handoff.**
+
 ## Close Criteria
 
 **C1 — The control drives a REAL spine, and records nothing.**
