@@ -1,120 +1,150 @@
 # Crash-resume state note — issue-305
 
-- **step:** execute · **`g1` CLOSED** · **`g2-review` CLOSED (BLOCK)** · **`g2-implement` REOPENED
-  (rework 1/3)** — rework implementer dispatched
-- **slug:** issue-305 · branch `epic-298/305` (**PUSHED**) · worktree
+- **step:** execute · **`g1` CLOSED · `g2` CLOSED (implement + review + integrate)** · gate
+  **`g3-implement`** is next, `pending`
+- **slug:** issue-305 · branch `epic-298/305` (**PUSHED** through `c48b48a`) · worktree
   `C:/Programs/constellation-skills-wt/e298-305` · base `967493c`
 - **next command:** `cd "C:/Programs/constellation-skills-wt/e298-305" && python scripts/checklist_engine.py --file .agent-work/issue-305/execute.json current`
-- **pid:** run_crew.py external/record-only — `constellation/issue-305/g2-implement/implementer/attempt-2`
-- **expected artifact:** `.agent-work/issue-305/crew/g2-implement-rework-result.md`
+- **pid:** none — foreground, stopped deliberately at a clean gate boundary
+- **expected artifact:** `.agent-work/issue-305/crew/g3-implement-result.md`
 
-**Everything is committed AND pushed.** Nothing depends on this machine.
+**Everything is committed AND pushed. Tree clean.** Nothing depends on this machine.
 
 ## Leases and engine
 
-Lease **`commander-305-e298`** (reused across both resumes — job-file-not-agent-file keeps journal
-provenance continuous). Spine `.agent-work/issue-305/spine.json`, gate plan
-`.agent-work/issue-305/execute.json`. **Drive the WORKTREE `scripts/checklist_engine.py`.**
+Lease **`commander-305-e298`** — **reuse it, do not mint a new one.** Job-file-not-agent-file
+keeps journal provenance continuous across resumes; this is the third holder.
+`claim --force --reason "..."` on `.agent-work/issue-305/spine.json`.
 
-**#357: the child `execute.json` carries `engine_session: null`, so the lease does NOT protect the
-gates.** You are alone; do not rely on the lease to keep you that way.
+Spine `.agent-work/issue-305/spine.json`, gate plan `.agent-work/issue-305/execute.json`.
+**Drive the WORKTREE `scripts/checklist_engine.py`**, not the installed copy.
 
-## Done
+**#357: the child `execute.json` carries `engine_session: null`, so the lease does NOT protect
+the gates.** You are alone; do not rely on the lease to keep you that way.
 
-- **g1 COMPLETE** — seam at `start()`/`reopen()`, write-if-absent; transitive closure ships to all
-  ten engine-carrying skills; AST detector sees plain sibling imports. **#362 verified in the world.**
-- **g2-implement attempt 1 COMPLETE** — composer, refusals counter, `docs/CHECKLIST_SCHEMA.md`,
-  `docs/EPISODE_STORE.md:781`. Suite **1470 passed / 2 skipped / 472 subtests**.
-- **Return item 4 proven** — #300's AC1 can now fail.
-- **HUNT 1 PROVEN IN THE WORLD** (`308e9fe`): `.agent-work/issue-305/evidence/hunt1_reopens_overcount.py`
-  — one command, exits **1** on the defect, **0** once fixed. A run with exactly ONE reopen emits
-  `"reopens": 2`. Mechanism: `reopen()`'s escalation branch (`checklist_engine.py:1870-1879`)
-  returns a normal string **without** incrementing `rework_count`, does not raise, so `main()`
-  takes the success path (`:2634`) and `reopen` is in `MUTATING_VERBS` — journalled anyway.
-- **g2-review CLOSED, verdict BLOCK, 3 blockers, all accepted in full** (`fa0d8b6`). Result:
-  `.agent-work/issue-305/crew/g2-review-result.md` (351 lines).
-- **g2-implement REOPENED**; rework handoff at
-  `.agent-work/issue-305/crew/g2-implement-rework-handoff.md`.
+## Gate status
 
-## The reviewer's two findings I could NOT have made myself
+```
+e0-context   complete    g2-implement complete    g3-implement PENDING  <- you are here
+g1-implement complete    g2-review    complete    g3-review    pending
+g1-review    complete    g2-integrate complete    g3-integrate pending
+g1-integrate complete                             g4-*         pending
+```
 
-1. **Mutation M5 SURVIVED** — replacing the whole two-witness `max` with `_rework_total` alone
-   leaves all 63 episode tests green. **The reconciliation has NO discriminating test.** Whichever
-   fix lands, it lands on unconstrained code. This is the epic's fourth vacuous-check entry (#337).
-2. **The over-count is `E` at a `start` seam but `E−1` at a `reopen` seam** — the in-flight verb's
-   own journal line is not yet written, so a single escalation is exactly cancelled there. **A test
-   exercising only the `reopen` seam PASSES on the broken code.** Same shape as the `project`
-   defect that shipped because it was only tested in a plain checkout.
+After g4: **reconcile → triage → review → feedback → archive** on the parent spine.
 
-## Rulings I made this session — cite these, do not re-litigate
+## Suite
 
-- **Fix shape B**: `reopens` uses `_rework_total()` alone; journal witness + `find_spine_path`
-  deleted (~60 lines). Rejected "subtract escalations" — arithmetically sound (premise verified:
-  escalation blockers are durable, `resume` refuses before its blockers filter) but it string-matches
+**1472 passed / 2 skipped / 472 subtests** (`python -m pytest -q`, ~90s). Baseline was 1470/2/472;
+**+2 is exactly the two new tests**, nothing else moved.
+
+## What closed this session (g2)
+
+**The named hunt was real and is now fixed.** `reopens` over-counted after an escalated reopen:
+`reopen()`'s rework-cap branch (`checklist_engine.py:1870-1879`) returns an ordinary string
+**without** incrementing `rework_count` and does **not** raise, so `main()` takes the success path
+(`:2634`) and `reopen` is in `MUTATING_VERBS` — journalled as a reopen its own message says did not
+happen. `max(journal, rework)` then preferred the inflated reading.
+
+**Proven in the world before acting** — `.agent-work/issue-305/evidence/hunt1_reopens_overcount.py`,
+one command, exit **1** on the defect and **0** when fixed. It now exits 0.
+
+**Fix shape B shipped:** `reopen_total()` sums per-task `rework_count` alone; `journal_reopens()`,
+`find_spine_path()` and the `spine_path` plumbing are deleted (~84 lines). Entirely in
+`episode_capture.py`; the engine is untouched.
+
+**The real deliverable was the test, not the arithmetic.** Reviewer mutation M5 had shown the old
+two-witness `max` was pinned by **no test at all**. `EscalatedReopenIsNotAReopenTests` is proven
+red on the old expression (`2 != 1` start seam, `4 != 3` reopen seam) and green on the fix, and
+covers **both seams** — the inflation is `E` at a `start` seam but `E−1` at a `reopen` seam, so the
+reopen-seam case needs **two** escalations or it passes on broken code.
+
+## Three independent mutations, all recorded — do not repeat them
+
+1. **Implementer's:** restored the old `max` expression. RED as predicted.
+2. **Commander's (mine):** re-inflated from the `blockers` escalation tally without restoring the
+   deleted journal reader. Both new tests RED (`5 != 3`). Restored; blob OID verified against HEAD.
+3. **Re-reviewer's M-A:** filtered `skipped` gates out of the checklist handed to `reopen_total`.
+   Caught **by the new tests alone** while the pre-existing `ReopensFieldTests` stayed green — the
+   proof the new tests add a discriminating axis rather than restating old coverage.
+   Its **M-B** (count reworked *tasks*, not reopens) **survives the new tests** and is caught only
+   by an older one: new tests pin *which* gates count, old ones pin *how much* each counts.
+   Complementary; neither alone suffices.
+
+## Rulings in force from this session — cite, do not re-litigate
+
+- **Fix shape B** over "subtract escalations". A's premise checked out (escalation blockers are
+  durable — `resume` refuses before reaching its blockers filter) but it string-matches
   engine-authored human-readable text from `episode_capture.py`, so it regresses silently on a
-  reword. **B removes the class.** Honest cost: loses amend-drops-a-gate recovery, so it can now
-  *under*-count on a narrow path — the direction doctrine concedes. Rejected "refuse" as too
-  aggressive (witnesses legitimately disagree in the amend case).
-- **`refusals` scope = DOCUMENTATION fix, not a semantics change.** Filed the attribution question
-  as **#367**. Ruled in-latitude because the field is new in this PR and has no production behavior
-  yet to change. **Floated to the Admiral as the one ruling I'd most want reversed if wrong.**
-- **The gate imperative's "reopens from the journal's reopen entries" is SUPERSEDED** by fix B. The
-  engine text will not update; the rework handoff says so explicitly.
+  reword. **B removes the class.** Accepted cost: can now *under*-count on the amend-drop path.
+- **`refusals` scope = DOCUMENTATION fix, not a semantics change.** Filed as **#367**. Ruled
+  in-latitude because the field is new in this PR with no production behavior yet to change.
+  **Floated to the Admiral as the ruling most worth reversing if wrong** — no answer received.
+- **`g2-integrate.c2` waived `--force`.** It required a literal `verdict == "APPROVE"`; the
+  reviewer returned the sanctioned **`APPROVE-WITH-FOLLOWUPS`**, no blockers. I refused to attach a
+  second evidence item reading `APPROVE` — that fabricates a verdict the reviewer did not give,
+  the exact sin the gate spent two rounds hunting. Real verdict is on the record. Filed as **#371**.
 
-## HUNT 3 — CLOSED, all three source claims confirmed by the reviewer
+## Still open — and the traps waiting in them
 
-`write_manifest` returns `Path(path)` so the collapsed return is value-identical ·
-`emit_mechanical_snapshot` swallows every `Exception` (not `BaseException` — reviewer's precision
-correction) so it cannot poison the manifest stub path · the write-if-absent/overwrite asymmetry is
-documented and deliberate. **The start/reopen snapshot collision is right by DESIGN** — no reader of
-`mechanical/` exists in `scripts/`, and `context-manifest-ref` pins the manifest, not the snapshot.
-
-**Wiring proven NOT ceremonial**: 6 of 7 independent call-site mutations caught, including deletion
-of the `emit_mechanical_snapshot` call site.
-
-## Still open
-
-- g2 rework → g2 re-review → g2-integrate, then g3, g4, then reconcile → triage → review → feedback
-  → archive.
-- **No CI check has ever been run on this branch. Claim nothing about one.** When you do: gate on
-  the status text reading `pass`, not a zero exit — `gh pr checks` has exited 0 on a *pending* check.
+- **g3** is the **negative control**: drive a real spine where the agent records nothing, then
+  assert the full mechanical group is present **and correct** against an independently-tallied
+  ground truth. Per the launch order this is **the** test of the issue's premise, and the Honest-Null
+  Clause applies: **if it fails, that is the issue's most valuable output** — report it, do not
+  engineer around it. Also **confirm the control can FAIL** before trusting it (run it against a
+  deliberately incomplete capture).
+- **g4** dogfoods the gates in this repo, full suite.
+- **`run.dirty` removal (#327) and the #300 successor line are still UNDONE** — both are launch-order
+  return items. Check which gate carries them before assuming g3/g4 do.
+- **No CI check has ever run on this branch. Claim nothing about one.** When you open the PR: gate
+  on the status text reading **`pass`**, not a zero exit — `gh pr checks` has exited 0 on a *pending*
+  check.
+- **#359 (surveys bypass the seam — Reviewer, Cartographer, Scout, Curator uncovered) MUST travel in
+  the PR body** alongside the capability, per the Admiral. The re-reviewer checked and found no
+  evidence the scope is wider than those four.
+- **#362 closes with the PR.**
 
 ## Lessons harvested (for the feedback step — do not lose these)
 
 - **A vacuous check plus an honest crew reads exactly like a passing check plus a compliant crew.**
-- **A revert-based red proves the assertion matches the tree; only a NOVEL module proves the
-  detector parses.** Belongs in the handoff template.
-- **`constellation-implementer` has no sanctioned resume or no-plan path** — every rework dispatch
-  costs the implementer a judgment call against the skill's opening imperative.
-- **Handoffs should carry the gate's `anchors` block verbatim.** Done twice this session.
+- **A revert-based red proves the assertion matches the tree; only a NOVEL module proves the detector
+  parses.**
+- **`constellation-implementer` has no sanctioned rework/resume path** — it opens by demanding a
+  fresh plan, which is exactly wrong for an attempt-2. **Three reworks in this epic have now hit the
+  same gap**; each dispatch had to override the skill in prose.
+- **Handoffs should carry the gate's `anchors` block verbatim.** Done three times this session.
 - **When a handoff freezes an adjudicated table, say who to tell and whether to proceed if a row
-  proves unimplementable.** Done twice this session; the reviewer confirmed it worked.
-- `--session-id` is **required** by `consolidate`, and must follow the verb, not precede it.
-- **An adjudicator's stated invariant deserves the same falsification as a crew's test.** The
-  `max()` reconciliation was accepted on a one-sentence invariant nobody tried to break. ~15 minutes
-  to break, once someone tried.
+  proves unimplementable.** Done; the reviewer confirmed it worked.
+- **An adjudicator's stated invariant deserves the same falsification as a crew's test.** The `max()`
+  reconciliation was accepted on a one-sentence invariant nobody tried to break. ~15 minutes to
+  break, once someone tried.
 - **"No output produced" and "output produced somewhere you did not look" are indistinguishable
   without checking the path derivation.** `manifest_root()` is the checklist dir's PARENT and
-  `manifest_path` re-appends the work-id, so my first repro emitted outside the fixture and looked
-  like no emit at all. Live face of **#360**.
-- **Telling a reviewer which claims you MEASURED versus ASSERTED changes what it does.** The
-  reviewer said naming HUNT 1 as already-proven and asking for three specific things instead is what
-  made it build a *boundary* repro rather than re-run mine — which is how the seam-masking surfaced.
-- **REVIEWER-REPORTED GAP:** a handoff that names hunts should also name the survey **shape**. The
-  reviewer had to extend the template with nine hunt-specific items; without that, three hunts would
-  have been crammed into two generic slots and the engine would have recorded far less.
-- **REVIEWER-REPORTED:** `docs/agents/engine-config.json` does not exist in this worktree, yet the
-  survey template and the g1 survey both reference it as `config_ref`. Harmless (engine falls back
-  to defaults) but two reviewers have now inherited the dangling reference.
+  `manifest_path` re-appends the work-id; my first repro emitted outside the fixture and read as no
+  emit at all. Live face of **#360**.
+- **Telling a crew which of your claims you MEASURED versus ASSERTED changes what it does.** The
+  reviewer said this is why it built a *boundary* repro instead of re-running mine — which is how the
+  reopen-seam cancellation surfaced. **Declaring already-spent mutations** did the same for the
+  re-reviewer.
+- **A handoff that names hunts should also name the survey SHAPE.** The reviewer had to extend the
+  template with nine hunt-specific items; without that, three hunts would have been crammed into two
+  generic slots and the engine would have recorded far less.
+- **`docs/agents/engine-config.json` does not exist** in this worktree, yet the survey template and
+  the g1 survey both reference it as `config_ref`. Harmless (engine falls back to defaults) but three
+  reviewers have now inherited the dangling reference.
+- **A gate acceptance criterion that cannot accept a sanctioned verdict pushes the agent toward
+  fabricating one.** #371. The wedge is not ergonomic, it is doctrinal.
 
-## Issues filed
+## Issues
 
 **#362** packaging — FIXED, close with the PR · **#359** surveys bypass the seam — **must travel in
-the PR body**, per the Admiral · **#360** doubled work-id manifest path, confirmed live twice ·
-**#361** unguarded `work_id` + duplicated place-and-write · **#367** `refusals` checklist-scoped not
-run-scoped (filed this session) · **#368** shotgun surgery on the eleven-field group (filed this
-session, against unfreezing).
+the PR body** · **#360** doubled work-id manifest path, confirmed live twice · **#361** unguarded
+`work_id` + duplicated place-and-write · **#367** `refusals` checklist-scoped not run-scoped ·
+**#368** shotgun surgery on the eleven-field group (against unfreezing) · **#371** integrate gate
+wedges on `APPROVE-WITH-FOLLOWUPS` · **#372** the conceded amend-drop under-count is pinned by no test.
 
-**Branch: PENDING** — pushed, no PR yet.
+(#367, #368, #371, #372 filed this session.)
 
-_Updated: 2026-08-02T05:40:00Z_
+**Branch: PENDING** — pushed through `c48b48a`, **no PR yet**.
+
+_Updated: 2026-08-02T06:30:00Z_
