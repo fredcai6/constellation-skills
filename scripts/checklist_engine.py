@@ -25,10 +25,15 @@ from pathlib import Path, PureWindowsPath
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
     # The context-manifest assembly seam (#305). Imported here so `start`/`reopen`
-    # can emit; the sidecar is NOT bundled into every engine-carrying skill
-    # (install_constellation.SKILL_SCRIPT_BUNDLES), so its absence degrades to a
-    # no-op rather than breaking the engine — the same "absence is normal, never
-    # raise" rule the manifest producer itself follows.
+    # can emit. The sidecar and its closure now DO ship with every engine-carrying
+    # skill, declared in install_constellation.SCRIPT_RUNTIME_COMPANIONS — an
+    # earlier version of this comment said the opposite and treated the fallback
+    # as the normal installed case, which is precisely how the seam stayed inert
+    # everywhere it was installed (#362). The fallback is kept for a genuinely
+    # partial tree only, following the same "absence is normal, never raise" rule
+    # the manifest producer itself follows. It is NOT the expected path, and
+    # tests/test_install_constellation.py asserts an installed engine binds the
+    # real function rather than this one.
     from episode_capture import emit_step_manifest  # noqa: E402
 except ImportError:  # pragma: no cover — only reachable from a partial install
     def emit_step_manifest(*_args, **_kwargs):  # type: ignore[misc]
@@ -1864,7 +1869,18 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None,
         return f"ESCALATED {iid}: rework cap {cap} reached; blocked and bubbled to parent (not reopened)"
     t["rework_count"] = t.get("rework_count", 0) + 1
     t["status"] = "in-progress"
-    emit_step_manifest(cl, iid, base_dir)  # #305: AFTER the mutation — active_id() picks the step.
+    # #305: AFTER the mutation — active_id() picks the in-progress step.
+    #
+    # This call is a BACKFILL, not a live emit: reopen refuses anything that is
+    # not `complete`, and a complete gate necessarily passed `start`, which
+    # already wrote this step's manifest — and emit_step_manifest is
+    # write-if-absent, so it returns early. On every reachable path in a spine
+    # created at or after #305 this is a no-op. It earns its keep only for a
+    # spine that predates the seam, where `start` ran before the emit existed
+    # and this is the first chance to write the manifest at all (observed live:
+    # reopening such a gate did emit). An earlier version of this comment
+    # justified the call as if it emitted normally; it does not.
+    emit_step_manifest(cl, iid, base_dir)
     t.setdefault("status_detail", {})["reopen_reason"] = reason
     _reset_conditions(t.get("postconditions", []))
     _supersede_evidence(t, iid, reason)

@@ -87,7 +87,20 @@ AGENT_CHOICES = sorted((*AGENT_TARGETS, "all"))
 # forgotten the same way.
 SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
     # checklist_engine._load_gauge_reader() -> Path(__file__).parent/"gauge_reader.py"
-    "checklist_engine.py": ("gauge_reader.py",),
+    #
+    # The rest are the #305 context-manifest capture seam, reached NOT by a path
+    # load but by `sys.path.insert(0, <own parent>)` + a plain import -- which is
+    # why the original companion guard could not see them (#362). The engine
+    # wraps that import in `try/except ImportError` with a no-op fallback, so an
+    # install missing them completes every gate and emits ZERO manifests with
+    # nothing on stderr. The whole transitive closure ships, not just the first
+    # hop: episode_capture needs agent_work_root at module scope and
+    # context_manifest deferred inside emit_step_manifest (deferred to break the
+    # context_manifest -> checklist_engine cycle).
+    "checklist_engine.py": (
+        "gauge_reader.py", "episode_capture.py",
+        "agent_work_root.py", "context_manifest.py",
+    ),
     # gauge_writer_hook._load_spine_rail() -> Path(__file__).parent/"spine_rail.py",
     # inside a bare `try/except Exception: return None`. A split lands the pair
     # where neither can find the other and NOTHING raises -- the hook just stops
