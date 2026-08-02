@@ -736,7 +736,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT at g4-result.md verified fresh"
         }
       ],
       "postconditions": [
@@ -747,7 +748,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
         }
       ],
       "constraints": [],
@@ -756,11 +758,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g4-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -772,7 +785,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT rounds 1 and 2 both APPROVE, 0 blockers"
         }
       ],
       "postconditions": [
@@ -788,7 +802,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
         },
         {
           "id": "c2",
@@ -800,17 +815,40 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g4-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -894,6 +932,20 @@
       "why": "Dogfooded from the materialized template in the degraded common case, which is what g3 did not isolate. Exit path 12 then 10 then 10 then 0: no receipt refuses, a receipt present but UNDISCHARGED still refuses and enumerates all three absent map candidates by path, and one orient re-run with substitutes, unmapped and escalation discharges it. The scratch spine's journal verbs are advance, attest, start - no waive, no force - so the gate is dischargeable honestly rather than only bypassable. Full suite 1538 passed, 2 skipped, 481 subtests, exit 0, local only; CI pins 3.12 and remains the merge gate. Zero product-code changes. Two findings reported and deliberately not fixed, one of which - a hash-pinned on-disk substitute labelled not corroborated by the filesystem - undercuts this issue's own honest-reporting deliverable in its wording and goes to the reviewer for a severity.",
       "mechanical": false,
       "ts": "2026-08-02T04:57:21.060088+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4-review",
+      "why": "APPROVE, no blockers, on two wiring mutations the reviewer devised itself - a seam neither the ten in the mutation floor nor g3's four prose mutations touch. R-A pointed the context check at a nonexistent subcommand against a FULLY DISCHARGED receipt and the engine refused at exit 1, then reverting that one token on the same spine with the same receipt reached context complete: one bit, opposite outcome. R-B neutered verify-orientation to always return OK and the spine sailed to context complete with NO receipt on disk at all, which is exactly what a contract that did nothing would have done and exactly what g4 did not do. Full suite reproduced independently at 1538 passed, 2 skipped, 481 subtests. I took the MAJOR wording finding as fix-now rather than deferring it, on the reviewer's own correction that zero tests pinned the sentence rather than three; re-confirmed clean.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:34:10.392259+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4-integrate",
+      "why": "Full suite run in my own hands: 1538 passed, 2 skipped, 481 subtests, exit 0 - the same numbers the implementer and the reviewer each got independently. Local only; CI pins 3.12 and remains the merge gate. Both g4 review rounds APPROVE with no blockers. The scope gap is stated rather than papered over: g4 exercises the DEGRADED arm only, and T3's mapped-repo clause stays unfalsified because this repo has no docs/architecture and f1Brainz is off-limits since orient writes a receipt into its root.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:41:28.057901+00:00"
     }
   ]
 }

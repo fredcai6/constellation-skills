@@ -1,0 +1,89 @@
+{
+  "work_id": "issue-304",
+  "diff_ref": "4f9c6d1..HEAD -- the only code in the diff is the three executable evidence assertions under .agent-work/issue-304/evidence/ (g4_assert_resolved.py 78 lines, g4_assert_discharged.py 78, g4_assert_closeout.py 78). Product tree is byte-identical to HEAD, so there is no product code to smell-test; these three scripts ARE the diff's code and are smell-tested in full.",
+  "repo_standards_ref": "docs/agents/ORCHESTRATOR_CONTEXT.md (the only docs/agents/ overlay present; no CREW_CONTEXT.md, no GLOSSARY.md), plus installed reviewer skill references/global-crew.md and references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "All three scripts are ~60 lines of undecomposed module-level straight-line procedure (read artifact, print, append to `problems`, exit). g4_assert_discharged.py in particular runs spine-status, receipt-shape, journal-verb and subprocess-re-run checks in one unbroken body with no functions.",
+      "override": {
+        "repo_standard": "global-crew.md: 'Make the minimal change that satisfies the handoff; no speculative abstraction.' + global-everyone.md: 'One canonical path; no speculative abstraction.'",
+        "reason": "These are single-use command checks the engine runs once and the transcript quotes verbatim; their read surface is a top-to-bottom transcript, not a call graph. Decomposing a 60-line one-shot assertion into helpers would hide the execution order that the transcript's value depends on, and buy reuse that will never occur (each script is deleted-in-place after archive). The standard subordinates the smell because the cost the smell predicts -- comprehension load from a long body -- is not paid here: the body IS the evidence artifact."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No classes in the diff at all.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "All three scripts repeat the same skeleton verbatim: `ROOT = Path(__file__).resolve().parents[3]`, a module-level `problems = []`, a print-then-conditionally-append idiom per assertion, and an identical `if problems: print each FAIL; sys.exit(1)` / else print a single uppercase sentinel tail. Three copies of a harness is textbook duplication.",
+      "override": {
+        "repo_standard": "global-crew.md 'no speculative abstraction'; global-everyone.md 'One canonical path; no speculative abstraction'; ORCHESTRATOR_CONTEXT.md Evidence And Verification Map, which treats evidence as reporting output rather than durable tooling.",
+        "reason": "Extracting the shared skeleton would put an importable module inside .agent-work/evidence/, which is archived scratch -- creating a durable dependency out of throwaway reporting output, and coupling three assertions that must stay independently runnable (the engine invokes each as a bare `python <path>` command check with no package context). The doctrine names exactly this trade and rules against the abstraction. The duplication is also self-limiting: three fixed copies, never extended."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "Each script reads only artifacts it names directly (its own spine, receipt, journal, git OIDs). No object reaches through another's internals for data it should own.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "The recurring (ROOT, WORK_ID) pair appears as module constants in each script rather than being threaded through signatures; with no function boundaries there is no clump to travel.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Findings are accumulated as a bare list of pre-formatted strings (`problems.append(\"substitute %r is not hash-pinned\" % ...)`) rather than a typed finding value, so severity, subject and message are fused into one primitive.",
+      "override": {
+        "repo_standard": "ORCHESTRATOR_CONTEXT.md Evidence And Verification Map: evidence is reporting, not durable tooling; global-crew.md 'minimal change'.",
+        "reason": "The strings have exactly one consumer -- stdout, read by a human in a transcript -- and are never filtered, sorted or dispatched on. A value object would add structure with no reader, which is the speculative generality the doctrine forbids. The smell predicts a cost (callers parsing primitives) that has no caller here."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The only function defined anywhere in the diff is `git(*args)` in g4_assert_closeout.py, a one-line varargs subprocess wrapper.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "The scratch work-id is hardcoded independently in each of the three scripts (`WORK_ID = \"g4-scratch-run\"` in two, the literal path in the third), so re-pointing the evidence at a different work area is a three-file edit with no single point of truth -- and a partial edit would leave one script silently asserting against a stale, absent work area, where several of its checks degrade to trivially-satisfied rather than failing loudly. Raised as an OBSERVATION only, not a blocker: the scripts are archived one-shot artifacts that will never be re-pointed, so the change-amplification the smell predicts cannot actually be incurred.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "Each script has exactly one reason to change (its own plan item's claim). No file mixes unrelated axes of change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Access depth stays at one or two hops (`spine[\"tasks\"][\"context\"][\"status\"]` is dict indexing into a document the script owns, not a navigation chain across objects).",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Nothing is built for a hypothetical second caller: no flags, no config, no extension points. The scripts do one job each and hardcode everything else.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "MOST SIGNIFICANT SMELL IN THE DIFF, and it is the one that matters for this issue specifically. g4_assert_discharged.py's docstring promises the check asserts 'the orientation receipt records a DEGRADED verdict', but the implementation is `degraded = \"DEGRADED\" in json.dumps(receipt).upper()` -- a whole-document substring scan. The structured verdict IS read one line earlier (`verdict = receipt.get(\"verdict\") or receipt.get(\"status\") or \"\"`) and then DISCARDED, used only inside the failure message it can no longer trigger. The receipt's `escalation` field is agent-authored free text, and the escalation actually passed at g4 contained the word 'degraded' ('...every Commander run in this repo is structurally degraded until a map exists'), so the assertion is satisfied by the agent's own prose. Demonstrated: a synthetic receipt with `verdict: RESOLVED` carrying that same escalation still evaluates the check to True. The printed line 'receipt degraded: True' quoted as evidence in g4-result.md is therefore produced by a substring match on agent-authored text, not by the verdict. The docstring is doing the work the code does not -- deodorant in its precise Fowler sense. OBSERVATION, not a blocker: the property is over-determined by stronger, independently-reproduced lines in the same run (orient printed DEGRADED-NO-MAP at exit 10; verify-orientation printed DEGRADED-NO-MAP; the same script's `verify-orientation re-run exit: 0` is genuinely load-bearing, which I proved by mutation R-B), so no conclusion in the result is wrong. Reported because it is exactly the #300 failure class this gate exists to hunt, appearing inside the gate's own evidence.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}
