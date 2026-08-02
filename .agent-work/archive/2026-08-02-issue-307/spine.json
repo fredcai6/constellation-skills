@@ -586,19 +586,22 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch epic-298/307 committed and pushed through f7eca8a; the archive move itself is staged for the closing commit. Six commits: setup, pre-registration, gate hardening, void-capture evidence, POST results, POST_RECORD, feedback."
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Lease release is the VERY LAST action, after the closing advance on archive, so the lease covers every journaled action and the release is the final journal entry."
         },
         {
           "id": "c4",
@@ -633,22 +636,46 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 34
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -657,13 +684,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "commander-307",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T19:27:24.746240+00:00",
-    "last_heartbeat": "2026-08-02T21:16:34.807298+00:00",
+    "last_heartbeat": "2026-08-02T21:18:21.525735+00:00",
     "claimed_by": "commander-307",
     "worktree": "C:/Programs/constellation-skills-wt/e298-307",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T21:19:09.204660+00:00"
   },
   "why_trail": [
     {
@@ -728,6 +756,13 @@
       "why": "Retrospective appended for issue-307 to the durable AGENT_FEEDBACK.md (worktree root; not inside the work area or archive). Lessons delta applied: confirm on verify-launch-order-claims-against-code (now 7) plus tick. TWO ADDS WERE REFUSED BY THE ACTIVE CAP (20 headings, --ripe reports nothing to settle); retiring another run's lesson is outside this delegated run's latitude, so both candidates were routed to the tracker instead (#396, #393) and are written up in AGENT_FEEDBACK. Escalated to the Admiral. Invariant check passes.",
       "mechanical": false,
       "ts": "2026-08-02T21:16:22.541985+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work area archived to .agent-work/archive/2026-08-02-issue-307/ with the durable AGENT_FEEDBACK.md left at the work-area root; archive-phase invariant passes. Branch committed and pushed through f7eca8a. Staged diff is 34 small artifacts, largest 50KB, no binaries or data files. Declaring the branch PENDING, not FINAL: no PR is open, so there is no check status to read, and the merge is handed up to the Admiral.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:18:21.525710+00:00"
     }
   ]
 }

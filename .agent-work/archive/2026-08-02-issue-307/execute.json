@@ -273,13 +273,14 @@
   "refusals": 4,
   "engine_session": {
     "session_id": "commander-307",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T21:09:40.421611+00:00",
     "last_heartbeat": "2026-08-02T21:10:11.871658+00:00",
     "claimed_by": "commander-307",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T21:19:09.559272+00:00"
   },
   "why_trail": [
     {
