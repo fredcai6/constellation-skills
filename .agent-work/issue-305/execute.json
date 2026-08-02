@@ -313,7 +313,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2",
+          "attested": {
+            "evidence": "e-g2-implement-2",
+            "note": "Rework result returned, no unresolved blockers. Verified independently by the Commander: repro exits 0, suite 1472/2/472, and a Commander mutation outside the crew's set drove both new tests red."
+          }
         }
       ],
       "constraints": [
@@ -348,7 +353,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "reopen_reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped."
       },
@@ -370,6 +375,18 @@
             "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
             "ts": "2026-08-02T04:46:24.634520+00:00"
           }
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g2-implement-rework-result.md",
+            "crew": "constellation/issue-305/g2-implement/implementer/attempt-2",
+            "blockers": "none",
+            "verified": "fresh"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 1
@@ -383,7 +400,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for the g2 rework: .agent-work/issue-305/crew/g2-implement-rework-result.md, evidence e-g2-implement-2, crew attempt-2, blockers none, artifact verified fresh."
         }
       ],
       "postconditions": [
@@ -394,7 +412,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2",
+          "attested": {
+            "evidence": "e-g2-review-2",
+            "note": "Re-review APPROVE-WITH-FOLLOWUPS, no blockers. Artifact verified fresh."
+          }
         }
       ],
       "constraints": [],
@@ -403,7 +426,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "g2-implement"
       },
@@ -426,6 +449,18 @@
             "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
             "ts": "2026-08-02T04:46:24.634535+00:00"
           }
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g2-review-rework-result.md",
+            "verdict": "APPROVE-WITH-FOLLOWUPS",
+            "crew": "constellation/issue-305/g2-review/reviewer/attempt-2",
+            "verified": "fresh"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -439,7 +474,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: .agent-work/issue-305/crew/g2-review-rework-result.md, evidence e-g2-review-2, APPROVE-WITH-FOLLOWUPS, no blockers, verified fresh."
         }
       ],
       "postconditions": [
@@ -455,7 +491,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
         },
         {
           "id": "c2",
@@ -467,17 +504,59 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2",
+          "waived": {
+            "authority": "commander-305c (delegated; logged and floated to the Admiral)",
+            "reason": "GATE-PLAN DEFECT, not a review shortfall. The reviewer returned APPROVE-WITH-FOLLOWUPS with NO blockers, a sanctioned approval verdict. c2 matches the literal string APPROVE, authored before anyone knew which approve-flavored verdict would come, so it cannot accept an approval carrying non-blocking followups. I am NOT attaching a second evidence item reading APPROVE: that would fabricate a verdict the reviewer did not give, the exact sin this gate spent two rounds hunting. Waiving with the real verdict on the record instead. Followups are triage-level: the conceded amend-drop under-count is reachable but unpinned by a test, plus two observation-level Fowler flags. c1 (full suite) passed engine-checked. Filed as an issue.",
+            "evidence": "e-g2-integrate-2",
+            "forced": true
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2",
+            "authority": "commander-305c (delegated; logged and floated to the Admiral)",
+            "reason": "GATE-PLAN DEFECT, not a review shortfall. The reviewer returned APPROVE-WITH-FOLLOWUPS with NO blockers, a sanctioned approval verdict. c2 matches the literal string APPROVE, authored before anyone knew which approve-flavored verdict would come, so it cannot accept an approval carrying non-blocking followups. I am NOT attaching a second evidence item reading APPROVE: that would fabricate a verdict the reviewer did not give, the exact sin this gate spent two rounds hunting. Waiving with the real verdict on the record instead. Followups are triage-level: the conceded amend-drop under-count is reachable but unpinned by a test, plus two observation-level Fowler flags. c1 (full suite) passed engine-checked. Filed as an issue.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -864,6 +943,27 @@
       "reopen": true,
       "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
       "ts": "2026-08-02T04:46:24.634547+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g2-implement",
+      "why": "Fix B landed and I verified the two load-bearing claims myself rather than accepting them: the repro script now exits 0 with reopens=1 while the fixture still shows journal=2 vs rework=1, so it is not passing vacuously, and the suite is 1472/2/472 (+2, exactly the new tests). I also ran my own mutation - re-inflating from the blockers escalation tally, a break the crew did not ship - and both new tests went red, then restored and verified episode_capture.py by blob OID against HEAD. The crew corrected a handoff error at source (the falsified docstring is in test_episode_fields.py, not test_episode_capture.py) and found a THIRD falsified prose site my handoff missed. Its one shape deviation - folding _rework_total into reopen_total - I accept, and the re-reviewer confirmed the body moved intact.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:24:44.087494+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g2-review",
+      "why": "Re-review approved the rework with no blockers. The dispatch earned itself: mutation M-A (filter skipped gates out of the checklist handed to reopen_total - a call-site break outside both spent mutation sets) was caught by the NEW tests ALONE while the pre-existing ReopensFieldTests stayed green, which is the proof the new tests add a discriminating axis rather than restating coverage. Four further mutations, none survived. M-B survives the new tests but is caught by an older one: new tests pin WHICH gates count, old ones pin HOW MUCH each counts - complementary, neither alone sufficient. Both of my own unverified claims confirmed at source, and the conceded under-count measured reachable by an ordinary route, so the docstring neither overstates nor understates it.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:25:03.222877+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g2-integrate",
+      "why": "Verdict APPROVE-WITH-FOLLOWUPS, no blockers, and I reproduced the evidence myself rather than accepting it: the repro exits 0 reporting reopens=1 while its fixture still shows journal=2 vs rework=1 so it is not passing vacuously; the suite is 1472/2/472; and my own mutation outside the crew's set drove both new tests red before I restored and verified by blob OID against HEAD. c2 waived --force as a gate-plan defect with the real verdict on the record rather than a fabricated APPROVE.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:29:05.482991+00:00"
     }
   ],
   "amendments": [

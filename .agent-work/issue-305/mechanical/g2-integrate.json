@@ -1,14 +1,14 @@
 {
   "contract": 1,
-  "step": "g2-review",
+  "step": "g2-integrate",
   "mechanical": {
     "run": "issue-305",
     "project": "constellation-skills",
-    "spine-step": "g2-review",
+    "spine-step": "g2-integrate",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 2,
-    "context-manifest-ref": "ctx-issue-305-g2-review@e34f5f4a9441a6de0899304711d52edbc9116f66",
+    "context-manifest-ref": "ctx-issue-305-g2-integrate@12e25b2866c3b3eb41e87cdc629fc0c71fc95a28",
     "artifact-ref": []
   },
   "refused": [
@@ -17,6 +17,6 @@
   ],
   "run": {
     "work_id": "issue-305",
-    "generated_at": "2026-08-02T05:25:03Z"
+    "generated_at": "2026-08-02T05:25:24Z"
   }
 }
