@@ -47,6 +47,24 @@ VERDICT_RE = re.compile(r"\b(RESOLVED|DEGRADED-NO-MAP|DEGRADED-EMPTY-MAP|DEGRADE
 # ONLY these tools can RUN anything. Everything else that mentions `map_orient` is talking
 # ABOUT the tool, not using it.
 EXECUTOR_TOOLS = ("Bash", "PowerShell")
+
+# HOP 1 OF THREE (see #393). The #304 contract text exists ONLY in
+# `templates/COMMANDER_SPINE.template.json` — `constellation-commander/SKILL.md` contains
+# zero occurrences of the word "map". So an agent can load the Commander (hop 0, which
+# `verify_treatment.py` proves) and still never encounter the imperative, because it never
+# materialized a spine. Without this column, "spine never materialized" and "corpus lacks the
+# contract" are the same observation with two different remedies.
+#
+# PRE-B IS THIS COLUMN'S CONTROL, and a strong one: PRE-B's subjects DID drive spines — all
+# five reached `plan` and authored `execute.json` — so PRE-B should read delivered=True with
+# zero map_orient calls. That makes the PRE-B/POST contrast precisely "same delivery path,
+# different contract content", rather than "did they use the Commander at all".
+DELIVERY_WITNESSES = {
+    "spine_instantiated": re.compile(r"init_work_area\.py[^\"']*--spine"),
+    "engine_driven": re.compile(r"checklist_engine\.py"),
+    "spine_json_touched": re.compile(r"spine\.json"),
+    "spine_template_touched": re.compile(r"COMMANDER_SPINE\.template\.json"),
+}
 # The one input key that is actually executed. Matching against `json.dumps(input)` counted
 # `Read(file_path=".../scripts/map_orient.py")` — a Commander inspecting its own tooling —
 # as an orientation invocation, which alone flips *irrelevant* into *insufficient*. Same for
@@ -79,6 +97,7 @@ def audit(run_dir: Path) -> dict:
     verdicts: list[str] = []
     confirmed: set[int] = set()
     pending: dict[str, int] = {}
+    delivery: dict[str, list[int]] = {k: [] for k in DELIVERY_WITNESSES}
 
     for ev in events(stream):
         if ev.get("type") == "assistant":
@@ -89,6 +108,11 @@ def audit(run_dir: Path) -> dict:
                 tool = b.get("name")
                 inp = b.get("input") or {}
                 calls.append({"index": idx, "tool": tool})
+
+                blob = json.dumps(inp)
+                for name, pattern in DELIVERY_WITNESSES.items():
+                    if pattern.search(blob):
+                        delivery[name].append(idx)
 
                 # An INVOCATION is an executor tool whose executed key names the script.
                 command = ""
@@ -108,7 +132,7 @@ def audit(run_dir: Path) -> dict:
                     })
                     if b.get("id"):
                         pending[b["id"]] = idx
-                elif MAP_ORIENT_RE.search(json.dumps(inp)):
+                elif MAP_ORIENT_RE.search(blob):
                     # Talking ABOUT the tool: a Read of the script, a Grep for the token, a
                     # Write quoting the gate command. Kept VISIBLE in its own column rather
                     # than fused into the measure — fusing them is what made the first
@@ -172,6 +196,12 @@ def audit(run_dir: Path) -> dict:
         "first_src_read_index": first_src if first_src is not None else NO_SRC_READ,
         "first_map_read_index": first_map if first_map is not None else "NO-MAP-READ",
         "map_orient_before_src": before_src,
+        # HOP 1: did the contract text ever reach this subject at all? (#393)
+        "contract_delivered": any(delivery.values()),
+        "delivery_witnesses": {k: v for k, v in delivery.items() if v},
+        "delivery_first_index": min(
+            (v[0] for v in delivery.values() if v), default=None
+        ),
         "invocations": invocations,
     }
 
@@ -289,23 +319,27 @@ def main() -> int:
         print("REFUSED: zero run dirs enumerated — there is nothing to audit")
         return 1
 
-    hdr = (f"{'run':<12} {'calls':>5} {'mo_calls':>8} {'first_mo':>18} "
-           f"{'first_src':>11} {'mo<src':>18} {'verdicts':<40}")
+    hdr = (f"{'run':<12} {'arm':<6} {'calls':>5} {'deliv':>6} {'mo':>3} {'ment':>5} "
+           f"{'first_mo':>18} {'first_src':>11} {'mo<src':>18} {'verdicts':<32}")
     print(hdr)
     print("-" * len(hdr))
     for r in rows:
         if r["status"] == "NOT-CAPTURED":
-            print(f"{r['run']:<12} NOT-CAPTURED")
+            print(f"{r['run']:<12} {r.get('arm','?'):<6} NOT-CAPTURED")
             continue
-        print(f"{r['run']:<12} {r['tool_call_count']:>5} "
-              f"{r['map_orient_invocation_count']:>8} "
+        print(f"{r['run']:<12} {r['arm']:<6} {r['tool_call_count']:>5} "
+              f"{str(r['contract_delivered']):>6} "
+              f"{r['map_orient_invocation_count']:>3} "
+              f"{r['map_orient_mention_count']:>5} "
               f"{str(r['first_map_orient_index']):>18} "
               f"{str(r['first_src_read_index']):>11} "
               f"{str(r['map_orient_before_src']):>18} "
-              f"{','.join(r['map_orient_verdicts'])[:40]:<40}")
+              f"{','.join(r['map_orient_verdicts'])[:32]:<32}")
 
     total = sum(r.get("map_orient_invocation_count", 0) for r in rows)
+    delivered = sum(1 for r in rows if r.get("contract_delivered"))
     print(f"\ntotal map_orient invocations across {len(rows)} run(s): {total}")
+    print(f"contract_delivered (hop 1, #393): {delivered} of {len(rows)} run(s)")
 
     if args.out:
         Path(args.out).write_text(json.dumps(rows, indent=2) + "\n",

@@ -40,9 +40,15 @@ and hand the three-way verdict (sufficient / insufficient / irrelevant) to Tommy
 - `docs/agents/ORCHESTRATOR_CONTEXT.md` — project deltas; evidence standards and repo action
   authority (pushes need approval, which is why this run declares FINAL and hands the merge up).
 
-Instruments, all held at their PRE-B revisions: `baselines/extract_ordering.py` (frozen),
-`preb/verify_treatment.py`, `preb/discriminate.py`, `preb/fingerprint_global_corpus.py`,
-`preb/capture_preb.py`, `preb/run_all_preb.py`.
+Instruments held at their PRE-B revisions, **verified blob-to-blob at `6774181` vs `HEAD`**
+rather than asserted: `baselines/extract_ordering.py` (frozen), `baselines/capture_baseline.py`,
+`baselines/issues.frozen.json` (the frozen brief source), `baselines/RUBRIC.md`,
+`baselines/verify_capture.py`, `preb/verify_treatment.py`, `preb/discriminate.py`,
+`preb/fingerprint_global_corpus.py` — **all nine byte-identical**. The single exception is
+`preb/capture_preb.py`, which gained the declared label-only `--arm` flag (+16/−6); digests for
+both revisions are recorded in `post/instrument-digests.json` and asserted by the `g2` gate.
+(The working tree shows CRLF against the blobs' LF, so a working-tree digest comparison
+reports every file changed — the comparison must be blob-to-blob, and is.)
 
 ## Governing Constraints / Assumptions
 

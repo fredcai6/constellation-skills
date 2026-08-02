@@ -165,20 +165,68 @@ def check_scores() -> int:
         return 1
 
     preb_audit = _load(HERE / "preB-map-orient-audit.json") or []
+    post_audit = _load(HERE / "post-map-orient-audit.json") or []
     total = sum(r.get("map_orient_invocation_count", 0) for r in preb_audit)
     print(f"  negative control: {total} map_orient invocation(s) across "
           f"{len(preb_audit)} pre-#304 run(s) — expected 0")
-    if not preb_audit:
-        _fail("negative control enumerated ZERO runs — it proves nothing"); ok = False
+    # A control of size one passes a mere `if not preb_audit` guard while proving nothing.
+    if len(preb_audit) != len(ISSUES):
+        _fail(f"negative control covers {len(preb_audit)} run(s), not {len(ISSUES)} — a "
+              "control smaller than the arm does not control it"); ok = False
     elif total:
         _fail(f"negative control found {total} invocation(s) in a pre-#304 arm — the audit "
               "is matching noise and the POST column cannot be trusted"); ok = False
+    if len(post_audit) != len(ISSUES):
+        _fail(f"POST audit covers {len(post_audit)} run(s), not {len(ISSUES)}"); ok = False
+
+    # BOTH scoring files name their rows `run-690` … `run-704`, because both arms name their
+    # DIRECTORIES that way. Without an arm label, `cp preb/preB-discriminated.json
+    # post/post-discriminated.json` passes every other check in this function: the gate that
+    # exists to prove both arms were scored could not detect that one arm was scored twice.
+    for label, rows, want in (("POST audit", post_audit, "POST"),
+                              ("PRE-B audit", preb_audit, "PRE-B")):
+        arms = sorted({r.get("arm") for r in rows})
+        print(f"  {label} arm labels: {arms} — expected ['{want}']")
+        if arms != [want]:
+            _fail(f"{label} rows are labelled {arms}, not exactly ['{want}'] — a scoring "
+                  "file that cannot name its own arm cannot be paired with anything")
+            ok = False
 
     post = _load(HERE / "post-discriminated.json") or []
     scored = [r for r in post if r.get("status") == "ok"]
     print(f"  POST discriminated: {len(scored)} of {len(post)} rows scored ok")
     if len(scored) != len(ISSUES):
         _fail(f"expected {len(ISSUES)} scored POST rows, got {len(scored)}"); ok = False
+
+    # `discriminate.py` emits no arm label (it is FROZEN and stays that way), so tie its rows
+    # to THIS arm's captures by a quantity only those captures can produce.
+    print("  cross-checking POST discriminated rows against POST captures:")
+    for row in post:
+        cap = _load(HERE / "runs" / str(row.get("run")) / "ordering.json")
+        if cap is None:
+            _fail(f"    {row.get('run')}: no matching POST capture — this row was scored "
+                  "over some OTHER arm's runs"); ok = False; continue
+        same = cap.get("tool_call_count") == row.get("tool_call_count")
+        print(f"    {row.get('run')}: calls row={row.get('tool_call_count')} "
+              f"capture={cap.get('tool_call_count')} match={same}")
+        if not same:
+            _fail(f"    {row.get('run')}: scored row does not match the POST capture"); ok = False
+
+    # The arm's central claim: the scorers are PRE-B's, unmodified.
+    digests = _load(HERE / "instrument-digests.json") or {}
+    print(f"  instrument digests: {len(digests)} file(s) compared PRE-B-merge vs HEAD")
+    if not digests:
+        _fail("no instrument-digests.json — 'the scorers are unmodified' is unverified");
+        ok = False
+    for name, d in sorted(digests.items()):
+        identical = d.get("identical")
+        note = "" if identical else "  <-- CHANGED (must be declared)"
+        print(f"    {name}: {'SAME' if identical else 'CHANGED'}{note}")
+    changed = {n for n, d in digests.items() if not d.get("identical")}
+    allowed = {"preb/capture_preb.py"}
+    if changed - allowed:
+        _fail(f"instruments changed since PRE-B beyond the declared label flag: "
+              f"{sorted(changed - allowed)}"); ok = False
     return 0 if ok else 1
 
 
@@ -201,17 +249,52 @@ def check_pairing() -> int:
     if not ok:
         return 1
 
-    if before.get("skillmd_concat_sha256") != after.get("skillmd_concat_sha256"):
-        _fail("the corpus CHANGED across the POST window — the five runs are not poolable "
-              "and this must be reported, not smoothed"); ok = False
+    # DEEP, not shallow. `skillmd_concat_sha256` covers only each skill's SKILL.md and is
+    # BLIND to references/, templates/ and scripts/ — which is where the whole contract under
+    # test lives: constellation-commander/SKILL.md contains zero occurrences of the word
+    # "map", while templates/COMMANDER_SPINE.template.json carries the imperative four times.
+    # A shallow comparison therefore reports "stable" through a re-install that rewrites the
+    # treatment, and would have reported "identical" had the delta been #304 alone. Filed as
+    # #395; asserted here on the deep digest, which was already being computed and printed
+    # and simply was not the thing being compared.
+    if before.get("deep_tree_sha256") != after.get("deep_tree_sha256"):
+        _fail("the corpus CHANGED across the POST window (deep digest) — the five runs are "
+              "not poolable and this must be reported, not smoothed"); ok = False
     else:
-        print("  corpus stable across the POST window (shallow digest identical)")
+        print("  corpus stable across the POST window (DEEP digest identical)")
 
-    if before.get("skillmd_concat_sha256") == preb_before.get("skillmd_concat_sha256"):
+    if before.get("deep_tree_sha256") == preb_before.get("deep_tree_sha256"):
         _fail("POST and PRE-B measured the SAME corpus — there is no treatment and the arm "
               "says nothing about #304"); ok = False
     else:
-        print("  POST corpus differs from PRE-B's — the treatment variable actually moved")
+        print("  POST corpus differs from PRE-B's (DEEP digest) — the treatment moved")
+
+    # DIRECT CONTENT ASSERTION, because everything above is still a digest comparison and
+    # `corpus_marker.source_commit` is read verbatim out of ~/.claude/skills/CORPUS.json — a
+    # SELF-REPORT WRITTEN BY THE INSTALLER, i.e. exactly the artifact that would lie in a
+    # #344-shaped failure. Proving delivery from the installer's own claim is #344 again with
+    # extra steps. Look at the installed bytes instead.
+    corpus = Path.home() / ".claude" / "skills" / "constellation-commander"
+    tool = corpus / "scripts" / "map_orient.py"
+    spine = corpus / "templates" / "COMMANDER_SPINE.template.json"
+    contract = "before you open any source file"
+    print(f"  installed contract, asserted against BYTES not markers (root {corpus}):")
+    print(f"    scripts/map_orient.py present: {tool.is_file()}")
+    if not tool.is_file():
+        _fail("map_orient.py is NOT in the installed corpus — this is the #344 failure and "
+              "any null from this arm would be a delivery failure, not a contract failure")
+        ok = False
+    if not spine.is_file():
+        _fail(f"{spine} absent — the contract text lives ONLY here (#393)"); ok = False
+    else:
+        text = spine.read_text(encoding="utf-8", errors="replace")
+        hits = text.lower().count(contract)
+        anchored = text.count("map_orient")
+        print(f"    spine template: {anchored} map_orient reference(s), "
+              f"{hits} occurrence(s) of the anchor phrase {contract!r}")
+        if not hits or not anchored:
+            _fail("the installed spine template does not carry the #304 anchor — the "
+                  "treatment is not installed, whatever the marker says"); ok = False
 
     packet = HERE / "POST_RECORD.md"
     print(f"  paired record: {'present' if packet.is_file() else 'MISSING'} {packet.name}")
