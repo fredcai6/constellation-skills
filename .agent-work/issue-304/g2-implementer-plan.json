@@ -403,13 +403,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "g2-implementer-304b",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T02:13:28.493043+00:00",
     "last_heartbeat": "2026-08-02T02:41:31.315212+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "g2-implementer-304",
-    "takeover_reason": "attempt-1 died on a session usage limit"
+    "takeover_reason": "attempt-1 died on a session usage limit",
+    "released_at": "2026-08-02T02:41:53.128253+00:00"
   },
   "why_trail": [
     {
