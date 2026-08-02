@@ -1,0 +1,597 @@
+{
+  "work_id": "issue-308",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-build-destination",
+    "g2-doc-coherence",
+    "g3-drop-cap-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-disposition-lessons",
+    "g5-cut-intake-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-land-consolidation",
+    "g7-retire-sources"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant Cartographer packet(s) for the bounded problem. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-build-destination": {
+      "id": "g1-build-destination",
+      "title": "Build out docs/agents/ so graduations have a tier to land in",
+      "imperative": "REASONING GATE (crew waived: the deliverable is doctrine prose whose tiering judgment is the Commander's own; a crew on a pure design note is shallower, not safer). Create docs/agents/CREW_CONTEXT.md following f1Brainz's realized structure at 3541d292 (implementation rules for crew-tier agents), and index BOTH docs/agents files from the repo README the way f1Brainz README.md:205-207 does. Do NOT invent a new structure. Per decision:tier-must-be-justified the file states its own audience. This gate ships the destination BEFORE anything graduates into it, so no later gate has a known-red window.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/agents/CREW_CONTEXT.md exists",
+          "check": {
+            "kind": "command",
+            "command": "test -f docs/agents/CREW_CONTEXT.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "BOTH docs/agents files indexed from the repo README -- discoverable, not buried",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'docs/agents/CREW_CONTEXT.md' README.md && grep -q 'docs/agents/ORCHESTRATOR_CONTEXT.md' README.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "CREW_CONTEXT.md names its audience in a tier statement, not merely containing the word 'crew'",
+          "check": {
+            "kind": "command",
+            "command": "grep -qiE '^.*(audience|tier)' docs/agents/CREW_CONTEXT.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Copy f1Brainz's realized structure; do not invent.",
+        "Broader-than-audience placement is a defect, not a delivery win."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g2-doc-coherence": {
+      "id": "g2-doc-coherence",
+      "title": "Fix the two known-defective anchors: #348 stale transcript and #322 taxonomy gap",
+      "imperative": "REASONING GATE (crew waived: prose corrections whose correctness is established by commands this Commander already ran). TWO edits. (a) #348: docs/EPISODE_STORE.md section 1 asserts a git check-ignore transcript for .agent-work/ that is FALSE at HEAD -- check-ignore exits 1, git ls-files returns 1958 tracked files. Correct it. This is a live instance of the very cluster this issue consolidates. (b) #322: docs/CONSTELLATION_OVERVIEW.md's truth-layer block omits the episode store entirely; add it and state the cutover -- episodes accumulate, the curator consolidates, doctrine lands in docs/agents/. Do NOT describe LESSONS.md as a live input.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "ALL THREE false claims in EPISODE_STORE.md section 1 are gone, not just the first: the '0 -> IGNORED' transcript line, the 'wc -l # 0' line, and the prose asserting '.gitignore line 1 is .agent-work/' / 'Nothing under it is in git'",
+          "check": {
+            "kind": "command",
+            "command": "! grep -qE \"0  -> IGNORED|Nothing under it is in git|\\`\\.gitignore\\` line 1 is\" docs/EPISODE_STORE.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "PREMISE PIN, not a deliverable check -- stated honestly: this passes at HEAD already (exit 0 today). It pins the world-fact the corrected doc must match, so a later change to .agent-work/'s ignore status re-reds this gate. c1 is what verifies the edit.",
+          "check": {
+            "kind": "command",
+            "command": "! git check-ignore .agent-work/"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the truth-layer taxonomy names the episode store",
+          "check": {
+            "kind": "command",
+            "command": "grep -A25 '## Truth layers' docs/CONSTELLATION_OVERVIEW.md | grep -q 'episodes/'"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Assert against behaviour, never against text describing it.",
+        "#348 stays open until its OTHER half (the undocumented #321 guard) is addressed or explicitly deferred."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g3-drop-cap-implement": {
+      "id": "g3-drop-cap-implement",
+      "title": "Drop the 20-entry hard cap from the lessons writer",
+      "imperative": "CREW GATE - dispatch constellation-implementer. Remove the hard cap from scripts/apply_lessons_delta.py per decision:no-cap-replacement-by-hygiene. Do NOT substitute a different numeric cap, a soft warning threshold, or a configurable limit -- the cap goes and the curator's regular cleanup replaces it. Update the LESSONS.md header prose and any test pinning cap-refusal behaviour. Acceptance evidence must be BEHAVIOURAL: an add refused at HEAD must succeed after the change, proven by RUNNING the writer, not by reading the diff.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "BEHAVIOURAL: the writer accepts an add against a frozen 20-entry fixture -- verified red before the change (exit 1, refusal names the cap), so this check demonstrably can fail",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-308/checks/cap_is_gone.py"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the removal is not a rename: DEFAULT_CAP and the active-cap refusal branch are both gone from the writer",
+          "check": {
+            "kind": "command",
+            "command": "! grep -nE 'DEFAULT_CAP|active cap' scripts/apply_lessons_delta.py"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "decision:no-cap-replacement-by-hygiene: no replacement numeric cap of any kind.",
+        "Prove the behaviour changed by running the writer, not by reading the diff."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Independent review of the cap removal",
+      "imperative": "CREW GATE - dispatch constellation-reviewer against g3's diff and evidence. Hunt specifically for a cap renamed rather than removed, and for a test now passing vacuously because its refusal path was deleted rather than inverted.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "reviewer verdict recorded",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Integrate the cap removal",
+      "imperative": "Check the verdict. Re-run the acceptance command yourself; do not accept a pasted transcript. Verify the IMPLEMENTER_RESULT is fresh, not a stale leftover.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verdict integrated; evidence reproduced in the Commander's own hands",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g4-disposition-lessons": {
+      "id": "g4-disposition-lessons",
+      "title": "Give all 20 active lessons a terminal disposition -- nothing stays active",
+      "imperative": "REASONING GATE (crew waived: 20 individual routing judgments over doctrine this Commander has read in full; a crew would re-read context this agent already holds). Every entry in LESSONS.md's Active section gets a TERMINAL disposition: graduate to docs/agents/ (naming the tier and why that audience) or to the doc that owns it, or delete with a stated reason. Nothing stays active. Retirement is the deletion path; a graduation is a paired edit-plus-retire whose retire reason names the destination. Write every op through apply_lessons_delta.py -- NEVER hand-edit LESSONS.md. Record the itemized disposition table in notes-308.md. Verify by READING BACK. CRITICAL CARVE-OUT (cold plan critic, BLOCKING 1): lesson:verify-launch-order-claims-against-code states cluster A's own pattern. Disposing it REQUIRES Tommy's bin ruling -- graduating it to docs/agents/ IS bin 2, so doing it here would be self-ruling, and if Tommy rules BIN 1 two consolidations would land, violating decision:one-consolidation-not-many. So this gate disposes the OTHER 19 and leaves exactly that one active, by id. g6 disposes it as part of the consolidation. If the ruling never arrives, that lesson stays active, Half 2 is honestly incomplete on one entry, and the branch is handed up PENDING saying so.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "exactly ONE lesson remains active and it is the carved-out cluster-A lesson, asserted BY ID so no other entry can satisfy the count",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-308/checks/dispositions_done.py"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "all 20 dispositions itemized with destination-or-reason in notes-308.md",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "NEVER hand-edit LESSONS.md; all writes via apply_lessons_delta.py.",
+        "Every graduation names its tier and justifies the audience (decision:tier-must-be-justified).",
+        "Verify by reading back, not by having written."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g5-cut-intake-implement": {
+      "id": "g5-cut-intake-implement",
+      "title": "Cut live agents off from lessons",
+      "imperative": "CREW GATE - dispatch constellation-implementer. Live agents stop reading lessons. The intake set was RE-ENUMERATED by command after the cold plan critic found the original hand-written list was under-inclusive (it named 5 sites; a grep over the corpus finds 6 across 5 files, and the original guard phrase matched only 2). Recording that because an under-inclusive enumeration presented as complete is literally issue-304-g3-001, one of the three episodes this issue consolidates. The complete set, by command: (1) skills/admiral/SKILL.md; (2) skills/admiral/templates/ADMIRAL_SPINE.template.json -- in the 'latitude' task, NOT 'context'; (3) skills/admiral/templates/LAUNCH_ORDER.template.md (inherited-context placeholder); (4) skills/charter/templates/AGENT_GUIDE.template.md; (5) skills/commander/templates/COMMANDER_SPINE.template.json -- TWO sites: the context imperative AND the context-manifest declaration entry. You MUST also update tests/test_context_manifest.py, whose DECLARATION pin (~line 550) lists ('durable', '.agent-work/LESSONS.md', False) as an exact literal -- dropping the manifest entry without it reds the suite. That edit is authorized by this gate. Do NOT touch the lessons-auditor skill or apply_lessons_delta.py: this is a cutover of the READ path, not a demolition of the writer. The launch-order block must still carry platform invariants and its charter-lite doctrine-carrier role -- remove the lessons half only. Every edited JSON template must still parse.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no live-agent artifact instructs READING the bank -- enumerates every LESSONS.md reference under skills/ and classifies it, asserting the enumeration is non-empty; verified red at plan time naming all 6 sites",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-308/checks/lesson_intake_is_cut.py"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the Commander spine no longer carries LESSONS.md as a context-manifest input",
+          "check": {
+            "kind": "command",
+            "command": "! grep -q 'agent-work/LESSONS.md' skills/commander/templates/COMMANDER_SPINE.template.json"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "every touched JSON template still parses",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json,glob; [json.load(open(p,encoding='utf-8')) for p in glob.glob('skills/*/templates/*.json')]\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Cutover of the READ path only. The auditor and the writer survive this gate untouched.",
+        "A launch order must still carry platform invariants -- remove the lessons half, not the whole block."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "Independent review of the intake cut",
+      "imperative": "CREW GATE - dispatch constellation-reviewer. Hunt for: an intake site the enumeration missed, a template left syntactically valid but semantically broken, and platform-invariant guidance destroyed as collateral alongside the lessons half.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "reviewer verdict recorded",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "Integrate the intake cut",
+      "imperative": "Check the verdict; reproduce the greps yourself. Any guard that loops must assert what it looped over -- confirm the grep ranged over skills/ and actually enumerated the templates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verdict integrated; greps reproduced by the Commander",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g6-land-consolidation": {
+      "id": "g6-land-consolidation",
+      "title": "Land the ONE consolidation for cluster A -- BLOCKED ON TOMMY'S RULING",
+      "imperative": "BLOCKED pending the two-bin routing ruling (.agent-work/issue-308/ROUTING_QUESTION.md). Does not start until the Admiral relays Tommy's bin. On BIN 1 (mechanize): build the doc-transcript checker, wire it into the suite, with a rationale pointer to this cluster. On BIN 2 (instruct): land the doctrine line in docs/agents/ at BOTH ORCHESTRATOR_CONTEXT.md and CREW_CONTEXT.md (the cluster hit both roles), WITH a tripwire and a pre-registered expected-improvement record. Either way land exactly ONE (decision:one-consolidation-not-many) and FILE the other. If the ruling has not arrived this gate stays pending and the branch is handed up PENDING -- do not self-rule.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Tommy's bin ruling received and cited",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "exactly one consolidation landed, its tier named and justified",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the not-chosen bin filed as an issue, number recorded",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "The routing ruling is Tommy's. Do NOT self-rule if the answer has not arrived.",
+        "decision:one-consolidation-not-many."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    },
+    "g7-retire-sources": {
+      "id": "g7-retire-sources",
+      "title": "Mark the source episodes consolidated -- verified by reading back",
+      "imperative": "Retire the three cluster-A source episodes (issue-304-g3-001, issue-304-g3-003, issue-309-002) through scripts/apply_episode_delta.py with a non-empty retire reason naming this consolidation and consolidated-into naming the cluster. Per decision:retirement-moves-the-file the files MOVE into episodes/retired/. The #342 workaround applies and is named in notes-308.md: the store has no confirmed/consolidated standing, so consolidation is represented by file LOCATION plus consolidated-into plus retired-reason. VERIFY BY READING BACK, and compare by blob OID or normalized content, never raw working-tree bytes (#319: * text=auto makes CRLF legitimate). Depends on g6.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all three source episodes resolve under episodes/retired/, none left in active/",
+          "check": {
+            "kind": "command",
+            "command": "test $(ls episodes/retired/ | grep -cE '^(issue-304-g3-001|issue-304-g3-003|issue-309-002)[.]md$') -eq 3 && ! ls episodes/active/ | grep -qE '^(issue-304-g3-001|issue-304-g3-003|issue-309-002)[.]md$'"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "each retired episode carries a non-empty consolidated-into, read back from disk",
+          "check": {
+            "kind": "command",
+            "command": "test $(grep -l 'consolidated-into: ..*' episodes/retired/issue-304-g3-001.md episodes/retired/issue-304-g3-003.md episodes/retired/issue-309-002.md | wc -l) -eq 3"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "each retired episode is FETCHABLE BY ID and parses -- enumerate exits 0 even on a corrupted or half-retired store (verified by the cold critic against a scratch copy), so fetch-by-id is the check that can actually fail",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/query_episodes.py fetch issue-304-g3-001 && python scripts/query_episodes.py fetch issue-304-g3-003 && python scripts/query_episodes.py fetch issue-309-002"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Verify by reading back, never by having performed the write.",
+        "Compare by blob OID or normalized content, never raw working-tree bytes (#319)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": [
+        "docs/EPISODE_STORE.md",
+        "episodes/README.md",
+        "docs/agents/ORCHESTRATOR_CONTEXT.md",
+        "docs/CONSTELLATION_OVERVIEW.md",
+        ".agent-work/LESSONS.md"
+      ]
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
