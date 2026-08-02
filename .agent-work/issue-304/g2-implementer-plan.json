@@ -347,7 +347,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q && python scripts/map_orient.py --self-test"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-1"
         },
         {
           "id": "c3",
@@ -356,7 +357,8 @@
             "kind": "command",
             "command": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g2-result.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-2"
         }
       ],
       "constraints": [
@@ -365,11 +367,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py tests/test_map_contract_wiring.py -q && python scripts/map_orient.py --self-test",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/crew-handoffs/g2-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -380,7 +405,7 @@
     "session_id": "g2-implementer-304b",
     "status": "active",
     "claimed_at": "2026-08-02T02:13:28.493043+00:00",
-    "last_heartbeat": "2026-08-02T02:30:40.364002+00:00",
+    "last_heartbeat": "2026-08-02T02:41:31.315212+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "g2-implementer-304",
@@ -428,6 +453,13 @@
       "why": "map_orient.py is registered on the commander bundle, the only bundle whose template invokes it, and the bundle-membership assertion is driven off the template rather than hardcoded so the two cannot drift apart. The companion question was answered by checking rather than by assuming: the module makes no dynamic sibling load and imports stdlib only, so it needs no SCRIPT_RUNTIME_COMPANIONS entry - stated explicitly in a code comment so the absence reads as a decision. c1 red reconstructed against 6d35fe2 - recorded as a deviation.",
       "mechanical": false,
       "ts": "2026-08-02T02:28:14.990768+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6",
+      "why": "Mutation floor extended with three verify-frame mutations, the vacuous pass (an absent frame credited as a pass) being the one that matters, and all three are killed. Applied-before-red held on each: anchor unique = 1, gone after substitution = 0, replacement count delta exactly +1, evaluated BEFORE the floor was run, so a no-op mutation cannot be mistaken for a killed mutant. Required evidence green: 284 passed 419 subtests on the handoff command verbatim, 303 passed 433 subtests on the superset that also covers the new wiring file, self-test exit 0. IMPLEMENTER_RESULT written to .agent-work/issue-304/crew-handoffs/g2-result.md with all six deviations named, including the three red reconstructions and the one pre-existing self-test assertion I tightened. The addendum's offered free fix was declined with measured evidence: the {64} regex already rejects longer digests because of the end anchor, and {64,} would loosen it.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:41:31.315182+00:00"
     }
   ]
 }
