@@ -590,12 +590,22 @@ class CommanderSpineDeclaration(unittest.TestCase):
         self.assertEqual(carriers, ["context"])
 
     def test_the_context_imperative_prose_is_not_replaced_by_the_declaration(self):
-        # The prose carries rules a path list cannot express (substitute-and-record,
-        # and the sanctioned-degradation rule). The declaration sits alongside it.
+        # The prose carries rules a path list cannot express. The declaration
+        # sits alongside it.
+        #
+        # Two of this test's original three sentinels -- "sanctioned degradation"
+        # and "do NOT create the overlay file" -- were phrases of the
+        # config_ref-is-absent-by-design block that issue #304 deleted as
+        # falsified (docs/agents/ EXISTS in this repo, and Charter ships a task
+        # that WRITES docs/agents/engine-config.json). The test's intent is
+        # unchanged and it still pins three phrases; the two replacements quote
+        # prose that survives, and they are the other degraded-mode rules --
+        # paths-are-not-guaranteed, and declare-before-you-read -- which are
+        # precisely the kind a path list still cannot express.
         prose = self.spine["tasks"]["context"]["imperative"]
         self.assertIn("record the substitution", prose)
-        self.assertIn("sanctioned degradation", prose)
-        self.assertIn("do NOT create the overlay file", prose)
+        self.assertIn("do not treat those paths as guaranteed to exist", prose)
+        self.assertIn("degraded is a declared reading, never a licence to start from code", prose)
 
 
 class Written(unittest.TestCase):

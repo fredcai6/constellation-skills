@@ -446,5 +446,58 @@ class ResolverPlaceholderAssertionTests(unittest.TestCase):
             self.assertFalse(dest.exists())
 
 
+class RepoRootPlaceholder(unittest.TestCase):
+    """`<repo-root>` -- a ROBUSTNESS token, not a repair.
+
+    Command checks receive no `cwd` and inherit the launcher's, so a relative
+    check works only while the launcher sits at the repo root: fragile, not
+    broken. `<repo-root>` lets a template author write a check that does not
+    depend on where the launcher happened to be. (The five already-shipped
+    relative checks are tracked separately as #341 and are NOT touched here.)
+    """
+
+    def test_repo_root_resolves_to_the_absolute_root(self):
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            out = m.resolve_spine('{"cmd": "python <repo-root>/scripts/x.py"}', "issue-7", None, root)
+            self.assertIn(root.resolve().as_posix(), out)
+            self.assertNotIn("<repo-root>", out)
+
+    def test_repo_root_is_json_safe_on_windows(self):
+        """A backslash value would break instantiate_spine's own json.loads guard."""
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            out = m.resolve_spine('{"cmd": "python <repo-root>/scripts/x.py"}', "issue-7", None, root)
+            json.loads(out)  # would raise "Invalid \escape" on a str(Path) value
+            self.assertNotIn("\\", out)
+
+    def test_instantiate_spine_writes_an_absolute_repo_root_check(self):
+        m = load()
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "scripts").mkdir()
+            tpl = root / "SPINE.template.json"
+            tpl.write_text(
+                '{"work_id": "<work-id>", "cmd": "python <repo-root>/scripts/x.py <work-id>"}',
+                encoding="utf-8",
+            )
+            out = m.instantiate_spine(root, "issue-7", tpl)
+            body = json.loads(out.read_text(encoding="utf-8"))
+            self.assertEqual(body["cmd"], f"python {root.resolve().as_posix()}/scripts/x.py issue-7")
+
+    def test_an_unresolved_repo_root_token_fails_loudly(self):
+        """The guard owns the token, so a regressed resolver cannot ship it."""
+        m = load()
+        with self.assertRaises(SystemExit) as caught:
+            m._assert_no_resolver_placeholders('{"cmd": "python <repo-root>/scripts/x.py"}')
+        self.assertIn("<repo-root>", str(caught.exception))
+
+    def test_the_guard_still_ignores_prose_placeholders(self):
+        m = load()
+        m._assert_no_resolver_placeholders('{"note": "<operator-fills-this-in>", "n": "<N>"}')
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1624,6 +1624,36 @@ worktree-independent.
 
 ---
 
+## issue-304 — Commander map-input contract (epic-298, B3)
+
+**Run shape:** `commander (delegated, under Admiral launch order commander-304)` · 10/10 spine steps + 13/13 execute items (four crew gate triads g1-g4) closed · opus commander, opus implementers + opus reviewers · **two commanders and one implementer died on session usage limits**; this entry is written by the third commander.
+
+**Instruction adherence:** `fully followed`
+- Drove the spine end-to-end through the engine after a cold resume; no hand-editing of any checklist JSON. Two BLOCK verdicts returned and closed through appended slices rather than `reopen`, deliberately, so verified upstream work was not cascade-reset. Every crew dispatched via `run_crew.py --backend external` plus an Agent-tool subagent plus `--verify-result`.
+
+**Friction / unclear:**
+- **`LAUNCH_ORDER-304.md was never committed.** It exists only in the main checkout's working tree, which the commander is fenced from, so the briefed `git show origin/main:` read fails outright. Orders 299, 305, 308, 309 and PRE-B are in the same state. The pasted briefing in the dispatch message is the only reason a cold resume was possible.
+- **`--finding` silently drops words containing backticks, and `attest` refuses `--finding` entirely** — `--note` is the working field. Both cost a round-trip before the pattern was clear.
+- **Every slice carried a TDD-red postcondition of the form "observed FAILING *before* X exists"** and X already existed, because the predecessor died mid-slice with its work written but unattested. There is no doctrine for this and it is now the second resumed gate in this epic to hit it.
+- **The trend snapshot's successor date diverged from a ratified Admiral amendment** because my handoff carried the amendment's substance but not its named date. A handoff paraphrasing a ratified amendment should quote it.
+
+**Crew-reported friction:**
+- Implementer (g2): the handoff's **Required evidence** command is stale by construction — it names a fixed test list, but the gate's own work *adds* a test file the list cannot cover. Ran both the verbatim list and the superset and reported both rather than silently substituting. Filed as #376.
+- Reviewer (g2): the reviewer skill directs the Fowler pass to be written to `templates/FOWLER_PASS.template.json` — the **installed template path** — which would mutate the shared skill install for every future run in every repo. Wrote to the survey directory instead and flagged it. Filed as #363.
+- Reviewer (g4): no engine shape exists for a **scoped re-confirmation round**; wrote a `-2` result with no survey behind it and flagged the deviation rather than hiding it. Third occurrence on this one issue. Filed as #375.
+- Both g2 crews independently asked for the same missing thing: a per-slice **wiring grep** in the handoff — not "does this function exist" but "does it have a call site", naming every function in one command so a *partial* fix is visible.
+
+**What worked:**
+- **Handoffs that named the attacks rather than asking for conformance.** Both BLOCKs came directly from two instructions — *devise a mutation of your own that is not in the shipped set* and *grep for CALLERS, not definitions*. Reviewers devised thirteen mutations across four gates, all red, including two aimed at the **wiring** rather than the code: neutering `verify-orientation` let a spine reach `context -> complete` with no receipt on disk at all, proving the dogfood was not a demonstration that would have looked the same if the contract did nothing.
+- **Committing a dead agent's uncommitted work as the first act of a resume.** 536 lines of implementation and two test files were one `git clean` from gone. Nothing was lost, and the diff became the audit surface.
+- **Appending a rework slice instead of `reopen`.** Reopening would have cascade-reset gates whose reds could not honestly be re-observed.
+
+**Improvement signals:**
+- **Green tests are not evidence a deliverable landed — a call site is.** Twice on this issue code was shipped, self-tested, and never called, with every signal green while the receipt recorded nothing. The second instance survived an audit that explicitly applied "grep for the caller", because the module ships its own `--self-test` as a subcommand and `main` reaches `self_test`, so naive reachability reported every self-tested helper as production-reachable. The rule must be **"a call site outside the def AND outside the self-test."** → disposition: `filed as #364`.
+- **Resuming a gate whose predecessor died mid-slice needs a sanctioned red-reconstruction recipe:** revert the implementation to the commit where it did not exist, observe the genuine red, restore, verify by **blob OID**, and record it as proving the tests *discriminate* — explicitly **not** that TDD order happened. Three of five conditions were satisfied this way and independently reproduced by the reviewer. → disposition: `route to Charter refresh (doctrine addition); recorded here for the epic harvest`.
+- **Windows CRLF has now cost six agents in one epic**, most recently on *writing* rather than reading. The warning alone is not working; the **recipe** belongs in every handoff constraint block — `git checkout HEAD -- <path>` plus a `hash-object`/`rev-parse` comparison, because `git status --porcelain` shows a phantom `M` while `git diff --quiet HEAD` returns 0. → disposition: `route to Charter refresh (shared windows doctrine), recorded for the epic harvest`.
+- **An imperative that points at "the command below" is invisible to an agent driven by `current`**, which never renders command text — and `current` alone is all a cold-started refresh agent has. → disposition: `filed as #374`.
+
 ## 2026-08-02 — `issue-305` (commander-305h, eighth commander on this issue)
 
 **Gates driven:** `g4-implement` (+ rework 1), `g4-review`, `g4-integrate`, then the parent

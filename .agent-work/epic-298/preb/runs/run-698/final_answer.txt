@@ -1,0 +1,45 @@
+Commander run for **#698** driven through the spine to `plan` and stopped there. Nothing in the repo was modified outside `.agent-work/cmdr-698/` — `git status` shows only that untracked directory. No commits, no push, no issue comment.
+
+Engine trail: `spine.json` at init → context → understand → **plan complete**; `interrogation.json` consolidated (13 questions, `verify_interrogation.py` exit 0); `execute.json` authored and frozen; lease released, run parked with a `STATE_NOTE.md`.
+
+## The headline: two of the issue's three premises are wrong
+
+**H1 is unachievable as written.** `CellAddress` carries six fields including `class_id`. All three store methods — `write_fingerprint`, `get_fingerprint`, `row_count` — are *class-agnostic*: they address a **slot of k cells**, with the class dimension supplied by `vocabulary.class_ids`. Typing them on `CellAddress` would force a meaningless argument.
+
+But the defect underneath is real and worse than "primitive obsession": **write validates, read doesn't.** Write builds a `CellAddress` per class (`store.py:233`), so a bad component raises. `get_fingerprint` builds nothing — `driver=""` or `driver="VER|X"` returns k synthesized `"unresolved"` cells, indistinguishable from a legitimately unfitted driver. That's the silent-wrong-answer shape your own `ORCHESTRATOR_CONTEXT.md` lists first.
+
+Ruling: satisfy the *intent* via a five-field `SlotAddress`, with `CellAddress` re-expressed as slot + `class_id` so there's one ontology and one validator. Hard cutover, no shim.
+
+**H3's premise is false.** `.agent-work/` is **tracked**. `.gitignore` covers `*.pkl`/`*.npz`/`*.db`/`scratch`/`ckpt`/`backtests` under it — nothing for `*.json`. Both named JSONs are **committed** under the archive path, deliberately. tc2's blanket `.agent-work/**/*.json` rule would silently un-track your evidence trail across 664/666/667/669/670. The real risk is different: the 675 script writes to a *bare relative* path into a work area archived on 2026-07-26, resurrecting a stale directory at whatever cwd it ran from.
+
+**H2 is real and its fix works** — verified, not assumed. The editable install is the finder-hook flavour mapping `src` → the MAIN checkout, but `install()` **appends** to `sys.meta_path`, so `sys.path.insert(0, repo_root)` wins. Had it inserted at position 0, the prescribed fix would have been inert. Scope held to the one named script: a sweep found **51** scripts with the same gap — that's a repo-wide lint job, filed as triage.
+
+## Two things you should know about how this ran
+
+The critic pass caught a landmine worth the whole exercise: `cell_key` joins fields as `(driver, era, vocabulary_version, class_id, channel, what_measure)` — **`class_id` is at position 4, not last**. The natural "slot + class_id" refactor puts it last, silently orphaning every stored row with no test failure. The plan now names it and demands a hard-coded expected string, not one recomputed from the same constant.
+
+And a real gap: doctrine wants independent-context alternative authors and a genuinely cold critic. This session bars subagent dispatch, so both were authored by me. That's recorded as a named untaken road, not papered over — same-author candidates correlate, and a critic who wrote the plan isn't cold. Also: `py -m pytest` **fails in this shell** (codex runtime, no pytest), so `e0-context` now self-tests the toolchain before any gate opens rather than letting it surface as a false-red mid-run.
+
+Plan shape: three gates, green at every boundary. `g1` additive; `g2` atomic (splitting the ~48-call-site migration guarantees a red window); `g3` independent. Four triage candidates seeded, including amending the issue body itself.
+
+## FILES I WOULD CHANGE
+
+```
+src/physics/fingerprint/address.py
+src/physics/fingerprint/store.py
+src/physics/fingerprint/fit.py
+src/physics/pilot/pipeline.py
+scripts/fingerprint_bounded_validation.py
+scripts/join_bounded_validation_667.py
+scripts/fingerprint_class_coverage_675.py
+tests/unit/physics/fingerprint/test_address.py
+tests/unit/physics/fingerprint/test_store.py
+tests/unit/physics/fingerprint/test_fit.py
+tests/unit/physics/fingerprint/test_bounded_validation.py
+tests/unit/physics/fingerprint/test_script_path_guard.py
+.gitignore
+```
+
+Why each: **`address.py`** gains `SlotAddress` and re-expresses `CellAddress` as slot + `class_id` — the one place the validation rules may live (g1). **`store.py`** is the retyped boundary; the whole issue is its signature (g2). **`fit.py:356`** is the only production writer. **`pilot/pipeline.py:257,325`** are the two production readers. **`fingerprint_bounded_validation.py:124`** and **`join_bounded_validation_667.py:173`** are script call sites that must migrate with the signature — no other change to either; both already carry the path guard. **`fingerprint_class_coverage_675.py`** takes all of H2 and H3a: the `_REPO_ROOT` guard plus repo-anchoring its two bare relative path constants and an `--out` override. **`test_address.py`** gets the `SlotAddress` tests and the hard-coded `cell_key` characterization test (g1). **`test_store.py` / `test_fit.py` / `test_bounded_validation.py`** hold the ~44 positional call sites; their *call forms* change, their *assertions* must not. **`test_script_path_guard.py`** is new and proves the H2/H3 property — `src` resolves under this repo root from a foreign cwd — rather than grepping for the guard line. **`.gitignore`** gets one narrow rule for the live pre-archive artifact path, coupled to the anchoring change and explicitly not a blanket `*.json` rule.
+
+Deliberately **not** in that list: `docs/architecture/packets/physics.md`. The architecture bookend puts map reconciliation at the spine's `reconcile` step under Cartographer, and there's a specific delta waiting for it — the packet says `instrument_panel` reads `get_fingerprint` cells directly, but no store import exists under `src/physics/instrument_panel/`; the call is at `pilot/pipeline.py:325`.
