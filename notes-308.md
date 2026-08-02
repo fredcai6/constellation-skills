@@ -305,3 +305,132 @@ reversal**: 10-never-confirmed and 12-stale looked like weak entries worth culli
 now **observations with an unknown recurrence count**. The count is empty; **the record is
 not invalid.** That is the single biggest interpretive change the re-scope makes to the
 measurements above.
+
+---
+
+# g4 — THE MIGRATION. Pinned to `3f7d059` unless stated otherwise.
+
+Executed under Tommy's re-scope, not under the obsolete disposition table above.
+Every write went through `scripts/apply_episode_delta.py` and
+`scripts/apply_lessons_delta.py`. Neither `LESSONS.md` nor any episode file was
+hand-edited.
+
+## THE TWO DELIVERABLE NUMBERS
+
+- **Migration count: 23 episodes created.** 20 of them are the 20 active lessons,
+  one-for-one — none merged, none dropped. 3 are this run's own observations, which
+  the issue requires be preserved: the commander's self-recurrence, and the two
+  clusters the cold rhyme-search sensor found.
+- **Episodes carrying an UNKNOWN field: 11 of 23** (15 unknown fields in total).
+
+**The unknown count is a headline number, not a defect.** Nothing was back-filled.
+Where a lesson did not record a field, the episode says so in-field, names the source,
+and carries `strength: weak`. Under the old scope, "10 of 20 never confirmed, 12 stale
+by 4+ runs" read as weak entries worth culling. Under this one they are **observations
+with an unknown recurrence count — the count is empty, the record is not invalid.**
+That reversal is the single biggest interpretive change the re-scope makes.
+
+## Where the unknowns fall
+
+`expected-behavior` (7) and `impact-cost` (7) carry almost all of them, plus one
+`workaround`. **Zero `observed-behavior` fields are unknown** — every one of the 23
+records something that actually happened. That is the shape you would predict: a
+lesson is written to state a rule and its remedy, so what happened and what was done
+survive banking, while what was expected beforehand and what it cost are the parts
+nobody wrote down. #342's fear — that `create`'s required `observed-behavior` would
+force a fabrication on a thin lesson — did not materialize on any of the 20.
+
+## The per-lesson migration table
+
+Every row is `MIGRATED`. There is no disposition column, because under this scope
+there is no disposition to make.
+
+| episode | provenance marker | origin run | fields recorded UNKNOWN |
+|---|---|---|---|
+| `issue-308-001` | `lesson:test-harness-concurrency-failsafe` | epic-178 | — |
+| `issue-308-002` | `lesson:verify-launch-order-claims-against-code` | epic-198-burndown | — |
+| `issue-308-003` | `lesson:observe-midprocess-state-not-via-end-output` | epic-198-burndown | impact-cost |
+| `issue-308-004` | `lesson:verify-harness-field-and-drive-real-writer` | epic-198-burndown | — |
+| `issue-308-005` | `lesson:round-trip-tests-prove-artifacts-not-parsers` | epic-226-lessons-audit | — |
+| `issue-308-006` | `lesson:checklist-engine-from-child-relative-path-and-gated-vs-survey` | epic-226-lessons-audit | — |
+| `issue-308-007` | `lesson:harvest-before-sweep-enforcement-gap` | epic-226-lessons-audit | — |
+| `issue-308-008` | `lesson:cold-critic-mandatory-for-measurement-dependent-plans` | epic-226-lessons-audit | expected-behavior |
+| `issue-308-009` | `lesson:windows-subprocess-env-does-not-shadow-path-resolution` | epic-226-lessons-audit | impact-cost |
+| `issue-308-010` | `lesson:prove-command-fails-postcondition` | epic-226-lessons-audit | expected-behavior, impact-cost |
+| `issue-308-011` | `lesson:canonical-routing-can-dissolve-a-file-fence` | epic-226-lessons-audit | expected-behavior, impact-cost |
+| `issue-308-012` | `lesson:crew-plan-file-shares-parent-gauge-directory` | governor-261 | — |
+| `issue-308-013` | `lesson:reviewer-old-vs-new-repro-without-mutating-file-under-review` | governor-261 | impact-cost |
+| `issue-308-014` | `lesson:drill-scope-should-name-every-sibling-template` | governor-268 | — |
+| `issue-308-015` | `lesson:lightweight-critic-catches-real-findings-on-bounded-issues` | governor-265 | expected-behavior, impact-cost |
+| `issue-308-016` | `lesson:reviewer-fowler-template-path-wording-ambiguous` | governor-265 | impact-cost |
+| `issue-308-017` | `lesson:guard-must-be-defined-by-the-consumer-not-a-character-list` | 301 | — |
+| `issue-308-018` | `lesson:a-panel-inherits-what-it-was-not-told-to-vary` | 301 | — |
+| `issue-308-019` | `lesson:a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed` | 301 | — |
+| `issue-308-020` | `lesson:stale-description-has-two-shapes-and-only-one-yields-to-verification` | 301 | expected-behavior |
+| `issue-308-021` | `observation:issue-308-commander-self-recurrence` | issue-308 | — |
+| `issue-308-022` | `observation:issue-308-cluster-a-inherited-repo-state-claim` | issue-308 | expected-behavior, workaround |
+| `issue-308-023` | `observation:issue-308-cluster-b-check-cannot-register-its-own-failure` | issue-308 | expected-behavior |
+
+All 20 lessons were then retired through `apply_lessons_delta.py`, each with a reason
+naming the episode it became. `tick` was deliberately omitted: a bare tick would have
+aged `runs-since-confirmed` on all 20 on their way out, which is aging a record for the
+crime of being migrated. Header state survives (`run-tick=40`, the full
+`ticked-work-ids` ring); `cap=20` dropped out of the live header on the first render,
+which is g3's grammar change landing on the real file.
+
+## Three schema facts that forced choices, each measured rather than assumed
+
+The launch order said extra fields are fine and a blank is a valid value. **Neither
+holds against the writer as shipped**, and this is the finding the order asked for.
+
+1. `agent_supplied` accepts **exactly five kinds, no more and no less**
+   (`scripts/apply_episode_delta.py:136`, enforced at `:919`). An `other-notes` key is
+   rejected as misfiled. There is nowhere for a field outside the five to go.
+2. Every one of the five requires a **non-empty `statement`** and a `strength` from a
+   closed vocabulary (`:942-955`). **A blank is not expressible.** The schema refuses
+   *empty*, not the *word* unknown — so an explicit in-field unknown naming the source
+   lesson is the only non-fabricating way through, and that is what all 15 are.
+3. The `mechanical` bin's four counters are **required non-negative integers** with no
+   "not recorded" value (`:158-162`).
+
+Fact 3 forced the sharpest choice. Writing the ORIGIN run's counters would mean
+asserting four numbers this migration does not know, **in the bin that is trusted
+precisely because it is machine-derived**. So the mechanical bin describes the
+**capture** run — `run: issue-308`, `role: commander`, `spine-step: execute`, counters
+from this run's real engine state — where every value is an observed fact. Origin run,
+origin lesson id and grounding artifacts ride in `artifact-ref` and in the statements,
+where "unknown" can be said out loud.
+
+**The cost of that choice, stated rather than hidden: a query by `run` or `role` will
+not find a migrated observation under its ORIGIN run or role.** Filed as **#399**.
+
+I wrote **no `diagnosis` bin on any of the 23**, although the schema offers one. Its
+kinds are `suspected-cause` and `proposed-remedy` — they name the subject and thereby
+solicit a confident one-run guess, which is the exact shape Tommy ruled out. Where a
+lesson's own author had already written a cause or severity claim, it is carried
+**verbatim and attributed** inside `observed-behavior`, prefixed *"Also observed, as a
+record that someone wrote it and deciding nothing"* — because that someone wrote it is
+itself an observation. Three migrated episodes carry one (017, 018, 020), plus 021,
+which carries this commander's own withdrawn bin-1 conclusion the same way.
+
+## The check caught me, and I fixed the store rather than the check
+
+The first write of the three run-observations gave them `- artifact-ref: lesson:<id>`
+markers. `migration_done.py` went **red**, naming all three: they assert a lesson
+provenance for lessons that never existed. That is the check's unexpected-marker arm
+working as designed, against its own author, within minutes of being written. The three
+files were removed and re-created through the writer under an `observation:` namespace.
+Recording it because the alternative — relaxing the check so the store's false claim
+passed — is the failure this whole epic is about.
+
+## Residual: the playbook's preamble still instructs agents to read it
+
+`.agent-work/LESSONS.md`'s Active section is empty, but its preamble still says *"Read
+the Active section at the Commander context step"* and *"which enforces cap, grounding,
+and counter rules"*. Both are now false. **It is unreachable through the sanctioned
+write path**: `load_playbook` reads the preamble as everything before `## Active` and
+`render_playbook` only substitutes the state marker inside it, so no delta op can
+rewrite it — and hand-editing is forbidden by this gate's own constraint. Filed rather
+than worked around, because the one workaround available — delete the file and let the
+writer re-seed it from `_default_preamble()` — would discard `run-tick=40` and the
+20-entry `ticked-work-ids` ring, trading a prose defect for a loss of mechanical state. Filed as **#400**.

@@ -1,0 +1,138 @@
+{
+  "work_id": "issue-308",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-308",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/issue-308/MISSION_FRAME.md@752a62f",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "observation:issue-308-commander-self-recurrence",
+          "origin-run:issue-308",
+          ".agent-work/LESSONS.md@752a62f",
+          "notes-308.md",
+          ".agent-work/issue-308/checks/lesson_intake_is_cut.py",
+          "skills/admiral/templates/ADMIRAL_SPINE.template.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Plan #308's g5 gate: cut live agents off from the lessons bank, by enumerating every artifact under skills/ that instructs an agent to read LESSONS.md, and write a guard asserting the cut. Corpus at 4cec87a, role commander, spine step plan."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The hand-written enumeration of lesson-intake sites in the gate imperative would be complete, and the guard written against it would fail if any live intake site survived."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "While planning the consolidation of a cluster whose shared failure mode is an under-inclusive or stale secondhand claim taken as premise, the commander committed that exact failure mode twice within roughly one hour. First, the g5 imperative enumerated 5 live-agent lesson-intake sites as though complete; a command over the corpus finds 6 across 5 files -- the missed one is in ADMIRAL_SPINE.template.json, in the `latitude` task rather than `context`, so a reader checking `context` would also have missed it. Second, one revision later and inside the guard written to fix that, the character class [^.backslash-n]{0,40} excludes the dot and so could never match any phrase containing '.agent-work/'; it went green against three live intake sites. Also observed, as a record that someone wrote it and deciding nothing, the commander's own conclusion at the time: 'prose did not stop an agent that had just read the cluster, was actively consolidating it, and had the remedy in front of it -- that is a real argument for bin 1 and against my own stated lean.' That conclusion is the kind of importance call Tommy has since ruled a local agent must not make; it is recorded here as something the author wrote, not as a finding."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Recurrence count 2, same agent, within roughly one hour, under maximal awareness -- the agent had just finished writing down that this is a recurring failure mode. Both were caught: the first by a cold plan critic, the second by running the guard and reading which sites it named. No defective artifact reached a crew or a merge."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Replace the hand-written enumeration with a script that enumerates the corpus itself and asserts the enumeration is non-empty -- .agent-work/issue-308/checks/lesson_intake_is_cut.py -- and verify a new guard by reading which sites it actually names, not by its exit code."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-308",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/issue-308/MISSION_FRAME.md@752a62f",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "observation:issue-308-cluster-a-inherited-repo-state-claim",
+          "origin-run:issue-308",
+          ".agent-work/LESSONS.md@752a62f",
+          ".agent-work/issue-308/ROUTING_QUESTION.md",
+          "episodes/active/issue-304-g3-001.md",
+          "episodes/active/issue-304-g3-003.md",
+          "episodes/active/issue-309-002.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the first live rhyme-search over the episode store (7 active episodes, 0 retired, across 2 runs, at 4cec87a) to see whether it surfaces a cluster at all. An independent cold sensor was dispatched with fresh context, no hypothesis, and explicit authorisation to return 'no cluster'."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "UNKNOWN -- the run was set up to accept an honest null; no positive expectation was registered before the sensor ran."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The sensor found a cluster of three episodes across two runs and two roles, sharing the pattern: a written secondhand claim about current repo state was taken as a premise, was wrong, and only re-deriving it by command caught it. issue-304-g3-001 (implementer): a handoff enumerated the suites pinning a file; the enumeration was under-inclusive and two out-of-scope test files broke. issue-304-g3-003 (implementer): a handoff asserted a prior gate had already made a textual change; it had not, and reading the current file would have CONFIRMED the false claim -- only git log plus git show over the 8 commits touching the file disproved it. issue-309-002 (commander): docs/EPISODE_STORE.md section 1's worked git check-ignore transcript claimed .agent-work/ was ignored -- true when written at #301, invalidated by #326 -- and the plan's first draft inherited the false premise. The cluster independently rediscovered a pattern LESSONS.md already held (lesson:verify-launch-order-claims-against-code, mentions 9 / confirmed 6), by a different route with no access to that file."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Observed facts about the two candidate remedies, used to decide nothing: a mechanical doc-transcript checker would have caught 1 of the 3 members (only issue-309-002 is a machine-checkable transcript); a prose instruction addresses 3 of 3, and each episode's own proposed-remedy independently converged on a variant of that sentence. The sensor ran BEFORE the commander recorded its own read, so agreement between them is convergence rather than inheritance. No consolidation was landed: Tommy withdrew the bin ruling, and deciding which observation deserves a doctrine line is the importance judgement he ruled requires a global view."
+        },
+        "workaround": {
+          "strength": "weak",
+          "statement": "UNKNOWN -- no workaround was applied. The consolidation this cluster was found for was withdrawn mid-run, so the cluster is recorded as an observation only."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-308",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/issue-308/MISSION_FRAME.md@752a62f",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "observation:issue-308-cluster-b-check-cannot-register-its-own-failure",
+          "origin-run:issue-308",
+          ".agent-work/LESSONS.md@752a62f",
+          "issue #392",
+          "episodes/active/issue-304-g3-005.md",
+          "episodes/active/issue-309-001.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Same rhyme-search pass as the cluster-A observation: one solo read by the commander, plus an independent cold sensor over the same 7 episodes."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "UNKNOWN -- no positive expectation was registered; the sensor was authorised to return no cluster."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The sensor found a second strong cluster the commander's solo read had MISSED -- the solo read had grouped issue-304-g3-005 as a singleton. Shared pattern: a check reports without being able to register the outcome it is credited with detecting, and in both instances the instrument was operated by the party whose work it measured. issue-304-g3-005: 'the measured defect -- lateness -- remains unenforced'; the check 'ran BY THE AGENT WHO AUTHORED THE ANCHOR'; it 'can verify that orientation HAPPENED but can never verify that it happened FIRST'. issue-309-001: 'a null is not a demonstration'; 'the 0% noise result measures lens discipline, not an absence of noise risk in the underlying pathway'. This cluster is the episode-store rediscovery of lesson:a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed, reached independently with no access to LESSONS.md, and it adds a shape that lesson does not carry: SELF-MEASUREMENT."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A data point about the rhyme-search pathway itself: one read is not enough to trust a null on any individual cluster. #308's honest-null clause covers the store-wide result; a per-cluster miss is a different and quieter failure, and it happened here. Filed as issue #392 rather than consolidated, so it was not silently dropped when decision:one-consolidation-not-many bound the run to one."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Dispatch an independent cold sensor in addition to the solo read, and treat the solo read's singletons as unconfirmed rather than as negatives. The candidate instruction as the sensor phrased it, recorded as the sensor's words and deciding nothing: 'before a check counts as evidence, state the condition under which it would FAIL and show it can reach that condition; if that condition is unobservable to the instrument, report a measurement gap, not a pass.'"
+        }
+      }
+    }
+  ]
+}

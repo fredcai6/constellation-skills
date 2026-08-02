@@ -888,7 +888,7 @@
         "rework-count": 0,
         "failed-commands": 0,
         "artifact-ref": [
-          "lesson:issue-308-commander-self-recurrence",
+          "observation:issue-308-commander-self-recurrence",
           "origin-run:issue-308",
           ".agent-work/LESSONS.md@752a62f",
           "notes-308.md",
@@ -932,7 +932,7 @@
         "rework-count": 0,
         "failed-commands": 0,
         "artifact-ref": [
-          "lesson:issue-308-cluster-a-inherited-repo-state-claim",
+          "observation:issue-308-cluster-a-inherited-repo-state-claim",
           "origin-run:issue-308",
           ".agent-work/LESSONS.md@752a62f",
           ".agent-work/issue-308/ROUTING_QUESTION.md",
@@ -977,7 +977,7 @@
         "rework-count": 0,
         "failed-commands": 0,
         "artifact-ref": [
-          "lesson:issue-308-cluster-b-check-cannot-register-its-own-failure",
+          "observation:issue-308-cluster-b-check-cannot-register-its-own-failure",
           "origin-run:issue-308",
           ".agent-work/LESSONS.md@752a62f",
           "issue #392",

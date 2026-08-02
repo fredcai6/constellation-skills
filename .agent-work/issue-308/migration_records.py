@@ -312,6 +312,7 @@ RECORDS = [
     # ------------------------------------------------------------------ 21
     {
         "lesson": "issue-308-commander-self-recurrence",
+        "provenance": "observation",
         "origin_run": "issue-308",
         "refs": ["notes-308.md", ".agent-work/issue-308/checks/lesson_intake_is_cut.py",
                  "skills/admiral/templates/ADMIRAL_SPINE.template.json"],
@@ -326,6 +327,7 @@ RECORDS = [
     # ------------------------------------------------------------------ 22
     {
         "lesson": "issue-308-cluster-a-inherited-repo-state-claim",
+        "provenance": "observation",
         "origin_run": "issue-308",
         "refs": [".agent-work/issue-308/ROUTING_QUESTION.md",
                  "episodes/active/issue-304-g3-001.md",
@@ -342,6 +344,7 @@ RECORDS = [
     # ------------------------------------------------------------------ 23
     {
         "lesson": "issue-308-cluster-b-check-cannot-register-its-own-failure",
+        "provenance": "observation",
         "origin_run": "issue-308",
         "refs": ["issue #392", "episodes/active/issue-304-g3-005.md",
                  "episodes/active/issue-309-001.md"],

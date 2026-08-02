@@ -73,7 +73,13 @@ def build(records) -> dict:
     for r in records:
         assert r["lesson"] not in seen, f"duplicate record for {r['lesson']}"
         seen.add(r["lesson"])
-        refs = [f"lesson:{r['lesson']}", f"origin-run:{r['origin_run']}", LESSONS_AT]
+        # The provenance namespace is load-bearing, not decoration: `lesson:<id>` asserts
+        # that a lesson of that id existed in the playbook and became this episode, and
+        # migration_done.py counts exactly those. This run's OWN three observations never
+        # were lessons, so they carry `observation:` instead. Writing them as `lesson:`
+        # first made the check go red naming all three -- the check working as designed.
+        ns = r.get("provenance", "lesson")
+        refs = [f"{ns}:{r['lesson']}", f"origin-run:{r['origin_run']}", LESSONS_AT]
         refs.extend(r["refs"])
         assert set(r["a"]) == {"task-intent", "expected-behavior", "observed-behavior",
                                "impact-cost", "workaround"}, r["lesson"]
