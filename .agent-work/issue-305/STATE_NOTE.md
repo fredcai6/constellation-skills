@@ -94,8 +94,13 @@ reopen-seam case needs **two** escalations or it passes on broken code.
   engineer around it. Also **confirm the control can FAIL** before trusting it (run it against a
   deliberately incomplete capture).
 - **g4** dogfoods the gates in this repo, full suite.
-- **`run.dirty` removal (#327) and the #300 successor line are still UNDONE** — both are launch-order
-  return items. Check which gate carries them before assuming g3/g4 do.
+- **`run.dirty` removal (#327) and the #300 successor line are still UNDONE — BOTH BELONG TO g4.**
+  **Ownership ruled by the Admiral** (it wrote the order), after I flagged them as unowned: #327 was
+  scoped to g4 by the first commander and never contradicted; the #300 successor line is a one-line
+  note on #300's shipped design doc saying the producer had no caller until #305 wired it, and sits
+  naturally alongside it. **Do not let g4 close without both** — they are launch-order return items
+  5 and the design-doc note, and an unowned return item is the same shape as a design pass that
+  exists only as a sentence in a PR body.
 - **No CI check has ever run on this branch. Claim nothing about one.** When you open the PR: gate
   on the status text reading **`pass`**, not a zero exit — `gh pr checks` has exited 0 on a *pending*
   check.
