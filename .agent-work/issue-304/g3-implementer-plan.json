@@ -161,7 +161,8 @@
           "id": "p1",
           "statement": "both deletions landed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "both deletions landed, ea52b2f and 456cac0"
         }
       ],
       "postconditions": [
@@ -169,7 +170,8 @@
           "id": "c1",
           "statement": "the state of the pathless phrasing at context and plan determined FROM THE FILE and written down, with the exact phrases quoted (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Determined FROM THE FILE, not from the handoff's summary. CONTEXT: discharged by g2 - tasks.context.imperative now opens the map step with 'Before you open any source file, resolve and read the map input: run python <commander-skill-dir>/scripts/map_orient.py orient ...'; no pathless phrase remains. PLAN: NOT discharged. tasks.plan.imperative still opened verbatim with 'Map-first: BEFORE authoring execute.json, produce a mission frame from the current map using templates/MISSION_FRAME.template.md'. Verified by command across all 8 commits that ever touched the template (git log --format=%h -8 -- <template> then git show <sha>:<template> | python -c 'print plan imperative[:110]'): the opening string is byte-identical at 5fad3e3, 1e015d8, 582002a, 54f5965, 41b1782, 75ee317, fdec654 (the g2 commit) and ea52b2f. g2 APPENDED verify-frame prose but never retargeted this phrase. Minimal retarget applied: 'from the current map using' -> 'from the map input the context step resolved, using'. No test pinned the old phrase (only a docstring quotation in test_map_contract_wiring.py:11, which quotes it as the historically-served text and stays accurate as history)."
         },
         {
           "id": "c2",
@@ -178,7 +180,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_prose_deletions.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
         }
       ],
       "constraints": [
@@ -186,11 +189,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_prose_deletions.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4": {
@@ -426,7 +441,7 @@
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T03:53:42.417640+00:00",
+    "last_heartbeat": "2026-08-02T03:55:21.185201+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -453,6 +468,13 @@
       "why": "Block (b) deleted the same offset-bounded way; wc -w over both deleted blocks reports 86 + 86 = 172, matching the handoff's corrected count exactly and derived from a command rather than asserted. A SECOND out-of-scope sentinel surfaced: test_map_contract_wiring.py also pinned 'sanctioned degradation'. Same minimal intent-preserving fix, same named deviation. A corpus-wide sweep for the deleted phrases found two remaining live references, both flagged rather than edited: scripts/verify_context_declaration.py's docstring (illustrative, not enforcing) and docs/superpowers/drills/dogfood-context-paths-absent.md (a historical run record that would be falsified by editing).",
       "mechanical": false,
       "ts": "2026-08-02T03:53:33.387840+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "T3's plan-side retarget was genuinely still outstanding, contradicting the handoff's expectation that g2 had done it. The evidence is a command over git history rather than a reading of the current file alone, because 'was it already done' is a question about history. The edit is 4 words replacing 4 - the smallest change that names the resolved input instead of an unnamed 'current map' - and it makes the plan step consistent with prose already in the same imperative ('the map inventory the context step resolved'). This does NOT move the anchor: the plan step still fires at authoring time, which is exactly why T3/T5 predict no ordering change.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:55:21.185172+00:00"
     }
   ],
   "amendments": [
