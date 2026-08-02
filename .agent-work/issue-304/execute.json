@@ -555,7 +555,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
         }
       ],
       "constraints": [],
@@ -564,11 +565,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g3-review-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -580,7 +592,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT at g3-review-result.md, APPROVE, 0 blockers"
         }
       ],
       "postconditions": [
@@ -596,7 +609,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c2",
@@ -608,17 +622,40 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g3-review-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_prose_deletions.py tests/test_context_declaration_lint.py tests/test_context_manifest.py tests/test_explorer_templates.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -823,6 +860,20 @@
       "why": "Deletion verified in my hands, not on report: the overlay phrase is down to ONE occurrence at offset 262, inside the load-bearing substitute-and-record sentence, and both dead-path blocks are gone from both templates. TRIPWIRES.md is byte-identical to its pre-registration - git diff 1662b90 HEAD on that path is empty - so the predictions did not move after the outcome was known. Five episodes filed. Three honest nulls came back rather than a clean sweep: T3's mapped-repo clause scored UNTESTED because no mapped repo was reachable, T5 NOT DETERMINABLE and recorded as the measurement gap the pre-registration explicitly asked for, and T1 held with a named near-miss. My own handoff was wrong about T3 - g2 had not retargeted the plan-side phrase - and the implementer verified byte-identity across all eight commits rather than concluding already-done. One deviation needs the reviewer: two out-of-scope test files pinned phrases OF the deleted block as sentinels and were re-pointed, which is the changed-a-test-to-green shape.",
       "mechanical": false,
       "ts": "2026-08-02T04:10:15.091769+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "APPROVE, 0 blockers, 4 minor, 3 triage. The reviewer answered can-this-check-fail with four mutations of its own against the edited template - a class the shipped nine never touch, since those all target map_orient.py. The decisive one replaced the whole context imperative with a 53-char stub and showed the 5 absence tests stay GREEN while the 3 presence tests go RED, which is direct proof the deletion pin is two-directional rather than the one-directional pin this epic keeps finding. The sentinel re-point was ruled a forced re-point, not a test changed to green, by reconstructing the moment of decision: exactly 2 failures in 1538 tests, necessary and sufficient, assert totals unchanged at 154 and 33. Pre-registration intact by blob identity and 6 of 6 ancestry checks. All three honest nulls ruled honest and all five episodes ruled to have observed something.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:36:38.044047+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Ran the verification myself: 111 passed, 69 subtests. Deletion verified independently - the overlay phrase is down to one occurrence at offset 262 inside the load-bearing sentence, both dead-path blocks gone, TRIPWIRES.md byte-identical to its pre-registration. One adjudication landed after the review: the trend snapshot bound its successor to the next epic that changes skills, while the ratified Admiral amendment names epic-298 close. I ruled for the ratified date and had the implementer keep its broader rule as the standing convention thereafter, committed at 4d95b6c. That divergence was my handoff under-specifying the amendment, not an implementer defect.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:37:06.574357+00:00"
     }
   ]
 }

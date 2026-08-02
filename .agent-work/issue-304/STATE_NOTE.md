@@ -1,10 +1,10 @@
 # Crash-resume state note - issue-304
 
-- **step:** execute - **g2 is CLOSED**; gate g3-implement is next
+- **step:** execute - **g2 and g3 are CLOSED**; gate g4-implement is next
 - **slug:** `issue-304` - branch `epic-298/304` - worktree `C:/Programs/constellation-skills-wt/e298-304`
 - **next command:** `py C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-304/execute.json current`
 - **pid:** none - foreground commander; g3 implementer dispatched as an in-process Agent subagent
-- **expected artifact:** `.agent-work/issue-304/crew-handoffs/g3-result.md` (IMPLEMENTER_RESULT)
+- **expected artifact:** `.agent-work/issue-304/crew-handoffs/g4-result.md` (IMPLEMENTER_RESULT); g4 handoff already written and committed
 
 _Updated: 2026-08-02T03:50:00Z_
 
