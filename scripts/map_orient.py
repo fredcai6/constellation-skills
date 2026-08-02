@@ -960,6 +960,17 @@ def render_verify_report(
         if label == LABEL_KNOWN_FALLBACK:
             note = "found in the fixed fallback set and present on disk"
         else:
+            # `agent-declared` is a DISJUNCTION: `classify_substitute` returns
+            # `known-fallback` iff (in-set AND exists), so this branch means
+            # *not-in-set* OR *in-set-but-absent*. The note names only the first
+            # disjunct, and is exactly true ONLY BECAUSE the second is unreachable
+            # here -- `orient` refuses an unpinned substitute first
+            # (`substitute_problems` -> EXIT_DEGRADED_UNDISCHARGED), so every entry
+            # reaching this line was hash-pinned, hence readable, hence present.
+            # If that refusal is ever relaxed this wording becomes WRONG: a
+            # declared-but-absent README.md *is* in the fallback set and would
+            # render falsely. Today only a hand-forged receipt with a fabricated
+            # sha256 reaches the bad line, where UNVERIFIED still warns.
             note = "UNVERIFIED -- declared by the agent, not in the fixed fallback set"
         lines.append(f"substitute: {path if path else '(no path)'} [{label}] -- {note}")
     return lines
