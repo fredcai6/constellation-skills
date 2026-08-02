@@ -891,5 +891,148 @@ class VerifyFrameContractShape(unittest.TestCase):
         self.assertIn("would exit", reporting.stdout)
 
 
+# =============================================================================
+# The degraded case's PARTIAL independent oracle
+# =============================================================================
+#
+# The degraded check's declared weakness is that substitutes are SELF-SELECTED:
+# it verifies the author cited what the author declared. A fixed, corpus-declared
+# fallback search order that `orient` PROBES on the filesystem converts HALF of
+# that into an oracle the agent does not author -- whether one of those paths
+# resolved is answered by the filesystem. It does NOT close the gap: the agent
+# still chooses what to declare, and anything outside the set stays labelled
+# unverified. Both labels are asserted below precisely so the receipt's
+# distinction between them cannot rot into a decoration.
+
+
+class KnownFallbackProbe(unittest.TestCase):
+    def test_orient_records_which_known_fallbacks_actually_exist(self):
+        """Existence is settled by the filesystem, not by the agent's account."""
+        repo = RepoFixture(self)
+        repo.file("README.md", "doctrine\n")
+        repo.file("CLAUDE.md", "more doctrine\n")
+        orient(repo.root, "w", "--substitute", "README.md",
+               "--unmapped", "everything structural", "--escalation", "ask commander")
+        probed = {e["path"]: e for e in receipt_of(repo.root)["fallbacks_probed"]}
+        self.assertEqual(tuple(probed), mo.KNOWN_FALLBACKS)
+        self.assertTrue(probed["README.md"]["exists"])
+        self.assertTrue(probed["CLAUDE.md"]["exists"])
+        self.assertFalse(probed["AGENTS.md"]["exists"])
+
+    def test_a_probed_fallback_that_exists_is_hash_pinned_too(self):
+        repo = RepoFixture(self)
+        repo.file("AGENTS.md", "agent doctrine\n")
+        orient(repo.root, "w", "--substitute", "AGENTS.md",
+               "--unmapped", "structure", "--escalation", "commander")
+        probed = {e["path"]: e for e in receipt_of(repo.root)["fallbacks_probed"]}
+        self.assertTrue(mo.is_content_hash(probed["AGENTS.md"]["content_hash"]))
+        self.assertIsNone(probed["README.md"]["content_hash"])
+
+    def test_the_probe_reports_a_fallback_the_agent_never_declared(self):
+        """The oracle's whole point: it answers independently of the agent."""
+        repo = RepoFixture(self)
+        repo.file("README.md", "doctrine\n")
+        repo.file("AGENTS.md", "undeclared but present\n")
+        orient(repo.root, "w", "--substitute", "README.md",
+               "--unmapped", "structure", "--escalation", "commander")
+        receipt = receipt_of(repo.root)
+        declared = [s["path"] for s in receipt["substitutes"]]
+        probed = {e["path"]: e["exists"] for e in receipt["fallbacks_probed"]}
+        self.assertNotIn("AGENTS.md", declared)
+        self.assertTrue(probed["AGENTS.md"])
+
+
+class SubstituteLabels(unittest.TestCase):
+    """BOTH labels, asserted on real receipts written by the real CLI."""
+
+    def _label(self, repo_files: dict, substitute: str) -> str:
+        repo = RepoFixture(self)
+        for rel, text in repo_files.items():
+            repo.file(rel, text)
+        orient(repo.root, "w", "--substitute", substitute,
+               "--unmapped", "structure", "--escalation", "commander")
+        entries = receipt_of(repo.root)["substitutes"]
+        self.assertEqual(len(entries), 1, entries)
+        return entries[0]["source"]
+
+    def test_a_present_known_fallback_is_labelled_known_fallback(self):
+        self.assertEqual(
+            self._label({"README.md": "doctrine\n"}, "README.md"),
+            mo.LABEL_KNOWN_FALLBACK,
+        )
+
+    def test_a_path_outside_the_known_set_is_labelled_agent_declared(self):
+        self.assertEqual(
+            self._label({"docs/notes/whatever.md": "my notes\n"}, "docs/notes/whatever.md"),
+            mo.LABEL_AGENT_DECLARED,
+        )
+
+    def test_a_declared_but_ABSENT_known_fallback_is_not_labelled_verified(self):
+        """Set membership alone must not earn the verified label -- that would
+        be the self-attestation this labelling exists to separate out."""
+        self.assertEqual(self._label({}, "README.md"), mo.LABEL_AGENT_DECLARED)
+
+    def test_a_docs_index_fallback_is_labelled_known_fallback(self):
+        self.assertEqual(
+            self._label({"docs/index.md": "the docs index\n"}, "docs/index.md"),
+            mo.LABEL_KNOWN_FALLBACK,
+        )
+
+    def test_the_label_never_upgrades_the_pin(self):
+        """A label is a provenance note, not a discharge: an absent substitute
+        still refuses, whatever it is called."""
+        repo = RepoFixture(self)
+        orient(repo.root, "w", "--substitute", "README.md",
+               "--unmapped", "structure", "--escalation", "commander")
+        entry = receipt_of(repo.root)["substitutes"][0]
+        self.assertEqual(entry["source"], mo.LABEL_AGENT_DECLARED)
+        self.assertIsNone(entry["content_hash"])
+        proc = run_cli("verify-orientation", "--root", str(repo.root), "--work-id", "w")
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+
+class VerifyFrameDegraded(unittest.TestCase):
+    """The degraded arm of verify-frame, against the hash-pinned prior."""
+
+    def degraded_repo(self, *extra_files: str) -> RepoFixture:
+        repo = RepoFixture(self)
+        repo.file("README.md", "the repo's own doctrine\n")
+        for rel in extra_files:
+            repo.file(rel, "more doctrine\n")
+        proc = orient(repo.root, "w", "--substitute", "README.md",
+                      "--unmapped", "everything structural",
+                      "--escalation", "ask commander for a map")
+        self.assertTrue(verdict(proc).startswith("DEGRADED-"), proc.stdout)
+        return repo
+
+    def test_a_degraded_frame_citing_a_declared_substitute_passes(self):
+        repo = self.degraded_repo()
+        frame(repo.root, DEGRADED_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual(verdict(proc), "FRAME-OK")
+
+    def test_a_degraded_frame_citing_an_UNDECLARED_fallback_refuses(self):
+        """The point of pinning: the frame is compared against a COMMITTED
+        prior declaration, not a same-breath assertion by the same agent."""
+        repo = self.degraded_repo("CLAUDE.md")
+        frame(repo.root, UUNDECLARED_FALLBACK_FRAME)
+        proc = verify_frame(repo.root)
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual(verdict(proc), "FRAME-REFUSED")
+        self.assertIn("CLAUDE.md", proc.stdout + proc.stderr)
+
+    def test_a_degraded_frame_citing_map_anchors_refuses(self):
+        """No map was read, so a map anchor cannot be a member of anything."""
+        repo = self.degraded_repo()
+        frame(repo.root, GOOD_FRAME)
+        self.assertNotEqual(verify_frame(repo.root).returncode, 0)
+
+    def test_a_degraded_frame_citing_nothing_declared_refuses(self):
+        repo = self.degraded_repo()
+        frame(repo.root, "# Mission Frame\n\nI read some things.\n")
+        self.assertNotEqual(verify_frame(repo.root).returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

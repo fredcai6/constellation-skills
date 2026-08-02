@@ -160,7 +160,8 @@
           "id": "p1",
           "statement": "verify-frame exists",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "verify-frame exists: build_parser registers the verify-frame subparser at scripts/map_orient.py:1610, cmd_verify_frame at :1187, and m2 closed green with 5 AbsentFrameRefuses tests passing."
         }
       ],
       "postconditions": [
@@ -168,7 +169,8 @@
           "id": "c1",
           "statement": "TDD red: both-label and degraded-frame tests written and observed FAILING before the fallback probe exists",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "GENUINE TDD red, observed in order - no reconstruction needed. The fallback probe was dead code at attempt-1: probe_fallbacks was never called by cmd_orient and pin_substitutes wrote no source label. Tests written first (KnownFallbackProbe, SubstituteLabels, VerifyFrameDegraded), then run: 9 failed, 3 passed. Root causes, verbatim from pytest: KeyError: 'fallbacks_probed' and KeyError: 'source'. Plus a 10th distinct failure: the undeclared-fallback refusal named the offender lowercased (claude.md) instead of as cited (CLAUDE.md). After implementation: 12 passed, 68 deselected."
         },
         {
           "id": "c2",
@@ -177,7 +179,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q && python scripts/map_orient.py --self-test"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
         }
       ],
       "constraints": [
@@ -185,11 +188,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q && python scripts/map_orient.py --self-test",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4": {
@@ -333,7 +348,7 @@
     "session_id": "g2-implementer-304b",
     "status": "active",
     "claimed_at": "2026-08-02T02:13:28.493043+00:00",
-    "last_heartbeat": "2026-08-02T02:17:25.949328+00:00",
+    "last_heartbeat": "2026-08-02T02:25:22.036026+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "g2-implementer-304",
@@ -360,6 +375,13 @@
       "why": "verify-frame audited against deliverable 1 rather than trusted: all four refusal arms verified present and green (absent frame FRAME-MISSING exit 12, unknown anchor named, code-cut refused, no-receipt refused), frozen g1 exit vocabulary reused with codes 10 and 12 widened by documented reading only. c1 red was reconstructed against 6d35fe2, not observed in TDD order - recorded as a deviation. AUDIT GAP FOUND for a later slice: probe_fallbacks is dead code, never called by cmd_orient, and pin_substitutes writes no source label, so the receipt does not record which known fallback resolved; the degraded-arm frame fixtures DEGRADED_FRAME and UUNDECLARED_FALLBACK_FRAME are defined in tests but never used.",
       "mechanical": false,
       "ts": "2026-08-02T02:17:25.949298+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "Wired the fallback oracle that attempt-1 left as dead code: cmd_orient now calls probe_fallbacks and records fallbacks_probed on every receipt (including RESOLVED ones, so the probe is not something an agent can suppress by claiming the map resolved), and pin_substitutes stamps each entry with source=known-fallback (in the fixed set AND present on disk) or agent-declared. Both labels asserted on receipts written by the real CLI, not on the pure helpers alone. The label is provenance only, never a discharge - an absent README.md is still agent-declared with content_hash null and still refuses. Also fixed a defect the self-test was pinning: the undeclared-fallback refusal renamed the offender to lowercase. Deliberately NOT claimed as closing the self-attestation gap; it converts half of it, since the agent still chooses what to declare.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:25:22.036001+00:00"
     }
   ]
 }

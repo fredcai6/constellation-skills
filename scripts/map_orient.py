@@ -127,7 +127,9 @@ Receipt schema (`.agent-work/<work-id>/map-orientation.json`)
     entrypoint       str?    repo-relative path of the winning candidate, else null
     anchor_count     int     unique citable anchor ids at the entrypoint (0 when degraded)
     candidates_tried list    [{order, kind, path, exists, outcome, anchor_count, note}]
-    substitutes      list    [{path, content_hash}] -- what was read INSTEAD of a map
+    substitutes      list    [{path, content_hash, source}] -- read INSTEAD of a map
+    fallbacks_probed list    [{path, exists, content_hash}] -- the FIXED fallback
+                             set, as the filesystem answers it
     unmapped         list    [str] -- what stayed unmapped, stated plainly
     escalation       str?    what is being escalated and to whom
     emitted_at       str     UTC ISO-8601 timestamp
@@ -139,6 +141,16 @@ read carries `content_hash: null` and **refuses** the discharge -- the pin is
 validated by SHAPE (64 hex chars), so no sentinel, typo, or truncated digest
 can stand in for one. A single mistyped path must not be able to satisfy the
 whole contract.
+
+Each substitute also carries a provenance `source`: `known-fallback` when the
+path is in the fixed corpus set (`README.md`, `AGENTS.md`, `CLAUDE.md`, a
+`docs/` index) AND present on disk, `agent-declared` otherwise. `orient` probes
+that whole set independently into `fallbacks_probed`. This converts HALF of the
+degraded check's self-attestation into an oracle the agent does not author --
+whether one of those paths resolved is the filesystem's answer, not the agent's.
+It does **not** close the gap: the agent still chooses what to declare, and
+anything outside the set stays labelled unverified. Do not describe it as making
+the degraded check sound; it converts part of it.
 
 Honest limits
 -------------
@@ -771,12 +783,16 @@ def frame_verdict(
                 )
     else:
         declared = set(declared_substitute_paths(receipt))
-        cited = [normalize_cited_path(p) for p in cited_paths(frame_text)]
-        backing = [p for p in cited if p in declared]
-        for path in cited:
-            if path in KNOWN_FALLBACK_SET and path not in declared:
+        # Keep the AS-CITED spelling alongside the comparable one: matching is
+        # case-insensitive, but a refusal that renames the offender (`CLAUDE.md`
+        # reported as `claude.md`) is a refusal the author has to translate
+        # before they can act on it.
+        cited = [(raw, normalize_cited_path(raw)) for raw in cited_paths(frame_text)]
+        backing = [raw for raw, norm in cited if norm in declared]
+        for raw, norm in cited:
+            if norm in KNOWN_FALLBACK_SET and norm not in declared:
                 problems.append(
-                    f"the frame cites {path}, which the receipt never declared as a "
+                    f"the frame cites {raw}, which the receipt never declared as a "
                     "hash-pinned substitute -- declare what you read at orient time so the "
                     "frame is compared against a committed prior, not a same-breath claim"
                 )
@@ -850,6 +866,7 @@ def build_receipt(
     unmapped: Sequence[str],
     escalation: str | None,
     emitted_at: str,
+    fallbacks_probed: Sequence[dict] = (),
 ) -> dict:
     """PURE. The receipt document -- schema documented in the module docstring."""
     return {
@@ -872,6 +889,12 @@ def build_receipt(
             for c in orientation.candidates
         ],
         "substitutes": [dict(s) for s in substitutes],
+        # The independent HALF of the degraded record: which of the fixed,
+        # corpus-declared fallbacks actually exist, answered by the filesystem
+        # rather than by the agent's account of what it read. Recorded on every
+        # receipt, including RESOLVED ones, so the probe is never something the
+        # agent could have suppressed by claiming the map resolved.
+        "fallbacks_probed": [dict(f) for f in fallbacks_probed],
         "unmapped": list(unmapped),
         "escalation": escalation,
         "emitted_at": emitted_at,
@@ -1083,14 +1106,24 @@ def pin_substitutes(root: Path, substitutes: Sequence[str]) -> list[dict]:
     An unreadable or nonexistent path gets `content_hash: null`, NOT a
     sentinel string. A sentinel would satisfy a "is it non-empty" test and let
     a mistyped path discharge the whole contract.
+
+    Each entry also carries `source`, the provenance label: `known-fallback`
+    when the path is in the fixed corpus set AND present on disk (the
+    filesystem, an oracle the agent does not author, agrees), `agent-declared`
+    otherwise. The label is a provenance NOTE, never a discharge -- an absent
+    substitute still refuses whatever it is called, which is why the label is
+    computed alongside the pin rather than in place of it.
     """
     pinned = []
     for raw in substitutes:
-        path = (root / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
+        absolute = Path(raw).is_absolute()
+        path = Path(raw) if absolute else (root / raw).resolve()
+        rel = path.as_posix() if absolute else _rel(root, path)
         pinned.append(
             {
-                "path": _rel(root, path) if not Path(raw).is_absolute() else path.as_posix(),
+                "path": rel,
                 "content_hash": sha256_of(path),
+                "source": classify_substitute(rel, path.is_file()),
             }
         )
     return pinned
@@ -1118,6 +1151,7 @@ def cmd_orient(args: argparse.Namespace) -> int:
         args.unmapped or [],
         args.escalation,
         _now_iso(),
+        probe_fallbacks(root) if root.is_dir() else [],
     )
 
     receipt_rel = None
@@ -1496,7 +1530,9 @@ def self_test() -> int:
     )
     line, code, problems = frame_verdict(degraded_pinned, "built from `CLAUDE.md`", ())
     _check("a degraded frame citing an UNDECLARED fallback refuses", code != EXIT_OK, failures)
-    _check("that refusal names the undeclared path", any("claude.md" in p for p in problems), failures)
+    # AS CITED, not normalized: matching is case-insensitive, but a refusal that
+    # renames the offender makes the author translate before they can act.
+    _check("that refusal names the undeclared path", any("CLAUDE.md" in p for p in problems), failures)
     _check(
         "a degraded frame citing nothing declared refuses",
         frame_verdict(degraded_pinned, "I thought about it", ())[1] != EXIT_OK,
