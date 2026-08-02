@@ -513,14 +513,14 @@
   "triage_candidates": [],
   "blockers": [],
   "engine_session": {
-    "session_id": "commander-305-e298",
+    "session_id": "commander-305h",
     "status": "active",
-    "claimed_at": "2026-08-02T05:40:02.558733+00:00",
-    "last_heartbeat": "2026-08-02T05:40:02.558733+00:00",
-    "claimed_by": "commander-305d (resumed at g3-implement boundary)",
-    "worktree": "C:/Programs/constellation-skills-wt/e298-305",
-    "previous_session_id": null,
-    "takeover_reason": null
+    "claimed_at": "2026-08-02T18:33:47.659123+00:00",
+    "last_heartbeat": "2026-08-02T18:33:47.659123+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": "commander-305-e298",
+    "takeover_reason": "commander-305d/e/g lineage dead; commander-305h dispatched by the Admiral to drive the spine to terminal"
   },
   "why_trail": [
     {
