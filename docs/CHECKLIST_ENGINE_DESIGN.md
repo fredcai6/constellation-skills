@@ -253,15 +253,17 @@ entirely** (#327). Having a caller is what revealed it: `git status --porcelain`
 the manifest itself written under a tracked `.agent-work/` the flag reports the run's own bookkeeping
 rather than anything a declaration names, and because `build_manifest()` computes it *before*
 `write_manifest()` creates the file, each manifest reads its predecessor's tree, not its own. Measured
-**as of `35d2686^`, the tree the removal was made on**, over the 49 manifests this producer had
-written in-tree: 47 `true`, 1 `false`, 1 field-absent. The revision is named rather than described
-because the arithmetic is pinned to that moment deliberately and the live count keeps growing as this
-producer runs — at `35d2686` itself it already reads 56 / 51 / 1 / 4. The lone `false` is the
-mechanism in miniature rather than an exception to it: it is
-`.agent-work/issue-305/context/g1-implement.json`, which exists at all only because g1 was
-**reopened**, and it reports clean because commit `2456130` cleaned the tree 2m16s before it was
-generated. It recorded what its predecessor left behind — `g1-review.json`, eight minutes earlier,
-reporting `true` — not what it was itself about to do. Neither reading is available to a
+**on the tree this removal was made on**, over the 49 manifests this producer had written in-tree:
+47 `true`, 1 `false`, 1 field-absent. **Both sides are given in full because the count is pinned to
+that moment deliberately and keeps growing as this producer runs**: 49 / 47 / 1 / 1 immediately
+before the removal, and 56 / 51 / 1 / 4 at the removal commit itself. (On the `epic-298/305` branch
+those were `35d2686^` and `35d2686`; the squash-merge does not carry either SHA into `main`, which is
+why the numbers rather than the refs are the durable anchor.) The lone `false` is the mechanism in
+miniature rather than an exception to it: it is `.agent-work/issue-305/context/g1-implement.json`,
+which exists at all only because g1 was **reopened**, and it reports clean because commit `2456130`
+cleaned the tree 2m16s before it was generated — that commit is what cleaned it. The manifest
+recorded the tree its predecessor `g1-review.json` had been followed by, eight minutes after that
+one reported `true`, rather than anything it was itself about to do. Neither reading is available to a
 consumer — not a constant to rely on, not a signal to interpret. The field was not an oversight in
 #300 and its removal is not a reversal of a mistake; it is what a first real caller made visible.
 `CONTENT_KEYS` is unchanged by the removal, because `dirty` was never content.
