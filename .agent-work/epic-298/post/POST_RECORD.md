@@ -95,6 +95,16 @@ anchor phrase *"before you open any source file"* — because `corpus_marker.sou
 read verbatim out of `CORPUS.json`, a **self-report written by the installer**, which is
 exactly the artifact that would lie in a #344-shaped failure.
 
+**On the install fingerprints this arm could not find.** `LAUNCH_ORDER-307` named
+`baselines/CORPUS_FINGERPRINT_{PRE,POST}_INSTALL.json` as the provenance record for the #344
+install. They were absent from the entire `.agent-work/` tree when this arm checked. The
+Admiral has since established why and fixed it: **the files were real but existed only in his
+main checkout's working tree, uncommitted**, so no commander could reach them — the #344
+install genuinely had no reachable provenance record. Now committed at `5d9e71a`. **This arm
+deliberately does not switch to them.** An instrument that reads its own provenance beats one
+that trusts an Admiral's, and the per-run witnesses in the table above are what the poolability
+claim rests on.
+
 ## 4. THE FINDING — orientation moved before source, and did not move to bootstrap
 
 **`map_before_src`: PRE-B `False` on 4 of 4 · POST `True` on 4 of 4.**
@@ -261,9 +271,39 @@ leave a newline-terminated file. Filed as **#396**. `run_all_post.py` now takes 
 `O_CREAT|O_EXCL` lock, and transcript integrity — one `system/init`, one `result`, one
 `session_id`, zero malformed lines — is now a gate condition and passes on all five valid runs.
 
-**This is a void capture, not a retry for a better number.** No ordering number was computed
-from the void set and none was looked at. `PRE_REGISTRATION.md` was committed before the valid
-arm produced its first result and stands unchanged.
+### 10.1 Why this is not a compromised measurement — the four facts, in one place
+
+*"We re-ran the arm"* is exactly what a compromised measurement looks like from the outside. A
+reader coming to this cold needs all four of these together, or they should reasonably discount
+the arm:
+
+1. **The void criterion is independent of the outcome.** *Two distinct `session_id`s and two
+   `result` events in one transcript* says nothing whatever about `map_before_src`. It cannot be
+   satisfied more easily by a result anyone prefers. **A void rule that could only fire on
+   disappointing data is p-hacking; one that fires on process identity is hygiene.**
+2. **It was applied blind.** The void set was never scored — `discriminate.py` was never run over
+   it, and no ordering number from it was ever computed or seen. The criterion being
+   outcome-independent protects the arm in principle; not having looked protects it in practice.
+3. **The void set was preserved, not deleted** — `runs-VOID-double-driver/` with
+   `VOID_CAPTURE_EVIDENCE.json`, and reported here rather than dropped. **A discarded arm that
+   leaves no trace is indistinguishable from one that was never run.**
+4. **`PRE_REGISTRATION.md` predates any POST number** (`a4993ec`, committed while captures were
+   still in flight) **and stands unchanged.** It survived its first real test, having named in
+   advance both of the ways this result could have been laundered — the #716 literal-row
+   denominator, and `NO-SRC-READ` being the contract's success case rather than a missing datum.
+
+### 10.2 The general defect — this epic's own thesis, arriving from a new direction
+
+**`exit=0` and a plausible elapsed time are exactly what a doubled run looks like.** Every cheap
+check passed: `meta.json` said `finished`, elapsed times were in range, and the truncation check
+could not see it **because interleaved corruption does not truncate — the files still end on a
+newline.** Only counting the thing itself caught it.
+
+**Metadata about an artifact is not the artifact, and a check that reads the wrapper reports
+clean on a corrupted payload.** That is *assert what you looped over*, reached from a completely
+different direction, and it generalises to every detached capture in this fleet — not just this
+one. The operational half deserves its own line: **a backgrounded `nohup` survived a compound
+command that reported failure. The shell said it failed; the process disagreed and won.**
 
 ## 11. Nothing landed in f1Brainz
 
