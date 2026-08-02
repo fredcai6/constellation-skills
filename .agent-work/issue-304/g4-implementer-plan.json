@@ -194,7 +194,8 @@
           "id": "p1",
           "statement": "dogfood and full-suite evidence in hand",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "dogfood transcript and full-suite output on disk"
         }
       ],
       "postconditions": [
@@ -205,7 +206,8 @@
             "kind": "command",
             "command": "python .agent-work/issue-304/evidence/g4_assert_closeout.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
         }
       ],
       "constraints": [
@@ -214,11 +216,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_closeout.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -227,13 +241,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "g4-implementer-attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T04:39:53.095007+00:00",
-    "last_heartbeat": "2026-08-02T04:51:41.565093+00:00",
+    "last_heartbeat": "2026-08-02T04:54:50.211791+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T04:55:01.294905+00:00"
   },
   "why_trail": [
     {
@@ -263,6 +278,13 @@
       "why": "full suite green locally under python 3.14: 1538 passed, 2 skipped, 481 subtests passed in 202.12s; the engine re-runs it as the gate",
       "mechanical": false,
       "ts": "2026-08-02T04:51:41.565063+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "scratch removed and absence verified; prior-gate artifacts and TRIPWIRES.md unchanged by blob OID; IMPLEMENTER_RESULT written",
+      "mechanical": false,
+      "ts": "2026-08-02T04:54:50.211771+00:00"
     }
   ]
 }
