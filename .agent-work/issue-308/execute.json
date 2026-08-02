@@ -484,13 +484,15 @@
             "kind": "command",
             "command": "python .agent-work/issue-308/checks/migration_done.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-disposition-lessons-1"
         },
         {
           "id": "c2",
           "statement": "notes-308.md carries the per-lesson migration table plus the two deliverable numbers: the migration count and the count of episodes carrying an unknown field",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "notes-308.md carries the g4 section: the 23-row per-episode migration table (episode id, provenance marker, origin run, fields recorded UNKNOWN), the two deliverable numbers -- 23 migrated, 11 of 23 carrying at least one UNKNOWN field, 15 unknown fields total -- their distribution (expected-behavior 7, impact-cost 7, workaround 1, observed-behavior ZERO), the three schema facts that forced choices with the line numbers they were measured at, the two filed findings #399 and #400, and the record of migration_done.py going red against its own author. Every number in that section is derived by command over the store, not eyeballed."
         },
         {
           "id": "c3",
@@ -499,7 +501,8 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-disposition-lessons-2"
         }
       ],
       "constraints": [
@@ -510,11 +513,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-disposition-lessons-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-308/checks/migration_done.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-disposition-lessons-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -544,7 +570,7 @@
           "statement": "the Commander spine no longer carries LESSONS.md as a context-manifest input",
           "check": {
             "kind": "command",
-            "command": "! grep -q 'agent-work/LESSONS.md' skills/commander/templates/COMMANDER_SPINE.template.json"
+            "command": "python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\""
           },
           "satisfied": false
         },
@@ -573,7 +599,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -665,7 +691,7 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T20:02:38.399197+00:00",
-    "last_heartbeat": "2026-08-02T22:07:58.661601+00:00",
+    "last_heartbeat": "2026-08-02T22:37:34.512616+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -713,6 +739,13 @@
       "why": "g3 is done and the cap is gone behaviourally, in the grammar, and in the prose that described it. The integration's real content was the doc correction the review surfaced: leaving a design record asserting a live cap would have reproduced exactly the #348 defect this run fixed at g2 -- a document accurate when written, false when read. Next is g4, the migration, where the 23 records already built and dry-run-validated get written to the store.",
       "mechanical": false,
       "ts": "2026-08-02T22:07:12.294596+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g4-disposition-lessons",
+      "why": "The migration is complete and nothing was judged: 23 episodes, 20 of them the lessons one-for-one, none merged and none dropped. The two numbers that matter are 23 migrated and 11 of 23 carrying an UNKNOWN field, and the second is the honest one -- zero observed-behavior fields are unknown, so #342's fear that a thin lesson would force a fabricated observation did not materialize on any of the 20. Where the schema would not take an honest gap I filed it (#399, #400) rather than inventing content or relaxing a check. The sharpest moment of the gate was migration_done.py going red against me: the three run-observations carried lesson: markers for lessons that never existed, and the store was fixed rather than the check. Suite re-run green after committing the episodes (1621/2) -- the first red was test_canon_episode_store_untouched objecting to 23 legitimately-new untracked files, which is worth noting as a friction, not a defect in this work.",
+      "mechanical": false,
+      "ts": "2026-08-02T22:35:38.607897+00:00"
     }
   ],
   "amendments": [
@@ -724,6 +757,14 @@
         "rescoped g4-disposition-lessons",
         "dropped g6-land-consolidation",
         "dropped g7-retire-sources"
+      ]
+    },
+    {
+      "ts": "2026-08-02T22:37:34.512594+00:00",
+      "reason": "The frozen c2 command was '! grep -q agent-work/LESSONS.md skills/commander/templates/COMMANDER_SPINE.template.json'. That file contains FIVE occurrences and only two are the read path: the context imperative (:22) and the context-manifest declaration (:34). The other three are the WRITE path this gate's own constraint requires survive -- the feedback imperative's apply_lessons_delta instructions (:109), verify_lessons_applied's --file argument (:112), and the git-change-policy deny_globs entry (:125). So the frozen check could only be satisfied by demolishing the writer, which the gate forbids. Corrected to a structural check over the context_refs declaration, which is what c2's own statement says it tests, with a vacuous-pass guard (exit 2 if context_refs is empty) so an emptied declaration list cannot satisfy it by having nothing to find. The prose half stays covered by c1.",
+      "authority": "Commander commander-308b under the frozen epic-298 launch order; corrects an authoring defect in this gate's own check, changes no scope",
+      "ops": [
+        "retext-check g5-cut-intake-implement.c2"
       ]
     }
   ]

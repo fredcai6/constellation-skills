@@ -1,0 +1,319 @@
+{
+  "work_id": "issue-308-g5-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-admiral",
+    "m2-charter",
+    "m3-spine-and-dependents",
+    "m4-accept"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then the project delta docs/agents/CREW_CONTEXT.md (docs/agents/GLOSSARY.md does not exist in this repo -- record the substitution), then the g5 implement handoff in full and the acceptance guard .agent-work/issue-308/checks/lesson_intake_is_cut.py. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions and return format; block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + acceptance guard loaded; handoff complete (task, intent, scope, exclusions, evidence, stop conditions, return format all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + docs/agents/CREW_CONTEXT.md read (docs/agents/GLOSSARY.md absent in this repo -- substitution recorded); g5-implement-handoff.md read in full; lesson_intake_is_cut.py read in full. Handoff complete: task, protected intent, 6-site scope table, explicit exclusions (writer/auditor/apply_lessons_delta + 8 named leave-alone lines), required evidence (4 load-bearing + 2 confirmatory), test mode (guard red-then-green + full suite), stop conditions, return format."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-admiral": {
+      "id": "m1-admiral",
+      "title": "Cut lessons intake from the three Admiral-side sites, keep platform invariants",
+      "imperative": "Sites 1-3. skills/admiral/SKILL.md:61 -- drop the lessons-inbox half of the sentence, keep the platform-invariants half. skills/admiral/templates/ADMIRAL_SPINE.template.json:22 -- in the LATITUDE task imperative (not context), drop 'and the Active section of .agent-work/LESSONS.md if present'. skills/admiral/templates/LAUNCH_ORDER.template.md:57 -- drop the lessons clause from the inherited-context placeholder, keep the platform/technical invariants clause and the charter-lite carrier sentence. Edit shipped compact JSON surgically as raw text; never round-trip through json.load/json.dump. Do NOT touch ADMIRAL_SPINE:49 or :57 (closeout audit = writer) or admiral/SKILL.md:60 and :67 (staging/audit = writer).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED baseline observed and recorded BEFORE any edit: lesson_intake_is_cut.py exits 1 naming 5 files covering all 6 sites, and the corrected c2 exits 1 printing 6 context_refs entries with .agent-work/LESSONS.md as the offender -- manual attest, because both are by-design-failing pre-change commands",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED BASELINE, captured before any edit. (a) python .agent-work/issue-308/checks/lesson_intake_is_cut.py -> EXIT 1; printed 'enumerated 11 files under skills/ referencing the lessons bank'; NOTE lines for skills/admiral/templates/LAUNCH_ORDER.template.md and skills/charter/templates/AGENT_GUIDE.template.md; FAIL naming skills/admiral/SKILL.md (marker LESSONS\\.md[^n]{0,60}Active section), skills/admiral/templates/ADMIRAL_SPINE.template.json (Active section of...LESSONS\\.md), skills/admiral/templates/LAUNCH_ORDER.template.md (Active lessons from...LESSONS\\.md), skills/charter/templates/AGENT_GUIDE.template.md (2 markers), skills/commander/templates/COMMANDER_SPINE.template.json (4 markers incl the context_refs path literal). (b) corrected c2 -> EXIT 1, printed 'context_refs entries: 6 | naming LESSONS.md: [.agent-work/LESSONS.md]'."
+        },
+        {
+          "id": "c2",
+          "statement": "admiral/SKILL.md drops to 2 LESSONS.md lines and still carries the platform-invariants clause; ADMIRAL_SPINE drops to 2 (closeout writer intact); LAUNCH_ORDER has zero LESSONS.md and still carries the invariants clause",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(grep -c 'LESSONS\\.md' skills/admiral/SKILL.md)\" = 2 && grep -q 'platform invariants ride in every launch order' skills/admiral/SKILL.md && test \"$(grep -c 'LESSONS\\.md' skills/admiral/templates/ADMIRAL_SPINE.template.json)\" = 2 && ! grep -q 'LESSONS\\.md' skills/admiral/templates/LAUNCH_ORDER.template.md && grep -q 'platform/technical invariants from the project playbook' skills/admiral/templates/LAUNCH_ORDER.template.md && echo 'M1-OK admiral doctrine keeps invariants and drops lessons intake'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-admiral-1"
+        }
+      ],
+      "constraints": [
+        "surgical raw-text edits to shipped compact JSON; re-validate with json.load",
+        "keep the invariants half at sites 1 and 3 -- remove the lessons half only",
+        "never touch C:/Programs/constellation-skills"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-admiral-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(grep -c 'LESSONS\\.md' skills/admiral/SKILL.md)\" = 2 && grep -q 'platform invariants ride in every launch order' skills/admiral/SKILL.md && test \"$(grep -c 'LESSONS\\.md' skills/admiral/templates/ADMIRAL_SPINE.template.json)\" = 2 && ! grep -q 'LESSONS\\.md' skills/admiral/templates/LAUNCH_ORDER.template.md && grep -q 'platform/technical invariants from the project playbook' skills/admiral/templates/LAUNCH_ORDER.template.md && echo 'M1-OK admiral doctrine keeps invariants and drops lessons intake'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-charter": {
+      "id": "m2-charter",
+      "title": "Cut the read instruction from the Charter agent guide, keep the write path",
+      "imperative": "Site 4. skills/charter/templates/AGENT_GUIDE.template.md:75 -- remove 'read the Active section before planning'; the apply_lessons_delta.py write-path sentence stays. The replacement must not leave 'Active section' within 60 characters of LESSONS.md in either direction, or the acceptance guard's markers still match.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 admiral sites cut and verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-admiral complete, check green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "AGENT_GUIDE keeps exactly one LESSONS.md line naming apply_lessons_delta.py, and no read-the-Active-section instruction survives any of the guard's markers",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(grep -c 'LESSONS\\.md' skills/charter/templates/AGENT_GUIDE.template.md)\" = 1 && grep -q 'apply_lessons_delta.py' skills/charter/templates/AGENT_GUIDE.template.md && ! grep -qi 'read the Active section' skills/charter/templates/AGENT_GUIDE.template.md && ! grep -q 'LESSONS\\.md.\\{0,60\\}Active section' skills/charter/templates/AGENT_GUIDE.template.md && ! grep -q 'Active section of.\\{0,60\\}LESSONS\\.md' skills/charter/templates/AGENT_GUIDE.template.md && echo 'M2-OK agent guide keeps the write path and drops the read instruction'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-charter-1"
+        }
+      ],
+      "constraints": [
+        "write path stays; read instruction goes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-charter-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(grep -c 'LESSONS\\.md' skills/charter/templates/AGENT_GUIDE.template.md)\" = 1 && grep -q 'apply_lessons_delta.py' skills/charter/templates/AGENT_GUIDE.template.md && ! grep -qi 'read the Active section' skills/charter/templates/AGENT_GUIDE.template.md && ! grep -q 'LESSONS\\.md.\\{0,60\\}Active section' skills/charter/templates/AGENT_GUIDE.template.md && ! grep -q 'Active section of.\\{0,60\\}LESSONS\\.md' skills/charter/templates/AGENT_GUIDE.template.md && echo 'M2-OK agent guide keeps the write path and drops the read instruction'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-spine-and-dependents": {
+      "id": "m3-spine-and-dependents",
+      "title": "Cut the Commander spine read path plus manifest declaration, and rework every dependent",
+      "imperative": "Sites 5 and 6 plus their blast radius, as one slice so the tree is never left red. COMMANDER_SPINE.template.json:22 -- remove the 'Read the Active section of .agent-work/LESSONS.md ...' sentence from the context imperative. :34 -- remove the context_refs entry with root durable and path .agent-work/LESSONS.md. THE OTHER THREE LESSONS.md MENTIONS IN THIS FILE ARE THE WRITER AND MUST SURVIVE: the feedback imperative (:109), verify_lessons_applied.py --file (:112), and the git-change-policy deny_globs entry (:125). A grep-and-delete over this filename destroys the writer. Then rework the dependents: tests/test_context_manifest.py EXPECTED literal drops the durable row (a deliberate two-line diff by that test's own docstring); the three tests/test_episode_capture.py roots-durable tests keep testing the double-nesting and repo-root traps by constructing a SYNTHETIC durable declaration instead of resolving the shipped one -- do not delete them; scripts/episode_capture.py comments at :66-68 and :162-163 stop claiming a shipped declaration that no longer exists, with no behaviour change. Edit the compact JSON surgically as raw text.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 charter site cut and verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-charter complete, check green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "corrected c2 exits 0 (no context_refs entry names LESSONS.md); COMMANDER_SPINE retains exactly 3 LESSONS.md lines and they are the writer trio (apply_lessons_delta, verify_lessons_applied, deny_globs); full suite green with the reworked tests",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\" && test \"$(grep -c 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json)\" = 3 && grep 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json | grep -q 'apply_lessons_delta\\.py' && grep 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json | grep -q 'verify_lessons_applied\\.py' && grep 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json | grep -q 'deny_globs' && echo 'M3-OK writer survivors intact: apply_lessons_delta + verify_lessons_applied + deny_globs' && python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-spine-and-dependents-1"
+        }
+      ],
+      "constraints": [
+        "exactly two of the five COMMANDER_SPINE LESSONS.md mentions may go",
+        "test_episode_capture roots-durable tests are reworked, never deleted -- their subject is the resolution trap",
+        "scripts/episode_capture.py behaviour unchanged; comments only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-spine-and-dependents-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\" && test \"$(grep -c 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json)\" = 3 && grep 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json | grep -q 'apply_lessons_delta\\.py' && grep 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json | grep -q 'verify_lessons_applied\\.py' && grep 'LESSONS\\.md' skills/commander/templates/COMMANDER_SPINE.template.json | grep -q 'deny_globs' && echo 'M3-OK writer survivors intact: apply_lessons_delta + verify_lessons_applied + deny_globs' && python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-accept": {
+      "id": "m4-accept",
+      "title": "Green the acceptance guard and assert the whole deliverable",
+      "imperative": "Run the full close criteria together and read WHICH SITES the guard names, not just its exit code -- an earlier revision of this guard went green against three live intake sites. Derive the changed-file count from git diff --stat and assert it rather than eyeballing it, assemble the before/after text for all six sites, and write IMPLEMENTER_RESULT to .agent-work/issue-308/crew-handoffs/g5-implement-result.md. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all six intake sites cut and their dependents reworked",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1/m2/m3 all complete with green checks; all 6 intake sites cut, dependents reworked"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lesson_intake_is_cut.py exits 0, corrected c2 exits 0, every shipped skills/*/templates/*.json parses, full suite green",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-308/checks/lesson_intake_is_cut.py && python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\" && python -c \"import json,glob; ps=sorted(glob.glob('skills/*/templates/*.json')); assert len(ps)>=5, ps; [json.load(open(p,encoding='utf-8')) for p in ps]; print('parsed',len(ps),'shipped JSON templates')\" && python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-accept-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written with the asserted file count, both red-then-green transcripts, all six before/after site pairs, and the mechanically derived suite counts",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/issue-308/crew-handoffs/g5-implement-result.md && echo RESULT-WRITTEN"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-accept-2"
+        }
+      ],
+      "constraints": [
+        "do not commit",
+        "assert the enumeration, never present a glance as a count"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-accept-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-308/checks/lesson_intake_is_cut.py && python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\" && python -c \"import json,glob; ps=sorted(glob.glob('skills/*/templates/*.json')); assert len(ps)>=5, ps; [json.load(open(p,encoding='utf-8')) for p in ps]; print('parsed',len(ps),'shipped JSON templates')\" && python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-accept-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-308/crew-handoffs/g5-implement-result.md && echo RESULT-WRITTEN",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g5-impl-308b",
+    "status": "released",
+    "claimed_at": "2026-08-02T22:43:05.200016+00:00",
+    "last_heartbeat": "2026-08-02T23:18:15.100600+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-02T23:18:31.139633+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "This gate is a cutover of the READ path only: the same filename appears on both sides of the cut, so the operative distinction is per-mention, not per-file. 5 of 11 skills/ files carrying the name hold intake; COMMANDER_SPINE holds 5 mentions of which exactly 2 are intake and 3 are the writer. The acceptance guard is phrasing-independent (6 regex markers over a git-grep enumeration) precisely because a hand-written site list is the defect class this issue consolidates -- so the guard, not my reading, decides completeness.",
+      "mechanical": false,
+      "ts": "2026-08-02T22:43:32.808417+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-admiral",
+      "why": "Sites 1 and 3 are compound sentences carrying two things; only the lessons conjunct is cut, so both files keep a standalone invariants clause rather than losing the bullet. Site 2 sits in the LATITUDE task, not the context task -- the earlier enumeration that missed it looked for the context step by name. ADMIRAL_SPINE went 3 LESSONS.md lines to 2, keeping the closeout writer at :49 and the verify_lessons_applied check at :57.",
+      "mechanical": false,
+      "ts": "2026-08-02T22:44:41.270721+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-charter",
+      "why": "The Charter guide bullet is the one site where the file's REMAINING mention is itself the write path, so the line survives and only its clause structure changes: the read instruction is replaced with the positive statement of what the bank now is (a staging bank an audit drains, not planning input for a live run), which is the doctrine a Charter-compiled guide should carry after the cutover. Wording deliberately avoids the token 'read' anywhere before the filename so it cannot re-trip the guard's broadest marker.",
+      "mechanical": false,
+      "ts": "2026-08-02T22:45:11.064556+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-spine-and-dependents",
+      "why": "Probed the writer trio against the guard's six regexes BEFORE editing: lines 109/112/125 match ZERO markers, so cutting only sites 5 and 6 greens the guard with no pressure to touch the writer -- the over-reach risk was measurable in advance, not just warned about. Measured blast radius corrects the handoff: only ONE of the three named test_episode_capture tests actually read the shipped declaration (the other two already build synthetic entries and passed untouched), so the real failure set was 1 test in each of the two files. Reworked that one onto a synthetic path while ADDING an assertion that no durable declaration ships, which converts a test that would have silently changed subject into one that fails if a durable entry returns.",
+      "mechanical": false,
+      "ts": "2026-08-02T23:02:06.518187+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-accept",
+      "why": "Read the guard's OUTPUT, not its exit code: enumeration moved 11 -> 10 files because LAUNCH_ORDER lost its only mention and left the git-grep set entirely, and AGENT_GUIDE still emits an advisory NOTE because it correctly keeps one write-path mention. Neither is a site hiding from the guard. Suite total is unchanged at 1621 (was 2 failed + 1619 passed), which is the mechanical proof the reworked tests were reworked and not deleted. 8 source files changed; the other 3 paths in git diff --stat are the Commander's pre-existing engine state, attributed by grepping my session id out of them rather than assumed.",
+      "mechanical": false,
+      "ts": "2026-08-02T23:18:15.100561+00:00"
+    }
+  ]
+}

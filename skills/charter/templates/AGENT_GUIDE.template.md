@@ -72,7 +72,7 @@ Universal commands only. Area-specific commands belong in handoffs, not here.
 
 - Temporary workflow state and archived history live under `.agent-work/` (see `docs/agents/` skills for the full layout). Treat it as recoverable state, not project truth.
 - The unified agent feedback log at `.agent-work/AGENT_FEEDBACK.md` accumulates run retrospectives across work-ids; it persists and is never archived with a single run.
-- The curated lessons playbook at `.agent-work/LESSONS.md` is its bounded, distilled derivative: read the Active section before planning; update it only through `apply_lessons_delta.py` structured deltas, never by hand.
+- The curated lessons playbook at `.agent-work/LESSONS.md` is its bounded, distilled derivative. It is a staging bank an audit drains, not planning input for a live run — agents write to it only through `apply_lessons_delta.py` structured deltas, never by hand.
 - If it is in `docs/`, it is meant to guide future work. If it is in `.agent-work/`, it is temporary or historical.
 
 ## Where to Go Next

@@ -541,13 +541,18 @@ class CommanderSpineDeclaration(unittest.TestCase):
     #: overlay). The prose lint is one-directional by design and cannot see it
     #: either. This literal is the only place either defect is visible: a deliberate
     #: change here is a two-line diff, an accidental one is a failure.
+    #:
+    #: The `durable`-rooted `.agent-work/LESSONS.md` row was dropped deliberately by
+    #: #308, which cut the lessons READ path: a live agent no longer loads the bank,
+    #: so nothing declares it. That leaves the corpus with **no** `durable`
+    #: declaration at all — a re-added one shows up here as a failure, which is the
+    #: point of pinning the list rather than deriving it.
     EXPECTED = [
         ("skill", "references/global-orchestrator.md", True),
         ("skill", "references/global-everyone.md", True),
         ("repo", "docs/agents/ORCHESTRATOR_CONTEXT.md", False),
         ("repo", "docs/agents/GLOSSARY.md", False),
         ("repo", "docs/agents/engine-config.json", False),
-        ("durable", ".agent-work/LESSONS.md", False),
     ]
 
     def setUp(self):

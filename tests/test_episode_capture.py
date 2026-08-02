@@ -13,8 +13,11 @@ failure modes this seam actually has are both **silent**:
   records `rev: null` without raising — so a wrong root ships a plausible-looking
   manifest with every revision null and every naive assertion green. The root
   tests below therefore assert the **resolved absolute path**, never the code that
-  produced it, and one of them resolves the single shipped `durable` declaration
-  to prove the double-nesting trap is not merely avoided by luck.
+  produced it, and one of them resolves a `durable` declaration end to end to prove
+  the double-nesting trap is not merely avoided by luck. That declaration is
+  synthetic since #308 cut the lessons read path and left the corpus shipping no
+  `durable` declaration at all — the trap is a property of `resolve_roots`, not of
+  whichever file happens to be declared.
 * The emit is fail-soft by design (it must never change a verb's exit code), so a
   broken emit looks exactly like a working one from the caller's side. The
   fail-soft tests therefore pin the exit code *and* the failure stub, because
@@ -145,9 +148,9 @@ class RootResolution(unittest.TestCase):
 
     def test_roots_durable_is_the_checkout_root_not_the_agent_work_directory(self):
         """The silent trap: `durable_agent_work()` returns `<root>/.agent-work`, which
-        double-nests the one shipped declaration to `.agent-work/.agent-work/LESSONS.md`
-        — a path that simply does not exist, so the row records `rev: null` and every
-        naive check stays green."""
+        double-nests any `.agent-work/…`-relative durable declaration to
+        `.agent-work/.agent-work/…` — a path that simply does not exist, so the row
+        records `rev: null` and every naive check stays green."""
         base = ROOT / ".agent-work"
         roots = ec.resolve_roots(base)
         # Resolved from the repo root — see the sibling test for why the argument,
@@ -158,21 +161,30 @@ class RootResolution(unittest.TestCase):
             os.path.basename(str(roots["durable"]).rstrip("/\\")), ".agent-work"
         )
 
-    def test_roots_durable_resolves_the_one_shipped_declaration_without_double_nesting(self):
-        """Resolve the single `durable` declaration that actually ships
-        (`COMMANDER_SPINE.template.json`) through the real producer, and assert the
-        absolute path it lands on."""
+    def test_roots_durable_resolves_a_declaration_without_double_nesting(self):
+        """Resolve a `durable`-rooted declaration through the real producer and assert
+        the absolute path it lands on.
+
+        The entry is **synthetic**. Until #308 this test resolved the corpus's one
+        shipped `durable` declaration (`.agent-work/LESSONS.md` in
+        `COMMANDER_SPINE.template.json`); cutting the lessons read path removed it, and
+        the corpus now ships none — asserted below, so a re-added one is visible rather
+        than silently changing what this test exercises. The subject was never that
+        path: it is the double-nesting trap in `resolve_roots`, which any
+        `.agent-work/…`-relative durable path exposes."""
         declared = json.loads(
             (ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json")
             .read_text(encoding="utf-8")
         )["tasks"]["context"]["context_refs"]
-        entry = [e for e in declared if e["root"] == "durable"]
-        self.assertEqual([e["path"] for e in entry], [".agent-work/LESSONS.md"])
+        self.assertEqual([e for e in declared if e["root"] == "durable"], [])
 
+        entry = {"root": "durable", "path": ".agent-work/synthetic-durable.md",
+                 "required": False}
         roots = ec.resolve_roots(ROOT / ".agent-work")
-        resolved = cm.resolve(entry[0], roots)
+        resolved = cm.resolve(entry, roots)
         self.assertEqual(
-            norm(resolved), norm(Path(roots["durable"]) / ".agent-work" / "LESSONS.md")
+            norm(resolved),
+            norm(Path(roots["durable"]) / ".agent-work" / "synthetic-durable.md"),
         )
         tail = os.path.normcase(resolved)
         self.assertNotIn(
@@ -185,7 +197,7 @@ class RootResolution(unittest.TestCase):
         worktree with no active Admiral epic lease. On every other path — plain
         checkout, active lease, no git — it returns `start` UNCHANGED. So handing it
         the spine's own directory silently makes that directory the durable root, and
-        the shipped `.agent-work/LESSONS.md` declaration nests under it. This is the
+        a `.agent-work/…`-relative durable declaration nests under it. This is the
         argument, not the helper, and no assertion about which function was called
         can see it."""
         with tempfile.TemporaryDirectory() as tmp:
@@ -195,8 +207,9 @@ class RootResolution(unittest.TestCase):
             roots = ec.resolve_roots(spine_dir)
             self.assertEqual(norm(roots["durable"]), norm(tmp))
             self.assertEqual(
-                norm(cm.resolve({"root": "durable", "path": ".agent-work/LESSONS.md"}, roots)),
-                norm(Path(tmp) / ".agent-work" / "LESSONS.md"),
+                norm(cm.resolve(
+                    {"root": "durable", "path": ".agent-work/synthetic-durable.md"}, roots)),
+                norm(Path(tmp) / ".agent-work" / "synthetic-durable.md"),
             )
 
     def test_roots_outside_a_git_repository_fall_back_visibly_and_never_raise(self):
