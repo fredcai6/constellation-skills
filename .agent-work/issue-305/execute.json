@@ -947,7 +947,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": "REVIEW_RESULT returned at .agent-work/issue-305/crew/g4-review-result.md. Verdict BLOCK with one blocker. The condition is 'REVIEW_RESULT returned', which is met by the artifact regardless of verdict; the BLOCK is adjudicated at g4-integrate, where the imperative routes it to rework."
+          }
         }
       ],
       "constraints": [],
@@ -956,11 +961,29 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g4-review-result.md",
+            "verdict": "BLOCK",
+            "blockers": "1 (BLOCKER-1: false causal parenthetical in docs/CHECKLIST_ENGINE_DESIGN.md successor paragraph)",
+            "reviewed_tree": "35d2686",
+            "survey": ".agent-work/issue-305/g4-review/ (18/18 checks consolidated, lease released last, Fowler rail exit 0)",
+            "claims_1_to_4": "all CONFIRMED, each re-derived with a different instrument than the Commander used",
+            "baseline_derived_by_reviewer": "1487 passed, 2 skipped, 472 subtests",
+            "mutations": "7, all against the shipped blob, all OID-confirmed and finally-restored; tree left OID-identical",
+            "blocker_1_verified_by_commander": "yes - both halves re-derived independently against the tree"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -1186,6 +1209,13 @@
       "why": "Implementer returned complete, no blockers on the work, committed at 35d2686. I verified rather than inherited: the highest-consequence claim (checklist_engine.py docstring-only) is PROVEN by AST comparison across 35d2686^..35d2686 - raw bytes differ, full AST differs, AST-with-docstrings-stripped is equal, so behaviour is byte-unchanged. context_manifest.py carries exactly three code changes: run_facts loses the dirty parameter, its returned dict loses the key, and build_manifest stops passing state.get(dirty). CONTENT_KEYS untouched. The regression guard is depth-complete (recursive key sweep plus encoded-token check) and the repo_state fakes still supply dirty, so it asserts the consumer ignores what it is handed - a stronger claim than nobody supplying it. The implementer's one forced waiver is on its own sub-plan condition (c3 compared local HEAD to origin, which cannot pass without a push the handoff forbids) and is mine to adjudicate at g4-integrate, not a blocker here.",
       "mechanical": false,
       "ts": "2026-08-02T17:49:38.512279+00:00"
+    },
+    {
+      "id": "w-23",
+      "gate": "g4-review",
+      "why": "REVIEW_RESULT returned: BLOCK, one blocker, claims 1-4 CONFIRMED. The blocker is BLOCKER-1, the exact claim my handoff named as deliberately unchecked, and it is refuted on both halves. I re-derived it rather than inheriting: g1-review.json was added at b1707f1 eight minutes BEFORE g1-implement.json at bcb0975 and carries dirty=true, so the false manifest was not the run's first; and commit 2456130 cleaned the tree 2m16s before that manifest's 20:00:53 timestamp, so the cause was a cleaning predecessor, not an absent one. The truth strengthens the ruling: no-predecessor would make the false a harmless startup artifact, whereas what actually happened IS the read-your-predecessor mechanism the removal rests on. Advancing to g4-integrate, where a BLOCK routes to rework.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:27:06.212693+00:00"
     }
   ],
   "amendments": [
@@ -1211,7 +1241,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T17:50:31.660908+00:00",
+    "last_heartbeat": "2026-08-02T18:27:06.212709+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
