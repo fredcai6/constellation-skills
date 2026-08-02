@@ -104,6 +104,39 @@ reopen-seam case needs **two** escalations or it passes on broken code.
   evidence the scope is wider than those four.
 - **#362 closes with the PR.**
 
+## PR-BODY CONTRACT — Admiral-directed. Do not paraphrase these away.
+
+The PR does not exist yet. When you open it, the body **must** carry all four:
+
+1. **The `reopens` cost, in these words:** *it can now under-count on a narrow path, which is the
+   direction doctrine already concedes.* The Admiral's reasoning: **a known-direction inaccuracy
+   that is documented is a different object from one that is discovered.**
+2. **#359** — surveys bypass the seam (Reviewer, Cartographer, Scout, Curator uncovered). **Must
+   travel alongside the capability.** Do not let a reader infer coverage the code does not have.
+   (The g2 re-reviewer checked and found no evidence the scope is wider than those four.)
+3. **#362** closes with the PR.
+4. **The store is complete for engine-driven runs and empty for everything else** — an agent that
+   never drives the engine leaves no engine state. Launch order: say so plainly rather than letting
+   a reader assume the store sees all work.
+
+## Admiral rulings received AFTER g2 closed — all verified ALREADY satisfied, no rework needed
+
+- **BINDING: the `refusals` doc must say what it IS, not hedge toward what it was meant to be.**
+  Verified against what shipped: `docs/CHECKLIST_SCHEMA.md:59` reads *"Scoped to the FILE, not to
+  the leaseholder — and say it that way"* and *"the honest reading is 'refusals taken against this
+  checklist', not 'refusals this agent took'"*; `scripts/episode_capture.py:391-399` matches. **No
+  hedging** — no "approximately run-scoped", no "run-scoped in the common case". Satisfied.
+- **File the run-scoped question as its own issue before closing the gate** — done, **#367**, filed
+  before `g2-integrate` closed. The reasoning is worth carrying: *a design pass that exists only as
+  a sentence in a PR body evaporates; give it a number so the deferral is a decision rather than a
+  disappearance.*
+- **The discriminating test must be in the SUITE, not in `evidence/`** — satisfied:
+  `tests/test_episode_fields.py::EscalatedReopenIsNotAReopenTests`. The `evidence/` script is a
+  separate one-command repro, not the test.
+- **The discriminating test must hit the `start` seam** — satisfied:
+  `test_an_escalation_does_not_inflate_reopens_at_a_start_seam:526`, alongside the reopen-seam case
+  at `:545`. The class docstring writes the `E` vs `E−1` trap down so it cannot be lost.
+
 ## Lessons harvested (for the feedback step — do not lose these)
 
 - **A vacuous check plus an honest crew reads exactly like a passing check plus a compliant crew.**
