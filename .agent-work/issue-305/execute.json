@@ -935,7 +935,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received at .agent-work/issue-305/crew/g4-implement-result.md, return status complete, no blockers on the work; attached as e-g4-implement-1 and g4-implement advanced. Implementation committed at 35d2686. Full suite re-run by me against the committed tree: 1487 passed, 2 skipped, 472 subtests in 134.91s - the subtest count returned to 472 exactly as the implementer predicted it would once the tree was committed, which independently confirms its account of the interim -1 (checklist_engine.py had been dirty and dropped out of a clean-subset subtest)."
         }
       ],
       "postconditions": [
@@ -955,7 +956,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1210,7 +1211,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T17:49:38.512297+00:00",
+    "last_heartbeat": "2026-08-02T17:50:31.660908+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
