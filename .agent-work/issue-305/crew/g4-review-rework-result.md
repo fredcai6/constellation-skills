@@ -307,3 +307,41 @@ since been discharged. Answering your question: **separate file, with a pointer.
 - **Repeat of a round-1 item:** the reviewer SKILL.md still says to `advance` a survey check, which
   the engine refuses (`advance is for gated checklists; use record`). Second time it cost me a
   refused call.
+
+---
+
+## Confirmation — `e61578b`
+
+**All three answers are yes, nothing new is wrong, and my `APPROVE-WITH-FOLLOWUPS` re-binds to
+`e61578b` (verified equal to shipped bytes at HEAD `fd2fc0b`, which touches no source).**
+
+**(1) FU-A/B/C discharged.** FU-A: **both** copies now read *"as of `35d2686^`, the tree the removal
+was made on"* — `CHECKLIST_ENGINE_DESIGN.md:256` and `context_manifest.py:35`. FU-B: the live-count
+guard is now in **both** (`:258` and `:40`), which was the whole point — it previously sat only in
+the copy a reader is less likely to check. FU-C: the reopen fact is in the design doc (`:262`),
+which is exactly the scope I specified; its absence from the docstring is correct, not a gap.
+
+**(2) Nothing new is wrong.** *"At `35d2686` itself it already reads 56 / 51 / 1 / 4"* is **correct
+as written** — I re-measured from scratch rather than accepting the agreement: `35d2686^` → 49/47/1/1,
+`35d2686` → 56/51/1/4. **No self-reference problem**: `git show 35d2686:scripts/context_manifest.py`
+contains **zero** occurrences of either SHA, so the file names an ancestor that already existed when
+the naming was written — there is no bootstrap paradox, and `35d2686^` (= `aa5d06dd`) is reachable
+from HEAD. Two observations, neither blocking, both strictly milder than what they replace:
+**(i)** *"It recorded what its predecessor left behind — `g1-review.json`, eight minutes earlier,
+reporting `true` — not what it was itself about to do."* Both halves are true and the causal
+attribution is correctly made to `2456130` in the preceding sentence, but the appositive sits where a
+reader can take it as claiming `g1-review.json` left the clean tree, which it did not. Moving the
+naming out of that clause would remove the invitation. **(ii)** `main`'s recent history is flat with
+`(#NNN)` suffixes — squash merges — so after merge **neither SHA will exist in `main`**, and the
+anchor a reader of `main` can resolve is the prose, not the ref. This degrades gracefully (the doc
+now states both counts explicitly, so the measurement stays unambiguous without the SHAs) and is
+strictly better than the ambiguity it replaced, but it is worth a decision at the PR step rather than
+a surprise afterwards. Cosmetically, the docstring's new wrap leaves one short line at `:41-42`.
+
+**(3) Still docstring-only.** Same instrument as before, `optimize=2` bytecode over `e61578b^..HEAD`:
+exactly **one** code object differs — `DeclarationError.co_code`, one inline operand
+`LOAD_SMALL_INT 166 → 168` — and `DeclarationError` moved from line 166 to 168, **+2**, exactly the
+module docstring's growth. No function's code changed; asserts identical; every changed line
+(pre 34–40, post 34–42) lies strictly inside the module docstring's span. Method note: this
+confirmation was run as a direct check rather than a new engine survey, at the Commander's explicit
+scoping — the rework survey it appends to was already driven to consolidation and released.

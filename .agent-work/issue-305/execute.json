@@ -973,7 +973,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-2"
         }
       ],
       "constraints": [],
@@ -982,7 +983,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "g4-implement"
       },
@@ -1010,6 +1011,23 @@
             "reason": "BLOCKER-1 from the g4 review, verified by me against the tree rather than accepted on report. docs/CHECKLIST_ENGINE_DESIGN.md's successor paragraph states the single measured 'false' manifest was 'the run's first, which had no predecessor'. Both halves are refuted: .agent-work/issue-305/context/g1-review.json was added at b1707f1 (2026-08-01 19:53:33 -0700) EIGHT MINUTES before g1-implement.json at bcb0975 (20:01:44) and carries dirty=true, so the false manifest was the second in its own context dir, not the run's first; and its cause was commit 2456130 (19:58:37) cleaning the tree 2m16s before it was generated at 20:00:53, i.e. a cleaning predecessor rather than an absent one. Reworking the clause. I also found a second defect in the same sentence that the review did not name: the measurement is written in a tense that reads as current ('the 49 manifests this producer has written in-tree') and is already stale - the in-tree count is now 52 with the field, 51 true / 1 false. Both copies of the measurement get scoped to the point of removal.",
             "ts": "2026-08-02T18:27:25.223763+00:00"
           }
+        },
+        {
+          "id": "e-g4-review-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g4-review-rework-result.md",
+            "verdict": "APPROVE-WITH-FOLLOWUPS",
+            "blockers": "none - BLOCKER-1 discharged",
+            "attempt": "2 (rework 1)",
+            "bound_to": "e61578b, re-bound by the reviewer from my stated 5ccae87 after it found HEAD had moved; per-blob equality, not tree equality",
+            "atoms_confirmed": "all 5 atoms of the replacement clause independently re-derived",
+            "docstring_only_reconfirmed": "optimize=2 bytecode comparison; one operand delta explained by __firstlineno__ line shift",
+            "followups": "FU-A/B/C fixed by me at e61578b (not filed); FU-1..FU-6 carried to triage as tc4-tc9",
+            "post_confirmation_change": "87827a4 - I changed the same prose AFTER the confirmation to close the reviewer two non-blocking observations (squash-merge SHA anchor, appositive misread). Prose only, AST-proven docstring-only. DISCLOSED: these bytes were not themselves re-reviewed."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -1295,6 +1313,13 @@
       "why": "Rework 1 complete, authored by me directly rather than a dispatched crew - a one-clause prose correction did not warrant an implementer dispatch, and I am disclosing the authorship on the record rather than letting the evidence imply independent crew work. BLOCKER-1 is closed: the false parenthetical is replaced with the verified truth, which strengthens the ruling rather than weakening it, because a cleaning predecessor IS the read-your-predecessor mechanism whereas an absent one would have been an exception to it. I also corrected the same sentence's already-stale present-perfect tense in BOTH shipped copies - the reviewer independently reached the same site as its FU-3, which corroborates the fix rather than duplicating it. scripts/context_manifest.py remains AST-proven docstring-only. Suite 1487 passed, 2 skipped, 472 subtests. Re-review is in flight and bound to 5ccae87, the shipped HEAD, not to the intermediate f6acc1e.",
       "mechanical": false,
       "ts": "2026-08-02T18:31:48.567511+00:00"
+    },
+    {
+      "id": "w-27",
+      "gate": "g4-review",
+      "why": "Rework 1 verdict is APPROVE-WITH-FOLLOWUPS with BLOCKER-1 discharged, and the reviewer confirmed the FU-A/B/C fix re-binds to e61578b. Two things I did not inherit: it re-bound the verdict itself after finding HEAD had moved past the commit I named, verifying PER-BLOB rather than tree equality and noting a tree-OID check would have failed wrongly because my .agent-work/ commits move the tree without touching a reviewed blob; and it caught that main squash-merges, so the SHAs my FU-A fix named would not exist for a reader of main. I fixed that at 87827a4 by making both counts explicit and demoting the SHAs to a locator. I am disclosing that 87827a4's bytes were not themselves re-reviewed: they close two observations the reviewer raised and specified the direction of, they are prose-only and AST-proven docstring-only, and a fourth round was disproportionate - but the disclosure belongs on the record rather than in my head.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:53:24.557635+00:00"
     }
   ],
   "amendments": [
@@ -1320,7 +1345,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T18:48:42.707602+00:00",
+    "last_heartbeat": "2026-08-02T18:53:24.557651+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
