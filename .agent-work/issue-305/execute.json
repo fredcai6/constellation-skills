@@ -254,9 +254,10 @@
         }
       ],
       "constraints": [
-        "Never fabricate a mechanical value. An unresolvable field REFUSES; it never defaults to 0 or to a placeholder string.",
-        "Do not modify apply_episode_delta.py's field group, allowlist, or validation. It is a frozen contract this gate FILLS.",
-        "reopens vs rework-count scoping is NOT defined in EPISODE_STORE.md \u2014 grep confirms only an example, no prose. Pick one reading, state it in the code, and file the ambiguity; do not present the choice as settled."
+        "PROJECT SOURCING IS CORRECTED -- do NOT use durable_root() for it. The plan previously said project = Path(durable_root()).name, on D5's reasoning that durable_root() yields the MAIN CHECKOUT and so keeps 'project' stable across epics. That reasoning is wrong, and I proved it empirically rather than by reading: durable_root() returns the worktree unchanged whenever an ACTIVE ADMIRAL EPIC LEASE exists (agent_work_root.py, the _active_epic_lease branch: 'the main checkout is fenced read-only, so honor the worktree'). That is exactly the condition every commander in this epic runs under. Measured in this worktree: durable_root(cwd) -> C:/Programs/constellation-skills-wt/e298-305, so Path(...).name -> 'e298-305'. That is precisely the per-epic drift D5 existed to prevent, reintroduced by the fix D5 prescribed. Corroborated by a real emitted manifest at .agent-work/issue-305/context/g1-review.json, whose run.roots.durable reads the worktree path.",
+        "USE INSTEAD: the parent of `git rev-parse --git-common-dir`, resolved absolute, and take its basename. Measured here: -> C:/Programs/constellation-skills -> 'constellation-skills'. This is correct on ALL THREE paths, which is why it beats durable_root() for this one field: in a linked worktree --git-common-dir points at the main checkout's .git regardless of any lease; in a plain checkout it returns '.git', whose parent is the checkout root; and it is unaffected by epic leases entirely, because it asks git about repository topology rather than asking the work-area helper about writability. Those are different questions and the field wants the first one.",
+        "FALLBACK, and it must REFUSE rather than guess: if git is absent or the directory is not a repository, the composer REFUSES to emit `project` rather than falling back to the worktree basename. A worktree-derived project silently poisons the one join meant to survive worktree deletion, and a fabricated mechanical fact is worse than an absent one. This is the same refuse-never-fabricate rule the gate already carries for `role` and `refusals`.",
+        "PROVE IT THE WAY IT WAS MISSED: a test asserting `project` is stable must be run FROM A LINKED WORKTREE UNDER AN ACTIVE EPIC LEASE, because that is the condition under which the old formula was wrong and every other condition it was right. A test that only exercises a plain checkout passes on the broken formula -- that is how D5 shipped its own defect. Cover both sides."
       ],
       "anchors": {
         "structural": [
@@ -708,6 +709,14 @@
       "ops": [
         "rescoped g2-implement",
         "rescoped g2-review"
+      ]
+    },
+    {
+      "ts": "2026-08-02T02:58:37.003874+00:00",
+      "reason": "Evidence contradicts D5's prescribed fix. durable_root() returns the WORKTREE under an active Admiral epic lease -- the condition this whole epic runs under -- so project would have been 'e298-305', the exact per-epic drift D5 existed to prevent. Measured, not read: durable_root(cwd) -> the worktree, and a real emitted manifest's run.roots.durable corroborates. Corrected to the git-common-dir parent, which is right on all three topology paths, with a refuse-not-guess fallback.",
+      "authority": "commander",
+      "ops": [
+        "rescoped g2-implement"
       ]
     }
   ]
