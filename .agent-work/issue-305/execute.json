@@ -872,7 +872,7 @@
             "evidence_type": "implementer-result"
           },
           "satisfied": true,
-          "satisfied_by": "e-g4-implement-1"
+          "satisfied_by": "e-g4-implement-2"
         }
       ],
       "constraints": [
@@ -903,7 +903,9 @@
       "directives": null,
       "child_checklist": null,
       "status": "complete",
-      "status_detail": {},
+      "status_detail": {
+        "reopen_reason": "BLOCKER-1 from the g4 review, verified by me against the tree rather than accepted on report. docs/CHECKLIST_ENGINE_DESIGN.md's successor paragraph states the single measured 'false' manifest was 'the run's first, which had no predecessor'. Both halves are refuted: .agent-work/issue-305/context/g1-review.json was added at b1707f1 (2026-08-01 19:53:33 -0700) EIGHT MINUTES before g1-implement.json at bcb0975 (20:01:44) and carries dirty=true, so the false manifest was the second in its own context dir, not the run's first; and its cause was commit 2456130 (19:58:37) cleaning the tree 2m16s before it was generated at 20:00:53, i.e. a cleaning predecessor rather than an absent one. Reworking the clause. I also found a second defect in the same sentence that the review did not name: the measurement is written in a tense that reads as current ('the 49 manifests this producer has written in-tree') and is already stale - the in-tree count is now 52 with the field, 51 true / 1 false. Both copies of the measurement get scoped to the point of removal."
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -921,10 +923,34 @@
             "implementer_self_waiver": "m6-suite-and-result.c3 on the implementer OWN plan, disclosed by it; adjudicated by me at g4-integrate"
           },
           "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g4-implement",
+            "reason": "BLOCKER-1 from the g4 review, verified by me against the tree rather than accepted on report. docs/CHECKLIST_ENGINE_DESIGN.md's successor paragraph states the single measured 'false' manifest was 'the run's first, which had no predecessor'. Both halves are refuted: .agent-work/issue-305/context/g1-review.json was added at b1707f1 (2026-08-01 19:53:33 -0700) EIGHT MINUTES before g1-implement.json at bcb0975 (20:01:44) and carries dirty=true, so the false manifest was the second in its own context dir, not the run's first; and its cause was commit 2456130 (19:58:37) cleaning the tree 2m16s before it was generated at 20:00:53, i.e. a cleaning predecessor rather than an absent one. Reworking the clause. I also found a second defect in the same sentence that the review did not name: the measurement is written in a tense that reads as current ('the 49 manifests this producer has written in-tree') and is already stale - the in-tree count is now 52 with the field, 51 true / 1 false. Both copies of the measurement get scoped to the point of removal.",
+            "ts": "2026-08-02T18:27:25.223739+00:00"
+          }
+        },
+        {
+          "id": "e-g4-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "attempt": "2 (rework 1)",
+            "authored_by": "commander-305h directly, NOT a dispatched implementer crew",
+            "scope": "one-clause prose correction closing g4 review BLOCKER-1, plus its duplicate copy",
+            "commits": "f6acc1e,5ccae87",
+            "files": "docs/CHECKLIST_ENGINE_DESIGN.md, scripts/context_manifest.py",
+            "verdict": "complete",
+            "blockers": "none",
+            "blocker_1_both_halves_reverified_by_me": "g1-review.json added at b1707f1 8min before g1-implement.json at bcb0975 and reports true; commit 2456130 cleaned the tree 2m16s before the false manifest generated at 20:00:53",
+            "second_defect_found_by_me": "the measurement was in a present-perfect tense already stale (live in-tree count 52 with field, 51 true); both shipped copies now pinned to the point of removal. Independently corroborated as the reviewer FU-3.",
+            "code_change": "none - AST-proven docstring-only for scripts/context_manifest.py against HEAD",
+            "suite": "1487 passed, 2 skipped, 472 subtests in 132.38s, run by me on the reworked tree"
+          },
+          "produced_by": "engine",
           "ts": ""
         }
       ],
-      "rework_count": 0
+      "rework_count": 1
     },
     "g4-review": {
       "id": "g4-review",
@@ -935,8 +961,7 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g4",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "IMPLEMENTER_RESULT received at .agent-work/issue-305/crew/g4-implement-result.md, return status complete, no blockers on the work; attached as e-g4-implement-1 and g4-implement advanced. Implementation committed at 35d2686. Full suite re-run by me against the committed tree: 1487 passed, 2 skipped, 472 subtests in 134.91s - the subtest count returned to 472 exactly as the implementer predicted it would once the tree was committed, which independently confirms its account of the interim -1 (checklist_engine.py had been dirty and dropped out of a clean-subset subtest)."
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -947,12 +972,7 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": true,
-          "satisfied_by": "e-g4-review-1",
-          "attested": {
-            "evidence": "e-g4-review-1",
-            "note": "REVIEW_RESULT returned at .agent-work/issue-305/crew/g4-review-result.md. Verdict BLOCK with one blocker. The condition is 'REVIEW_RESULT returned', which is met by the artifact regardless of verdict; the BLOCK is adjudicated at g4-integrate, where the imperative routes it to rework."
-          }
+          "satisfied": false
         }
       ],
       "constraints": [],
@@ -961,8 +981,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
-      "status_detail": {},
+      "status": "pending",
+      "status_detail": {
+        "superseded_by_reopen": "g4-implement"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -981,7 +1003,12 @@
             "blocker_1_verified_by_commander": "yes - both halves re-derived independently against the tree"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g4-implement",
+            "reason": "BLOCKER-1 from the g4 review, verified by me against the tree rather than accepted on report. docs/CHECKLIST_ENGINE_DESIGN.md's successor paragraph states the single measured 'false' manifest was 'the run's first, which had no predecessor'. Both halves are refuted: .agent-work/issue-305/context/g1-review.json was added at b1707f1 (2026-08-01 19:53:33 -0700) EIGHT MINUTES before g1-implement.json at bcb0975 (20:01:44) and carries dirty=true, so the false manifest was the second in its own context dir, not the run's first; and its cause was commit 2456130 (19:58:37) cleaning the tree 2m16s before it was generated at 20:00:53, i.e. a cleaning predecessor rather than an absent one. Reworking the clause. I also found a second defect in the same sentence that the review did not name: the measurement is written in a tense that reads as current ('the 49 manifests this producer has written in-tree') and is already stale - the in-tree count is now 52 with the field, 51 true / 1 false. Both copies of the measurement get scoped to the point of removal.",
+            "ts": "2026-08-02T18:27:25.223763+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -1216,6 +1243,27 @@
       "why": "REVIEW_RESULT returned: BLOCK, one blocker, claims 1-4 CONFIRMED. The blocker is BLOCKER-1, the exact claim my handoff named as deliberately unchecked, and it is refuted on both halves. I re-derived it rather than inheriting: g1-review.json was added at b1707f1 eight minutes BEFORE g1-implement.json at bcb0975 and carries dirty=true, so the false manifest was not the run's first; and commit 2456130 cleaned the tree 2m16s before that manifest's 20:00:53 timestamp, so the cause was a cleaning predecessor, not an absent one. The truth strengthens the ruling: no-predecessor would make the false a harmless startup artifact, whereas what actually happened IS the read-your-predecessor mechanism the removal rests on. Advancing to g4-integrate, where a BLOCK routes to rework.",
       "mechanical": false,
       "ts": "2026-08-02T18:27:06.212693+00:00"
+    },
+    {
+      "id": "w-24",
+      "gate": "g4-implement",
+      "reopen": true,
+      "reason": "BLOCKER-1 from the g4 review, verified by me against the tree rather than accepted on report. docs/CHECKLIST_ENGINE_DESIGN.md's successor paragraph states the single measured 'false' manifest was 'the run's first, which had no predecessor'. Both halves are refuted: .agent-work/issue-305/context/g1-review.json was added at b1707f1 (2026-08-01 19:53:33 -0700) EIGHT MINUTES before g1-implement.json at bcb0975 (20:01:44) and carries dirty=true, so the false manifest was the second in its own context dir, not the run's first; and its cause was commit 2456130 (19:58:37) cleaning the tree 2m16s before it was generated at 20:00:53, i.e. a cleaning predecessor rather than an absent one. Reworking the clause. I also found a second defect in the same sentence that the review did not name: the measurement is written in a tense that reads as current ('the 49 manifests this producer has written in-tree') and is already stale - the in-tree count is now 52 with the field, 51 true / 1 false. Both copies of the measurement get scoped to the point of removal.",
+      "ts": "2026-08-02T18:27:25.223773+00:00"
+    },
+    {
+      "id": "w-25",
+      "gate": "g4-review",
+      "reopen": true,
+      "reason": "BLOCKER-1 from the g4 review, verified by me against the tree rather than accepted on report. docs/CHECKLIST_ENGINE_DESIGN.md's successor paragraph states the single measured 'false' manifest was 'the run's first, which had no predecessor'. Both halves are refuted: .agent-work/issue-305/context/g1-review.json was added at b1707f1 (2026-08-01 19:53:33 -0700) EIGHT MINUTES before g1-implement.json at bcb0975 (20:01:44) and carries dirty=true, so the false manifest was the second in its own context dir, not the run's first; and its cause was commit 2456130 (19:58:37) cleaning the tree 2m16s before it was generated at 20:00:53, i.e. a cleaning predecessor rather than an absent one. Reworking the clause. I also found a second defect in the same sentence that the review did not name: the measurement is written in a tense that reads as current ('the 49 manifests this producer has written in-tree') and is already stale - the in-tree count is now 52 with the field, 51 true / 1 false. Both copies of the measurement get scoped to the point of removal.",
+      "ts": "2026-08-02T18:27:25.223778+00:00"
+    },
+    {
+      "id": "w-26",
+      "gate": "g4-implement",
+      "why": "Rework 1 complete, authored by me directly rather than a dispatched crew - a one-clause prose correction did not warrant an implementer dispatch, and I am disclosing the authorship on the record rather than letting the evidence imply independent crew work. BLOCKER-1 is closed: the false parenthetical is replaced with the verified truth, which strengthens the ruling rather than weakening it, because a cleaning predecessor IS the read-your-predecessor mechanism whereas an absent one would have been an exception to it. I also corrected the same sentence's already-stale present-perfect tense in BOTH shipped copies - the reviewer independently reached the same site as its FU-3, which corroborates the fix rather than duplicating it. scripts/context_manifest.py remains AST-proven docstring-only. Suite 1487 passed, 2 skipped, 472 subtests. Re-review is in flight and bound to 5ccae87, the shipped HEAD, not to the intermediate f6acc1e.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:31:48.567511+00:00"
     }
   ],
   "amendments": [
@@ -1241,7 +1289,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T17:47:19.365760+00:00",
-    "last_heartbeat": "2026-08-02T18:27:06.212709+00:00",
+    "last_heartbeat": "2026-08-02T18:31:48.567529+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305g",
