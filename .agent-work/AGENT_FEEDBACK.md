@@ -1621,3 +1621,108 @@ signals, above) could not be banked without evicting a lesson I had no grounds t
 Filed as issue #349 instead of held locally, per Inherited Latitude's issue-filing
 pre-clearance — a cleaner outcome than a local hold file, since the tracker is durable and
 worktree-independent.
+
+---
+
+## 2026-08-02 — `issue-305` (commander-305h, eighth commander on this issue)
+
+**Gates driven:** `g4-implement` (+ rework 1), `g4-review`, `g4-integrate`, then the parent
+spine tail. Inherited a committed implementation at `35d2686` from a predecessor that died
+immediately after committing it.
+
+**How closely I followed the skills, handoffs and checklists**
+
+Closely, with one deliberate departure I disclosed on the record rather than hid: **rework 1
+was authored by me, the Commander, not by a dispatched implementer crew.** The gate's
+imperative says to dispatch `constellation-implementer`; the rework was a one-clause prose
+correction closing a single review blocker, and a dispatch would have cost more than it
+bought. I attached the authorship to the evidence item explicitly (`e-g4-implement-2`,
+`authored_by=commander-305h directly, NOT a dispatched implementer crew`) so the record does
+not imply independent crew work that did not happen. **The failure mode I was avoiding is not
+"skipping a dispatch" — it is a reader later mistaking my own edit for independently produced
+work.**
+
+**Where I improvised or worked around the instructions**
+
+- **The engine's own frozen step imperative for `g4-implement` states a claim that is
+  measured false** — that `run.dirty` is "permanently, self-causedly true". It prints on
+  every `current` call, so every commander on this gate reads it repeatedly. It is correctly
+  immutable as historical record, but there is no mechanism that marks a frozen imperative as
+  superseded, and the only thing standing between it and the shipped prose is each
+  commander remembering not to copy it forward. **That is a real gap: the engine re-asserts a
+  disproven claim at every poll, with no way to annotate it.**
+- **The launch order and the Admiral's dispatch conflicted on merge authority.**
+  `LAUNCH_ORDER-305.md:92` pre-clears merge gated on CI status; the Admiral's dispatch says
+  do not merge and hand it up. I followed the Admiral (the live, narrower instruction) and
+  said so rather than silently picking one.
+- **The launch order names working notes `notes-305.md`; every predecessor and the dispatch
+  use `notes-<n>.md`.** I followed the live instruction. Minor, but it is the second frozen
+  artifact this run that the actual practice has drifted away from.
+
+**What was ambiguous, missing, or contradictory**
+
+- **The `g4-integrate.c2` wedge (#371) is now four gates old and still unfixed.** The
+  condition demands the literal verdict `APPROVE`; the sanctioned verdict on this epic is
+  `APPROVE-WITH-FOLLOWUPS`. Four commanders before me hit it and all four handled it the
+  same correct way — waive `--force` with the real verdict on the record. **A defect that
+  five consecutive agents each independently work around, correctly, is no longer a surprise;
+  it is a tax.** The cost is not the waiver, it is that every waiver looks like a possible
+  fabrication to the next reader and has to be re-audited.
+- **The Admiral's brief contained two claims that failed against the tree** (10 unpushed vs
+  the actual 20; issue filing described as lacking pre-clearance when the launch order both
+  pre-clears it and *requires* it). Both were caught by checking at source. This is now a
+  named pattern in this epic — *the Admiral reasons about what happened; the tree records
+  what is in force* — and the brief itself told me to expect it and to trust the tree. **That
+  instruction worked. Telling a delegate which of your own claims to distrust is cheap and it
+  paid off twice here.**
+
+**What would have helped**
+
+- **A way to mark a frozen imperative as superseded** without editing it — a
+  `superseded_note` the engine prints beside the imperative. The `run.dirty` false claim
+  would then correct itself at every read instead of relying on eight consecutive commanders
+  each remembering.
+- **Fixing #371.** Accepting a verdict *set* rather than a literal string would remove the
+  single most repeated manual override in this epic.
+
+**Crew workflow feedback harvested at `g4-review`**
+
+- The reviewer's own report flagged that my handoff's practice of **naming specific claims as
+  "mine, deliberately unverified, attack this"** is what produced the run's only BLOCK. The
+  blocked clause was the one item I explicitly declined to check and handed over labelled as
+  such. **Stating which of your claims you did NOT verify is a higher-yield handoff move than
+  stating which you did** — and it is the cheap version of the adversarial-exposure lesson
+  below.
+- Carried from `g4-implement`: the handoff's acceptance item 3 offered
+  `git grep -n "run\.dirty"` as the check that no stale prose survives, but one of the four
+  enumerated scope items (`scripts/checklist_engine.py`) is written in prose that never uses
+  that literal string. **An acceptance criterion that cannot fail for a site it is meant to
+  cover** is the same manufactured-green hazard the handoff's own method warnings describe.
+  The implementer caught it and said so; a less careful one would have passed the grep and
+  skipped the site.
+
+**Improvement signals**
+
+- **An asserted property that was never attacked is a claim, not a guarantee.** The g3
+  closed-world census was asserted and *well documented*, and never shot at until V2. This
+  run reproduced the shape at a smaller scale: a well-written, confidently-sourced causal
+  parenthetical in a shipped design doc ("the run's first, which had no predecessor") was
+  **false on both halves**, and no amount of reading would have caught it — it took someone
+  going to the git history and checking which manifest was actually written first.
+  **Documentation quality and adversarial exposure are independent axes.** Prose confidence
+  correlates with nothing.
+- **Duplicated prose is where claims go to diverge.** The 49-manifest measurement shipped in
+  two places with no single source. That is exactly how the two copies came to disagree, and
+  it is why fixing the design doc alone would have left the module docstring restating the
+  stale form. The reviewer independently reached the same root cause (Fowler shotgun-surgery).
+  **Filed rather than banked**, per the launch order's standing instruction.
+- **A measurement written in the present tense decays silently.** The same sentence stated
+  "the 49 manifests this producer *has* written" — already stale, since the producer keeps
+  running (52 at the time I checked). Pinning it to "at the point of removal" makes the
+  arithmetic permanently true. **Any measured count in shipped prose needs an anchor to the
+  moment it was taken, or it becomes false by the mechanism it is describing.** This one was
+  literally falsified by its own subject continuing to operate.
+
+**Lessons bank:** no threshold-ripe lesson left unpaid at this run's close; the candidates
+above are filed to the tracker rather than held locally, per `LAUNCH_ORDER-305.md:92`
+("file findings directly, never bank them worktree-locally").
