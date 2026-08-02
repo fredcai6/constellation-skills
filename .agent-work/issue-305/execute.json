@@ -580,7 +580,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1",
+          "attested": {
+            "evidence": "e-g3-implement-1",
+            "note": "IMPLEMENTER_RESULT present and verified fresh via run_crew.py --verify-result (exit 0, completed). No unresolved blockers: the two items raised are decisions escalated to me, not blockers, and both are ruled. Evidence reproduced in my own hands: 13/13 green, and two mutations of my own outside the crew set each caught naming exactly the broken field."
+          }
         }
       ],
       "constraints": [
@@ -615,11 +620,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g3-implement-result.md",
+            "verdict": "complete-with-honest-null",
+            "crew": "constellation/issue-305/g3-implement/implementer/attempt-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -965,6 +982,13 @@
       "why": "Verdict APPROVE-WITH-FOLLOWUPS, no blockers, and I reproduced the evidence myself rather than accepting it: the repro exits 0 reporting reopens=1 while its fixture still shows journal=2 vs rework=1 so it is not passing vacuously; the suite is 1472/2/472; and my own mutation outside the crew's set drove both new tests red before I restored and verified by blob OID against HEAD. c2 waived --force as a gate-plan defect with the real verdict on the record rather than a fabricated APPROVE.",
       "mechanical": false,
       "ts": "2026-08-02T05:29:05.482991+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g3-implement",
+      "why": "Control built and independently verified. Two mutations of MY OWN, outside the crew set, were each caught naming exactly the broken field: replacing the manifest-ref revision with a constant sha1 gave [context-manifest-ref], proving the harness recomputes the blob OID rather than pattern-matching; and dropping artifact-ref, which is deliberately absent from REQUIRED_MECHANICAL_FIELDS so a control iterating only that tuple would miss it, gave [artifact-ref]. Both restored, blob OID verified equal to HEAD. One mutation attempt silently failed to apply and I caught it by OID before trusting its green - that is the fourth costume from 337. The honest null is real and filed as 379: role and refusals refuse at every child-gate seam because the child is never claimed, and validate_create requires both, so a gate snapshot cannot become an episode without agent effort. Reported, not engineered around.",
+      "mechanical": false,
+      "ts": "2026-08-02T06:16:18.014962+00:00"
     }
   ],
   "amendments": [
