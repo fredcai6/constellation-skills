@@ -477,7 +477,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
         }
       ],
       "constraints": [
@@ -515,11 +516,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g3-result.md",
+            "verdict": "COMPLETE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -803,6 +815,13 @@
       "why": "Verified in my own hands, not on report: the asymmetric wiring reads verify-orientation at context c2 with no override policy and verify-frame at plan c6 with a human-authority override, both using the absolute repo-root placeholder rather than a relative path, read straight from the template JSON. Close criteria re-run by me at 312 passed, 435 subtests, self-test exit 0. The rework call site is at map_orient.py:958, outside its own def and outside self_test (which spans 1306-1637 after the edit), with tests asserting both provenance labels in real subprocess stdout including a negative case. Reviewer APPROVE round 2 after a correct BLOCK round 1.",
       "mechanical": false,
       "ts": "2026-08-02T03:42:08.200167+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "Deletion verified in my hands, not on report: the overlay phrase is down to ONE occurrence at offset 262, inside the load-bearing substitute-and-record sentence, and both dead-path blocks are gone from both templates. TRIPWIRES.md is byte-identical to its pre-registration - git diff 1662b90 HEAD on that path is empty - so the predictions did not move after the outcome was known. Five episodes filed. Three honest nulls came back rather than a clean sweep: T3's mapped-repo clause scored UNTESTED because no mapped repo was reachable, T5 NOT DETERMINABLE and recorded as the measurement gap the pre-registration explicitly asked for, and T1 held with a named near-miss. My own handoff was wrong about T3 - g2 had not retargeted the plan-side phrase - and the implementer verified byte-identity across all eight commits rather than concluding already-done. One deviation needs the reviewer: two out-of-scope test files pinned phrases OF the deleted block as sentinels and were re-pointed, which is the changed-a-test-to-green shape.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:10:15.091769+00:00"
     }
   ]
 }
