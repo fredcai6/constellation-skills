@@ -33,9 +33,25 @@ import re
 from pathlib import Path
 
 MAP_ORIENT_RE = re.compile(r"map_orient(?:\.py)?\b")
-SUBCOMMAND_RE = re.compile(r"map_orient(?:\.py)?[^\n]*?\b(orient|verify-orientation|verify-frame)\b")
+
+# Anchored to the SAME argv as the `map_orient` match. The earlier form used `[^\n]*?`,
+# which is a no-op against `json.dumps` output — that output contains no literal newlines,
+# only two-character `\n` escapes — so on a large payload the non-greedy scan could bind a
+# subcommand token from an entirely different part of the file.
+SUBCOMMAND_RE = re.compile(
+    r"map_orient(?:\.py)?[\"'\\ ]+(?:[-\w:/.\\]+[\"'\\ ]+)*?(orient|verify-orientation|verify-frame)\b"
+)
 VERDICT_RE = re.compile(r"\b(RESOLVED|DEGRADED-NO-MAP|DEGRADED-EMPTY-MAP|DEGRADED-UNPARSEABLE|"
                         r"UNRESOLVABLE-ROOT|FRAME-OK|FRAME-MISSING|FRAME-REFUSED)\b")
+
+# ONLY these tools can RUN anything. Everything else that mentions `map_orient` is talking
+# ABOUT the tool, not using it.
+EXECUTOR_TOOLS = ("Bash", "PowerShell")
+# The one input key that is actually executed. Matching against `json.dumps(input)` counted
+# `Read(file_path=".../scripts/map_orient.py")` — a Commander inspecting its own tooling —
+# as an orientation invocation, which alone flips *irrelevant* into *insufficient*. Same for
+# `Grep(pattern="map_orient")` and for any Write whose CONTENT quotes the spine's gate command.
+COMMAND_KEYS = ("command", "cmd")
 
 NO_MAP_ORIENT = "NO-MAP-ORIENT-CALL"
 NO_SRC_READ = "NO-SRC-READ"
@@ -59,7 +75,9 @@ def audit(run_dir: Path) -> dict:
 
     calls: list[dict] = []
     invocations: list[dict] = []
+    mentions: list[dict] = []
     verdicts: list[str] = []
+    confirmed: set[int] = set()
     pending: dict[str, int] = {}
 
     for ev in events(stream):
@@ -68,18 +86,35 @@ def audit(run_dir: Path) -> dict:
                 if not isinstance(b, dict) or b.get("type") != "tool_use":
                     continue
                 idx = len(calls)
-                blob = json.dumps(b.get("input") or {})
-                calls.append({"index": idx, "tool": b.get("name")})
-                if MAP_ORIENT_RE.search(blob):
-                    sub = SUBCOMMAND_RE.search(blob)
+                tool = b.get("name")
+                inp = b.get("input") or {}
+                calls.append({"index": idx, "tool": tool})
+
+                # An INVOCATION is an executor tool whose executed key names the script.
+                command = ""
+                if tool in EXECUTOR_TOOLS and isinstance(inp, dict):
+                    for key in COMMAND_KEYS:
+                        value = inp.get(key)
+                        if isinstance(value, str):
+                            command = value
+                            break
+                if command and MAP_ORIENT_RE.search(command):
+                    sub = SUBCOMMAND_RE.search(command)
                     invocations.append({
                         "index": idx,
-                        "tool": b.get("name"),
+                        "tool": tool,
                         "subcommand": sub.group(1) if sub else "unknown",
-                        "excerpt": blob[:300],
+                        "command": command[:400],
                     })
                     if b.get("id"):
                         pending[b["id"]] = idx
+                elif MAP_ORIENT_RE.search(json.dumps(inp)):
+                    # Talking ABOUT the tool: a Read of the script, a Grep for the token, a
+                    # Write quoting the gate command. Kept VISIBLE in its own column rather
+                    # than fused into the measure — fusing them is what made the first
+                    # version of this script able to manufacture a false *insufficient*.
+                    mentions.append({"index": idx, "tool": tool,
+                                     "excerpt": json.dumps(inp)[:200]})
         elif ev.get("type") == "user":
             for b in (ev.get("message") or {}).get("content") or []:
                 if not isinstance(b, dict) or b.get("type") != "tool_result":
@@ -89,6 +124,7 @@ def audit(run_dir: Path) -> dict:
                 text = json.dumps(b.get("content"))
                 for m in VERDICT_RE.finditer(text):
                     verdicts.append(f"call{pending[b['tool_use_id']]}:{m.group(1)}")
+                    confirmed.add(pending[b["tool_use_id"]])
 
     # `first_src_read_index` comes from the FROZEN extractor, never recomputed here — the
     # whole point is that this column sits alongside the frozen measure on the same axis.
@@ -104,7 +140,9 @@ def audit(run_dir: Path) -> dict:
         first_src = fs if isinstance(fs, int) else None
         first_map = fm if isinstance(fm, int) else None
 
-    orient_calls = [i for i in invocations if i["subcommand"] in ("orient", "unknown")]
+    # `unknown` is NOT folded into the orient set: a `--help` or `--self-test` call would
+    # otherwise set first_map_orient_index and be read as the contract firing.
+    orient_calls = [i for i in invocations if i["subcommand"] == "orient"]
     first_orient = orient_calls[0]["index"] if orient_calls else None
 
     if first_orient is None:
@@ -116,12 +154,20 @@ def audit(run_dir: Path) -> dict:
 
     return {
         "run": run_dir.name,
+        "run_dir": str(run_dir.resolve()),
+        "arm": _arm_of(run_dir),
         "status": "ok" if captured else "NOT-CAPTURED",
         "tool_call_count": len(calls),
         "map_orient_invocation_count": len(invocations),
         "map_orient_indices": [i["index"] for i in invocations],
         "map_orient_subcommands": [i["subcommand"] for i in invocations],
+        "map_orient_orient_indices": [i["index"] for i in orient_calls],
+        # An invocation whose RESULT carried a verdict token actually ran and returned.
+        "map_orient_confirmed_by_result": sorted(confirmed),
         "map_orient_verdicts": verdicts,
+        # Talking ABOUT the tool. Reported, never counted as use.
+        "map_orient_mention_count": len(mentions),
+        "map_orient_mentions": mentions,
         "first_map_orient_index": first_orient if first_orient is not None else NO_MAP_ORIENT,
         "first_src_read_index": first_src if first_src is not None else NO_SRC_READ,
         "first_map_read_index": first_map if first_map is not None else "NO-MAP-READ",
@@ -130,13 +176,109 @@ def audit(run_dir: Path) -> dict:
     }
 
 
+def _arm_of(run_dir: Path) -> str:
+    """The arm label from the run's own meta.json — so a row cannot be mistaken for the
+    other arm's. Both arms name their dirs `run-690` ... `run-704`; without this a POST
+    scoring file and a PRE-B one are indistinguishable by content."""
+    meta = run_dir / "meta.json"
+    if not meta.is_file():
+        return "UNKNOWN"
+    try:
+        return json.loads(meta.read_text(encoding="utf-8")).get("arm", "UNKNOWN")
+    except ValueError:
+        return "UNKNOWN"
+
+
+def _ev_assistant(tool: str, inp: dict, call_id: str = "") -> str:
+    block = {"type": "tool_use", "name": tool, "input": inp}
+    if call_id:
+        block["id"] = call_id
+    return json.dumps({"type": "assistant", "message": {"content": [block]}})
+
+
+def _ev_result(call_id: str, text: str) -> str:
+    return json.dumps({"type": "user", "message": {"content": [
+        {"type": "tool_result", "tool_use_id": call_id, "content": text}]}})
+
+
+ORIENT_CMD = ('py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py '
+              'orient --root C:/Programs/f1bwt/post690 --work-id issue-690')
+
+
+def self_test() -> int:
+    """POSITIVE control plus the mutants that must NOT count.
+
+    The PRE-B negative control proves only that the token does not appear spontaneously in a
+    pre-#304 arm — which is true BY CONSTRUCTION and therefore proves almost nothing about
+    this code. It cannot show that a real invocation is matched, nor that a mere mention is
+    rejected. That is what these mutants are for. New code beside a frozen instrument needs a
+    falsification floor at least as strong as the instrument's.
+    """
+    import tempfile
+
+    cases: list[tuple[str, list[str], int, int]] = [
+        # (name, ndjson lines, expected invocations, expected mentions)
+        ("POSITIVE: real Bash orient invocation",
+         [_ev_assistant("Bash", {"command": ORIENT_CMD}, "c1"),
+          _ev_result("c1", "DEGRADED-NO-MAP\nroot: C:/Programs/f1bwt/post690")], 1, 0),
+        ("POSITIVE: PowerShell executor counts too",
+         [_ev_assistant("PowerShell", {"command": ORIENT_CMD})], 1, 0),
+        ("MUTANT: Read of the script is a MENTION, not a call",
+         [_ev_assistant("Read", {"file_path": "C:/Users/fredc/.claude/skills/"
+                                 "constellation-commander/scripts/map_orient.py"})], 0, 1),
+        ("MUTANT: Grep for the token is a MENTION",
+         [_ev_assistant("Grep", {"pattern": "map_orient", "path": "."})], 0, 1),
+        ("MUTANT: Write quoting the gate command is a MENTION",
+         [_ev_assistant("Write", {"file_path": "x.md",
+                                  "content": f"the gate runs `{ORIENT_CMD}`"})], 0, 1),
+        ("MUTANT: --help is an invocation but NOT an orient call",
+         [_ev_assistant("Bash", {"command": "py .../map_orient.py --help"})], 1, 0),
+        ("CONTROL: unrelated call is neither",
+         [_ev_assistant("Bash", {"command": "git status --porcelain"})], 0, 0),
+    ]
+
+    failures = 0
+    print(f"self-test: {len(cases)} case(s)")
+    with tempfile.TemporaryDirectory() as tmp:
+        for i, (name, lines, want_inv, want_men) in enumerate(cases):
+            d = Path(tmp) / f"run-{i}"
+            d.mkdir()
+            (d / "stream.ndjson").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            (d / "ordering.json").write_text(json.dumps(
+                {"captured": True, "first_src_read_index": 50,
+                 "first_map_read_index": 60}), encoding="utf-8")
+            r = audit(d)
+            got_inv = r["map_orient_invocation_count"]
+            got_men = r["map_orient_mention_count"]
+            ok = got_inv == want_inv and got_men == want_men
+            # The --help case must produce an invocation with NO orient credit.
+            if name.startswith("MUTANT: --help"):
+                ok = ok and r["first_map_orient_index"] == NO_MAP_ORIENT
+            if name.startswith("POSITIVE: real Bash"):
+                ok = ok and r["map_orient_before_src"] is True and r["map_orient_verdicts"]
+            print(f"  [{'ok ' if ok else 'FAIL'}] {name}: inv={got_inv} (want {want_inv}) "
+                  f"mentions={got_men} (want {want_men})")
+            if not ok:
+                failures += 1
+    print(f"self-test: {len(cases) - failures}/{len(cases)} passed")
+    return 1 if failures else 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("run_dirs", nargs="+")
+    p.add_argument("run_dirs", nargs="*")
+    p.add_argument("--self-test", action="store_true",
+                   help="positive control + mutants; takes no run dirs")
     p.add_argument("--out", default=None)
     p.add_argument("--expect-zero", action="store_true",
                    help="negative-control mode: exit 1 if ANY run shows a map_orient call")
     args = p.parse_args()
+
+    if args.self_test:
+        return self_test()
+    if not args.run_dirs:
+        print("REFUSED: no run dirs given (and --self-test not requested)")
+        return 1
 
     rows = [audit(Path(d)) for d in args.run_dirs]
 
