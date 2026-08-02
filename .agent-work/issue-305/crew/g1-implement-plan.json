@@ -168,7 +168,8 @@
           "id": "c1",
           "statement": "TDD red: end-to-end start/reopen seam tests written and observed failing",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED reproduced on resume: Seam::test_seam_reopen_emits_the_manifest_too fails -- 'no manifest at <tmp>/.agent-work/wk/context/g1.json'; 1 failed, 5 passed, 22 deselected. start() already wired and green; reopen() unwired."
         },
         {
           "id": "c2",
@@ -177,7 +178,8 @@
             "kind": "command",
             "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k seam"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-seam-1"
         },
         {
           "id": "c3",
@@ -186,7 +188,8 @@
             "kind": "command",
             "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && git diff --stat -- scripts/checklist_engine.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-seam-2"
         }
       ],
       "constraints": [
@@ -196,11 +199,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-seam-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k seam",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-seam-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && git diff --stat -- scripts/checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4-failsoft": {
@@ -212,7 +238,8 @@
           "id": "p1",
           "statement": "seam wired and proven",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m3-seam complete: start() and reopen() both emit through the real engine CLI; 6 seam tests pass."
         }
       ],
       "postconditions": [
@@ -220,7 +247,8 @@
           "id": "c1",
           "statement": "TDD red: fail-soft and stub tests written and observed failing",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED observed, and it was a MIS-SPECIFIED TEST, not missing behaviour. test_failsoft_swallows_an_arbitrary_producer_crash asserted emit_step_manifest(...) is None on a producer crash -- 'AssertionError: WindowsPath(.../.agent-work/wk/context/g1.json) is not None'. That assertion encodes the SUPERSEDED fail-silent contract; ruling D8 says a failed emit is fail-soft but never fail-silent. Rewrote it to the adjudicated contract and added test_stub_files_null_is_not_the_same_reading_as_empty_files. Because both then passed on first run, I MUTATION-CHECKED rather than trusting the green: mutant A (stub writes files: [] instead of null) killed 3 tests; mutant B (failed emit returns None, fail-silent) killed 4. Both mutants reverted; scripts/episode_capture.py is byte-identical to fba7fae."
         },
         {
           "id": "c2",
@@ -229,7 +257,8 @@
             "kind": "command",
             "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k \"failsoft or stub\""
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-failsoft-1"
         }
       ],
       "constraints": [
@@ -238,11 +267,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-failsoft-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/test_episode_capture.py -q -k \"failsoft or stub\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m5-suite": {
@@ -254,7 +295,8 @@
           "id": "p1",
           "statement": "all implementation slices green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m1-m4 all complete: roots, emit, seam, fail-soft."
         }
       ],
       "postconditions": [
@@ -265,7 +307,8 @@
             "kind": "command",
             "command": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-1"
         },
         {
           "id": "c2",
@@ -274,7 +317,8 @@
             "kind": "command",
             "command": "test -f \"C:/Programs/constellation-skills-wt/e298-305/.agent-work/issue-305/crew/g1-implement-result.md\""
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-2"
         }
       ],
       "constraints": [
@@ -282,11 +326,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-305\" && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f \"C:/Programs/constellation-skills-wt/e298-305/.agent-work/issue-305/crew/g1-implement-result.md\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -295,13 +362,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "impl-305-g1",
-    "status": "active",
-    "claimed_at": "2026-08-01T23:36:59.216408+00:00",
-    "last_heartbeat": "2026-08-01T23:44:01.388051+00:00",
+    "status": "released",
+    "claimed_at": "2026-08-02T02:13:27.631653+00:00",
+    "last_heartbeat": "2026-08-02T02:25:51.427282+00:00",
     "claimed_by": "implementer",
-    "worktree": ".",
+    "worktree": "C:/Programs/constellation-skills-wt/e298-305",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-02T02:26:01.213657+00:00"
   },
   "why_trail": [
     {
@@ -324,6 +392,27 @@
       "why": "emit_step_manifest builds via build_manifest, writes via manifest_path/write_manifest, and returns early when the destination exists so the snapshot is never rewritten. base_dir=None writes nothing, which keeps in-process engine calls from scattering manifests.",
       "mechanical": false,
       "ts": "2026-08-01T23:43:54.536297+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-seam",
+      "why": "reopen() wired identically to start(): emit_step_manifest(cl, iid, base_dir) immediately after t['status']='in-progress', so active_id() selects the reopened gate. DISCLOSURE for the reviewer: the engine diff is the import shim + the two emit calls PLUS two lines of pure plumbing -- reopen() gained a 'base_dir: Path | None = None' kwarg and _run_verb passes it. reopen() had NO other route to the checklist's location, and the alternatives were worse: a module global (hidden state) or emitting from dispatch() (explicitly excluded by the handoff). No logic entered the engine; all logic stays in episode_capture.py.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:16:29.347599+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-failsoft",
+      "why": "Exit codes proven UNCHANGED, not merely observed: ran all three named cases (plus a malformed declaration and a reopen) against the pre-seam engine extracted from 967493c AND the wired engine, side by side -- 10/10 identical (terminal checklist: current 0, start 1, advance 1; unmapped root: 0; non-git dir: 0). A failed emit leaves a real stub: the unmapped-root case writes {step: g1, files: null, emit_error: {error: DeclarationError, message: unknown root token 'vendor'...}} while the verb still exits 0 with empty stderr. files: null vs files: [] is now pinned directly, including the trap that both are falsy so a truthiness check would conflate them.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:19:55.199746+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-suite",
+      "why": "Full suite green: 1435 passed, 2 skipped, 409 subtests in 69.78s. Every required evidence item is pasted, not summarized: the three resolved root tokens from a real py-3.12 run; a real start-produced manifest whose durable row (.agent-work/LESSONS.md) carries a NON-NULL rev, which is the discriminator proving the double-nesting trap is disarmed rather than merely avoided; the write-if-absent before/after (identical sha256 AND identical mtime_ns across a real reopen with the declaration swapped underneath, still naming the original three paths); and the fail-soft exit codes run side by side against the pre-seam engine extracted from 967493c, 10/10 SAME. Two new tests were mutation-checked rather than trusted for passing on first run. Committed at b12e59d.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:25:51.427253+00:00"
     }
   ],
   "amendments": [

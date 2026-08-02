@@ -63,7 +63,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1",
+          "attested": {
+            "evidence": "e-g1-implement-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -100,11 +105,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g1-implement-result.md",
+            "crew": "constellation/issue-305/g1-implement/implementer/attempt-2",
+            "verified": "fresh",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -196,7 +214,7 @@
     "g2-implement": {
       "id": "g2-implement",
       "title": "Mechanical composer: the field group from engine state alone",
-      "imperative": "Fill the handoff and dispatch constellation-implementer. THE CHANGE: a composer that fills the frozen mechanical field group from engine state with zero agent effort, emitted as a snapshot at the SAME seam as g1 so a run where the agent records nothing still yields the full group. Field sourcing is ADJUDICATED, not the implementer's choice: run=cl['work_id']; project=the MAIN CHECKOUT's name via durable_root(), NOT Path(worktree).name which yields 'e298-305' and would give the same repo a different project every epic; role=the lease's claimed_by; spine-step=active_id(cl), the one selector, imported never re-derived; context-manifest-ref='ctx-<work-id>-<step>@<rev>' where rev is context_manifest.rev() over the manifest's own bytes \u2014 this satisfies EPISODE_STORE.md:679-689's <manifest-ref>@<revision> contract verbatim ('pinning to its own blob hash at capture time') and is why g1's write-if-absent is load-bearing; rework-count from task['rework_count']; reopens from the journal's reopen entries; failed-commands from evidence type command-output with payload.exit != 0 \u2014 these survive a refusal because the evidence item is appended BEFORE the raise and main() persists on the error path; artifact-ref from _collect_changed_files() (:607), which already returns REPO-RELATIVE paths matching the shipped episodes' shape \u2014 do NOT invent an 'artifact-ref' evidence type, it has zero occurrences across ~900 evidence items and would be a second secretly-agent-dependent field. REFUSALS: pending the Admiral's ruling on float #1. If ruled in scope, increment a counter on main()'s except EngineError path, which already calls save(). If ruled out, the composer REFUSES rather than emitting a silent 0 \u2014 a 0 on a run that was actually refused is a fabricated mechanical fact, worse than an absent one. Wait for and integrate IMPLEMENTER_RESULT.",
+      "imperative": "Fill the handoff and dispatch constellation-implementer. THE CHANGE: a composer that fills the frozen mechanical field group from engine state with zero agent effort, emitted as a snapshot at the SAME seam as g1 so a run where the agent records nothing still yields the full group. Field sourcing is ADJUDICATED, not the implementer's choice: run=cl['work_id']; project=the MAIN CHECKOUT's name via durable_root(), NOT Path(worktree).name which yields 'e298-305' and would give the same repo a different project every epic; role=the lease's claimed_by; spine-step=active_id(cl), the one selector, imported never re-derived; context-manifest-ref='ctx-<work-id>-<step>@<rev>' where rev is context_manifest.rev() over the manifest's own bytes - this satisfies EPISODE_STORE.md:679-689's <manifest-ref>@<revision> contract verbatim ('pinning to its own blob hash at capture time') and is why g1's write-if-absent is load-bearing; rework-count from task['rework_count']; reopens from the journal's reopen entries; failed-commands from evidence type command-output with payload.exit != 0 - these survive a refusal because the evidence item is appended BEFORE the raise and main() persists on the error path; artifact-ref from _collect_changed_files() (:607), which already returns REPO-RELATIVE paths matching the shipped episodes' shape - do NOT invent an 'artifact-ref' evidence type, it has zero occurrences across ~900 evidence items and would be a second secretly-agent-dependent field.\n\nREFUSALS - THE FLOAT IS ANSWERED: the Admiral ruled it IS IN SCOPE. A refusal today raises EngineError, main() catches it at :2556 and DOES persist cl, but records nothing about the refusal; the journal sidecar is documented and implemented as success-only (:2469, append_journal_entry sits after the return 1). So the field has no engine-state source and is today secretly agent-dependent, which decision:zero-agent-effort-is-literal forbids. Add the counter on main()'s except EngineError path, which already calls save(). FOUR CONDITIONS, all non-negotiable: (1) ADDITIVE ONLY - no existing field changes meaning, no existing reader breaks on a checklist that lacks the counter. (2) docs/CHECKLIST_SCHEMA.md is updated IN THIS SAME PR - a schema change shipped with a stale doc is the exact defect #309's sweep found live, so this is not a follow-up. (3) PROVE THE COUNTER CAN BE WRONG, and prove that test can fail: induce a real refusal, assert the counter incremented to the specific expected value, then break the increment and confirm the test goes RED on that specific assertion - not merely non-zero exit, which an import error also produces. (4) STATE THE LATENCY in the result: the engine change is latent until the installed corpus is refreshed (#344), so refusals will be silently absent in production while these tests pass. That is a real gap to report, not to engineer around.\n\nALSO CORRECT docs/EPISODE_STORE.md:781. It currently says '#305 wires automated capture - nothing writes to this store on its own yet', which promises something the store's own validator forbids: _validate_create requires all five agent-supplied assertion kinds with non-empty statements, so a complete episode CANNOT exist without agent judgment. The adjudicated reading, ruled by the Admiral: #305 delivers a MECHANICAL SNAPSHOT, not auto-created episodes. The acceptance criterion says 'the full mechanical FIELD GROUP', not a complete episode. Rewrite that line so a reader of main sees the true division: the mechanical half falls out of the engine with zero agent effort; the judgment half stays agent-initiated because it is irreducibly judgment.\n\nREFUSE, NEVER FABRICATE: if any field cannot be honestly sourced, the assembler REFUSES rather than emitting a silent 0 or a plausible default. A fabricated mechanical fact is worse than an absent one. Wait for and integrate IMPLEMENTER_RESULT.",
       "preconditions": [
         {
           "id": "p1",
@@ -257,7 +275,7 @@
     "g2-review": {
       "id": "g2-review",
       "title": "Mechanical composer: review",
-      "imperative": "Fill the reviewer handoff and dispatch constellation-reviewer. THE DEFECT CLASS TO HUNT, stated exactly: a composer that returns plausible constants and reads no engine state at all would pass a presence-based check. Verify each field is DERIVED \u2014 trace it to the state it came from, and construct a run where the true value is non-default (a real reopen, a real failed command) and confirm the composer reports the real number, not 0. Also verify: project is the main checkout's name and not the worktree's; context-manifest-ref actually pins the manifest's own bytes and dereferences; artifact-ref entries are repo-relative and match shipped episode shape. AUTHOR ADVERSARIAL INPUTS. Wait for and integrate REVIEW_RESULT.",
+      "imperative": "Fill the reviewer handoff and dispatch constellation-reviewer. THE DEFECT CLASS TO HUNT, stated exactly: a composer that returns plausible constants and reads no engine state at all would pass a presence-based check. Verify each field is DERIVED - trace it to the state it came from, and construct a run where the true value is non-default (a real reopen, a real failed command) and confirm the composer tracks it rather than returning a constant that happened to match. Do not accept validate_delta() as evidence of anything but shape: it is isinstance-and-non-empty only.\n\nADDED BY AMENDMENT, hunt these too: (a) THE REFUSALS COUNTER. Confirm it is genuinely additive - construct a checklist saved BEFORE the counter existed and confirm every reader still works. Confirm docs/CHECKLIST_SCHEMA.md actually documents the new field and matches the implementation exactly; a stale schema doc is a shipped defect here, not a nit. Confirm the increment is on the refusal path and not somewhere a success also reaches - induce a SUCCESSFUL verb and assert the counter did NOT move, which is the case a one-sided test misses. (b) YOU MUST DEVISE A MUTATION THE IMPLEMENTER DID NOT SHIP. The implementer cannot audit its own falsifiability; your independent mutation is the only thing that establishes it. Break the derivation in a way its own red-proof does not cover and confirm the suite catches it. (c) Confirm the docs/EPISODE_STORE.md:781 rewrite is TRUE as written against the shipped code - specifically that it no longer promises automated episode creation that _validate_create forbids. (d) MAKE THE PREDICATE THE WHOLE CONDITION: any predicate with a boundary needs cases on both sides, and any predicate quantifying over a collection needs a multi-element case. Check the counter's and the tallies' tests against that bar.",
       "preconditions": [
         {
           "id": "p1",
@@ -647,6 +665,24 @@
       "why": "Execution context loaded. The plan I am driving is the post-panel plan, not the convergence.",
       "mechanical": false,
       "ts": "2026-08-01T23:31:41.841007+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Seam landed at both sites and I reproduced the evidence: full suite 1435 passed / 2 skipped / 410 subtests, and the engine diff at 967493c..HEAD is an import shim, two one-line emit calls, and base_dir threading onto reopen -- no logic in the engine. The crew self-flagged that the literal 'import plus two call sites, nothing else' criterion was not achievable because reopen() had no route to the checklist's on-disk location; I accept the two plumbing lines under delegated structural latitude, since the alternatives (module global, or emitting from dispatch/_run_verb) are both worse and the latter is explicitly excluded. Recording a defect the crew's honesty covered for: m3's c3 postcondition was 'git diff --stat', which exits 0 whatever the diff says, so 'nothing else' was never mechanically checked -- I verified it by reading the diff instead. Three triage candidates banked, the sharpest being that install_constellation.py may not bundle episode_capture.py, which would make a skill emit no manifests and say nothing.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:29:16.457299+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-02T02:12:16.338571+00:00",
+      "reason": "Admiral answered float 1 (refusals IS in scope, four conditions) and float 3 (mechanical snapshot, not auto-created episodes; EPISODE_STORE.md:781 is a defect to correct). Folding both rulings into the pending g2 gates, plus the independent-mutation and whole-predicate review bars.",
+      "authority": "admiral",
+      "ops": [
+        "rescoped g2-implement",
+        "rescoped g2-review"
+      ]
     }
   ]
 }

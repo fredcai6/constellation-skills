@@ -515,9 +515,9 @@
   "engine_session": {
     "session_id": "commander-305-e298",
     "status": "active",
-    "claimed_at": "2026-08-01T22:51:49.696558+00:00",
-    "last_heartbeat": "2026-08-01T23:31:26.124999+00:00",
-    "claimed_by": "commander-305",
+    "claimed_at": "2026-08-02T02:07:05.341031+00:00",
+    "last_heartbeat": "2026-08-02T02:07:05.341031+00:00",
+    "claimed_by": "commander-305 (resumed)",
     "worktree": "C:/Programs/constellation-skills-wt/e298-305",
     "previous_session_id": null,
     "takeover_reason": null
