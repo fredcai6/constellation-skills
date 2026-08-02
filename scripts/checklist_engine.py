@@ -952,6 +952,16 @@ def claim(
             previous_id = existing.get("session_id")
             takeover_reason = reason or "stale lease reclaimed"
 
+    # #305: ARM the refusals counter. Armed here, at lease creation, so that a
+    # `refusals: 0` is a real reading — "an engine that counts refusals drove this
+    # run, and none happened" — rather than being ambiguous with "this file predates
+    # the counter". That is what keeps ABSENCE meaningful, which is what lets
+    # `episode_capture.mechanical_fields` REFUSE the field rather than report a
+    # fabricated 0. `setdefault`, so a re-claim never resets a live tally; and
+    # deliberately not on the idempotent-resume path above (which returns early),
+    # because resuming a pre-counter run must not backdate a 0 over refusals that
+    # really happened and were never recorded.
+    cl.setdefault("refusals", 0)
     cl["engine_session"] = {
         "session_id": session_id,
         "status": "active",
@@ -2588,6 +2598,25 @@ def main(argv: list[str] | None = None) -> int:
     except EngineError as exc:
         # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
         if not args.dry_run and args.verb != "current":
+            # #305: the ONE engine-state source for the `refusals` mechanical field.
+            # It has to live here because this is the only place a refusal is
+            # observable at all: the journal sidecar is success-only by construction
+            # (`append_journal_entry` sits after the `return 1` below), so a refusal
+            # left no trace anywhere and the field was secretly agent-dependent.
+            # Incremented INSIDE the persistence guard, not above it: a bump that is
+            # never saved is a tally that disagrees with its own file, and a dry-run
+            # is by definition not something that happened. Run-scoped rather than
+            # step-scoped, unlike `rework_count` — a refusal does not always name a
+            # task (an unknown item, a lease conflict, a malformed verb), and scoping
+            # it to a step would silently drop exactly those, which is the same class
+            # of fabrication as inventing a value.
+            # Only an ARMED counter is incremented. Creating it here on a pre-counter
+            # checklist would write `refusals: 1` onto a run whose real total is
+            # unknown and may be five — a plausible wrong number, which is worse than
+            # an absent one and is the one thing this field must never be.
+            armed = cl.get("refusals")
+            if isinstance(armed, int) and not isinstance(armed, bool):
+                cl["refusals"] = armed + 1
             save(path, cl)
         # Recovery (#227 gate g3, item a): a state-caused refusal names its exact
         # exit verb, composed HERE at the CLI boundary from the exception's

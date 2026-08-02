@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m3-derived-fields",
+  "files": [],
+  "repo_rev": {
+    "commit": "1dc0ad59921448cee8bc020bec37acabaab13595"
+  },
+  "run": {
+    "work_id": "issue-305-g2-implement",
+    "generated_at": "2026-08-02T03:51:09Z",
+    "dirty": true,
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/e298-305",
+      "repo": "C:/Programs/constellation-skills-wt/e298-305",
+      "durable": "C:/Programs/constellation-skills-wt/e298-305"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-305"
+    }
+  }
+}
