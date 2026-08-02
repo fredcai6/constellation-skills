@@ -667,7 +667,8 @@
           "id": "p1",
           "statement": "g3 integrated: deletions made, workflows run, outcomes recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3 integrated: 172 words deleted across both templates, T4 survivor intact at offset 262, 5 episodes filed, reviewer APPROVE, verification 111 passed 69 subtests re-run by the Commander"
         }
       ],
       "postconditions": [
@@ -707,7 +708,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,

@@ -94,7 +94,8 @@
           "id": "p1",
           "statement": "materialized spine exists with resolved placeholders",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "materialized spine at .agent-work/g4-scratch-run/spine.json with placeholders resolved"
         }
       ],
       "postconditions": [
@@ -105,7 +106,8 @@
             "kind": "command",
             "command": "python .agent-work/issue-304/evidence/g4_assert_discharged.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
         }
       ],
       "constraints": [
@@ -114,11 +116,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-304/evidence/g4_assert_discharged.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m3": {
@@ -201,7 +215,7 @@
     "session_id": "g4-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T04:39:53.095007+00:00",
-    "last_heartbeat": "2026-08-02T04:41:24.750907+00:00",
+    "last_heartbeat": "2026-08-02T04:44:15.380478+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -221,6 +235,13 @@
       "why": "materialized spine carries zero resolver-family placeholders; context c2 --root resolved to a real absolute path and --work-id to the scratch id",
       "mechanical": false,
       "ts": "2026-08-02T04:41:24.750890+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "the materialized check reported degraded (engine REFUSED exit 1, check exit 12 then 10) and was discharged in one command to exit 0; context advanced with no --force and no waiver",
+      "mechanical": false,
+      "ts": "2026-08-02T04:44:15.380459+00:00"
     }
   ]
 }
