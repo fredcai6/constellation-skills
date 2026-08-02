@@ -381,7 +381,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received: .agent-work/issue-305/crew/g2-implement-result.md, evidence e-g2-implement-1 on g2-implement (crew attempt-1, blockers none). Suite 1470 passed / 2 skipped / 472 subtests."
         }
       ],
       "postconditions": [
