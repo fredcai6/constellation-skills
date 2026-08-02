@@ -242,3 +242,66 @@ flagged. `checks/dispositions_done.py` requires exactly the carve-out to survive
 - **Half 2** — the destination is built (g1) and the two coherence defects are closed (g2).
   The cap removal (g3), the dispositions (g4) and the intake cut (g5) are **planned and
   gated but not executed**.
+
+---
+
+# CORRECTION — #308 WAS RE-SCOPED. THE TABLE ABOVE IS OBSOLETE.
+
+**Everything above this line was written under the OLD scope. Read `STATE_NOTE.md` first.**
+
+Tommy re-scoped the issue mid-run. What changed, and what it invalidates in this file:
+
+## The "PROPOSED dispositions for g4" table is DEAD — do not execute it
+
+Its 20 rows route lessons to **GRADUATE** (11), **DELETE** (4), **RETIRE as already
+graduated** (3), plus one carve-out and one flagged row. **Graduation and deletion are both
+withdrawn.** The correct disposition for every one of the 20 is now the same:
+
+> **Migrate it into an episode. Record what is known; mark what is not as unknown.**
+
+The table's only surviving value is as a **per-lesson summary of what each lesson contains**,
+useful when composing the episodes. **Its disposition column is wrong on every row.**
+
+## The carve-out rule is dead, and the check that enforces it is now inverted
+
+The table's row 2 holds `verify-launch-order-claims-against-code` back for `g6` because
+"disposing it IS the routing decision." That was correct under the old scope. **There is no
+`g6` now** — the consolidation is withdrawn, not blocked.
+
+**`checks/dispositions_done.py` requires exactly ONE surviving active lesson and FAILS on
+zero.** Under the new scope **zero is correct.** That script asserts the opposite of the
+requirement and is still wired as `g4-disposition-lessons` c1 in the frozen `execute.json`.
+It must be rewritten or replaced. **A successor who trusts it will be blocked by a check
+defending a withdrawn rule.**
+
+## What else in this file is now historical rather than operative
+
+- **The two-bin routing question** (`ROUTING_QUESTION.md`, and this file's discussion of
+  bins, coverage and my lean): **historical.** No bin will be chosen.
+- **My argument that the self-recurrence "is a real argument for bin 1 and against my own
+  stated lean":** that conclusion is exactly the kind of importance judgement Tommy has now
+  ruled a local agent must not make. **The observation survives; the conclusion is demoted
+  to `other-notes`, attributed, deciding nothing.**
+- **The two coverage numbers (mechanism 1/3, prose 3/3):** they **stay**, as observed facts
+  about the remedies. They are used to decide nothing.
+- **`g1`'s `CREW_CONTEXT.md` and `g2`'s #348/#322 fixes:** these **stand** and are merged
+  into the branch. `CREW_CONTEXT.md` is flagged to Tommy but kept, because what it carries is
+  observable environment facts, not distilled importance judgements.
+
+## What is unchanged and still load-bearing
+
+Everything in the first half of this file that is a **measurement** rather than a decision:
+
+- the cap is binding at 20/20, reproduced (`exit 1`, `active cap 20 reached`), live file
+  sha256-identical before and after;
+- 10 of 20 never confirmed, 12 of 20 stale >= 4 runs;
+- `.agent-work/` is NOT gitignored (exit 1, 1958 tracked files);
+- the store held 7 active episodes, 0 retired, across 2 runs at `4cec87a`;
+- the #342 workaround analysis, which now matters MORE, because the migration will hit
+  `create`'s required `observed-behavior` on thin lessons. **Do not back-fill it.**
+
+Under the new scope the staleness numbers **read differently and this is the important
+reversal**: 10-never-confirmed and 12-stale looked like weak entries worth culling. They are
+now **observations with an unknown recurrence count**. The count is empty; **the record is
+not invalid.** That is the single biggest interpretive change the re-scope makes to the
+measurements above.
