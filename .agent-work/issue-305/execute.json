@@ -313,12 +313,7 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": true,
-          "satisfied_by": "e-g2-implement-1",
-          "attested": {
-            "evidence": "e-g2-implement-1",
-            "note": null
-          }
+          "satisfied": false
         }
       ],
       "constraints": [
@@ -353,8 +348,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
-      "status_detail": {},
+      "status": "in-progress",
+      "status_detail": {
+        "reopen_reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped."
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -367,10 +364,15 @@
             "blockers": "none"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g2-implement",
+            "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
+            "ts": "2026-08-02T04:46:24.634520+00:00"
+          }
         }
       ],
-      "rework_count": 0
+      "rework_count": 1
     },
     "g2-review": {
       "id": "g2-review",
@@ -381,8 +383,7 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g2",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "IMPLEMENTER_RESULT received: .agent-work/issue-305/crew/g2-implement-result.md, evidence e-g2-implement-1 on g2-implement (crew attempt-1, blockers none). Suite 1470 passed / 2 skipped / 472 subtests."
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -403,10 +404,30 @@
       "directives": null,
       "child_checklist": null,
       "status": "pending",
-      "status_detail": {},
+      "status_detail": {
+        "superseded_by_reopen": "g2-implement"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-305/crew/g2-review-result.md",
+            "verdict": "BLOCK",
+            "crew": "constellation/issue-305/g2-review/reviewer/attempt-1",
+            "verified": "fresh"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g2-implement",
+            "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
+            "ts": "2026-08-02T04:46:24.634535+00:00"
+          }
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -822,6 +843,27 @@
       "why": "Composer landed; suite 1470 passed / 2 skipped / 472 subtests (+34 = exactly the new tests), committed and pushed. The anti-constant proof is the real deliverable and it is genuine: validate_delta ACCEPTED nine hardcoded constants reading zero engine state, and those same constants drove 9 of 13 tests red, three of them asserting ABSENCE -- which is where a constant composer cannot hide and which validate_delta structurally cannot express. The project fix is proven live from a linked worktree under an active epic lease, the exact condition that breaks the old formula, and the pin equals git hash-object on the manifest. DEVIATION ADJUDICATED - I ACCEPT the two-witness reconciliation for reopens: the literal row is genuinely unimplementable at the seam because append_journal_entry runs AFTER the verb returns, so the in-flight verb has no journal line and a run's first mutating verb has no journal file at all. The handoff's justification for that row was MINE and it was wrong -- it described failed-commands, not reopens. BUT ITS STATED INVARIANT IS FALSE AND I VERIFIED THAT AT SOURCE: 'neither witness can over-count' is contradicted by the crew's own triage item 3 -- an escalated reopen (rework cap breached) returns ESCALATED WITHOUT incrementing rework_count yet still journals as a successful reopen, so the journal over-counts and the max takes the wrong reading. Narrow, but it fabricates a mechanical fact in exactly the case refuse-never-fabricate forbids. Handing it to g2-review as a named hunt rather than fixing it myself.",
       "mechanical": false,
       "ts": "2026-08-02T04:16:04.450899+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g2-review",
+      "why": "Review returned a BLOCK I am accepting in full. It confirmed HUNT 1 live and my repro route canonical, then narrowed it in a way I had not measured: the over-count is E at a start seam but E-1 at a reopen seam, because the in-flight verb's own journal line is not yet written. Its decisive finding is one I structurally could not have made - mutation M5 survived, so the two-witness max has NO discriminating test and whichever fix I choose lands on unconstrained code. Third blocker is the same fabrication class: refusals is checklist-scoped, not run-scoped as the schema doc and composer comment both assert. Reopening g2-implement for a bounded fix.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:46:14.364760+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g2-implement",
+      "reopen": true,
+      "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
+      "ts": "2026-08-02T04:46:24.634544+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g2-review",
+      "reopen": true,
+      "reason": "g2-review BLOCK, 3 blockers accepted in full. Fix shape B ruled: reopens uses _rework_total alone; journal witness and find_spine_path go. Hard condition: it must ship with a test that mutation M5 fails - the two-witness max has no discriminating test today, which is the real defect. Plus the falsified neither-can-over-count invariant corrected in prose, and CHECKLIST_SCHEMA.md corrected on three counts including run-scoped -> checklist-scoped.",
+      "ts": "2026-08-02T04:46:24.634547+00:00"
     }
   ],
   "amendments": [
