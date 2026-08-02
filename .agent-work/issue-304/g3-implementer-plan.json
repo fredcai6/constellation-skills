@@ -217,7 +217,8 @@
           "id": "p1",
           "statement": "deletions landed and T3 determined",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "deletions landed (ea52b2f, 456cac0), T3 determined and retargeted (baf09f2)"
         }
       ],
       "postconditions": [
@@ -225,7 +226,8 @@
           "id": "c1",
           "statement": "scratch spine materialized and driven through init and context; engine output captured verbatim (manual attest)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Fresh Commander spine materialized in this repo via init_work_area.py --spine and driven through init and context with the engine; execute.json also instantiated and driven through e0-context for T2. Engine output captured verbatim by tee into .agent-work/issue-304/evidence/g3-run-transcript.txt (384 lines). Headline observations: context REFUSED to advance with 'REFUSED: context: postconditions unmet [c2]'; verify-orientation reported 'RECEIPT-MISSING' exit 12; orient reported 'DEGRADED-NO-MAP ... degraded and NOT discharged -- still owed: substitutes / unmapped / escalation' exit 10; after discharge verify-orientation reported 'orientation contract SATISFIED, problems: 0, substitute: README.md [known-fallback]' exit 0 and context advanced. e0-context advanced first try with its config_ref absent. docs/agents/engine-config.json did NOT exist before or after either run. Scratch work area removed; .agent-work/issue-304/ untouched."
         },
         {
           "id": "c2",
@@ -234,7 +236,8 @@
             "kind": "command",
             "command": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/evidence/g3-run-transcript.txt"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
         }
       ],
       "constraints": [
@@ -243,11 +246,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/e298-304/.agent-work/issue-304/evidence/g3-run-transcript.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m5": {
@@ -441,7 +456,7 @@
     "session_id": "constellation/issue-304/g3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-02T03:46:33.406903+00:00",
-    "last_heartbeat": "2026-08-02T03:55:21.185201+00:00",
+    "last_heartbeat": "2026-08-02T03:58:15.788379+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -475,6 +490,13 @@
       "why": "T3's plan-side retarget was genuinely still outstanding, contradicting the handoff's expectation that g2 had done it. The evidence is a command over git history rather than a reading of the current file alone, because 'was it already done' is a question about history. The edit is 4 words replacing 4 - the smallest change that names the resolved input instead of an unnamed 'current map' - and it makes the plan step consistent with prose already in the same imperative ('the map inventory the context step resolved'). This does NOT move the anchor: the plan step still fires at authoring time, which is exactly why T3/T5 predict no ordering change.",
       "mechanical": false,
       "ts": "2026-08-02T03:55:21.185172+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "The run is a real result in both directions. The contract REPORTS rather than passing silently: it refused the advance, named the missing receipt, named exactly what a degraded verdict still owed, and accepted only a discharge carrying a hash-pinned substitute plus the unmapped gap plus an escalation. And the deletion changed nothing mechanical: both checklists carry config_ref docs/agents/engine-config.json, that file does not exist, and the engine degraded it silently and correctly with no prose anywhere telling it to. The T5-relevant finding is a NEGATIVE with evidence: grep for map_before_src in map_orient.py returns nothing - the gate observes the RECEIPT's content, never tool ordering - so a run may still read fifty source files, then discharge orientation, then advance context. Better positioned, not enforcing.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:58:15.788362+00:00"
     }
   ],
   "amendments": [

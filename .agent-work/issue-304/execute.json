@@ -465,7 +465,8 @@
           "id": "p1",
           "statement": "g2 integrated: the contract is wired, so the prose it supersedes can be deleted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2 integrated: verify-orientation wired at context c2 and verify-frame at plan c6 on the absolute repo-root placeholder, reviewer APPROVE round 2, close criteria 312 passed 435 subtests plus self-test exit 0 re-run by the Commander"
         }
       ],
       "postconditions": [
@@ -514,7 +515,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
