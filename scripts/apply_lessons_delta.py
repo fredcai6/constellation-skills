@@ -34,7 +34,6 @@ _utf8_stdio()
 
 
 SCOPES = ("handoff", "commander", "admiral", "project", "constellation")
-DEFAULT_CAP = 20
 DEFAULT_DORMANCY_RUNS = 10
 DEFAULT_APPLY_RECURRENCES = 1
 DEFAULT_APPLY_CONFIRMED = 3
@@ -44,8 +43,13 @@ DEFAULT_APPLY_CONFIRMED = 3
 # that has aged out simply ages once more, which is harmless.
 TICKED_WORK_ID_RETENTION = 50
 
+# `cap=N` is NOT part of the grammar any more: there is no active-entry cap, so there is
+# nothing for the field to carry. It stays here as a tolerated-and-discarded non-capturing
+# group ONLY so the many legacy playbooks that still hold one keep parsing; the value is
+# never read and is dropped on the next render. Do not reintroduce a capture group for it —
+# a parsed cap is a claim, and the claim would enforce nothing.
 STATE_RE = re.compile(
-    r"<!--\s*playbook-state:\s*run-tick=(\d+)\s+cap=(\d+)\s+dormancy-runs=(\d+)"
+    r"<!--\s*playbook-state:\s*run-tick=(\d+)(?:\s+cap=\d+)?\s+dormancy-runs=(\d+)"
     r"(?:\s+apply-recurrences=(\d+))?(?:\s+apply-confirmed=(\d+))?"
     r"(?:\s+ticked-work-ids=(\S*))?\s*-->"
 )
@@ -119,7 +123,6 @@ class Lesson:
 @dataclass
 class Playbook:
     run_tick: int
-    cap: int
     dormancy_runs: int
     apply_recurrences: int
     apply_confirmed: int
@@ -137,15 +140,18 @@ class Playbook:
 def _default_preamble() -> str:
     return (
         "# Lessons Playbook\n\n"
-        "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids= -->\n\n"
+        "<!-- playbook-state: run-tick=0 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids= -->\n\n"
         "Open problems carried forward — NOT a log of everything learned. If a lesson is\n"
         "understood and fixable, apply the fix and record it in AGENT_FEEDBACK; do not\n"
         "bank it here. A lesson lives here only because it needs to be re-observed to be\n"
         "understood, so every `add` states a bank-reason (what re-observation will\n"
-        "clarify). Reaching the cap is a failure mode — it means the bank is being used\n"
-        "to accumulate instead of to adjudicate. Read the Active section at the Commander\n"
-        "context step. Never edit by hand or by LLM: apply structured deltas via\n"
-        "apply_lessons_delta.py, which enforces cap, grounding, and counter rules.\n\n"
+        "clarify). There is no cap on this bank: a cap does not cause cleanup, it causes\n"
+        "forgetting, and then blocks capture outright. Size is held down by the Curator's\n"
+        "regular cleanup pass, which adjudicates each entry — a bank that has grown is a\n"
+        "signal to run that pass, not a reason to refuse the next entry. Read the Active\n"
+        "section at the Commander context step. Never edit by hand or by LLM: apply\n"
+        "structured deltas via apply_lessons_delta.py, which enforces grounding and\n"
+        "counter rules.\n\n"
         "Counter semantics split by scope: for most scopes a confirm is trust\n"
         "(the lesson held again). For a constellation-scoped lesson it is the\n"
         "opposite — a recurrence of an unfixed shared-machinery defect, so it\n"
@@ -227,12 +233,12 @@ def load_playbook(path: Path) -> Playbook:
     state = STATE_RE.search(text)
     if not state:
         raise LessonsDeltaError(f"playbook missing playbook-state marker: {path}")
-    run_tick, cap, dormancy = (int(state.group(i)) for i in (1, 2, 3))
-    apply_recurrences = int(state.group(4)) if state.group(4) else DEFAULT_APPLY_RECURRENCES
-    apply_confirmed = int(state.group(5)) if state.group(5) else DEFAULT_APPLY_CONFIRMED
+    run_tick, dormancy = (int(state.group(i)) for i in (1, 2))
+    apply_recurrences = int(state.group(3)) if state.group(3) else DEFAULT_APPLY_RECURRENCES
+    apply_confirmed = int(state.group(4)) if state.group(4) else DEFAULT_APPLY_CONFIRMED
     # Seen-work-ids dedup ring (comma-joined, most-recent-last). Absent field or empty
     # value -> empty ring; a stray empty entry is corruption, so fail visibly.
-    raw_ticked = state.group(6)
+    raw_ticked = state.group(5)
     if raw_ticked:
         ticked_work_ids = raw_ticked.split(",")
         if any(not wid for wid in ticked_work_ids):
@@ -257,7 +263,6 @@ def load_playbook(path: Path) -> Playbook:
 
     return Playbook(
         run_tick=run_tick,
-        cap=cap,
         dormancy_runs=dormancy,
         apply_recurrences=apply_recurrences,
         apply_confirmed=apply_confirmed,
@@ -269,7 +274,7 @@ def load_playbook(path: Path) -> Playbook:
 
 def render_playbook(book: Playbook) -> str:
     preamble = STATE_RE.sub(
-        f"<!-- playbook-state: run-tick={book.run_tick} cap={book.cap} "
+        f"<!-- playbook-state: run-tick={book.run_tick} "
         f"dormancy-runs={book.dormancy_runs} apply-recurrences={book.apply_recurrences} "
         f"apply-confirmed={book.apply_confirmed} "
         f"ticked-work-ids={','.join(book.ticked_work_ids)} -->",
@@ -422,7 +427,8 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
     log: list[str] = []
     stamp = _stamp(work_id)
 
-    # Retires first so retire-before-add can satisfy the cap within one delta.
+    # Retires (and applies, which also delete) run first so a single delta can retire a
+    # lesson and re-add its id without tripping the duplicate-id refusal.
     ordered = sorted(ops, key=lambda op: 0 if op["op"] in ("retire", "apply") else 1)
 
     for op in ordered:
@@ -432,10 +438,6 @@ def apply_delta(book: Playbook, delta: dict) -> list[str]:
         if kind == "add":
             if lesson:
                 raise LessonsDeltaError(f"add {lesson_id}: id already exists")
-            if len(book.active) >= book.cap:
-                raise LessonsDeltaError(
-                    f"add {lesson_id}: active cap {book.cap} reached — retire before adding"
-                )
             book.active.append(
                 Lesson(
                     lesson_id=lesson_id,
@@ -681,9 +683,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for line in log:
         print(line)
-    print(
-        f"playbook: {len(book.active)} active (cap {book.cap}, run {book.run_tick})"
-    )
+    print(f"playbook: {len(book.active)} active (run {book.run_tick})")
     debt = [l for l in book.active if l.scope == "constellation" and l.recurrences > 0
             and l.status != "fixed-upstream"]
     if debt:

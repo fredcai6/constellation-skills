@@ -276,7 +276,8 @@
             "kind": "command",
             "command": "python .agent-work/issue-308/checks/cap_is_gone.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-drop-cap-implement-4"
         },
         {
           "id": "c2",
@@ -285,7 +286,8 @@
             "kind": "command",
             "command": "! grep -nE 'DEFAULT_CAP|active cap' scripts/apply_lessons_delta.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-drop-cap-implement-5"
         },
         {
           "id": "c3",
@@ -294,7 +296,8 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-drop-cap-implement-6"
         }
       ],
       "constraints": [
@@ -303,11 +306,78 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-drop-cap-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-308/checks/cap_is_gone.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-drop-cap-implement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -nE 'DEFAULT_CAP|active cap' scripts/apply_lessons_delta.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-drop-cap-implement-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-drop-cap-implement-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-308/checks/cap_is_gone.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-drop-cap-implement-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -nE 'DEFAULT_CAP|active cap' scripts/apply_lessons_delta.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-drop-cap-implement-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -575,12 +645,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 0,
+  "refusals": 1,
   "engine_session": {
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T20:02:38.399197+00:00",
-    "last_heartbeat": "2026-08-02T20:36:24.055319+00:00",
+    "last_heartbeat": "2026-08-02T21:36:11.014558+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -607,6 +677,13 @@
       "why": "#348 corrected: section 1's stale gitignore transcript replaced with re-measured numbers pinned to 4cec87a, naming b69e6c8/#326 as the cause and preserving the ruling (the store needs TRACKED, not 'not-ignored-elsewhere'). #322 folded: truth-layer block gains episodes/ as raw observed history, plus the cutover flow and the explicit statement that LESSONS.md's absence is the ruling, not an omission.",
       "mechanical": false,
       "ts": "2026-08-02T20:21:14.434943+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3-drop-cap-implement",
+      "why": "The cap is gone at the level of BEHAVIOUR, not of source text: cap_is_gone.py drives the real writer against a frozen 20-entry fixture and was red at 752a62f (exit 1, 'active cap 20 reached') and green after. The removal reached the grammar, not just the refusal branch -- DEFAULT_CAP, the Playbook.cap field, the cap= capture group and the rendered header are all gone, with a tolerated-and-discarded non-capturing group left so the many legacy files still carrying cap=N keep parsing. That grammar removal is what stops the cap becoming a stale claim that enforces nothing, which is the failure class this epic has been closing all week. The refusal test was rewritten rather than deleted -- a delete would have made the suite green by removing the only assertion that could have failed -- and red-proved against a HEAD writer snapshot swapped in from scratch, with the mutation asserted applied and the restore cmp-verified. Suite 1621 passed / 2 skipped, run by me, not read from the crew's transcript.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:36:11.014524+00:00"
     }
   ],
   "amendments": [
