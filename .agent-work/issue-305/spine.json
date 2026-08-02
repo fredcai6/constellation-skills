@@ -254,13 +254,14 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All four gates in execute.json closed with integrated evidence. g1 assembly seam, g2 mechanical composer, g3 negative control, g4 drop run.dirty (#327). g4 required one rework: the review returned a genuine BLOCK on a false causal claim in the design doc, which I re-derived against the tree before acting on, fixed, and had re-reviewed to APPROVE-WITH-FOLLOWUPS. Suite on the shipped tree, run by the engine itself as g4-integrate.c1: exit 0, and independently by me: 1487 passed, 2 skipped, 472 subtests. Every integrate gate's c2 waiver is the #371 gate-plan defect with the real verdict attached; no APPROVE was fabricated at any gate."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -288,7 +289,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete: all four gates in execute.json closed with integrated evidence, engine-run suite exit 0."
         }
       ],
       "postconditions": [
@@ -296,13 +298,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "NO PACKET MAP PATH, taken because it applies, not to avoid work: docs/architecture/ does not exist in this repo, so there is no Cartographer map to fold into and no subagent dispatch is possible. Reconciled the structural record directly instead, as the imperative directs. THE CHANGE'S OWN DOC WAS THE TARGET AND IS ALREADY FOLDED: docs/CHECKLIST_ENGINE_DESIGN.md carries the corrected two-level-revision narrative plus a new #300-successor paragraph recording that the producer had no caller until #305 wired one - so a reader of main can tell deliberate sequencing from oversight rather than reading the removal as a reversal of a mistake. VERIFIED NOT ASSUMED for the second doc: docs/CHECKLIST_SCHEMA.md documents no manifest run-subtree shape at all (grepped work_id/generated_at/host/run-subtree; the only work_id hit is a checklist example at :35, and :123 is the context_refs row), so dropping run.dirty leaves nothing stale there - the implementer's blob-OID-equals-HEAD claim for that file is correct and I re-derived the reason rather than accepting the OID. Structural anchors touched: context_manifest.run_facts (parameter and returned key dropped), context_manifest.build_manifest (call site narrowed to commit), checklist_engine.repo_revision (docstring only, behaviour AST-proven unchanged). CONTENT_KEYS admission list honored and untouched - the removal needed no content change, which is itself evidence that admitting repo_rev by sub-field was the right shape."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -318,7 +321,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
         }
       ],
       "postconditions": [
@@ -326,7 +330,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every candidate routed. tc1/tc2 -> already filed as the open #382, verified by gh rather than assumed. tc3 -> #388. tc4/tc7 (FU-1 encode-token comment, FU-4 duplicated walker) -> #386. tc5 (FU-2 surviving mutant) -> #384. tc8 (FU-5 shotgun-surgery, the g4 BLOCK's root cause) -> #385. tc9 (FU-6 speculative generality) + design doc :187 -> #387. FU-A/B/C were FIXED in-gate rather than filed, because they were the same defect class the gate exists to fix and cost one clause each. The reviewer's own FU-3 was deliberately NOT filed: my rework had already closed it in both copies, and filing a closed finding puts a phantom on the tracker."
         },
         {
           "id": "c2",
@@ -335,17 +340,33 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "quote": "issue filing/closing on fredcai6/constellation-skills (gh pre-cleared - file findings directly, never bank them worktree-locally) [LAUNCH_ORDER-305.md:92]",
+            "decision": "FILED, not banked. The order does not merely permit filing, it forbids the alternative.",
+            "issues_filed": "#384 surviving mutant; #385 two prose copies of the measurement with no single source (root cause of the g4 BLOCK); #386 test hygiene (encode-token comment + duplicated walker); #387 repo_revision speculative generality + design doc :187 stale; #388 crew doctrine (spent-mutation conditions, exception-vs-assertion)",
+            "not_filed": "tc1/tc2 already covered by the open #382; the reviewer own FU-3 was closed by my rework rather than filed, to avoid putting a phantom on the tracker; FU-A/B/C fixed in-gate",
+            "issue_327": "correction comment posted (comment 5159861805); closure rides on the PR body Closes #327 rather than a manual close, because the fix is not on main until the Admiral merges"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -516,7 +537,7 @@
     "session_id": "commander-305h",
     "status": "active",
     "claimed_at": "2026-08-02T18:33:47.659123+00:00",
-    "last_heartbeat": "2026-08-02T18:33:47.659123+00:00",
+    "last_heartbeat": "2026-08-02T18:59:44.722065+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "commander-305-e298",
@@ -550,6 +571,27 @@
       "why": "Plan frozen: 4 crew gates, cut from ~9-12 after the cold panel. The panel reversed my own convergence and I verified it at source: start() is already unskippable because advance() refuses unless in-progress (:1644) and only start (:1635) and reopen (:1852) set it -- so emitting at start/reopen buys the same guarantee as the dispatch chokepoint with one verb of blast radius instead of every verb, removes two git subprocesses per verb, and is semantically the right seam (the manifest records what was available to the agent running THIS step). Write-if-absent then makes the EPISODE_STORE <manifest-ref>@<revision> contract satisfiable via context_manifest.rev() over the manifest's own bytes. My first negative control was vacuous (validate_delta is presence-only); replaced with independently-tallied ground truth compared field-by-field. Three floats open; none blocks building.",
       "mechanical": false,
       "ts": "2026-08-01T23:30:58.647878+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Four gates closed. The run's substantive outcome beyond the code: the g4 review BLOCKED on the one claim my handoff had explicitly named as deliberately unverified by me and asked the reviewer to attack, and it was refuted on both halves. That is the reusable result - stating which of your claims you did NOT verify is a higher-yield handoff move than stating which you did. Three successive revisions of the same sentence then moved it from false, to ambiguous, to unresolvable-after-squash-merge, and every one of those failures was in a claim ABOUT the measurement rather than in the measurement itself.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:57:25.904627+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly against the structural record because no packet map exists (docs/architecture/ is absent, so a Cartographer dispatch is not possible). The change touched exactly two docs and both are accurate: CHECKLIST_ENGINE_DESIGN.md was rewritten for the removal and carries the #300-successor paragraph; CHECKLIST_SCHEMA.md needed no change and I verified WHY rather than trusting its unchanged blob OID - it documents no manifest run-subtree shape, so there was nothing there to go stale. The one known-stale line (design doc :187 omits repo_rev from build_manifest's stated return shape) is pre-existing since #300 g5, unrelated to #327, and carried to triage rather than silently fixed inside a removal gate.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:57:56.002387+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Six candidates routed to five new issues plus one verified-existing (#382), and #327 got a correction comment rather than a silent close. The judgement worth recording: #327's own TITLE asserts the claim this gate measured FALSE - 'run.dirty is permanently true and self-caused'. Closing it without correcting that would have ratified the false premise as the durable public record of why the field went, so the comment states the measured spread and the read-your-predecessor mechanism before the closure lands. Filing rather than banking is not my preference, it is LAUNCH_ORDER-305:92, which forbids the alternative.",
+      "mechanical": false,
+      "ts": "2026-08-02T18:59:44.722046+00:00"
     }
   ],
   "refusals": 0
