@@ -1,0 +1,15 @@
+[
+  {
+    "session_name": "constellation/489/g1/implementer/attempt-1",
+    "crew_id": "constellation/489/g1/implementer/attempt-1",
+    "work_id": "489",
+    "gate": "g1",
+    "role": "implementer",
+    "worktree": "C:/Programs/f1Brainz/.claude/worktrees/489-ribbon-v2",
+    "attempt": 1,
+    "status": "running",
+    "dispatch_mode": "external",
+    "started_at": "2026-06-17T22:21:19.450774+00:00",
+    "result_artifact": ".agent-work/489/crew-handoffs/g1-implement-IMPLEMENTER_RESULT.md"
+  }
+]

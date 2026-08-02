@@ -1,0 +1,135 @@
+{
+  "work_id": "623-headless-deadlock-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-thread-cap",
+    "m2-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer skill's references/global-crew.md and references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff HANDOFF_g1-implement.md. Verify the handoff is complete (task, protected intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-thread-cap": {
+      "id": "m1-thread-cap",
+      "title": "Cap torch/BLAS threads unconditionally at top of run.py + regression test",
+      "imperative": "In src/evo_predictor/run.py, insert immediately after the stdlib imports (argparse/json/logging/os/re/sys/dataclasses/datetime/pathlib/typing) and before `import numpy as np` / the `from src.compound_prior...` block: (1) os.environ.setdefault for OMP_NUM_THREADS, MKL_NUM_THREADS, OPENBLAS_NUM_THREADS, NUMEXPR_NUM_THREADS to '1'; (2) a guarded `try: import torch; torch.set_num_threads(1)` / `except Exception:` block mirroring src/utils/utilization.py's init_worker guard style (comment convention matched from that file). Unconditional -- no isatty()/headless-detection gating (Pre-Ruling #2). Add a new unit test (tests/unit/evo_predictor/test_run_entrypoint_thread_cap.py or an addition to test_run_cli_defaults.py) asserting the entrypoint caps threads: import src.evo_predictor.run fresh and assert torch.get_num_threads() == 1 (or assert the env vars if a true fresh-process reimport isn't practical -- state which was picked). Test-after is allowed per handoff Test Mode, so this item collapses to the single green postcondition (c2) -- no separate TDD-red attest needed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete (m0-context c1 attested)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "run.py caps threads unconditionally before project imports; new test passes; full tests/unit/evo_predictor + tests/unit/test_utilization.py suites green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-623 && py -c \"import src.evo_predictor.run as r; print(r.__file__)\" && py -m pytest tests/unit/evo_predictor tests/unit/test_utilization.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-thread-cap-1"
+        }
+      ],
+      "constraints": [
+        "Only src/evo_predictor/run.py and one new/modified test file under tests/unit/evo_predictor/ may change (Allowed Scope).",
+        "Do NOT touch module_runtime.py, sampled_runtime.py, sampled_backtest.py, sampled_backtest_scoring.py, or src/utils/utilization.py (Specific Exclusions).",
+        "Do NOT add isatty()/headless-detection branching.",
+        "Do NOT change any existing CLI argument default or production model default.",
+        "Use os.environ.setdefault for the four env vars; call torch.set_num_threads(1) unconditionally (not gated by setdefault)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-thread-cap-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-623 && py -c \"import src.evo_predictor.run as r; print(r.__file__)\" && py -m pytest tests/unit/evo_predictor tests/unit/test_utilization.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-evidence": {
+      "id": "m2-evidence",
+      "title": "Write IMPLEMENTER_RESULT and integrate evidence",
+      "imperative": "Write RESULT_g1-implement.md at .agent-work/623-headless-deadlock/RESULT_g1-implement.md using the IMPLEMENTER_RESULT template: completed slice, files changed, test mode satisfied, full diff of run.py, new test content, verification command output tail (final summary line), assumptions, stop conditions hit (or none), out-of-scope observations, Map Impact, and Workflow Feedback. Attest c1 once the file exists with all required sections filled.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-thread-cap complete (tests green, evidence captured)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RESULT_g1-implement.md written with all required sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-623-g1",
+    "status": "released",
+    "claimed_at": "2026-07-17T22:27:41.381956+00:00",
+    "last_heartbeat": "2026-07-18T01:10:19.571832+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T01:10:24.868778+00:00"
+  }
+}

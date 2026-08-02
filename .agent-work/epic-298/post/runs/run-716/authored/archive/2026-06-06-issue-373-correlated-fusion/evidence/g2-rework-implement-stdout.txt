@@ -1,0 +1,57 @@
+All criteria met. Here is the full IMPLEMENTER_RESULT:
+
+---
+
+## IMPLEMENTER_RESULT — G2 REWORK: `fuse_module_fields_correlated` simplification limits
+
+### What was extracted
+
+Three private helpers inserted between `fuse_module_fields_ordered` and `fuse_module_fields_correlated` in `src/evo_predictor/fusion.py`:
+
+1. **`_validate_correlation_matrix(correlation, k) -> np.ndarray`** — the shape/symmetry/unit-diagonal/PSD validation block (4 branches, ~18 lines). Takes the raw `correlation` argument and returns a validated `np.ndarray`.
+
+2. **`_resolve_correlated_modules(config, result_by_module, module_results) -> tuple[list[str], dict[str, FusionStepConfig]]`** — enabled-module resolution (empty check, missing-module check, single-event-id check, task-match check), returns `(enabled_modules, step_by_module)`. Every ValueError message text preserved verbatim.
+
+3. **`_build_aligned_obs(enabled_modules, step_by_module, result_by_module, drivers, constructor_by_driver, config) -> tuple[np.ndarray, np.ndarray]`** — the loop building `obs_mean_mat (k,n)` and `obs_std_mat (k,n)`. Contains the driver/constructor branch and the diagonal obs_cov computation.
+
+The vectorized GLS core (`W`, `R_inv`, `prec`, `ybar_num`, posterior fold), diagnostics dict, and `FusedLatentField` return stay in the main function.
+
+### Files changed
+
+- **`src/evo_predictor/fusion.py`** — three helpers added; `fuse_module_fields_correlated` refactored to delegate to them. No other function touched.
+
+### Simplification limits output
+
+```
+FAIL (2 violations, 8 files checked)
+src/evo_predictor/fusion.py fuse_module_fields_ordered: cyclomatic_complexity=20 (limit: <20)
+src/evo_predictor/fusion.py fuse_module_fields_ordered: function_lines=118 (limit: <100)
+```
+Only the 2 pre-existing `fuse_module_fields_ordered` violations remain. `fuse_module_fields_correlated` is clean.
+
+### pytest results
+
+```
+23 passed in 0.23s   (test_fusion_correlated.py + test_fusion_replay_harness.py)
+290 passed, 1217 deselected  (tests/unit/evo_predictor/ -k "fusion or record or replay")
+```
+
+### R=I identity test status
+
+`test_correlated_RI_equals_diagonal_baseline` passes (part of the 23 tests above). The identity `fuse_module_fields_correlated(R=I) == _fuse_baseline_diagonal_numpy` holds to `atol<=1e-9` — confirmed across seeds 1, 13, 42, 55, 99.
+
+### git diff confirmation
+
+`fuse_module_fields_ordered` is absent from the diff entirely (byte-for-byte identical to committed HEAD). The diff shows only additions: three new helpers and the refactored `fuse_module_fields_correlated`.
+
+### Assumptions
+
+- The three helpers are private (underscore-prefixed); they are not exported and not referenced from outside fusion.py.
+- All original docstring text in `fuse_module_fields_correlated` preserved verbatim.
+- All existing ValueError messages preserved verbatim (exact string match).
+
+### Out-of-scope notes
+
+- Pre-existing `fuse_module_fields_ordered` violations (complexity=20, lines=118) left untouched per ruling.
+- No changes to `_correlation.py`, `variants.py`, test file, or any other file.
+- G3 (record generation / backtests) not started.

@@ -1,0 +1,120 @@
+{
+  "work_id": "issue-356-cartographer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "packets",
+    "index-overlays",
+    "map-compliance"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, index.md, packets/utils.md, packets/evo_predictor.md; map model + repo-local check_arch_map.py reviewed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node packet against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "index.md + touched packets (utils, evo_predictor) loaded in context gate"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched packets reflect current code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "utils.md (+utilization.py), evo_predictor.md (+parallel_jobs, sampled_backtest_scoring, gold-cycle fan-out, run_sampled_runtime_comparison row), compound_prior.md (+build_rolling_compound_priors) reconciled against verified code"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled packets.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "index and overlays consistent with packets",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Extended evo->utils edge evidence (gold_cycle/* + sampled_backtest* utilization imports); added 2026-06-03 #356 refresh line to index header; no new nodes; overlays unchanged (no new constraint/purpose)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map compliant; open structural questions recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "py scripts/check_arch_map.py PASSES (37 catalog nodes, 16 packets, 10 overlay nodes; OK: architecture map is consistent; exit 0). No new structural questions or triage candidates from #356."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

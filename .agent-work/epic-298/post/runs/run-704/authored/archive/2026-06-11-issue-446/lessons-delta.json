@@ -1,0 +1,58 @@
+{
+  "work_id": "issue-446",
+  "tick": true,
+  "ops": [
+    {
+      "id": "worktree-untracked-data",
+      "grounding": "issue-446 run: FastF1 cache (C:/Programs/f1Brainz/outputs/cache) and season DBs (data/f1_data_<year>.db) are untracked and absent from the worktree; all g2/g3 crews used absolute paths into the main checkout per the launch order Data Locations.",
+      "op": "confirm"
+    },
+    {
+      "id": "py-launcher",
+      "grounding": "issue-446 run: spine init/integrate imperatives hard-code 'python ...' but every engine and test call used 'py'; the contradiction was navigated by using py throughout.",
+      "op": "confirm"
+    },
+    {
+      "id": "engine-artifact-attest",
+      "grounding": "issue-446 run: review-result and user-decision artifact postconditions were attached (not attested); review-result attached to both gN-review and gN-integrate so the APPROVE-match check passed at integrate.",
+      "op": "confirm"
+    },
+    {
+      "id": "compact-step-skip",
+      "grounding": "issue-446 run: spine 'compact' step skipped with reason (per lesson) \u2014 /compact is a user-level CLI command unavailable to the agent; harness auto-compaction covered context.",
+      "op": "confirm"
+    },
+    {
+      "id": "run-crew-cli-launcher-misfit",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "run_crew.py spawns crews via a headless 'claude --role --handoff' CLI binary (launch_process/subprocess.run); in environments where crews are Agent-tool subagents there is no such binary. Closest-compliant path: dispatch the implementer/reviewer via the Agent tool, and record each attempt in crew-runs.json using run_crew.py's pure registry functions (session_name/next_attempt/active_duplicate/result_exists) so duplicate-guard + result-artifact verification are preserved; run recover_crews before each dispatch.",
+      "grounding": "issue-446 AGENT_FEEDBACK 2026-06-11 entry (Instruction adherence: material workflow misfit); all 7 crew dispatches used the Agent tool with registry recorded via run_crew pure functions.",
+      "op": "add"
+    },
+    {
+      "id": "dbmanager-not-readonly",
+      "scope": "project",
+      "task_class": "general-workflow",
+      "statement": "DatabaseManager is NOT a read-only path: its __init__ runs a schema-ensure write. For truly read-only access to the canonical season DBs (e.g. physics/preprocessing telemetry-truth reads), open a direct sqlite connection with a 'file:<path>?mode=ro' URI instead of instantiating DatabaseManager.",
+      "grounding": "issue-446 g2 implementer + reviewer: db_truth_loader.py bypassed DatabaseManager and used file:?mode=ro to avoid a canonical-DB write; reviewer confirmed no write path.",
+      "op": "add"
+    },
+    {
+      "id": "fastf1-posdata-decimetres",
+      "scope": "project",
+      "task_class": "general-workflow",
+      "statement": "FastF1 pos_data X/Y are in DECIMETRES, not metres \u2014 multiply by 0.1 for arc-length/distance in metres. Verified by ratio ~10 vs FastF1's own Distance column (6941.6m computed vs 6949.5m FastF1 on a Spa lap).",
+      "grounding": "issue-446 g2 review: independent throwaway script measured raw arc 69415.7 units, *0.1 = 6941.6m vs FastF1 Distance 6949.5m, ratio 9.99.",
+      "op": "add"
+    },
+    {
+      "id": "spine-lease-stale-long-crew",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "The spine engine lease goes stale after lease_stale_seconds (default 1800s) of no heartbeat; a >30min crew step will lapse it and the next mutating verb is refused until you re-claim (same id, or --force --reason). Re-claim with --force on resume rather than treating it as an error.",
+      "grounding": "issue-446 run: after the g3 multi-session crew run, 'advance execute' was REFUSED ('lease cmdr-446 is stale'); re-claimed with --force --reason and continued.",
+      "op": "add"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "work_id": "issue-495-fit-robustness",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1-success-bar",
+    "q2-recover-vs-skip",
+    "q3-diagnose-first",
+    "q4-dashboard"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load issue #495, the P0 evidence report, the architecture map for session_fit/calibration, and the lessons. Note that PR #548 (509-w3) already hardened part of the #495 cluster (flying-lap-union windows, empty-stream guard, no_accel_samples sentinel). Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1-success-bar": {
+      "id": "q1-success-bar",
+      "title": "What defines done for #495 given PR #548 already hardened part of the cluster?",
+      "imperative": "The original 18 errors + 1 no_laps were measured on the OLD physics_fits.db before #548. Resolve the success bar with the human: re-measure current failures, then (a) recover as many fits as safely possible, or (b) guarantee no-crash + honest typed-skip accounting, recovering only where physically sound.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2-recover-vs-skip": {
+      "id": "q2-recover-vs-skip",
+      "title": "Recover-vs-skip philosophy per failure pattern, under physics rigor",
+      "imperative": "Physics doctrine: fail visibly, no hidden fallback, no plausible-wrong output. A fit recovered from too-sparse/non-overlapping streams could feed a bad fit into the pool. Resolve which patterns are genuinely recoverable vs must skip-clean with a typed reason.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3-diagnose-first": {
+      "id": "q3-diagnose-first",
+      "title": "Confirm diagnose-first gate-1 with a decide-fix checkpoint",
+      "imperative": "Per lesson:diagnose-first-decide-fix + ORCHESTRATOR planning invariant + the issue's own 'trace the NoneType edge': make gate-1 an evidence-only reproduction/diagnosis on current main, with a human decide-fix checkpoint before any fix code. Confirm.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4-dashboard": {
+      "id": "q4-dashboard",
+      "title": "Visual analysis artifacts for a dashboard: scope, integration target, content, format",
+      "imperative": "User added: good visual analysis artifacts for a dashboard as we do the robustness work. Resolve: (A) integration target \u2014 standalone reproducible artifacts under reports/physics/ vs wiring into src/reporting/html_reports/ (region-crossing); (B) content \u2014 what to visualize (fit-status landscape, failure-pattern breakdown, before/after recovery, per-case stream-overlap diagnostic); (C) format/commit \u2014 text-based HTML/SVG (committable, trips no binary waiver) vs PNG (binary, trips archive c4 binary-waiver).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved: robustness + iterative standalone dashboard",
+    "findings": []
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

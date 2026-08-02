@@ -1,0 +1,1261 @@
+{
+  "work_id": "663-grip-g",
+  "type": "gated",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-verdict"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (MISSION_FRAME.md + INTERROGATION_RECORD.json), then attest c1. Note: verify_worktree_isolation.py --here was already run and pasted as the launch order's literal first step, before spine init (outside this checklist) -- attach that evidence here by reference for closeout completeness.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame + interrogation record loaded; plan intent and scope confirmed; worktree-isolation evidence referenced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 store: GripEstimateRecord + GripStore artifact family",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for: create src/physics/layer2/grip_store.py mirroring estimate_store.py's shape (EstimateRecord/EstimateStore) -- a frozen GripEstimateRecord dataclass (PK=(year,gp_name,session_type), session-level not per-constructor) with fields: year,gp_name,session_type,session_id,curve_asymptote,curve_asymptote_sigma,curve_rate,curve_rate_sigma,session_offset,session_offset_sigma,curve_offset_correlation,n_stints_used,n_drivers_used,n_laps_used,fit_status(ok|thin_fallback|error),fallback_reason,cumulative_track_laps_max,rain_flag,fitted_at,error. A GripStore class (own standalone SQLite db, own connection) with has()/upsert()/load(year,session_type,status)->DataFrame, additive-only migration (_migrate_missing_columns via PRAGMA table_info + ALTER TABLE ADD COLUMN, mirroring estimate_store.py:400-412 exactly). Write tests at tests/unit/physics/layer2/test_grip_store.py (this exact path -- g1-integrate's postcondition hardcodes it) covering has/upsert/load round-trip and the additive migration. Dispatch a subagent invoking constellation-implementer.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
+        }
+      ],
+      "constraints": [
+        "Follow estimate_store.py's exact shape/pattern (design-it-twice already skipped for this per issue #663 -- precedented, not novel)",
+        "Do not modify estimate_store.py or any existing layer2 file in this gate"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 -- src/physics/layer2/, new sibling module"
+        ],
+        "capability": [
+          "new: grip-baseline artifact storage + query surface"
+        ],
+        "constraint": [
+          "assumption:additive-only-migration"
+        ],
+        "decision": [
+          "decision pressure: PK is session-level (year,gp_name,session_type) not per-constructor, since G is field-pooled -- flag for Cartographer at reconcile"
+        ],
+        "evidence": [
+          "claim:cumulative-track-laps-reuse -- field names must carry the cumulative_track_laps convention, not invent a new axis name"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK (verified independently): simplification_limits FAILs on test_grip_store.py's two long assert-sequence test functions (CC=20/22, limit<20). Rework: split those two test functions into smaller helpers/parametrized assertions. No production-code (grip_store.py) change needed."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/663-grip-g/crew-handoffs/g1-implement-result.md",
+            "summary": "grip_store.py + test_grip_store.py created, 9/9 pass (verified independently by commander with the corrected py launcher), both files not gitignored."
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Reviewer BLOCK (verified independently): simplification_limits FAILs on test_grip_store.py's two long assert-sequence test functions (CC=20/22, limit<20). Rework: split those two test functions into smaller helpers/parametrized assertions. No production-code (grip_store.py) change needed.",
+            "ts": "2026-07-25T16:08:01.077117+00:00"
+          }
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/663-grip-g/crew-handoffs/g1-implement-result.md",
+            "summary": "REWORK attempt-2: test_grip_store.py's two over-complex test functions restructured (dict/list+loop pattern), simplification_limits now PASS, 9/9 tests still pass, grip_store.py untouched. Verified independently by commander."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 store: review",
+      "imperative": "Fill REVIEWER_HANDOFF from g1-implement's IMPLEMENTER_RESULT. Verify: PK shape correct, additive migration mirrors estimate_store.py's exact pattern, has/upsert/load work, tests exist and pass (tests/unit/physics/layer2/test_grip_store.py). Dispatch a subagent invoking constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (rework attempt-2) received for g1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g1-implement"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/663-grip-g/crew-handoffs/g1-review-result.md",
+            "summary": "Independent review: implementation+evidence sound and reproduced, but simplification_limits FAILs on 2 over-complex test functions in test_grip_store.py (CC=20/22, limit<20). Fix confined to test file."
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Reviewer BLOCK (verified independently): simplification_limits FAILs on test_grip_store.py's two long assert-sequence test functions (CC=20/22, limit<20). Rework: split those two test functions into smaller helpers/parametrized assertions. No production-code (grip_store.py) change needed.",
+            "ts": "2026-07-25T16:08:01.077117+00:00"
+          }
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/663-grip-g/crew-handoffs/g1-review-result.md",
+            "summary": "Re-check APPROVE: rework fixed the sole prior blocker (simplification_limits), 9/9 tests pass, grip_store.py untouched, no assertion coverage dropped. Verified independently by commander."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 store: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the test command yourself, then advance (command postcondition re-runs on advance). BLOCK: send back for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) received for g1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "grip_store tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_store.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 fit: grip_baseline.py curve + offset + thin-session fallback",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for: create src/physics/layer2/grip_baseline.py. (a) cumulative-track-laps helper: vectorized per-session replication of session_race.compute_cumulative_track_laps's exact counting convention (lap_number < X, ALL cars, regardless of valid_lap/track_status) -- one query per session returning a per-lap cumulative count, not N per-lap calls; cite session_race.py:268-303 as the authoritative definition to match exactly (a small regression test comparing the vectorized result to compute_cumulative_track_laps's own output on a handful of real (session_id, lap_number) pairs is required evidence). (b) generalize tyre_supplant.race_degradation_slopes's OLS design (stint-ordinal fixed effects + standardized fuel*lap_number term + per-compound tyre_life slope) by adding a session_type parameter to the underlying lap-read query (currently hardcoded to 'R' in _read_clean_race_laps) -- reuse the regression design unchanged, do not reimplement it; call the existing function with the new parameter rather than duplicating its body where feasible, or extract a shared helper if tyre_supplant.py's structure requires it (note: do not modify tyre_supplant.py itself in this gate if avoidable -- prefer a grip_baseline.py-local generalized reader; if extraction genuinely requires editing tyre_supplant.py, keep the edit additive-only, i.e. adding an optional session_type param defaulting to 'R', never changing existing callers' behavior). (c) saturating intra-session curve fit (asymptote*(1-exp(-rate*x)) or equivalent, field-pooled per session) + free per-session offset, Student-t residuals via src/common/student_t.predictive_t (cite the exact call signature). (d) thin-session rule: wide-sigma fallback per the frozen decision (floor >=2 stints of >=4 laps reusing tyre_supplant.MIN_STINT_LAPS; below floor, offset via within-weekend nearest-neighbor extrapolation with inflated sigma, never a dropped/NULL record -- fit_status='thin_fallback'). (e) RAIN-FLAG re-estimation (frozen Mission requirement, not optional): when a session's rain_flag is set (from sessions.rainfall or equivalent weather column), the session's offset fit MUST re-estimate with an explicitly inflated sigma (a named multiplicative factor, not reused from the thin-session fallback's factor -- these are two distinct triggers sharing the wide-sigma MECHANISM, each gets its own named constant) rather than treating rain_flag as an inert stored column. Write tests at tests/unit/physics/layer2/test_grip_baseline.py (this exact path -- g2-integrate's postcondition hardcodes it) covering: the cumulative-laps helper against real (session_id, lap_number) pairs compared to compute_cumulative_track_laps's own output; the thin-session fallback triggering on a synthetic 2-lap-stint fixture; the rain-flag fallback triggering and producing a wider sigma than the equivalent dry-session fit. Dispatch a subagent invoking constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 store artifact exists (GripEstimateRecord shape frozen)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 (GripEstimateRecord shape) complete/APPROVED."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Student-t residuals required (no-baked-normality)",
+        "Do not modify existing tyre_supplant.py callers' behavior -- additive-only if touched at all",
+        "Thin-session rule must be the wide-sigma fallback exactly as resolved at understand (q3), not a silent skip",
+        "Rain-flag wide-sigma re-estimation is a frozen Mission requirement (LAUNCH_ORDER-663.md Mission: 'rain flag -> wide-sigma re-estimate') -- must have real fit-time effect, not ship as an inert schema column"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2"
+        ],
+        "capability": [
+          "new: G's fit logic"
+        ],
+        "constraint": [
+          "assumption:student-t-residuals"
+        ],
+        "decision": [
+          "decision:thin-session-explicit -- wide-sigma fallback, floor=2 stints of 4 laps @grade: settled/measured \u00b7 leans g2-implement",
+          "decision:session-scope-uniform -- all session types, generalized session_type parameter @grade: settled/measured \u00b7 leans g2-implement"
+        ],
+        "evidence": [
+          "claim:cumulative-track-laps-reuse",
+          "claim:tyre-supplant-correction-reused"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/663-grip-g/crew-handoffs/g2-implement-result.md",
+            "summary": "grip_baseline.py fit logic complete (cumulative-laps helper matches compute_cumulative_track_laps exactly; race_degradation_slopes reused unchanged via a local session_type-generalized reader, tyre_supplant.py untouched; saturating curve + predictive_t sigmas; thin-session fallback (3.0x) + rain-flag fallback (4.0x, distinct constant, verified 4.000x sigma ratio) both real+tested. 12/12 tests, simplification PASS. Verified independently by commander."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 fit: review",
+      "imperative": "Fill REVIEWER_HANDOFF from g2-implement's IMPLEMENTER_RESULT. Verify: cumulative-laps helper matches compute_cumulative_track_laps's convention exactly (check the regression test); the OLS design is genuinely reused not reimplemented (diff against tyre_supplant.race_degradation_slopes); Student-t residuals actually used (not a Gaussian in disguise); thin-session fallback triggers correctly on real thin-session fixtures (e.g. a synthetic 2-lap-stint session) and never returns a silently-dropped record; RAIN-FLAG re-estimation has a real, testable fit-time effect (wider sigma than the equivalent dry fit) and is not an inert stored column. Dispatch a subagent invoking constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g2."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/663-grip-g/crew-handoffs/g2-review-result.md",
+            "summary": "APPROVE, verified independently: reuse-not-reimplement confirmed by source comparison (cumulative-laps regression-matched, race_degradation_slopes imported+called unchanged, tyre_supplant.py zero diff), predictive_t genuine Student-t (not Gaussian), both fallbacks real+tested (rain ratio reproduced exactly 4.000000), 12/12 tests, simplification PASS. 2 out-of-scope findings confirmed genuine (fuel confound, rainfall schema/storage mismatch)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 fit: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the test command yourself, then advance. BLOCK: send back for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) received for g2."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "grip_baseline tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 batch: grip_batch.py driver + get_grip_at query surface",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for: create src/physics/layer2/grip_batch.py with run_grip_batch(store, *, seasons, db_path, force=False, session_type=None, ..., log=print) -> dict, mirroring estimate_batch.run_estimate_batch's injectable-collaborator-fn pattern and per-unit failure isolation (one session's fit failing writes an error record and continues). Add a get_grip_at(store_or_records, year, gp_name, session_type, cumulative_track_laps) -> (mu, sigma) consumer-facing query function to grip_store.py (the actual 'subtract G' call every future consumer uses). Write tests at tests/unit/physics/layer2/test_grip_batch.py (this exact path -- g3-integrate's postcondition hardcodes it) covering per-unit failure isolation and get_grip_at's contract. Dispatch a subagent invoking constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 fit logic exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 (fit logic) complete/APPROVED."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Mirror estimate_batch.py's injectable-fn seam so tests can fake DB/fit calls"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2"
+        ],
+        "capability": [
+          "new: G batch driver + consumer query surface"
+        ],
+        "constraint": [],
+        "decision": [],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/663-grip-g/crew-handoffs/g3-implement-result.md",
+            "summary": "grip_batch.py (run_grip_batch, injectable-fn, per-unit failure isolation) + get_grip_at (delta-method sigma propagation, GripRecordNotFoundError) built. 22/22 tests, simplification PASS. grip_store.py additive-only edit confirmed. FLAGGED: weekend-neighbor wiring for thin-session fallback not implemented in batch driver (fit_session_grip_baseline's neighbor-lookup mechanism exists+tested in g2 directly, but run_grip_batch doesn't pass sibling-session fits across sessions -- real production gap, needs review scrutiny for whether it affects g4/g5's GATING harnesses)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 batch: review",
+      "imperative": "Fill REVIEWER_HANDOFF from g3-implement's IMPLEMENTER_RESULT. Verify: per-unit failure isolation actually works (one bad session doesn't sink the batch), get_grip_at has a clear/testable contract. Dispatch a subagent invoking constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g3."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/663-grip-g/crew-handoffs/g3-review-result.md",
+            "summary": "APPROVE, verified independently: 22/22 tests, isolation genuine, get_grip_at honest-sigma provably safe. Weekend-neighbor gap decisively ruled (b) out-of-scope -- g4 uses fit_grip_baseline_from_laps directly (has weekend_neighbors param), g5 imports the fit pipeline directly, neither routes through run_grip_batch. Flagged as triage tc1."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 batch: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the test command yourself, then advance. BLOCK: send back for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) received for g3."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "grip_batch tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_batch.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_batch.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 GATING: held-out reconciliation harness + run",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for: build a held-out reconciliation evaluation harness at tests/unit/physics/layer2/test_grip_heldout.py (this exact path -- g4-integrate's postcondition hardcodes it; commit to this pytest location, not a standalone scripts/ alternative) implementing the frozen decision (interrogation q4): ~50/50 driver split per session (stratified by team where session_classifications.team available, else random with fixed seed); fit G using ONLY fit-set drivers' laps; compute same-driver/compound/similar-fuel cross-session reconciliation error (before vs after subtracting G) using ONLY held-out drivers. LEAKAGE DISCIPLINE (LAUNCH_ORDER-663.md Inherited Context, directly named as relevant to this gate): the reconciliation 'truth' pace correction must NOT be drawn from the exact same signal family as G's own fit correction in a way that would yield a spuriously-high pass (the launch order names this failure mode explicitly: 'a truth channel from the same signal family... yields spuriously high LOO P -- gate P>=0.95-means-leakage'); before trusting any near-perfect reconciliation result, verify the truth-side OLS is full-rank (the launch order names the specific collinearity risk: within-stint fixed-effects + tyre_life are collinear since lap_number = offset + tyre_life within a stint -- use driver or race fixed-effects for the fuel term, not stint fixed-effects, on the truth side) and report the rank-check result explicitly as evidence. Test assertions must exit 0 whenever the harness runs correctly and reports a result (pass OR a measured null) -- do NOT assert the reconciliation metric improves; assert only that the harness ran, the split was genuinely disjoint, and a result was computed and logged (the Honest-Null Clause: a measured negative is a complete, successful deliverable, and the pytest command must not itself become a pass/fail trap on the SCIENTIFIC outcome). Run it on a REPRESENTATIVE SLICE of the 2023 DB (3-5 contrasting circuits per Budget latitude -- a full 22-event season fit is not required; state the exact scope run). This is a REAL run against data/f1_data_2023.db (main checkout, pass path explicitly), not a synthetic-only check. Report the before/after reconciliation error numbers plainly. Bound/detach if the fit proves long (#650 thread-cap tax) per Budget guidance -- do not idle on it. Dispatch a subagent invoking constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 batch + query surface exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 (batch driver + query surface) complete/APPROVED."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with real held-out numbers (pass or measured null) on a stated 2023 slice, plus the truth-side rank/leakage check result",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "DB-only analysis, path data/f1Brainz/data/f1_data_2023.db passed explicitly",
+        "State the exact circuit/session scope run -- do not silently claim full-season coverage",
+        "A null result must be reported with full rigor, not papered over (Honest-Null Clause)",
+        "Test assertions must not fail merely because the scientific result is a null -- only a broken/leaky harness should fail the pytest command",
+        "Truth-side reconciliation OLS must be verified full-rank (driver/race FE for the fuel term, not stint FE) and checked against the named leakage failure mode before trusting a near-perfect pass"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2"
+        ],
+        "capability": [
+          "G's held-out acceptance evidence"
+        ],
+        "constraint": [
+          "constraint:db-only-analysis"
+        ],
+        "decision": [
+          "decision:held-out-not-in-sample @grade: settled/human \u00b7 leans g4-implement,g4-review",
+          "decision:heldout-split-axis @grade: guess \u00b7 leans g4-implement \u00b7 settle: run on the real slice, adjust split scheme if it proves too coarse"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/663-grip-g/crew-handoffs/g4-implement-result.md",
+            "summary": "MEASURED NEGATIVE (honest-null): subtracting G worsens held-out reconciliation RMS by +155.5% (3.02s->7.72s aggregate, 0/4 circuits improved), 4 contrasting 2023 circuits, 37 held-out cells. Diagnosed to structurally unidentified per-session curve fits (offset<->asymptote corr near +-1). Leakage-avoided by design (regression-free truth side). Honest-null operationalized correctly (no pytest assertion encodes improvement). Verified independently by commander: harness reproduces exactly, no improvement-assertion found in source."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 GATING: review",
+      "imperative": "Fill REVIEWER_HANDOFF from g4-implement's IMPLEMENTER_RESULT. Verify: the split is genuinely disjoint (fit-set laps never leak into the held-out scoring), the reconciliation metric is computed correctly, the reported result (pass or null) is grounded in re-runnable evidence -- re-run the harness yourself on at least one circuit to spot-check. LEAKAGE CHECK (LAUNCH_ORDER-663.md Inherited Context): confirm the truth-side reconciliation OLS is full-rank and uses driver/race fixed-effects (not stint fixed-effects) for the fuel term; treat a near-perfect (P>=0.95-style) pass with suspicion until the rank/independence check is confirmed, not celebrated at face value. Confirm the pytest assertions do not fail merely on a scientific null (only a broken harness should BLOCK). If the driver-split scheme was changed from the frozen 50/50-stratified default (decision:heldout-split-axis is graded 'guess'), confirm the reasoning was recorded before this gate closed. Dispatch a subagent invoking constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g4."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/663-grip-g/crew-handoffs/g4-review-result.md",
+            "summary": "APPROVE -- REAL, not artifact. All 8 close criteria independently verified: split disjoint, fit-set-only fit, held-out-only scoring, leakage-avoidance-by-design VERIFIED (grep confirms zero executable regression calls on truth side), swap negative-control genuinely wired (numerically distinct), degenerate Monaco FP2 fit reproduced to full precision, all 10 asserts are harness-validity-only (none encodes improvement), scope honest (4 real circuits vs real DB). Triage candidates: G's curve fit structurally unidentified on FP data (reopen-g2 vs accept-null is commander's call); sigma-gating downstream consumers."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 GATING: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the test command yourself, then advance. BLOCK: send back for rework or raise a blocker. A measured-null verdict from the harness is still an APPROVE-able review outcome (Honest-Null Clause) as long as the harness itself is sound -- do not conflate 'the harness is broken' (BLOCK) with 'the harness correctly found no improvement' (APPROVE + null recorded).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) received for g4."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "held-out harness tests/run pass (or a sound null is recorded)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_heldout.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_heldout.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "G5 GATING: synthetic recovery/separability harness + run",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for: build a synthetic-recovery evaluation harness at tests/unit/physics/layer2/test_grip_synthetic_recovery.py (this exact path -- g5-integrate's postcondition hardcodes it) implementing the frozen decision (interrogation q5): inject a KNOWN saturating curve + KNOWN per-session offsets into simulated field-pooled pace data (matching real 2023 session shapes -- driver counts, stint structure, noise levels), run G's actual fit pipeline (from g2, imported directly -- not a reimplementation) on the synthetic data, and check across >=50 replicates: (a) parameter recovery -- recovered curve params + each session offset land within the fit's OWN reported 2-sigma predictive interval (via predictive_t) of injected ground truth in >=90% of replicates; (b) separability -- the fit's estimated correlation between curve-initial-value and offset has magnitude <0.8 in >=90% of replicates. Report exact pass/fail rates. Test assertions must exit 0 whenever the harness runs correctly and reports rates (pass OR a measured null) -- do NOT assert the rates clear the threshold; assert only that the harness ran the full replicate count and computed+logged both rates (the Honest-Null Clause: a failure on either axis is a measured null, a complete deliverable, and the pytest command must not itself become a pass/fail trap on the SCIENTIFIC outcome). Report with full rigor and scope, do not paper over a null. Dispatch a subagent invoking constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 fit logic exists (the same pipeline g5 tests must be reused, not a separate implementation)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 (fit logic) complete/APPROVED, the same pipeline g5 must call."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with real synthetic recovery/separability numbers (pass or measured null)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
+        }
+      ],
+      "constraints": [
+        "Must call G's ACTUAL fit pipeline from g2, not a reimplementation, or the test proves nothing about the real module",
+        "A null result must be reported with full rigor, not papered over (Honest-Null Clause)",
+        "Test assertions must not fail merely because the scientific result is a null -- only a broken harness should fail the pytest command"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2"
+        ],
+        "capability": [
+          "G's synthetic-recovery acceptance evidence"
+        ],
+        "constraint": [],
+        "decision": [
+          "decision:synthetic-identifiability @grade: settled/human \u00b7 leans g5-implement,g5-review",
+          "decision:synthetic-criterion @grade: guess \u00b7 leans g5-implement \u00b7 settle: run the harness, adjust the 0.8 threshold with recorded reasoning if it proves miscalibrated against the fit's natural behavior"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/663-grip-g/crew-handoffs/g5-implement-result.md",
+            "summary": "SPLIT/measured-null: recovery 94.4% PASS (but only via honest sigma-widening at low SNR), separability 31.9% FAIL (median |corr|=0.835, worst at high-confidence/high-SNR where it should be cleanest -- 0.939 median even in the estimator's best case). SYNTHETICALLY CONFIRMS g4's real-data identifiability diagnosis with known ground truth. 72 replicates, 6-cell SNR x bend sweep, real fit_grip_baseline_from_laps called directly. Verified independently by commander: harness reproduces exactly, no pass-threshold assertion found in source."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5 GATING: review",
+      "imperative": "Fill REVIEWER_HANDOFF from g5-implement's IMPLEMENTER_RESULT. Verify: the harness genuinely calls g2's real fit function (not a stub/reimplementation -- check the import), the synthetic data generation is realistic (matches real session shapes), the pass/fail rates are computed correctly and re-runnable, and the pytest assertions do not fail merely on a scientific null (only a broken harness should BLOCK). If the 0.8 separability threshold or the >=50 replicate count was changed from the frozen default (decision:synthetic-criterion is graded 'guess'), confirm the reasoning was recorded before this gate closed. Dispatch a subagent invoking constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g5."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/663-grip-g/crew-handoffs/g5-review-result.md",
+            "summary": "APPROVE -- split result verified sound and real. Reviewer independently fitted 5 REAL 2023 sessions (residual RMS 12.2-14.5s) confirming the harness's low-SNR tier is honest (if anything easier than reality); separability fails even at the estimator's cleanest tier (median|corr|=0.939), so the finding doesn't hinge on SNR calibration. All 7 close criteria pass. Independently confirms g4 on synthetic data with known ground truth."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5 GATING: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the test command yourself, then advance. BLOCK: send back for rework or raise a blocker. A measured-null verdict is still APPROVE-able if the harness is sound (Honest-Null Clause).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) received for g5."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "synthetic-recovery harness tests/run pass (or a sound null is recorded)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_synthetic_recovery.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1",
+          "attested": {
+            "evidence": "e-g5-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_synthetic_recovery.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-verdict": {
+      "id": "g6-verdict",
+      "title": "G6: verdict synthesis (reasoning gate, no crew)",
+      "imperative": "REASONING GATE (crew-waived: pure synthesis of already-produced g1-g5 evidence, no new code/independently-verifiable change). Synthesize the overall issue #663 verdict (built+gates-pass / built+measured-null / blocked) from g4/g5's actual results, write it into notes-663.md, and record simplification_limits + triage candidates: (1) tyre_separation.py reconciliation per interrogation q7 (a second within-session-covariate implementation now exists per the ADR's own Review Trigger), (2) #511 grip_decay_prior_k unification (physics_config.py + session_fit.py's two independent hardcoded literals), (3) layer2_evolution.py wiring to consume G (closes its own floated 'no bridge' Known Limit), (4) GripEstimateRecord's session-level PK (year,gp_name,session_type) vs EstimateRecord's per-constructor PK -- a durable structural divergence worth a Cartographer decision anchor at reconcile (MISSION_FRAME.md decision pressure). Run py -m src.utils.simplification_limits on touched paths (strict) before attesting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 and g5 GATING results integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 (held-out, MEASURED NEGATIVE) and g5 (synthetic-recovery, MEASURED SPLIT confirming g4) both integrated and APPROVED."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification_limits passes on touched paths",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths src/physics/layer2/grip_baseline.py src/physics/layer2/grip_store.py src/physics/layer2/grip_batch.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-verdict-1"
+        },
+        {
+          "id": "c2",
+          "statement": "overall verdict + triage candidates recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Verdict synthesized to C:/Programs/f1Brainz/.agent-work/epic-659/notes-663.md (main checkout, per launch order file ownership): built + measured-null. 9 triage candidates recorded (curve-parameterization identifiability fix is the dominant one; tyre_separation reconciliation, #511 unification, layer2_evolution wiring, PK decision-pressure, weekend-neighbor batch wiring tc1, rainfall schema mismatch, fuel-residual, sigma-gating downstream)."
+        }
+      ],
+      "constraints": [
+        "crew-waived: pure synthesis, this Commander already holds full context from g1-g5"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-verdict-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths src/physics/layer2/grip_baseline.py src/physics/layer2/grip_store.py src/physics/layer2/grip_batch.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-663-session1",
+    "status": "released",
+    "claimed_at": "2026-07-25T15:44:18.796745+00:00",
+    "last_heartbeat": "2026-07-25T18:13:03.642940+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T18:13:07.931171+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Plan context confirmed: MISSION_FRAME.md + INTERROGATION_RECORD.json loaded; worktree-isolation evidence was captured as the launch order's literal first step before spine init. Beginning g1-implement.",
+      "mechanical": false,
+      "ts": "2026-07-25T15:44:26.160617+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer subagent dispatched (Agent tool, recorded via run_crew.py --backend external, verified fresh via --verify-result). grip_store.py + test_grip_store.py created mirroring estimate_store.py's shape exactly (session-level PK, additive-only migration, has/upsert/load, error_record). Independently re-verified by commander: git status shows both new untracked files, git check-ignore exit=1 both, pytest 9/9 pass using the corrected launcher path (WindowsApps py.exe -- the plain 'py' PATH-shim environment gotcha was discovered here and fixed via amend across all 6 gates' postconditions). Proceeding to g1-review.",
+      "mechanical": false,
+      "ts": "2026-07-25T15:59:16.891303+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer dispatched, independently re-ran all evidence (pytest 9/9 via corrected launcher, check-ignore, additive-migration test genuineness), confirmed simplification_limits FAIL on 2 test functions -- BLOCK. Verified independently by commander: reproduced identical FAIL. Proceeding to g1-integrate to route rework.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:07:49.527070+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-implement",
+      "reopen": true,
+      "reason": "Reviewer BLOCK (verified independently): simplification_limits FAILs on test_grip_store.py's two long assert-sequence test functions (CC=20/22, limit<20). Rework: split those two test functions into smaller helpers/parametrized assertions. No production-code (grip_store.py) change needed.",
+      "ts": "2026-07-25T16:08:01.077117+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-review",
+      "reopen": true,
+      "reason": "Reviewer BLOCK (verified independently): simplification_limits FAILs on test_grip_store.py's two long assert-sequence test functions (CC=20/22, limit<20). Rework: split those two test functions into smaller helpers/parametrized assertions. No production-code (grip_store.py) change needed.",
+      "ts": "2026-07-25T16:08:01.077117+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g1-implement",
+      "why": "Rework attempt-2 dispatched (narrow scope: fix cyclomatic-complexity BLOCKER in test_grip_store.py only). Independently re-verified by commander: simplification_limits PASS (0 violations, was CC=20/22), pytest 9/9 pass, grip_store.py untouched (git status confirms only the test file's content changed, no new/deleted files). Proceeding to re-review.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:13:36.622267+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g1-review",
+      "why": "Re-check reviewer dispatched, independently re-ran simplification_limits (PASS) + pytest (9/9) + field spot-check (all 20/11 fields covered, nothing dropped) + git status (grip_store.py untouched). Verdict APPROVE, verified independently by commander. Proceeding to g1-integrate.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:20:08.357451+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g1-integrate",
+      "why": "APPROVE verdict confirmed via evidence reference e-g1-review-2. Test command (corrected launcher, via amend) re-run by advance itself; commander also independently pre-verified simplification_limits+pytest+git-status prior. g1 (grip_store.py artifact family) complete. Proceeding to g2 (fit logic).",
+      "mechanical": false,
+      "ts": "2026-07-25T16:20:32.158507+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g2-implement",
+      "why": "Implementer dispatched, built grip_baseline.py per spec: cumulative-laps helper regression-matches compute_cumulative_track_laps on real 2023 data; task(b) resolved via a LOCAL session_type-generalized reader (tyre_supplant.py never touched, zero risk to existing R callers); curve+offset fit uses predictive_t for Student-t sigmas, curve_offset_correlation from covariance off-diagonal; thin-session (3.0x) and rain-flag (4.0x) fallbacks both implemented as distinct named constants with real tested effect (rain sigma ratio verified exactly 4.000x). Independently re-verified by commander: 12/12 pytest pass, simplification_limits PASS, tyre_supplant.py/grip_store.py untouched. Two real out-of-scope findings noted for triage: fuel not fully removed from residual (race_degradation_slopes doesn't expose its fuel term) and sessions.rainfall schema/storage mismatch (declared REAL, stored as int64 blob; session_surface_features.session_rain_flag is a cleaner canonical source). Proceeding to g2-review.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:38:35.458578+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g2-review",
+      "why": "Reviewer APPROVED, independently verified by commander (12/12 tests, tyre_supplant.py confirmed untouched). Proceeding to g2-integrate.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:47:44.612360+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g2-integrate",
+      "why": "APPROVE confirmed via e-g2-review-1. Test command re-run by advance itself (corrected launcher). g2 (fit logic) complete. Proceeding to g3 (batch driver + query surface). Triage candidates noted for g6: fuel confound (race_degradation_slopes doesn't expose fuel coefficient), sessions.rainfall schema/storage mismatch (declared REAL, stored as int64 blob).",
+      "mechanical": false,
+      "ts": "2026-07-25T16:47:56.994937+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g3-implement",
+      "why": "Implementer dispatched, built grip_batch.py + get_grip_at per spec. Independently re-verified by commander: 22/22 tests pass, simplification_limits PASS (3 files). Real flagged gap (weekend-neighbor wiring not in batch driver) noted for reviewer scrutiny -- need to determine if this affects g4/g5's GATING acceptance evidence before accepting as a deferred triage candidate. Proceeding to g3-review with this as an explicit review focus.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:57:03.769142+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g3-review",
+      "why": "Reviewer APPROVED with decisive scrutiny on the weekend-neighbor question, independently verified by commander (22/22 tests, fit_grip_baseline_from_laps confirmed to exist at line 442). Proceeding to g3-integrate.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:04:30.956906+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g3-integrate",
+      "why": "APPROVE confirmed via e-g3-review-1. g3 (batch driver + query surface) complete. Core module (g1+g2+g3) done: grip_store.py, grip_baseline.py, grip_batch.py all built+reviewed+approved. Proceeding to g4 (held-out GATING acceptance harness) -- the critical acceptance evidence gate. Triage candidate tc1 (weekend-neighbor batch wiring) confirmed non-blocking for g4/g5, carried to g6.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:04:42.489560+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g4-implement",
+      "why": "Implementer dispatched, built the held-out reconciliation GATING harness against real 2023 data (4 circuits, 37 cells). Result is a rigorous MEASURED NEGATIVE, not a positive -- Honest-Null Clause applies. Independently re-verified by commander: pytest reproduces exact same numbers, simplification_limits PASS, grepped all assertions in the test file and confirmed none encodes 'G must improve' (only harness-validity: split-disjoint, finite values, cell counts, regression-free flag). Proceeding to g4-review with explicit instruction to scrutinize whether the negative is real or a harness artifact (not to rubber-stamp given the significance of the finding).",
+      "mechanical": false,
+      "ts": "2026-07-25T17:32:51.402119+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g4-review",
+      "why": "Reviewer APPROVED after rigorous independent scrutiny of all 8 close criteria, including independently reproducing the degenerate Monaco FP2 fit to full precision. Commander independently spot-checked the leakage-avoidance grep claim (confirmed zero executable regression calls on truth-side path, only comments/docstrings). The measured negative is REAL, not a harness artifact. Proceeding to g4-integrate.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:42:03.717479+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g4-integrate",
+      "why": "APPROVE confirmed via e-g4-review-1. g4 GATING gate 1 (held-out reconciliation) complete: MEASURED NEGATIVE, real and rigorously verified (harness sound, result honest). Test command re-run by advance itself. Proceeding to g5 (synthetic-recovery GATING gate 2).",
+      "mechanical": false,
+      "ts": "2026-07-25T17:42:15.402132+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g5-implement",
+      "why": "Implementer dispatched, built the synthetic-recovery GATING harness (72 replicates, real fit pipeline, SNR x bend regime sweep). Result: measured SPLIT -- recovery passes (94.4%) via honest sigma-widening, separability fails (31.9%, median |corr|=0.835), confirming g4's real-data finding on synthetic data with known truth (even the estimator's cleanest regime shows median |corr|=0.939). Independently re-verified by commander: pytest reproduces exact rates, simplification PASS, grepped assertions and confirmed none encodes a pass-threshold on the rates. Proceeding to g5-review with explicit instruction to scrutinize rigor given the significance (both GATING gates now show the same defect).",
+      "mechanical": false,
+      "ts": "2026-07-25T18:00:35.635059+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g5-review",
+      "why": "Reviewer APPROVED with a genuine real-data SNR calibration spot-check (5 real 2023 sessions independently fitted). Commander independently re-ran the harness, reproduced identical pass. Both GATING gates (g4 held-out + g5 synthetic) now conclusively point at the same defect: G's saturating curve+offset is structurally non-separable on realistic F1 session shapes. Proceeding to g5-integrate.",
+      "mechanical": false,
+      "ts": "2026-07-25T18:10:56.374171+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g5-integrate",
+      "why": "APPROVE confirmed via e-g5-review-1. g5 GATING gate 2 (synthetic-recovery) complete: measured SPLIT (recovery passes hollowly, separability fails decisively), independently confirming g4's real-data finding. Both GATING acceptance criteria for issue #663 are now evaluated with full rigor: the deliverable is a measured/diagnosed structural non-identifiability, not a pass. Proceeding to g6 (verdict synthesis).",
+      "mechanical": false,
+      "ts": "2026-07-25T18:11:09.951450+00:00"
+    },
+    {
+      "id": "w-21",
+      "gate": "g6-verdict",
+      "why": "Verdict synthesized (built+measured-null, both GATING gates converge on the same real, diagnosed identifiability defect). simplification_limits re-run clean (PASS, 3 files). All 6 gates complete. execute.json fully driven.",
+      "mechanical": false,
+      "ts": "2026-07-25T18:13:03.642940+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-07-25T15:58:25.971033+00:00",
+      "reason": "g1-implement's own evidence surfaced a real environment defect: 'py' on this Bash-tool sandbox's PATH resolves to a codex-runtime shim lacking scipy/fastf1 (confirmed against the unmodified estimate_store.py too -- pre-existing, not caused by this run), while the real Windows py launcher lives at /c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe. All 6 gates' postcondition test/check commands authored at plan time used bare 'py', which would false-BLOCK every remaining gate's automated advance despite correct implementation work. Corrected via retext-check (not a hand-edit) before any of these gates enter their check-command phase.",
+      "authority": "commander (self-authored plan-time check defect, corrected per commander-core.md 'self-authored reasoning-gate checks need review scrutiny' doctrine -- applies equally to crew-gate check commands discovered wrong at execution time)",
+      "ops": [
+        "retext-check g1-integrate.c1",
+        "retext-check g2-integrate.c1",
+        "retext-check g3-integrate.c1",
+        "retext-check g4-integrate.c1",
+        "retext-check g5-integrate.c1",
+        "retext-check g6-verdict.c1"
+      ]
+    },
+    {
+      "ts": "2026-07-25T18:12:48.699327+00:00",
+      "reason": "g6-verdict's postcondition command used the non-existent --strict flag (the real CLI only accepts --paths, as g1-g5's own postconditions correctly used). Self-authored plan-time check defect (same class as the earlier py-launcher amendment), caught by actually running the command before advancing rather than discovering it as a false-BLOCK at closeout.",
+      "authority": "commander (self-authored check defect, corrected per commander-core.md self-authored-reasoning-gate-checks-need-review-scrutiny doctrine)",
+      "ops": [
+        "retext-check g6-verdict.c1"
+      ]
+    }
+  ]
+}

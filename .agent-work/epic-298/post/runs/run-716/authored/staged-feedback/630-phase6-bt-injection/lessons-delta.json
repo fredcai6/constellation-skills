@@ -1,0 +1,31 @@
+{
+  "work_id": "630-phase6-bt-injection",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/staged-feedback/630-phase6-bt-injection/AGENT_FEEDBACK.md 2026-07-25 630-phase6-bt-injection: bare 'py' launcher shadowed to a pytest-less codex runtime throughout this run; used the pinned interpreter C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe for every test/verification command across all 3 gates + triage + PR review."
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": ".agent-work/staged-feedback/630-phase6-bt-injection/AGENT_FEEDBACK.md 2026-07-25 630-phase6-bt-injection: G1-G3 handoffs pre-researched and cited exact file:line seam signatures (e.g. verified 'no argparse flag exists for quali_pace_anchor_enabled' via grep before writing the G2 handoff, verified the real 11-name physics axis vocabulary before writing G3's axis_name section) -- crew Workflow Feedback across all 3 gates independently confirmed near-zero rediscovery cost as a direct result."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": ".agent-work/staged-feedback/630-phase6-bt-injection/AGENT_FEEDBACK.md 2026-07-25 630-phase6-bt-injection: durable_root() resolved to the WORKTREE (not the main checkout) because an active Admiral epic-lease spine.json exists in the main checkout right now -- the fencing exception fired for real, confirming this lesson's mechanism is live and correctly gates a concurrent-epic scenario, not just a hypothetical."
+    },
+    {
+      "op": "export",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/staged-feedback/630-phase6-bt-injection/CONSTELLATION_FEEDBACK.md 2026-07-25 f1Brainz 630-phase6-bt-injection entry (Lesson: lesson:engine-artifact-attest) -- dry-run flagged a bare confirm as recurrence-debt (16th recurrence) rather than new signal, so exported instead with a concrete upstream-fix proposal."
+    },
+    {
+      "op": "export",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/staged-feedback/630-phase6-bt-injection/CONSTELLATION_FEEDBACK.md 2026-07-25 f1Brainz 630-phase6-bt-injection entry (Lesson: lesson:run-crew-cli-launcher-misfit) -- dry-run flagged a bare confirm as recurrence-debt (11th recurrence) rather than new signal, so exported instead with a concrete upstream-fix proposal."
+    }
+  ]
+}

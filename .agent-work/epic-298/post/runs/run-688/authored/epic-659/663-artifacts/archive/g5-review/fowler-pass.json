@@ -1,0 +1,20 @@
+{
+  "work_id": "663-grip-g-g5-review",
+  "diff_ref": "tests/unit/physics/layer2/test_grip_synthetic_recovery.py (new file, ~406 lines, untracked/committable)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "overridden", "finding": "run_replicate scores three parallel per-parameter coverages (cov_off/cov_asy/cov_rate) and two_sigma_covers takes a (mu,sigma,n_eff,truth) quadruple recurring 3x", "override": {"repo_standard": "CREW_CONTEXT minimal-change + test-locality; global-crew 'small composable units, explicit contracts'", "reason": "the three parameters (offset, asymptote, rate) are distinct identifiability axes reported SEPARATELY by design — the per-axis coverage breakdown IS part of the deliverable (it is what reveals covAsy 66.7% in the confident regime). Collapsing them into a param-object would obscure the per-axis diagnostic. Standard subordinates the smell."}},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "large module docstring + dense inline comments on the SNR calibration, honest-null clause, and the sqrt(1+1/n_eff) double-count", "override": {"repo_standard": "CREW_CONTEXT: physics changes need highest-applicable truth-anchored evidence; this is a GATING acceptance-evidence harness; global-everyone 'fail visibly, keep rationale explicit'", "reason": "the comments carry the GATING scientific CALIBRATION rationale a reviewer/commander MUST read to judge the split result (why low-SNR ~0.14 is the real regime, why i.i.d. noise is the benign case, why re-passing sigma biases toward PASS). They explain WHY the experiment is calibrated as it is, not WHAT trivial code does — this is required evidence, not deodorant masking bad code. Confirmed against source: the code itself is clear. Standard subordinates the smell."}}
+  ],
+  "rail_exception": null
+}

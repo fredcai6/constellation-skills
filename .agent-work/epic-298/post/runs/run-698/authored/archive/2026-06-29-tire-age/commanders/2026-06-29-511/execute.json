@@ -1,0 +1,856 @@
+{
+  "work_id": "511",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-populate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Commander confirms execution context before dispatch: inherited global doctrine + ORCHESTRATOR_CONTEXT + GLOSSARY + physics packet + LESSONS Active already read at the spine context step; MISSION_FRAME.md and PROBLEM_STATEMENT.md authored. Confirm frozen plan intent/scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "execution context confirmed; mission frame + problem statement authored; W2/W1/#443 seams verified from source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 populate batch (module+CLI+smoke): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md. TASK: new evo-free module src/physics/layer2/race_stint_batch.py (discovery of 2023 race sessions + drivers from the per-year SQLite DB; per-(gp,driver) loop calling session_race.load_race_stints -> stint_estimator.estimate_stint -> race_stint_store.record_from_stint_estimate -> RaceStintStore.upsert; resumable via store.has() skip; error_record on per-stint failure so nothing is lost; timestamped progress logging) + thin CLI scripts/populate_race_stint_estimates.py + unit test tests/unit/physics/layer2/test_race_stint_batch.py over the PURE helpers (discovery, skip logic, record assembly) using synthetic/fixture inputs (no heavy telemetry). SMOKE PROOF (real data, absolute main-checkout paths): run the batch on 2 races (Bahrain + one more) writing rows to C:/Programs/f1Brainz/data/race_stint_estimates.db and report per-stint (lateral g0,k) ranges + covariance PSD/finite sanity in the result. Dispatch a subagent invoking constellation-implementer. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import (race_stint_batch.py imports no evo-region package)",
+        "DB/telemetry-store is the only data source; py not python",
+        "do not modify W2 modules (session_race/stint_estimator/race_stint_store) \u2014 consume only; float if a defect surfaces"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 src/physics/layer2/race_stint_batch.py (new module, component-leaf)",
+          "src/physics/layer2/session_race.py::load_race_stints / stint_estimator.py::estimate_stint / race_stint_store.py::RaceStintStore (consumed seams)"
+        ],
+        "capability": [
+          "purpose:physics_estimation \u2014 race-stint per-driver decay population"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "lesson:worktree-untracked-data \u2014 DBs/telemetry store absent from worktree; use absolute C:/Programs/f1Brainz/data/ paths"
+        ],
+        "decision": [
+          "decision pressure: separate race_stint_estimates.db location (data/race_stint_estimates.db) \u2014 within latitude"
+        ],
+        "evidence": [
+          "W2 inherited 889 clean 2023 stints \u2014 smoke re-confirms per-stint (g0,k) usable on real data",
+          "covariance PSD/finite on smoke fits"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result_path": ".agent-work/511/crew-handoffs/g1-implementer-result.md",
+            "status": "complete",
+            "summary": "race_stint_batch.py + CLI + 22 tests; smoke Bahrain+Australia 106 rows ok, 102 lateral fits all PSD/finite; evo-free"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 populate batch: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Verify: race_stint_batch.py correctness + evo-free import; resumability (has()-skip) and error_record coverage; the smoke fits are non-degenerate (finite g0,k; PSD covariance; plausible lateral g0 ~ 1.0-1.6 g, k >= 0 small); unit test exercises the pure helpers; no W2-module mutation. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/511/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 populate batch: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "race_stint_batch unit test green + simplification limits clean",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_race_stint_batch.py -q && py -m src.utils.simplification_limits --paths src/physics/layer2/race_stint_batch.py tests/unit/physics/layer2/test_race_stint_batch.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/511/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_race_stint_batch.py -q && py -m src.utils.simplification_limits --paths src/physics/layer2/race_stint_batch.py tests/unit/physics/layer2/test_race_stint_batch.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-populate": {
+      "id": "g2-populate",
+      "title": "G2 full 2023 population + coverage diagnosis (reasoning gate, commander-run)",
+      "imperative": "REASONING GATE (crew-waiver: deliverable is a long detached DATA-POPULATION run from the G1-reviewed pure-population script + a coverage DIAGNOSIS; no code produced; commander holds the context and the launch order assigns the batch to the commander; no crew manages the DB during the run). Run scripts/populate_race_stint_estimates.py over ALL clean 2023 race stints, DETACHED with a STATE_NOTE before launch; poll to completion (do not idle). Then write the coverage diagnosis to .agent-work/511/evidence/G2_COVERAGE.md: stints fitted ok vs error; per-compound and per-circuit coverage; per-axis fit yield (lateral/traction/braking/powerdrag/coast); covariance sanity (PSD/finite); per-stint (g0,k) distribution; pit-staggered age-spread. ASSESS collapse: if coverage collapses (too few usable lateral fits / a compound or circuit class empty / covariances pathological) FLOAT to the Admiral before proceeding. Attest c2 with the diagnosis; advance only when c1 (mechanical store-sanity) passes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 batch script reviewed + APPROVEd",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "race_stint_estimates populated for 2023 with ok lateral fits across real compounds (mechanical store-sanity guard)",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from src.physics.layer2.race_stint_store import RaceStintStore; import numpy as np; df=RaceStintStore('C:/Programs/f1Brainz/data/race_stint_estimates.db').load(year=2023); ok=df[df['fit_status']=='ok']; lat=int(ok['lateral_g0'].notna().sum()); print('rows',len(df),'ok',len(ok),'lateral_ok',lat); assert len(df)>0; assert lat>0; assert len(set(ok['compound'].dropna().unique()) & {'SOFT','MEDIUM','HARD'})>=2\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-populate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "coverage diagnosis written + collapse assessed (float if collapsed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "state-note before detach (lesson:state-note-before-detach)",
+        "poll to completion \u2014 result file is the deliverable (lesson:crew-idle-strands-deliverable)",
+        "do not mutate existing DBs/cache; only write race_stint_estimates rows"
+      ],
+      "anchors": {
+        "structural": [
+          "data/race_stint_estimates.db (race_stint_estimates table)"
+        ],
+        "capability": [
+          "purpose:physics_estimation"
+        ],
+        "constraint": [
+          "DB-only data source"
+        ],
+        "decision": [
+          "decision pressure: gate-1 coverage-collapse is a FLOAT trigger"
+        ],
+        "evidence": [
+          "W2 inherited 889 clean 2023 stints / track_status 100% / absolute tyre_life \u2014 re-confirmed on the actual populated store"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-populate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"from src.physics.layer2.race_stint_store import RaceStintStore; import numpy as np; df=RaceStintStore('C:/Programs/f1Brainz/data/race_stint_estimates.db').load(year=2023); ok=df[df['fit_status']=='ok']; lat=int(ok['lateral_g0'].notna().sum()); print('rows',len(df),'ok',len(ok),'lateral_ok',lat); assert len(df)>0; assert lat>0; assert len(set(ok['compound'].dropna().unique()) & {'SOFT','MEDIUM','HARD'})>=2\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 separation (f_tyre vs g_track): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md. TASK: new evo-free module src/physics/layer2/tyre_separation.py implementing the crossed log-grip separation grip = car_envelope(driver,weekend) + f_tyre(compound,age) + g_track + noise over the populated race_stint_estimates store. f_tyre(compound,age) = THE TARGET, per-axis VECTOR (lateral_mech via lateral g0, lateral_aero via lateral b_aero, traction via traction a0/k); LATERAL primary, traction speculative (per-axis honest-null OK). SEASON-pooled per-compound k via pooling.pool_random_effects; STRONG STRUCTURAL prior only (monotone-up compound ordering SOFT>MEDIUM>HARD on decay, k>=0, plausible ranges) via the #496 injectable-(value,sigma) pattern \u2014 NO #443 empirical magnitudes (anti-circular). g_track = NET-NEW within-weekend track-evolution nuisance on the cumulative_track_laps axis, per-(circuit,weekend) partial-pooled (pooling.py has no within-weekend time term \u2014 build lightweight, reuse pool_random_effects/fit_drift idioms). car_envelope anchored from the QUALI envelope (read physics_estimates.db session_estimates), NOT re-fit from race noise. Identifiability: pit-staggered fleet (same cumulative-laps/diff age -> tyre; same age/diff track-state -> track); report an identifiability diagnostic. ALL diagnostics (residual/stability/covariance-honesty) MUST be leave-one-out (lesson:loo-residual-diagnostic). + unit tests tests/unit/physics/layer2/test_tyre_separation.py (synthetic fixture: planted f_tyre + g_track recovered within tolerance; monotone prior enforced; evo-free import). Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 coverage confirmed usable (no collapse float pending)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import \u2014 tyre_separation.py imports NO evo-region package",
+        "STRUCTURAL priors only (anti-circular)",
+        "LOO for any self-weighted-fit diagnostic",
+        "2sigma = reference not gate",
+        "honest-null per-axis is a complete deliverable"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 src/physics/layer2/tyre_separation.py (new)",
+          "src/physics/layer2/pooling.py (pool_random_effects/fit_drift/fit_two_way)",
+          "race_stint_estimates store + physics_estimates.db session_estimates (quali anchor)"
+        ],
+        "capability": [
+          "purpose:physics_estimation / purpose:physics_utilization"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "lesson:loo-residual-diagnostic-over-self-weighted-predictor"
+        ],
+        "decision": [
+          "decision:regime_readiness_rubric (#512) \u2014 per-axis vector posture, 2sigma reference",
+          "decision pressure (candidate): the W3 crossed log-grip separation model + net-new g_track term"
+        ],
+        "evidence": [
+          "planted-recovery synthetic test; monotone compound ordering; LOO identifiability/stability"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result_path": ".agent-work/511/crew-handoffs/g3-implementer-result.md",
+            "status": "complete",
+            "summary": "tyre_separation.py: lateral k separates monotone (HARD<MED<SOFT) cond1050 alias0.19 LOO-stable; base null (signal in k); traction k-only; g_track +0.75%/100laps; 9 tests + 404 layer2 regression green; evo-free; structural-priors-only"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 separation: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Verify: evo-free import; structural-priors-only (NO #443 empirical magnitudes baked in \u2014 anti-circular); car_envelope from quali not race; g_track is a genuine within-weekend term on cumulative_track_laps; per-axis f_tyre vector; LOO used for every self-fit diagnostic (not self-inclusive); planted-recovery test actually recovers planted f_tyre/g_track; honest covariance. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/511/crew-handoffs/g3-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 separation: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tyre_separation unit test green + simplification limits clean",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_tyre_separation.py -q && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_separation.py tests/unit/physics/layer2/test_tyre_separation.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/511/crew-handoffs/g3-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_tyre_separation.py -q && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_separation.py tests/unit/physics/layer2/test_tyre_separation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 supplant scoring: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md. TASK: new evo-free module src/physics/layer2/tyre_supplant.py \u2014 the supplant scoring + per-axis verdict rubric. Build the (race,compound) truth cells from lap_times (within-race centred lap-time degradation slope + lap-count weight) via a pure helper. Score physics mu_tyre(age) (from G3 separation) AND a set of INJECTED incumbent prediction arrays {absolute-C# floor ordering, compound_prior gamma ordering} using the NEUTRAL src/common/pairwise_ordering.pairwise_ordering_accuracy (within-race P) + magnitude R^2 + honest covariance overlap. ANTI-CIRCULAR: physics prediction uses only the structural-prior separation (no #443 empirical magnitudes); truth (lap-time slope) is independent of the physics feature (telemetry grip decay). Use LOO/out-of-sample for any residual/calibration/stability diagnostic over the pooled fit. Incumbents are passed as INJECTED arrays (the module imports NO evo package \u2014 the dashboard script wires them). classify_axis_verdict(...) pure function -> GO/CONTEXTUAL/NO-GO per axis (coverage + separability + supplant-beat + LOO-honesty; 2sigma reference not gate). + unit tests tests/unit/physics/layer2/test_tyre_supplant.py (synthetic: truth-cell builder; P ordering; verdict classification; evo-free import). Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 separation APPROVEd (f_tyre available)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import \u2014 tyre_supplant.py imports NO evo-region package; incumbents are INJECTED arrays",
+        "neutral metric only (src/common/pairwise_ordering)",
+        "anti-circular: structural priors only, truth independent of feature",
+        "LOO for self-fit diagnostics",
+        "judge degradation-estimation quality NOT finish-ranking",
+        "2sigma reference not gate"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 src/physics/layer2/tyre_supplant.py (new)",
+          "struct:common \u2014 src/common/pairwise_ordering.py (neutral metric)"
+        ],
+        "capability": [
+          "purpose:physics_estimation"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "anti-circular discipline (#443 circular-target trap)",
+          "lesson:loo-residual-diagnostic-over-self-weighted-predictor"
+        ],
+        "decision": [
+          "decision:regime_readiness_rubric (#512)",
+          "decision pressure (candidate): neutral-boundary INJECTION pattern for physics-vs-evo supplant comparison"
+        ],
+        "evidence": [
+          "#443 LOO P=0.8032 cross-check bar",
+          "neutral pairwise P; magnitude R^2; honest covariance overlap"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result_path": ".agent-work/511/crew-handoffs/g4-implementer-result.md",
+            "status": "blocked-truth-reshape",
+            "summary": "supplant scoring core DONE+PROVEN (16 tests, evo-free, neutral P + R2 + LOO + verdict); real-data verdict BLOCKED \u2014 per-stint lap_time~tyre_life truth is fuel-confounded (SOFT slope inverts to -0.24; physics P=0.387, textbook-C# incumbent P=0.220, both <0.5 => truth is the suspect). Reshape probe (cross-stint fuel-corrected) recovers correct ordering. FLOATING to Admiral."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 supplant scoring: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Verify: evo-free import (incumbents injected, not imported); the neutral metric is used unchanged; ANTI-CIRCULAR (no #443 empirical magnitudes leak into the physics prediction; truth-cell build is lap-time-based, independent of telemetry grip); LOO discipline on diagnostics; verdict classification is sound and 2sigma is a reference not a gate; judges degradation not finish-ranking. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 supplant scoring: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tyre_supplant unit test green + simplification limits clean",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_tyre_supplant.py -q && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_supplant.py tests/unit/physics/layer2/test_tyre_supplant.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "G5 tyre-age dashboard + per-axis verdict: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md. TASK: region-neutral script scripts/tyre_age_dashboard.py (mirror scripts/regime_capability_dashboard.py #512 pattern). It reads the populated race_stint_estimates store + runs tyre_separation (G3) + builds truth cells + reads the EVO incumbents at THIS neutral boundary (compound_prior gamma, absolute-C# floor from compounds.yaml, and #443 empirical_sensor as an independent CROSS-CHECK only) and injects their prediction arrays into tyre_supplant (G4). Renders: coverage map, per-axis f_tyre(compound,age) ladders, g_track curves, supplant result table (physics P vs incumbents + #443 agreement), identifiability map. Emits tyre_age_verdict.json with per-axis GO/CONTEXTUAL/NO-GO (via tyre_supplant.classify_axis_verdict) to a --out dir (default a gitignored/scratch dir; do NOT commit plots or the verdict json). --year/--store/--out args. If pure dashboard helpers warrant it add focused tests; otherwise the end-to-end run is the evidence. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G4 supplant APPROVEd; G2 store fully populated",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "scripts/ are region-neutral (this is the sanctioned physics<->evo neutral boundary)",
+        "do NOT commit generated plots / verdict json (archive c4 deny-globs)",
+        "#443 sensor is a CROSS-CHECK not the incumbent",
+        "py not python"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/tyre_age_dashboard.py (non-map node; neutral boundary)",
+          "scripts/regime_capability_dashboard.py (#512 pattern reference)",
+          "src/physics/layer2/tyre_separation.py + tyre_supplant.py (consumed)",
+          "src/compound_prior/empirical_sensor.py (#443 cross-check, read here only)"
+        ],
+        "capability": [
+          "purpose:physics_estimation \u2014 characterization dashboard + verdict"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import (honored BY this being a script, not src/physics)",
+          "artifact policy \u2014 no committed generated outputs"
+        ],
+        "decision": [
+          "decision:regime_readiness_rubric (#512) \u2014 dashboard + per-axis verdict pattern",
+          "decision pressure (candidate): neutral-boundary injection wiring lands in the script"
+        ],
+        "evidence": [
+          "per-axis verdict json with lateral_mech/lateral_aero/traction",
+          "supplant table physics vs incumbents + #443 agreement"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5 dashboard + verdict: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Verify: the dashboard runs end-to-end on the populated store and emits a per-axis verdict json (lateral_mech/lateral_aero/traction); the evo reads are confined to the script (neutral boundary intact, no physics->evo import); #443 used as cross-check only; verdicts trace to coverage/separability/supplant/LOO evidence; 2sigma treated as reference; no committed generated artifacts. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5 dashboard + verdict: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run verification (dashboard end-to-end -> verdict json with the three axes), confirm postconditions, advance. BLOCK: rework. Synthesize the PER-AXIS readiness verdict (lateral/traction/braking) for the return + #511 comment at this step. Log out-of-scope finds (incl. closeout improvement ideas) as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dashboard runs end-to-end and emits a per-axis verdict json",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/tyre_age_dashboard.py --year 2023 --store C:/Programs/f1Brainz/data/race_stint_estimates.db --out C:/Users/fredc/AppData/Local/Temp/claude/tyre_dash_511 && py -c \"import json,glob; f=glob.glob('C:/Users/fredc/AppData/Local/Temp/claude/tyre_dash_511/*verdict*.json')[0]; v=json.load(open(f)); assert len(set(v.keys()) & {'lateral_mech','lateral_aero','traction'})>=3, list(v); print('verdict axes', list(v.keys()))\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "g0 plausibility guide (1.0-1.6 g) is qualifying-calibrated; race-stint g0 runs ~2.0 median / ~4.8 max (low-speed corner regime) \u2014 add a race-stint addendum to W3/physics docs"
+    },
+    {
+      "id": "tc2",
+      "from": "g1-integrate",
+      "statement": "Australia/RUS smoother HP calibration warning (no_accel_samples) from session_race.py during race-stint load \u2014 route to #496 physics-aware estimator follow-on"
+    },
+    {
+      "id": "tc3",
+      "from": "g3-integrate",
+      "statement": "Phase-P #450 should carry the per-compound DECAY k vector, not a fresh-grip base \u2014 race-stint g0 base does not separate by compound (soft rarely run fresh-and-long; noisy g0 extrapolation)"
+    },
+    {
+      "id": "tc4",
+      "from": "g3-integrate",
+      "statement": "RaceStintStore.__init__ runs CREATE TABLE IF NOT EXISTS (write-mode open) \u2014 a read-only load path / mode=ro accessor would let consumers honor the read-only-canonical rule without a custom helper"
+    }
+  ],
+  "blockers": []
+}

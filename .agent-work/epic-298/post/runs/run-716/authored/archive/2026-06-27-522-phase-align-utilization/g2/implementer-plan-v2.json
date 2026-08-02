@@ -1,0 +1,263 @@
+{
+  "work_id": "522-g2-lateral-units-v2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-discard-first-attempt",
+    "m2-red-truth-anchor",
+    "m3-convert-car-prior",
+    "m4-green-full-region"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff (REWORK after BLOCK)",
+      "imperative": "Read the v2 handoff at .agent-work/522-phase-align-utilization/crew-handoffs/g2-implement-handoff-v2.md, CREW_CONTEXT, GLOSSARY. Verify handoff complete (task=Option-A car_prior boundary conversion g-units->m/s2; intent=fix C1 lateral cap without touching consumer; scope=car_prior.py + test only; exclusions=consumer/producer/schema/regime untouched; evidence=truth-anchor RED->GREEN + convention-A unbroken + full-region green; stop conditions present; return format=overwrite g2-implement-result.md). Confirm producer g-unit convention and consumer m/s2 convention. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff loaded and complete; producer g-unit + consumer m/s2 conventions confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-discard-first-attempt": {
+      "id": "m1-discard-first-attempt",
+      "title": "Discard the entire first-attempt diff (return to convention-A baseline)",
+      "imperative": "git checkout -- src/physics tests/unit/physics tests/known_answer tests/property. Confirm git status shows no tracked src/test edits (only .agent-work untracked). The consumer files (physics_data_models.py, physics_simulator.py, capability_envelope.py) and their tests are back to convention-A (m/s2) baseline.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "working tree clean of first-attempt src/test edits",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import subprocess,sys; d=subprocess.run(['git','-C','C:/Programs/f1Brainz','diff','--name-only','--','src','tests'],capture_output=True,text=True).stdout.strip(); sys.exit(0 if d=='' else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-discard-first-attempt-2"
+        }
+      ],
+      "constraints": [
+        "do NOT re-touch consumer files"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-discard-first-attempt-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz && test -z \"$(git diff --name-only -- src tests)\" && echo CLEAN",
+            "exit": 1
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-discard-first-attempt-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import subprocess,sys; d=subprocess.run(['git','-C','C:/Programs/f1Brainz','diff','--name-only','--','src','tests'],capture_output=True,text=True).stdout.strip(); sys.exit(0 if d=='' else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-red-truth-anchor": {
+      "id": "m2-red-truth-anchor",
+      "title": "Add the truth-anchor test (RED before conversion)",
+      "imperative": "In tests/unit/physics/test_car_prior.py, update _rec lateral defaults to realistic g-units (A0=3.2, A2=0.00032) and fix test_lateral_A0_A2 to assert the CONVERTED m/s2 values. Add a truth-anchor test: build a ceiling from a g-unit store row (A0=3.2, A2=0.00032, rho=1.18) and assert the Monaco-tunnel corner cap (kappa=0.011, via PhysicsSimulator._compute_speed_caps) is ~63-66 m/s (VER 63.3). Confirm it is RED now (bug gives ~17 m/s).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline clean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "truth-anchor test exists and FAILS RED on the un-converted code",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import subprocess,sys; r=subprocess.run(['py','-m','pytest','tests/unit/physics/test_car_prior.py','-k','tunnel_corner_cap','-q'],cwd='C:/Programs/f1Brainz'); sys.exit(0 if r.returncode!=0 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-red-truth-anchor-1"
+        }
+      ],
+      "constraints": [
+        "test file is the only test changed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-red-truth-anchor-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import subprocess,sys; r=subprocess.run(['py','-m','pytest','tests/unit/physics/test_car_prior.py','-k','tunnel_corner_cap','-q'],cwd='C:/Programs/f1Brainz'); sys.exit(0 if r.returncode!=0 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-convert-car-prior": {
+      "id": "m3-convert-car-prior",
+      "title": "Implement Option-A conversion in car_prior._assemble_lateral (GREEN)",
+      "imperative": "Import G_MS2 from src/physics/braking_fit.py. Thread air_density into _assemble_lateral. Convert A0_param=A0_mu*G_MS2, A2_param=A2_mu*G_MS2/air_density; transform covariance via Jacobian J=diag(G_MS2, G_MS2/air_density): cov'=J cov J^T, applied to BOTH the diagonal and the blob (_pick_representative_blob) paths. Mirror the _build_longitudinal G5 docstring; add # TODO(#525). Truth anchor goes GREEN; the L1 lateral_A0_A2 test asserts converted values.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "truth-anchor RED",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "car_prior conversion done; car_prior tests pass including the truth anchor",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import subprocess,sys; r=subprocess.run(['py','-m','pytest','tests/unit/physics/test_car_prior.py','-q'],cwd='C:/Programs/f1Brainz'); sys.exit(r.returncode)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-convert-car-prior-1"
+        }
+      ],
+      "constraints": [
+        "ONLY src/physics/utilization/car_prior.py changed in src/; import not redefine G_MS2; consumer byte-identical"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-convert-car-prior-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import subprocess,sys; r=subprocess.run(['py','-m','pytest','tests/unit/physics/test_car_prior.py','-q'],cwd='C:/Programs/f1Brainz'); sys.exit(r.returncode)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-green-full-region": {
+      "id": "m4-green-full-region",
+      "title": "Full physics-region green; convention-A unbroken with NO re-baselining",
+      "imperative": "Run the full verification command. Confirm the reverted consumer tests (test_physics_data_models, test_physics_simulator, test_capability_envelope, etc.) pass UNCHANGED (convention A intact, no re-baselining). Run simplification_limits on car_prior.py. git diff must show ONLY car_prior.py + test_car_prior.py changed in tracked code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "car_prior conversion done and car_prior tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full physics region green",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import subprocess,sys; r=subprocess.run(['py','-m','pytest','tests/unit/physics/','tests/known_answer/test_published_f1_data.py','tests/property/test_physics_properties.py','-q'],cwd='C:/Programs/f1Brainz'); sys.exit(r.returncode)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-green-full-region-1"
+        },
+        {
+          "id": "c2",
+          "statement": "only car_prior.py + test_car_prior.py changed in tracked code",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import subprocess,sys; d=set(x for x in subprocess.run(['git','-C','C:/Programs/f1Brainz','diff','--name-only'],capture_output=True,text=True).stdout.split() if x); want={'src/physics/utilization/car_prior.py','tests/unit/physics/test_car_prior.py'}; sys.exit(0 if d==want else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-green-full-region-2"
+        }
+      ],
+      "constraints": [
+        "consumer tests must pass with NO re-baselining"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-green-full-region-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import subprocess,sys; r=subprocess.run(['py','-m','pytest','tests/unit/physics/','tests/known_answer/test_published_f1_data.py','tests/property/test_physics_properties.py','-q'],cwd='C:/Programs/f1Brainz'); sys.exit(r.returncode)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-green-full-region-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import subprocess,sys; d=set(x for x in subprocess.run(['git','-C','C:/Programs/f1Brainz','diff','--name-only'],capture_output=True,text=True).stdout.split() if x); want={'src/physics/utilization/car_prior.py','tests/unit/physics/test_car_prior.py'}; sys.exit(0 if d==want else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

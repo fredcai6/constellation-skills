@@ -1,0 +1,160 @@
+{
+  "work_id": "664-g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew + global-everyone, project CREW_CONTEXT (physics/units L1-L4 rules, simplification_limits blocker) + GLOSSARY, handoff, and all three files under review.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All close criteria reproduced: 23/23 green; point deficit byte-identical with/without G; band loc=time deficit (unshifted, one-sided up); half-t nu=4 tail 4.60 > gaussian 2.58; get_grip_at consumed not re-fit; energy invariant to +1234.5 offset; store additive+idempotent; deficits are g1 class_deficits verbatim. Delivered exactly the handoff's scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No exclusions touched: no point-G subtraction (byte-identical proven); no re-fit (grep clean: no grip_baseline/.fit_); mu never off zero (#678 untouched, band loc unshifted); no absolute SOC/kW (np.diff of specific-energy only); reference_laps table UNCHANGED (coexists, its 8 g2 tests green); derate_flag left dormant (no new threshold literal minted). Only the 2 new files + additive store edit.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every IMPLEMENTER_RESULT claim independently reproduced from the worktree copy (repro_g3.py + pytest): 23 passed; byte-identical point deficit; sigma+(0.3,0.4)=0.5 & sign-insensitive; half-t nu=4 tail>gaussian; energy invariant to +1234.5; deployment shares sum to 1; store round-trip+idempotent(2 rows)+escalation dormant+reference_laps coexists. Result file present. Truth-anchored L1(hypot analytic)/L2(offset+sign invariants)/L3(zero-scale collapse).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All inherited constraints met: frozen-constants (no new literal; simplification_limits PASS on both files); no-normality (Student-t nu=4, not Gaussian); own-db #632 (DEFAULT_DB_PATH=data/reference_utilization.db, never f1_data); tests-clean-real-dbs #656 (temp DBs only); pre-quali no race leakage (strictly_pre ideal, no race-side observable); anti-circularity (absolute g1 deficit, no ratio). Physics/units explicit; degrade paths visible (legacy narrow-sigma soft-degrade, zero-scale collapse). Docstrings state the elevation-convention finding + energy DESCRIPTIVE-not-gated scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Aligns with recorded architecture: struct:physics.utilization gains one new module + an additive sibling table; consumes g1 class_ledger + grip_store.get_grip_at + src.common.student_t as anchored. No contradiction of the settled/inherited G one-sided wrap or decision:c1_driver_utilization_design (settled/human) \u2014 no FLOAT. Map-impact notes match the diff (new+additive, reference_laps untouched). Escalation columns are a launch-order-blessed dormant exception, documented in-code. No reconcile blocker.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass. Render a verdict on each Fowler baseline smell: flagged / overridden / absent. Record the pass to FOWLER_PASS record, run verify_fowler_pass.py, then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass driven over all 12 baseline smells (verify_fowler_pass.py EXIT=0). flagged: duplicated-code (two near-identical additive-migrate helpers + mirrored write/get pairs \u2014 LOW-severity observation, not a blocker). overridden w/ logged standard: large-class + divergent-change (own-db one-store-per-DB convention #632/estimate_store), data-clumps (established store signature convention), speculative-generality (launch-order-blessed dormant escalation columns). Others absent.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g3 class utilization observable + one-sided G band + relative energy: all 8 close criteria reproduced green (23/23 tests); one-sided G moves ONLY sigma+ (point byte-identical), heavy-tailed Student-t nu=4, G consumed via get_grip_at not re-fit, mu on zero; sigma+ units COHERENT (time-domain width on time deficit, speed deficit carries no band); energy relative-invariant, DESCRIPTIVE not gated; store additive+idempotent+own-db, reference_laps untouched. One LOW-severity observation (migrate-helper dup) + 2 triage candidates. No blockers."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "G pace-unit reconciliation: g_sigma_onesided=hypot(mu,sigma) is a whole-session lap-PACE grip width (seconds) applied as the band width on a per-CLASS transit-time deficit (also seconds). Dimensionally coherent (seconds-on-seconds) but grain-mismatched (lap-pace scale vs per-class transit scale) \u2014 a conservatively WIDE envelope. Implementer already flagged; wants an explicit scale-reconciliation ruling. Not a units bug."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "Real derate_flag needs an energy-threshold ruling: the dormant derate_flag/escalation_* columns exist but a computed derate would mint a new physical energy threshold (out of scope this run). Needs an owner decision before activation."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3rev-664",
+    "status": "released",
+    "claimed_at": "2026-07-26T09:26:51.994267+00:00",
+    "last_heartbeat": "2026-07-26T09:32:36.418755+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-26T09:33:36.373492+00:00"
+  }
+}

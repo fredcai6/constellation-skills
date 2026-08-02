@@ -1,0 +1,14 @@
+FP representativeness held-out gate -- GATE_PROTOCOL.md
+
+PRIMARY_GRIP channel: verdict=HONEST_NULL
+  overall spearman: mean_delta=-0.0037 ci=[-0.0537, 0.0424] favors_learned=False
+  overall centred-rmse: mean_delta=0.0016 ci=[-0.0006, 0.0039] favors_learned=False
+  divergent-case read: verdict=HONEST_NULL n_divergent=152/456 inconclusive=False
+
+SECONDARY_POWER channel: status=CONFOUNDED_NOT_EVIDENTIAL verdict=CONFOUNDED_NOT_EVIDENTIAL
+
+Emergence audit (F3): passes=True push_weight=0.9975 longrun_weight=0.6399 track_evo_only_range=0.0580 other_features_range=0.6200
+
+Sandbagging demo (F8): weekend=Canada car=Ferrari pace_jump=0.1473 learned=0.9526 clock=0.5403 passes=False
+
+wall_seconds=48411 n_weekends=16

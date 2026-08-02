@@ -1,0 +1,105 @@
+{
+  "work_id": "issue-302-simplification-limits",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1", "g2", "g3", "g4", "g5"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load pilot context",
+      "imperative": "Read PROBLEM_STATEMENT.md, docs/architecture/packets for data + reporting, CREW_CONTEXT verification table. Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "frozen plan intent loaded", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1": {
+      "id": "g1",
+      "title": "Canonical verifier + baseline allowlist",
+      "imperative": "Add src/utils/simplification_limits.py with verify_simplification_limits (CC max 19, function/file physical lines), committed config/simplification_baseline.json for remaining mega-files, unit tests with synthetic fixtures.",
+      "preconditions": [{"id": "p1", "statement": "pilot context loaded", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "verifier tests pass", "check": {"kind": "command", "command": "py -m pytest tests/unit/utils/test_simplification_limits.py -v"}, "satisfied": false},
+        {"id": "c2", "statement": "baseline mode passes on repo", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --baseline"}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer approves", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": ["Deterministic; radon for CC; physical line counts documented"],
+      "directives": null,
+      "child_checklist": "g1-review.json",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "Agent wiring + run_tests consolidation",
+      "imperative": "Wire REVIEW_SURVEY r-simplification-limits; update ORCHESTRATOR_CONTEXT, CREW_CONTEXT, engine-config rules_root, TESTING.md Last verified; delegate run_tests.py --compliance to canonical verifier; fix complexity None crash.",
+      "preconditions": [{"id": "p1", "statement": "g1 complete", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "compliance delegates cleanly", "check": {"kind": "command", "command": "py run_tests.py --compliance"}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer approves", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": ["Name-check same function/command everywhere"],
+      "directives": null,
+      "child_checklist": "g2-review.json",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "Split race_report.py",
+      "imperative": "Refactor src/reporting/race_report.py into logical submodules (data fetch vs markdown/html/json renderers). Preserve RaceReportGenerator public API via re-export. Remove race_report from baseline allowlist once under 1000 lines.",
+      "preconditions": [{"id": "p1", "statement": "g2 complete", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "race report tests pass", "check": {"kind": "command", "command": "py -m pytest tests/unit/test_race_report.py -v"}, "satisfied": false},
+        {"id": "c2", "statement": "strict verifier clean for reporting split files", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --paths src/reporting"}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer approves", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": ["No report output semantics change", "Structural refactor only"],
+      "directives": null,
+      "child_checklist": "g3-review.json",
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4": {
+      "id": "g4",
+      "title": "Split database.py",
+      "imperative": "Extract DatabaseManager methods into src/data/database/ subpackage (core+schema, session/insert, results queries, telemetry, classifications/metadata). Keep DatabaseManager import path stable. Remove database modules from baseline when compliant.",
+      "preconditions": [{"id": "p1", "statement": "g3 complete", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "database unit tests pass", "check": {"kind": "command", "command": "py -m pytest tests/unit/test_database.py tests/unit/evo_predictor/test_database_classifications.py -v"}, "satisfied": false},
+        {"id": "c2", "statement": "strict verifier clean for data split files", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --paths src/data"}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer approves", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": ["DB-only; no analysis semantics change", "DatabaseManager singleton pattern preserved at facade"],
+      "directives": null,
+      "child_checklist": "g4-review.json",
+      "status": "pending",
+      "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g5": {
+      "id": "g5",
+      "title": "Triage mega-file burn-down issues",
+      "imperative": "Record triage candidates for remaining 12 mega-files grouped by region (evo models, compound_prior diagnostics/solver, evo adapters/tests, preprocessing). Present to Commander for user-approved issue filing.",
+      "preconditions": [{"id": "p1", "statement": "g4 complete", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "triage candidates documented under triage-candidates/", "check": null, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {"statement": "Split src/evo_predictor/models.py (~2816 lines) into feature/dataclass modules", "from": "plan"},
+    {"statement": "Split src/compound_prior/diagnostics.py (~2723 lines)", "from": "plan"},
+    {"statement": "Split src/compound_prior/solver.py (~2342 lines)", "from": "plan"},
+    {"statement": "Split src/evo_predictor/data_adapter.py (~1765 lines)", "from": "plan"},
+    {"statement": "Split src/evo_predictor/fusion_training.py + test_fusion_training.py", "from": "plan"},
+    {"statement": "Split src/evo_predictor/practice_preprocessor.py (~1654 lines)", "from": "plan"},
+    {"statement": "Split src/evo_predictor/module_adapters.py (~1396 lines)", "from": "plan"},
+    {"statement": "Split src/preprocessing/windowed_solver.py (~1283 lines)", "from": "plan"},
+    {"statement": "Split src/evo_predictor/gold_cycle/runner.py (~1198 lines)", "from": "plan"},
+    {"statement": "Split large evo unit tests (session_dropout, data_adapter)", "from": "plan"}
+  ],
+  "blockers": []
+}

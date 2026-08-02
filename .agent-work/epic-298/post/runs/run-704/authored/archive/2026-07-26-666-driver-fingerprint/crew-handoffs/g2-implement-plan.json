@@ -1,0 +1,299 @@
+{
+  "work_id": "666-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-address",
+    "m2-vocabulary",
+    "m3-store",
+    "m4-verify-and-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), the project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), and the g2-implement handoff at .agent-work/666-driver-fingerprint/crew-handoffs/g2-implement-handoff.md in full. Read the read-only reference seams: src/physics/utilization/reference_utilization_store.py, src/physics/layer2/grip_store.py (house store pattern), src/physics/segment_map/identity.py (VocabularyRef -- fully-qualified class_ids minted once, resolved by name not position), src/physics/regulation_era.py (RegulationEra.for_season flags), src/physics/fingerprint/frozen_constants.py (FINGERPRINT_UNRESOLVED_SUPPORT_FLOOR). Verify the handoff is complete (task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + house-store-pattern + VocabularyRef + RegulationEra + frozen_constants all read; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-address": {
+      "id": "m1-address",
+      "title": "src/physics/fingerprint/address.py: CellAddress + non-NULL cell_key",
+      "imperative": "Write tests/unit/physics/fingerprint/test_address.py FIRST: cell_key is a '|'-delimited join of all 6 fields (driver, era, vocabulary_version, class_id, channel, what_measure) in that order; each field raises a loud ValueError naming the offending field when None/empty/non-str; a value containing the delimiter raises; what_measure defaults to 'deficit', each RESERVED_WHAT_MEASURES slot ('push','managed','consistency','management_efficiency') is CONSTRUCTIBLE, an unknown what_measure raises; FINGERPRINT_CHANNELS == ('utilization','energy'); cell_key round-trips (same fields -> same key, differing field -> differing key). Observe failure (module absent) -- attest c1. Then create src/physics/fingerprint/address.py: frozen dataclass CellAddress with the 6 fields, __post_init__ validating every field non-empty str with no delimiter plus what_measure membership in {default}+RESERVED_WHAT_MEASURES, a cell_key property, module constants CELL_KEY_DELIMITER='|', FINGERPRINT_CHANNELS=('utilization','energy'), DEFAULT_WHAT_MEASURE='deficit', RESERVED_WHAT_MEASURES=('push','managed','consistency','management_efficiency') -- until green (command-check c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff confirmed complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_address.py written and observed failing (module absent) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "address.py implemented; test_address.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_address.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-address-1"
+        }
+      ],
+      "constraints": [
+        "non-NULL cell_key validation is STRUCTURAL (raises in __post_init__, not just documented)",
+        "a reserved what_measure slot is CONSTRUCTIBLE (do not refuse it here -- refusal is the store's job)",
+        "do not edit any existing module"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-address-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_address.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-vocabulary": {
+      "id": "m2-vocabulary",
+      "title": "src/physics/fingerprint/vocabulary.py: ClassVocabulary + era_key + require_fittable",
+      "imperative": "Write tests/unit/physics/fingerprint/test_vocabulary.py FIRST: k/class_ids length + uniqueness validation raises; f12_verdict must be one of PASS/FAIL/UNVERIFIED else raises; require_fittable() raises ClassVocabularyNotFittableError on FAIL and on UNVERIFIED, passes silently on PASS, and an explicit override bypasses the raise on both FAIL and UNVERIFIED; era_key(season) is deterministic (same season twice -> same key), groups seasons sharing the same RegulationEra flag signature (era_key(2024)==era_key(2025)), and differs across a flag change (era_key(2013) != era_key(2015); era_key(2024) != era_key(2026)). Observe failure -- attest c1. Then create src/physics/fingerprint/vocabulary.py: frozen dataclass ClassVocabulary (vocabulary_id, rules_era, k, class_ids, f12_verdict, f12_provenance) with __post_init__ validation, F12_VERDICTS=('PASS','FAIL','UNVERIFIED') constant, require_fittable(self, *, override: bool=False) raising ClassVocabularyNotFittableError unless f12_verdict=='PASS' or override, era_key(season:int)->str deriving a canonical string from RegulationEra.for_season(season)'s drs_enabled/mguk_regen/mguh_present flag signature (document this choice in the docstring: do NOT invent a new taxonomy, key off the existing RegulationEra seam) -- until green (command-check c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "CellAddress green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CellAddress green, 28/28"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_vocabulary.py written and observed failing (module absent) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "vocabulary.py implemented; test_vocabulary.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_vocabulary.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-vocabulary-1"
+        }
+      ],
+      "constraints": [
+        "do NOT invent a new era taxonomy -- era_key must derive from RegulationEra.for_season only",
+        "default require_fittable() behavior is refuse; override must be explicit",
+        "do not edit any existing module (RegulationEra is read-only)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-vocabulary-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_vocabulary.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-store": {
+      "id": "m3-store",
+      "title": "src/physics/fingerprint/store.py: DriverFingerprintStore (own db, k-cells-always, loud refusal, replace-on-rerun, no-fit-on-read)",
+      "imperative": "Write tests/unit/physics/fingerprint/test_store.py FIRST (temp DB via pytest tmp_path only, #656): write_fingerprint(driver, era, vocabulary, channel, what_measure, observations) writes EXACTLY k rows (one per vocabulary.class_ids), a class absent from observations or below FINGERPRINT_UNRESOLVED_SUPPORT_FLOOR gets status='unresolved' (NULL mean/sigma), a class at/above the floor gets status='resolved' with its mean/sigma; get_fingerprint(...) returns EXACTLY k cells always (empty store -> k unresolved cells, never a missing row, never an exception from computation); INSERT OR REPLACE idempotency (writing the identical fingerprint twice leaves row_count==k, not 2k); replace-on-rerun (rewriting with a different mean updates the stored row in place); loud refusal (raise, no silent substitution) when era != vocabulary.rules_era on both read and write; loud refusal when write targets a (driver,era,channel,what_measure) that already has stored cells under a DIFFERENT vocabulary_version (vocabulary drift); loud refusal when vocabulary.f12_verdict != 'PASS' (propagated from require_fittable, unless an explicit allow_unverified override); loud refusal when what_measure is a RESERVED_WHAT_MEASURES slot; no-fit-on-read structurally (a read on a never-written store returns unresolved cells with no exception and no computation -- assert via inspecting the store module's own source that it imports no fit/pooling/observables module); must_exist=True on a nonexistent path raises FileNotFoundError before any schema work (mirrors the house pattern). Observe failure -- attest c1. Then create src/physics/fingerprint/store.py mirroring reference_utilization_store.py/grip_store.py's own-db pattern: sqlite3.Row factory, create-on-construct __init__(self, db_path, *, must_exist=False), _connect, _init_schema + _migrate_missing_columns (additive ALTER-ADD only), FORMAT_VERSION stamp, table driver_fingerprint_cells with cell_key TEXT PRIMARY KEY NOT NULL plus driver/era/vocabulary_version/class_id/channel/what_measure/mean/sigma/support_n/status/shared_floor_applied/format_version columns, write_fingerprint/get_fingerprint per above, a small FingerprintCell/CellObservation value shape for the write/read payloads, EraVocabularyMismatchError + ReservedWhatMeasureError exception classes -- until green (command-check c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ClassVocabulary green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ClassVocabulary green, 20/20"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_store.py written and observed failing (module absent) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "store.py implemented; test_store.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-store-1"
+        }
+      ],
+      "constraints": [
+        "OWN db (#632) -- never data/f1_data_*.db or the #664 observables db",
+        "tests use TEMP DBs only (pytest tmp_path, #656)",
+        "NO fit logic -- store never computes, only persists/returns stored rows",
+        "no import of the G3 fit module / driver_class_observables in this store",
+        "do not edit any existing module"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-store-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify-and-close": {
+      "id": "m4-verify-and-close",
+      "title": "Full fingerprint test run + simplification_limits + IMPLEMENTER_RESULT + handoff to cmdr-666",
+      "imperative": "Run both verification commands from the handoff foreground: the combined tests/unit/physics/fingerprint/test_address.py test_vocabulary.py test_store.py run, and py -m src.utils.simplification_limits on the 3 new files. Paste both outputs. Confirm no data/.agent-work path is staged: git status --porcelain snapshot; git check-ignore exit-code check on the 6 new committed files (expect exit 1, not ignored). Write IMPLEMENTER_RESULT to .agent-work/666-driver-fingerprint/crew-handoffs/g2-implement-result.md per the template (completed slice, files changed, test-mode satisfied, evidence incl. pasted full test run + simplification_limits output, assumptions used -- era_key derivation + cell_key delimiter + drift-check design, stop conditions hit, out-of-scope observations, workflow feedback, map impact). Deliver the IMPLEMENTER_RESULT summary via SendMessage to cmdr-666. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "address, vocabulary, and store all green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "address, vocabulary, store all complete/green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT written and delivered to cmdr-666; no data/.agent-work staged; both verification commands green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do NOT stage/commit any .agent-work/ path or data/ blob"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-666-impl-g2",
+    "status": "released",
+    "claimed_at": "2026-07-26T14:37:34.667098+00:00",
+    "last_heartbeat": "2026-07-26T14:46:01.773740+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-26T14:46:07.687308+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete: build address.py (CellAddress+cell_key), vocabulary.py (ClassVocabulary+era_key+require_fittable), store.py (DriverFingerprintStore own-db) under src/physics/fingerprint/, TDD, temp DBs only. House pattern confirmed from reference_utilization_store.py/grip_store.py (sqlite3.Row, create-on-construct, _migrate_missing_columns additive, INSERT OR REPLACE). VocabularyRef precedent: fully-qualified class_ids minted once, resolved by name not position -- mirrors this build's class_id label design. RegulationEra.for_season gives drs_enabled/mguk_regen/mguh_present flags -- will derive era_key from that flag signature (grouping seasons sharing regs), not str(season), per decision:fingerprint-era-key (graded guess, my latitude to settle). FINGERPRINT_UNRESOLVED_SUPPORT_FLOOR=1.0 confirmed in frozen_constants.py for the store's resolved/unresolved boundary. Proceeding to build CellAddress test-first.",
+      "mechanical": false,
+      "ts": "2026-07-26T14:37:58.505347+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-address",
+      "why": "CellAddress built: frozen dataclass, 6 fields, __post_init__ validates non-empty str + no delimiter per field (loud ValueError naming field) + what_measure membership in {deficit}+4 reserved slots. cell_key = '|'-join of all 6 fields, always non-NULL structurally. FINGERPRINT_CHANNELS=(utilization,energy), RESERVED_WHAT_MEASURES=4 Build-2 slots (constructible, not populated -- store's job). 28/28 tests green. Proceeding to ClassVocabulary.",
+      "mechanical": false,
+      "ts": "2026-07-26T14:39:31.642557+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-vocabulary",
+      "why": "ClassVocabulary built: k/class_ids length+uniqueness validated, f12_verdict in PASS/FAIL/UNVERIFIED, require_fittable(override=False) raises ClassVocabularyNotFittableError unless PASS or override=True (bypasses FAIL and UNVERIFIED alike). era_key(season) derives a flag-signature string from RegulationEra.for_season (drs_enabled,mguk_regen,mguh_present) -- 2024==2025, 2013!=2015, 2024!=2026 as expected. 20/20 tests green. Proceeding to DriverFingerprintStore (the biggest slice: schema, k-cells-always, idempotency, loud refusal, no-fit-on-read).",
+      "mechanical": false,
+      "ts": "2026-07-26T14:41:02.957313+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-store",
+      "why": "DriverFingerprintStore built: own-db house pattern (sqlite3.Row, create-on-construct, additive _migrate_missing_columns), driver_fingerprint_cells table with cell_key TEXT PRIMARY KEY NOT NULL. write_fingerprint always writes exactly k rows (unresolved for absent/thin-support classes below FINGERPRINT_UNRESOLVED_SUPPORT_FLOOR); get_fingerprint always returns exactly k cells, synthesizing unresolved placeholders for never-written classes (no computation -- no-fit-on-read verified structurally via an ast import-scan test, not a raw substring match which false-positived on this file's OWN protective docstring naming driver_class_observables). INSERT OR REPLACE on cell_key gives idempotency + replace-on-rerun. Two loud refusals implemented: (1) era-vs-vocabulary.rules_era argument mismatch, on both read and write; (2) vocabulary-version drift on write (existing cells under a different vocabulary_version for the same driver/era/channel/what_measure). Plus require_fittable() propagation (non-PASS refuses unless allow_unverified) and RESERVED_WHAT_MEASURES write refusal. 17/17 new tests green; combined fingerprint suite 65/65 green; simplification_limits PASS (3 files, note: handoff's pinned command was missing --paths, used the correct CLI form). Proceeding to final verification + IMPLEMENTER_RESULT.",
+      "mechanical": false,
+      "ts": "2026-07-26T14:43:59.167824+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify-and-close",
+      "why": "Both verification commands re-run foreground green (65/65 combined fingerprint tests; simplification_limits PASS 3 files -- with the --paths fix noted since the handoff's pinned command form errored). git status --porcelain shows only untracked new paths, nothing staged; check-ignore confirms all 6 new committed files are NOT ignored (correctly trackable). IMPLEMENTER_RESULT written to g2-implement-result.md and delivered via SendMessage to cmdr-666. All 5 plan items now complete -- releasing the lease as the final step.",
+      "mechanical": false,
+      "ts": "2026-07-26T14:46:01.773730+00:00"
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "work_id": "661-segment-map-map-delta",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "packets",
+    "index-overlays",
+    "map-compliance"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node packet against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Current map loaded per context gate: docs/architecture/index.md physics-components catalog + packets/physics.md full container (all 6 existing component sections read for style precedent: layer2 L407, utilization L1481, wear L1678, ideal_lap L1907, weekend_state L2230, feature_view L2369)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched packets reflect current code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Scope override per launch instructions (issue #661, one wave of epic #659): output is a MAP-DELTA authored at .agent-work/661-cartography/MAP_DELTA.md (evidence e-packets-1), not an applied edit to docs/architecture/packets/physics.md -- the Admiral folds it at epic closeout. Delta content: new struct:physics.segment_map component section (grounded by reading all 6 source files: protocols.py/runtime.py/identity.py/from_mixture.py/store.py/__init__.py) + a sibling intro-bullet addition, both matching the packet's existing component style (verified against layer2/utilization/weekend_state/feature_view sections)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-packets-1",
+          "type": "map-delta",
+          "payload": {
+            "path": ".agent-work/661-cartography/MAP_DELTA.md",
+            "target_packet": "docs/architecture/packets/physics.md",
+            "new_node": "struct:physics.segment_map"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled packets.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "index and overlays consistent with packets",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "index.md struct catalog block for struct:physics.segment_map authored (sibling to the existing struct:physics.feature_view block, same purpose-string + status/confidence style) plus a constrained-by edge to constraint:physics_region_no_evo_import for overlays/constraints.yml (mirrors the existing layer2/utilization/weekend_state/feature_view sibling edges) -- both in .agent-work/661-cartography/MAP_DELTA.md sections 3-4, not applied (delta-only scope, Admiral folds at closeout)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-index-overlays-1",
+          "type": "map-delta",
+          "payload": {
+            "path": ".agent-work/661-cartography/MAP_DELTA.md",
+            "target_files": "docs/architecture/index.md,docs/architecture/overlays/constraints.yml",
+            "new_node": "struct:physics.segment_map",
+            "new_edge": "struct:physics.segment_map--constrained-by--constraint:physics_region_no_evo_import"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map compliant; open structural questions recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Map compliant: no Inclusion Rule violation (segment_map earns a struct: node -- planning: MC-sim/derivation follow-on issues in #659 need to know this seam exists; boundary correctness: no-evo-import verified; trust: 40 green tests cited). No unresolved structural questions raised by this delta -- the future derivation/join/MC-sim work (#662 + others) is already epic-#659-tracked by the launch order itself, not a new Triage item this Cartographer pass needs to file. No map-truth discrepancy found (MAP_DELTA.md section 6)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "context",
+      "why": "Loaded global-everyone/global-orchestrator doctrine + F1Brainz ORCHESTRATOR_CONTEXT.md (physics is a rigorous subsystem, physics/evo boundary must not be crossed). Loaded current map: docs/architecture/index.md (physics container catalog, siblings layer2/utilization/wear/ideal_lap/weekend_state/feature_view) and packets/physics.md (full container + all 6 existing component sections, precedent style for a new #661 segment_map component). Task scope: author a MAP-DELTA only (no docs/architecture edit) for the new src/physics/segment_map/ package landed by impl-660 -- 5 modules (protocols.py, runtime.py, identity.py, from_mixture.py, store.py) + __init__.py, 40 green unit tests, no src/ consumer yet.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:37:41.725045+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "packets",
+      "why": "Authored the segment_map component delta by reading all 5 source modules + __init__.py directly (protocols.SeverityMixture Protocol shape, runtime.SegmentMap flat-array dataclass + hot-path methods, identity.VocabularyRef/MapVersion + hash helpers, from_mixture.py as the sole layer2.property_mixture import site, store.py's SQLite persistence mirroring estimate_store.py conventions). Cross-checked against tests/unit/physics/segment_map/ (24 runtime + 16 store = 40 tests, matches handoff claim) and grepped the package for evo-region imports (none) and repo-wide for other segment_map importers (none -- MEASURED-not-wired confirmed, not over-claimed).",
+      "mechanical": false,
+      "ts": "2026-07-25T16:38:42.881275+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "index-overlays",
+      "why": "Index/overlay delta is consistent with the packets delta: same struct:physics.segment_map id, same parent/path/status/confidence, purpose string is a compressed restatement of the packet section. Edge follows the established sibling pattern exactly (verified by reading all 4 existing physics-subcomponent constrained-by edges in constraints.yml).",
+      "mechanical": false,
+      "ts": "2026-07-25T16:38:58.820884+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "map-compliance",
+      "why": "Final gate: MAP_DELTA.md carries the complete, self-contained delta (packet section, intro bullet, index.md node, constraints.yml edge, no-evo-import confirmation, no-discrepancy finding). No blockers, no triage candidates beyond what the epic already tracks. Ready for the Admiral to fold at #659 closeout.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:39:13.919833+00:00"
+    }
+  ],
+  "engine_session": {
+    "session_id": "cmdr-661-661cartography",
+    "status": "released",
+    "claimed_at": "2026-07-25T16:39:23.063529+00:00",
+    "last_heartbeat": "2026-07-25T16:39:23.063529+00:00",
+    "claimed_by": "cartographer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T16:39:23.167546+00:00"
+  }
+}

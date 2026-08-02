@@ -1,0 +1,725 @@
+{
+  "work_id": "522-phase-align-utilization",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "decide-fix",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, the physics.md packet utilization section, and the two decision anchors (c1-driver-utilization-design, ideal-lap-sim-two-sided-evaluator). Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + utilization packet + decision anchors loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 Diagnose: discriminate (a) misregistration vs (b) under-called caps",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for the DIAGNOSIS gate. Evidence-only; NO production code change. On 1-2 RBR 2023-Q corners (Monaco/VER fast corner is the canonical 3.79x case; add one braking knee), pull the ideal-lap speed trace (PhysicsSimulator canonical path via car_prior.build_car_ceiling), the real best-lap speed, and the ribbon curvature, ALL on TRUE track distance (not normalized progress). Determine whether the 3.3-3.8x ratios come from (a) corner misregistration by resample_by_progress (ideal caps physical; corners drift in distance) or (b) genuinely under-called ideal corner caps (lateral frontier / Gsat fallback too low even when distance-aligned). Concretely: (i) overlay v_ideal, v_real, curvature vs distance; (ii) check the ideal lap's apex/min-speed values are physically plausible for each corner's curvature; (iii) check whether min-speed points line up in distance between ideal and real; (iv) recompute the regime ratio under a true-distance alignment and report whether it falls to <=~1. Deliver .agent-work/522-phase-align-utilization/DIAGNOSIS.md naming (a) or (b) with the trace evidence and a recommended comparison method, plus a reproducible diagnostic script and the figure(s). Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with the (a)/(b) diagnosis and a recommended comparison method",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "No production code change in this gate (diagnosis only).",
+        "py launcher; FastF1 cache + season DBs read-only via absolute main-checkout paths.",
+        "FastF1 pos_data X/Y are decimetres (x0.1 for metres)."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization \u2014 src/physics/utilization/regime_utilization.py (comparison core), characterize.py (orchestration)",
+          "struct:physics \u2014 physics_simulator.py simulate_lap/_compute_speed_caps, sim_evaluator.resample_by_progress"
+        ],
+        "capability": [
+          "per-regime driver utilization \u2014 how the realised lap is compared to the ceiling"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "physics rigor: truth-anchored, units/bounds explicit"
+        ],
+        "decision": [
+          "decision:ideal_lap_sim_two_sided_evaluator (review trigger names the phase-alignment fix)",
+          "decision pressure: a vs b picks the comparison method \u2014 confirmed by human at decide-fix"
+        ],
+        "evidence": [
+          "claim: ratio falls to <=~1 under correct alignment if (a); apex caps physical if not (b)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "(b) under-called lateral caps",
+            "detail": "Monaco/VER: (a) misregistration REJECTED (lap-len delta 0.47%, true-dist registration changes U by 0.4-0.7%); (b) CONFIRMED: fitted A0=2.64 m/s2 implies 0.27g grip, tunnel cap 16 m/s vs VER 63 m/s (3.98x raw). Recommends per-regime measured-frontier comparison; flags pooling-dilution hypothesis (UNVERIFIED units-vs-dilution)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 Diagnose: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Independently verify the diagnosis: the traces are real (regenerable from the script), the (a)/(b) call is justified by the evidence (not asserted), the ideal-lap path used is the canonical one, and the recommended comparison method follows from the finding. Dispatch constellation-reviewer. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "detail": "Diagnosis SOUND (7/7 checks). Corrects implementer: NOT pooling dilution but a LATERAL UNITS BUG (g-units producer vs m/s2 consumer, missing x9.81 + spurious xrho), same class as #518 G5. Direct LateralView.fit x9.81 -> tunnel 65.9 vs VER 63.3 (4%). Blast radius: shared lateral_capability feeds #485 production envelope."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 Diagnose: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: confirm the DIAGNOSIS.md artifact exists and advance. BLOCK: rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "diagnosis report exists",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import os,sys; sys.exit(0 if os.path.exists('.agent-work/522-phase-align-utilization/DIAGNOSIS.md') else 1)\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "detail": "diagnosis APPROVE; lateral units bug identified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import os,sys; sys.exit(0 if os.path.exists('.agent-work/522-phase-align-utilization/DIAGNOSIS.md') else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "decide-fix": {
+      "id": "decide-fix",
+      "title": "Checkpoint: human approves the comparison-fix approach from the diagnosis",
+      "imperative": "Present the gate-1 diagnosis (a vs b) and the recommended comparison method to the human. Get explicit approval of the fix approach BEFORE authoring the g2 handoff. If the diagnosis contradicts the plan's leading hypothesis (a) in a way that changes the gate structure (e.g. (b) demands a lateral-frontier rebuild beyond this issue), surface it and re-plan (abort-and-reissue) rather than forcing the frozen g2/g3 shape.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 diagnosis integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "human approved the comparison-fix approach",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-decide-fix-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-decide-fix-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "pivot to lateral units fix at source",
+            "detail": "User: 'fix the bugs'. Diagnosis = lateral units bug (g-units producer vs m/s2 consumers; missing x9.81 + spurious xrho), NOT comparison method. Fix at the SHARED consumer (physics_data_models.lateral_capability + physics_simulator + check friction_coupling/apex_extract + grip-ratio fallbacks), correcting the #485 production envelope too (physics-only blast radius, no prediction consumers). Re-plan g2=units-fix, g3=re-run+verdict."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 Fix: correct the lateral grip units (g-coefficient vs m/s2) at source",
+      "imperative": "REWORK (Option A, post-BLOCK; handoff-v2). The first attempt fixed the SHARED consumer for g-units, which broke the live convention-A path (sim_evaluator/fit_batch in m/s2, default_A0=30 \u2014 the consumer is correctly written for that). User decided Option A: DISCARD the first-attempt diff (git checkout -- src/physics tests/...), then convert the g-unit store A0/A2 -> the consumer's m/s2 convention at the car_prior boundary ONLY (mirror the #518 G5 p_max/MASS_KG conversion in _build_longitudinal): A0_param=A0_mu*G; A2_param=A2_mu*G/air_density (exact \u2014 uses build_car_ceiling's mean-causal air_density that also flows to the consumer); covariance via Jacobian diag(G, G/air_density). Consumer (physics_data_models/physics_simulator/capability_envelope), producer (lateral_view), store schema, regime_utilization all UNTOUCHED. Truth anchor moves to test_car_prior (C1 path): g-unit store row -> tunnel cap ~63-66 m/s, RED->GREEN. Prove convention A unbroken (reverted consumer tests pass unchanged). FULL physics region green (no narrow command). Wider producer-unification audit = issue #525. Fill IMPLEMENTER_HANDOFF from handoff-v2. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix approach approved at decide-fix (lateral units fix at source)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Single canonical lateral-scaling location; no dual unit convention / compatibility shim.",
+        "Truth-anchored: validate corrected caps against real apex speeds, not buggy legacy test expectations.",
+        "Audit ALL lateral consumers for the same bug or pre-existing compensation; do not double-correct.",
+        "no evo import; py launcher; physics-model change = highest-applicable L1-L4 evidence with units/bounds explicit."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics \u2014 physics_data_models.LateralParameters.lateral_capability (shared), physics_simulator._compute_speed_caps (inline), capability_envelope.lateral_capability (#485 wrapper), friction_coupling.py, apex_extract.py",
+          "struct:physics.layer2 \u2014 lateral_view.py (producer: g-unit convention, the source of truth)"
+        ],
+        "capability": [
+          "lateral capability ceiling (feeds the ideal-lap sim corner caps AND the #485 production envelope)"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "single canonical execution path; physics rigor"
+        ],
+        "decision": [
+          "decision:ideal_lap_sim_two_sided_evaluator (units fix parallels the #518 G5 p_max fix already recorded on this anchor)",
+          "decision:c1_driver_utilization_design",
+          "decision candidate: lateral g-unit-vs-m/s2 boundary fix becomes a durable anchor at reconcile (cf. G5)"
+        ],
+        "evidence": [
+          "claim: corrected Monaco tunnel cap ~63-66 m/s (vs VER 63.3); physics suite re-baselined to truth; corner-regime U un-pins from 2.0"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "g2-review BLOCK: consumer-side fix broke the live convention-A path (sim_evaluator/fit_batch). User chose Option A: convert g-units at the car_prior boundary (mirror #518 G5 p_max), consumer untouched. Wider B audit = issue #525."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "complete",
+            "detail": "Lateral units fix: single G_MS2=9.81; xg+drop-rho at lateral_capability(root)+_compute_speed_caps/_gsat_ceiling(inline)+capability_envelope headroom; friction/apex delegate. Truth anchor tunnel cap ~63-66 vs VER 63.3 (RED->GREEN). KEY RISK: fix inverts convention; correctness rests on convention-A (legacy m/s2 FitStore A0=30) being runtime-disjoint. Re-baselined 9 test files incl 4 known_answer (restored grip directionality). Full physics unit 607 passed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "complete",
+            "detail": "Option A rework + fallback fix. car_prior._assemble_lateral converts ONLY store-pooled g-units (A0*G, A2*G/air_density, cov Jacobian); m/s2 defaults pass through unconverted (fallback 3.06g not 30g). Consumer/producer untouched (convention A intact). Truth anchor tunnel cap 63.19 vs VER 63.3. Diff = car_prior.py + test_car_prior.py only. Full physics region 642 passed/6 skipped. #525 TODO present."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 Fix: review",
+      "imperative": "REWORK REVIEW (Option A; handoff-v2). Verify the car_prior boundary conversion: diff is EXACTLY car_prior.py + test_car_prior.py (consumer/producer byte-identical); store g-units converted (A0*G, A2*G/air_density, cov Jacobian) ONLY on the pooled branch; m/s2 defaults pass through UNCONVERTED (fallback ~3g not 30g, new regression test). CRITICAL: convention A UNBROKEN \u2014 independently confirm the sim_evaluator/fit_batch m/s2 path is intact (consumer untouched) and the full physics region is green with NO re-baselining (642 passed). Truth anchor tunnel cap ~63 m/s vs VER 63.3. #525 TODO present. Independently spot-check one corrected cap. Dispatch constellation-reviewer. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "rework: g2-implement re-done as Option A (car_prior boundary conversion + fallback fix). The prior BLOCK review was on the discarded consumer-side attempt; need a fresh review of the new diff."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "detail": "RISK1 FAIL: convention A NOT runtime-disjoint. run_sim_evaluator.py + build_physics_fit_store.py feed conv-A (m/s2, A0~28) params into the fixed shared consumer -> post-fix 28g floors / 6121km/h corners. sim_evaluator is decision:ideal_lap_sim_two_sided_evaluator status CURRENT. Tests blind (all re-baselined to conv B). RISK2 clean (no known-answer weakening; but 'saturated clamp' narrative inaccurate). Fix math correct FOR conv B; spot-check 62.4 vs 63.3. Clear-block: convert at a producer boundary / unify producers / retire legacy."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "detail": "Option A rework APPROVE (6 checks). Diff=2 files; consumer byte-identical; conversion exact (A2_param*rho==A2_g*G); fallback unconverted (3.06g); truth anchor 17->63 spot-checked; full region 642 passed/6 skipped NO re-baselining; convention A structurally unbroken; G_MS2 imported; #525 TODO present."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 Fix: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions pass, advance. BLOCK: rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lateral capability is physically scaled; physics lateral/capability/sim suite green (re-baselined to truth)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "detail": "Option A APPROVE; convention A unbroken"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 Re-run + verdict: re-assess C1 on the RBR 2023-Q subset",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for the RE-RUN gate. Run scripts/driver_utilization_dashboard.py on the RBR 2023-Q subset (Monaco/Italy/Great Britain/Singapore, VER) with the lateral-units-corrected ceiling. Compare per-regime U + honest sigma before (clipped at 2.0) vs after (expect braking/fast-corner to un-pin now that the corner caps are physical). Re-check the secondary straight under-call (the corrected lateral does not touch straight power-drag, so straight may still need a note; record as a finding for triage if it persists). Author .agent-work/522-phase-align-utilization/VERDICT.md with a per-regime GO/CONTEXTUAL/NO-GO assessment grounded in the new numbers; explicitly state that the #518 'phase misalignment' conclusion was superseded by the lateral units bug. Update the physics.md packet characterization finding + the ideal-lap decision anchor review-trigger text to reflect the units fix (reconcile will confirm). Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 fix integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with the re-run numbers and VERDICT.md",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "RBR subset only; do NOT wire other constructors.",
+        "Verdict grounded in actual dashboard numbers, not narrative.",
+        "py launcher; store/cache read-only via absolute main-checkout paths."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/driver_utilization_dashboard.py (re-run surface)",
+          "struct:physics.utilization"
+        ],
+        "capability": [
+          "per-regime driver utilization \u2014 re-assessed verdict"
+        ],
+        "constraint": [
+          "honest covariance first-class (envelope + lap-sampling sigma)"
+        ],
+        "decision": [
+          "decision:ideal_lap_sim_two_sided_evaluator (verdict updates its characterization finding)"
+        ],
+        "evidence": [
+          "claim: braking/fast-corner no longer pinned at 2.0; straight stays physical; per-regime verdict"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "CONTEXTUAL",
+            "detail": "Corner regimes UN-PINNED from 2.0: braking 0.89-1.02, fast_corner 0.92-0.97, slow_corner 0.89-0.96, straight 0.90-1.01 (all 4 RBR cases, honest sigma). Overall CONTEXTUAL (up from #518 NO-GO). #518 phase-misalignment superseded by lateral units bug. Docs (packet + decision anchor) updated; 35/35 tests pass, no old clipped expectations."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 Re-run + verdict: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: the dashboard re-run is on the correct RBR subset, the verdict numbers match the dashboard output, the GO/CONTEXTUAL/NO-GO calls are honestly grounded (covariance considered), and the packet/decision-anchor text matches the result. Dispatch constellation-reviewer. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "detail": "C1 re-run verdict APPROVE (5/5). Numbers independently reproduced (267s, match to 3 sig figs); corner regimes un-pinned (no 2.0 clip); CONTEXTUAL honestly grounded; root-cause statement correct; docs purged of stale NO-GO/phase-misalignment claims; 35/35 tests; no src change. Straight under-call (Italy 0.987/Singapore 0.958) -> triage."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 Re-run + verdict: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions pass, advance. BLOCK: rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dashboard re-run + verdict produced; utilization + dashboard tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "detail": "C1 re-run APPROVE; CONTEXTUAL"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-implement",
+      "statement": "Legacy convention-A lateral path (LateralEnvelopeFit/ParameterEstimator->FitStore, default_A0=30 m/s2) is now non-physical against the g-unit shared data model; runtime-disjoint from #522 but needs reconcile-or-remove"
+    },
+    {
+      "id": "tc2",
+      "from": "g2-implement",
+      "statement": "braking_fit.py defines a duplicate G_MS2=9.81; consolidate to import physics_data_models.G_MS2 (single gravity constant)"
+    },
+    {
+      "id": "tc3",
+      "from": "g2-implement",
+      "statement": "Plausibility clips A0_max_plausible=60 / A2_max_plausible=0.01 sized for convention-A m/s2; semantically stale for g-unit A0 (never bite)"
+    },
+    {
+      "id": "tc4",
+      "from": "g2-implement",
+      "statement": "physics_simulator._sample_parameters 185-line simplification violation (PRE-EXISTING, untouched by #522); + full inline de-dup of lateral g->m/s2 formula deferred"
+    },
+    {
+      "id": "tc5",
+      "from": "g3-review",
+      "statement": "Straight U slight under-call persists (Italy 0.987, Singapore 0.958) after the lateral fix \u2014 the lateral fix doesn't touch straight power-drag; route to a power-drag calibration audit (#525-adjacent)"
+    }
+  ],
+  "blockers": []
+}

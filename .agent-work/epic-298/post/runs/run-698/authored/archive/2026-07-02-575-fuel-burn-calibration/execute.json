@@ -1,0 +1,241 @@
+{
+  "work_id": "575-fuel-burn-calibration",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/architecture/packets/physics.md. Confirm the frozen plan's intent and scope (MISSION_FRAME.md \u2014 this run is validation-only, wiring deferred), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + physics packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 (validate the zero-fit throttle-anchored burn-rate hypothesis, NOT wired): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate. Task: (1) Add a cited per-season FIA fuel-regulation table (flow-rate cap kg/h and max race-start fuel kg: flow 100 kg/h flat 2014-2025, ~70 kg/h-equivalent from 2026 per the energy-based 3000 MJ/h limit; max fuel 110kg 2019-2025, 70kg 2026 \u2014 sources recorded in MISSION_FRAME.md Governing Constraints). (2) Build src/physics/burn_rate_calibration.py implementing the ZERO-FIT estimator: for each race ('R') session, reuse the existing single seam `src.data.telemetry_session.build_db_session(TelemetryStore().read_session(year, gp_name, 'R'))` (car_data keyed by driver -> DataFrame with `Throttle` (0-100) + `SessionTime` timedelta; `DBSession.laps` -> `_ShimLaps` with `Driver`/`LapNumber`/`LapStartTime`/`Time`); for each lap, time-weight-average throttle over [LapStartTime, Time) and estimate `lap_burn_kg = flow_rate_cap_kg_per_s * mean_throttle_fraction * lap_duration_s`. Average per season (NO cross-season pooling; each season fully independent). (3) Cross-check across a WIDER circuit range, not just the two free-flow anchors (human steer: 'those were helpful for fitting, let's check a range of races') \u2014 Bahrain, Spain (2026: 'Barcelona-Catalunya', since Bahrain is absent from the 2026 calendar and the DB names 2026's Spain round differently), Silverstone (moderate/in-between case, matches the circuit set already used in the uncommitted scripts/mass_validation_dashboard.py panel C), and Monaco (heavily pace-managed adversarial case). At EACH circuit, compare the throttle-integral estimate against the INDEPENDENT lap-time-slope signal (OLS observed lap-time-vs-lap-number slope vs the mass model's predicted slope at the throttle-derived kg/lap), reporting real numbers per (season, circuit). Expected pattern to report explicitly: agreement at Bahrain/Spain/Silverstone (both methods should roughly concur); at Monaco, the lap-time-slope signal is expected to diverge (known pace-management confound) while the throttle-integral estimate should stay physically sane and duration-adjusted-comparable to the other circuits \u2014 that divergence pattern, if observed, is evidence FOR the throttle method's robustness, not a failure of it. Do not average/pool the per-circuit comparisons into one number; report per (season, circuit). (4) SC/VSC natural-reproduction check: using the same telemetry, compute the throttle-integral burn estimate separately for SC/VSC-flagged laps vs green-flag laps within the same sessions (join lap_times.track_status from the season DB, or the store's own status if present) and report the ratio \u2014 check how it compares to the existing hardcoded SC_BURN_FRACTION=0.5 (informational only; do not change SC_BURN_FRACTION). (5) Add a runnable script (e.g. scripts/validate_burn_rate_hypothesis.py) that prints/plots this evidence for 2019-2026. Do NOT modify mass_model.py's public constants and do NOT wire anything into race_mass/fuel_at_lap in this gate \u2014 that is explicitly deferred to a follow-up decided after this evidence is reviewed. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "DB-only/telemetry-store-only data access (no direct FastF1 calls); reuse the existing build_db_session/TelemetryStore seam, do not re-derive a parallel telemetry loader",
+        "no cross-season pooling/shrinkage anywhere in this gate \u2014 throttle-integral estimate AND lap-time-slope cross-check are both computed per-season only",
+        "no regression/fitted parameters in the primary estimator \u2014 flow_rate_cap is the literal regulated constant, not a free parameter",
+        "mass_model.py itself is NOT modified in this gate (pure-arithmetic module stays untouched); no wiring into race_mass/fuel_at_lap",
+        "SC_BURN_FRACTION is not changed \u2014 the SC/VSC check is informational evidence only",
+        "cite the regulatory source values inline as a comment/docstring, not just in the mission frame"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics \u2014 src/physics/mass_model.py (existing constants: DEFAULT_BURN_PER_LAP_KG, MAX_FUEL_KG, SC_BURN_FRACTION, SEASON_BASE_KG pattern to follow; read-only reference in this gate)",
+          "struct:data \u2014 src/data/telemetry_store.py (TelemetryStore.read_session), src/data/telemetry_session.py (build_db_session/DBSession shim) \u2014 the seam to reuse, verified: tele_car.throttle + tele_laps.lap_start_time_s/lap_end_time_s present for race sessions"
+        ],
+        "capability": [
+          "physics mass/fuel accounting \u2014 currently a flat all-season burn constant; this gate produces validation evidence only"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "ORCHESTRATOR_CONTEXT canonical-data-constraint (DB/telemetry-store only)"
+        ],
+        "decision": [
+          "decision pressure: decision:burn_rate_calibration_design \u2014 regulation-anchored, zero-fit throttle-integral, independently-per-season, no pooling; wiring decision explicitly deferred to the human at this run's review/triage step"
+        ],
+        "evidence": [
+          "FIA regulation citations: 100 kg/h fuel-flow flat 2014-2025, max race fuel 110kg (2019-2025) -> 70kg (2026), energy-based 3000 MJ/h flow limit from 2026 (see MISSION_FRAME.md Governing Constraints)",
+          "claim: throttle-integral estimate and lap-time-slope cross-check agree at Bahrain/Spain/Silverstone, and diverge in the expected direction at Monaco (pace-management confound), per season 2019-2026 (both per-season and per-circuit only, no pooling)",
+          "claim: SC/VSC-vs-green throttle-integral burn ratio is informative relative to the existing hardcoded SC_BURN_FRACTION=0.5"
+        ],
+        "confidence_flags": [
+          "genuinely new structure \u2014 no prior packet documents a burn-rate calibration module"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "completed": "slice",
+            "summary": "See .agent-work/575-fuel-burn-calibration/crew-handoffs/g1-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: verify the estimator is genuinely zero-fit (flow_rate_cap is a literal cited constant, not derived via regression), verify each season/circuit combination (both the throttle-integral estimate and the lap-time-slope cross-check) is computed independently with no pooling across seasons OR circuits, verify the cross-check actually covers Bahrain, Spain (or Barcelona-Catalunya for 2026), Silverstone, AND Monaco (not just the original two anchors), verify the reported Monaco divergence is explained as an expected pace-management confound rather than hand-waved, verify it reuses the existing build_db_session/TelemetryStore seam rather than a parallel loader, verify the regulation citations are present and accurate, verify mass_model.py is untouched (read-only) and SC_BURN_FRACTION is unchanged, verify the cross-check and SC/VSC evidence are reported with actual numbers per (season, circuit) \u2014 not just asserted. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "See .agent-work/575-fuel-burn-calibration/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions pass, advance this gate. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates (e.g. the deferred wiring work itself, once this evidence is reviewed, becomes a triage/follow-up candidate at the triage step).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new calibration module unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_burn_rate_calibration.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE, see g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_burn_rate_calibration.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

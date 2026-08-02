@@ -1,0 +1,1097 @@
+{
+  "work_id": "issue-356-utilization-knob",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-implement",
+    "g6-review",
+    "g6-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, CREW_CONTEXT.md, and packets utils.md / evo_predictor.md / compound_prior.md. Confirm the frozen plan's intent (result-preserving utilization knob) and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + relevant packets loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded CREW_CONTEXT + utils/evo_predictor packets; frozen plan intent confirmed: result-preserving utilization knob, src/utils home, 6 gates"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 shared utilization core: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1. Create src/utils/utilization.py with UTILIZATION_LEVELS=('background','balanced','max'), frozen ResourcePlan(level,n_workers,threads_per_worker,priority), resolve_resource_plan(level,*,physical_cores=None,available_mem_gb=None,mem_per_worker_gb=1.0) enforcing workers*threads~=cores with a RAM auto-cap (logged when it binds), init_worker(threads_per_worker,priority) (module-level/picklable: sets OMP/MKL/OPENBLAS/NUMEXPR env + torch.set_num_threads + psutil OS priority), and run_jobs(jobs,worker_fn,plan,*,on_complete=None,fail_fast=True,logger=None) using ProcessPoolExecutor with n_workers==1 short-circuiting to an in-process loop, results reassembled in INPUT order, fail_fast surfacing the first error with the job's identity. Declare psutil in pyproject.toml. Add tests/unit/test_utilization.py. Dispatch a constellation-implementer subagent; integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow the superpowers:test-driven-development skill: red-green-refactor, write failing tests FIRST, watch them fail, implement to green, then refactor.",
+        "No mutable module-level runtime state; no module-level DatabaseManager.",
+        "Nothing F1-specific in src/utils/utilization.py.",
+        "Validation messages name field, expectation, actual.",
+        "Run py -m src.utils.simplification_limits on touched paths."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "25 passed",
+            "simplification": "PASS",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g1-implementer-result.md",
+            "decision": "cores1-clamp confirmed by commander"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 shared utilization core: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan and IMPLEMENTER_RESULT. Inspect the diff for src/utils/utilization.py, tests/unit/test_utilization.py, pyproject.toml. Verify: level->plan mapping correct on a stubbed core count; RAM cap binds and logs; cpu_count fallback; workers*threads~=cores invariant; run_jobs reassembles in input order under out-of-order completion; n_workers==1 takes the in-process path (no pool); a raising job surfaces wrapped and closes the pool; no module-level mutable state; psutil declared. Dispatch a constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 shared utilization core: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "utilization core unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/test_utilization.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/test_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 gold config + CLI plumbing: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G2. Add utilization:str to GoldCycleRuntimeConfig (config.py) validated against UTILIZATION_LEVELS (reuse src/utils/utilization); wire into _parse_and_validate, _config_to_raw, and the override section_map (utilization->runtime). Add `[runtime] utilization = \"balanced\"` to configs/evo/gold_defaults.toml. Add --utilization {background,balanced,max} to the gold-cycle subparser in run.py and apply it in cmd_gold_cycle DIRECTLY post-load (config.runtime.utilization = args.utilization) OUTSIDE apply_cli_overrides so gold mode allows it and it never lands in applied_overrides. Add config tests. NO parallelism and NO report-schema change in this gate. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 core landed (UTILIZATION_LEVELS available)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 core landed and committed (UTILIZATION_LEVELS available)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow the superpowers:test-driven-development skill: red-green-refactor, write failing tests FIRST, watch them fail, implement to green, then refactor.",
+        "--utilization is a non-policy hint: never in applied_overrides; gold mode must still accept it.",
+        "Do NOT add utilization to the gold report schema/run_config in this gate.",
+        "Run py -m src.utils.simplification_limits on touched paths."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "69 passed",
+            "simplification": "no new violations; 3 pre-existing -> triaged",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g2-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 gold config + CLI plumbing: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Inspect diff for config.py, run.py, gold_defaults.toml, test_gold_cycle_config.py. Verify: valid levels accepted, invalid rejected with a field-naming message; default is balanced; gold mode with --utilization applies the hint and does NOT raise and does NOT populate applied_overrides; research/smoke still behave. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 gold config + CLI plumbing: integrate",
+      "imperative": "Check verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gold-cycle config tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 gold training-loop parallelization: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G3. Create src/evo_predictor/gold_cycle/parallel_jobs.py with a picklable job dataclass + module-level run_train_backtest(job) worker (runs cmd_train, fills bundle=manifest_path, runs cmd_backtest, returns manifest/backtest paths + identifiers). In runner.py resolve the plan once via resolve_resource_plan(config.runtime.utilization, available_mem_gb=...) and log it. Convert _train_all_modules, _collect_loso_fusion_train_rows, _blocked_calibration_module_rows to build the SAME args in the SAME order, hand jobs to run_jobs, and assemble rows in input order. Move ETA logging into on_complete (completed-count + wall-clock). Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 run_jobs + G2 config.runtime.utilization available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 run_jobs + G2 config.runtime.utilization landed & committed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow the superpowers:test-driven-development skill: red-green-refactor, write failing tests FIRST, watch them fail, implement to green, then refactor.",
+        "Worker fns module-level and spawn-safe; jobs carry only picklable primitives/paths (no DB handles, no tensors).",
+        "Row assembly in input order to preserve byte-identity.",
+        "DB-only analysis; no FastF1.",
+        "Run py -m src.utils.simplification_limits on touched paths; split files approaching limits."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "33/40 passed",
+            "simplification": "no new violations; loso fn improved under limit; 1 pre-existing (_gold_preflight_coverage)",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g3-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 gold training-loop parallelization: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Inspect diff for runner.py, runner_support.py, parallel_jobs.py, tests. Verify: jobs built in the same order/args as before; rows assembled in input order; worker fns module-level and carry only picklable data; progress logging coherent; background (1 worker) takes the in-process path. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G3"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 gold training-loop parallelization: integrate",
+      "imperative": "Check verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gold runner + fusion-train-rows tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_fusion_train_rows.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_fusion_train_rows.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 sampled-backtest per-race refactor + parallelize: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G4. Extract a pure _score_one_race(...) from backtest_sampled_runtime's loop (no behavior change); make backtest_sampled_runtime a thin driver that maps races via run_jobs, with a module-level race-scoring worker that rebuilds DatabaseManager(db_path) + runtime-from-manifest + normalizer inside the worker. Thread the plan from _run_sampled_backtest_phase in runner.py. Preserve per_race ordering and skip semantics exactly. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 run_jobs + G3 parallel_jobs module landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 run_jobs + G3 parallel_jobs module landed & committed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow the superpowers:test-driven-development skill: red-green-refactor. For this behavior-preserving refactor, ensure characterization tests cover _score_one_race equivalence BEFORE refactoring.",
+        "Refactor must preserve existing backtest behavior (tests green).",
+        "per_race results reassembled in calendar/input order.",
+        "Worker rebuilds DB/runtime/normalizer from paths; no handles cross the process boundary.",
+        "DB-only analysis; no FastF1.",
+        "Run py -m src.utils.simplification_limits on touched paths."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "47 passed (1171 evo suite)",
+            "simplification": "no new violations; backtest_sampled_runtime brought under limit; sibling module added (confirmed)",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g4-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 sampled-backtest per-race refactor + parallelize: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Inspect diff for sampled_backtest.py, runner.py, parallel_jobs.py, tests. Verify: _score_one_race is pure and equivalent to the old loop body; driver preserves ordering and skip reasons; worker reconstructs state from paths only; no shared RNG. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G4"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g4-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 sampled-backtest per-race refactor + parallelize: integrate",
+      "imperative": "Check verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sampled backtest tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_sampled_backtest.py tests/unit/evo_predictor/test_sampled_backtest_cli.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_sampled_backtest.py tests/unit/evo_predictor/test_sampled_backtest_cli.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "G5 standalone scripts adopt core: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G5. Add --utilization {background,balanced,max} to scripts/build_rolling_compound_priors.py and scripts/run_sampled_runtime_comparison.py. Add module-level, spawn-safe worker fns (heavy/CLI work stays under if __name__=='__main__'); map the per-year(/round) prior fits and the default/trained backtests via run_jobs. Add a light 'parallel matches sequential' smoke check per script. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 run_jobs available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 run_jobs available & committed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow the superpowers:test-driven-development skill: red-green-refactor, write failing tests FIRST, watch them fail, implement to green, then refactor.",
+        "Worker fns importable module-level; no import-time side effects (guard heavy work under __main__).",
+        "DB-only analysis; no FastF1.",
+        "Run py -m src.utils.simplification_limits on touched paths."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "86 passed",
+            "simplification": "no new violations; 1 pre-existing (run_comparison)",
+            "spawn_gap": "real multi-process spawn for scripts untested - reviewer to close",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g5-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5 standalone scripts adopt core: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Inspect diff for the two scripts + their tests. Verify: worker fns spawn-safe (no import side effects); --utilization wired and validated; parallel output matches sequential on the smoke check. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G5"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "real_spawn_smoke": "passed",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g5-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5 standalone scripts adopt core: integrate",
+      "imperative": "Check verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT: APPROVE; real spawn smoke passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "rolling-prior + runtime-comparison tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/compound_prior/test_build_rolling_priors.py tests/unit/evo_predictor/test_sampled_runtime_comparison_manifest_resolution.py tests/unit/evo_predictor/test_sampled_runtime_comparison_reporting.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/compound_prior/test_build_rolling_priors.py tests/unit/evo_predictor/test_sampled_runtime_comparison_manifest_resolution.py tests/unit/evo_predictor/test_sampled_runtime_comparison_reporting.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-implement": {
+      "id": "g6-implement",
+      "title": "G6 determinism acceptance test + usage doc: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G6. Add the canonical determinism acceptance test: a tiny smoke gold cycle (smoke mode, max_rounds_per_year=1, 2-3 train years, fixture/small DB) run at background (1 worker, 1 thread) vs a forced multi-worker plan at the SAME 1 thread -> assert byte-identical report artifacts (hash JSONs); plus 1x1 vs balanced -> metrics within tolerance. Add a short usage doc note for the --utilization knob (CLI help/docs + gold_defaults comment). Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 + G4 gold-cycle parallelization landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 + G4 gold-cycle parallelization landed & committed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-implement-2"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow the superpowers:test-driven-development skill: this gate IS the test; author it to fail meaningfully if determinism is violated before relying on green.",
+        "Test must be bounded/fast (tiny smoke); deterministic seeds.",
+        "Keep the knob OUT of the gold report schema (runtime-only hint).",
+        "Run py -m src.utils.simplification_limits on touched paths."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-implement-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "accept reframed determinism guarantee",
+            "note": "weight byte-identity unattainable (intrinsic torch CPU drift); accepted structural byte-identity + weight agreement<1e-2 + proof worker-count adds no drift; bit-repro split to separate issue"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "2 passed (utilization_determinism), ran vs local data",
+            "guarantee": "reframed-human-approved",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g6-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-review": {
+      "id": "g6-review",
+      "title": "G6 determinism acceptance test + usage doc: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify the determinism test actually asserts byte-identity at fixed threads (1 worker vs N workers) and tolerance across thread counts, runs bounded, and the doc note is accurate. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G6",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G6; guarantee reframed (human-approved)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "divergence_catch": "reproduced",
+            "artifact": ".agent-work/issue-356-utilization-knob/crew-handoffs/g6-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-integrate": {
+      "id": "g6-integrate",
+      "title": "G6 determinism acceptance test + usage doc: integrate",
+      "imperative": "Check verdict. APPROVE: run the determinism test, confirm postconditions, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G6",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT: APPROVE; divergence-catch reproduced"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "determinism acceptance test passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest -q -k utilization_determinism"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest -q -k utilization_determinism",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-implement",
+      "statement": "Pre-existing simplification debt surfaced by --paths during G2: src/evo_predictor/gold_cycle/config.py _parse_and_validate (~134 lines) and src/evo_predictor/run.py _build_parser (~195 lines) + cmd_train_latent_power_module (124 lines) exceed the <100 function-line limit. Plan a focused split. Not caused by issue 356; grandfathered by --baseline only as part of broader legacy debt."
+    },
+    {
+      "id": "tc2",
+      "from": "g5-implement",
+      "statement": "Pre-existing simplification debt: scripts/run_sampled_runtime_comparison.py run_comparison is 134 lines (>100 limit), pre-existing (was 135 pre-G5). Extract the backtest execution block into a helper. Not caused by issue 356."
+    },
+    {
+      "id": "tc3",
+      "from": "g6-implement",
+      "statement": "Latent-power training is not bit-reproducible run-to-run on torch 2.10 CPU (py3.14/Win) even single-thread + same-seed + fixed PYTHONHASHSEED (~3e-4 weight drift; rank metrics swing O(0.1-0.3)). Orthogonal to run_jobs/parallelism, but means gold-cycle committed artifacts are not bit-stable across reruns in general. Investigate torch.use_deterministic_algorithms(True) + deterministic reductions + thread pinning; assess training-speed cost. Human approved filing as a separate issue (2026-06-03)."
+    }
+  ],
+  "blockers": []
+}

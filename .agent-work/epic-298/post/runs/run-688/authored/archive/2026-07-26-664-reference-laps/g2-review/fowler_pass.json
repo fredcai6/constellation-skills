@@ -1,0 +1,20 @@
+{
+  "work_id": "664-reference-laps-g2-review",
+  "diff_ref": "4 new files (src/physics/utilization/reference_lap_product.py, reference_utilization_store.py, tests/unit/physics/test_reference_lap_product.py, test_reference_utilization_store.py) + 1 additive .gitignore line",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md; sibling stores layer2/estimate_store.py, segment_map/store.py",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "overridden", "finding": "", "override": {"repo_standard": "CREW_CONTEXT 'Match the surrounding code's naming/labeling conventions'; module docstring 'Mirrors layer2/estimate_store.py / segment_map/store.py conventions'", "reason": "The weekend-key 4-tuple (year, gp_name, session_type, map_version) recurs across has/get/row_count signatures — a genuine clump — but it is exactly the sibling stores' positional-key convention and mirrors the table PK 1:1; extracting a key object here would diverge from estimate_store/segment_map for no locality gain and break the deliberate cross-store consistency."}},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "flagged", "finding": "Minor, NON-BLOCKING observation: FieldBasis.sessions is a tuple that in g2 always carries exactly one element (session_type,), built 'so the descriptor extends to multi-session bases without a schema change', and store carries a FORMAT_VERSION recorded 'so a future schema evolution can branch on it'. These are forward-compat hooks for capability not yet exercised (YAGNI-adjacent). Accepted: the field_basis descriptor is explicitly needed for the g4 drop-a-constructor jackknife (documented), the sessions-tuple is a cheap 1-line hedge, and FORMAT_VERSION mirrors estimate_store's own versioning convention. Raised as an observation for Commander awareness, not a blocker."},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

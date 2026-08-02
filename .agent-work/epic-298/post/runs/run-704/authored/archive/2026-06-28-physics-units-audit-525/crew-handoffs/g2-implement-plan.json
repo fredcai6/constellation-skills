@@ -1,0 +1,386 @@
+{
+  "work_id": "525-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-friction-verify",
+    "m2-constants-module",
+    "m3-mass-kg-dedup",
+    "m4-rho-fallback",
+    "m5-gravity-literals",
+    "m6-lateral-labels",
+    "m7-longitudinal-labels",
+    "m8-rho-labels",
+    "m9-comment-fix",
+    "m10-guard-test",
+    "m11-suite-green"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context and verify handoff completeness",
+      "imperative": "Verify handoff is complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format — all present. Read AUDIT_MAP.md seams. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete: all fields verified, AUDIT_MAP seams read, friction_coupling not-called confirmed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-friction-verify": {
+      "id": "m1-friction-verify",
+      "title": "VERIFY friction_coupling is never invoked, then remove it",
+      "imperative": "Grep for .friction_coupling. (dot-method calls) in all src. If invoked: STOP and report. If only instantiated (confirmed): remove self.friction_coupling line from parameter_estimator.py, remove import, remove __init__.py export, delete friction_coupling.py, delete tests/unit/physics/test_friction_coupling.py, remove import+class from test_numerical_stability.py (keep the test method that uses CapabilityEnvelope), remove import+test from test_physics_properties.py. Run: py -m pytest tests/unit/physics/test_numerical_stability.py tests/property/test_physics_properties.py -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "friction_coupling.py removed or STOP reported; test suite still GREEN for affected files",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_numerical_stability.py tests/property/test_physics_properties.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["no evo import", "STOP if actually called"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-constants-module": {
+      "id": "m2-constants-module",
+      "title": "OT-3: Create src/physics/constants.py with GRAVITY_MS2",
+      "imperative": "Create src/physics/constants.py with GRAVITY_MS2 = 9.81. Update car_prior.py import: replace 'from src.physics.braking_fit import G_MS2' with 'from src.physics.constants import GRAVITY_MS2' and update the two usages (s0 = G_MS2 -> GRAVITY_MS2, etc). Remove G_MS2 from braking_fit.py (replace definition with deprecation-import comment or just remove). Replace all >=8 scattered 9.81/_G inline-g literals listed in AUDIT_MAP with imports of GRAVITY_MS2 (lateral_view.py, braking_view.py, traction_view.py, power_drag_view.py, coast_view.py, decoupled_longitudinal.py _G, physics_simulator.py inline, lateral_report.py _G, session_lateral.py _G, session_braking.py inline, session_traction.py inline x2, session_estimator.py inline). Default arg literals (g: float = 9.81) can stay as defaults — only module-level duplicates and inline uses in expressions. Run: py -m pytest tests/unit/physics/ -q -x",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "constants.py exists with GRAVITY_MS2; braking_fit G_MS2 retired; module-level _G / inline 9.81 in expressions replaced with GRAVITY_MS2 imports; unit suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q -x"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["value-identical, no math change"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-mass-kg-dedup": {
+      "id": "m3-mass-kg-dedup",
+      "title": "OT-4: Remove duplicate MASS_KG from session_fit.py",
+      "imperative": "In session_fit.py:57, replace 'MASS_KG = 808.0  # CdA = 2 * MASS_KG * theta_D' with 'from src.physics.longitudinal_fit import MASS_KG'. Check all uses of MASS_KG in session_fit.py still work. Run: py -m pytest tests/unit/physics/ -q -x",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "single MASS_KG definition; session_fit imports from longitudinal_fit; tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q -x"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["value-identical"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-rho-fallback": {
+      "id": "m4-rho-fallback",
+      "title": "OT-7: Consolidate air-density fallback to 1.225 (ISA)",
+      "imperative": "In session_fit.py, change 'DEFAULT_RHO = 1.20' to 'DEFAULT_RHO = 1.225  # ISA standard sea-level air density'. In car_prior.py build_car_ceiling, the fallback is already 1.225 (line 580). Check any test that asserts DEFAULT_RHO == 1.20 and update to 1.225. Run: py -m pytest tests/unit/physics/ -q -x",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "single fallback density 1.225 in session_fit; tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q -x"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["value change 1.20->1.225 is intentional per ratification"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-gravity-literals": {
+      "id": "m5-gravity-literals",
+      "title": "OT-3 continued: Replace remaining gravity literals in layer2 session files",
+      "imperative": "Replace module-level _G / inline 9.81 in computation expressions (not default-arg signatures) in: session_braking.py, session_traction.py, session_estimator.py, session_lateral.py with 'from src.physics.constants import GRAVITY_MS2'. The _DECEL_CEILING / _ACCEL_CEILING computed from 9.81 in session_braking/traction should use GRAVITY_MS2. Run: py -m pytest tests/unit/physics/ -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no module-level _G = 9.81 or inline 9.81 in expressions in layer2 session files; tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["value-identical; keep default-arg signatures as-is"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-lateral-labels": {
+      "id": "m6-lateral-labels",
+      "title": "OT-1: Unit-suffix lateral A0/A2 and label LateralParameters + seam",
+      "imperative": "1. In LateralViewResult (lateral_view.py): rename field comments to make g-unit convention explicit — add field docstrings noting '(g-units, dimensionless)'. Add a block comment section '## Units' in the class. 2. In EstimateRecord (estimate_store.py): add inline comments on the A0/A2 fields saying '# g-units (dimensionless lateral grip coefficient, from LateralView)'. 3. In LateralParameters (physics_data_models.py): add a '# Unit convention A (m/s²)' header and field docstrings on A0 (m/s²) and A2 (m/s²/ρ). 4. In car_prior._assemble_lateral: retire the '# TODO(#525)' block (lines 470-473) and replace with a docstring/comment stating this is the ONE canonical g→m/s² seam. Run: py -m pytest tests/unit/physics/ -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no TODO(#525) in car_prior.py; LateralParameters, LateralViewResult, EstimateRecord have unit headers; tests green; git grep shows empty TODO(#525)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q && cd C:/Programs/f1Brainz && git grep -n 'TODO(#525)' src/"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["no math change; no field renames on LateralParameters consumer fields"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m7-longitudinal-labels": {
+      "id": "m7-longitudinal-labels",
+      "title": "OT-5: Label longitudinal store columns and consumer field",
+      "imperative": "LABEL ONLY — no formula changes. 1. In EstimateRecord: add inline comments on p_max ('# W (total watts)') and cda_closed ('# m² (drag area)'). Add class-level docstring note about units. 2. In LongitudinalParameters: add unit comment on theta_P_values field stating 'W/kg (specific power, m²/s³)'. 3. In car_prior._build_longitudinal: already has good comments; add 'theta_P_w_per_kg' as a variable alias in the comment/docstring to make the naming intent visible. NOTE: OT-5 says to rename theta_P -> theta_P_w_per_kg as a store COLUMN but theta_P_values is not a store column — it lives only in LongitudinalParameters (the consumer dataclass). The store has p_max (W). The handoff's 'theta_P -> theta_P_w_per_kg' rename refers to making it clear at the conversion boundary. Apply a comment only at car_prior._build_longitudinal showing the variable represents W/kg. Do NOT rename theta_P_values or theta_P_times fields in LongitudinalParameters (that would change the consumer formula contract). Run: py -m pytest tests/unit/physics/ -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m6 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "p_max/cda_closed store columns have unit comments; theta_P_values has W/kg note; car_prior conversion labelled; tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["LABEL ONLY — no formula changes; no LongitudinalParameters field renames"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m8-rho-labels": {
+      "id": "m8-rho-labels",
+      "title": "OT-2: Label ρ role in A2 (five-view ρ-folded vs ρ-independent)",
+      "imperative": "Label-only. 1. In LateralView.fit (lateral_view.py): add/update docstring note that A2 is a session-ρ-FOLDED grip slope (no ρ in the model; ρ is implicitly absorbed since a_lat = mu*g with no density term). 2. In estimate_store.py A2 comment: add '# NOTE: session-ρ-folded — car_prior un-folds via /air_density to the ρ-independent coefficient the consumer expects'. 3. In car_prior._assemble_lateral: already has s2 = G_MS2/air_density note; add comment that the un-folding via /air_density produces the ρ-independent A2 parameter the consumer's A2*rho*v^2 expects. Run: py -m pytest tests/unit/physics/ -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m7 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "ρ role labelled at five-view producer, store, and car_prior seam; tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["label/comment only; no math change; no ρ removal"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m9-comment-fix": {
+      "id": "m9-comment-fix",
+      "title": "OT-6: Fix false comment at car_prior.py:57 (k_tire)",
+      "imperative": "In car_prior.py module docstring line 57: the comment says 'matches the neutral single-session convention in session_fit.py (line 89)' but single-session is k_tire=0.01. Fix the comment to say 'k_tire=0.0 is a deliberate neutral default for the C1 ceiling construction (the no-tire-wear baseline); the value unification between this and the per-session convention (k_tire=0.01) is tracked in #511.' Do NOT change the k_tire value. Run: py -m pytest tests/unit/physics/ -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m8 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "comment fixed at car_prior.py docstring; k_tire value unchanged; tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["comment only; do NOT change k_tire value"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m10-guard-test": {
+      "id": "m10-guard-test",
+      "title": "Item 9: Write the output-level guard test in test_published_f1_data.py",
+      "imperative": "TDD: (1) Write the test first in TestCarPriorIdealLap class, (2) run to see green (it exercises the real car_prior->CapabilityEnvelope->PhysicsSimulator path), (3) deliberately break it by bypassing the car_prior conversion (skip g->m/s² scaling), (4) show it red, (5) restore. The test: build a synthetic EstimateRecord with realistic RBR-level values (A0~3.2 g, A2~8e-5 1/(m/s)^2, cda_closed~0.7m2, p_max~800000W, coast_theta_R~0.5, a_b~18, b_b~0.0035, a_t~10, b_t~0.004), build store_df from it, call build_car_ceiling, then simulate ideal lap on a simple track and assert: top_speed_kmh in [300, 360] and a representative corner cap in [15, 60] m/s. Run: py -m pytest tests/known_answer/test_published_f1_data.py -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m9 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "guard test green; deliberate-break shows red; restore shows green again; evidence captured",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/known_answer/test_published_f1_data.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": ["test-led for this item; no per-param band matrix; no units library; use car_prior path"],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m11-suite-green": {
+      "id": "m11-suite-green",
+      "title": "Full suite run + simplification_limits + TODO(#525) check",
+      "imperative": "Run: (1) py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q. (2) Check git grep -n 'TODO(#525)' src/ is empty. (3) Run py -m src.utils.simplification_limits --paths <touched paths>. Capture all outputs for the result file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m10 complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite GREEN; no TODO(#525) in src/; simplification_limits clean or issues noted",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,341 @@
+{
+  "work_id": "g3-implement-627",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-jacobian",
+    "m2-cross-view-module",
+    "m3-store-wiring",
+    "m4-monza-demo",
+    "m5-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas (docs/agents/CREW_CONTEXT.md, GLOSSARY.md), the g3 HANDOFF.md, G1/G2 IMPLEMENTER_RESULT.md, PLAN_ALTERNATIVES.md (Interface A decision), and the actual source files (braking_view.py, traction_view.py, estimate_store.py, power_drag_view.py, coast_view.py, systematic_budget.py, session_estimator.py, session_coast.py). Verify handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + G1/G2 results + all relevant source read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-jacobian": {
+      "id": "m1-jacobian",
+      "title": "Expose cda_jacobian on BrakingViewResult/TractionViewResult",
+      "imperative": "Add cda_jacobian: np.ndarray | None = None field to BrakingViewResult and TractionViewResult (frozen dataclasses, defaulted so existing constructors keep working). Populate it in BrakingView.fit and TractionView.fit with the already-computed J (cda_frontier_jacobian output), currently discarded. Add unit tests confirming the field is populated with the expected Jacobian on a healthy fit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new tests for cda_jacobian population written (test-after; numeric/behavioral module, no red/green split needed) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "cda_jacobian populated on both views; braking+traction view tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_braking_view.py tests/unit/physics/layer2/test_traction_view.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-jacobian-1"
+        }
+      ],
+      "constraints": [
+        "ASCII only",
+        "frozen dataclass defaults",
+        "do not change production pinning CdA flow"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-jacobian-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_braking_view.py tests/unit/physics/layer2/test_traction_view.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-cross-view-module": {
+      "id": "m2-cross-view-module",
+      "title": "Build src/physics/layer2/cross_view.py (honest fusion + propagation helpers)",
+      "imperative": "Create cross_view.py with: cda_jacobian_covariance(sigma_cda, jacobian) -> 2-vector; fuse_dual_cda(cda_pd, sigma_pd, cda_co, sigma_co, shared_rel) -> FusedCdA (cov-aware GLS fusion, Sigma=[[sigma_pd^2,cov],[cov,sigma_co^2]], u=[1,1], falsifiable agreement z, disagreement >= 5-sigma flags illegitimate, non-PSD guarded); propagate_shared_param_variance(total_var_pin, cov_with_shared_pin, sigma_shared_pin, sigma_shared_new) -> tightened variance using ONLY the persisted cross-term (recovers J from cov/sigma_pin^2, no re-fit). Write tests/unit/physics/layer2/test_cross_view.py covering: cov-aware fused sigma on a correlated pair >= naive-independent AND < smaller component sigma; zero-correlation collapses to naive; 5-sigma disagreement flags illegitimate (mu/sigma None); propagation tightens with smaller shared sigma; zero-coupling propagation is a null (unchanged).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-jacobian complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_cross_view.py written first, observed failing (module does not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "cross_view.py implemented; test_cross_view.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_cross_view.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-cross-view-module-1"
+        }
+      ],
+      "constraints": [
+        "ASCII only",
+        "honest-wide: naive-independent fuse forbidden",
+        "no evo import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-cross-view-module-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_cross_view.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-store-wiring": {
+      "id": "m3-store-wiring",
+      "title": "Persist cross_view_covariance in estimate_store.record_from_estimate",
+      "imperative": "Populate cross_view_covariance: cov_cda_a_b/cov_cda_b_b from est.cda_closed.sigma**2 * est.braking.cda_jacobian; cov_cda_a_t/cov_cda_b_t from est.traction.cda_jacobian; fused_cda + fused_cda_z + fused_cda_reason from the honest cov-aware fuse_dual_cda of PowerDrag-CdA and Coast-CdA (ONLY when Coast was independently fit -- not pinned; production estimate_session() always pins Coast so fused_cda stays unpopulated there by design -- null-safe with an explicit reason string otherwise). Update the stale G2 test test_cross_view_covariance_defaults_to_none (now populated with a reason even when unfused) and add new tests: jacobian terms populate + round-trip; fused_cda computed when coast is independent and agrees; fused_cda flagged illegitimate on 5-sigma disagreement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-cross-view-module complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new/updated tests written for the store wiring -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "record_from_estimate populates cross_view_covariance; test_estimate_store.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-store-wiring-1"
+        }
+      ],
+      "constraints": [
+        "ASCII only",
+        "do not resolve {axis}_status",
+        "do not replace SYSTEMATIC_FLOOR",
+        "null-safe when a view/Jacobian is absent",
+        "do not write/commit data/*.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-store-wiring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-monza-demo": {
+      "id": "m4-monza-demo",
+      "title": "Non-tautological Monza (Italy) RBR 2023 Q redundancy demonstration",
+      "imperative": "Build a bounded local demo script under .agent-work/627-unified-basis/g3-implement/ that: loads the real Monza RBR 2023 Q session (store=absolute main-checkout telemetry_store.db path); gets a live PowerDrag CdA fit (cheap raw-signal path, no smoother-HP calibration) and a live INDEPENDENT Coast CdA fit (cda_prior=None, same cheap path); computes the honest fused CdA via fuse_dual_cda using G1 systematic_budget's shared_rel; computes live TractionView cda_jacobian and propagates PowerDrag-pin-vs-fused CdA sigma through cov(CdA,b_t) via propagate_shared_param_variance to show b_t tightens. For BrakingView (expensive smoother-HP path, documented G1 stall risk): attempt ONE bounded <=6min live fit; on stall, fall back to the real stored session_estimates row (C:/Programs/f1Brainz/data/physics_estimates.db, Italy/2023/Q/Red Bull Racing) + the documented closed-form Jacobian approximation (J ~= -rho/(2*mass), the SAME form systematic_budget.py already uses) to compute the b_b before/after; state explicitly which path (live vs fallback) was used for each axis. Produce a before/after table: PowerDrag-only pin sigma_CdA vs fused sigma_CdA; b_b, b_t effective sigma before/after; agreement z. Never fabricate -- state the run path used for every number.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-store-wiring complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "worktree isolation asserted before any real-data run (py -c import estimate_store; print __file__ under C:\\Programs\\f1-627) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "before/after redundancy table produced with real-scale numbers, run path documented per axis, data/*.db unmodified (git status clean on data/)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && git status --porcelain -- data/ | (! grep .)"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-monza-demo-1"
+        }
+      ],
+      "constraints": [
+        "bounded <=10min timeout on any live fit",
+        "no data/*.db writes/commits",
+        "never fabricate; document run path used"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-monza-demo-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && git status --porcelain -- data/ | (! grep .)",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-evidence": {
+      "id": "m5-evidence",
+      "title": "Full required-evidence test run + IMPLEMENTER_RESULT",
+      "imperative": "Run the handoff's exact Verification Commands plus the full new/changed test set. Write IMPLEMENTER_RESULT.md (completed slice, files changed, fusion+propagation design, before/after table with real numbers + run path, test tail, assumptions, stop conditions, out-of-scope observations, workflow feedback, map impact). Deliver the summary via SendMessage.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4-monza-demo complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "required verification commands pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_estimate_store.py tests/unit/physics/layer2/test_braking_view.py tests/unit/physics/layer2/test_traction_view.py tests/unit/physics/layer2/test_cross_view.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written to .agent-work/627-unified-basis/g3-implement/IMPLEMENTER_RESULT.md -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py -m pytest tests/unit/physics/layer2/test_estimate_store.py tests/unit/physics/layer2/test_braking_view.py tests/unit/physics/layer2/test_traction_view.py tests/unit/physics/layer2/test_cross_view.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3-impl-627",
+    "status": "released",
+    "claimed_at": "2026-07-18T19:31:08.734578+00:00",
+    "last_heartbeat": "2026-07-18T20:09:21.260244+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T20:09:29.258128+00:00"
+  }
+}

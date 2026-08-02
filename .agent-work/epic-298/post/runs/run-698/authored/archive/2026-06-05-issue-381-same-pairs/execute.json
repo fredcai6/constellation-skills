@@ -1,0 +1,560 @@
+{
+  "work_id": "issue-381-same-pairs",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/evo/prediction_ceiling_and_priorities.md (\u00a77.6/\u00a77.6.1), scripts/diagnose_quali_evidence.py, src/latent_power/nll_eval.py, src/latent_power/alignment_report.py, src/evo_predictor/module_record.py, and the run.py backtest-latent-power-module path. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + harness + module-record IO + backtest path loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded during planning: priorities doc \u00a77.6/\u00a77.6.1, diagnose_quali_evidence.py (pairwise_accuracy_event primitive, dual ceiling), nll_eval.py + alignment_report.py (pi sign: eta=pi[i]-pi[j], outcome>=0.5 => i beat j), module_record.py (per-event pi/pair_index/outcome/entity_ids/actual_positions), run.py backtest-latent-power-module path. Newest bundle = gold_cycle_260603_173742_2018thru2024."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Model inference: emit per-event quali module records (committed bundle, no retrain)",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for g1. Run run.py backtest-latent-power-module --emit-module-record on the NEWEST committed gold bundle (params/gold/runtime_bundles/gold_cycle_260603_173742_2018thru2024) for driver_quali_power_from_race_weekend AND driver_quali_power_from_recent_history, across years 2018,2019,2020,2021,2022,2023,2024 (LOSO headline regime) and 2025 (clean OOS). Write record sidecars under the run package (.agent-work/issue-381-same-pairs/records/). This is INFERENCE on committed weights only \u2014 NO retrain, NO param change. Dispatch a subagent invoking constellation-implementer. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execution context loaded (e0 complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned: per-event .record.json/.record.npz produced for both quali channels across the required years, no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "INFERENCE ONLY on committed gold weights \u2014 absolutely no retrain, no checkpoint write, no param/manifest edit.",
+        "ADMIRAL Q2 ANNOTATION: if any single bundle/year inference pass exceeds ~1 hour wall-clock, STOP and report rather than grinding.",
+        "py not python; DB-only data access (data/f1_data_<year>.db).",
+        "Records are run-package artifacts (.agent-work/...), NOT committed to params/ or outputs/.",
+        "If a quali module requires --compound-prior-root, supply the committed time-safe compound prior root; do not fabricate one."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "48 record sidecars (rh+rw 2018-2025) emitted by predecessor via run.py backtest-latent-power-module --emit-module-record on gold_cycle_260603_173742_2018thru2024; INFERENCE ONLY, no retrain/param change",
+            "verification": "Commander verified: both channels carry pi/sigma_pi/outcome/pair_index/entity_ids/actual_positions per event; event counts match real F1 calendars (2020=17, 2024/25=24) and rh==rw per year; raw model sign acc rw=0.6207 rh=0.7770 (2018-24), rw=0.5941 rh=0.7522 (2025) -- in-band, not inverted",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Review: inference integrity (no retrain, records well-formed)",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: (1) no retrain/param/checkpoint change occurred (git status clean of params/ and src/ behavior; only run-package records added); (2) records carry pi/sigma_pi/outcome/pair_index/entity_ids and actual_positions per event; (3) the right module names, bundle, and year coverage (2018-2024 + 2025) are present; (4) sign convention sanity (model sign accuracy is in a plausible 0.6-0.8 band, not inverted near 0.2-0.4). Dispatch a subagent invoking constellation-reviewer. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "implementer-result e-g1-implement-1 integrated; records verified intact"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "Inference integrity confirmed: (1) git tree clean of params/ and src/ - zero retrain/param/checkpoint/behavior change, only run-package records added; (2) all 48 records expose pi/sigma_pi/outcome/pair_index/entity_ids/actual_positions per event; (3) correct module names (driver_quali_power_from_recent_history / _from_race_weekend), committed bundle gold_cycle_260603_173742_2018thru2024, full 2018-2025 coverage with rh==rw event counts matching real calendars; (4) sign convention sane - raw model sign acc rw=0.62/0.59 rh=0.78/0.75, non-inverted."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Integrate g1: records validated",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the record-validation command, confirm records parse and cover both channels + required years, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review-result e-g1-review-1 verdict=APPROVE integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all emitted quali records parse via module_record.load_module_record and expose pi/outcome/pair_index/entity_ids; both channels + 2018-2024 + 2025 covered",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/validate_quali_records_381.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "g1 inference records reviewed APPROVE (mirror of g1-review evidence for integrate artifact-match check)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/validate_quali_records_381.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Same-pairs diagnostic: model-vs-dual-ceiling sign accuracy + 3-axis attribution",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for g2. Build scripts/diagnose_quali_same_pairs.py (DB-only, stdlib/numpy): for each model event (from g1 records), compute model pairwise sign accuracy from pi/pair_index/outcome AND recompute the dual data-only ceiling (best_across_fp + blend_rank, min-sectors) on the IDENTICAL common-driver set per event by reusing scripts/diagnose_quali_evidence.py source-builders + pairwise_accuracy_event. Restrict ceiling to NORMAL weekends to match the ceiling definition; intersect driver sets so model and ceiling share identical pairs. Pool to (A) HEADLINE 2018-2024 and (B) OOS 2025 separately (ceiling recomputed on each event set). Emit: numbers table (model vs best_across_fp vs blend_rank, per regime, with events+pairs n); axis (i) recent-history drag = standalone race_weekend vs recent_history model sign accuracy on shared pairs; axis (ii) close-gap/midfield concentration (sign accuracy stratified by target Q-position gap / midfield band); axis (iii) evidence-weighting framing with the model-vs-ceiling residual. Add targeted pytest. Dispatch constellation-implementer. Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 records validated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 records validated (validate_quali_records_381.py exit 0); structural facts confirmed: entity_ids==DB driver_ids (3-letter codes), event_id=year:round:gp:tag, records use directed pairs N*(N-1) symmetric"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned: diagnostic script + tests + emitted numbers (headline + OOS, dual ceiling, 3 attribution axes), no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "SHARED PAIRS INVARIANT (Admiral Q1): model and ceiling MUST be scored on the identical common-driver pair set per event; ceiling recomputed on the exact same event set in each regime. No pooling across the 2018-2024 and 2025 regimes.",
+        "ADMIRAL Q3 ANNOTATION: standalone per-channel (race_weekend vs recent_history) is the PRIMARY drag number. Fusion-combined delta is corroboration ONLY if committed fusion artifacts support it WITHOUT retraining; if not cheap, report standalone alone and STATE THAT EXPLICITLY \u2014 do NOT approximate the fusion delta.",
+        "Reuse scripts/diagnose_quali_evidence.py functions (import, do not fork the ceiling math). DB-only. py not python. Deterministic.",
+        "driver_quali PRIMARY (Q4); constructor_quali only if cheap and it sharpens the recent-history story.",
+        "Pyright-clean on any touched src/.py; this gate should touch scripts/ + tests/ only (no src/ behavior change)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "Built scripts/diagnose_quali_same_pairs.py (DB-only, reuses diagnose_quali_evidence harness) + test_diagnose_quali_same_pairs.py (7 tests). Shared non-tie pair set per event across model/best_across_fp/blend_rank; ceiling recomputed per regime; no cross-regime pooling.",
+            "numbers": "HEADLINE 2018-24 (130 ev, 23862 pairs): rw model=0.6149 rh model=0.7803 vs best_across_fp=0.8061 blend_rank=0.8078. OOS 2025 (18 ev, 3352 pairs): rw=0.5656 rh=0.7515 vs baf=0.7643 blr=0.7709. Residuals: rw +0.191/+0.199, rh +0.026/+0.013. blend-prod slice +0.0017 (head) / +0.0066 (OOS).",
+            "axes": "(i) drag rw-rh = -0.165 head / -0.186 OOS -> recent_history is STRONGER standalone, race_weekend is the weak channel; fusion delta OMITTED (Q3). (ii) gap-strat: model worst at adjacent (0.520 vs ceiling 0.585) and midfield (0.533 vs 0.688); gap_vs_ceiling widens with gap. (iii) residual IS the model-side gap.",
+            "tests": "7 passed; simplification PASS; pyright 0 errors",
+            "assumptions": "constructor_quali omitted (Q4, no records emitted); shared-pairs strict reading = drop pairs tied in ANY source",
+            "stop_conditions": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Review: shared-pairs correctness + attribution soundness",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: (1) the shared-pairs invariant holds \u2014 for each event the model and ceiling operate on the identical common-driver set, and the ceiling is recomputed per regime (not the global 0.7968/0.8029 reused blindly); (2) ceiling math is the imported harness (best_across_fp + blend_rank, min-sectors), not a re-implementation that could drift; (3) the recent-history drag is the STANDALONE per-channel delta, with the fusion delta either cheaply supported or explicitly declined; (4) attribution axes ii/iii are computed with numbers, not asserted; (5) tests pass and pin the invariant. Dispatch constellation-reviewer. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "implementer-result e-g2-implement-1 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "All 5 criteria pass with INDEPENDENT verification. (1) Shared-pairs invariant holds: reviewer re-derived 2023-Miami from raw DB+npz -> 188 shared pairs, model=0.6011 baf=0.7819 blr=0.7553, EXACT match to script; per-regime ceilings (head baf=0.8061, OOS baf=0.7643) DIFFER from doc-global 0.7968, proving per-regime recomputation not blind reuse. (2) Zero forked ceiling math (no def of best_across_fp/blend_rank/agg/pairwise in new script; 7 dqe.* call sites; test pins sp.dqe is dqe). (3) Drag is standalone per-channel; fusion delta correctly OMITTED - confirmed NO committed fused quali artifact exists (bundle has only per-channel standalone modules), so corroboration is not cheap. (4) axes ii/iii have real per-bucket numbers. (5) 7 tests pass, pin invariant + regime non-pooling. Finding: the measured drag direction is the OPPOSITE of the priors framing - recent_history (0.78) is the STRONGER standalone channel; race_weekend standalone (0.61) is the one ~19pp below its own data ceiling."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Integrate g2: diagnostic green, numbers captured",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the targeted pytest, confirm it passes, capture the emitted numbers into the run package, advance. BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review-result e-g2-review-1 verdict=APPROVE integrated; numbers captured in evidence/same_pairs_numbers.json + same_pairs_report.txt"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "same-pairs diagnostic tests pass; numbers (headline + OOS, dual ceiling, 3 axes) captured in run package",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_diagnose_quali_same_pairs.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "g2 same-pairs diagnostic reviewed APPROVE (independent re-derivation matched; ceiling recomputed per regime; fusion omission justified). Mirror for integrate artifact-match."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_diagnose_quali_same_pairs.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Doc append: \u00a77.6.2 same-pairs result + 3-axis attribution + written routing recommendation",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for g3. Append a new \u00a77.6.2 section to docs/evo/prediction_ceiling_and_priorities.md (append-shaped; do not rewrite \u00a77.6/\u00a77.6.1) carrying: the apples-to-apples numbers table (model vs best_across_fp vs blend_rank, headline 2018-2024 + OOS 2025, shared pairs, events+pairs n); the localized gap; the 3-axis attribution with numbers (recent-history drag / close-gap-midfield region / evidence-weighting); and the WRITTEN ROUTING RECOMMENDATION \u2014 route remainder to #375 (context-conditioned shared net) vs a cheaper targeted fix, and the explicit rank-blend triage-candidate FIRE/HOLD verdict driven by the (b)\u2212(a) blend_rank\u2212best_across_fp slice vs the model gap (Admiral Q5). Dispatch constellation-implementer. Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 numbers captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 numbers captured in evidence/same_pairs_numbers.json"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned: \u00a77.6.2 appended with numbers table + 3-axis attribution + routing recommendation + rank-blend fire/hold verdict; zero production behavior change",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "APPEND-SHAPED edit only to docs/evo/prediction_ceiling_and_priorities.md; do not rewrite existing \u00a77.6/\u00a77.6.1.",
+        "R3 BOUNDARY: deliverable is localization + attribution + written routing recommendation. Do NOT build Piece 2 / #375.",
+        "Numbers in the doc must come from the g2 diagnostic output verbatim \u2014 no hand-edited figures.",
+        "The rank-blend fire/hold verdict is a RECOMMENDATION for the Admiral; record it as a triage candidate, do not file the issue here."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "Inserted 7.6.2 'Same-pairs localization (#381)' between 7.6.1 and 7.7 in docs/evo/prediction_ceiling_and_priorities.md. 104 additions, 0 deletions (pure insertion; 7.6/7.6.1/7.7 untouched). All numbers verbatim from same_pairs_numbers.json (cross-checked programmatically: every accuracy/residual/slice/count matches).",
+            "routing": "Route remainder to #375 (context-conditioned net); cheaper targeted alternative = fix the standalone race_weekend quali head specifically (it leaves ~19pp below its own data ceiling, concentrated on COARSE far-apart pairs). Lever is model-side on the race_weekend channel.",
+            "rankblend_verdict": "HOLD (do not fire). blend-prod slice +0.0017 head / +0.0066 OOS (~0.6pp) is dwarfed by the ~19pp model-side gap below the current ceiling; stays deferred to #375 per 7.6.1. Recorded as triage candidate for the Admiral.",
+            "assumptions": "Recovered from a path slip: an earlier edit landed in the MAIN repo (branch main) by absolute path; reverted main to clean (kept pristine) and applied the insertion to the WORKTREE doc. Main repo verified clean, no 7.6.2.",
+            "stop_conditions": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Review: doc fidelity + routing logic",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: (1) the doc numbers match the g2 diagnostic output exactly; (2) the section is append-shaped (no destructive rewrite of \u00a77.6/\u00a77.6.1); (3) the routing recommendation follows from the numbers (recent-history drag vs evidence-weighting steer to cheaper-fix vs #375) and is internally consistent with \u00a77.6.1's deferred-#379 framing; (4) the rank-blend fire/hold verdict is justified by the (b)\u2212(a) slice vs model gap; (5) zero production behavior change (only docs touched in this gate). Dispatch constellation-reviewer. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "implementer-result e-g3-implement-1 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "All 5 criteria pass. (1) Doc numbers match g2 JSON EXACTLY - programmatic cross-check of every accuracy/residual/slice/count returned ALL MATCH. (2) Append-shaped: 104 additions 0 deletions; 7.6/7.6.1/7.7 untouched; section ordering 7.6->7.6.1->7.6.2->7.7 correct. (3) Routing rec follows from the numbers (evidence-weighting residual +0.19 on race_weekend steers to #375 context-conditioned weighting, with justified cheaper-first alternative to fix the specific weak race_weekend head) and is explicitly consistent with 7.6.1's deferred-#375 framing. (4) Rank-blend HOLD verdict quantitatively justified: slice +0.0017/+0.0066 (~0.6pp) vs ~19pp model gap (model at ~76% of current ceiling). (5) Zero production change: whole run touches only docs+2 scripts+1 test+run-pkg; params/ and src/ clean. Honest reframing of the drag direction (recent_history is stronger, not the drag) correctly surfaced."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Integrate g3: doc landed, full diagnostic suite green",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the full touched-test command, confirm green and zero production behavior change, advance. BLOCK: rework or raise blocker. Record the rank-blend fire/hold as a triage candidate for the triage step.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review-result e-g3-review-1 verdict=APPROVE integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "same-pairs diagnostic + any touched tests pass; \u00a77.6.2 present in the doc",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_diagnose_quali_same_pairs.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "g3 doc append reviewed APPROVE (numbers exact, append-shaped, routing sound, HOLD verdict justified, zero prod change). Mirror for integrate artifact-match."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_diagnose_quali_same_pairs.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g3-integrate",
+      "statement": "Rank-blend production aggregation switch (best_across_fp -> blend_rank, min-sectors FP1/2/3): HOLD/defer to #375. The blend-prod ceiling slice is only ~0.6pp (+0.0017 headline / +0.0066 OOS 2025) vs a ~19pp model-side gap; not worth firing standalone. Admiral decides whether to file or fold into #375."
+    }
+  ],
+  "blockers": []
+}

@@ -1,0 +1,9 @@
+POWERED F10 DONE
+primary_verdict=HONEST_NULL
+secondary_verdict=CONFOUNDED_NOT_EVIDENTIAL (status=CONFOUNDED_NOT_EVIDENTIAL)
+emergence_passes=True
+sandbag_passes=False
+wall_seconds=2715
+n_weekends=3
+report_txt=C:\Programs\f1-fp-powered\reports\physics\fp_representativeness_gate_2023_smoke2wk.txt
+report_json=C:\Programs\f1-fp-powered\reports\physics\fp_representativeness_gate_2023_smoke2wk.json

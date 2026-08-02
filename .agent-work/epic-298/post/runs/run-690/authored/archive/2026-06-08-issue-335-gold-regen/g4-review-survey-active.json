@@ -1,0 +1,126 @@
+{
+  "work_id": "g4-review-issue-335",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read handoff, diff, evidence. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff g4-reviewer-handoff.md, diff, comparison.md, acceptance_420.txt, cleanup_checks.json, armA/B backtests all loaded. Baseline context clear: evidence-only gate, no promotion.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three deliverables present: evidence/comparison.md, evidence/acceptance_420.txt, evidence/cleanup_checks.json. Harness diff confirms default-preserving argparse addition. A/B numbers independently recomputed: ArmA=0.2077438, ArmB=0.2008099 (B better 19/24). Bootstrap CI=[\u22120.0103,\u22120.0036] excludes 0. Acceptance ran against ArmB bundle (loading path confirmed), reports a=0.5 0.7765/0.9058 (HL) and 0.7616/0.9004 (OOS) \u2014 both exceed \u00a77.6.4 references (\u22480.75/0.87, OOS holds).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Only scripts/accept_quali_anchor_420.py modified (tracked). evidence/ added (untracked, allowed). params/gold/ modification: nil tracked changes; untracked unc_cal_260607/260608 files are generated training artifacts from earlier Arm A/B training gates (pre-G4), not this gate. gold_defaults.toml and params/gold/runtime_bundles/ untouched. Blend math, REF_HEADLINE, REF_OOS, BUNDLE_NAME, BUNDLE_PATH, OUTPUT_DIR constants unchanged by diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is evidence present and does it actually demonstrate the behavior?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "A/B Brier reproduced from raw JSON: A=0.2077438, B=0.2008099, delta=\u22120.00693, B>A in 19/24 races, bootstrap [\u22120.0103,\u22120.0036] excludes 0. acceptance_420.txt is byte-identical to acceptance_armB/g2_accept_output.txt; it targeted outputs/evo_runs/issue335_armB/modules/driver_quali_power_from_race_weekend. alpha=0 is exact no-op (matches baseline_acc). cleanup_checks: nll_ok=true (both arms have corr_sigma_pi_trace_vs_nll, not _vs_log_loss), race_count=24, threads note sane (utilization=max\u2192threads_per_worker=1 confirmed in _LEVEL_PLANS).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet inherited project rules?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "tc4 (pre-existing): _score_event_production 122 lines (limit <100) confirmed pre-existing via stash round-trip: violation present before and after the diff. Not newly introduced. Harness change is safe: KNOWN, not a block per handoff. Working tree change confirmed restored after stash pop (git diff --stat shows 34 insertions/9 deletions). No new test surface touched (pure analysis script + evidence files). DB-only rule: harness uses DB not FastF1 directly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from recorded architecture in a way Commander must reconcile?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "docs/architecture/index.md already documents accept_quali_anchor_420.py as a read-only script (packet prose, not a map node). The argparse addition is cosmetic scaffolding within that same scripts/ scope. No new container/component nodes or edges introduced. No architecture reconciliation needed.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "summary": "All checks pass. A/B Brier independently reproduced with CI excluding 0 (B wins). Harness diff is safe and default-preserving (stash confirms pre-existing violation). Acceptance targets ArmB bundle and exceeds \u00a77.6.4 thresholds. Cleanup checks correct.",
+    "blockers": [],
+    "observations": [
+      "tc2: oracle_all_states 1-race error in both arms (known, not a block per handoff)",
+      "tc4: _score_event_production 122 lines pre-existing violation (known, not a block per handoff)",
+      "untracked params/gold/uncertainty_calibration/unc_cal_260607/260608 files are Arm A/B training artifacts from earlier gates \u2014 not introduced by G4; G5 promotion will need to decide which to commit",
+      "acceptance_420.txt Bundle: header line still shows BUNDLE_NAME constant (gold_cycle_260603...) even when --bundle-path targets ArmB \u2014 cosmetic; loading path line correctly shows ArmB path"
+    ]
+  },
+  "triage_candidates": [
+    "G5 should decide whether to commit unc_cal_260607/260608 uncertainty calibration artifacts or keep them local-only"
+  ],
+  "blockers": []
+}

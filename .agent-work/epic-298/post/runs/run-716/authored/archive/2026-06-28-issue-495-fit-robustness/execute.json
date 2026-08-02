@@ -1,0 +1,753 @@
+{
+  "work_id": "issue-495-fit-robustness",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "decide-fix",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read inherited global doctrine (references/global-orchestrator.md, global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, packets/physics.md + packets/preprocessing.md, and the run's problem_statement.md + mission_frame.md. Confirm frozen plan intent/scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + packets + problem statement + mission frame loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 Diagnose (evidence-only): re-measure current failure population on main",
+      "imperative": "EVIDENCE-ONLY \u2014 NO src/ changes. Fill IMPLEMENTER_HANDOFF for a diagnosis. Re-run the 19 OLD-store failing cases (2023 Q: interleaved-n=0 x15 [Japan PIA/NOR/LEC/SAI/MAG, Netherlands SAR, Mexico ZHO, Brazil PIA, Las Vegas BOT, Abu Dhabi VER, Saudi Arabia DEV, Azerbaijan GAS/DEV, Miami BOT, Canada ALB]; NoneType x3 [Bahrain ALO/HAM, Canada HUL]; no_laps x1 [Japan SAR]) on CURRENT main via session_fit.fit_driver. For EACH: classify {already-fixed-ok / already-clean-typed-skip / still-raises / genuinely-unfittable}. For interleaved-n=0: establish whether pos/speed streams TRULY overlap (recoverable by wider/re-picked window) vs genuinely non-overlapping (must skip-clean). For NoneType: trace to the EXACT None-origin line + root cause in the smoother->adapter->estimator chain. Verify the real current FitRecord.fit_status valid set from source (flag the stale fit_store.py:34 comment). Quantify current failure counts by pattern. Locate exact fix loci (file:line). Deliverable: .agent-work/issue-495-fit-robustness/g1_diagnosis.md. Dispatch a subagent invoking constellation-implementer; integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with diagnosis report; no src/ changes",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "EVIDENCE-ONLY: no src/ edits",
+        "physics_region_no_evo_import",
+        "py launcher, not python",
+        "data in main checkout: data/telemetry_store.db, data/telemetry cache, data/physics_fits.db"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics session_fit.py fit_driver/load_quali_session (component)",
+          "struct:preprocessing calibration.py interleaved@133 + fit_stint_hp/calibrate_session_hp/session_offset",
+          "struct:preprocessing loaders.driver_streams/RawSessionStreams",
+          "struct:physics fit_store.FitRecord.fit_status (table session_fits)"
+        ],
+        "capability": [
+          "per-session physics fit",
+          "HP calibration / held-out split"
+        ],
+        "constraint": [
+          "physics_region_no_evo_import",
+          "fail-visibly / no fix code this gate"
+        ],
+        "decision": [
+          "decision pressure: enumerated typed-skip reason set (store contract)",
+          "decision pressure: recover-vs-skip boundary for interleaved n=0 \u2014 surface at decide-fix"
+        ],
+        "evidence": [
+          "re-run 19 failing cases on main; per-case classification",
+          "trace NoneType to exact None line; root cause",
+          "real FitRecord.fit_status valid set from source",
+          "current failure counts by pattern"
+        ],
+        "confidence_flags": [
+          "fit_store.py:34 fit_status comment is stale (no_accel_samples emitted but undocumented)",
+          "current failure population post-#548 unmeasured \u2014 do not author fixes against the stale OLD-store list"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "18/19 OLD failures already fixed by #548; 1 live bug remains: Saudi Arabia DEV empty session-wide speed stream -> tc.min() on empty array at calibration.py:879 (windows= branch, before #548 guard). 14/15 interleaved recover, 1 skip-clean. fit_store.py:34 comment stale.",
+            "result_file": ".agent-work/issue-495-fit-robustness/g1_implementer_result.md",
+            "report": ".agent-work/issue-495-fit-robustness/g1_diagnosis.md",
+            "src_changes": "none (verified git status --short src/ empty)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 Diagnose: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Independently verify the diagnosis: spot-check the reproduction is faithful (re-run a sample of the failing cases), confirm each classification is sound, confirm the NoneType root cause is the actual None-origin (not a symptom), and confirm the recover-vs-skip determination per interleaved case is evidence-backed (real stream-overlap check, not assumed). Dispatch a subagent invoking constellation-reviewer; integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the diagnosis against the same anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/issue-495-fit-robustness/g1_review_result.md",
+            "summary": "independently reproduced 4 already-fixed cases (all ok) + Saudi DEV bug @ calibration.py:879 empty session-wide speed stream; fit_status set + stale comment confirmed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 Diagnose: integrate",
+      "imperative": "Check verdict. APPROVE: confirm diagnosis report complete (per-case classification, NoneType root cause, recover-vs-skip determinations, current failure counts, fix loci) and advance. BLOCK: return implementer for rework. Log out-of-scope finds as triage candidates. Harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "diagnosis report complete and reproduction confirmed faithful",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/issue-495-fit-robustness/g1_review_result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "decide-fix": {
+      "id": "decide-fix",
+      "title": "Decide-fix checkpoint (human): ratify fix plan from G1 evidence",
+      "imperative": "Present the G1 diagnosis + a proposed fix plan to the human: which cases are real bugs to fix, which recover via window re-pick, which become typed-skips; the enumerated typed-skip reason set; and confirm the frozen g2/g3 scope (or re-author them if the evidence diverges from the plan \u2014 the sanctioned re-plan point). Record the human ratification as a user-decision artifact (attach, not attest). In delegated mode, cite the launch order instead.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 diagnosis integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "human ratified the fix plan, typed-skip set, and frozen g2/g3 scope",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-decide-fix-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-decide-fix-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "fix plan ratified by human 2026-06-28",
+            "d1_reason": "distinct no_speed_stream typed-skip reason (not reuse no_accel_samples)",
+            "d2_guard": "BOTH: primary early guard in session_fit.fit_driver after driver_streams + defense-in-depth empty-input guard in calibrate_session_hp windows= branch",
+            "d3_thinfloor": "OUT of scope for #495 (crash->typed-skip only); thin-fit minimum-flying-laps floor -> follow-up triage (tc2)",
+            "g2_scope": "one guard (two sites) + no_speed_stream reason + fit_store.py:34 stale comment fix + tests",
+            "g3_scope": "validate: re-fit the 19 + confirm DEV skips clean + no regression"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 Robustness fix: recover-or-typed-skip, no raw crashes",
+      "imperative": "Fill IMPLEMENTER_HANDOFF from the ratified fix plan. Implement the fixes per decide-fix: (a) fix the NoneType edge at its root; (b) make interleaved-n=0 recover where streams truly overlap (wider/re-picked window) else return a clean typed-skip; (c) standardize + enumerate the FitRecord.fit_status typed-skip reason set and update the stale fit_store.py:34 comment. TEST-LED: add/extend tests in tests/unit/physics + tests/unit/preprocessing for each typed-skip reason and each recovery path; keep test_calibration_robustness.py green. No fabricated stream overlap; a recovered fit meets the same quality bar. Dispatch a subagent invoking constellation-implementer; integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "decide-fix ratified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "physics_region_no_evo_import",
+        "fail-visibly / no hidden fallback / no plausible-wrong fit",
+        "test-led; py launcher",
+        "recovered fit meets same quality bar; do NOT manufacture stream overlap"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics session_fit.fit_driver/fit_session_full",
+          "struct:preprocessing calibration.interleaved/fit_stint_hp/calibrate_session_hp",
+          "struct:physics fit_store.FitRecord.fit_status (comment fit_store.py:34)"
+        ],
+        "capability": [
+          "per-session physics fit",
+          "HP calibration / held-out split"
+        ],
+        "constraint": [
+          "physics_region_no_evo_import",
+          "test-led region suites",
+          "fail-visibly / no fabricated overlap",
+          "py launcher"
+        ],
+        "decision": [
+          "ratified typed-skip taxonomy + recover-vs-skip boundary (from decide-fix)"
+        ],
+        "evidence": [
+          "tests/unit/physics + tests/unit/preprocessing green incl. new per-reason/per-recovery tests",
+          "previously-failing cases now recover-or-typed-skip (no raw crash)",
+          "test_calibration_robustness.py stays green"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "fold in fit_session_full no_speed_stream guard (human decision 2026-06-28)"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "no_speed_stream typed-skip: early guard in fit_driver + typed raise in calibrate_session_hp windows= branch + fit_store.py:34 comment + valid_statuses sets + 2 new tests. 755 passed/52 skipped. Saudi DEV -> no_speed_stream.",
+            "result_file": ".agent-work/issue-495-fit-robustness/g2_implementer_result.md",
+            "files": "src/physics/session_fit.py, src/preprocessing/trajectory/calibration.py, src/physics/fit_store.py, tests/unit/physics/{test_calibration_robustness,test_475_validation_breadth}.py"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "REWORK1 verified: no_speed_stream guard now in BOTH fit_driver (returns _err) AND fit_session_full (returns None) + 2 tests; 14 robustness tests pass; commander ground-truthed (crew left result body stale, addendum added).",
+            "result_file": ".agent-work/issue-495-fit-robustness/g2_implementer_result.md",
+            "rework": "fit_session_full guard folded in per human decision"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 Robustness fix: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: the NoneType root-cause fix (not symptom-masking); interleaved recovery only where streams truly overlap (no fabricated overlap); typed-skip rows are honest and the reason set is enumerated + tested; no hidden fallback / no plausible-wrong fit; region suites + test_calibration_robustness green; physics_region_no_evo_import holds. Dispatch a subagent invoking constellation-reviewer; integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/issue-495-fit-robustness/g2_review_result.md",
+            "increment_verification": ".agent-work/issue-495-fit-robustness/g2_commander_verification.md",
+            "note": "attempt-1 crew APPROVE (core fix, 8 checks); fit_session_full increment commander-verified (crew attempt-2 blocked by session limit)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 Robustness fix: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: return implementer or raise blocker. Log out-of-scope finds as triage candidates. Harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fixes land; previously-failing cases recover-or-typed-skip; region suites pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics tests/unit/preprocessing -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/issue-495-fit-robustness/g2_review_result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics tests/unit/preprocessing -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 Validation: re-fit previously-failing cases on fixed code + before/after accounting",
+      "imperative": "Fill IMPLEMENTER_HANDOFF. Real-data validation of the G2 fix (NO dashboard \u2014 dropped by the user 2026-06-28). (1) Re-fit the 19 previously-failing 2023-Q cases on the fixed code (via session_fit.fit_driver, or py scripts/build_physics_fit_store.py --seasons 2023 --sessions Q --db <fresh path> --force scoped to the failing rows) and record per-case outcome: recovered-ok / clean-typed-skip / still-failing. (2) No-regression check: confirm a representative sample of the 421 previously-ok 2023-Q fits still produce ok fits with unchanged params (or the full set if cost permits \u2014 note the cost). (3) Write a short before/after accounting note in markdown to reports/physics/ (old: 421 ok / 18 error / 1 no_laps -> new counts by status). Text only, no binary. Dispatch a subagent invoking constellation-implementer; integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 fixes integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "physics_region_no_evo_import",
+        "markdown accounting note only (no binary)",
+        "no fabricated overlap; recovered fits meet the same quality bar",
+        "do NOT alter the 55GB cache or telemetry store",
+        "py launcher"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics session_fit.fit_driver + fit_batch.run_batch + scripts/build_physics_fit_store.py",
+          "struct:physics fit_evidence.py (markdown precedent)",
+          "reports/physics/ (committed markdown accounting note)"
+        ],
+        "capability": [
+          "batch fit-store population",
+          "fit evidence reporting"
+        ],
+        "constraint": [
+          "physics_region_no_evo_import",
+          "markdown-only accounting (no binary)",
+          "no fabricated overlap / same quality bar",
+          "py launcher"
+        ],
+        "decision": [],
+        "evidence": [
+          "per-case outcome for the 19 previously-failing cases",
+          "no-regression on previously-ok sample (unchanged params)",
+          "before/after counts by fit_status"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "g3-review BLOCK: validation note must separate #548's 17-case recovery from G2's 1-case (Saudi DEV no_speed_stream)"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "Validation: 18 error -> 0. Final 2023-Q: 438 ok / 1 no_laps / 1 no_speed_stream (Saudi DEV). 19 cases match G1 (17 ok, SAR no_laps, DEV no_speed_stream). No-regression: 24/24 previously-ok still ok; param drift attributed to #548 (already on main), not G2.",
+            "result_file": ".agent-work/issue-495-fit-robustness/g3_implementer_result.md",
+            "note": ".gitignore /reports \u2014 validation note needs git add -f at commit (consistent with tracked P0/P1a siblings)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "REWORK1: attribution split fixed in validation note (#548->17, G2->1 Saudi DEV). Tally 17 ok+1 no_speed_stream+1 no_laps=19.",
+            "result_file": ".agent-work/issue-495-fit-robustness/g3_implementer_result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 Validation: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: the per-case outcomes are real and reproducible (spot-check a re-fit); the before/after counts are honest; the no-regression check confirms previously-ok fits are unchanged (no silent drift in params); recovered fits meet the same quality bar (no fabricated overlap); physics_region_no_evo_import holds. Dispatch a subagent invoking constellation-reviewer; integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "re-review attribution-split note fix"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "result_file": ".agent-work/issue-495-fit-robustness/g3_review_result.md",
+            "blocker": "note conflates G2 (1 case: Saudi DEV) with #548 (17 cases); separate the contributions"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/issue-495-fit-robustness/g3_review_result.md",
+            "note": "attempt-2: B1 resolved (attribution split #548:17/G2:1); all 11 checks pass"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 Validation: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command, confirm the before/after accounting note exists under reports/physics/, advance. BLOCK: return implementer or raise blocker. Log out-of-scope finds as triage candidates. Harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "region suite passes (no regression)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c3",
+          "statement": "before/after accounting note (markdown) written under reports/physics/; per-case outcomes recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/issue-495-fit-robustness/g3_review_result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "OLD data/physics_fits.db (built pre-#548, 2026-06-23) is stale \u2014 rebuild the 2023-Q (and broader) fit store on fixed code after #495 lands so downstream pooling consumes current fits."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-integrate",
+      "statement": "Thin fits now pass (e.g. Azerbaijan GAS n_fly=1, n_samp=412 returns ok). The decide-fix 'no second-class fits' bar may want a minimum-flying-laps / minimum-sample floor below which a fit is a typed-skip rather than ok. Surface at decide-fix; if deferred, file as follow-up."
+    },
+    {
+      "id": "tc3",
+      "from": "g2-integrate",
+      "statement": "calibration.py windows= branch: the len(tp)<1 guard raises a ValueError message 'no_speed_stream: empty position stream' \u2014 semantically a position-empty condition under the speed-named bucket. Low reachability (fit_driver early guard fires first); consider a distinct no_position_stream reason if a position-empty case ever becomes reachable. Naming-nit cleanup."
+    }
+  ],
+  "blockers": []
+}

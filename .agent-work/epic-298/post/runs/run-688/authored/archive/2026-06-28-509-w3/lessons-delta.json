@@ -1,0 +1,92 @@
+{
+  "work_id": "509-w3",
+  "tick": true,
+  "ops": [
+    {
+      "op": "retire",
+      "id": "portfolio-worktree-spikes",
+      "reason": "0 confirmations across 6 runs; specialized exploratory-research pattern has not recurred in delivery waves; proactive retire to stay within cap while adding two grounded new lessons"
+    },
+    {
+      "op": "retire",
+      "id": "cross-session-findings-on-issue",
+      "reason": "1 confirmation, 6 runs-since-confirmed; approaching dormancy; general principle absorbed into fleet discipline; elevating to Charter nomination; retire to make room for ci-gate-selftest-in-ci-environment"
+    },
+    {
+      "op": "add",
+      "id": "frontier-characterize-v-source",
+      "scope": "handoff",
+      "task_class": "physics-fitting",
+      "statement": "When a handoff authorizes characterization of a frontier-fitting view (TractionView, PowerDragView, CoastView), name the v-source each alternative uses (smoothed trajectory speed vs raw CAN-bus speed) and require parity, or require single-variable isolation. Swapping a_long AND the speed axis simultaneously confounds the comparison: measured regressions may be pure v-source artifact, not estimator differences. The claim 'blast radius expected small' does not hold when both variables change together.",
+      "grounding": "ADMIRAL_LOG 2026-06-28 RULING 'the comparison is confounded — decoupled a_long is paired with smoothed s.speed v-axis vs incumbent raw spd_d[V]'; cmdr-V AGENT_FEEDBACK 2026-06-28 'v-source difference surfaced by the characterization, not anticipated in the launch order; the pre-ruling blast-radius-small was wrong because it missed this v-source difference'"
+    },
+    {
+      "op": "add",
+      "id": "ci-gate-selftest-in-ci-environment",
+      "scope": "commander",
+      "task_class": "ci-tooling",
+      "statement": "A CI gate's self-test must prove the gate works in the CI environment, not just locally. Baselines for env-sensitive tools (pyright, mypy, coverage thresholds) differ between a Windows/py3.14 dev machine and ubuntu/py3.11 CI due to Python version, OS, and stub sets. Preferred pattern: compute the baseline from the base branch at CI runtime in the same job (not from a locally-committed snapshot), so cross-environment mismatch is impossible by construction.",
+      "grounding": "ADMIRAL_LOG 2026-06-28 INCIDENT 'pyright-baseline.json was generated LOCALLY (Windows/py3.14) but CI runs ubuntu/py3.11 + CI pandas-stubs DIFFERENT/larger error set; the committed baseline doesnt match CIs'; RULING 'sent cmdr-C back to make the gate ENVIRONMENT-PORTABLE'; cmdr-C AGENT_FEEDBACK 'self-tested no-op exit 0 injected-error exit 1 — passed locally, failed in CI'"
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "ADMIRAL_LOG 2026-06-28 INCIDENT 'cmdr-R ran apply_lessons_delta itself (LESSONS.md tick 15->16); captured both diffs, then reverted'; cmdr-C AGENT_FEEDBACK 'shared files not committed on mission branch — confirmed by deny-globs check; launch-order DO NOT edit means DO NOT COMMIT, not do not write at all'"
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": "ADMIRAL_LOG 2026-06-28: all 3 commanders used py throughout; cmdr-C AGENT_FEEDBACK 'spine command checks hardcoded as python C:/Users/... patched spine.json in-place' (standing contradiction navigated)"
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": "cmdr-V AGENT_FEEDBACK 'c2 postcondition engine-checked cannot attest — used attach'; cmdr-C AGENT_FEEDBACK 'attest init c1 refused engine-checked use advance — recovered by advance init'"
+    },
+    {
+      "op": "confirm",
+      "id": "idle-artifact-completeness-distinguisher",
+      "grounding": "ADMIRAL_LOG 2026-06-28 INCIDENT (idle not stalled DONE artifacts) x3: cmdr-V PR #547, cmdr-R PR #548, cmdr-C PR #550 — all idled with no verdict message, all accepted via artifact-completeness gate (commit+open PR)"
+    },
+    {
+      "op": "confirm",
+      "id": "diagnose-first-decide-fix",
+      "grounding": "ADMIRAL_LOG 2026-06-28: cmdr-V send-back 'NOT accepting the HOLD as final yet' parity evidence required before accepting honest-null; cmdr-C send-back for CI-portability 'prove it works in CI environment before merge' not just locally"
+    },
+    {
+      "op": "confirm",
+      "id": "verify-claimed-side-effects",
+      "grounding": "ADMIRAL_LOG 2026-06-28: PR #548 empty body caught+backfilled before merge; cmdr-C CI-fail on own PR caught at adjudication (local self-test passed CI failed); issue close states verified post-merge for all 5 auto-closed issues"
+    },
+    {
+      "op": "confirm",
+      "id": "disjoint-physics-channel-fencing",
+      "grounding": "ADMIRAL_LOG 2026-06-28 MERGE 'fence CLEAN' for PR #547 (layer2 only) + PR #548 (calibration/session_fit only); 'ZERO collisions merge order irrelevant as predicted'"
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": "cmdr-R launch-order exact calibration.py/session_fit.py seams with file:line + 'verify each signature from source before relying on it'; cmdr-V launch-order exact session_traction.py:80/:110 and session_coast.py:49/:75 signatures; both commanders confirmed high adherence"
+    },
+    {
+      "op": "confirm",
+      "id": "admiral-close-after-merge-verified",
+      "grounding": "ADMIRAL_LOG 2026-06-28 MERGE x3: each sequence verify-checks -> merge -> verify-HEAD-advanced -> auto-close -> verify-CLOSED; PR #548 body backfilled BEFORE merge"
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": "cmdr-R AGENT_FEEDBACK 'Context compaction break during G2 dispatch. Recovery from summary was clean (state note + execute.json gave full context). No work lost.'"
+    },
+    {
+      "op": "confirm",
+      "id": "worktree-untracked-data",
+      "grounding": "All 3 launch orders carry Data Locations blocks with absolute main-checkout paths; all 3 commanders used absolute paths throughout their runs"
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": "cmdr-R cmdr-V cmdr-C all crews dispatched via Agent tool with run_crew.py registry functions; no claude CLI binary in this harness — standing misfit navigated by all 3 (recurrence-debt)"
+    }
+  ]
+}

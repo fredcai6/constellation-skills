@@ -1,0 +1,152 @@
+{
+  "work_id": "668-instrument-panel/g7-realrun-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, handoff, implementer result, script, test file, report md. Confirmed frozen_constants.py mod is pre-existing from already-APPROVED g3-replication gate, not part of g7's diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced: --check-reproduce PASS; fresh-process re-run's parsed JSON == committed JSON (full dict equality confirmed via python compare) though raw JSON text differs in key ORDER for instruments_2_3.per_partition_verdicts (non-deterministic set iteration in replication.py's compare_channels_by_class, out of g7 scope) -- values are 100% stable, only an internal diagnostic field's serialization order varies; markdown unaffected (combined_per_class uses a sorted list). No-leakback CONFIRMED structurally (score_sector consumes official_time only after composed dataclass is frozen) and the test (near/far official time, composed_mu/sigma/n_eff identical) is NOT vacuous. driver_utilization_share FLOOR=0.0 independently verified as genuine MoM clip: raw var_team=0.0 exactly while var_circuit/var_resid are both positive (fit_two_way's max(0.0,...) triggered on real data, not coincidental). Instrument 4 honesty: composability limitation text accurate, #670 verified as a real open GitHub issue. sigma-honesty 100% coverage independently traced to weakest-link n_eff dominated by near-empty class c1 (n_eff as low as 0.03) -- honestly caveated, not spun. Frozen constants cited by direct import/attribute reference, no inline re-mint. Bounded-scope note present. NOTE: handoff text attributes 'a real bug fixed' to the no-leakback area, but implementer's own why_trail/result attributes the actual fixed bug to an unrelated hardcoded DRIVERS/CIRCUITS iteration completeness issue in instrument4_whole_lap_calibration -- no-leakback appears correctly structural from the start; flagged as a handoff/narrative mismatch, not a code defect.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status shows exactly the 4 allowed-scope deliverables as new (script, .md, .json, test file) plus the pre-existing frozen_constants.py mod verified (r0) to belong to the already-APPROVED g3-replication gate. instrument_panel/*.py mtimes (variance_decomposition/sector_scorecard/replication/__init__, all 2026-07-26 18:44-20:16 PDT) all predate g7-implement's session window (20:32-20:58 PDT per crew-runs.json UTC timestamps) -- independently confirms no instrument module was touched during g7. Script imports are read-only (DatabaseManager, replication.py, sector_scorecard.py, variance_decomposition.py, frozen_constants, sector_nesting) matching the allowed READ-ONLY list. No fastf1 import anywhere in the script (grep confirmed). No write path to data/f1_data_2023.db (DatabaseManager used only for get_sessions/get_lap_times). No docs/architecture/* touched (git status confirms). Specific exclusions all respected.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced ALL required evidence on the pinned interpreter: (1) scripts/instrument_panel_668_report.py --check-reproduce -> PASS; (2) full report regen -> stdout ends with wrote docs/physics/...md + .json; (3) py -m pytest tests/unit/physics/instrument_panel/ -q -> 57 passed; (4) py -m pyright scripts/instrument_panel_668_report.py tests/unit/physics/instrument_panel/test_panel_report.py -> 0 errors, 0 warnings, 0 informations; (5) git status --porcelain data/ showed data/f1_data_2023.db WAL-touched (M), restored via git checkout, confirmed clean after. All evidence claims in the implement-result match independently-reproduced reality. One caveat already logged at r1: raw JSON byte text for one nested diagnostic field (per_partition_verdicts) is not order-stable across fresh processes though the data itself is -- does not invalidate the evidence, since both the committed-json-matches-fresh test and my own dict-equality check use semantic (order-insensitive) comparison, which is the correct standard here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "CREW_CONTEXT.md 'Verification By Region': 'Simplification limits (all regions): ... Review blocker when skipped or failing on in-scope Python.' The implementer's evidence never ran py -m src.utils.simplification_limits at all (omitted from the Evidence section). I ran it myself: 'py -m src.utils.simplification_limits --paths scripts/instrument_panel_668_report.py tests/unit/physics/instrument_panel/test_panel_report.py' -> FAIL (3 violations): instruments_2_3_replication cyclomatic_complexity=26 (limit <20); render_markdown cyclomatic_complexity=20 (limit <20) and function_lines=125 (limit <100). Precedent check: the script this one 'mirrors the shape of' (scripts/fingerprint_class_coverage_675.py) PASSES the same check cleanly, showing compliance is achievable for a comparable script in this repo, not an inherent scripts/ exemption. Positives elsewhere: absolute main-checkout path used correctly for the untracked slice DB (CREW_CONTEXT rule); validation messages name field/expectation/actual; missingness handled intentionally (None, never zeroed/fabricated) throughout; no module-level mutable state or DB singleton; print() confined to the CLI script. Net: one concrete, reproducible, doctrine-named review-blocker (skipped + failing complexity check) on an otherwise clean quality picture; recommend a scoped fix (extract helper sub-functions from instruments_2_3_replication and render_markdown) -- fully within g7's own allowed scope, no instrument-logic or frozen-value change needed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes checked against the diff and independent verification: structural anchors (new script/docs/test) match git status exactly; 'no existing instrument capability changed' matches mtime evidence (r2); constraints (no-frame-kill, strictly-pre, db-only/own-db, decision:split-half-unit) all independently confirmed honored above. decide_channel_from_mean_r() read verified: re-applies imported r_floor()+channel_tie_margin, never redefines/re-mints. Claims (report-reproduces, no-leakback, bounded-scope-stated) all independently verified. Trust-limitation note (Build-1 weakest-link n_eff sizing artifact) accurately framed (independently confirmed via composed_n_eff values as low as 0.03, driven by c1). Triage candidate (#670 per-FIA-sector composability gap) correctly routed, #670 confirmed a real open issue, not fabricated. docs/architecture/* deliberately untouched per handoff's own Specific Exclusions -- not a reconciliation gap, a sanctioned scope boundary (this is a versioned report artifact, not a persistent pipeline capability). No decision candidate needed beyond the already owner-ruled decision:split-half-unit. No reconciliation gap for Commander beyond the r4 simplification-limits finding already recorded.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Fowler pass recorded to g7-realrun-review/fowler_pass.json, verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, duplicated-code], overridden=[primitive-obsession, logged reason: replication.py's own Cell/string-class_id convention]). long-method corroborates r4-quality's independently-reproduced simplification_limits FAIL (instruments_2_3_replication cyclomatic=26, render_markdown cyclomatic=20/125 lines). duplicated-code: build_half_cells and half_cell_sem share an identical filter-and-group-by-(driver,class_id) block, minor, not correctness-affecting. Recording fail here to keep this check's verdict aligned with the underlying long-method defect it surfaces (same root cause as r4), not a second independent blocker.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r4-quality: CREW_CONTEXT.md 'Verification By Region': 'Simplification limits (all regions): ... Review blocker when skipped or failing on in-scope Python.' The implementer's evidence never ran py -m src.utils.simplification_limits at all (omitted from the Evidence section). I ran it myself: 'py -m src.utils.simplification_limits --paths scripts/instrument_panel_668_report.py tests/unit/physics/instrument_panel/test_panel_report.py' -> FAIL (3 violations): instruments_2_3_replication cyclomatic_complexity=26 (limit <20); render_markdown cyclomatic_complexity=20 (limit <20) and function_lines=125 (limit <100). Precedent check: the script this one 'mirrors the shape of' (scripts/fingerprint_class_coverage_675.py) PASSES the same check cleanly, showing compliance is achievable for a comparable script in this repo, not an inherent scripts/ exemption. Positives elsewhere: absolute main-checkout path used correctly for the untracked slice DB (CREW_CONTEXT rule); validation messages name field/expectation/actual; missingness handled intentionally (None, never zeroed/fabricated) throughout; no module-level mutable state or DB singleton; print() confined to the CLI script. Net: one concrete, reproducible, doctrine-named review-blocker (skipped + failing complexity check) on an otherwise clean quality picture; recommend a scoped fix (extract helper sub-functions from instruments_2_3_replication and render_markdown) -- fully within g7's own allowed scope, no instrument-logic or frozen-value change needed.",
+      "r6-fowler: Fowler pass recorded to g7-realrun-review/fowler_pass.json, verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, duplicated-code], overridden=[primitive-obsession, logged reason: replication.py's own Cell/string-class_id convention]). long-method corroborates r4-quality's independently-reproduced simplification_limits FAIL (instruments_2_3_replication cyclomatic=26, render_markdown cyclomatic=20/125 lines). duplicated-code: build_half_cells and half_cell_sem share an identical filter-and-group-by-(driver,class_id) block, minor, not correctness-affecting. Recording fail here to keep this check's verdict aligned with the underlying long-method defect it surfaces (same root cause as r4), not a second independent blocker."
+    ],
+    "summary": "Substantive real-data judgments (report reproduces at the value level, no-leakback structural+non-vacuous, driver-utilization FLOOR genuine MoM clip independently verified, Instrument 4 honesty + #670 real, sigma-honesty conservative framing independently verified, frozen constants exact/no-remint, bounded-scope present) ALL CONFIRMED. BLOCK is solely on a concrete, reproducible, doctrine-named review blocker: CREW_CONTEXT.md's simplification-limits check was never run by the implementer and FAILS (3 violations: instruments_2_3_replication cyclomatic=26>20, render_markdown cyclomatic=20 and function_lines=125>100) -- a scoped, script-only fix (extract helper sub-functions), no instrument-logic or frozen-value change needed. Two non-blocking observations also logged: (1) instruments_2_3.per_partition_verdicts JSON key order is non-deterministic across fresh processes (root cause in already-approved replication.py, values unaffected, markdown unaffected, existing tests correctly use order-insensitive comparison); (2) the review handoff's narrative attributes the found-and-fixed bug to the no-leakback area, but the implementer's own why_trail attributes it to an unrelated hardcoded-iteration completeness bug -- a documentation mismatch, not a code defect."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-668-g7-review-1",
+    "status": "released",
+    "claimed_at": "2026-07-27T04:00:36.469213+00:00",
+    "last_heartbeat": "2026-07-27T04:12:14.793610+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-27T04:13:39.037753+00:00"
+  }
+}

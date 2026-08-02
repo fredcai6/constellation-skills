@@ -1,0 +1,36 @@
+{
+  "work_id": "662-segment-map",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": "662-segment-map: attach (not attest) used for every artifact-checked postcondition -- user-decision at understand/plan/triage/review (each citing LAUNCH_ORDER), implementer-result/review-result at every gN-implement/gN-review AND at every gN-integrate (attached to both gN-review and gN-integrate so the APPROVE-match check passed at integrate) across g1-g6 + g3 re-review; attest --which preconditions/postconditions used only for check:null conditions; attest correctly refused on command-checked conditions (advance run instead)."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": "662-segment-map: all 12 crew dispatches (g1-g6 implement+review + g3 re-review) used the Agent tool with run_crew.py --backend external registering each attempt in crew-runs.json, --verify-result confirming freshness (fresh/completed), recover_crews.py before each; --abandon/--relaunch used for the g3 implementer + reviewer rework attempts. The first-class --backend external path (the shipped fix) worked with zero dispatch-mechanism friction -- corroborates the fixed-upstream resolution."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "662-segment-map: every .agent-work path kept OFF the mission branch -- feedback trio staged under .agent-work/staged-feedback/662-segment-map/ per the launch order fence, notes-662.md + 662-cartography/ + VERDICT.md + the work area all uncommitted; git diff main...HEAD is exactly the 15 new src/tests/scripts files + the .gitignore fix (verified via git diff --name-only). Map fence honored (no docs/architecture edit)."
+    },
+    {
+      "op": "confirm",
+      "id": "from-child-refuses-on-gated-checklist",
+      "grounding": "662-segment-map: advanced the spine execute step by 'attest execute --cond c1' directly after execute.json (a GATED child) reported DONE no-open-items -- did NOT use --from-child (which only works for survey children). The lesson's predicted spine step was reached and navigated correctly without the surprise."
+    },
+    {
+      "op": "confirm",
+      "id": "crew-idle-strands-deliverable",
+      "grounding": "662-segment-map g3 rework: the resumed g3 implementer applied the code fix + added the catching test + went 18/18 green, but STRANDED on rewriting its IMPLEMENTER_RESULT .md (deliverable done, echo missing) -- so the commander's completion-waiter keyed to the result-md mtime never fired (looked idle). Recovered by ground-truthing from the artifacts (code diff + new test + green suite), appending the rework note to the md, verifying, proceeding. Recurrence of the strand-on-result-write pattern."
+    },
+    {
+      "op": "confirm",
+      "id": "delegated-commander-foreground-poll-over-watcher-yield",
+      "grounding": "662-segment-map g3 rework: armed a background Bash until-loop waiter (bdvr7xv4q) keyed to the result-md freshness and ended the turn to 'wait' -- which read to the Admiral as IDLE (they sent a state-report query). A bounded foreground poll would have kept the turn alive for a medium wait (a rework). Confirms the lesson's core claim that background-watcher-then-yield reads as a stall in a delegated run."
+    }
+  ]
+}

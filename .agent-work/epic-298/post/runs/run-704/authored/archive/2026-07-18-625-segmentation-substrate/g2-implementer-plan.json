@@ -1,0 +1,242 @@
+{
+  "work_id": "625-segmentation-substrate-g2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-property-mixture",
+    "m2-soft-class-membership",
+    "m3-full-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's global-crew.md and global-everyone.md, the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the handoff g2-implement-handoff.md, CONVERGED_PLAN.md's pre-ruling #1, and the current source of src/physics/segment_classifier.py, src/physics/physics_data_models.py (_VALID_REGIMES, KinematicSample), src/physics/constants.py (GRAVITY_MS2), and src/physics/layer2/corner_descriptors.py (Gate 1's sibling module, for import/docstring style). Verify handoff completeness and that segment_classifier.py's actual structure matches the handoff's description (Stop Condition check). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + CONVERGED_PLAN pre-ruling #1 loaded; handoff complete; segment_classifier.py structure confirmed matching handoff",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-property-mixture": {
+      "id": "m1-property-mixture",
+      "title": "New src/physics/layer2/property_mixture.py: MixtureFit, fit_property_mixture, posterior_membership",
+      "imperative": "Create src/physics/layer2/property_mixture.py with: module-level constant MIN_COMPONENT_WEIGHT_FRAC = 0.05 (documented: pre-registered before any real-data fit exists, per pre-ruling #1 support-driven class count, Gates 3/4 will import this exact constant); a frozen dataclass MixtureFit carrying gmm (the fitted sklearn.mixture.GaussianMixture), k (int), scaler (the fitted StandardScaler), and bic_scores (dict[int, float] per candidate k tried); fit_property_mixture(descriptors: np.ndarray, k_range: tuple[int,int] = (2,6), min_component_weight_frac: float = MIN_COMPONENT_WEIGHT_FRAC, random_state: int = 0) -> MixtureFit implementing: standardize descriptors with StandardScaler, for each k in range(k_range[0], k_range[1]+1) fit GaussianMixture(n_components=k, random_state=random_state) on standardized data, reject any k whose weights_.min() < min_component_weight_frac, among surviving candidates pick lowest-BIC k, if every k is rejected fall back to k=1 (fit a single-component GaussianMixture, not raise); posterior_membership(fit: MixtureFit, descriptors: np.ndarray) -> np.ndarray shape (N, fit.k), each row summing to 1, via fit.gmm.predict_proba on descriptors transformed by the SAME stored fit.scaler (not a re-fit scaler). Both functions carry docstrings citing why standardization matters (radius in meters vs lateral_g in O(1) g-units) and why the support floor exists (pre-ruling #1: class count is support-driven, not fixed). Write tests/unit/physics/layer2/test_property_mixture.py: TDD red first (write tests before implementation, observe failing via manual run, attest c1 as red evidence) covering: 2-cluster well-separated synthetic Gaussian blobs -> fit.k == 2; 3-cluster well-separated blobs -> fit.k == 3; a thin/unsupported blob scenario where a candidate k's split would create a component below MIN_COMPONENT_WEIGHT_FRAC -> selection does not pick that k (assert against the floor behavior, e.g. lower k selected or documented fallback); posterior_membership rows sum to 1 via np.allclose; MIN_COMPONENT_WEIGHT_FRAC equals exactly 0.05 (regression-pin the constant's value per the handoff's Authority section -- do not let a test silently want a different number). Do not modify MIN_COMPONENT_WEIGHT_FRAC's value to fit a test; adjust fixtures instead.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_property_mixture.py written, observed failing (module/functions do not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "property_mixture.py implemented; all test_property_mixture.py cases pass (2-cluster k==2, 3-cluster k==3, thin-blob floor behavior, posterior rows sum to 1, constant pinned at 0.05)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_property_mixture.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-property-mixture-1"
+        }
+      ],
+      "constraints": [
+        "MIN_COMPONENT_WEIGHT_FRAC = 0.05 exactly, not tuned by any real-data fit",
+        "mixtures fit on STANDARDIZED (radius, lateral_g) features",
+        "posterior_membership reuses the stored fit-time scaler, never re-fits one",
+        "every-k-rejected falls back to k=1, never raises, never silently picks a rejected k",
+        "no DB I/O, pure functions/synthetic fixtures only",
+        "no evo_predictor/latent_power/compound_prior imports"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-property-mixture-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_property_mixture.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-soft-class-membership": {
+      "id": "m2-soft-class-membership",
+      "title": "SegmentClassifier.soft_class_membership additive method",
+      "imperative": "Edit src/physics/segment_classifier.py: add ONE new method soft_class_membership(self, sample: KinematicSample, fit: 'MixtureFit') -> Optional[np.ndarray] importing MixtureFit/posterior_membership from src.physics.layer2.property_mixture and GRAVITY_MS2 from src.physics.constants. Returns None when sample.regime != 'corner'. For a corner sample: derive radius = 1.0 / sample.curvature when abs(sample.curvature) > 1e-9, else return None (degenerate zero-curvature corner-regime edge case); lateral_g = sample.a_lateral / GRAVITY_MS2 (note: this is DIVIDING by G, unlike corner_descriptors.py's bin_row_to_descriptor which takes mu_lat_p90 already in g-units -- sample.a_lateral is m/s^2, different unit convention, document this distinction in the method docstring to prevent future confusion between the two call sites). Call posterior_membership(fit, np.array([[radius, lateral_g]])) and return the single-row result as a 1-D array (or the 2-D row -- your call, document it). Do NOT modify _classify_regime, _VALID_REGIMES, or any other existing method/behavior; do NOT wire soft_class_membership into classify_samples's main loop. Add test cases to tests/unit/physics/test_segment_classifier.py (TDD red first: write cases, observe failing, attest c1) covering: a corner sample with valid curvature returns a membership array summing to 1 (use a small synthetic MixtureFit built via fit_property_mixture on a synthetic 2-cluster descriptor set for the test); a straight-regime sample (any of straight_throttle/straight_coast/straight_brake) returns None; a corner-regime sample with curvature == 0.0 (or abs < 1e-9) returns None (degenerate case). Do not remove or weaken any existing test in the file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: property_mixture.py implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new soft_class_membership test cases written, observed failing (method does not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "soft_class_membership implemented; new cases pass alongside ALL pre-existing test_segment_classifier.py cases (none removed)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/test_segment_classifier.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-soft-class-membership-1"
+        }
+      ],
+      "constraints": [
+        "_classify_regime and _VALID_REGIMES byte-identical to before this gate",
+        "soft_class_membership NOT wired into classify_samples's main loop",
+        "sample.a_lateral (m/s^2) divided by GRAVITY_MS2 -- distinct from corner_descriptors.py's already-g-units convention, documented",
+        "no pre-existing test removed or weakened",
+        "no evo_predictor/latent_power/compound_prior imports"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-soft-class-membership-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/test_segment_classifier.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-evidence": {
+      "id": "m3-full-evidence",
+      "title": "Full required-evidence run + simplification_limits + write IMPLEMENTER_RESULT",
+      "imperative": "Run the exact Required Evidence command from the handoff (both test files together, -v), confirm pre-existing test_segment_classifier.py case count is unchanged before vs after (count before editing vs after) and all pass, and no property_mixture case regressed. Run py -m src.utils.simplification_limits over the touched src/ and tests/ paths per project norm. Write IMPLEMENTER_RESULT to .agent-work/625-segmentation-substrate/crew-handoffs/g2-implement-result.md using the template, citing before/after test counts and the MixtureFit/soft_class_membership diff. Attach it as evidence via attach --type implementer-result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: soft_class_membership implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "combined required-evidence test run passes, all cases including pre-existing ones, counts confirmed",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_property_mixture.py tests/unit/physics/test_segment_classifier.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-evidence-2"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written and attached",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-evidence-1"
+        }
+      ],
+      "constraints": [
+        "no commits unless asked",
+        "evidence pasted verbatim, not paraphrased"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-evidence-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/625-segmentation-substrate/crew-handoffs/g2-implement-result.md",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-full-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_property_mixture.py tests/unit/physics/test_segment_classifier.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipC-625-g2-impl-1",
+    "status": "released",
+    "claimed_at": "2026-07-18T04:46:59.723333+00:00",
+    "last_heartbeat": "2026-07-18T04:55:26.343446+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T04:55:36.890985+00:00"
+  }
+}

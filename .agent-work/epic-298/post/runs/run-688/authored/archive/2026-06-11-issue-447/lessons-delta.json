@@ -1,0 +1,39 @@
+{
+  "work_id": "issue-447",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-447 entry (Instruction adherence): crews dispatched via the Agent tool with each attempt recorded through run_crew.py registry functions and recover_crews.py run before each dispatch; no claude CLI binary in this harness."
+    },
+    {
+      "op": "confirm",
+      "id": "spine-lease-stale-long-crew",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-447 entry: continuation cmdr-447-cont1 re-claimed the spine lease with --force --reason after the original session held it past staleness; engine confirmed 'claimed lease cmdr-447 -> active'."
+    },
+    {
+      "op": "confirm",
+      "id": "fastf1-posdata-decimetres",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-447 entry + docs/physics/measurement_model.md §2: raw pos_data X/Y/Z integers in decimetres, 0.1 m quantization, x0.1 to metres everywhere; re-confirmed across 6 sessions."
+    },
+    {
+      "op": "confirm",
+      "id": "dbmanager-not-readonly",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-447 entry (crew-reported friction): g2 implementer bypassed DatabaseManager with a direct file:?mode=ro sqlite URI to stay read-only against the canonical DBs because __init__ runs a schema-ensure write."
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-447 entry (Friction): engine imperatives/command-checks hard-code 'python' but py was used throughout; same standing contradiction navigated again."
+    },
+    {
+      "op": "add",
+      "id": "feedback-step-session-limit-stranding",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "The feedback step (durable AGENT_FEEDBACK.md entry + lessons-delta + invariant check) runs at the tail of a long context and is a predictable session-limit death point. A death there strands the durable retrospective even though mission commits are already on the branch. Recovery by a cold continuation is clean ONLY because the on-disk spine is canonical, the lease is --force re-claimable, and the workbench artifacts (RUN_SUMMARY, evidence, review surveys) are complete enough to reconstruct the entry without redoing analysis. Mitigation: checkpoint/draft the AGENT_FEEDBACK entry and lessons-delta earlier (e.g. at review), so a tail-end death cannot lose them.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-447 entry (Workflow observation): original cmdr-447 killed by session limit mid-feedback with spine 'feedback: in-progress'; cmdr-447-cont1 recovered closeout only from the on-disk spine + workbench."
+    }
+  ]
+}

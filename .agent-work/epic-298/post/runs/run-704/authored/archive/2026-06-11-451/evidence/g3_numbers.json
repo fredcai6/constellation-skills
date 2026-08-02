@@ -1,0 +1,20 @@
+{
+  "wide_net": {
+    "hidden_dim": 384,
+    "rw": 0.5880,
+    "ceiling": 0.7643,
+    "pairs": 3352,
+    "split": "train 2018-2024, eval 2025 OOS (single held-out year; seed 0; 23 features as-is)",
+    "events": 18,
+    "gap_to_ceiling": 0.1763,
+    "delta_vs_control": "+0.0012"
+  },
+  "control_ref": 0.5868,
+  "capacity_excluded": true,
+  "verdict_rationale": "Wide-net (hidden_dim=384, 3x default 128) OOS 2025 rw=0.5880 vs control rw=0.5868: delta=+0.0012 — well within the ±0.02 threshold. Tripling network capacity on the same 23 features produces no meaningful lift. The 0.1763 gap to the 0.7643 ceiling persists unchanged. Capacity (c) is excluded as the bottleneck; the deficit is representational (feature absence), consistent with hypothesis (a) from G2.",
+  "notes": {
+    "headline_wide": "HEADLINE 2018-2024 rw=0.6560 (same as G2 control; rw_2018-2024 records carried over from G2 control; only rw_2025 is from wide-net retrain)",
+    "seed": "seed=0; 23 features (driver_quali_power_from_race_weekend.v2); no src edit",
+    "pairs_match": "3352 pairs, 18 events — exactly matches G2 control OOS (rh_2025 carried over, same shared-pairs construction)"
+  }
+}

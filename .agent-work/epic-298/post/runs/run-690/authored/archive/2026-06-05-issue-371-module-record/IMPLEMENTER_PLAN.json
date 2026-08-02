@@ -1,0 +1,198 @@
+{
+  "work_id": "issue-371-rework-r1-g2-fail-fast",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-green",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Confirm: task (replace silent filter with fail-fast collect_record_rows helper), scope (module_record.py, run.py, test_module_record.py only), exclusions (all other files), required evidence (pytest outputs), test mode (TDD: red then green), stop conditions (no scope creep).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete: files identified, blocker line confirmed at run.py:452, test file exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Blocker line confirmed at run.py:452; module_record.py and test_module_record.py identified; scope: 3 files only"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "TDD red: write failing test for collect_record_rows",
+      "imperative": "Add TestCollectRecordRows class to test_module_record.py. Import collect_record_rows from module_record. Two cases: (a) one row missing 'record' => ValueError naming the event_id; (b) all rows have 'record' => returns list of record values, no raise. Run tests to confirm ImportError/AttributeError (red).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new tests fail (ImportError or AttributeError) \u2014 collect_record_rows does not yet exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: 5/5 tests fail with ImportError: cannot import name collect_record_rows"
+        }
+      ],
+      "constraints": [
+        "only touch test_module_record.py in this step"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-red-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_record.py::TestCollectRecordRows -q 2>&1 | Select-String -Pattern 'FAILED|ERROR|ImportError|AttributeError'",
+            "exit": 255
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-green": {
+      "id": "m2-green",
+      "title": "Green: add collect_record_rows helper and fix run.py",
+      "imperative": "1. Add collect_record_rows(per_event_rows) -> list to module_record.py with fail-fast ValueError logic. 2. Add to __all__. 3. Replace the silent-filter line in run.py with a call to collect_record_rows. Run tests to confirm green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red confirmed at m1-red"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all TestCollectRecordRows tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_record.py::TestCollectRecordRows -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-green-1"
+        }
+      ],
+      "constraints": [
+        "only touch module_record.py and run.py and test_module_record.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_record.py::TestCollectRecordRows -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Full verification: all unit tests + simplification_limits",
+      "imperative": "Run the full unit suite for the module, then the simplification_limits check on the three touched files.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "green observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Green confirmed: 5/5 TestCollectRecordRows pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all unit tests in tests/unit/evo_predictor/ pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits passes on the three files",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/evo_predictor/module_record.py src/evo_predictor/run.py tests/unit/evo_predictor/test_module_record.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/evo_predictor/module_record.py src/evo_predictor/run.py tests/unit/evo_predictor/test_module_record.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

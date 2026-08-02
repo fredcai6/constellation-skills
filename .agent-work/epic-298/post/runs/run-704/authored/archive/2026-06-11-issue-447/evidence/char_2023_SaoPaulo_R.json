@@ -1,0 +1,855 @@
+{
+  "session": {
+    "year": 2023,
+    "gp": "São Paulo Grand Prix",
+    "session_type": "R",
+    "label": "2023_SaoPaulo_R",
+    "notes": "Brazil 2023; wet/safety-car conditions; messy session (wet/messy requirement)",
+    "n_drivers_total": 20,
+    "n_drivers_analysed": 5
+  },
+  "car_data": {
+    "VER": {
+      "n_rows": 41390,
+      "columns": [
+        "Date",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "sampling_interval": {
+        "n_intervals": 41389,
+        "median_dt_s": 0.2400000000000091,
+        "p05_dt_s": 0.15999999999985448,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.4390000000003056,
+        "max_gap_s": 1.4809999999997672,
+        "dropout_count": 54,
+        "dropout_rate_pct": 0.13046944840416536,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 41390,
+        "source_counts": {
+          "car": 41390
+        },
+        "source_fractions": {
+          "car": 1.0
+        }
+      },
+      "noise_covariance": {
+        "unit_note": "Speed residual variance in (km/h)^2",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_speed_diff_thresh_kmh": 2.0,
+        "n_total": 41390,
+        "n_steady": 20798,
+        "Speed_residual_var_kmh2": 1.425441
+      }
+    },
+    "SAR": {
+      "n_rows": 41390,
+      "columns": [
+        "Date",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "sampling_interval": {
+        "n_intervals": 41389,
+        "median_dt_s": 0.2400000000000091,
+        "p05_dt_s": 0.15999999999985448,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.4390000000003056,
+        "max_gap_s": 1.4809999999997672,
+        "dropout_count": 54,
+        "dropout_rate_pct": 0.13046944840416536,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 41390,
+        "source_counts": {
+          "car": 41390
+        },
+        "source_fractions": {
+          "car": 1.0
+        }
+      },
+      "noise_covariance": {
+        "unit_note": "Speed residual variance in (km/h)^2",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_speed_diff_thresh_kmh": 2.0,
+        "n_total": 41390,
+        "n_steady": 20404,
+        "Speed_residual_var_kmh2": 2.533815
+      }
+    },
+    "RIC": {
+      "n_rows": 41390,
+      "columns": [
+        "Date",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "sampling_interval": {
+        "n_intervals": 41389,
+        "median_dt_s": 0.2400000000000091,
+        "p05_dt_s": 0.15999999999985448,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.4390000000003056,
+        "max_gap_s": 1.4809999999997672,
+        "dropout_count": 54,
+        "dropout_rate_pct": 0.13046944840416536,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 41390,
+        "source_counts": {
+          "car": 41390
+        },
+        "source_fractions": {
+          "car": 1.0
+        }
+      },
+      "noise_covariance": {
+        "unit_note": "Speed residual variance in (km/h)^2",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_speed_diff_thresh_kmh": 2.0,
+        "n_total": 41390,
+        "n_steady": 20251,
+        "Speed_residual_var_kmh2": 1.016768
+      }
+    },
+    "NOR": {
+      "n_rows": 41390,
+      "columns": [
+        "Date",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "sampling_interval": {
+        "n_intervals": 41389,
+        "median_dt_s": 0.2400000000000091,
+        "p05_dt_s": 0.15999999999985448,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.4390000000003056,
+        "max_gap_s": 1.4809999999997672,
+        "dropout_count": 54,
+        "dropout_rate_pct": 0.13046944840416536,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 41390,
+        "source_counts": {
+          "car": 41390
+        },
+        "source_fractions": {
+          "car": 1.0
+        }
+      },
+      "noise_covariance": {
+        "unit_note": "Speed residual variance in (km/h)^2",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_speed_diff_thresh_kmh": 2.0,
+        "n_total": 41390,
+        "n_steady": 20508,
+        "Speed_residual_var_kmh2": 1.063254
+      }
+    },
+    "GAS": {
+      "n_rows": 41390,
+      "columns": [
+        "Date",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "sampling_interval": {
+        "n_intervals": 41389,
+        "median_dt_s": 0.2400000000000091,
+        "p05_dt_s": 0.15999999999985448,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.4390000000003056,
+        "max_gap_s": 1.4809999999997672,
+        "dropout_count": 54,
+        "dropout_rate_pct": 0.13046944840416536,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 41390,
+        "source_counts": {
+          "car": 41390
+        },
+        "source_fractions": {
+          "car": 1.0
+        }
+      },
+      "noise_covariance": {
+        "unit_note": "Speed residual variance in (km/h)^2",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_speed_diff_thresh_kmh": 2.0,
+        "n_total": 41390,
+        "n_steady": 20661,
+        "Speed_residual_var_kmh2": 1.941241
+      }
+    }
+  },
+  "pos_data": {
+    "VER": {
+      "n_rows": 42180,
+      "columns": [
+        "Date",
+        "Status",
+        "X",
+        "Y",
+        "Z",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "unit_note": "X/Y/Z are in DECIMETRES (dm) as emitted by FastF1 pos_data",
+      "sampling_interval": {
+        "n_intervals": 42179,
+        "median_dt_s": 0.24000000000069122,
+        "p05_dt_s": 0.13999999999941792,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.42000000000007276,
+        "max_gap_s": 1.4600000000000364,
+        "dropout_count": 66,
+        "dropout_rate_pct": 0.15647597145498945,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 42180,
+        "source_counts": {
+          "pos": 42180
+        },
+        "source_fractions": {
+          "pos": 1.0
+        }
+      },
+      "quantization": {
+        "X": {
+          "axis": "X",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 6079
+        },
+        "Y": {
+          "axis": "Y",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 8288
+        },
+        "Z": {
+          "axis": "Z",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 432
+        }
+      },
+      "z_channel_verdict": {
+        "verdict": "PASS",
+        "reason": "range_dm=7820.00 >= 50.0, var_dm2=2900723.4882 >= 4.0, fraction_constant=0.213",
+        "unit_note": "Z in decimetres (dm); range_m = range_dm * 0.1",
+        "range_dm": 7820.0,
+        "range_m": 782.0,
+        "z_min_dm": 0.0,
+        "z_max_dm": 7820.0,
+        "z_min_m": 0.0,
+        "z_max_m": 782.0,
+        "variance_dm2": 2900723.48819,
+        "variance_m2": 29007.2348819,
+        "fraction_constant": 0.2125,
+        "n_finite_samples": 42180
+      },
+      "noise_covariance": {
+        "unit_note": "X/Y/Z residual variance in dm^2 (raw) and m^2 (converted); pos_data values are in decimetres",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_pos_diff_thresh_dm": 5.0,
+        "X_n_total": 42180,
+        "X_n_steady": 18268,
+        "X_residual_var_dm2": 21.648851,
+        "X_residual_var_m2": 0.21648851,
+        "Y_n_total": 42180,
+        "Y_n_steady": 18109,
+        "Y_residual_var_dm2": 43.818267,
+        "Y_residual_var_m2": 0.43818267,
+        "Z_n_total": 42180,
+        "Z_n_steady": 30009,
+        "Z_residual_var_dm2": 222.64477,
+        "Z_residual_var_m2": 2.2264477
+      }
+    },
+    "SAR": {
+      "n_rows": 42180,
+      "columns": [
+        "Date",
+        "Status",
+        "X",
+        "Y",
+        "Z",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "unit_note": "X/Y/Z are in DECIMETRES (dm) as emitted by FastF1 pos_data",
+      "sampling_interval": {
+        "n_intervals": 42179,
+        "median_dt_s": 0.24000000000069122,
+        "p05_dt_s": 0.13999999999941792,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.42000000000007276,
+        "max_gap_s": 1.4600000000000364,
+        "dropout_count": 66,
+        "dropout_rate_pct": 0.15647597145498945,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 42180,
+        "source_counts": {
+          "pos": 42180
+        },
+        "source_fractions": {
+          "pos": 1.0
+        }
+      },
+      "quantization": {
+        "X": {
+          "axis": "X",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 6082
+        },
+        "Y": {
+          "axis": "Y",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 8393
+        },
+        "Z": {
+          "axis": "Z",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 433
+        }
+      },
+      "z_channel_verdict": {
+        "verdict": "PASS",
+        "reason": "range_dm=7820.00 >= 50.0, var_dm2=3628060.0450 >= 4.0, fraction_constant=0.223",
+        "unit_note": "Z in decimetres (dm); range_m = range_dm * 0.1",
+        "range_dm": 7820.0,
+        "range_m": 782.0,
+        "z_min_dm": 0.0,
+        "z_max_dm": 7820.0,
+        "z_min_m": 0.0,
+        "z_max_m": 782.0,
+        "variance_dm2": 3628060.044961,
+        "variance_m2": 36280.60044961,
+        "fraction_constant": 0.2231,
+        "n_finite_samples": 42180
+      },
+      "noise_covariance": {
+        "unit_note": "X/Y/Z residual variance in dm^2 (raw) and m^2 (converted); pos_data values are in decimetres",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_pos_diff_thresh_dm": 5.0,
+        "X_n_total": 42180,
+        "X_n_steady": 18205,
+        "X_residual_var_dm2": 16.994896,
+        "X_residual_var_m2": 0.16994896,
+        "Y_n_total": 42180,
+        "Y_n_steady": 17727,
+        "Y_residual_var_dm2": 43.827623,
+        "Y_residual_var_m2": 0.43827623,
+        "Z_n_total": 42180,
+        "Z_n_steady": 30050,
+        "Z_residual_var_dm2": 45.709746,
+        "Z_residual_var_m2": 0.45709746
+      }
+    },
+    "RIC": {
+      "n_rows": 42180,
+      "columns": [
+        "Date",
+        "Status",
+        "X",
+        "Y",
+        "Z",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "unit_note": "X/Y/Z are in DECIMETRES (dm) as emitted by FastF1 pos_data",
+      "sampling_interval": {
+        "n_intervals": 42179,
+        "median_dt_s": 0.24000000000069122,
+        "p05_dt_s": 0.13999999999941792,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.42000000000007276,
+        "max_gap_s": 1.4600000000000364,
+        "dropout_count": 66,
+        "dropout_rate_pct": 0.15647597145498945,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 42180,
+        "source_counts": {
+          "pos": 42180
+        },
+        "source_fractions": {
+          "pos": 1.0
+        }
+      },
+      "quantization": {
+        "X": {
+          "axis": "X",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 6044
+        },
+        "Y": {
+          "axis": "Y",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 8233
+        },
+        "Z": {
+          "axis": "Z",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 432
+        }
+      },
+      "z_channel_verdict": {
+        "verdict": "PASS",
+        "reason": "range_dm=7820.00 >= 50.0, var_dm2=3374734.3624 >= 4.0, fraction_constant=0.238",
+        "unit_note": "Z in decimetres (dm); range_m = range_dm * 0.1",
+        "range_dm": 7820.0,
+        "range_m": 782.0,
+        "z_min_dm": 0.0,
+        "z_max_dm": 7820.0,
+        "z_min_m": 0.0,
+        "z_max_m": 782.0,
+        "variance_dm2": 3374734.362358,
+        "variance_m2": 33747.34362358,
+        "fraction_constant": 0.2379,
+        "n_finite_samples": 42180
+      },
+      "noise_covariance": {
+        "unit_note": "X/Y/Z residual variance in dm^2 (raw) and m^2 (converted); pos_data values are in decimetres",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_pos_diff_thresh_dm": 5.0,
+        "X_n_total": 42180,
+        "X_n_steady": 18875,
+        "X_residual_var_dm2": 16.064027,
+        "X_residual_var_m2": 0.16064027,
+        "Y_n_total": 42180,
+        "Y_n_steady": 18696,
+        "Y_residual_var_dm2": 24.835462,
+        "Y_residual_var_m2": 0.24835462,
+        "Z_n_total": 42180,
+        "Z_n_steady": 30310,
+        "Z_residual_var_dm2": 812.092151,
+        "Z_residual_var_m2": 8.12092151
+      }
+    },
+    "NOR": {
+      "n_rows": 42180,
+      "columns": [
+        "Date",
+        "Status",
+        "X",
+        "Y",
+        "Z",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "unit_note": "X/Y/Z are in DECIMETRES (dm) as emitted by FastF1 pos_data",
+      "sampling_interval": {
+        "n_intervals": 42179,
+        "median_dt_s": 0.24000000000069122,
+        "p05_dt_s": 0.13999999999941792,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.42000000000007276,
+        "max_gap_s": 1.4600000000000364,
+        "dropout_count": 66,
+        "dropout_rate_pct": 0.15647597145498945,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 42180,
+        "source_counts": {
+          "pos": 42180
+        },
+        "source_fractions": {
+          "pos": 1.0
+        }
+      },
+      "quantization": {
+        "X": {
+          "axis": "X",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 6089
+        },
+        "Y": {
+          "axis": "Y",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 8360
+        },
+        "Z": {
+          "axis": "Z",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 433
+        }
+      },
+      "z_channel_verdict": {
+        "verdict": "PASS",
+        "reason": "range_dm=7820.00 >= 50.0, var_dm2=3087157.6987 >= 4.0, fraction_constant=0.222",
+        "unit_note": "Z in decimetres (dm); range_m = range_dm * 0.1",
+        "range_dm": 7820.0,
+        "range_m": 782.0,
+        "z_min_dm": 0.0,
+        "z_max_dm": 7820.0,
+        "z_min_m": 0.0,
+        "z_max_m": 782.0,
+        "variance_dm2": 3087157.698652,
+        "variance_m2": 30871.57698652,
+        "fraction_constant": 0.2218,
+        "n_finite_samples": 42180
+      },
+      "noise_covariance": {
+        "unit_note": "X/Y/Z residual variance in dm^2 (raw) and m^2 (converted); pos_data values are in decimetres",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_pos_diff_thresh_dm": 5.0,
+        "X_n_total": 42180,
+        "X_n_steady": 18493,
+        "X_residual_var_dm2": 30.38373,
+        "X_residual_var_m2": 0.3038373,
+        "Y_n_total": 42180,
+        "Y_n_steady": 18262,
+        "Y_residual_var_dm2": 54.100316,
+        "Y_residual_var_m2": 0.54100316,
+        "Z_n_total": 42180,
+        "Z_n_steady": 30041,
+        "Z_residual_var_dm2": 454.561942,
+        "Z_residual_var_m2": 4.54561942
+      }
+    },
+    "GAS": {
+      "n_rows": 42180,
+      "columns": [
+        "Date",
+        "Status",
+        "X",
+        "Y",
+        "Z",
+        "Source",
+        "Time",
+        "SessionTime"
+      ],
+      "unit_note": "X/Y/Z are in DECIMETRES (dm) as emitted by FastF1 pos_data",
+      "sampling_interval": {
+        "n_intervals": 42179,
+        "median_dt_s": 0.24000000000069122,
+        "p05_dt_s": 0.13999999999941792,
+        "p25_dt_s": 0.1999999999998181,
+        "p75_dt_s": 0.31999999999970896,
+        "p95_dt_s": 0.42000000000007276,
+        "max_gap_s": 1.4600000000000364,
+        "dropout_count": 66,
+        "dropout_rate_pct": 0.15647597145498945,
+        "dropout_gap_threshold_s": 1.0
+      },
+      "source_breakdown": {
+        "total_rows": 42180,
+        "source_counts": {
+          "pos": 42180
+        },
+        "source_fractions": {
+          "pos": 1.0
+        }
+      },
+      "quantization": {
+        "X": {
+          "axis": "X",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 6061
+        },
+        "Y": {
+          "axis": "Y",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 8276
+        },
+        "Z": {
+          "axis": "Z",
+          "unit_note": "raw values in decimetres (dm); multiply by 0.1 for metres",
+          "min_step_dm": 1.0,
+          "min_step_m": 0.1,
+          "modal_step_dm": 1.0,
+          "modal_step_m": 0.1,
+          "n_unique_values": 432
+        }
+      },
+      "z_channel_verdict": {
+        "verdict": "PASS",
+        "reason": "range_dm=7820.00 >= 50.0, var_dm2=3390312.2355 >= 4.0, fraction_constant=0.233",
+        "unit_note": "Z in decimetres (dm); range_m = range_dm * 0.1",
+        "range_dm": 7820.0,
+        "range_m": 782.0,
+        "z_min_dm": 0.0,
+        "z_max_dm": 7820.0,
+        "z_min_m": 0.0,
+        "z_max_m": 782.0,
+        "variance_dm2": 3390312.235491,
+        "variance_m2": 33903.12235491,
+        "fraction_constant": 0.2327,
+        "n_finite_samples": 42180
+      },
+      "noise_covariance": {
+        "unit_note": "X/Y/Z residual variance in dm^2 (raw) and m^2 (converted); pos_data values are in decimetres",
+        "sg_window": 21,
+        "sg_polyorder": 3,
+        "steady_pos_diff_thresh_dm": 5.0,
+        "X_n_total": 42180,
+        "X_n_steady": 18417,
+        "X_residual_var_dm2": 11.615663,
+        "X_residual_var_m2": 0.11615663,
+        "Y_n_total": 42180,
+        "Y_n_steady": 18133,
+        "Y_residual_var_dm2": 32.305277,
+        "Y_residual_var_m2": 0.32305277,
+        "Z_n_total": 42180,
+        "Z_n_steady": 30047,
+        "Z_residual_var_dm2": 102.810166,
+        "Z_residual_var_m2": 1.02810166
+      }
+    }
+  },
+  "grid_relationship": {
+    "VER": {
+      "car_row_count": 41390,
+      "pos_row_count": 42180,
+      "row_count_diff": 790,
+      "car_base_tick_s": 0.04,
+      "pos_base_tick_s": 0.01,
+      "overlap_tolerance_s": 0.0001,
+      "n_exact_overlaps": 177,
+      "overlap_fraction": 0.004196,
+      "median_nn_distance_s": 0.064,
+      "interpretation": "separate_grids"
+    },
+    "SAR": {
+      "car_row_count": 41390,
+      "pos_row_count": 42180,
+      "row_count_diff": 790,
+      "car_base_tick_s": 0.04,
+      "pos_base_tick_s": 0.01,
+      "overlap_tolerance_s": 0.0001,
+      "n_exact_overlaps": 177,
+      "overlap_fraction": 0.004196,
+      "median_nn_distance_s": 0.064,
+      "interpretation": "separate_grids"
+    },
+    "RIC": {
+      "car_row_count": 41390,
+      "pos_row_count": 42180,
+      "row_count_diff": 790,
+      "car_base_tick_s": 0.04,
+      "pos_base_tick_s": 0.01,
+      "overlap_tolerance_s": 0.0001,
+      "n_exact_overlaps": 177,
+      "overlap_fraction": 0.004196,
+      "median_nn_distance_s": 0.064,
+      "interpretation": "separate_grids"
+    },
+    "NOR": {
+      "car_row_count": 41390,
+      "pos_row_count": 42180,
+      "row_count_diff": 790,
+      "car_base_tick_s": 0.04,
+      "pos_base_tick_s": 0.01,
+      "overlap_tolerance_s": 0.0001,
+      "n_exact_overlaps": 177,
+      "overlap_fraction": 0.004196,
+      "median_nn_distance_s": 0.064,
+      "interpretation": "separate_grids"
+    },
+    "GAS": {
+      "car_row_count": 41390,
+      "pos_row_count": 42180,
+      "row_count_diff": 790,
+      "car_base_tick_s": 0.04,
+      "pos_base_tick_s": 0.01,
+      "overlap_tolerance_s": 0.0001,
+      "n_exact_overlaps": 177,
+      "overlap_fraction": 0.004196,
+      "median_nn_distance_s": 0.064,
+      "interpretation": "separate_grids"
+    }
+  },
+  "headline": {
+    "car_data_median_dt_s_mean": 0.2400000000000091,
+    "pos_data_median_dt_s_mean": 0.24000000000069122,
+    "z_verdicts": [
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS"
+    ],
+    "z_verdict_consensus": "PASS",
+    "grid_relationship_aggregate": {
+      "car_row_counts": [
+        41390,
+        41390,
+        41390,
+        41390,
+        41390
+      ],
+      "pos_row_counts": [
+        42180,
+        42180,
+        42180,
+        42180,
+        42180
+      ],
+      "car_base_tick_s_values": [
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.04
+      ],
+      "pos_base_tick_s_values": [
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01
+      ],
+      "overlap_fractions": [
+        0.004196,
+        0.004196,
+        0.004196,
+        0.004196,
+        0.004196
+      ],
+      "median_nn_distance_s_values": [
+        0.064,
+        0.064,
+        0.064,
+        0.064,
+        0.064
+      ],
+      "median_overlap_fraction": 0.004196,
+      "median_nn_distance_s": 0.064,
+      "median_car_base_tick_s": 0.04,
+      "median_pos_base_tick_s": 0.01,
+      "interpretations": [
+        "separate_grids",
+        "separate_grids",
+        "separate_grids",
+        "separate_grids",
+        "separate_grids"
+      ],
+      "n_drivers": 5
+    }
+  }
+}

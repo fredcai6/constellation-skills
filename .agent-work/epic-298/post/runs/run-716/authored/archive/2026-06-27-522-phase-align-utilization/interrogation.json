@@ -1,0 +1,66 @@
+{
+  "work_id": "522-phase-align-utilization",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1-approach",
+    "q2-scope-verdict"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load issue #522, the c1-driver-utilization-design and ideal-lap-sim-two-sided-evaluator decision anchors, the physics.utilization packet, regime_utilization.py, sim_evaluator.resample_by_progress, and the #518 VERDICT. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1-approach": {
+      "id": "q1-approach",
+      "title": "Which comparison method replaces the point-aligned v_real/v_ideal ratio?",
+      "imperative": "Force the central design decision: phase-aligned point comparison (keep the ratio, fix the registration) vs per-regime capability-frontier comparison (drop point-alignment, compare realised regime forces to the car's measured per-view frontier). Decision candidate \u2014 governs structure + future C-phase. Give a recommendation with rationale.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2-scope-verdict": {
+      "id": "q2-scope-verdict",
+      "title": "Re-run surface + secondary straight under-call + verdict",
+      "imperative": "Resolve: re-run scope (RBR 2023-Q subset vs wider C1 set), whether the secondary straight under-call folds into this issue, and whether the issue closes with a re-assessed per-regime GO/CONTEXTUAL/NO-GO verdict (#518 pattern). Recommend.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved",
+    "findings": []
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

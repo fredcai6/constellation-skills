@@ -1,0 +1,202 @@
+{
+  "work_id": "512-g4-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-core",
+    "m2-dashboard",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load g4 handoff and verify completeness",
+      "imperative": "Read the g4 handoff, the existing regime_readiness.py core, the dashboard script and its test. Verify the handoff is complete (task/method/return shape/scope/exclusions/evidence/stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g4 handoff + existing core/dashboard loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-core": {
+      "id": "m1-core",
+      "title": "Add static-latent separability to regime_readiness.py",
+      "imperative": "Add separation_ratio_manageable to thresholds; StaticSeparability dataclass; _static_separability + _axis_setup_conflated; attach AxisReadiness.static (additive, backward compatible). Add TDD tests planting separable / non-separable (same-mu and huge-sigma) / developing-car / setup-conflated / None-when-<2-cars / threshold-injectable / backward-compat.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "core tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-core-1"
+        }
+      ],
+      "constraints": [
+        "No evo import",
+        "No I/O/plotting in core",
+        "Do not modify pooling.py/estimate_store.py",
+        "Backward compatible: existing G1/G2 fields unchanged",
+        "No GO/NO-GO verdict"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-core-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-dashboard": {
+      "id": "m2-dashboard",
+      "title": "Render static-separability section in the dashboard",
+      "imperative": "Add build_static_rows + render_static_separability_section + a caterpillar plot to the dashboard, rendering from the core (single source of truth). Wire into render_markdown_table and the console summary. Add dashboard tests. Keep functions under simplification-limits caps.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "core static separability implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dashboard tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_regime_capability_dashboard.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-dashboard-1"
+        }
+      ],
+      "constraints": [
+        "Render from the core, never recompute the rubric",
+        "PNG gitignored; .md committed",
+        "No GO/NO-GO verdict cells"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-dashboard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_capability_dashboard.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Verify both suites + simplification + real-store run + no evo import",
+      "imperative": "Run both test files green; run simplification_limits on all touched files; run the dashboard over the real store C:/Programs/f1Brainz/data/physics_estimates_g3wired.db (status=None) and capture the static-separability section; confirm no evo import.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "core + dashboard implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both suites green AND no evo import in the touched source",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py tests/unit/physics/layer2/test_regime_capability_dashboard.py -q && ! grep -iE 'evo_predictor|latent_power|compound_prior' src/physics/layer2/regime_readiness.py scripts/regime_capability_dashboard.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py tests/unit/physics/layer2/test_regime_capability_dashboard.py -q && ! grep -iE 'evo_predictor|latent_power|compound_prior' src/physics/layer2/regime_readiness.py scripts/regime_capability_dashboard.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "512-g4-impl",
+    "status": "released",
+    "claimed_at": "2026-06-28T18:30:53.114250+00:00",
+    "last_heartbeat": "2026-06-28T18:31:41.393039+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-06-28T18:31:49.693895+00:00"
+  }
+}

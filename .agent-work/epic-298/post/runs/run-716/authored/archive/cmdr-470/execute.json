@@ -1,0 +1,436 @@
+{
+  "work_id": "cmdr-470",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, the mission frame (.agent-work/cmdr-470/MISSION_FRAME.md) and walkforward pipeline/orchestrator/periods code. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + mission frame + walkforward code loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Inherit-gold-fusion mode (flag-gated, test-led): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md. TASK: add a flag-gated inherit-gold-fusion mode to the walk-forward pipeline. (1) render_period_config: when inherit mode is on, emit emit_fusion_train_rows = \"none\" (base modules only) instead of leave_one_season_out. (2) _run_downstream: when inherit mode is on, SKIP run_static_hierarchical_fusion_training.py and instead assemble the period trained manifest from the period's own gold details + the LIVE gold fusion config (params/gold/fusion/fusion.json) and calibration (params/gold/uncertainty_calibration/) via assemble_trained_sampled_runtime_manifest.py, PRESERVING the quali_pace_anchor; then run the sampled-runtime comparison against that inherited-fusion trained manifest. (3) Allow P0 (R1-6) to flow through the cutoff pipeline at cutoff=0 under inherit mode so all 4 periods score on the identical sampled-runtime path (P0 needs NO per_race_predictions export). (4) Thread the flag through scripts/run_walkforward_backtest.py (a CLI flag, default OFF) -> orchestrator -> pipeline. DEFAULT (flag off) must preserve existing per-period-LOSO behavior exactly. TEST-LED: existing tests/unit/evo_predictor/walkforward/* must stay green; add unit tests for the inherit-fusion path (config emits none; _run_downstream does NOT call fusion training and DOES point assemble at the live gold fusion config; anchor preserved; P0-at-cutoff-0 routes through the cutoff pipeline). Run py -m src.utils.simplification_limits on touched paths and pyright on touched src. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "utf-8 child env on captured subprocesses; PYTHONUTF8=1 for unicode scripts",
+        "default flag OFF preserves existing behavior",
+        "anchor alpha 0.5 preserved in every assembled manifest",
+        "DB-only; as-of cutoffs enforced",
+        "test-led; simplification_limits + pyright on touched src"
+      ],
+      "anchors": {
+        "structural": [
+          "src/evo_predictor/walkforward/pipeline.py \u2014 render_period_config (line 159), _run_downstream (lines 295-365), module level",
+          "src/evo_predictor/walkforward/orchestrator.py \u2014 P0 vs cutoff routing",
+          "src/evo_predictor/walkforward/periods.py \u2014 build_periods, P0 cutoff=None",
+          "scripts/run_walkforward_backtest.py \u2014 CLI flag thread",
+          "scripts/assemble_trained_sampled_runtime_manifest.py \u2014 anchor-preserving writer"
+        ],
+        "capability": [
+          "walk-forward backtest downstream: alternate inherit-fusion path",
+          "struct:evo.sampled_runtime \u2014 single scoring path",
+          "struct:evo.fusion \u2014 inherited live gold fusion"
+        ],
+        "constraint": [
+          "one-canonical-path doctrine: flag is a tracked dual path, default unchanged",
+          "as-of cutoff / leakage attestation must still hold",
+          "quali_pace_anchor alpha 0.5 preserved"
+        ],
+        "decision": [
+          "pre-confirmed: single sampled-runtime path incl P0 at cutoff=0; baseline 829",
+          "decision pressure: inherit-fusion is a durable new pipeline capability -> reconcile candidate"
+        ],
+        "evidence": [
+          "existing walkforward unit suite green (default unchanged)",
+          "new test: inherit path emits none + assembles from live gold fusion + anchor preserved + no fusion training call"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "CLI guard fix: skip pred_dir requirement in inherit mode + correct stale help text + add test."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "result_p0": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-result-p0.md",
+            "tests": "153 passed",
+            "note": "items 1/2/3/5 + P0 Option B; simpl+pyright clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "result_cliguard": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-result-cliguard.md",
+            "tests": "155 passed",
+            "note": "CLI pred_dir guard skipped in inherit mode + help text fixed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Inherit-gold-fusion mode: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and IMPLEMENTER_RESULT. Verify: inherit mode emits emit_fusion_train_rows=none and does NOT invoke fusion training; assembles trained manifest from period gold details + LIVE gold fusion config with the anchor PRESERVED; P0 routes through the cutoff pipeline at cutoff=0 under inherit mode; the flag defaults OFF and the default path is byte-for-byte the prior behavior (existing tests green); new tests cover the inherit path; simplification_limits + pyright clean on touched src. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result": ".agent-work/cmdr-470/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Inherit-gold-fusion mode: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the walkforward unit suite, confirm green, advance. BLOCK: rework or raise a blocker. Log out-of-scope finds as triage candidates; harvest Workflow Feedback into the lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "inherit-fusion mode lands flag-gated with default unchanged; walkforward unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "inherit-fusion CLI thread incomplete: run_walkforward_backtest.py main() rejects inherit-mode runs via the spurious pred_dir guard (P0 in inherit mode scores live gold, not per_race_predictions). Fix the guard + stale help text + add a test, then re-verify."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result": ".agent-work/cmdr-470/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "implementer-result",
+          "payload": {
+            "commander_verification": "155 walkforward tests pass; guard diff confirmed (skips pred_dir in inherit mode, help text corrected); micro-fix on top of reviewer-APPROVED change"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Run walk-forward (cheap inherit flow) + author report: implement",
+      "imperative": "COMMANDER-DRIVEN (long compute runs foreground in the commander, NOT a crew). Run the cheap inherit-gold-fusion walk-forward 2025 backtest DETACHED (Start-Process -WindowStyle Hidden), recording PID + expected artifact in .agent-work/453/findings/cmdr-470.md FIRST, then check on resume (NO watcher-sleep). When complete: score all 4 periods single-path (sampled-runtime), write reports/walkforward/walkforward_2025.summary.{json,md} (NOT overwriting multiseason_fantasy.*), compute the walk-forward total vs baseline 829 with the per-period breakdown and plain-English verdict (wash/better/worse, by how much), verify attestation_all_pass=true. Update docs/evo/analysis_refresh.md with the cheap inherit flow. Record the run evidence as an implementer-result-style note. NO subagent is dispatched for the heavy run; the commander executes it and attaches the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "inherit-fusion mode integrated (G1 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "walk-forward run complete; single-path summary written; baseline comparison + verdict recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "single-path scoring (sampled-runtime); never mix 707/711 with 829/849",
+        "do NOT overwrite reports/walkforward/multiseason_fantasy.*",
+        "honest-null: a wash is a complete deliverable, no tuning",
+        "state-note BEFORE detach; no watcher-sleep",
+        "attestation must pass (no leakage)"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_walkforward_backtest.py (inherit flag)",
+          "reports/walkforward/walkforward_2025.summary.{json,md} (output contract)",
+          "docs/evo/analysis_refresh.md (runbook update)"
+        ],
+        "capability": [
+          "walk-forward fantasy scoring single-path"
+        ],
+        "constraint": [
+          "single-path; baseline 829; honest-null"
+        ],
+        "decision": [
+          "baseline = 829 no-in-season-retrain (multiseason_fantasy.json)"
+        ],
+        "evidence": [
+          "attestation_all_pass=true; per-period breakdown; verdict vs 829"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Run walk-forward + report: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Verify: the report is single-path (no scale mixing), the baseline used is 829, attestation_all_pass=true, the per-period breakdown and verdict are honest and match the summary JSON, multiseason_fantasy.* untouched, the runbook update is correct. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run + report evidence received",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Run walk-forward + report: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: confirm the summary JSON exists and is single-path, advance. BLOCK: rework. Log out-of-scope finds as triage candidates; harvest Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "single-path walk-forward summary committed-ready; baseline comparison present",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import json,sys; d=json.load(open('reports/walkforward/walkforward_2025.summary.json',encoding='utf-8')); assert d['attestation_all_pass'] is True; assert d['baseline_total'] is not None; print('ok', d['season_total'], d['baseline_total'])\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "build_dry_run_plan uses build_periods() regardless of --inherit-fusion, so the dry-run plan output is cosmetically inaccurate in inherit mode (P0 shown as reuse, not live-gold-scoring). Real run unaffected. Cleanup: branch on inherit_fusion in build_dry_run_plan."
+    }
+  ],
+  "blockers": []
+}

@@ -1,0 +1,265 @@
+{
+  "work_id": "511-g4-implementer",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3,
+    "lease_stale_seconds": 1800
+  },
+  "items": [
+    "m0-context",
+    "m1-module",
+    "m2-tests",
+    "m3-limits",
+    "m4-supplant",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context and verify handoff completeness",
+      "imperative": "Read global-crew + global-everyone doctrine, CREW_CONTEXT, GLOSSARY, the handoff, and the G3 module+result. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Re-verify every seam from source: pairwise_ordering_accuracy signature; tyre_separation.separate_axis/load_stores_ro API + CompoundEffect.k; lap_times clean-lap filter columns; race_stint_estimates lateral_k columns; canonical DB paths read-only coverage. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Handoff verified complete; all seams re-confirmed from source; 2023 coverage (20 race GPs, dry compounds) confirmed; truth-channel independence (lap-time slope) vs feature (telemetry k) confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-module": {
+      "id": "m1-module",
+      "title": "Create src/physics/layer2/tyre_supplant.py (evo-free supplant scoring core)",
+      "imperative": "Build the evo-free supplant module: build_truth_cells (per-(race,compound) within-race-centred lap-time deg slope from clean green dry laps + lap_count weight); physics_k_by_cell + build_physics_primary_prediction (inverse-variance mean lateral_k per (race,compound)); build_physics_pooled_loo_prediction (G3 season-pooled per-compound k, LOO over races); score_predictor (neutral pairwise_ordering_accuracy P + within-race magnitude R2); interval_overlap (2sigma reference); classify_axis_verdict (GO/CONTEXTUAL/NO-GO from coverage, G3 separability, supplant-beat, LOO-honesty; 2sigma reference not gate). Incumbents are INJECTED arrays - NO evo imports.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m0-context attested c1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "tyre_supplant.py imports no evo-region package and exposes build_truth_cells/score_predictor/classify_axis_verdict",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-511 && py -c \"import ast,sys; src=open('src/physics/layer2/tyre_supplant.py').read(); mods=[n.module or '' for n in ast.walk(ast.parse(src)) if isinstance(n,ast.ImportFrom)]+[a.name for n in ast.walk(ast.parse(src)) if isinstance(n,ast.Import) for a in n.names]; bad=[m for m in mods if 'evo_predictor' in m or 'latent_power' in m or 'compound_prior' in m]; print('EVO-FREE FAIL',bad) or sys.exit(1) if bad else print('evo-free ok')\" && py -c \"from src.physics.layer2.tyre_supplant import build_truth_cells, score_predictor, classify_axis_verdict; print('api ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-module-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "Anti-circular: truth=lap-time slope independent of feature=telemetry k; NO #443 magnitudes",
+        "Do NOT modify W2/quali/store/G3/pooling/common modules"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-module-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-511 && py -c \"import ast,sys; src=open('src/physics/layer2/tyre_supplant.py').read(); mods=[n.module or '' for n in ast.walk(ast.parse(src)) if isinstance(n,ast.ImportFrom)]+[a.name for n in ast.walk(ast.parse(src)) if isinstance(n,ast.Import) for a in n.names]; bad=[m for m in mods if 'evo_predictor' in m or 'latent_power' in m or 'compound_prior' in m]; print('EVO-FREE FAIL',bad) or sys.exit(1) if bad else print('evo-free ok')\" && py -c \"from src.physics.layer2.tyre_supplant import build_truth_cells, score_predictor, classify_axis_verdict; print('api ok')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-tests": {
+      "id": "m2-tests",
+      "title": "Create tests/unit/physics/layer2/test_tyre_supplant.py",
+      "imperative": "Write synthetic load-bearing tests: truth-cell builder recovers planted per-stint slopes (in-memory sqlite with clean+dirty laps, dirty filtered); P ordering (matched predictor scores ~1, reversed ~0); magnitude R2 high for matched; physics primary alignment (inverse-variance means); pooled-LOO excludes the target race; verdict classification (each branch); interval_overlap; evo-free AST import. Test-after acceptable per handoff.",
+      "preconditions": [
+        {
+          "id": "p2",
+          "statement": "m1-module c2 satisfied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c3",
+          "statement": "test file exists; pytest green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-511 && py -m pytest tests/unit/physics/layer2/test_tyre_supplant.py -q 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-tests-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-511 && py -m pytest tests/unit/physics/layer2/test_tyre_supplant.py -q 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-limits": {
+      "id": "m3-limits",
+      "title": "simplification_limits clean on new files",
+      "imperative": "Run simplification_limits --paths on the new module + test; fix any file/function-length or complexity violations.",
+      "preconditions": [
+        {
+          "id": "p3",
+          "statement": "m2-tests c3 satisfied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c4",
+          "statement": "simplification_limits PASS on both new files",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-511 && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_supplant.py tests/unit/physics/layer2/test_tyre_supplant.py 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-limits-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-limits-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-511 && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_supplant.py tests/unit/physics/layer2/test_tyre_supplant.py 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-supplant": {
+      "id": "m4-supplant",
+      "title": "Real-data supplant report on the 2023 stores (read-only)",
+      "imperative": "Run the supplant test on canonical DBs read-only for 2023: build truth cells (lap-time deg slope); build physics primary per-(race,compound) k and LOO season-pooled k; score within-race P + magnitude R2 for physics, LOO, and a synthetic/placeholder incumbent (compound C-number hardness ladder, a DB-integer substrate, NOT an evo import); report the truth-cell summary (n races, n cells) and the per-axis verdict. The LIVE incumbents are wired in G5.",
+      "preconditions": [
+        {
+          "id": "p4",
+          "statement": "m3-limits c4 satisfied",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c5",
+          "statement": "Supplant report ran on canonical DBs read-only; physics P, LOO P, placeholder incumbent P, magnitude R2, truth-cell summary, and verdict reported",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Open canonical DBs read-only (mode=ro)",
+        "Do NOT commit .db files",
+        "Incumbent is INJECTED (built outside the module)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Real-data supplant verdict is UNSOUND as specified: the handoff truth channel (per-driver-stint regress lap_time~tyre_life) is fuel-confounded. Within a stint tyre_life and race-lap are perfectly collinear, so a per-stint slope CANNOT separate fuel-burn from tyre-degradation. Empirically the ordering INVERTS (SOFT shows the most-negative slope = appears to 'improve' fastest; physically impossible) at every min-stint-length (4/8/12/16) and under mean AND median. Both physics (P=0.387) AND a naive compound-hardness incumbent (P=0.220) score BELOW coin-flip -> the truth, not the predictors, is broken. The module-produced NO-GO is a truth-channel artifact, not an honest physics verdict.",
+        "authority_needed": "commander",
+        "next_action": "Float a MATERIAL SUPPLANT RESHAPE: replace the per-stint truth with an evo-free cross-stint fuel-corrected within-race degradation truth (OLS: stint fixed-effects + global fuel(lap_number) + per-compound tyre_life slope, robust/median aggregation). PROBE shows it recovers POSITIVE degradation and the correct median ordering SOFT 0.095 > MEDIUM 0.071 > HARD 0.066. This is telemetry-independent so physics stays anti-circular. NOTE the catch-22 to adjudicate: a fuel-faithful lap-time degradation truth is conceptually the incumbent's own job (#443/compound_prior) -> commander/Admiral must rule whether the fuel-correction is 'independent enough' or imports circularity. Scoring core + verdict rubric are DONE+PROVEN and need no change; only build_truth_cells' slope computation changes."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/511/crew-handoffs/g4-implementer-result.md with completed slice, files changed, the 4 evidence blocks, the supplant finding (physics P vs placeholder incumbent + LOO P; does physics carry real degradation-ordering signal?), assumptions, stop conditions, out-of-scope observations, Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p5",
+          "statement": "m4-supplant c5 satisfied",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c6",
+          "statement": "g4-implementer-result.md exists with all 4 evidence blocks and the supplant finding + verdict",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [
+    {
+      "item": "m4-supplant",
+      "blocker": "Real-data supplant verdict is UNSOUND as specified: the handoff truth channel (per-driver-stint regress lap_time~tyre_life) is fuel-confounded. Within a stint tyre_life and race-lap are perfectly collinear, so a per-stint slope CANNOT separate fuel-burn from tyre-degradation. Empirically the ordering INVERTS (SOFT shows the most-negative slope = appears to 'improve' fastest; physically impossible) at every min-stint-length (4/8/12/16) and under mean AND median. Both physics (P=0.387) AND a naive compound-hardness incumbent (P=0.220) score BELOW coin-flip -> the truth, not the predictors, is broken. The module-produced NO-GO is a truth-channel artifact, not an honest physics verdict.",
+      "authority_needed": "commander",
+      "next_action": "Float a MATERIAL SUPPLANT RESHAPE: replace the per-stint truth with an evo-free cross-stint fuel-corrected within-race degradation truth (OLS: stint fixed-effects + global fuel(lap_number) + per-compound tyre_life slope, robust/median aggregation). PROBE shows it recovers POSITIVE degradation and the correct median ordering SOFT 0.095 > MEDIUM 0.071 > HARD 0.066. This is telemetry-independent so physics stays anti-circular. NOTE the catch-22 to adjudicate: a fuel-faithful lap-time degradation truth is conceptually the incumbent's own job (#443/compound_prior) -> commander/Admiral must rule whether the fuel-correction is 'independent enough' or imports circularity. Scoring core + verdict rubric are DONE+PROVEN and need no change; only build_truth_cells' slope computation changes."
+    }
+  ]
+}

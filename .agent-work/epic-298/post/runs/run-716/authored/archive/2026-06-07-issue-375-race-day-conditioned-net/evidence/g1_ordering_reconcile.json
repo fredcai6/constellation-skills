@@ -1,0 +1,174 @@
+{
+  "race_start": {
+    "n_events": 173,
+    "n_pairs": 25962,
+    "n_pairs_persist_valid": 25959,
+    "n_pairs_persist_dropped": 3,
+    "n_events_persist_empty": 0,
+    "model1_loss": 0.33581543627205873,
+    "model2b_loss": 0.32499505433024745,
+    "gap_model2b_vs_m1": 0.012555925992838852,
+    "gap_ci95": [
+      0.008236066971053654,
+      0.01721022218329203
+    ],
+    "sign_acc_model1": 0.8788228950003851,
+    "sign_acc_model2b": 0.8791695555041984,
+    "sign_acc_persist": 0.8787703686582689,
+    "sign_acc_m2b_mean_of_events": 0.8754949278705967,
+    "sign_acc_m1_mean_of_events": 0.8750668317844715,
+    "sign_acc_persist_mean_of_events": 0.8748982825585843,
+    "delta_sign_acc_m2b_vs_m1": 0.00042809608612504046,
+    "delta_sign_acc_m2b_vs_m1_ci95": [
+      -8.650890633612425e-05,
+      0.0009605870761783539
+    ],
+    "delta_sign_acc_m2b_vs_persist": 0.0005966453120124451,
+    "delta_sign_acc_m2b_vs_persist_ci95": [
+      -0.00022158834836674262,
+      0.001382022428110851
+    ],
+    "rank_mae_persist": 1.6730518337821618,
+    "rank_mae_model1": 1.6756808368173997,
+    "rank_mae_model2b": 1.673349261250351,
+    "delta_rank_mae_m2b_vs_m1": -0.0023315755670486418,
+    "delta_rank_mae_m2b_vs_m1_ci95": [
+      -0.0084618277389041,
+      0.00444636700131832
+    ],
+    "delta_rank_mae_m2b_vs_persist": 0.00029742746818929024,
+    "delta_rank_mae_m2b_vs_persist_ci95": [
+      -0.00898011481699002,
+      0.010136072897228687
+    ],
+    "spearman_persist": 0.8575903343481502,
+    "spearman_model1": 0.858143355567701,
+    "spearman_model2b": 0.8586010491176117,
+    "delta_spearman_m2b_vs_m1": 0.0004576935499106602,
+    "delta_spearman_m2b_vs_m1_ci95": [
+      -9.521322479902712e-05,
+      0.0009903215271399172
+    ],
+    "delta_spearman_m2b_vs_persist": 0.0010107147694613466,
+    "delta_spearman_m2b_vs_persist_ci95": [
+      -7.443694032126239e-05,
+      0.0023614486551703576
+    ],
+    "primary_seed": 0,
+    "seed_stability": [
+      {
+        "seed": 1,
+        "pairwise_ll": 0.32454900749613375,
+        "gap_vs_m1": 0.013151253975489798,
+        "sign_acc_pooled": 0.8788614128341422,
+        "sign_acc_mean_of_events": 0.8751443518909829
+      },
+      {
+        "seed": 2,
+        "pairwise_ll": 0.3254290756723376,
+        "gap_vs_m1": 0.012132582153632254,
+        "sign_acc_pooled": 0.8792080733379555,
+        "sign_acc_mean_of_events": 0.8756180732558262
+      }
+    ],
+    "n_events_secondary_m1m2": 173,
+    "n_events_secondary_persist": 173
+  },
+  "race": {
+    "n_events": 173,
+    "n_pairs": 30149,
+    "n_pairs_persist_valid": 30149,
+    "n_pairs_persist_dropped": 0,
+    "n_events_persist_empty": 0,
+    "model1_loss": 0.4773596650731451,
+    "model2b_loss": 0.47111349772377986,
+    "gap_model2b_vs_m1": 0.006054036962573857,
+    "gap_ci95": [
+      0.0035381961420452414,
+      0.008673963070229704
+    ],
+    "sign_acc_model1": 0.7876214799827523,
+    "sign_acc_model2b": 0.7874556370028857,
+    "sign_acc_persist": 0.7753490994726193,
+    "sign_acc_m2b_mean_of_events": 0.7877440658369094,
+    "sign_acc_m1_mean_of_events": 0.7881127014585021,
+    "sign_acc_persist_mean_of_events": 0.7748683838019722,
+    "delta_sign_acc_m2b_vs_m1": -0.00036863562159290266,
+    "delta_sign_acc_m2b_vs_m1_ci95": [
+      -0.002097262820275932,
+      0.0013887334824762155
+    ],
+    "delta_sign_acc_m2b_vs_persist": 0.012875682034936855,
+    "delta_sign_acc_m2b_vs_persist_ci95": [
+      0.006676455618198047,
+      0.01917348933892492
+    ],
+    "rank_mae_persist": 3.029056862763175,
+    "rank_mae_model1": 2.906591588060029,
+    "rank_mae_model2b": 2.906774004602348,
+    "delta_rank_mae_m2b_vs_m1": 0.00018241654231918245,
+    "delta_rank_mae_m2b_vs_m1_ci95": [
+      -0.013704450190988064,
+      0.013694858533617245
+    ],
+    "delta_rank_mae_m2b_vs_persist": -0.12228285816082665,
+    "delta_rank_mae_m2b_vs_persist_ci95": [
+      -0.19833841851635886,
+      -0.04331909338119187
+    ],
+    "spearman_persist": 0.6738982080393882,
+    "spearman_model1": 0.7056777172075406,
+    "spearman_model2b": 0.7054408597779095,
+    "delta_spearman_m2b_vs_m1": -0.00023685742963110433,
+    "delta_spearman_m2b_vs_m1_ci95": [
+      -0.002165782019629176,
+      0.0015043880052313398
+    ],
+    "delta_spearman_m2b_vs_persist": 0.03154265173852139,
+    "delta_spearman_m2b_vs_persist_ci95": [
+      0.019153536695770815,
+      0.043457153395737205
+    ],
+    "primary_seed": 0,
+    "seed_stability": [
+      {
+        "seed": 1,
+        "pairwise_ll": 0.47103391731939936,
+        "gap_vs_m1": 0.006179990203126553,
+        "sign_acc_pooled": 0.7881190089223523,
+        "sign_acc_mean_of_events": 0.7883038341385842
+      },
+      {
+        "seed": 2,
+        "pairwise_ll": 0.4708585680992571,
+        "gap_vs_m1": 0.0062944903648894275,
+        "sign_acc_pooled": 0.787986334538459,
+        "sign_acc_mean_of_events": 0.788307553394169
+      }
+    ],
+    "n_events_secondary_m1m2": 173,
+    "n_events_secondary_persist": 173
+  },
+  "meta": {
+    "B": 1000,
+    "seed": 0,
+    "extra_seeds": [
+      1,
+      2
+    ],
+    "tasks_requested": [
+      "race_start",
+      "race"
+    ],
+    "records_dir": ".agent-work\\issue-375-race-day-conditioned-net\\records",
+    "torch_version": "2.10.0+cpu",
+    "scipy_version": "1.17.1",
+    "generated_date": "2026-06-07",
+    "missingness_policy": "Pairs where either driver is absent from the prior-stage order dict are DROPPED from persistence metrics. Pairs where both drivers share the same prior position (tie) are also dropped. Model metrics are computed over ALL pairs (no persistence filter).",
+    "persistence_logit": "persist_logit = prior_pos_j - prior_pos_i for pair (i, j). Positive => persistence predicts i ahead (agrees with y=1). Magnitude is position difference, not a calibrated probability logit. Pairwise log-loss is NOT reported for persistence (not its native metric).",
+    "prior_stage_source": {
+      "race_start": "get_session_classification(year, round, 'Q') \u2014 quali grid order",
+      "race": "get_race_start_order(year, round, expected_target_lap=3) \u2014 lap-3 positions"
+    }
+  }
+}

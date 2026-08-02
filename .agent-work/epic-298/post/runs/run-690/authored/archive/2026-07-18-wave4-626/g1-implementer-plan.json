@@ -1,0 +1,341 @@
+{
+  "work_id": "g1-implementer-626",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-frame",
+    "m2-floor",
+    "m3-holdout",
+    "m4-gate-spec",
+    "m5-wrapup"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas (docs/agents/CREW_CONTEXT.md, GLOSSARY.md), the g1 handoff, and the three cited reference sources (x4 script, 624 baseline-lock doc, PLAN_CRITIC_DISPOSITIONS.md). Verify handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + x4 script + 624 doc + critic dispositions loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-frame": {
+      "id": "m1-frame",
+      "title": "frame.py: load session_estimates from absolute main-checkout DB",
+      "imperative": "Create src/physics/weekend_state/__init__.py and frame.py: load session_type='Q', fit_status='ok' rows from the absolute path C:/Programs/f1Brainz/data/physics_estimates.db into a tidy frame keyed (year, gp_name, constructor, round_idx) over the 11 AXES + their _sigma columns, plus rho, rho_is_fallback, mass_kg_assumed. Read-only (sqlite3.connect with mode=ro or plain connect + no writes). Write a smoke check (either as part of a later test file or inline) that row count > 1500 and all 11 axes present as columns. Attest c1 after confirming import path resolves to this worktree (.pth trap check).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "frame.py loads store; __file__ resolves under C:/Programs/f1-626; manual attest of a quick load (>1500 rows, 11 axes present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "py -c smoke import + load succeeds",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-626 && py -c \"from src.physics.weekend_state.frame import load_frame; df = load_frame(); assert len(df) > 1500, len(df); print('OK', len(df))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-frame-1"
+        }
+      ],
+      "constraints": [
+        "no evo import",
+        "read-only DB access",
+        "absolute path module constant"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-frame-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-626 && py -c \"from src.physics.weekend_state.frame import load_frame; df = load_frame(); assert len(df) > 1500, len(df); print('OK', len(df))\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-floor": {
+      "id": "m2-floor",
+      "title": "floor.py: faithful x4 metric reimplementation + reproduction test",
+      "imperative": "Create floor.py: column-parameterizable reimplementation of x4's normalization_stability.py per-axis metric (field_sigma via weekend median of cross-constructor SD on weekends with >=6 constructors; noise_sd via median of car-season own-mean residual SD on car-seasons with >=4 ok weekends; N_weekends=(noise_sd/field_sigma)**2; snr; weekend_relative(df, axis) transform). Write tests/unit/physics/weekend_state/__init__.py and test_floor_reproduction.py asserting floor.py reproduces the 624 table's 11-axis rel & abs noise_sd and N_weekends within tight tolerance (rel tol 1e-2). Run pytest, iterate to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "frame.py loads data",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_floor_reproduction.py passes, reproducing all 11 axes within tolerance vs 624 table",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_floor_reproduction.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-floor-1"
+        }
+      ],
+      "constraints": [
+        "no evo import",
+        "must cite normalization_stability.py logic exactly",
+        "MIN_FIELD=6, MIN_WEEKENDS=4"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-floor-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_floor_reproduction.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-holdout": {
+      "id": "m3-holdout",
+      "title": "holdout.py: deterministic frozen weekend split + test",
+      "imperative": "Create holdout.py with a deterministic, documented, frozen weekend held-out rule (is_holdout(year, round_idx) -> bool; split(df) -> (train_df, holdout_df)) leaving >= a threshold of car-seasons with >=2 held-out weekends. Write test_holdout_split.py asserting determinism across repeated calls and the car-season coverage threshold. Run pytest, iterate to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "frame.py available for real data shape",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_holdout_split.py passes: deterministic + coverage threshold met",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_holdout_split.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-holdout-1"
+        }
+      ],
+      "constraints": [
+        "no evo import",
+        "split rule must be documented + frozen, not tuned on results"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-holdout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_holdout_split.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-gate-spec": {
+      "id": "m4-gate-spec",
+      "title": "gate_spec.py: frozen F6 decision rule (F1/F2/F3 cold-critic fixes) + test",
+      "imperative": "Create gate_spec.py encoding: F2 paired held-out comparison harness (recompute raw x4 weekend-relative floor on any given held-out subset, paired per car-season); F1 signal-preservation guard (score held-out car-signal by out-of-sample residual around a train-fit trajectory, not self-dispersion; PASS requires faster convergence AND preserved held-out accuracy within stored _sigma); F3 pinned rule (PASS = model beats paired held-out raw floor on >=7/11 axes by margin outside noise from a car-season-resampled bootstrap with fixed seed; tie = not-a-beat; median convergence-speed ratio reported as summary; MDE/power sanity helper). Fixed RNG seed, pure functions, constants -- do not tune against any held-out result. Write test_gate_spec.py asserting: (a) a synthetic over-shrinker (constant per car-season) fails the signal-preservation guard / does not PASS; (b) a synthetic model that genuinely lowers noise while preserving accuracy registers axis-beats; (c) the >=7/11 rule + tie handling behave as specified. Run pytest, iterate to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "floor.py + holdout.py available as building blocks",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_gate_spec.py passes: over-shrinker fails guard, genuine improver beats, 7/11+tie rule correct",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_gate_spec.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-gate-spec-1"
+        }
+      ],
+      "constraints": [
+        "gate rule is FROZEN by launch order -- implement exactly, do not soften",
+        "fixed seed determinism",
+        "no evo import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-gate-spec-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_gate_spec.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-wrapup": {
+      "id": "m5-wrapup",
+      "title": "Full suite green + no-evo-import + no-db-commit check + write IMPLEMENTER_RESULT",
+      "imperative": "Run the full three-file test command from the handoff's Verification Commands. Run grep -r evo src/physics/weekend_state/ and confirm no evo import. Confirm git status shows no data/*.db staged/modified. Produce the reproduced-vs-624 11-axis side-by-side table. Write IMPLEMENTER_RESULT to .agent-work/wave4-626/g1-implementer-result.md per the template, including all required sections (completed slice, files changed, exact test output, table, assumptions, stop conditions, out-of-scope observations, workflow feedback, map impact).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full 3-file pytest command passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_floor_reproduction.py tests/unit/physics/weekend_state/test_holdout_split.py tests/unit/physics/weekend_state/test_gate_spec.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-wrapup-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no evo import in package",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-626 && ! grep -r 'evo' src/physics/weekend_state/*.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-wrapup-2"
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT written to the exact path",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "no data/*.db commit",
+        "result file at exact commander-specified path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-wrapup-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_floor_reproduction.py tests/unit/physics/weekend_state/test_holdout_split.py tests/unit/physics/weekend_state/test_gate_spec.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-wrapup-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-626 && ! grep -r 'evo' src/physics/weekend_state/*.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipE-626-g1",
+    "status": "released",
+    "claimed_at": "2026-07-18T13:40:36.648135+00:00",
+    "last_heartbeat": "2026-07-18T14:01:57.522946+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T14:02:07.920233+00:00"
+  }
+}

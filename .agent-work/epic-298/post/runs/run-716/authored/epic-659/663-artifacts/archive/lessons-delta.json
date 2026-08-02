@@ -1,0 +1,35 @@
+{
+  "work_id": "663-grip-g",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-25 663-grip-g: attach (not attest) used for every artifact-checked postcondition (user-decision at understand/plan/triage/review; implementer-result/review-result at every gN-implement/gN-review); attest --which preconditions/postconditions used only for check:null conditions and evidence-reference (--evidence <id>) on gN-integrate.c2."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-25 663-grip-g: all 14 crew dispatches (g1x2 implementer + g1x2 reviewer, g2-g5 implementer+reviewer, plus rework attempts) used the Agent tool with run_crew.py --backend external recording each attempt + --verify-result confirming freshness; recover_crews.py run before every dispatch; no claude CLI binary in this harness."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-25 663-grip-g: notes-663.md written directly to the MAIN CHECKOUT C:/Programs/f1Brainz/.agent-work/epic-659/ per explicit launch-order file ownership (sole-writer, not the shared playbook); this worktree's own .agent-work/663-grip-g/ (spine, execute.json, crew-handoffs, lessons-delta) never staged/committed on branch epic659/663-grip-g -- git status confirms only src/physics/layer2/*.py + tests/unit/physics/layer2/test_*.py untracked on the branch."
+    },
+    {
+      "op": "confirm",
+      "id": "self-authored-reasoning-gate-checks-need-review-scrutiny",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-25 663-grip-g: g6-verdict's own postcondition command used a non-existent --strict flag for simplification_limits (real CLI only accepts --paths); caught by the commander actually running the command before advancing, fixed via engine amend/retext-check -- second independent occurrence of this exact lesson class (first: 624-phase0 g4-sq-probe.c3's over-broad grep)."
+    },
+    {
+      "op": "add",
+      "id": "cartographer-subagent-wrong-checkout-root",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "A Cartographer subagent dispatched at the reconcile step, given the worktree's absolute path in its dispatch prompt, wrote all its architecture-doc edits (docs/architecture/packets/*.md, index.md, overlays/*.yml, a new decisions/*.md file) to the MAIN CHECKOUT instead of the assigned worktree -- a git-invisible failure (the subagent's final report correctly named the files and content, but git status in the assigned worktree showed nothing, while the main checkout showed the exact claimed diff, uncommitted, on a checkout shared with sibling commanders/the human). Caught only because the dispatching commander independently ran git status in BOTH locations rather than trusting the subagent's self-report. Recovery: capture each file's diff/content before touching anything, revert the main checkout to clean (git checkout -- / rm), re-apply the identical changes to the worktree (git apply / cp), re-verify both ends plus the worktree's own architecture-map checker.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-25 663-grip-g INCIDENT+RECOVERY entry: full diff/status evidence for both the main checkout (git diff --stat showed 3 modified + 1 new file before recovery, git status --porcelain empty after) and the worktree (git status --porcelain empty before recovery, correct 4-file change after; scripts/check_arch_map.py OK both before and after).",
+      "bank_reason": "First observed instance of this specific failure mode (a dispatched subagent's write landing in the wrong repo root despite an explicit worktree path in its prompt) -- the root cause (why the subagent's own tool calls resolved against the main checkout instead of the stated worktree) was not determined this run, so the right fix (stronger prompt wording vs. a self-verify-write-location step built into the Cartographer skill's own doctrine) isn't yet clear. Needs re-observation on a future Cartographer dispatch to see whether it recurs and whether a specific prompt pattern reliably prevents it, before committing to one fix over the other."
+    }
+  ]
+}

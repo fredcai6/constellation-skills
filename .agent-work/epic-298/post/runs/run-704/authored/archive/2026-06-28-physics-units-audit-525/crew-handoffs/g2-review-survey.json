@@ -1,0 +1,164 @@
+{
+  "work_id": "525-g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "c1-no-regression",
+    "c2-rename-consistency",
+    "c3-friction-removal",
+    "c4-constant-dedup",
+    "c5-guard-meaningfulness",
+    "c6-suite-green",
+    "c7-scope"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff, DECIDE_FIX_DECISIONS, g2-implement-result, AUDIT_MAP, the diff. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read g2-review-handoff, DECIDE_FIX_DECISIONS, g2-implement-result, g2-implement-handoff, AUDIT_MAP, and the full git diff (main vs working tree, 20 files +261/-234 plus untracked constants.py). Context loaded.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c1-no-regression": {
+      "id": "c1-no-regression",
+      "title": "No-regression / convention B (consumer formulas unchanged)",
+      "imperative": "Confirm lateral_capability/drag_acceleration/_compute_speed_caps math unchanged; no rho removal; no refit.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Consumer formulas UNCHANGED. physics_data_models.py diff = ONLY docstrings + two new A0/A2 field docstrings (lines 54,57) + LongitudinalParameters docstring + theta_P_values inline comment; no math line touched in lateral_capability/drag_acceleration. physics_simulator.py diff = ONLY import + pop_max '9.81'->'GRAVITY_MS2' in _gsat_ceiling (value-identical); _compute_speed_caps fully untouched (no +/- line in that fn). No rho removal (A2.rho.v2 intact in consumer; OT-2 label-only). No refit. Probe: current ideal-lap top speed=436.0 km/h, assembled A0=31.392 m/s2 (=3.2g*9.81), corner cap=52.91 m/s @kappa=0.012 \u2014 all consistent with pre-G2 (consumer untouched).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c2-rename-consistency": {
+      "id": "c2-rename-consistency",
+      "title": "Rename consistency (no half-renamed seam)",
+      "imperative": "Confirm every renamed field/column updated producer->store->consumer + tests; grep OLD names for stragglers.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "RATIFIED FIELD-SUFFIX RENAMES NOT DELIVERED (label-only substituted). DECIDE OT-1 mandates 'unit-suffix A0/A2'; OT-5 mandates 'suffix p_max_w/cda_m2 (store) + theta_P_w_per_kg (consumer)'; g2-implement-handoff OT-5 repeats 'unit-suffix... theta_P -> theta_P_w_per_kg ... Update every reference consistently (no half-rename)'. Diff shows fields were NOT renamed: EstimateRecord still p_max/cda_closed/A0/A2; LongitudinalParameters still theta_P_values; LateralViewResult still A0/A2. Implementer added unit COMMENTS instead (estimate_store.py:148/157-159/165-171, lateral_view.py docstring, physics_data_models.py:137/148). Grep p_max_w/cda_m2/theta_P_w_per_kg in src = ZERO hits except pre-existing untouched JSON dict keys in estimator_report.py:89 / throttle_report.py:109,143. NUANCE: this is NOT a broken half-renamed seam \u2014 names are internally CONSISTENT producer->store->consumer (no straggler, no broken ref, suite green). But the suffix is the PRIMARY de-overload mechanism of OT-1/OT-5 (it defuses the #518/#522 footgun at the name level at every call site); comments alone leave names ambiguous. Implementer kept names to avoid touching the consumer/EstimateRecord-schema (defensible safety call, since theta_P_values rename WOULD edit consumer-read code: physics_simulator.py:66,311 + drag/max_power) BUT did not surface the label-for-rename substitution as a deviation requiring authority (g2-implement-result presents 'labels' as the deliverable without flagging the ratified suffix was dropped). Ratified deliverable partially unmet + substitution unsurfaced.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c3-friction-removal": {
+      "id": "c3-friction-removal",
+      "title": "friction_coupling removal safe",
+      "imperative": "Independently confirm friction_coupling never invoked (only instantiated); no dangling refs.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Removal SAFE. 'git grep .friction_coupling. -- src/' = EMPTY (zero call sites; it was instantiated at parameter_estimator.py only, never invoked). Diff confirms instantiation 'self.friction_coupling = FrictionCoupling(...)' + import removed from parameter_estimator.py; __init__ import + __all__ entry removed; friction_coupling.py DELETED; test_friction_coupling.py DELETED; FrictionCoupling import+tests removed from test_numerical_stability.py (class renamed to TestCapabilityEnvelopeEdgeCases, retained the 2 CapabilityEnvelope/PhysicsSimulator tests) and test_physics_properties.py (TestFrictionUtilizationProperties removed). 'git grep -ni friction_coupling|FrictionCoupling -- src/ tests/' = only 2 DESCRIPTIVE doc-comment mentions remain (__init__.py:16 module-header bullet describing it as DEPRECATED, capability_envelope.py:27 narrative 'superseded ...FrictionCoupling') \u2014 no code references, no dangling import. No real call site existed; not a BLOCK.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c4-constant-dedup": {
+      "id": "c4-constant-dedup",
+      "title": "Constant dedup value-identical",
+      "imperative": "GRAVITY_MS2=9.81, MASS_KG=808.0 unchanged; density 1.20->1.225 fallback-only intended; G_MS2 retired; no TODO(#525).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Value-identical. constants.py: GRAVITY_MS2: float = 9.81 (single canonical home). MASS_KG: float = 808.0 single def at longitudinal_fit.py:44; session_fit.py:35 now imports it (old local 'MASS_KG = 808.0' deleted in diff) \u2014 grep finds no second def. Density 1.20->1.225 is the ONE intended value change: session_fit.py:58 DEFAULT_RHO=1.225 (ISA), used only on the weather-unavailable fallback path (session_fit.py:128 'rho = DEFAULT_RHO', :140 warning) \u2014 fallback-only confirmed. No test asserts old session_fit DEFAULT_RHO==1.20 (the 1.20 hits in tests are unrelated: compound_prior betas, CdA/power fixtures, air_density arrays). braking_fit.G_MS2 retired to deprecated alias 'G_MS2 = GRAVITY_MS2' (sanctioned by DECIDE 'alias OR removed'); car_prior imports GRAVITY_MS2 from constants (not braking_fit). 'git grep TODO(#525) -- src/' = EMPTY. All layer2 _G=9.81 / inline 9.81*sin(theta) / 6.5*9.81 / 3.5*9.81 replaced with GRAVITY_MS2 (value-identical).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c5-guard-meaningfulness": {
+      "id": "c5-guard-meaningfulness",
+      "title": "Guard genuinely bites",
+      "imperative": "Confirm guard exercises real path, A0 [20,60] assert is teeth, red-on-break genuine, band catches both bug classes, doc inconsistency noted.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Guard genuinely bites (with one caveat noted). REAL path: store_df_and_ceiling fixture builds an EstimateRecord -> build_car_ceiling(car_prior) -> PhysicsSimulator.simulate_lap / _compute_speed_caps (test_published_f1_data.py:~600-672). A0-boundary assert [20,60] m/s2 (line 668) is the MEANINGFUL TEETH. INDEPENDENTLY REPRODUCED red-on-break: set s0=1.0,s2=1.0/rho in _assemble_lateral -> 'test_representative_corner_cap_physical_band FAILED: assembled A0=3.20 m/s2 outside [20,60] ... assert 20.0 <= 3.2' (1 failed,1 passed), then restored exactly (git diff clean). CAVEAT (band looseness, anticipated by handoff): on that SAME break, test_ideal_lap_top_speed_physical_band still PASSED \u2014 the [250,500] km/h top-speed band did NOT catch the full g->m/s2 conversion bypass; only the A0 assert did. So the top-speed band is a COARSE sentinel (it brackets the historical RAW failures #522 ~100-150<250 and #518 745>500) but is effectively toothless against the conversion-bypass class in this synthetic setup; the A0 boundary assert is what bites. 436 km/h is the CURRENT consumer-untouched value (probed independently) = not a new regression. Confirmed NOT a per-param band matrix, uses NO units library. DOC INCONSISTENCIES (note, not block): top-speed test docstring says '300-360 km/h' (line 619) but assert is [250,500]; corner-cap docstring says '15-60 m/s' (line 643) but assert is [15,80].",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c6-suite-green": {
+      "id": "c6-suite-green",
+      "title": "Suite green (re-run)",
+      "imperative": "Re-run the physics region suite myself and confirm GREEN.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "RE-RAN myself: 'py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q' => 639 passed, 6 skipped in 739.36s (exit 0). GREEN. Independently reproduces the implementer's 639/6 claim. TestCarPriorIdealLapGuard (2 tests) included and green.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c7-scope": {
+      "id": "c7-scope",
+      "title": "Scope (physics-region only)",
+      "imperative": "Confirm physics-region only; no evo import; no shim/alias/dual-path beyond sanctioned G_MS2; braking/traction/coast/terrain math untouched.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope clean. Physics-region only: all touched files under src/physics/** + the 4 sanctioned test files + src/physics/__init__.py + new src/physics/constants.py \u2014 matches allowed scope exactly. No evo import: 'git grep evo_predictor -- src/physics/' = only constraint-DOC comments (decoupled_calibration.py:39, decoupled_longitudinal.py:65, scoreboard.py:22), zero actual imports; constraint:physics_region_no_evo_import honored. No new shim/alias/dual-path EXCEPT the sanctioned deprecated G_MS2=GRAVITY_MS2 alias (DECIDE allowed 'alias OR removed', implementer flagged it). braking/traction/coast/terrain math UNTOUCHED: per-file diff of session_braking/session_traction/session_estimator/decoupled_longitudinal/session_lateral/lateral_report shows ZERO added lines beyond GRAVITY_MS2 imports/substitutions + unit comments (6.5*9.81->6.5*GRAVITY_MS2 etc. value-identical). k_tire value unchanged (=0.0 at car_prior.py:521; only the OT-6 comment corrected at :57-60).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "c2-rename-consistency: RATIFIED FIELD-SUFFIX RENAMES NOT DELIVERED (label-only substituted). DECIDE OT-1 mandates 'unit-suffix A0/A2'; OT-5 mandates 'suffix p_max_w/cda_m2 (store) + theta_P_w_per_kg (consumer)'; g2-implement-handoff OT-5 repeats 'unit-suffix... theta_P -> theta_P_w_per_kg ... Update every reference consistently (no half-rename)'. Diff shows fields were NOT renamed: EstimateRecord still p_max/cda_closed/A0/A2; LongitudinalParameters still theta_P_values; LateralViewResult still A0/A2. Implementer added unit COMMENTS instead (estimate_store.py:148/157-159/165-171, lateral_view.py docstring, physics_data_models.py:137/148). Grep p_max_w/cda_m2/theta_P_w_per_kg in src = ZERO hits except pre-existing untouched JSON dict keys in estimator_report.py:89 / throttle_report.py:109,143. NUANCE: this is NOT a broken half-renamed seam \u2014 names are internally CONSISTENT producer->store->consumer (no straggler, no broken ref, suite green). But the suffix is the PRIMARY de-overload mechanism of OT-1/OT-5 (it defuses the #518/#522 footgun at the name level at every call site); comments alone leave names ambiguous. Implementer kept names to avoid touching the consumer/EstimateRecord-schema (defensible safety call, since theta_P_values rename WOULD edit consumer-read code: physics_simulator.py:66,311 + drag/max_power) BUT did not surface the label-for-rename substitution as a deviation requiring authority (g2-implement-result presents 'labels' as the deliverable without flagging the ratified suffix was dropped). Ratified deliverable partially unmet + substitution unsurfaced."
+    ]
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "c5-guard-meaningfulness",
+      "statement": "Guard doc-vs-assert inconsistencies: top-speed test docstring says '300-360 km/h' but assert is [250,500] (line 619 vs 636); corner-cap docstring says '15-60 m/s' but assert is [15,80] (line 643 vs 658). Tighten docstrings to match asserts, OR (better) tighten the top-speed band toward a defensible Monza value so it actually bites the conversion-bypass class (currently only the A0 assert catches it)."
+    },
+    {
+      "id": "tc2",
+      "from": "c2-rename-consistency",
+      "statement": "OT-1/OT-5 ratified unit-suffix field renames (p_max_w/cda_m2/theta_P_w_per_kg + A0/A2 g-suffix) were replaced with comment-only labels. Commander/human must reconcile: either authorize the rename (accepting consumer-field + EstimateRecord-schema touch, in tension with the consumer-untouched constraint) or formally down-scope OT-1/OT-5 to label-only."
+    }
+  ],
+  "blockers": []
+}

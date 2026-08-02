@@ -1,0 +1,128 @@
+==================================================================================
+ACCEPT_QUALI_ANCHOR_420 — G2 production acceptance harness
+==================================================================================
+
+Loading gold bundle...
+  C:\Programs\f1Brainz\.claude\worktrees\agent-aedb2af1326073fec\params\gold\runtime_bundles\gold_cycle_260603_173742_2018thru2024\modules\driver_quali_power_from_race_weekend
+  module_name: driver_quali_power_from_race_weekend
+
+Scoring HEADLINE 2018-2024 (production inference)...
+  [year 2018] events_used=21
+  [year 2019] events_used=21
+  [year 2020] events_used=16
+  [year 2021] events_used=19
+  [year 2022] events_used=19
+  [year 2023] events_used=16
+  [year 2024] events_used=18
+
+Scoring OOS 2025 (production inference)...
+  [year 2025] events_used=18
+
+
+==================================================================================
+#420 G2 — PRODUCTION quali-pace-anchor acceptance measurement
+==================================================================================
+Bundle:     gold_cycle_260603_173742_2018thru2024
+Module:     driver_quali_power_from_race_weekend
+Anchor src: min(qs_best_raw, lr_best_raw) — min-sector pace across BOTH practice buckets (raw s)
+Blend fn:   blend_quali_pace_anchor (src.evo_predictor.quali_pace_anchor)
+Pair set:   identical algorithm to scope_quali_anchor_414.py (imported primitives)
+Alpha sweep: (0.0, 0.2, 0.3, 0.5, 0.7, 1.0)
+
+
+==================================================================================
+HEADLINE — production 2018-2024
+==================================================================================
+  Events: used=130  sprint_skip=18  fp/q_skip=1  no_features=0
+  Baseline (alpha=0):    overall=0.6163  EASY=0.6924  pairs=24070
+  Data ceiling (baf/a=1): overall=0.8053  EASY=0.9423
+
+  alpha   OVERALL   rec-frac  EASY(>=9)  easy-frac  n_pairs
+  ------------------------------------------------------------
+    0.0    0.6163     +0.000     0.6924     +0.000    24070
+    0.2    0.6993     +0.439     0.8106     +0.473    24070
+    0.3    0.7174     +0.535     0.8293     +0.548    24070
+    0.5    0.7499     +0.707     0.8736     +0.725    24070
+    0.7    0.7894     +0.916     0.9204     +0.913    24070
+    1.0    0.8136     +1.044     0.9423     +1.000    24070  [data ceiling, not model win]
+
+==================================================================================
+HEADLINE — production 2018-2024 — delta vs §7.6.3 reference
+==================================================================================
+  alpha   prod_ov    ref_ov    dlt_ov   prod_ez    ref_ez    dlt_ez
+  ------------------------------------------------------------------
+    0.0    0.6163    0.6153   +0.0010      0.6924    0.6926   -0.0002
+    0.2    0.6993    0.6947   +0.0046      0.8106    0.8062   +0.0044
+    0.5    0.7499    0.7452   +0.0047      0.8736    0.8691   +0.0045
+    1.0    0.8136    0.8061   +0.0075      0.9423    0.9365   +0.0058
+
+==================================================================================
+OOS — production 2025
+==================================================================================
+  Events: used=18  sprint_skip=6  fp/q_skip=0  no_features=0
+  Baseline (alpha=0):    overall=0.5743  EASY=0.6145  pairs=3352
+  Data ceiling (baf/a=1): overall=0.7643  EASY=0.9226
+
+  alpha   OVERALL   rec-frac  EASY(>=9)  easy-frac  n_pairs
+  ------------------------------------------------------------
+    0.0    0.5743     +0.000     0.6145     +0.000     3352
+    0.2    0.6369     +0.330     0.7251     +0.359     3352
+    0.3    0.6596     +0.449     0.7702     +0.506     3352
+    0.5    0.7094     +0.711     0.8426     +0.740     3352
+    0.7    0.7497     +0.923     0.8945     +0.909     3352
+    1.0    0.7816     +1.091     0.9226     +1.000     3352  [data ceiling, not model win]
+
+==================================================================================
+OOS — production 2025 — delta vs §7.6.3 reference
+==================================================================================
+  alpha   prod_ov    ref_ov    dlt_ov   prod_ez    ref_ez    dlt_ez
+  ------------------------------------------------------------------
+    0.0    0.5743    0.5674   +0.0069      0.6145    0.6060   +0.0085
+    0.5    0.7094    0.7097   -0.0003      0.8426    0.8451   -0.0025
+    1.0    0.7816    0.7643   +0.0173      0.9226    0.9055   +0.0171
+
+==================================================================================
+BASELINE REPRODUCTION CHECK (headline alpha=0 vs §7.6.3 baseline=0.6153/0.6926)
+==================================================================================
+  §7.6.3 baseline: overall=0.6153  EASY=0.6926  pairs=23862
+  Production a=0:  overall=0.6163  EASY=0.6924  pairs=24070
+  Delta:           overall=+0.0010  EASY=-0.0002  pairs_delta=+208
+  STATUS: PASS (within 1pp)
+
+==================================================================================
+VERDICT
+==================================================================================
+
+PRODUCTION PATH SUMMARY
+  Anchor:  min(qs_best_raw, lr_best_raw) (production min-sector pace, both practice buckets)
+  Blend:   blend_quali_pace_anchor (production function)
+  pi src:  committed gold bundle inference (not record-replay)
+
+HEADLINE 2018-2024 (production, alpha=0.5):
+  overall   = 0.7499  (§7.6.3 ref: 0.7452, delta: +0.0047)
+  EASY      = 0.8736  (§7.6.3 ref: 0.8691, delta: +0.0045)
+  rec-frac  = 0.707  (§7.6.3 reported ~0.68 overall)
+
+OOS 2025 (production, alpha=0.5):
+  overall   = 0.7094  (§7.6.3 ref: 0.7097)
+  EASY      = 0.8426  (§7.6.3 ref: 0.8451)
+
+ANCHOR DELTA EXPLANATION
+  Prototype anchor (§7.6.3 record-replay):
+    best_across_fp = min(agg_theoretical_best) over ALL clean laps
+    across FP1+FP2+FP3 (green/dry/non-pit/positive-time filter)
+  Production anchor (this harness, = production _anchor_quali_field):
+    min(qs_best_raw, lr_best_raw) = min-sector pace across BOTH the
+    short-stint (quali-sim) and long-stint (long-run) practice buckets.
+  The production feature machinery SPLITS the all-FP clean laps into the
+    qs (short-stint) and lr (long-stint) buckets; the min across both
+    reconstructs the all-laps min-sector ordering signal in-machinery.
+    Residual delta vs prototype: bucket-split coverage edge effects only.
+
+VERDICT: REPRODUCES
+  The production path (qs_best_raw anchor + blend_quali_pace_anchor)
+  reproduces the §7.6.3 measured improvement within reasonable tolerance.
+  alpha=0.5 overall delta=+0.0047 (within ±3pp threshold)
+  alpha=0.5 EASY delta=+0.0045 (within ±5pp threshold)
+
+  Verdict code: REPRODUCES

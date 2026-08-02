@@ -1,0 +1,297 @@
+{
+  "work_id": "518-g2-side-by-side-adapter",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-altitude-helper",
+    "m2-adapter",
+    "m3-adapter-tests",
+    "m4-sidebyside-script",
+    "m5-run-and-report"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff",
+      "imperative": "Read the g2 handoff, the seams (decoupled_longitudinal, braking_view, session_braking, terrain, segment_classifier), and the prove_synthesis_496 proof driver. Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Confirm the gravity de-conflation: Variant A = F_vehicle/m + theta=0; Variant B = incumbent a_long + real theta.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + seams + proof driver loaded; handoff complete; gravity de-conflation confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). Seams + proof driver read. Gravity de-conflation confirmed: A=F_vehicle/m+theta=0 (gravity in estimator z-map), B=incumbent a_long+real theta. Units consistent: driver_streams *0.1 to metres, KinematicSample.position metres."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-altitude-helper": {
+      "id": "m1-altitude-helper",
+      "title": "Add altitude_at_positions helper to terrain.py",
+      "imperative": "Add altitude_at_positions(px, py, profile) to src/physics/terrain.py, mirroring gradient_at_positions exactly (cKDTree nearest-centerline projection, returns profile['altitude_m'][idx]). Add a synthetic unit test in tests/unit/physics/layer2/ that builds a tiny profile and confirms nearest-centerline altitude lookup (no FastF1).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "altitude_at_positions added; its synthetic test passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_terrain_altitude.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-altitude-helper-1"
+        }
+      ],
+      "constraints": [
+        "no production view modified",
+        "no evo-region imports"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-altitude-helper-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_terrain_altitude.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-adapter": {
+      "id": "m2-adapter",
+      "title": "Build decoupled_braking_input adapter",
+      "imperative": "Create src/physics/layer2/decoupled_braking_input.py: a reusable adapter that runs estimate_longitudinal PER LAP over contiguous classified KinematicSamples, with terrain theta/z from the #497 z-map, and emits per-sample a_long/F_vehicle/sigma_a aligned to the classified samples. Anchor magnitude = clean_longitudinal_from_raw RAW a_long (honors two_cycle_external_anchor_design). Loud altitude_assumed_flat when terrain absent. Pure-logic seam (per-lap split, alignment, F_vehicle/m feeding) must be unit-testable without FastF1. Do NOT modify any production view.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "altitude_at_positions available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "altitude_at_positions added + tested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "adapter module imports cleanly and exposes the documented contract",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import src.physics.layer2.decoupled_braking_input as m; print(sorted(n for n in dir(m) if not n.startswith('_')))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-adapter-1"
+        }
+      ],
+      "constraints": [
+        "no production view modified",
+        "no evo-region imports",
+        "anchor stays TV-denoised RAW a_long",
+        "honest per-sample sigma_a carried into sigma_kin"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-adapter-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import src.physics.layer2.decoupled_braking_input as m; print(sorted(n for n in dir(m) if not n.startswith('_')))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-adapter-tests": {
+      "id": "m3-adapter-tests",
+      "title": "Adapter unit tests (synthetic, no FastF1)",
+      "imperative": "Add tests/unit/physics/layer2/test_decoupled_braking_input.py covering the pure logic: per-lap contiguous split + 1:1 alignment to samples, F_vehicle/m feeding into BrakingView with theta=0 (gravity-once), per-sample sigma_a propagation into sigma_kin (not broadcast), and the flat-terrain loud flag. All synthetic \u2014 no real session.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "adapter exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "adapter module exists + imports"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "adapter unit tests pass without FastF1 cache",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_decoupled_braking_input.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-adapter-tests-1"
+        }
+      ],
+      "constraints": [
+        "tests run without FastF1 cache"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-adapter-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_decoupled_braking_input.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-sidebyside-script": {
+      "id": "m4-sidebyside-script",
+      "title": "Side-by-side comparison script",
+      "imperative": "Create scripts/braking_sidebyside_518.py: for each circuit x (VER,PER pooled), fit BrakingView two ways with the G1-DEFAULT HPs and cold-start supporting priors -- (A) adapter F_vehicle/m + theta=0; (B) incumbent prepare_braking_frontier path (a_long + real theta). Report per circuit (a_b,b_b), covariance, raw_p99 knee, capability ceiling, which is deeper, terrain effect. Emit reports/physics/braking_sidebyside_2023Q.{json,md}. Measurement only.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "adapter + tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "adapter + 10 tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script imports cleanly (syntax + wiring) without running the full telemetry sweep",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import ast,pathlib; ast.parse(pathlib.Path('scripts/braking_sidebyside_518.py').read_text()); print('parse-ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-sidebyside-script-1"
+        }
+      ],
+      "constraints": [
+        "no production view modified",
+        "DEFAULT HPs tv_lambda=0.10 sig_a_soft_brake=0.10",
+        "reports gitignored"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-sidebyside-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import ast,pathlib; ast.parse(pathlib.Path('scripts/braking_sidebyside_518.py').read_text()); print('parse-ok')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-run-and-report": {
+      "id": "m5-run-and-report",
+      "title": "Run side-by-side + full layer2 suite + simplification, write result",
+      "imperative": "Run the side-by-side script on all 6 circuits x VER+PER, producing the report. Run py -m pytest tests/unit/physics/layer2/ -q (green) and py -m src.utils.simplification_limits on touched paths (clean). Synthesize the retire/keep recommendation from the deciding numbers. Write IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script wired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "script wired + parses"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "report produced; full layer2 suite green; simplification clean on touched paths; result written",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-run-and-report-2"
+        }
+      ],
+      "constraints": [
+        "measurement only -- no retire decision made here"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-run-and-report-1",
+          "type": "evidence",
+          "payload": {
+            "summary": "6-circuit sweep complete (exit 0); report at reports/physics/braking_sidebyside_2023Q.{json,md}; layer2 197 passed; simplification clean on touched paths (only pre-existing build_terrain_profile flagged)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-run-and-report-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

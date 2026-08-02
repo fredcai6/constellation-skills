@@ -1,0 +1,392 @@
+{
+  "work_id": "g1-crew-plan",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-contract",
+    "m2-sector-anchor-tdd",
+    "m3-covariance-gate",
+    "m4-cross-residual",
+    "m5-report-schema",
+    "m6-tests-green",
+    "m7-simplification-limits"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context and verify handoff completeness",
+      "imperative": "Verify the handoff has: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff verified complete: all 8 required fields present",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff verified complete: task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format all present"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-contract": {
+      "id": "m1-contract",
+      "title": "Candidate-trajectory contract dataclass",
+      "imperative": "Create src/preprocessing/trajectory_grading/__init__.py and src/preprocessing/trajectory_grading/contract.py with the CandidateTrajectory dataclass/Protocol. Units: time in seconds, arc-length in metres. Include per-lap structure, s(t) samples (1D arrays), per-sample variance, accessors for arc-length at a given time and integrated-speed arc length. No imports from evo/latent_power/compound_prior.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context loaded from m0-context, handoff complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "contract.py exists, imports cleanly, no forbidden imports",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from src.preprocessing.trajectory_grading.contract import CandidateTrajectory; print('ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-contract-1"
+        }
+      ],
+      "constraints": [
+        "No imports from src/evo_predictor, src/latent_power, src/compound_prior",
+        "Units: seconds for time, metres for arc-length"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-contract-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"from src.preprocessing.trajectory_grading.contract import CandidateTrajectory; print('ok')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-sector-anchor-tdd": {
+      "id": "m2-sector-anchor-tdd",
+      "title": "Sector-anchor gate (TDD: red then green)",
+      "imperative": "TDD: write the known-answer test first (L1 \u2014 synthetic candidate with KNOWN anchors, verify recovery), see it fail (red), then implement score_sector_anchor in src/preprocessing/trajectory_grading/sector_anchor.py. Default tol_s=0.050. Anchors are co-estimated free parameters with uncertainty, never hard-coded. Also write L3 degenerate tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "contract.py exists and imports cleanly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "contract.py exists and imports cleanly"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "L1 known-answer test passes: synthetic candidate with known anchors recovers them; L3 degenerate inputs raise with named fields",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q -k \"sector_anchor\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-sector-anchor-tdd-1"
+        }
+      ],
+      "constraints": [
+        "Anchors are co-estimated, never hard-coded",
+        "TDD: red test first, then implementation"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-sector-anchor-tdd-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q -k \"sector_anchor\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-covariance-gate": {
+      "id": "m3-covariance-gate",
+      "title": "Covariance-consistency gate",
+      "imperative": "Implement score_covariance_consistency in src/preprocessing/trajectory_grading/covariance_gate.py. Compute reduced chi-square of residuals against reported covariance. Pass/fail within configurable band. Write L2 covariance-honesty tests: white-noise with matching covariance -> chi-square ~1 (passes); inflated/deflated -> departs (fails).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "contract.py exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "contract.py exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "covariance honesty tests pass: chi-square ~1 for honest cov, fails for dishonest",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q -k \"covariance\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-covariance-gate-1"
+        }
+      ],
+      "constraints": [
+        "Reduced chi-square as the honesty metric",
+        "Configurable band around 1"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-covariance-gate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q -k \"covariance\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-cross-residual": {
+      "id": "m4-cross-residual",
+      "title": "Cross-residual diagnostic (NOT a gate)",
+      "imperative": "Implement diagnose_cross_residual in src/preprocessing/trajectory_grading/cross_residual.py. Per-lap: fit free inter-stream time offset; compare integrated-speed vs position-derived arc length with lap-closure constraint. Return fitted offsets + arc-length residuals. NEVER returns pass/fail. Write L2 test: inject known offset, verify recovery.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "contract.py exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "contract.py exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "L2 cross-residual test passes: known injected offset is recovered; no pass/fail in return value",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q -k \"cross_residual\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-cross-residual-1"
+        }
+      ],
+      "constraints": [
+        "NEVER a gate: no pass/fail in return type",
+        "Clock pathologies of the two streams are NOT assumed independent"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-cross-residual-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q -k \"cross_residual\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-report-schema": {
+      "id": "m5-report-schema",
+      "title": "JSON report schema + docs/report_schemas/ doc",
+      "imperative": "Implement frozen dataclasses for the full grading report in src/preprocessing/trajectory_grading/report_schema.py. Include: session_id, per-lap/sector anchor-gate results, covariance-gate result, cross-residual diagnostic block, fitted anchors+uncertainty, tolerances used. Add to_dict() serializer. ALSO create docs/report_schemas/trajectory_grading_report.md documenting every field. Producer + doc move together (repo policy).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sector_anchor, covariance_gate, cross_residual all exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "sector_anchor, covariance_gate, cross_residual all exist and tests pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "report schema imports cleanly; to_dict() produces valid JSON; docs/report_schemas/trajectory_grading_report.md exists",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from src.preprocessing.trajectory_grading.report_schema import GradingReport; import json; print('ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-report-schema-1"
+        }
+      ],
+      "constraints": [
+        "Frozen dataclasses",
+        "Producer + doc together (repo policy)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-report-schema-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"from src.preprocessing.trajectory_grading.report_schema import GradingReport; import json; print('ok')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-tests-green": {
+      "id": "m6-tests-green",
+      "title": "Full test suite green",
+      "imperative": "Run all tests in tests/unit/preprocessing/test_trajectory_grading.py. All must pass: L1/L2 known-answer (anchor recovery + offset recovery), L2 covariance honesty, L3 degenerate/limit. Paste the full green output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all 5 deliverables exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all 5 deliverables exist"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all tests in test_trajectory_grading.py pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-tests-green-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-tests-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-simplification-limits": {
+      "id": "m7-simplification-limits",
+      "title": "Simplification limits pass on all touched paths",
+      "imperative": "Run py -m src.utils.simplification_limits --paths src/preprocessing/trajectory_grading tests/unit/preprocessing/test_trajectory_grading.py. Fix any violations (file >999 lines, function >99 lines, CC>19). Then commit all changes on the branch.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification_limits PASS on all touched paths",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory_grading tests/unit/preprocessing/test_trajectory_grading.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-simplification-limits-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-simplification-limits-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory_grading tests/unit/preprocessing/test_trajectory_grading.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g1-crew-001",
+    "status": "released",
+    "claimed_at": "2026-06-11T14:39:50.107836+00:00",
+    "last_heartbeat": "2026-06-11T14:39:50.107836+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:\\Programs\\f1Brainz-worktrees\\cmdr-446",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-06-11T14:54:48.094877+00:00"
+  }
+}

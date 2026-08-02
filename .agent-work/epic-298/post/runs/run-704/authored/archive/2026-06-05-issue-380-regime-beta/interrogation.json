@@ -1,0 +1,83 @@
+{
+  "work_id": "issue-380-regime-beta",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q3"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load the handed-in goal and context (what you are resolving) and the starting questions, if any. Read the glossary and the topic's relevant code/docs. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "<starting question>",
+      "imperative": "<ask one question at a time with a recommended answer; explore the codebase if it can answer; append follow-ups and new branches; skip questions overcome by earlier answers>",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Source of gate-beta values (feasibility branch not on main)",
+      "imperative": "Gate beta + section 7 doc live on origin/claude/compound-regime-feasibility, not main. Resolution: vendor the beta values into a new evo module with provenance to compound_crossover_gate_findings.md; do NOT depend on the unmerged branch. Reversible. Logged as decision taken.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Injection mechanism: second normalizer vs in-normalizer regime switch",
+      "imperative": "Buckets are split before normalization; pass a push-beta CompoundNormalizer to quali_sim compute calls, race-beta to long_run. None default falls back to race-beta = byte-identical. Honors INJECT-behind-interface ruling with minimal blast radius.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved",
+    "findings": []
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

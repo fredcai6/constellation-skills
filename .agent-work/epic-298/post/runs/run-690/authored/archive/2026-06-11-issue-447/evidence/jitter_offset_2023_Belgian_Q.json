@@ -1,0 +1,1024 @@
+{
+  "session": {
+    "year": 2023,
+    "ff1_gp": "Belgian Grand Prix",
+    "db_gp": "Belgium",
+    "stype": "Q",
+    "label": "2023_Belgian_Q",
+    "track_m": 7004.0,
+    "notes": "Spa; 0a baseline circuit; quali"
+  },
+  "sector_truth_available": true,
+  "db_session_id": 569,
+  "n_drivers_analysed": 5,
+  "per_driver": {
+    "VER": {
+      "n_laps_candidate": 22,
+      "cadence_jitter_car_data": {
+        "n": 21051,
+        "median": -0.0005071290115665761,
+        "mean": 1.1792766798871964e-05,
+        "std": 0.11990667103533736,
+        "p05": -0.18723040748193398,
+        "p25": -0.07074046919436228,
+        "p75": 0.07036211960530636,
+        "p95": 0.18943487723049657,
+        "iqr": 0.14110258879966864,
+        "min": -0.5897455758577053,
+        "max": 0.6103807261065413,
+        "abs_median": 0.070613712319755,
+        "abs_p95": 0.24350611791754773,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "car_data"
+      },
+      "cadence_jitter_pos_data": {
+        "n": 21764,
+        "median": -0.0012709069551419816,
+        "mean": 3.3459064512328877e-06,
+        "std": 0.11256752756328764,
+        "p05": -0.17331226108318967,
+        "p25": -0.0684337900251819,
+        "p75": 0.067806957327889,
+        "p95": 0.17928634354016137,
+        "iqr": 0.1362407473530709,
+        "min": -0.571718070505085,
+        "max": 0.6100777632104837,
+        "abs_median": 0.06808367892881506,
+        "abs_p95": 0.22311146216209177,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "pos_data"
+      },
+      "sector_crossing_jitter": {
+        "n": 54,
+        "median": -0.10217560626171718,
+        "mean": -0.11161156200583548,
+        "std": 0.3674910220016108,
+        "p05": -0.500406302526753,
+        "p25": -0.2885352972785231,
+        "p75": 0.0658236405155801,
+        "p95": 0.2809990318610268,
+        "iqr": 0.3543589377941032,
+        "min": -1.7172627964877094,
+        "max": 1.3077590682525226,
+        "abs_median": 0.1582190787856348,
+        "abs_p95": 0.6625063048140655,
+        "unit": "seconds",
+        "matched_laps": 18,
+        "max_abs_residual_s": 1.7172627964877094,
+        "fitted_anchors_m": {
+          "s_finish": 0.0,
+          "s1": 2218.237789368682,
+          "s2": 5012.8250142942115,
+          "s3": 7003.9999953889965
+        },
+        "method": "score_sector_anchor: telemetry-predicted sector DURATION minus DB official sector DURATION (per lap, per sector); anchors co-fit from s(t)"
+      },
+      "error_model": {
+        "class": "white-jitter (no systematic bias/walk/batch)",
+        "discriminating_statistic": "dt-deviation lag-1 autocorr (max=-4.000152436600818e-05) < 0.1 => uncorrelated increments (no persistence; cumulative excursion driven by sparse gaps, not a walk); low per-Source eta^2=0.0; small |mean|/std (max=9.834954716903574e-05) => independent per-sample jitter, zero-mean around cadence",
+        "thresholds": {
+          "random_walk_drift_ratio": 0.7,
+          "per_batch_eta_squared": 0.1,
+          "bias_mean_over_std": 1.0
+        },
+        "statistics": {
+          "dt_deviation_lag1_autocorr_by_stream": {
+            "car_data": -4.000152436600818e-05,
+            "pos_data": -0.03861399400953152
+          },
+          "cumulative_drift_ratio_by_stream": {
+            "car_data": 39.70208141692985,
+            "pos_data": 29.59317600221374
+          },
+          "sg_residual_lag1_autocorr_by_stream_reference_only": {
+            "car_data": 0.6303632005759199,
+            "pos_data": 0.5943752779001089
+          },
+          "bias_mean_over_std_by_stream": {
+            "car_data": 9.834954716903574e-05,
+            "pos_data": 2.9723549265588643e-05
+          },
+          "per_source_eta_squared_car": 0.0,
+          "n_sources_car": 1
+        }
+      },
+      "offset_stability": {
+        "unit_offset": "seconds",
+        "unit_arc_residual": "metres",
+        "n_laps": 22,
+        "per_lap_offset_s": {
+          "0": -0.006773890405024999,
+          "1": 0.0921827386695765,
+          "2": -0.11612015957970388,
+          "3": -0.12386978749664163,
+          "4": 0.12257429574450494,
+          "5": 0.1640141699425944,
+          "6": 0.07717543366963979,
+          "7": -0.02129743349813142,
+          "8": 1.3158990681429427e-06,
+          "9": 0.16631209072517644,
+          "10": -0.1462245239818742,
+          "11": -0.054591271858748576,
+          "12": 0.1702948268039524,
+          "13": -0.029093259842482833,
+          "14": 0.06550616865488086,
+          "15": 0.04608358680072236,
+          "16": -2.3374301678205493e-06,
+          "17": -0.02234874945894263,
+          "18": -0.04443622048785691,
+          "19": -0.02481889308969999,
+          "20": 0.028991311479844177,
+          "21": -0.08937356674033539
+        },
+        "per_lap_lap_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "offset_distribution": {
+          "offset_n": 22,
+          "offset_median": -0.0033881139175964098,
+          "offset_mean": 0.011553902023652262,
+          "offset_std": 0.0911966500485872,
+          "offset_p05": -0.12348230610079473,
+          "offset_p25": -0.040600480326513394,
+          "offset_p75": 0.07425811741595006,
+          "offset_p95": 0.16619719468604735,
+          "offset_iqr": 0.11485859774246346,
+          "offset_min": -0.1462245239818742,
+          "offset_max": 0.1702948268039524,
+          "offset_abs_median": 0.06004872025681472,
+          "offset_abs_p95": 0.16619719468604735
+        },
+        "offset_range_s": 0.3165193507858266,
+        "offset_lag1_autocorr": -0.0867908458975483,
+        "offset_drift": {
+          "slope_per_step": -0.0020292937764129124,
+          "total_drift": -0.04261516930467116
+        },
+        "arc_residual_distribution": {
+          "arc_n": 22,
+          "arc_median": 4.9241475060686,
+          "arc_mean": 5.230016655462587,
+          "arc_std": 2.0768160084105185,
+          "arc_p05": 2.194449892961071,
+          "arc_p25": 3.8334062457986873,
+          "arc_p75": 6.490792664996876,
+          "arc_p95": 8.749918717034438,
+          "arc_iqr": 2.657386419198189,
+          "arc_min": 1.9352813750797602,
+          "arc_max": 10.896674923444763,
+          "arc_abs_median": 4.9241475060686,
+          "arc_abs_p95": 8.749918717034438
+        },
+        "lap_closure_distribution": {
+          "closure_n": 22,
+          "closure_median": 75.04120682053872,
+          "closure_mean": 92.69123737852082,
+          "closure_std": 78.84379135456184,
+          "closure_p05": 36.29411111112309,
+          "closure_p25": 55.06302485328797,
+          "closure_p75": 105.04552792405116,
+          "closure_p95": 129.8012571492599,
+          "closure_iqr": 49.98250307076319,
+          "closure_min": 34.55811726142656,
+          "closure_max": 430.5100000000066,
+          "closure_abs_median": 75.04120682053872,
+          "closure_abs_p95": 129.8012571492599
+        }
+      },
+      "covariance_chi_square": {
+        "unit_residual": "metres",
+        "residual_definition": "speed_arc_s - position_arc_s (per-sample arc discrepancy)",
+        "measured_per_sample_variance_m2": 0.7425524028489937,
+        "variance_basis": "2 * measured pos XY residual variance (m^2) from G1/this run",
+        "reduced_chi_sq": 95.90853660948348,
+        "band": [
+          0.01,
+          100.0
+        ],
+        "passed_under_loose_band": true,
+        "n_samples": 15397
+      }
+    },
+    "SAR": {
+      "n_laps_candidate": 6,
+      "cadence_jitter_car_data": {
+        "n": 21051,
+        "median": -0.0005071290115665761,
+        "mean": 1.1792766798871964e-05,
+        "std": 0.11990667103533736,
+        "p05": -0.18723040748193398,
+        "p25": -0.07074046919436228,
+        "p75": 0.07036211960530636,
+        "p95": 0.18943487723049657,
+        "iqr": 0.14110258879966864,
+        "min": -0.5897455758577053,
+        "max": 0.6103807261065413,
+        "abs_median": 0.070613712319755,
+        "abs_p95": 0.24350611791754773,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "car_data"
+      },
+      "cadence_jitter_pos_data": {
+        "n": 21764,
+        "median": -0.0012709069551419816,
+        "mean": 3.3459064512328877e-06,
+        "std": 0.11256752756328764,
+        "p05": -0.17331226108318967,
+        "p25": -0.0684337900251819,
+        "p75": 0.067806957327889,
+        "p95": 0.17928634354016137,
+        "iqr": 0.1362407473530709,
+        "min": -0.571718070505085,
+        "max": 0.6100777632104837,
+        "abs_median": 0.06808367892881506,
+        "abs_p95": 0.22311146216209177,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "pos_data"
+      },
+      "sector_crossing_jitter": {
+        "n": 15,
+        "median": -0.06934673158671245,
+        "mean": -0.09140000000001341,
+        "std": 0.09851235355227052,
+        "p05": -0.25892107901659783,
+        "p25": -0.14744279474878041,
+        "p75": -0.019415626218080462,
+        "p95": 0.0177758253295081,
+        "iqr": 0.12802716853069995,
+        "min": -0.33096841255296994,
+        "max": 0.060437047669431365,
+        "abs_median": 0.06934673158671245,
+        "abs_p95": 0.2589210790165977,
+        "unit": "seconds",
+        "matched_laps": 5,
+        "max_abs_residual_s": 0.33096841255296994,
+        "fitted_anchors_m": {
+          "s_finish": 0.0,
+          "s1": 2236.2702178735176,
+          "s2": 5022.6850832823575,
+          "s3": 6998.2639428250895
+        },
+        "method": "score_sector_anchor: telemetry-predicted sector DURATION minus DB official sector DURATION (per lap, per sector); anchors co-fit from s(t)"
+      },
+      "error_model": {
+        "class": "white-jitter (no systematic bias/walk/batch)",
+        "discriminating_statistic": "dt-deviation lag-1 autocorr (max=-4.000152436600818e-05) < 0.1 => uncorrelated increments (no persistence; cumulative excursion driven by sparse gaps, not a walk); low per-Source eta^2=0.0; small |mean|/std (max=9.834954716903574e-05) => independent per-sample jitter, zero-mean around cadence",
+        "thresholds": {
+          "random_walk_drift_ratio": 0.7,
+          "per_batch_eta_squared": 0.1,
+          "bias_mean_over_std": 1.0
+        },
+        "statistics": {
+          "dt_deviation_lag1_autocorr_by_stream": {
+            "car_data": -4.000152436600818e-05,
+            "pos_data": -0.03861399400953152
+          },
+          "cumulative_drift_ratio_by_stream": {
+            "car_data": 39.70208141692985,
+            "pos_data": 29.59317600221374
+          },
+          "sg_residual_lag1_autocorr_by_stream_reference_only": {
+            "car_data": 0.6303632005759199,
+            "pos_data": 0.5943752779001089
+          },
+          "bias_mean_over_std_by_stream": {
+            "car_data": 9.834954716903574e-05,
+            "pos_data": 2.9723549265588643e-05
+          },
+          "per_source_eta_squared_car": 0.0,
+          "n_sources_car": 1
+        }
+      },
+      "offset_stability": {
+        "unit_offset": "seconds",
+        "unit_arc_residual": "metres",
+        "n_laps": 6,
+        "per_lap_offset_s": {
+          "0": -0.24146809141251444,
+          "1": 0.2290225663064608,
+          "2": 0.2622630212103194,
+          "3": -0.06259026719667195,
+          "4": -0.019339009227761706,
+          "5": -0.31594253961621066
+        },
+        "per_lap_lap_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "offset_distribution": {
+          "offset_n": 6,
+          "offset_median": -0.040964638212216825,
+          "offset_mean": -0.02467571998939642,
+          "offset_std": 0.2160238982015634,
+          "offset_p05": -0.2973239275652866,
+          "offset_p25": -0.1967486353585538,
+          "offset_p75": 0.16693217242290517,
+          "offset_p95": 0.2539529074843548,
+          "offset_iqr": 0.36368080778145895,
+          "offset_min": -0.31594253961621066,
+          "offset_max": 0.2622630212103194,
+          "offset_abs_median": 0.23524532885948762,
+          "offset_abs_p95": 0.3025226600147378
+        },
+        "offset_range_s": 0.5782055608265301,
+        "offset_lag1_autocorr": 0.018429119410851784,
+        "offset_drift": {
+          "slope_per_step": -0.04120886445794685,
+          "total_drift": -0.20604432228973427
+        },
+        "arc_residual_distribution": {
+          "arc_n": 6,
+          "arc_median": 5.8435347629716805,
+          "arc_mean": 6.177187393052655,
+          "arc_std": 1.839680416452099,
+          "arc_p05": 3.9213544888211667,
+          "arc_p25": 5.0180612656946835,
+          "arc_p75": 7.357242314264621,
+          "arc_p95": 8.808329169809282,
+          "arc_iqr": 2.3391810485699374,
+          "arc_min": 3.5939184249713048,
+          "arc_max": 9.177421476103309,
+          "arc_abs_median": 5.8435347629716805,
+          "arc_abs_p95": 8.808329169809282
+        },
+        "lap_closure_distribution": {
+          "closure_n": 6,
+          "closure_median": 68.29604131601582,
+          "closure_mean": 129.59817710894563,
+          "closure_std": 134.61858470526846,
+          "closure_p05": 58.734592227625626,
+          "closure_p25": 62.108221127320576,
+          "closure_p75": 87.40774288023908,
+          "closure_p95": 345.10118055557155,
+          "closure_iqr": 25.29952175291851,
+          "closure_min": 57.62361111111022,
+          "closure_max": 429.549444444463,
+          "closure_abs_median": 68.29604131601582,
+          "closure_abs_p95": 345.10118055557155
+        }
+      },
+      "covariance_chi_square": {
+        "unit_residual": "metres",
+        "residual_definition": "speed_arc_s - position_arc_s (per-sample arc discrepancy)",
+        "measured_per_sample_variance_m2": 0.3078577133617123,
+        "variance_basis": "2 * measured pos XY residual variance (m^2) from G1/this run",
+        "reduced_chi_sq": 686.3588436038715,
+        "band": [
+          0.01,
+          100.0
+        ],
+        "passed_under_loose_band": false,
+        "n_samples": 3081
+      }
+    },
+    "RIC": {
+      "n_laps_candidate": 8,
+      "cadence_jitter_car_data": {
+        "n": 21051,
+        "median": -0.0005071290115665761,
+        "mean": 1.1792766798871964e-05,
+        "std": 0.11990667103533736,
+        "p05": -0.18723040748193398,
+        "p25": -0.07074046919436228,
+        "p75": 0.07036211960530636,
+        "p95": 0.18943487723049657,
+        "iqr": 0.14110258879966864,
+        "min": -0.5897455758577053,
+        "max": 0.6103807261065413,
+        "abs_median": 0.070613712319755,
+        "abs_p95": 0.24350611791754773,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "car_data"
+      },
+      "cadence_jitter_pos_data": {
+        "n": 21764,
+        "median": -0.0012709069551419816,
+        "mean": 3.3459064512328877e-06,
+        "std": 0.11256752756328764,
+        "p05": -0.17331226108318967,
+        "p25": -0.0684337900251819,
+        "p75": 0.067806957327889,
+        "p95": 0.17928634354016137,
+        "iqr": 0.1362407473530709,
+        "min": -0.571718070505085,
+        "max": 0.6100777632104837,
+        "abs_median": 0.06808367892881506,
+        "abs_p95": 0.22311146216209177,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "pos_data"
+      },
+      "sector_crossing_jitter": {
+        "n": 18,
+        "median": -0.1116459966425829,
+        "mean": -0.12847377883530064,
+        "std": 0.12302869662785328,
+        "p05": -0.30562464057301353,
+        "p25": -0.2382408340437543,
+        "p75": -0.03553812353039909,
+        "p95": 0.039187688653374034,
+        "iqr": 0.2027027105133552,
+        "min": -0.3872358869343202,
+        "max": 0.049307236894506445,
+        "abs_median": 0.1116459966425829,
+        "abs_p95": 0.3056246405730134,
+        "unit": "seconds",
+        "matched_laps": 6,
+        "max_abs_residual_s": 0.3872358869343202,
+        "fitted_anchors_m": {
+          "s_finish": 0.0,
+          "s1": 2233.9831832505215,
+          "s2": 5019.3558192922355,
+          "s3": 6990.509221292692
+        },
+        "method": "score_sector_anchor: telemetry-predicted sector DURATION minus DB official sector DURATION (per lap, per sector); anchors co-fit from s(t)"
+      },
+      "error_model": {
+        "class": "white-jitter (no systematic bias/walk/batch)",
+        "discriminating_statistic": "dt-deviation lag-1 autocorr (max=-4.000152436600818e-05) < 0.1 => uncorrelated increments (no persistence; cumulative excursion driven by sparse gaps, not a walk); low per-Source eta^2=0.0; small |mean|/std (max=9.834954716903574e-05) => independent per-sample jitter, zero-mean around cadence",
+        "thresholds": {
+          "random_walk_drift_ratio": 0.7,
+          "per_batch_eta_squared": 0.1,
+          "bias_mean_over_std": 1.0
+        },
+        "statistics": {
+          "dt_deviation_lag1_autocorr_by_stream": {
+            "car_data": -4.000152436600818e-05,
+            "pos_data": -0.03861399400953152
+          },
+          "cumulative_drift_ratio_by_stream": {
+            "car_data": 39.70208141692985,
+            "pos_data": 29.59317600221374
+          },
+          "sg_residual_lag1_autocorr_by_stream_reference_only": {
+            "car_data": 0.6303632005759199,
+            "pos_data": 0.5943752779001089
+          },
+          "bias_mean_over_std_by_stream": {
+            "car_data": 9.834954716903574e-05,
+            "pos_data": 2.9723549265588643e-05
+          },
+          "per_source_eta_squared_car": 0.0,
+          "n_sources_car": 1
+        }
+      },
+      "offset_stability": {
+        "unit_offset": "seconds",
+        "unit_arc_residual": "metres",
+        "n_laps": 8,
+        "per_lap_offset_s": {
+          "0": -0.3654767501176881,
+          "1": -0.03071344308571412,
+          "2": -0.15305509923560462,
+          "3": 0.012843673842844596,
+          "4": -0.024585957382326277,
+          "5": -0.1729853159401547,
+          "6": 0.06274333652722223,
+          "7": -0.014033690323177252
+        },
+        "per_lap_lap_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "offset_distribution": {
+          "offset_n": 8,
+          "offset_median": -0.0276497002340202,
+          "offset_mean": -0.08565790571432477,
+          "offset_std": 0.12945618897219205,
+          "offset_p05": -0.29810474815555144,
+          "offset_p25": -0.15803765341174214,
+          "offset_p75": -0.0073143492816717896,
+          "offset_p95": 0.04527845458769003,
+          "offset_iqr": 0.15072330413007035,
+          "offset_min": -0.3654767501176881,
+          "offset_max": 0.06274333652722223,
+          "offset_abs_median": 0.04672838980646818,
+          "offset_abs_p95": 0.2981047481555513
+        },
+        "offset_range_s": 0.42822008664491035,
+        "offset_lag1_autocorr": -0.204102492013245,
+        "offset_drift": {
+          "slope_per_step": 0.033692440896279006,
+          "total_drift": 0.23584708627395304
+        },
+        "arc_residual_distribution": {
+          "arc_n": 8,
+          "arc_median": 5.426075392869189,
+          "arc_mean": 5.664273485151638,
+          "arc_std": 1.6075771848040719,
+          "arc_p05": 3.59831082711292,
+          "arc_p25": 4.678890213778708,
+          "arc_p75": 6.510777180884196,
+          "arc_p95": 8.146560016813952,
+          "arc_iqr": 1.831886967105488,
+          "arc_min": 3.4248089620347453,
+          "arc_max": 8.455739398498682,
+          "arc_abs_median": 5.426075392869189,
+          "arc_abs_p95": 8.146560016813952
+        },
+        "lap_closure_distribution": {
+          "closure_n": 8,
+          "closure_median": 83.13312740153197,
+          "closure_mean": 125.85574712816197,
+          "closure_std": 135.5486669541869,
+          "closure_p05": 30.494263888901013,
+          "closure_p25": 63.36534722221927,
+          "closure_p75": 106.97097222222692,
+          "closure_p95": 354.333972222215,
+          "closure_iqr": 43.60562500000765,
+          "closure_min": 27.021388888907495,
+          "closure_max": 475.05305555554696,
+          "closure_abs_median": 83.13312740153197,
+          "closure_abs_p95": 354.333972222215
+        }
+      },
+      "covariance_chi_square": {
+        "unit_residual": "metres",
+        "residual_definition": "speed_arc_s - position_arc_s (per-sample arc discrepancy)",
+        "measured_per_sample_variance_m2": 0.27157895633137985,
+        "variance_basis": "2 * measured pos XY residual variance (m^2) from G1/this run",
+        "reduced_chi_sq": 426.21900005940546,
+        "band": [
+          0.01,
+          100.0
+        ],
+        "passed_under_loose_band": false,
+        "n_samples": 4605
+      }
+    },
+    "NOR": {
+      "n_laps_candidate": 21,
+      "cadence_jitter_car_data": {
+        "n": 21051,
+        "median": -0.0005071290115665761,
+        "mean": 1.1792766798871964e-05,
+        "std": 0.11990667103533736,
+        "p05": -0.18723040748193398,
+        "p25": -0.07074046919436228,
+        "p75": 0.07036211960530636,
+        "p95": 0.18943487723049657,
+        "iqr": 0.14110258879966864,
+        "min": -0.5897455758577053,
+        "max": 0.6103807261065413,
+        "abs_median": 0.070613712319755,
+        "abs_p95": 0.24350611791754773,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "car_data"
+      },
+      "cadence_jitter_pos_data": {
+        "n": 21764,
+        "median": -0.0012709069551419816,
+        "mean": 3.3459064512328877e-06,
+        "std": 0.11256752756328764,
+        "p05": -0.17331226108318967,
+        "p25": -0.0684337900251819,
+        "p75": 0.067806957327889,
+        "p95": 0.17928634354016137,
+        "iqr": 0.1362407473530709,
+        "min": -0.571718070505085,
+        "max": 0.6100777632104837,
+        "abs_median": 0.06808367892881506,
+        "abs_p95": 0.22311146216209177,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "pos_data"
+      },
+      "sector_crossing_jitter": {
+        "n": 48,
+        "median": -0.14231905991743687,
+        "mean": -0.09434182070779269,
+        "std": 0.333833917664429,
+        "p05": -0.44246855551340936,
+        "p25": -0.22112005907309218,
+        "p75": 0.07229454538306879,
+        "p95": 0.3208718554573876,
+        "iqr": 0.29341460445616097,
+        "min": -1.1872053404866634,
+        "max": 0.8933017678798763,
+        "abs_median": 0.18218127210340995,
+        "abs_p95": 0.8750398941226861,
+        "unit": "seconds",
+        "matched_laps": 16,
+        "max_abs_residual_s": 1.1872053404866634,
+        "fitted_anchors_m": {
+          "s_finish": 0.0,
+          "s1": 2225.7640103201898,
+          "s2": 5013.965937218269,
+          "s3": 7003.999999999999
+        },
+        "method": "score_sector_anchor: telemetry-predicted sector DURATION minus DB official sector DURATION (per lap, per sector); anchors co-fit from s(t)"
+      },
+      "error_model": {
+        "class": "white-jitter (no systematic bias/walk/batch)",
+        "discriminating_statistic": "dt-deviation lag-1 autocorr (max=-4.000152436600818e-05) < 0.1 => uncorrelated increments (no persistence; cumulative excursion driven by sparse gaps, not a walk); low per-Source eta^2=0.0; small |mean|/std (max=9.834954716903574e-05) => independent per-sample jitter, zero-mean around cadence",
+        "thresholds": {
+          "random_walk_drift_ratio": 0.7,
+          "per_batch_eta_squared": 0.1,
+          "bias_mean_over_std": 1.0
+        },
+        "statistics": {
+          "dt_deviation_lag1_autocorr_by_stream": {
+            "car_data": -4.000152436600818e-05,
+            "pos_data": -0.03861399400953152
+          },
+          "cumulative_drift_ratio_by_stream": {
+            "car_data": 39.70208141692985,
+            "pos_data": 29.59317600221374
+          },
+          "sg_residual_lag1_autocorr_by_stream_reference_only": {
+            "car_data": 0.6303632005759199,
+            "pos_data": 0.5943752779001089
+          },
+          "bias_mean_over_std_by_stream": {
+            "car_data": 9.834954716903574e-05,
+            "pos_data": 2.9723549265588643e-05
+          },
+          "per_source_eta_squared_car": 0.0,
+          "n_sources_car": 1
+        }
+      },
+      "offset_stability": {
+        "unit_offset": "seconds",
+        "unit_arc_residual": "metres",
+        "n_laps": 21,
+        "per_lap_offset_s": {
+          "0": -0.1986763368649041,
+          "1": 0.15444044144535474,
+          "2": 0.21452799593206862,
+          "3": -0.05534011226757687,
+          "4": 0.23617748302302582,
+          "5": -0.05156673857248079,
+          "6": 0.22010764498647065,
+          "7": -0.03235329452854495,
+          "8": -2.8221942843090754e-06,
+          "9": 0.08667242639592326,
+          "10": -0.01814895041787611,
+          "11": 0.11449309182885918,
+          "12": 0.08530636427565487,
+          "13": -0.04072506630355678,
+          "14": -0.07719983593767915,
+          "15": -0.10697751523870527,
+          "16": 0.05490315876717831,
+          "17": -0.03883377616744552,
+          "18": -0.00038225923185651535,
+          "19": 0.12862713937313344,
+          "20": 0.09098849923981747
+        },
+        "per_lap_lap_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21
+        ],
+        "offset_distribution": {
+          "offset_n": 21,
+          "offset_median": -2.8221942843090754e-06,
+          "offset_mean": 0.036477977978217904,
+          "offset_std": 0.11318647778673374,
+          "offset_p05": -0.10697751523870527,
+          "offset_p25": -0.04072506630355678,
+          "offset_p75": 0.11449309182885918,
+          "offset_p95": 0.22010764498647065,
+          "offset_iqr": 0.15521815813241596,
+          "offset_min": -0.1986763368649041,
+          "offset_max": 0.23617748302302582,
+          "offset_abs_median": 0.08530636427565487,
+          "offset_abs_p95": 0.22010764498647065
+        },
+        "offset_range_s": 0.4348538198879299,
+        "offset_lag1_autocorr": -0.25512878354544927,
+        "offset_drift": {
+          "slope_per_step": -0.0017143052931536148,
+          "total_drift": -0.0342861058630723
+        },
+        "arc_residual_distribution": {
+          "arc_n": 21,
+          "arc_median": 5.284941925027664,
+          "arc_mean": 5.271776638683822,
+          "arc_std": 1.7501226281138036,
+          "arc_p05": 2.8191840016990786,
+          "arc_p25": 4.242049128149555,
+          "arc_p75": 6.2770116669966605,
+          "arc_p95": 8.211916223456058,
+          "arc_iqr": 2.0349625388471058,
+          "arc_min": 0.9543798514444856,
+          "arc_max": 8.484086217506826,
+          "arc_abs_median": 5.284941925027664,
+          "arc_abs_p95": 8.211916223456058
+        },
+        "lap_closure_distribution": {
+          "closure_n": 21,
+          "closure_median": 71.19585060066493,
+          "closure_mean": 96.66404806454821,
+          "closure_std": 81.99142319428891,
+          "closure_p05": 32.645277777756746,
+          "closure_p25": 50.86151798682022,
+          "closure_p75": 124.6091666666407,
+          "closure_p95": 154.9627777777623,
+          "closure_iqr": 73.74764867982049,
+          "closure_min": 29.81944444446981,
+          "closure_max": 422.3261111111069,
+          "closure_abs_median": 71.19585060066493,
+          "closure_abs_p95": 154.9627777777623
+        }
+      },
+      "covariance_chi_square": {
+        "unit_residual": "metres",
+        "residual_definition": "speed_arc_s - position_arc_s (per-sample arc discrepancy)",
+        "measured_per_sample_variance_m2": 0.7067799550256737,
+        "variance_basis": "2 * measured pos XY residual variance (m^2) from G1/this run",
+        "reduced_chi_sq": 102.38522427258961,
+        "band": [
+          0.01,
+          100.0
+        ],
+        "passed_under_loose_band": false,
+        "n_samples": 15657
+      }
+    },
+    "GAS": {
+      "n_laps_candidate": 17,
+      "cadence_jitter_car_data": {
+        "n": 21051,
+        "median": -0.0005071290115665761,
+        "mean": 1.1792766798871964e-05,
+        "std": 0.11990667103533736,
+        "p05": -0.18723040748193398,
+        "p25": -0.07074046919436228,
+        "p75": 0.07036211960530636,
+        "p95": 0.18943487723049657,
+        "iqr": 0.14110258879966864,
+        "min": -0.5897455758577053,
+        "max": 0.6103807261065413,
+        "abs_median": 0.070613712319755,
+        "abs_p95": 0.24350611791754773,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "car_data"
+      },
+      "cadence_jitter_pos_data": {
+        "n": 21764,
+        "median": -0.0012709069551419816,
+        "mean": 3.3459064512328877e-06,
+        "std": 0.11256752756328764,
+        "p05": -0.17331226108318967,
+        "p25": -0.0684337900251819,
+        "p75": 0.067806957327889,
+        "p95": 0.17928634354016137,
+        "iqr": 0.1362407473530709,
+        "min": -0.571718070505085,
+        "max": 0.6100777632104837,
+        "abs_median": 0.06808367892881506,
+        "abs_p95": 0.22311146216209177,
+        "unit": "seconds",
+        "method": "residual of SessionTime vs SG cadence fit (window=31, polyorder=2)",
+        "stream": "pos_data"
+      },
+      "sector_crossing_jitter": {
+        "n": 45,
+        "median": -0.1959271806395364,
+        "mean": -0.21300172059364778,
+        "std": 0.48008383032956664,
+        "p05": -1.0807534372393406,
+        "p25": -0.3737476604684389,
+        "p75": -0.04680560472856854,
+        "p95": 0.6632857026119265,
+        "iqr": 0.32694205573987034,
+        "min": -1.7294690054466741,
+        "max": 0.8434379630841846,
+        "abs_median": 0.310515386764898,
+        "abs_p95": 1.0807534372393406,
+        "unit": "seconds",
+        "matched_laps": 15,
+        "max_abs_residual_s": 1.7294690054466741,
+        "fitted_anchors_m": {
+          "s_finish": 0.0,
+          "s1": 2219.0951446716185,
+          "s2": 5006.6711187956225,
+          "s3": 7003.999999999999
+        },
+        "method": "score_sector_anchor: telemetry-predicted sector DURATION minus DB official sector DURATION (per lap, per sector); anchors co-fit from s(t)"
+      },
+      "error_model": {
+        "class": "white-jitter (no systematic bias/walk/batch)",
+        "discriminating_statistic": "dt-deviation lag-1 autocorr (max=-4.000152436600818e-05) < 0.1 => uncorrelated increments (no persistence; cumulative excursion driven by sparse gaps, not a walk); low per-Source eta^2=0.0; small |mean|/std (max=9.834954716903574e-05) => independent per-sample jitter, zero-mean around cadence",
+        "thresholds": {
+          "random_walk_drift_ratio": 0.7,
+          "per_batch_eta_squared": 0.1,
+          "bias_mean_over_std": 1.0
+        },
+        "statistics": {
+          "dt_deviation_lag1_autocorr_by_stream": {
+            "car_data": -4.000152436600818e-05,
+            "pos_data": -0.03861399400953152
+          },
+          "cumulative_drift_ratio_by_stream": {
+            "car_data": 39.70208141692985,
+            "pos_data": 29.59317600221374
+          },
+          "sg_residual_lag1_autocorr_by_stream_reference_only": {
+            "car_data": 0.6303632005759199,
+            "pos_data": 0.5943752779001089
+          },
+          "bias_mean_over_std_by_stream": {
+            "car_data": 9.834954716903574e-05,
+            "pos_data": 2.9723549265588643e-05
+          },
+          "per_source_eta_squared_car": 0.0,
+          "n_sources_car": 1
+        }
+      },
+      "offset_stability": {
+        "unit_offset": "seconds",
+        "unit_arc_residual": "metres",
+        "n_laps": 17,
+        "per_lap_offset_s": {
+          "0": -0.21081208712678365,
+          "1": 0.04380321360546727,
+          "2": 0.05950646788356163,
+          "3": -0.053013072820704485,
+          "4": -0.0208560103232812,
+          "5": -0.08266681240704808,
+          "6": -0.22202600930979965,
+          "7": -0.1841026628425016,
+          "8": -0.10260054007963161,
+          "9": 2.607698227936261e-06,
+          "10": 0.1706414912157394,
+          "11": 0.006958704669019974,
+          "12": 0.32972364724915804,
+          "13": 0.3172486069077136,
+          "14": 0.2205628806723641,
+          "15": 0.3887204264556102,
+          "16": 0.4304212692304514
+        },
+        "per_lap_lap_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "offset_distribution": {
+          "offset_n": 17,
+          "offset_median": 0.006958704669019974,
+          "offset_mean": 0.06420659533397431,
+          "offset_std": 0.2039549977523991,
+          "offset_p05": -0.21305487156338684,
+          "offset_p25": -0.08266681240704808,
+          "offset_p75": 0.2205628806723641,
+          "offset_p95": 0.39706059501057844,
+          "offset_iqr": 0.30322969307941217,
+          "offset_min": -0.22202600930979965,
+          "offset_max": 0.4304212692304514,
+          "offset_abs_median": 0.1706414912157394,
+          "offset_abs_p95": 0.39706059501057844
+        },
+        "offset_range_s": 0.6524472785402511,
+        "offset_lag1_autocorr": 0.6252792031111718,
+        "offset_drift": {
+          "slope_per_step": 0.03186904330709204,
+          "total_drift": 0.5099046929134726
+        },
+        "arc_residual_distribution": {
+          "arc_n": 17,
+          "arc_median": 7.62306011813469,
+          "arc_mean": 8.064426256719432,
+          "arc_std": 3.408730598746152,
+          "arc_p05": 4.09188967595965,
+          "arc_p25": 5.558987172589235,
+          "arc_p75": 10.240160712858312,
+          "arc_p95": 14.663735096978348,
+          "arc_iqr": 4.681173540269078,
+          "arc_min": 3.7178863449947244,
+          "arc_max": 15.031605908239257,
+          "arc_abs_median": 7.62306011813469,
+          "arc_abs_p95": 14.663735096978348
+        },
+        "lap_closure_distribution": {
+          "closure_n": 17,
+          "closure_median": 76.11960228099815,
+          "closure_mean": 92.2140323849756,
+          "closure_std": 96.0108286243001,
+          "closure_p05": 14.069770065673039,
+          "closure_p25": 42.42861111112961,
+          "closure_p75": 104.55361111108687,
+          "closure_p95": 206.85811111111687,
+          "closure_iqr": 62.124999999957254,
+          "closure_min": 0.6202988022296267,
+          "closure_max": 440.8438888888859,
+          "closure_abs_median": 76.11960228099815,
+          "closure_abs_p95": 206.85811111111687
+        }
+      },
+      "covariance_chi_square": {
+        "unit_residual": "metres",
+        "residual_definition": "speed_arc_s - position_arc_s (per-sample arc discrepancy)",
+        "measured_per_sample_variance_m2": 0.31865690294578863,
+        "variance_basis": "2 * measured pos XY residual variance (m^2) from G1/this run",
+        "reduced_chi_sq": 814.2715683946383,
+        "band": [
+          0.01,
+          100.0
+        ],
+        "passed_under_loose_band": false,
+        "n_samples": 9852
+      }
+    }
+  },
+  "headline": {
+    "cadence_jitter_car_data": {
+      "median_abs_s": 0.070613712319755,
+      "iqr_s": 0.14110258879966864,
+      "p95_abs_s": 0.24350611791754773
+    },
+    "cadence_jitter_pos_data": {
+      "median_abs_s": 0.06808367892881506,
+      "iqr_s": 0.1362407473530709,
+      "p95_abs_s": 0.22311146216209177
+    },
+    "sector_crossing_jitter_abs_median_s": 0.1582190787856348,
+    "error_model_class": "white-jitter (no systematic bias/walk/batch)",
+    "error_model_discriminating_statistic": "dt-deviation lag-1 autocorr (max=-4.000152436600818e-05) < 0.1 => uncorrelated increments (no persistence; cumulative excursion driven by sparse gaps, not a walk); low per-Source eta^2=0.0; small |mean|/std (max=9.834954716903574e-05) => independent per-sample jitter, zero-mean around cadence",
+    "offset_verdict": {
+      "verdict": "stable-estimable",
+      "reason": "median per-lap offset std=0.129s <= 0.15s AND median |lag-1 autocorr|=0.204102492013245 < 0.5 => tight, low-drift => estimable stable bias",
+      "session_mean_offset_s": -0.003578074818440757,
+      "median_per_lap_offset_std_s": 0.12945618897219205,
+      "median_per_lap_offset_range_s": 0.4348538198879299,
+      "median_abs_lag1_autocorr": 0.204102492013245,
+      "median_total_drift_s": -0.0342861058630723,
+      "n_drivers": 5
+    },
+    "covariance_reduced_chi_sq_range": [
+      95.90853660948348,
+      814.2715683946383
+    ],
+    "covariance_reduced_chi_sq_median": 426.21900005940546
+  }
+}

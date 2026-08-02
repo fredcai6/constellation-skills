@@ -1,0 +1,20 @@
+{
+  "work_id": "662-segment-map-g2-review",
+  "diff_ref": "src/physics/segment_map/derivation/tiling.py, tests/unit/physics/segment_map/derivation/test_tiling.py (both new files, G2 of issue #662)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "src/physics/segment_map/runtime.py:26 -- 'Segment kind, int-coded because both hot callers branch on it inside vectorized code.'", "reason": "Tiling.seg_type_code stores SegType as a raw int8 numpy array rather than an array of SegType enum members -- a textbook primitive-obsession shape. But this is the SAME convention runtime.py's own SegmentMap already established and documented for the identical reason (vectorized hot-path branching), and tiling.py's grid_type array (also int8) and SegType usage (via int(SegType.X) at every write site) is the direct upstream producer of that same convention. Introducing a richer wrapper type here would just add a conversion step at the seam with SegmentMap, contradicting the established, documented convention rather than fixing a real problem."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

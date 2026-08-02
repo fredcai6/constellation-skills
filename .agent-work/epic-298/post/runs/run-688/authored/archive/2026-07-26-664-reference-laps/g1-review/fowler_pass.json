@@ -1,0 +1,20 @@
+{
+  "work_id": "664-g1-review",
+  "diff_ref": "src/physics/utilization/class_ledger.py (new, ~363 LOC) + tests/unit/physics/test_class_ledger.py (new, 14 tests)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md (match surrounding conventions; module is explicit sibling of compute_regime_deficits)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "Longest function class_deficits (~40 LOC) is linear and sectioned with comments; each helper (build_weight_matrix, _segment_transit_times, _validate_profile) is single-purpose and short.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "Only two dataclasses, both pure frozen data holders (ClassTimeLedger, ClassDeficits); no behavior-bearing god class.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "_segment_transit_times is factored once and reused for ideal + real laps; no copy-paste.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "Reads SegmentMap fields (seg_type_code, severity_membership, segment_of, n_segments) but that is the map's intended read-only consumption surface, not envy of another object's internals.", "override": null},
+    {"smell": "data-clumps", "verdict": "overridden", "finding": "The trio (segment_map, distance_m, speed/v_ideal/v_real) recurs across class_time_ledger, class_time_shares, class_deficits.", "override": {"repo_standard": "global-crew.md 'Match the surrounding code's naming/conventions'; module docstring declares it a class-grain SIBLING of driver_utility_observable.compute_regime_deficits, whose per-lap signature is (segment_map/ribbon, distance, speeds).", "reason": "Bundling these into a LapProfile object would diverge the pure-function surface from the established sibling convention and add an abstraction the handoff did not ask for (no speculative abstraction). The clump is the deliberate, matching public contract, not accidental."}},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Uses np.ndarray for numeric channels and a small {class_id: float} dict for the convenience view; appropriate for a numeric core, not stringly-typed primitives standing in for domain types.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "Max 4 positional (segment_map, distance_m, v_ideal, v_real) + 1 keyword-only min_speed_ms with an inherited default; within reasonable bounds.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "New self-contained module; no cross-cutting edit scatter introduced.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "Single cohesive responsibility (class-grain time ledger + absolute deficits); no unrelated axes bolted together.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No a.b().c().d() chains; SegmentMap accessors called directly.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "dominant_class_of is a REQUIRED diagnostic named by decision:class-attribution-membership-faithful (argmax allowed only as derived view), not speculative; class_time_shares is a thin, used convenience. No unused hooks or extension points.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "Comments are contract-bearing (anti-circularity rationale, construction-vs-validation labeling, simulator-mirror citations), explaining WHY not masking unclear code.", "override": null}
+  ],
+  "rail_exception": null
+}

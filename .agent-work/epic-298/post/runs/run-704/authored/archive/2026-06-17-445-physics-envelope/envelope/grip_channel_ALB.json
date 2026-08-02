@@ -1,0 +1,15 @@
+{
+  "car": "ALB",
+  "team": "WIL",
+  "form": "G(v)=min(A+B v^2, G_sat) [g], v in m/s; +frontier to soft tyre",
+  "A_mechanical_g": 1.74,
+  "B_downforce": 0.00192,
+  "G_sat_g": 4.84,
+  "compound_frontier_lift_g": 0.09,
+  "valid_kmh": [
+    46,
+    185
+  ],
+  "above": "capped at G_sat (physical, unmeasured)",
+  "provenance": "pooled apexes Suzuka+Monaco quali+race, derived saturation"
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "g3-review-626",
+  "diff_ref": "src/physics/weekend_state/layer2_evolution.py (NEW) + tests/unit/physics/weekend_state/test_layer2_evolution.py (NEW), uncommitted tree in C:/Programs/f1-626",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, sibling module src/physics/weekend_state/frame.py (g1, established the per-module absolute-DB-path + readonly-connector convention this file follows)",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "fit_track_evolution (lines 225-319, ~95 lines) does FE-slope fit, per-weekend spline fit, sigma calc, and wide-sigma derivation in one function. It stays a single cohesive concern (fit the whole latent) and the loop body is not separable without adding indirection for a one-call-site helper, so this is a minor, non-blocking observation, not a rewrite demand.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "_connect_readonly (3-line sqlite mode=ro URI helper) is copy-pasted verbatim from frame.py (g1) into layer2_evolution.py (lines 123-125) rather than shared from a common util. Each module reads a different DB (physics_estimates.db vs damage_integrals.db) so a shared helper would need a tiny refactor; flagging as a minor, non-blocking cleanup candidate for Admiral/Triage, not overriding since no documented standard mandates per-module duplication (only observed precedent, one prior instance).", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "(year, gp_name) tuple keys recur across coverage/splines/ctl_ref/ctl_span/sigma dicts, but they are genuinely the natural composite key for a per-weekend fit and are encapsulated behind TrackEvolutionFit + latent_at/apply_track_evolution; not a clump forcing callers to know the pieces separately.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "Nothing built ahead of need: apply_track_evolution/loo_earns_keep/orthogonality_vs_season are all exercised by the tests and are exactly what the handoff's honest-verdict deliverable requires; no unused hooks or extension points.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "The module docstring and EARNS_KEEP_VERDICT constant are long (~120 lines of prose) relative to the code.", "override": {"repo_standard": "g3-implementer-handoff.md: 'State this coverage limit loudly' (Key data facts) + 'REPORT it with the held-out numbers' (Honest test, mandatory) + Required Evidence: 'Explicit statement: earns-its-keep / unidentifiable-float, with the coverage caveat.'", "reason": "This gate's deliverable is explicitly the honest report as much as the code (implementer result line 1: 'the numbers (the deliverable as much as the code)'). The handoff mandates the coverage caveat and verdict be stated loudly and reported, not inferred from clean code; the docstring is the reporting artifact the handoff asked for, not a substitute for unclear structure -- the code itself (function names, dataclass fields, IDENTIFIABLE_YEARS constant) is independently clear without the prose."}}
+  ],
+  "rail_exception": null
+}

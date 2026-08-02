@@ -1,0 +1,427 @@
+{
+  "work_id": "issue-381-same-pairs",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "compact",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-381-same-pairs. Start the work branch per repo guidance.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-381-same-pairs"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-381-same-pairs",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read ORCHESTRATOR_CONTEXT, GLOSSARY, engine-config; AGENT_GUIDE rules absorbed via engine-config rules_root"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (the interrogator must reach the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; save the consolidated problem statement. Confirm it with the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context step complete; baseline loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "source": "Admiral rulings (binding)",
+            "decision": "All 5 interrogation forks ruled; all recommended defaults APPROVED with 2 annotations",
+            "detail": "interrogation.json consolidated verdict=resolved; problem statement confirmed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Frame the bounded problem against the architecture packets. Author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria and required evidence. Get the human to approve it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Ask confirmed: interrogation.json consolidated verdict=resolved; Admiral rulings Q1-Q5 all approved."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "execute.json authored, one bounded issue",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored: e0-context + 3 gates (g1 inference records / g2 same-pairs diagnostic + attribution / g3 doc append + routing rec), each implement-review-integrate. Faithful to Admiral rulings Q1-Q5."
+        },
+        {
+          "id": "c2",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "PROCEED (Commander logged default)",
+            "rationale": "Plan is a faithful, reversible elaboration of the already-approved Admiral rulings Q1-Q5 with NO new scope and NO retrain (inference-only). plan.approved checkpoint satisfied by the binding rulings that pre-settled every plan decision.",
+            "surfaced": "Plan posted prominently to Admiral for interception"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "compact": {
+      "id": "compact",
+      "title": "Compact context and reload skills",
+      "imperative": "Run /compact to compress conversation context. Then reload the constellation-commander skill into this context. Confirm it is active before proceeding to execute.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context compacted",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "commander skill reloaded in this context",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "skipped",
+      "status_detail": {
+        "reason": "/compact is a user-level CLI command the agent cannot invoke; harness auto-compaction covers it. Commander skill remains loaded in-context. Per constellation-engine-quirks."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate. If a gate proves the plan wrong, surface the decision to the user before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "commander skill loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Commander skill loaded in-context (compact skipped per quirks)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json child checklist DONE: all 3 gates (g1/g2/g3) closed with integrated APPROVE evidence; targeted tests green; zero production change"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Map reconciled in-context (no nested dispatch per standing orders): added dated #381 reconcile line to docs/architecture/index.md per the scripts-are-not-map-nodes convention; diagnostic recorded as prose, findings xref \u00a77.6.2; check_arch_map.py OK (37 nodes consistent). Zero src/ change -> no structural nodes/edges/overlays to add."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc1 (rank-blend HOLD) routed: recorded as issue-ready recommendation triage-candidates/tc1-rank-blend-hold.md; verdict HOLD/fold-into-#375; NOT filed per binding Admiral order. No other candidates from the run."
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "NO issues filed in this run (Commander logged default per binding Admiral order)",
+            "rationale": "Standing order Q5: the rank-blend fire/hold is a RECOMMENDATION for the Admiral; 'do not file the issue here'. tc1 recorded as issue-ready recommendation with verdict HOLD/fold-into-#375. The Admiral makes the file/hold call at review.",
+            "surfaced": "tc1 recommendation presented in the final report under routing recommendation; awaiting Admiral disposition"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "Run delivered (Commander logged default for background job)",
+            "summary": "3 gates closed (g1 records validated / g2 same-pairs diagnostic + 3-axis attribution / g3 doc append + routing). Numbers: race_weekend standalone 0.6149 (~19pp below ceiling 0.8061), recent_history 0.7803 (~2.6pp below); OOS 2025 reproduces. Routing -> #375; rank-blend HOLD (~0.6pp slice). PR #406 opened (Closes #381), NOT merged. Zero production change. 7 tests green, arch map consistent.",
+            "surfaced": "Full run summary in the Commander's final report; PR #406 body carries the numbers table + attribution + routing. Admiral merges the PR and decides the rank-blend tc disposition."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work. Push the branch to remote. Move .agent-work/issue-381-same-pairs/ to .agent-work/archive/<date>-issue-381-same-pairs/. Confirm the branch is clean and merge-ready per repo guidance.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "run summary accepted (review complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "work area being moved to .agent-work/archive/2026-06-05-issue-381-same-pairs/ and committed in this step"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "code/docs committed (7838026) and pushed; PR #406 opened (Closes #381, not merged); archive commit follows"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

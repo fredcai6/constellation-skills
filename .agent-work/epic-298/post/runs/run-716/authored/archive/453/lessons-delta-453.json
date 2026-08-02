@@ -1,0 +1,99 @@
+{
+  "work_id": "453",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "watcher-sleep-death",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "Arming a blocking watcher/monitor after launching a detached process is the most common kill pattern for multi-hour gold-pipeline runs: the session sleeps on the watcher and dies. Safe pattern: launch detached, record PID + expected output artifact in the state note, and check on resume \u2014 no watcher. Short foreground steps run foreground, no detach.",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-13 INCIDENT (third watcher-sleep death); cmdr-440.md STATE LOG (3 watcher-armed kills across continuations)"
+    },
+    {
+      "op": "add",
+      "id": "shared-files-not-on-mission-branch",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "Never commit .agent-work/LESSONS.md, .agent-work/AGENT_FEEDBACK.md, or .agent-work/CONSTELLATION_FEEDBACK.md on a mission branch. Return lessons-delta.json and feedback entries in the closeout report; the Admiral applies them centrally. Merging a mission branch that writes these clobbers canonical state from siblings.",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-11 INCIDENT (LESSONS.md clobber on PR #457 merge; AGENT_FEEDBACK add/add conflict from concurrent #458)"
+    },
+    {
+      "op": "add",
+      "id": "cmdr-turn-premature-on-pre-answered",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "Do not end your turn on a question whose answer is already in the launch order; re-read it before surfacing anything. A turn ending on a pre-answered question (or an intermediate spine step) is a discipline violation that forces an unnecessary continuation re-dispatch.",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-11 RULING (cmdr-410 premature float); INCIDENT (cmdr-425 workbench-init stall); RULING (cmdr-425 cont-1 filing question pre-answered in LO)"
+    },
+    {
+      "op": "add",
+      "id": "admiral-close-after-merge-verified",
+      "scope": "admiral",
+      "task_class": "general-workflow",
+      "statement": "Issue close is a separate step sequenced strictly after the merge is CONFIRMED, not after gate checks pass. Sequence: verify checks green, merge, verify main HEAD advanced, then close. Never batch the close with gate verification.",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-11 ADMIRAL ERROR (closed #425 citing 'merged, checks green' while PR #466 gate had actually FAILED and the merge never ran)"
+    },
+    {
+      "op": "add",
+      "id": "state-note-before-detach",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "Update the crash-resume state note (step done, slug, next command, process PID, expected output) BEFORE launching any detached multi-hour process. A stale note when the session dies needs forensics; a current note makes every recovery trivial.",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-13 INCIDENT (cont3 violated this, ~3h lost); cmdr-440.md (4 trivial recoveries when honored)"
+    },
+    {
+      "op": "add",
+      "id": "cross-session-findings-on-issue",
+      "scope": "admiral",
+      "task_class": "general-workflow",
+      "statement": "Any finding actionable for a downstream open issue must be posted as an issue comment AT DISCOVERY TIME. Session scratch (post-run notes, archive files) is invisible to the next fleet. Archiving a session must check: are there findings that belong on open issues?",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-12 ESCALATION (2026-06-10 stale-LOSO finding lived only in session scratch; cmdr-440 rediscovered it from scratch)"
+    },
+    {
+      "op": "retire",
+      "id": "simplification-limits-catches-function-length",
+      "reason": "redundant with the standing project tenet 'run py -m src.utils.simplification_limits on touched paths' (engine-config rules_root + ORCHESTRATOR_CONTEXT evidence table); not a distinct workflow lesson"
+    },
+    {
+      "op": "retire",
+      "id": "gold-artifact-commit-scope",
+      "reason": "absorbed by ORCHESTRATOR_CONTEXT 'bulky generated evidence stays out of git unless curated'; niche #410-specific instance, not durable workflow signal"
+    },
+    {
+      "op": "retire",
+      "id": "triage-claim-solver-specificity",
+      "reason": "niche #382/#410-specific instance (note which estimator produced a monotonicity claim); not a durable cross-run workflow lesson \u2014 the substance lives in the #410 archive"
+    },
+    {
+      "op": "confirm",
+      "id": "session-limit-waving",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-12/13 INCIDENTs (3 session-limit kills on cmdr-440, all recovered via state-note + continuation)"
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issues 394, 395 (compact skipped with reason; harness auto-compaction)"
+    },
+    {
+      "op": "confirm",
+      "id": "worktree-untracked-data",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-395 (per-year DBs, absolute paths); cmdr-440 ran in main checkout for manifest portability"
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-451 (Agent-tool dispatch); CONSTELLATION_FEEDBACK 2026-06-11 issue-447"
+    },
+    {
+      "op": "confirm",
+      "id": "spine-lease-stale-long-crew",
+      "grounding": ".agent-work/453/ADMIRAL_LOG.md 2026-06-13 (admiral lease went stale across the multi-hour capstone; same-id resume); AGENT_FEEDBACK 2026-06-11 issue-451"
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/453 run-wide: py used throughout; engine command-checks hard-code python as a standing contradiction"
+    }
+  ]
+}

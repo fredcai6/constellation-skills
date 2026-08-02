@@ -1,0 +1,231 @@
+{
+  "work_id": "625-segmentation-substrate-g4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-regime-rollup-module",
+    "m2-observability-router",
+    "m3-build-script-real-run"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's global-crew.md and global-everyone.md, the g4-implement-handoff.md, CONVERGED_PLAN.md's Gate 4 section + cold-critic dispositions #1/#2/#5/#6, and the current source of src/physics/layer2/corner_descriptors.py (Gate 1), property_mixture.py (Gate 2, fit_property_mixture/MixtureFit/posterior_membership signatures), arcs.py (Gate 1, _BRAKE_REGIME/identify_braking_arcs), and grip_bin_obs.py (table shape: bin/mu_lat_p90/v_mean/n_samples/lap_number/gp_name columns, N_BINS=32). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Verify Gate 1/2/3 signatures match what the handoff describes (Stop Condition check). Verify the real DB is reachable read-only at C:/Programs/f1Brainz/data/damage_integrals.db with a grip_bin_obs table, and that .agent-work/625-segmentation-substrate/artifacts/f12_holdout_stability.json exists with headline_verdict FAIL. Verify router citation targets (session_lateral.py, session_traction.py, arcs.py, decoupled_braking_input.py, session_coast.py) by reading them directly -- do not trust the handoff's line numbers without checking. Verify all 5 new deliverable paths are not gitignored (git check-ignore -v). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + CONVERGED_PLAN Gate 4 loaded; handoff complete; Gate 1/2/3 signatures confirmed matching; real DB + F12 artifact reachable; router citations independently verified against real source; deliverable paths confirmed not gitignored",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff verified complete (task/protected-intent/test-mode/scope/exclusions/constraints/map-anchors/evidence/verification/stop-conditions/return-format all present). Gate1 corner_descriptors.py (bin_row_to_descriptor, descriptors_from_frame -- drops mu_lat_p90<=0/NaN rows) and arcs.py (_BRAKE_REGIME='straight_brake', identify_braking_arcs) confirmed matching. Gate2 property_mixture.py (MixtureFit{gmm,k,scaler,bic_scores}, fit_property_mixture, posterior_membership) confirmed matching. grip_bin_obs.py confirmed: N_BINS=32, columns bin/mu_lat_p90/v_mean/n_samples/lap_number/gp_name/year/session_type/driver/stint_num present, bins uniform 1/32-of-distance by construction (dist/total*N_BINS). Real DB confirmed reachable read-only at C:/Programs/f1Brainz/data/damage_integrals.db via sqlite3 URI mode=ro (write attempt correctly blocked, 'attempt to write a readonly database'); grip_bin_obs has 612615 rows. f12_holdout_stability.json confirmed present with headline_verdict=FAIL, n_pass=0/5. Router citations independently verified by direct read: session_lateral.py:61 'corner_parts.append([s for s in samples if s.regime == \"corner\"])' matches; session_traction.py:24 '_TRACTION_REGIMES = (\"straight_throttle\", \"corner\")' matches; arcs.py:12 '_BRAKE_REGIME = \"straight_brake\"' used at arcs.py:60 in identify_braking_arcs, composed into decoupled_braking_input.py:183 'brake = regime == _BRAKE_REGIME' matches exactly; session_coast.py's prepare_coast_samples (lines 74-76) confirmed derives its OWN coast mask directly from thr<5.0/brk<5.0/v_at>_V_MIN/al_at<0.0 thresholds and does NOT read any regime field -- indirect/parallel linkage confirmed, will be stated honestly in the router note. All 5 new deliverable paths confirmed not gitignored (git check-ignore -v exit=1 for all). Also read CONVERGED_PLAN.md Gate 4 section + all 6 cold-critic dispositions directly (not just the handoff's summary): disposition #6 requires the FAIL verdict propagate into the CSV artifact itself (not just a companion file) -- handoff's Close Criteria already bakes this in. NOTE: CONVERGED_PLAN.md's Gate 4 prose also mentions this gate's 'integrate step' running a full-suite regression (py -m pytest tests/unit/physics -q) and a grep-based no-evo-import check across 5 named files -- these are NOT listed in the handoff's own Required Evidence section (which lists only the two unit-test commands + the real-store run). Since the grep/full-suite checks are cheap and directly serve constraint:physics_region_no_evo_import already assigned to me, I will run them as supplementary evidence beyond the handoff's explicit list, flagged in Workflow Feedback as a handoff/plan inconsistency rather than silently skipped or silently treated as blocking scope creep."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-regime-rollup-module": {
+      "id": "m1-regime-rollup-module",
+      "title": "New src/physics/layer2/regime_rollup.py: corner_bin_share, circuit_distance_share, load_circuit_frame + discriminating unit tests",
+      "imperative": "Create src/physics/layer2/regime_rollup.py implementing: corner_bin_share(bins_occupied: set[int] | int, n_bins: int = 32) -> float (pure; len(bins_occupied)/n_bins for a set, bins_occupied/n_bins for a count); circuit_distance_share(df_for_circuit: pd.DataFrame, fit: MixtureFit) -> dict computing, per lap-identity group (lap_number plus any of year/session_type/driver/stint_num present in the frame), the fraction of the 32 bins occupied, averaged across laps -> corner_distance_share; straight_distance_share = 1.0 - corner_distance_share; corner sub-shares via corner_descriptors.descriptors_from_frame + property_mixture.posterior_membership on the SAME validity mask descriptors_from_frame uses internally (mu_lat_p90 finite/>0, v_mean finite), n_samples-weighted average membership per class scaled by corner_distance_share so corner_class_i_distance_share values sum to corner_distance_share across classes (document the M=0 / n_samples-sum=0 degenerate fallback); return dict with corner_distance_share, straight_distance_share, corner_class_{i}_distance_share for i in range(fit.k), n_laps, n_rows; load_circuit_frame(db_path: str, gp_name: str) -> pd.DataFrame, a thin READ-ONLY sqlite3 URI (mode=ro) SELECT * FROM grip_bin_obs WHERE gp_name = ? reader with zero computation inside. Module docstring MUST name the computed quantity distance_share (never time_share anywhere in the module) and MUST state explicitly that bin-occupancy distance-share SYSTEMATICALLY UNDERSTATES true time-share for corners (dt = ds/v, lower v in corners means more real time per unit distance than distance-share implies). Write tests/unit/physics/layer2/test_regime_rollup.py: TDD red first (write tests, observe failing via manual run, attest c1 as red evidence) covering corner_bin_share (set and count forms), circuit_distance_share on synthetic multi-lap fixtures with a known/controlled bin-occupancy pattern and a small synthetic MixtureFit (assert corner_class_i shares sum to corner_distance_share, assert straight+corner sum to 1.0, assert n_laps/n_rows correctness, assert no field is literally named time_share anywhere in the returned dict keys or module source), and a DB-fixture smoke test for load_circuit_frame (build a tiny temp sqlite db with a grip_bin_obs table + a couple of rows, assert the loader returns exactly those rows for the right gp_name and is read-only against a separate connection).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete (attested + advanced)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_regime_rollup.py written, observed failing (module does not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests/unit/physics/layer2/test_regime_rollup.py written (26 test cases across TestCornerBinShare/TestCircuitDistanceShare/TestLoadCircuitFrame/TestNoTimeShareIdentifier). Observed RED: pytest collection ERROR, ModuleNotFoundError: No module named 'src.physics.layer2.regime_rollup' (module does not exist yet)."
+        },
+        {
+          "id": "c2",
+          "statement": "regime_rollup.py implemented; all test_regime_rollup.py cases pass, distance_share/time_share naming constraint visibly verified",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_regime_rollup.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-regime-rollup-module-1"
+        }
+      ],
+      "constraints": [
+        "NAME THE FIELDS distance_share, NEVER time_share, anywhere in this module",
+        "load_circuit_frame has zero computation inside (thin reader only), read-only connection",
+        "corner_class_i_distance_share values sum to corner_distance_share across classes",
+        "does not modify property_mixture.py, corner_descriptors.py, mixture_stability.py, or arcs.py",
+        "no evo_predictor/latent_power/compound_prior imports",
+        "does not write to data/damage_integrals.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-regime-rollup-module-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_regime_rollup.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-observability-router": {
+      "id": "m2-observability-router",
+      "title": "New src/physics/layer2/observability_router.py: ROUTER_ENTRIES for the four regime tags + citation-resolving unit test",
+      "imperative": "Create src/physics/layer2/observability_router.py implementing ROUTER_ENTRIES: dict[str, list[dict]] mapping each of \"corner\", \"straight_throttle\", \"straight_coast\", \"straight_brake\" to a list of {\"view\": \"<module.ClassName>\", \"citation\": \"<file>:<line>\", \"note\": \"<one-line>\"} entries, grounded in real currently-true code verified by direct read: corner -> lateral_view.LateralView (session_lateral.py, the corner_parts.append([s for s in samples if s.regime == \"corner\"]) line) AND traction_view.TractionView / power_drag_view.PowerDragView (session_traction.py, the _TRACTION_REGIMES = (\"straight_throttle\", \"corner\") line); straight_throttle -> traction_view.TractionView / power_drag_view.PowerDragView (same session_traction.py citation); straight_brake -> braking_view.BrakingView (arcs.py's _BRAKE_REGIME = \"straight_brake\" used by identify_braking_arcs, composed by session_braking.py into decoupled_braking_input.py's brake = regime == _BRAKE_REGIME line); straight_coast -> coast_view.CoastView, citing session_coast.py's prepare_coast_samples honestly: it does NOT read SegmentClassifier's regime field, it derives its own coast mask directly from raw throttle/brake/speed thresholds (thr < 5.0 & brk < 5.0 & ...) -- the note field must say this plainly (indirect/parallel linkage, not a regime==\"straight_coast\" filter) rather than fabricating a filter that does not exist. Use the EXACT real file:line numbers found by reading the files (do not reuse unverified numbers from the handoff prose without confirming them against current line numbers in this worktree). Write tests/unit/physics/layer2/test_observability_router.py: TDD red first (write test, observe failing, attest c1 as red evidence), then a test that iterates every ROUTER_ENTRIES entry, opens the cited file, reads the cited line number, and asserts the line's text contains language matching the claimed regime filter/constant (lightweight text-match, not full re-derivation) -- this is the citation-grounding check per cold critic finding #5.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-regime-rollup-module complete (attested + advanced, 18/18 tests passing)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_observability_router.py written, observed failing (module does not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests/unit/physics/layer2/test_observability_router.py written (TestRouterEntriesShape, TestCitationsResolveAgainstRealSource parametrized over all 4 regime tags, TestStraightCoastHonestlyGroundsIndirectLinkage, TestNoInventedCitations). Observed RED: pytest collection ERROR, ModuleNotFoundError: No module named 'src.physics.layer2.observability_router' (module does not exist yet)."
+        },
+        {
+          "id": "c2",
+          "statement": "observability_router.py implemented; all test_observability_router.py cases pass, every citation resolved against real current source text",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_observability_router.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-observability-router-1"
+        }
+      ],
+      "constraints": [
+        "every citation independently verified by reading the actual file at the claimed line -- no invented line numbers or filters",
+        "straight_coast's CoastView entry states the indirect/parallel mechanism honestly, not a fabricated direct regime filter",
+        "does not modify session_lateral.py, session_traction.py, arcs.py, decoupled_braking_input.py, session_coast.py, session_braking.py",
+        "no evo_predictor/latent_power/compound_prior imports"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-observability-router-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_observability_router.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-build-script-real-run": {
+      "id": "m3-build-script-real-run",
+      "title": "New scripts/build_regime_rollup.py; real-store run producing regime_time_share.csv + F12-verdict metadata; Monza/Monaco evidence",
+      "imperative": "Create scripts/build_regime_rollup.py: thin CLI with --db flag (default C:/Programs/f1Brainz/data/damage_integrals.db), connects READ-ONLY, loads the FULL grip_bin_obs table once, computes descriptors via corner_descriptors.descriptors_from_frame over the pooled full dataset and fits property_mixture.fit_property_mixture ONCE on that pooled set (shared class vocabulary across circuits, not a per-circuit fit), then for every distinct gp_name calls regime_rollup.load_circuit_frame(db, gp_name) and regime_rollup.circuit_distance_share(df, fit), writing one row per circuit (sorted by gp_name) to .agent-work/625-segmentation-substrate/artifacts/regime_time_share.csv with column headers corner_distance_share / straight_distance_share / corner_class_N_distance_share / n_laps / n_rows / gp_name (never time_share). Also reads .agent-work/625-segmentation-substrate/artifacts/f12_holdout_stability.json (real content, not paraphrased) and writes .agent-work/625-segmentation-substrate/artifacts/regime_time_share.meta.json carrying the F12 headline_verdict, n_pass/n_splits, mean/min/max_statistic, a plain-English caveat sentence (\"this rollup's class-membership substrate did NOT pass its held-out-circuit stability check -- treat class-level sub-shares as provisional, not validated\"), and the path to the full F12 artifact; ALSO prepend the CSV itself with a few leading '#'-prefixed comment lines carrying the same headline_verdict + caveat + meta-json path, so the FAIL verdict is readable from the CSV alone without needing to know the sibling file exists. Run it for real against C:/Programs/f1Brainz/data/damage_integrals.db (mixture fit over 612,615 rows may take a couple of minutes -- this is expected). Capture the full stdout transcript, the CSV's first few rows plus the Italy (Monza) and Monaco rows specifically, and the meta content, as command-output evidence. State plainly in the imperative's evidence whether Italy's (Monza's) corner_distance_share < Monaco's on the real run, and that the CSV's own output visibly carries the F12 FAIL verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 and m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 and m2 complete (attested + advanced, 30/30 tests passing total)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "real-store run completes and writes regime_time_share.csv + regime_time_share.meta.json with F12 FAIL verdict visible in both the meta file and the CSV's own leading comment lines",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py scripts/build_regime_rollup.py --db C:/Programs/f1Brainz/data/damage_integrals.db"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-build-script-real-run-1"
+        },
+        {
+          "id": "c2",
+          "statement": "Monza (Italy) vs Monaco corner_distance_share ordering stated plainly from the real CSV output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Real-store run (612615 rows, 22 circuits, mixture fit k=3) confirms Monza (gp_name='Italy') corner_distance_share=0.5186 IS LESS THAN Monaco corner_distance_share=0.8314 -- the expected sanity ordering holds on the real store (Monza is a low-downforce, straight-heavy circuit; Monaco is a tight street circuit with almost no straights)."
+        }
+      ],
+      "constraints": [
+        "CSV filename may keep the mission's 'time_share' wording, but CSV column headers must never say time_share",
+        "F12 FAIL verdict readable from the rollup's own output artifacts (CSV comment header AND meta.json), not only from a separate file a reader might not know to check",
+        "does not write to data/damage_integrals.db",
+        "no evo_predictor/latent_power/compound_prior imports",
+        "no circuits.yaml/production-default changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-build-script-real-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py scripts/build_regime_rollup.py --db C:/Programs/f1Brainz/data/damage_integrals.db",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g4-impl-shipc625",
+    "status": "released",
+    "claimed_at": "2026-07-18T06:37:10.229075+00:00",
+    "last_heartbeat": "2026-07-18T06:49:37.916190+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T07:06:10.219046+00:00"
+  }
+}

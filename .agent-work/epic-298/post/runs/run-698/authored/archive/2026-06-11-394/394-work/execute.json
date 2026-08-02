@@ -1,0 +1,79 @@
+{
+  "work_id": "394",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "g1"
+  ],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "Research evidence and write design note with go/no-go recommendation",
+      "plan": {
+        "description": "Synthesize all available evidence \u00e2\u20ac\u201d #369 A/B, #335 promoted bundle metrics, race_pace_gap.py observable properties, current adapter wiring \u00e2\u20ac\u201d into a design note with an explicit go/no-go recommendation for extending pace-gap form encoding to race recent-history modules. Produce findings file at .agent-work/453/findings/cmdr-394.md and docs/evo/race_form_reencoding_design.md.",
+        "scope": "Read-only research and writing. No src/ changes, no config changes, no DB queries beyond confirming observable availability. All evidence is already in memory from context/plan steps.",
+        "close_criteria": [
+          "Design note exists at .agent-work/453/findings/cmdr-394.md",
+          "Design note contains explicit go/no-go with rationale referencing #369 A/B evidence and promoted #335 numbers",
+          "If go: note names exact quantity, missingness policy, as-of contract, measurement plan",
+          "Note does not justify recommendation by appeal to #451 quali-channel gap finding",
+          "Note addresses why the promoted Brier improvement (0.2008 vs 0.2077) does or does not strengthen the race-extension case"
+        ],
+        "anchors": {
+          "structural": [
+            "_fetch_pace_gap_map gated on task=='quali' in src/evo_predictor/module_adapters/_common.py",
+            "race_pace_gap.integrated_pace_gap in src/evo_predictor/race_pace_gap.py",
+            "RecentHistoryFeatureConfig.form_encoding in recent_history_adapter.py"
+          ],
+          "evidence": [
+            "#369 A/B: mixed results \u00e2\u20ac\u201d driver corr_sigma worse (0.420 vs 0.534), constructor better (0.494 vs 0.427), pairwise_nll_skill regressed both modules",
+            "#335 gold: fused Brier 0.2008 (trained+anchor) vs 0.2077 (baseline+no-anchor) \u00e2\u20ac\u201d compound effect, not just encoding",
+            "promoted race_power_from_recent_history sigma correlations: driver 0.268, constructor 0.574 \u00e2\u20ac\u201d weak/insignificant per unc_diag flags"
+          ],
+          "constraints": [
+            "no src/config changes; honest-null is first-class; no appeal to #451 quali-channel gap"
+          ]
+        }
+      },
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "findings file .agent-work/453/findings/cmdr-394.md exists with go/no-go recommendation",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "cmdr-394-design-note-written"
+        },
+        {
+          "id": "c2",
+          "statement": "recommendation references #369 A/B evidence and #335 promoted bundle numbers",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "cmdr-394-design-note-written"
+        },
+        {
+          "id": "c3",
+          "statement": "if go: exact quantity, missingness policy, as-of contract, measurement plan specified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "cmdr-394-design-note-written"
+        }
+      ],
+      "constraints": [
+        "No src/ changes. No config changes. Read-only. No appeal to #451."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "APPROVE",
+      "finding": "NO-GO: pace-gap form encoding should NOT be extended to race recent-history modules. #369 A/B showed NLL skill regression in both quali modules; promoted Brier improvement conflates anchor+retrain+encoding; race pace is noisier; no race A/B exists. Specification and conditions for future GO documented.",
+      "evidence": [],
+      "rework_count": 0,
+      "triage_candidates": []
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

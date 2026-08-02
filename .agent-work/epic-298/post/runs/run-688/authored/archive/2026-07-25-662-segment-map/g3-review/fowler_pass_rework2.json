@@ -1,0 +1,20 @@
+{
+  "work_id": "g3-review-662-rework2",
+  "diff_ref": "src/physics/segment_map/derivation/sector_nesting.py _merge_slivers left_removable branch (del types[i-1] -> del types[i] + comment) and the new test test_backward_merge_keeps_the_real_neighbors_type_not_the_slivers in tests/unit/physics/segment_map/derivation/test_sector_nesting.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "_merge_slivers's forward (right_removable) and backward (left_removable) branches remain near-mirror-image ~5-line blocks after this fix (same shape flagged in the prior review's Fowler pass, over the same region the bug lived in). The fix restored symmetry by correcting one line rather than removing the duplication; an extraction into a shared '_do_merge(boundaries, types, remove_boundary_idx, remove_type_idx)' helper would make the two directions structurally incapable of diverging again -- non-blocking (repeat of the prior review's observation, not new), worth doing when this file is next touched.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "overridden", "finding": "", "override": {"repo_standard": "src/physics/session_fit.py's own load_quali_session(year, gp_name, session_type, ...) signature (the exact function derive_sector_lines calls, unchanged by this rework)", "reason": "the (year, gp_name, session_type) triple is that callee's own established parameter grouping, not a clump invented here; same override this file's prior review already logged and this rework does not touch derive_sector_lines at all."}},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "src/physics/segment_map/runtime.py's documented int-coded-for-vectorized-branching convention (seg_type_code as int8, same as G2's review precedent)", "reason": "types is a list of the project's own established int-coded SegType values, not an ad hoc primitive; unchanged by this rework, same override the prior review already logged."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The fix and its regression test are fully contained to one function (_merge_slivers) and one new sibling test case; no other call site or test needed to change.", "override": null},
+    {"smell": "divergent-change", "verdict": "overridden", "finding": "", "override": {"repo_standard": "G1's reference_lap.py's own established one-file-per-derivation-gate structure (pure core + data-plumbing wrapper together)", "reason": "sector_nesting.py mixing nest_sectors (pure) and derive_sector_lines (data plumbing) in one file is the project's own precedent, not an accidental grab-bag; this rework does not add a new reason for the file to change, it only corrects an existing one -- same override the prior review already logged."}},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The backward-branch comment was rewritten to state the NOW-TRUE symmetric behavior accurately (it previously would have described behavior the old code did not actually have, which is the failure mode this smell targets) -- comment and code agree.", "override": null}
+  ],
+  "rail_exception": null
+}

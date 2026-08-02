@@ -1,0 +1,807 @@
+{
+  "work_id": "issue-371-module-record",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and docs/architecture/index.md sections for evo_predictor/gold_cycle. Confirm the frozen plan's intent and scope (PROBLEM_STATEMENT.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + architecture sections loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, architecture index evo_predictor/gold_cycle sections; PROBLEM_STATEMENT confirmed by user at resume checkpoint; branch fast-forwarded to adac146 (no scope overlap)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 pure record collection in evaluate_labeled_batches: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1: add an opt-in collect parameter (default off) to evaluate_labeled_batches that enriches each per_event row in-memory with a record entry carrying numpy arrays pi, sigma_pi, target_mu (None-safe), outcome, actual_positions, pair_index, features, dqi, entity_ids plus event metadata available on the batch. Default-off path returns rows byte-identical to today. Function stays pure (no path knowledge). Unit tests on synthetic batches prove default-unchanged and exact array capture. Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "evaluate_labeled_batches stays pure",
+        "default-off rows byte-identical",
+        "simplification_limits strict on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "files": "src/evo_predictor/module_training_orchestration.py, tests/unit/evo_predictor/test_evaluate_labeled_batches_record.py",
+            "tests": "22 passed (new file 19 + existing 3); full evo suite 1213 passed",
+            "simplification": "10 pre-existing violations, 0 new",
+            "agent": "a92e843bee32e0fcd"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 pure record collection: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the G1 plan and IMPLEMENTER_RESULT; dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "r0-r5 all PASS; scrutiny points cleared (sigma_pi error names module/event; 0 new simplification violations)",
+            "agent": "a7453f21727306836"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 pure record collection: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework via implementer or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evo focused unit suite green including new G1 tests",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "r0-r5 all PASS",
+            "agent": "a7453f21727306836"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 sidecar writer/reader + backtest CLI wiring: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G2: new src/evo_predictor/module_record.py with write + load functions ({stem}.record.npz event-keyed arrays + {stem}.record.json stdlib index with module identity, per-event usable/label flags, entity_ids, gp metadata); cmd_module_backtest gains --emit-module-record, strips record arrays from the JSON payload, spills sidecars next to args.output; [reuse] early-return requires sidecars present when flag on else re-runs. Unit tests: exact round-trip (np.array_equal), reuse guard, payload JSON unchanged, index lists every emitted event. Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 record rows available in evaluate_labeled_batches",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 complete and committed (5c832fe): collect_record rows available in evaluate_labeled_batches"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "backtest JSON payload unchanged",
+        "one canonical record format",
+        "no silent reuse without sidecars when flag on",
+        "simplification_limits strict on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK r4h: replace silent record_rows filter with fail-fast raise naming events missing a record when emit on; add covering test"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "files": "src/evo_predictor/module_record.py (new), tests/unit/evo_predictor/test_module_record.py (new), src/evo_predictor/run.py (+34/-3)",
+            "tests": "22/22 module_record; full evo suite 1240 passed",
+            "simplification": "PASS on touched files; 6 pre-existing dir-wide, none new",
+            "note": "resumed after first dispatch died mid-flight (socket error); resume agent audited inherited code then completed run.py wiring",
+            "agent": "a67c26e87758ad6a0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "rework": "1",
+            "fix": "collect_record_rows pure helper (module_record.py) + fail-fast ValueError naming missing events in run.py; 5 new tests",
+            "tests": "1245 passed full evo suite; simplification PASS",
+            "agent": "a15800d908e194163"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 sidecar writer/reader + CLI: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the G2 plan and IMPLEMENTER_RESULT; dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Re-verify rework round 1 (fail-fast collect_record_rows) before integrate"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "blocker": "r4h: run.py record_rows filter silently excludes rows lacking 'record'; must fail fast naming missing events",
+            "other_checks": "16/17 PASS incl. independent re-run + adversarial probe",
+            "agent": "a9adc13e97bd6846b"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "rework verified: fail-fast helper, 5 tests, 1245 suite green, scope clean; 16 prior checks unaltered",
+            "agent": "a03c14b7be7d0f12b"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 sidecar writer/reader + CLI: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE after rework round 1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evo focused unit suite green including G2 round-trip/reuse/payload tests",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "re-review APPROVE post-rework",
+            "agent": "a03c14b7be7d0f12b"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 gold-cycle config + threading + docs: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G3: GoldCycleRuntimeConfig gains emit_module_record bool parsed via runtime_raw.get('emit_module_record', False) with type validation (utilization precedent); NOT echoed into build_run_config/details.json; override-section mapping + gold-cycle parser arg following the existing override pattern; _config_to_raw includes it; thread config.runtime.emit_module_record into all three backtest template builders (mains runner.py, LOSO + calibration runner_support.py); gold_defaults.toml gains explicit false with comment; docs/evo/ page documenting the record contract linked from gold_module_training_cycle.md. Unit tests: default false, parse true, invalid type rejected, override accepted in smoke/research + rejected in gold mode, template builders carry the flag. Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 CLI flag and sidecar writer exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 complete and committed: --emit-module-record CLI flag + sidecar writer exist"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "flag NOT echoed into details.json/run_config",
+        "existing configs stay valid without the key",
+        "docs updated in same gate",
+        "simplification_limits strict on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "files": "gold_cycle/config.py, runner.py, runner_support.py, run.py, gold_defaults.toml, docs/evo/module_backtest_record.md (new), analysis_refresh.md, 2 test files (+15 tests)",
+            "tests": "110 targeted; 1258 full evo suite",
+            "simplification": "PASS 7 touched files; 11 pre-existing dir-wide, none new",
+            "note": "handoff link target docs/evo/gold_module_training_cycle.md does not exist; linked from analysis_refresh.md instead",
+            "agent": "a548db673838bddef"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 config + threading + docs: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the G3 plan and IMPLEMENTER_RESULT; dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "threading exact-match PASS, bool guard PASS, docs line-by-line PASS, link judgment: analysis_refresh.md correct home",
+            "agent": "a97fbeb5d44dbe577"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 config + threading + docs: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evo focused unit suite green including G3 config/builder tests",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "G3 review APPROVE",
+            "agent": "a97fbeb5d44dbe577"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 bounded integration test + flag-on smoke evidence run: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G4: (a) tests/integration/test_module_record_emit.py in the determinism-test mold (skip-if-no-data; train one cheap recent_history quali module bounded: 2 train years, max_rounds_per_year 1, 2 epochs, threads 1; run cmd_module_backtest twice on the same bundle flag off/on; assert byte-identical backtest JSON, .record.* only flag-on, exact round-trip of the real record, index lists every scored event); (b) evidence smoke gold cycle: dedicated TOML under .agent-work/issue-371-module-record/evidence/ (mode smoke, 2 train years, emit_fusion_train_rows leave_one_season_out, emit_module_record true, max_rounds_per_year bounded, output_dir+report_dir inside the evidence dir), run py -m src.evo_predictor.run gold-cycle, capture file listing showing .record.npz+.record.json across mains, LOSO folds, and calibration backtests dirs plus one loaded-record sanity printout into evidence/g4-smoke-run.md. Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 config threading complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 complete and committed: config threading in place across all three builders"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "smoke evidence run writes only inside .agent-work evidence dir",
+        "integration test skips cleanly where data absent",
+        "simplification_limits strict on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK: relocate escaped unc_cal artifact into evidence dir + disclose pollution honestly in g4-smoke-run.md (no src changes)"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "files": "tests/integration/test_module_record_emit.py (new); evidence/g4_smoke_config.toml + g4-smoke-run.md + run artifacts",
+            "tests": "integration test 1 passed (runs, not skips); simplification PASS",
+            "smoke": "97s wall clock; 96 sidecars across mains(12)/LOSO(24)/calibration(12... per-family counts in evidence); details.json no-echo confirmed",
+            "agent": "a0b9433f32abd619a"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "rework": "1",
+            "fix": "escaped unc_cal artifact relocated to evidence/escaped_artifacts/; Pollution disclosure section added to g4-smoke-run.md; May-20 pre-existing file untouched",
+            "agent": "a3d9a827cc9c62dd9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 integration + smoke evidence: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the G4 plan and IMPLEMENTER_RESULT; dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Re-verify rework round 1 (pollution relocation + disclosure) before integrate"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "blocker": "smoke run leaked params/gold/uncertainty_calibration/unc_cal_260605_234006_2022thru2023_smoke1.json (hardcoded promotion path, pre-existing); evidence doc does not disclose it",
+            "other_checks": "test deliverable fully verified: seeding sound, raw byte-equality, timing explained (real 0.7s training), 96 sidecars verified on disk, no-echo verified",
+            "agent": "a6d468e94b65f6d55"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "remediation verified on disk; test deliverable undisturbed (1 passed); zero src diffs",
+            "agent": "a4afcd7848c1dcdcc"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 integration + smoke evidence: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions and the evidence artifact, advance. BLOCK: rework or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE after rework round 1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "bounded integration test green (runs with local data)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/integration/test_module_record_emit.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "checks": "G4 re-review APPROVE",
+            "agent": "a4afcd7848c1dcdcc"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/integration/test_module_record_emit.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "Pre-existing simplification_limits violations in module_training_orchestration.py: build_labeled_batches_for_module (cc=36, 160 lines), build_evidence_mode_eval_batches (106 lines), build_recent_history_holdout_eval_batches (148 lines) \u2014 decomposition pass candidate (out of #371 scope)"
+    },
+    {
+      "id": "tc2",
+      "from": "g3-integrate",
+      "statement": "docs/DOCUMENTATION.md Active Domain Reference table missing entry for new docs/evo/module_backtest_record.md (added by this run; G3 scope omitted the index file). One-line addition."
+    },
+    {
+      "id": "tc3",
+      "from": "g4-implement",
+      "statement": "Backtest inference nondeterminism (pre-existing, NOT #371): cmd_backtest_latent_power_module/evaluate_labeled_batches never call network.eval(), so dropout is active during backtest inference \u2014 metrics and emitted records carry dropout noise; sequential same-bundle backtests differ without RNG seeding. Training-side _evaluate_module does .eval() correctly. Fix changes promoted-path backtest bytes => needs own issue + baseline comparison. Found by G4 byte-identity test; q4 interrogation assumption 'inference deterministic' was wrong."
+    },
+    {
+      "id": "tc4",
+      "from": "g4-review",
+      "statement": "Hardcoded calibration promotion path: gold_cycle/runner.py:341-343 writes uncertainty-calibration artifact to params/gold/uncertainty_calibration/{slug}.json ignoring config output_dir/report_dir \u2014 every bounded/smoke/evidence run promotes into the repo tree, defeating output isolation. Route through report_dir or add promotion toggle. Root cause of G4 pollution blocker; forbidden to fix in G4."
+    }
+  ],
+  "blockers": []
+}

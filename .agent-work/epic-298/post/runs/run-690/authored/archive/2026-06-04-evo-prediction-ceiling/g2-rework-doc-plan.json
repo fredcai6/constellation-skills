@@ -1,0 +1,121 @@
+{
+  "work_id": "g2-rework-doc-fix",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix-doc",
+    "m2-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context and verify handoff completeness",
+      "imperative": "Read the target doc; confirm handoff has: task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Handoff complete: task=update stale framing, scope=docs/evo/analysis_refresh.md only, exclusions=no code, evidence=diff+pytest green, stop=no new code changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doc read at lines 155-167; handoff complete: task=update stale doc framing, scope=docs/evo/analysis_refresh.md only, exclusions=no code/other docs, evidence=diff+pytest, stop=no new code changes"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix-doc": {
+      "id": "m1-fix-doc",
+      "title": "Update analysis_refresh.md to honest framing",
+      "imperative": "Edit lines ~161-167 to distinguish significant-wrong-sign (defect) from insignificant (advisory/expected). Scan the rest of the doc for any other near-zero/insignificant-as-defect framing and fix consistently. Do NOT change any code. Do NOT touch other docs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m0-context complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context is complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/evo/analysis_refresh.md no longer describes insignificant/near-zero correlations as a defect; distinguishes significant-wrong-sign (defect) from insignificant (advisory/expected)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Lines 161-170 updated: near-zero removed; now distinguishes significant-wrong-sign (defect) from insignificant (advisory). No other correlation-as-defect framing found in rest of doc."
+        }
+      ],
+      "constraints": [
+        "ONLY docs/evo/analysis_refresh.md \u2014 no code, no other docs",
+        "Keep issue refs #314, #316",
+        "Match doc voice"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-verify": {
+      "id": "m2-verify",
+      "title": "Verify: git status clean except doc + pre-existing G2 files; tests pass",
+      "imperative": "Run git status --porcelain and confirm only the doc plus pre-existing G2 src/test files appear. Run the G2 test suite. Collect evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-fix-doc complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-fix-doc complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py tests/unit/evo_predictor/test_gold_module_cycle.py -q exits 0",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py tests/unit/evo_predictor/test_gold_module_cycle.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py tests/unit/evo_predictor/test_gold_module_cycle.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

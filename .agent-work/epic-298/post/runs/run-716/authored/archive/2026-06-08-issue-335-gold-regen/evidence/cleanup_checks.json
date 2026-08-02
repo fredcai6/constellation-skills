@@ -1,0 +1,5 @@
+{
+  "nll_ok": true,
+  "race_count": 24,
+  "threads_note": "utilization=max in src/utils/utilization.py _LEVEL_PLANS maps to threads_per_worker=1 (lambda cores: max(1, cores-1), threads_per_worker=1). At n_workers=1, run_jobs short-circuits to a sequential in-process loop — no pool, no pickling — so results are byte-identical to the plain sequential path. This is the bit-reproducible regime. _WEIGHT_TOL=1e-6 (#362) is accepted under the threads=1 argument with no full-scale 2-run check; user decision confirmed in the interrogation."
+}

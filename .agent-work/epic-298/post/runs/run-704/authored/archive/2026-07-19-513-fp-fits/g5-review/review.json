@@ -1,0 +1,155 @@
+{
+  "work_id": "513-fp-fits-g5-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, windows.md, CREW_CONTEXT.md, GLOSSARY.md, engine-config.json, handoff-g5-review.md, handoff-g5.md, result-g5-implement.md, GATE_PROTOCOL.md, and the full diff of all 4 touched src files + 3 touched/new test files.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All close criteria reproduced independently: (1) estimate_session gained session_type/mass_kg/mass_sigma_kg/db_path with the :115 load literal flipped from 'Q' to session_type (diff confirmed); (2) _resolve_session_mass's Q branch returns quali_mass(year), None -- byte-identical to old unconditional m=quali_mass(year), proven by test_default_call_and_explicit_q_call_produce_identical_mass + Q/store regression 66 passed; (3) estimate_batch.run_estimate_batch now passes session_type=session_type into estimate_fn (previously omitted -- the exact bug named); (4) grip-anchor-first confirmed: _axis_statuses' fp_mass_unresolved flag only touches cda/p_max/b_b/b_t, leaving a_b/a_t/A0/A2 status untouched (test_axis_status_fp_with_mass_sigma_widens_longitudinal_axes_only); (5) FP explicit-unknown widening reuses the EXISTING effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC (both unmodified by this diff) -- only the boolean status feeding them changed, no parallel sigma math added; (6) #560 _support_trust_profile reason split (practice_session_fp_mass_uncertainty for FP vs unchanged practice_session_quali_mass_assumption for other non-Q) with trust degrade unchanged at medium -- no new hard floor. Live 2023 FP smoke fit is DEFERRED to G7 per the review handoff's own accepted-disposition instruction -- not blocked.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --short confirms only the 4 Allowed-Scope src files + 3 test files touched -- backfill_estimate_store.py (flagged as a Trust-limitation triage candidate, correctly NOT touched) is genuinely untouched, confirmed by absence from git status. All Specific Exclusions honored: git status --short data/ is clean (no real backfill/re-pop, no data/*.db write); mass is resolved ONCE per session and passed uniformly into braking/traction/power_drag fit calls (no per-observation threading -- verified in session_estimator.py's fit loop, same m/m_sigma reused every round); braking_view.py/traction_view.py/lateral_view.py source files are absent from the diff entirely -- grip/lateral mass-cancelling math is untouched, only the _axis_statuses STATUS routing (not the view fit math) changed; no driver_utility (#628) references anywhere in the diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced every required evidence item, not merely re-reading the report: (1) test_session_estimator_fp.py alone -- 21 passed; (2) combined test_session_estimator_fp.py + test_estimate_batch.py + test_estimate_store.py -- 82 passed (exact match to result-g5-implement.md); (3) test_estimate_batch.py + test_estimate_store.py + test_estimate_store_cumulative.py -- 66 passed; (4) simplification_limits --baseline on the 4 touched src files -- PASS (4 files checked); (5) git status --short data/ -- clean; (6) genuine TDD RED reproduced live via git stash push -- src/physics/layer2/session_estimator.py -> ImportError: cannot import name '_fastest_clean_lap' (exact match to the claimed evidence), then git stash pop cleanly restored the working tree (git status identical before/after, 21/21 green again). The deferred live-2023-telemetry smoke fit is not required per the review handoff's explicit deferral instruction; the structural-verification substitute in result-g5-implement.md is consistent with the independently-reproduced axis-status test behavior (test_axis_status_fp_with_mass_sigma_widens_longitudinal_axes_only, etc.), so it is not fabricated.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked every handoff constraint individually: physics-region import discipline (grep for evo/latent_power/compound_prior/fastf1 across all 4 touched files + fp_lap_latent.py -- zero hits); Q byte-identical (verified above); sigma-widens-never-shifts (verified above, effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC in estimate_store_fields.py are UNMODIFIED by this diff -- only the boolean status feeding them changed, confirmed by diff inspection); #627 machinery reused verbatim (no new sigma formula anywhere in the diff); fp_mass/fp_lap_latent correctly imported and reused from G2 (from src.physics.layer2.fp_lap_latent import extract_fp_lap_latent; from src.physics.mass_model import fp_mass, quali_mass). CREW_CONTEXT cross-check: no print()/logging added; no new module-level mutable state; getattr(est, 'mass_sigma_kg', None) matches the file's PRE-EXISTING getattr(est, 'braking'/'traction'/'lateral', None) duck-typing convention, not new caller-probing; docstrings are thorough and match surrounding convention; degradation/uncertainty-inflation behavior is visible in both code comments and tests, satisfying CREW_CONTEXT's 'Model degradation... must be visible in code and tests.'",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes verified against source, not trusted: (1) weekend_state/frame.py's 'session_type=Q hardcoded, unaffected by FP mass' claim -- confirmed directly, line 74 literally has WHERE session_type='Q' AND fit_status='ok'. (2) scripts/backfill_estimate_store.py 'D9-canonical writer has the identical missing-session_type bug' claim -- confirmed directly at line 140-143: estimate_session(year=..., gp=..., drivers=..., cache=..., session=..., rho=..., refine=..., hp_store=...) genuinely omits session_type=session_type even though the module's own docstring (line 4) says 'THE one writer.' This is a REAL, correctly-diagnosed gap: any FP row produced through this canonical script today would still silently default to quali_mass. Correctly flagged as HIGH-priority triage (out of this gate's Allowed Scope, not fixed here, not silently dropped -- appears in both Map Impact/Trust-limitations and Out-of-scope observations). Structural anchors in Map Impact match the diff exactly (session_estimator.py::estimate_session, estimate_batch.py::run_estimate_batch, estimate_store_fields.py::_axis_statuses/_support_trust_profile, estimate_store.py::record_from_estimate/EstimateRecord). No graph-impact claim found to be overstated or missing. Flagging the same backfill_estimate_store.py gap onward as a triage candidate from this review too (see Out-of-scope observations in REVIEW_RESULT).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to .agent-work/513-fp-fits/g5-review/fowler-pass.json and cleared scripts/verify_fowler_pass.py (fowler pass ok: smells=12, flagged=[feature-envy, data-clumps, long-parameter-list], overridden=[primitive-obsession, speculative-generality]). All 3 flagged smells are minor, non-blocking observations (feature-envy in _fastest_clean_lap's placement re: fp_lap_latent.py, a data-clump in the mass-resolution parameter set, and estimate_session's growing parameter count) -- none affect correctness or the two hard checks. Both overrides carry a logged repo_standard + reason: primitive-obsession overridden against the module's own established raw-float/raw-str field convention (mass_kg already existed pre-g5 as a bare float); speculative-generality overridden against GATE_PROTOCOL.md's frozen F2/F10 mass-sigma-propagation requirement + the handoff's own Authority section explicitly mandating the db_path/mass_kg/mass_sigma_kg hooks for G7's already-scheduled consumption (also exercised directly by 3 of the 21 new unit tests, not dead code).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "G5 (estimate_session FP wiring + explicit-unknown + #560) APPROVED. Both hard checks independently reproduced against source + live test runs: (1) Q byte-identical -- _resolve_session_mass's Q branch returns quali_mass(year), None, byte-identical to the old unconditional m=quali_mass(year); proven by test + a live git-stash TDD-RED reproduction; 66/66 + 82/82 Q/store regression green. (2) sigma widens-never-shifts -- FP mass sigma widening is 100% routed through the PRE-EXISTING, UNMODIFIED effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC machinery via a boolean status flip in _axis_statuses; no parallel sigma path; grip/lateral axes (a_b/a_t/A0/A2) independently confirmed untouched; no mean ever shifted (drag_area_closed_m2 etc. only nulled on genuine PowerDrag degeneracy, unrelated to the FP-sigma flag). FP path reachability confirmed structurally: estimate_batch.run_estimate_batch now passes session_type into both estimate_fn and record_fn (previously the estimate_fn call omitted it -- the exact bug named in the handoff). 21 new FP unit tests + full touched-region suite (149 tests across the 3 required files) all independently reproduced green; simplification_limits --baseline PASS; git status --short data/ clean. Fowler pass cleared the rail (2 minor non-blocking flags, 2 logged overrides). One correctly-surfaced, correctly-out-of-scope HIGH triage candidate: scripts/backfill_estimate_store.py has the identical missing-session_type bug (independently re-confirmed by this review at source, line 140-143) and must be fixed before any real FP backfill (#646)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "scripts/backfill_estimate_store.py (D9-canonical session_estimates writer per its own module docstring) does not pass session_type=session_type into its estimate_session(...) call at line 140-143, despite already loading the session with the correct session_type via load_quali_session. Independently re-confirmed by this review (source read, not just the implementer's claim). Any real FP backfill run through this canonical script would silently default every FP row back to quali_mass -- the exact bias #513 g5 exists to fix. HIGH priority: must land before #646's real FP backfill."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipI-513-g5-1784477667",
+    "status": "released",
+    "claimed_at": "2026-07-19T16:14:27.951498+00:00",
+    "last_heartbeat": "2026-07-19T16:22:36.939508+00:00",
+    "claimed_by": "ShipI-513",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T16:23:34.079594+00:00"
+  }
+}

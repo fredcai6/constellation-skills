@@ -1,0 +1,249 @@
+{
+  "work_id": "issue-439-g4-prior-fallback",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-pipeline-fallback",
+    "m2-thread-provenance",
+    "m3-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and confirm loader fallback + handoff completeness",
+      "imperative": "Read CREW_CONTEXT.md, the g4 handoff, pipeline.py, orchestrator.py, attestation.py, periods.py, runtime_normalization.py, run_season_alignment.py, and the existing walkforward tests. Confirm the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions, return format). Empirically confirm the STOP CONDITION: with no 2025 prior dir present, load_time_safe_compound_prior(target_year=2025, allow_same_season_research=True) falls back to a prior-season (cross-season-safe, zero-2025) artifact. If it does NOT fall back, block and report.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff loaded and complete; loader empirically confirmed to fall back to prior-season (source_season<2025) when 2025 dir absent",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All context files read; handoff complete (all 8 sections); loader fallback empirically confirmed (source_season=2024 prior_season when 2025 absent)"
+        }
+      ],
+      "constraints": [
+        "DB-only",
+        "py not python",
+        "repo-root",
+        "do not modify the solver or fit_compound_prior"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "loader-probe",
+          "payload": {
+            "result": "CompoundPriorArtifact source_season=2024 availability_rule=prior_season leakage_mode=None",
+            "meaning": "no 2025 dir => prior_season(2024), zero 2025 data, leakage-safe; same as promoted gold"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-pipeline-fallback": {
+      "id": "m1-pipeline-fallback",
+      "title": "pipeline._build_prior_root: best-effort as-of-N with explicit cross-season fallback",
+      "imperative": "TDD (test-after allowed, but write the unit test for both paths). Add a frozen PriorBuildResult(prior_mode, prior_through_round) and make _build_prior_root return it: try the as-of-N run_year/copy; on failure (any Exception from run_year or a missing summary) leave NO <period>/compound_prior/2025 dir (only the copied 2018-2024 train-year priors), log an explicit fallback message naming period + cutoff N + cross-season, and return PriorBuildResult('cross_season_fallback', 0). On success return PriorBuildResult('as_of_n', N). run_cutoff_period propagates prior_mode/prior_through_round onto PeriodPredictions. Add the unit test: mock run_year to raise -> cross_season_fallback/0 recorded AND no 2025 dir created; run_year succeeds -> as_of_n/N recorded.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded; loader fallback confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; loader fallback confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "PriorBuildResult carries prior_mode/through_round; failed as-of-N build no longer raises, records cross_season_fallback/0 and leaves no 2025 dir; success records as_of_n/N; new pipeline unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_pipeline.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-pipeline-fallback-2"
+        }
+      ],
+      "constraints": [
+        "Do NOT modify the compound-prior solver or fit_compound_prior",
+        "Explicit/recorded fallback (no silent latest-value); log message names period+N+cross-season",
+        "Touch only pipeline.py + its test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-pipeline-fallback-1",
+          "type": "test-run",
+          "payload": {
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_pipeline.py -q",
+            "result": "17 passed",
+            "note": "5 new fallback tests: cross_season on run_year failure (SystemExit), partial-2025-dir removed, as_of_n success records N, missing gold prior hard-fails, provenance propagated"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-pipeline-fallback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/test_pipeline.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-thread-provenance": {
+      "id": "m2-thread-provenance",
+      "title": "Thread effective prior_mode/prior_through_round through orchestrator into attestation + summary",
+      "imperative": "TDD. PeriodPredictions carries prior_mode + prior_through_round. Orchestrator._cutoff_race_rows uses the EFFECTIVE prior_through_round (from predictions, not period.prior_through_round) and prior_mode in each race row; P0 rows record prior_mode='promoted_gold' (cross-season, through_round 0). attestation receives the effective compound_prior_through_round (no change to the leakage RULE). per_race summary rows + .md add a prior_mode column. Add orchestrator unit tests: a fake pipeline returning cross_season_fallback/0 -> rows record prior_mode + effective through_round 0, attestation passes; as_of_n/N -> through_round N recorded; both surface prior_mode in the summary.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 pipeline fallback landed and tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 landed: PriorBuildResult + pipeline fallback tested green (17 pass)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "summary per_race rows carry prior_mode + effective compound_prior_through_round; attestation uses effective value and passes for both modes; .md shows prior mode; orchestrator + run-script tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-thread-provenance-2"
+        }
+      ],
+      "constraints": [
+        "Attestation leakage RULE unchanged \u2014 only the input prior_through_round value changes",
+        "Do NOT change G1/G2 semantics, scoring, gold defaults, promoted params/gold",
+        "Touch only orchestrator.py + attestation.py (if needed) + their tests + run-script summary surfacing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-thread-provenance-1",
+          "type": "test-run",
+          "payload": {
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward -q",
+            "result": "93 passed",
+            "note": "effective prior_mode+through_round threaded to attestation+summary+md; 4 new provenance tests (cross_season passes attestation at 0, as_of_n at cutoff, P0 promoted_gold, md column)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-thread-provenance-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-evidence": {
+      "id": "m3-evidence",
+      "title": "Full walkforward suite green, simplification PASS, real P1 fallback check",
+      "imperative": "Run the full tests/unit/evo_predictor/walkforward -q suite (green). Run py -m src.utils.simplification_limits --paths on the touched src/ + tests/ paths (PASS). Drive the REAL _build_prior_root for P1 (N=6) against the baselined P1 alignment parquets: assert it logs the cross-season fallback (the as-of-6 solve genuinely fails today), returns cross_season_fallback/0, and leaves no <period>/compound_prior/2025 dir; and that the resulting period prior root resolves via the loader to a source_season<2025 (zero-2025) artifact. Paste all evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 + m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1+m2 complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full walkforward suite green AND simplification PASS AND real P1 _build_prior_root logs cross-season fallback, returns cross_season_fallback/0, leaves no 2025 dir, loader resolves to source_season<2025",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-evidence-3"
+        }
+      ],
+      "constraints": [
+        "Do NOT run the full multi-hour backtest",
+        "DB-only",
+        "py",
+        "repo-root"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-evidence-1",
+          "type": "simplification",
+          "payload": {
+            "command": "py -m src.utils.simplification_limits --paths <4 touched files>",
+            "result": "PASS (4 files checked)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-evidence-2",
+          "type": "real-p1-check",
+          "payload": {
+            "solver": "Bounded constrained compound prior solve did not converge: maximum number of function evaluations exceeded -> run_year sys.exit(1)",
+            "result": "prior_mode=cross_season_fallback through_round=0; no 2025 dir; train-years 2018-2024 present; loader resolved source_season=2024 prior_season (zero 2025); PASS"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-evidence-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,158 @@
+{
+  "work_id": "663-grip-g-g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, the g1-implement-handoff, g1-implement-result, g1-review-handoff, and the mirrored reference src/physics/layer2/estimate_store.py. Diff target files (grip_store.py, test_grip_store.py) read in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Field list matches implement-handoff exactly (20 fields incl PK). PK is session-level (year,gp_name,session_type), not per-constructor, as mandated. GripStore has own standalone SQLite DB with has/upsert/load. _migrate_missing_columns mirrors estimate_store.py:400-412 structurally (PRAGMA table_info diff + ALTER TABLE ADD COLUMN, no drop/rename). error_record() present, never-lose-a-failure. Independently re-ran tests via corrected launcher: 9/9 pass (reproduced). Independently confirmed plain py fails (ModuleNotFoundError fastf1) validating the environment-note claim. git check-ignore exit=1 for both new files (reproduced).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows only the two allowed new files (grip_store.py, test_grip_store.py) plus .agent-work workflow scratch -- no modified/tracked files, estimate_store.py untouched. grip_store.py contains no curve-fitting logic (g2) and no batch driver (g3) -- only the dataclass, GripStore CRUD, and error_record().",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All required evidence present and independently reproduced: pytest 9/9 pass (real launcher), git check-ignore exit=1 x2, additive-migration confirmation paragraph citing estimate_store.py:400-412. The additive-migration test (test_migrate_missing_columns_additive_self_heal) is genuine, not tautological: hand-crafts a 4-column legacy table + pre-existing row, opens via GripStore, asserts new columns appear, old row's fit_status survives, curve_asymptote backfills None, and the store remains writable for new rows afterward -- satisfies the handoff's explicit non-tautological requirement.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCKER: CREW_CONTEXT.md's project-specific simplification-limits gate ('Verification By Region' + 'Review Blockers') is a documented review blocker when skipped or failing on in-scope Python -- and it fails here. Ran the documented strict-on-changed-trees command (py -m src.utils.simplification_limits --paths <touched>, no --baseline -- --baseline only activates the file_lines metric per config/simplification_baseline.json's baseline_metrics=['file_lines'], so it is the WRONG invocation for this check): FAIL, 2 violations, both in tests/unit/physics/layer2/test_grip_store.py -- test_error_record_never_loses_a_failure cyclomatic_complexity=20 (limit <20) and test_load_roundtrips_field_values cyclomatic_complexity=22 (limit <20), driven by radon counting each of the many sequential field-by-field assert statements. grip_store.py itself passes cleanly (checked alone). The implementer's IMPLEMENTER_RESULT never ran or mentioned this check at all despite it being an explicit region-verification requirement for every source change. All other quality checks pass: no mutable module-level state (only the immutable _PK tuple), no module-level DB singleton, fail-visible must_exist guard, naming/doc conventions match estimate_store.py, no logging needed (mirrors precedent), Optional-field convention correctly mirrors EstimateRecord's own no-default-Optional pattern (documented, reasoned deviation from close-criteria literal float/int typing on curve/count fields -- necessary so error_record() can null them, consistent with 'never lose a failure').",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence. Map Impact notes in IMPLEMENTER_RESULT match the diff exactly: struct:physics.layer2 new sibling module (confirmed, no existing file touched); new capability, not yet consumed (confirmed, no wiring); assumption:additive-only-migration honored (confirmed via test); PK decision pressure correctly left ungraded/unrevised for Cartographer (implementation uses (year,gp_name,session_type) exactly as pre-decided, not revisited); claim:cumulative-track-laps-reuse field named cumulative_track_laps_max exactly as this review handoff's own Map Anchors independently expect. No missing/overstated structural or capability claims. No new out-of-scope discovery beyond what the implement handoff already named for g2/g3 -- nothing to route to Triage from this gate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Fowler pass recorded to .agent-work/663-grip-g/g1-review/fowler_pass.json, verify_fowler_pass.py exits 0 (12/12 smells rendered, no skips, both overrides carry a logged standard+reason). Verdict: long-method FLAGGED (test_load_roundtrips_field_values CC=22, test_error_record_never_loses_a_failure CC=20 -- same root cause as the r4-quality BLOCKER, not a separate issue). duplicated-code / data-clumps / primitive-obsession OVERRIDDEN (each mirrors estimate_store.py's own precedented convention per the handoff's explicit design-it-twice-skipped directive; duplicated-code additionally noted as a Triage candidate for a future shared-base extraction now that 2 real instances exist). Remaining 8 baseline smells ABSENT. Recording fail here because long-method is a real flagged finding tied to the open r4 blocker, not because the pass itself was incomplete.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r4-quality: BLOCKER: CREW_CONTEXT.md's project-specific simplification-limits gate ('Verification By Region' + 'Review Blockers') is a documented review blocker when skipped or failing on in-scope Python -- and it fails here. Ran the documented strict-on-changed-trees command (py -m src.utils.simplification_limits --paths <touched>, no --baseline -- --baseline only activates the file_lines metric per config/simplification_baseline.json's baseline_metrics=['file_lines'], so it is the WRONG invocation for this check): FAIL, 2 violations, both in tests/unit/physics/layer2/test_grip_store.py -- test_error_record_never_loses_a_failure cyclomatic_complexity=20 (limit <20) and test_load_roundtrips_field_values cyclomatic_complexity=22 (limit <20), driven by radon counting each of the many sequential field-by-field assert statements. grip_store.py itself passes cleanly (checked alone). The implementer's IMPLEMENTER_RESULT never ran or mentioned this check at all despite it being an explicit region-verification requirement for every source change. All other quality checks pass: no mutable module-level state (only the immutable _PK tuple), no module-level DB singleton, fail-visible must_exist guard, naming/doc conventions match estimate_store.py, no logging needed (mirrors precedent), Optional-field convention correctly mirrors EstimateRecord's own no-default-Optional pattern (documented, reasoned deviation from close-criteria literal float/int typing on curve/count fields -- necessary so error_record() can null them, consistent with 'never lose a failure').",
+      "r6-fowler: Fowler pass recorded to .agent-work/663-grip-g/g1-review/fowler_pass.json, verify_fowler_pass.py exits 0 (12/12 smells rendered, no skips, both overrides carry a logged standard+reason). Verdict: long-method FLAGGED (test_load_roundtrips_field_values CC=22, test_error_record_never_loses_a_failure CC=20 -- same root cause as the r4-quality BLOCKER, not a separate issue). duplicated-code / data-clumps / primitive-obsession OVERRIDDEN (each mirrors estimate_store.py's own precedented convention per the handoff's explicit design-it-twice-skipped directive; duplicated-code additionally noted as a Triage candidate for a future shared-base extraction now that 2 real instances exist). Remaining 8 baseline smells ABSENT. Recording fail here because long-method is a real flagged finding tied to the open r4 blocker, not because the pass itself was incomplete."
+    ],
+    "summary": "BLOCK: grip_store.py + test_grip_store.py correctly implement the g1-implement-handoff's precedented artifact-store shape (field list, session-level PK, additive migration, error_record, has/upsert/load) -- r1/r2/r3/r5 all pass, all evidence independently reproduced (9/9 tests via corrected launcher, git check-ignore exit=1 x2). BLOCKING defect: the project's own documented simplification-limits gate (CREW_CONTEXT.md, strict-on-changed-trees invocation) fails on 2 test functions in test_grip_store.py (cyclomatic_complexity 20 and 22, limit <20) -- never run or reported by the implementer. Fix is small (split the two long field-by-field assertion sequences) and does not touch grip_store.py itself, which passes cleanly alone. One Fowler smell (long-method) flagged for the same reason; duplicated-code/data-clumps/primitive-obsession smells are legitimately overridden by the handoff's explicit mirror-estimate_store.py directive. A duplicated-code Triage candidate (future shared SQLite-store base) was flagged, out of scope for this gate."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "Future triage: extract a shared lightweight SQLite-record-store base (own DB file, additive-migration, INSERT OR REPLACE upsert, WHERE-from-non-None-args load) now that estimate_store.EstimateStore and grip_store.GripStore are two real, near-identical instances of the same pattern (deep-module doctrine: one adapter is a hypothetical seam, two is a real one). Not scoped to #663 g1 -- the handoff explicitly directed mirroring the precedented shape rather than inventing a shared abstraction now."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g1-review-cmdr663",
+    "status": "released",
+    "claimed_at": "2026-07-25T16:00:13.968988+00:00",
+    "last_heartbeat": "2026-07-25T16:05:50.175391+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T16:06:51.430839+00:00"
+  }
+}

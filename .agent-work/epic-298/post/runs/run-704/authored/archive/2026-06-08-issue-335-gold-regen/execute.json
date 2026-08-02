@@ -1,0 +1,1115 @@
+{
+  "work_id": "issue-335-gold-regen",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "gfix-implement",
+    "gfix-review",
+    "gfix-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-decide",
+    "g5-promote",
+    "g5-review",
+    "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/architecture/packets/evo_predictor.md, docs/architecture/packets/data.md, and .agent-work/issue-335-gold-regen/PROBLEM_STATEMENT.md. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + relevant packets loaded; frozen plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "evo + data packets, orchestrator context, glossary, problem statement read; --utilization max flag confirmed on gold-cycle; baseline=260603_173742 (packet cites stale 260530 -> reconcile note)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 activate anchor + prepare arms + smoke: implement",
+      "imperative": "Dispatch a constellation-implementer subagent (model: sonnet) with a filled IMPLEMENTER_HANDOFF: (a) flip quali_pace_anchor_enabled false->true in configs/evo/gold_defaults.toml (alpha 0.5 already set); leave utilization committed value unchanged (max passed per-run). (b) Create the Arm B run config .agent-work/issue-335-gold-regen/configs/armB_quali_pace_gap.toml = a copy of gold_defaults.toml with recent_history_form_encoding=\"quali_pace_gap\" (Arm A is gold_defaults.toml itself). (c) Run a fast smoke for BOTH arms end-to-end with anchor ON (gold-cycle at --max-rounds-per-year 1, or smoke profile) proving the cycle wires up with anchor on under each encoding; capture smoke logs to evidence/smoke_armA.log and evidence/smoke_armB.log. No source logic changes beyond the config flip + new arm-B config file. Run simplification_limits if any src/ touched. Integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0 context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "generated artifacts derived (no manual edits)",
+        "gold-mode leakage-free invariants intact",
+        "arm-B config stays in work area (experimental until it wins)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "anchor flip (1 line) + armB config + smoke configs; both smokes exit 0 (anchor enabled in manifest, armA v1 / armB v2); 114 config tests pass; flagged pre-existing sampled-backtest TypeError"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Dispatch a constellation-reviewer subagent (model: sonnet) with a filled REVIEWER_HANDOFF. Review focus: anchor flag correctly flipped (true, alpha 0.5), gold-mode invariants unchanged, arm-B config differs ONLY by encoding, both smoke runs completed clean end-to-end with anchor on. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "all 4 criteria verified; anchor flip 1 line, utilization unchanged; armB differs only by encoding(+do-not-promote comment); 114 config tests pass; smokes confirm anchor enabled + v1/v2; TypeError confirmed pre-existing & independent"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "If APPROVE: confirm config unit tests pass, commit the anchor flip on the run branch, advance. If BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received for G1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gold-cycle config tests pass with anchor on",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_run_cli_defaults.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g1-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_run_cli_defaults.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "gfix-implement": {
+      "id": "gfix-implement",
+      "title": "GFIX feature_schema_version override must not break adapter configs: implement",
+      "imperative": "Dispatch a constellation-implementer subagent (model: sonnet) with a filled IMPLEMENTER_HANDOFF. Fix the #369 regression in sampled_runtime._run_stage (lines ~446-449): the per-bundle manifest feature_schema_version is blanket-injected into every module's adapter Config via stage_overrides, breaking any recent-history config that does not declare the field (RaceStartRecentHistoryConfig and the other non-quali recent-history configs) -> TypeError aborts the whole sampled-runtime backtest. Root-cause fix: keep using feature_schema_version for the module_runtime consistency CHECK and the quali v1/v2 encoding selection, but do NOT pass it into adapter Config constructors that do not declare it. Cover ALL affected recent-history module families (confirm which configs reject it), not just race_start. Test-led (promoted runtime path): add a regression test exercising the _run_stage / sampled-backtest path with a race_start_recent_history module bundle carrying feature_schema_version, proving it failed before and passes after. Re-run the smoke Arm A sampled-backtest to show it now completes (no TypeError). Run simplification_limits on touched paths. Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 integrated (anchor on, bug characterized)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 integrated; bug characterized (sampled_runtime._run_stage forwards feature_schema_version to adapter configs)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-gfix-implement-1"
+        }
+      ],
+      "constraints": [
+        "preserve the #369 runtime consistency check and quali v1/v2 selection",
+        "one canonical path (no per-config band-aids if an injection-site fix is cleaner)",
+        "promoted runtime path: test-led, focused region green",
+        "no behavior change to the quali encoding paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-gfix-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "fix in module_adapters/_common.py _config_with_overrides: pop feature_schema_version before dataclasses.replace (single chokepoint, covers all non-quali modules; quali consumes it earlier). 11-test regression (9 fail->all pass); evo region 1615 passed 0 fail; quali consistency+v1/v2 tests preserved; limits PASS; smoke Arm A sampled-backtest completes no TypeError"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "gfix-review": {
+      "id": "gfix-review",
+      "title": "GFIX: review",
+      "imperative": "Dispatch a constellation-reviewer subagent (model: sonnet). Review focus: root-cause fix (not a narrow band-aid that leaves sibling recent-history configs broken), ALL affected module families covered, #369 consistency check + quali v1/v2 selection preserved (no regression), the regression test genuinely reproduces the pre-fix TypeError and catches it, full evo unit region green, and the smoke Arm A sampled-backtest now completes. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for GFIX",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for GFIX"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-gfix-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-gfix-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "independent pre-fix red (10 fail) / post-fix green (11 pass); evo region 1615 passed 0 fail; quali path untouched (4 tests, quali closures bypass _config_with_overrides); single chokepoint covers all 8 non-quali call sites; limits PASS; working tree has fix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "gfix-integrate": {
+      "id": "gfix-integrate",
+      "title": "GFIX: integrate",
+      "imperative": "If APPROVE: confirm the full evo unit region is green, commit the fix on the run branch, advance. If BLOCK: rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for GFIX",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received for GFIX"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full evo unit region green (regression test included)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-gfix-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-gfix-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-gfix-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from gfix-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gfix-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 Arm A full cycle (position_quality + anchor): run [COMMANDER-RUN]",
+      "imperative": "COMMANDER-RUN (long-running ~1.5h; NOT a subagent \u2014 the commander owns the run and monitors the background job). Run the full gold cycle at utilization=max (threads=1, reproducible): py -m src.evo_predictor.run gold-cycle --config configs/evo/gold_defaults.toml (utilization=max via flag/config). Then static fusion (scripts/run_static_hierarchical_fusion_training.py) + sampled-runtime manifest (scripts/assemble_trained_sampled_runtime_manifest.py) + backtest for fused Brier. Copy key outputs to evidence/armA/: gold_details.json, gold_summary.json, manifest.json, unc_diag.json, and a summary.txt (bundle id, fused Brier, anchor=on). Attest/attach the produced-artifact evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "gfix integrated (sampled-backtest works); G1 anchor on, arms prepared, smoke clean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "gfix integrated; anchor on; isolated arm run configs created + validated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Arm A v6 gold report produced with skill_vs_chance for all modules",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import sys; t=open(r'.agent-work/issue-335-gold-regen/evidence/armA/gold_details.json',encoding='utf-8').read(); sys.exit(0 if t.count('skill_vs_chance')>=12 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "DB is the only analysis source",
+        "leakage-free gold mode",
+        "generated artifacts out of git unless curated",
+        "utilization=max for reproducible threads=1 realization"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import sys; t=open(r'.agent-work/issue-335-gold-regen/evidence/armA/gold_details.json',encoding='utf-8').read(); sys.exit(0 if t.count('skill_vs_chance')>=12 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 Arm A: review",
+      "imperative": "Dispatch a constellation-reviewer subagent (model: sonnet) with a filled REVIEWER_HANDOFF pointing at evidence/armA/. Review focus: cycle completed all stages, v6 schema (skill_vs_chance present for all 12 modules), anchor active in provenance, no leakage/same-season compound prior, fused Brier captured and sane vs the 260603 baseline. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Arm A outputs produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Arm A outputs produced + staged to evidence/armA/"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "6/6 criteria verified: skill_vs_chance=12, anchor active(alpha 0.5), leakage-free(37 invariants 0 fail), fused Brier 0.2077 sane, NLL convention clean, race_count 24/0-skip, trained manifest=ArmA slug, promoted 260603 untouched"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 Arm A: integrate",
+      "imperative": "If APPROVE: confirm Arm A manifest produced, advance. If BLOCK: rework (re-run/repair) or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 REVIEW APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Arm A sampled-runtime manifest exists",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import os,sys; sys.exit(0 if os.path.getsize(r'.agent-work/issue-335-gold-regen/evidence/armA/manifest.json')>1000 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g2-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import os,sys; sys.exit(0 if os.path.getsize(r'.agent-work/issue-335-gold-regen/evidence/armA/manifest.json')>1000 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 Arm B full cycle (quali_pace_gap + anchor): run [COMMANDER-RUN]",
+      "imperative": "COMMANDER-RUN (long-running ~1.5h; NOT a subagent). Run the full gold cycle at utilization=max with the Arm B config: py -m src.evo_predictor.run gold-cycle --config .agent-work/issue-335-gold-regen/configs/armB_quali_pace_gap.toml. Then static fusion + sampled-runtime manifest + backtest for fused Brier. Copy outputs to evidence/armB/ (same filenames as Arm A). Attest/attach produced-artifact evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 integrated (Arm A complete; ensures pipeline sound before second run)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 integrated; Arm A pipeline sound end-to-end"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Arm B v6 gold report produced with skill_vs_chance for all modules",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import sys; t=open(r'.agent-work/issue-335-gold-regen/evidence/armB/gold_details.json',encoding='utf-8').read(); sys.exit(0 if t.count('skill_vs_chance')>=12 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "DB is the only analysis source",
+        "leakage-free gold mode",
+        "generated artifacts out of git unless curated"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import sys; t=open(r'.agent-work/issue-335-gold-regen/evidence/armB/gold_details.json',encoding='utf-8').read(); sys.exit(0 if t.count('skill_vs_chance')>=12 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 Arm B: review",
+      "imperative": "Dispatch a constellation-reviewer subagent (model: sonnet) pointing at evidence/armB/. Same review focus as G2 plus: confirm encoding=quali_pace_gap actually took effect (v2 feature schema on the recent-history quali modules), arms differ ONLY by encoding (same split/seed/anchor). Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Arm B outputs produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Arm B outputs produced + staged; v2 encoding verified; A/B computed (B wins primary Brier, CI excludes 0)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "7/7: v2 pace-gap encoding active, arms differ ONLY by encoding, skill_vs_chance=12, anchor active, leakage-free, Brier 0.2008 sane, 24/24; A/B fair (same harness, CI excludes 0, B 19/24)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 Arm B: integrate",
+      "imperative": "If APPROVE: confirm Arm B manifest produced, advance. If BLOCK: rework or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 REVIEW APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Arm B sampled-runtime manifest exists",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import os,sys; sys.exit(0 if os.path.getsize(r'.agent-work/issue-335-gold-regen/evidence/armB/manifest.json')>1000 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g3-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import os,sys; sys.exit(0 if os.path.getsize(r'.agent-work/issue-335-gold-regen/evidence/armB/manifest.json')>1000 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 compare + accept + verify cleanups: implement",
+      "imperative": "Dispatch a constellation-implementer subagent (model: sonnet) with a filled IMPLEMENTER_HANDOFF pointing at evidence/armA/ and evidence/armB/: (a) Compute the fused-output comparison Arm A vs Arm B at the system/fusion level over the SAME eval population: Brier (primary) + pairwise sign-acc/NLL + reliability; write evidence/comparison.md with a verdict on whose fusion wins (note tie-> pace_gap bias). (b) Run scripts/accept_quali_anchor_420.py against the anchored bundle; save output to evidence/acceptance_420.txt; confirm it reproduces/improves the docs/evo/prediction_ceiling_and_priorities.md \u00a77.6.4 numbers. (c) Cleanup verifications -> write evidence/cleanup_checks.json {nll_ok: fresh report emits corr_*_vs_nll and NOT _vs_log_loss; race_count: sampled_runtime scored-race count (expect 24); threads_note: max=threads=1 reproducible}. Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 integrated (both arms complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 integrated; both arms complete, A/B computed (B wins primary Brier, CI excludes 0)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with comparison + acceptance + cleanup evidence",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "comparison is fair (identical eval population)",
+        "no promotion in this gate",
+        "metrics traceable to run outputs"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "A/B verified (B Brier 0.2008<0.2077, CI[-0.0104,-0.0038] excl 0, B 19/24); anchor acceptance on new bundle EXCEEDS 7.6.4 (headline a=0.5 0.7765 vs 0.7452 +0.031; OOS 0.7616 vs 0.7097); cleanup_checks nll_ok+race_count=24; harness parametrized default-preserving"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4: review",
+      "imperative": "Dispatch a constellation-reviewer subagent (model: sonnet). Review focus: comparison fairness (same eval set/population, Brier primary, no overselling), acceptance numbers traceable to \u00a77.6.4, cleanup checks correct (nll convention, race_count=24). Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G4"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "A/B reproduced (B 0.2008<A 0.2077, CI[-0.0103,-0.0036] excl 0, 19/24); harness change default-preserving (limits violation pre-existing); acceptance on Arm B bundle exceeds 7.6.4 all 4 numbers; cleanup_checks correct"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4: integrate",
+      "imperative": "If APPROVE: confirm comparison + cleanup evidence substantive, advance. If BLOCK: rework or blocker. Log triage candidates (e.g. pace-gap follow-ups).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G4 REVIEW APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "comparison doc substantive + cleanups pass (nll convention, race_count 24)",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import json,os,sys; comp=os.path.getsize(r'.agent-work/issue-335-gold-regen/evidence/comparison.md')>800; d=json.load(open(r'.agent-work/issue-335-gold-regen/evidence/cleanup_checks.json')); sys.exit(0 if comp and d.get('nll_ok') and d.get('race_count')==24 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g4-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import json,os,sys; comp=os.path.getsize(r'.agent-work/issue-335-gold-regen/evidence/comparison.md')>800; d=json.load(open(r'.agent-work/issue-335-gold-regen/evidence/cleanup_checks.json')); sys.exit(0 if comp and d.get('nll_ok') and d.get('race_count')==24 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-decide": {
+      "id": "g5-decide",
+      "title": "G5 promotion decision [HUMAN CHECKPOINT]",
+      "imperative": "COMMANDER (human-reachable context). Present the full evidence to the user: fused-Brier comparison (Arm A vs Arm B), acceptance \u00a77.6.4 reproduction, pipeline gold status, and the baseline (260603) delta. The user picks which arm to promote and explicitly approves the promotion (tie -> pace_gap per stated bias). Attach the user-decision. Talk before promotion no matter what.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G4 integrated (evidence established)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G4 integrated; full evidence package complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "user picked arm + approved promotion",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-decide-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-decide-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "promote Arm B (quali_pace_gap)",
+            "flip_default_encoding": "yes -> quali_pace_gap",
+            "prune_old_260603": "yes"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-promote": {
+      "id": "g5-promote",
+      "title": "G5 promote chosen bundle: implement",
+      "imperative": "Dispatch a constellation-implementer subagent (model: sonnet) with a precise IMPLEMENTER_HANDOFF naming the chosen arm: promote the chosen bundle to params/gold/runtime_bundles/, update params/gold/sampled_runtime_manifest.json + params/gold/fusion/ to point at it, and IF pace_gap chosen flip recent_history_form_encoding default in configs/evo/gold_defaults.toml. Use the established promotion path (mirror prior promotions; prune via scripts/prune_gold_artifacts.py if that is the convention). Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "user approved promotion of a specific arm",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "user approved promote Arm B + flip default + prune old"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned (artifacts promoted)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-promote-1"
+        }
+      ],
+      "constraints": [
+        "promote derived artifacts only via regeneration outputs (no hand-edits)",
+        "canonical manifest swap must point at the promoted bundle consistently"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-promote-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "COMMANDER-RUN promotion of Arm B (gold_cycle_260608_043414): materialized bundles->params/gold/runtime_bundles; canonical sampled_runtime_manifest.json (params/gold-relative paths + provenance); fusion config + reports to canonical; encoding default flipped->quali_pace_gap; rt_comparison regenerated (trained 24/24, MAE 3.70 Brier 0.2007); harness default repointed->260608; pruned 260517/260530/260603 (--keep 1); pipeline_validation ALL 7 GREEN"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5 promotion: review",
+      "imperative": "Dispatch a constellation-reviewer subagent (model: sonnet). Review focus: the correct (user-chosen) bundle is promoted, sampled_runtime_manifest.json + fusion config point at it consistently, encoding default flip present iff pace_gap chosen, no stray/leftover stale references. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "promotion artifacts produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "promotion artifacts produced; pipeline_validation all green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "promoted bundle Arm B/v2 anchor active; 12/12 paths resolve; encoding flipped; old pruned (only 260608); pipeline_validation exit 0 all 7 pass; change scope clean (7M/153D/18??)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5 promotion: integrate",
+      "imperative": "If APPROVE: run pipeline_validation on the promoted manifest, confirm gold->pass, commit the promotion on the run branch, advance. If BLOCK: rework or blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G5 REVIEW APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pipeline_validation gold section passes on promoted manifest",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/run_pipeline_validation.py --profile compact"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g5-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/run_pipeline_validation.py --profile compact",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-implement",
+      "statement": "sampled_runtime._run_stage (#369 seam, lines 446-449) blanket-forwards manifest feature_schema_version into every module's adapter Config; RaceStartRecentHistoryConfig has no such field -> TypeError aborts the whole sampled-runtime backtest (both modes) for any manifest whose race_start_recent_history bundle stamps feature_schema_version (i.e. all fresh bundles). Blocks fused-output Brier. Fix: use feature_schema_version for the module_runtime consistency CHECK only; do not pass into adapter configs that don't declare it."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-implement",
+      "statement": "oracle_all_states sampled-backtest mode: 1 race fails non-fatally with ValueError('sampled positions must be a strict permutation of positions 1..20') (same DNS/permutation family as #330 but in the oracle scoring path the #330 fix + gfix didn't cover). sampled_state (production metric) unaffected. Investigate whether pre-existing on 260603 or anchor-exposed; fix the oracle path or document."
+    },
+    {
+      "id": "tc3",
+      "from": "g2-implement",
+      "statement": "Hardware acceleration spike (user request, Lunar Lake: Core Ultra 7 268V + Arc 140V iGPU 16GB + AI Boost NPU4 ~48 TOPS): NPU is inference-only (OpenVINO; no training path). Evaluate Arc iGPU via IPEX-XPU and/or ONNX+OpenVINO for the inference-heavy sampled-backtest, with a numerics-parity gate (INT8/FP16 vs FP32 Brier within tolerance) and reproducibility caveat. Likely low ROI on tiny nets; revisit if channel-refactor grows model size."
+    },
+    {
+      "id": "tc4",
+      "from": "g4-implement",
+      "statement": "Pre-existing simplification_limits violation: scripts/accept_quali_anchor_420.py _score_event_production function_lines=122 (limit <100). Confirmed pre-existing (git stash round-trip); not introduced by the g4 --bundle-path addition. Decompose in a follow-up."
+    }
+  ],
+  "blockers": []
+}

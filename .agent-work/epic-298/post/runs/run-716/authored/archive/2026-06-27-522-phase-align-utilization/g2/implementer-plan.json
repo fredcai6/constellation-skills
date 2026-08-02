@@ -1,0 +1,304 @@
+{
+  "work_id": "522-g2-lateral-units-fix",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-truth-anchor-red",
+    "m2-data-model-fix",
+    "m3-simulator-fix",
+    "m4-consumer-audit-fix",
+    "m5-rebaseline-tests",
+    "m6-verify-suite",
+    "m7-simplification"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff complete + finish audit",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g2 handoff, and the G1 review-result probe. Verify handoff completeness (task/intent/scope/exclusions/evidence/test-mode/stop/return). Complete the producer/consumer convention audit (g-unit vs m/s2 paths, ceiling units, friction/apex/fallbacks, double-correction). If incomplete or a hard stop-condition triggers, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + G1 probe loaded; handoff complete; convention audit resolved (g-unit producer is single convention; ceiling resolved to m/s2; friction/apex/fallbacks understood)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Crew context+glossary+handoff+G1 probe loaded. Handoff complete. Audit resolved: live #522 path = g-unit producer (store A0 1.6-5.0g); fix=xG drop rho; ceiling=m/s2; capability_envelope L82 headroom needs xG; friction/apex delegate (no double-correction); second convention-A path (LateralEnvelopeFit/FitStore) is runtime-disjoint, out of scope, tests re-baselineable."
+        }
+      ],
+      "constraints": [
+        "do not touch lateral_view.py producer",
+        "do not touch store schema or regime_utilization comparison logic",
+        "no evo region"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-truth-anchor-red": {
+      "id": "m1-truth-anchor-red",
+      "title": "Add truth-anchor test (RED: fails pre-fix)",
+      "imperative": "Add a truth-anchored test asserting the Monaco/VER tunnel cap (kappa approx 0.011, g-unit A0 from the real producer ~3.2) yields ~63-66 m/s (NOT ~16), i.e. lateral capability ~3-5g. Place it where the data-model / sim cap is exercised (test_physics_data_models.py and/or test_physics_simulator.py). Confirm it FAILS pre-fix (g-unit A0 read as m/s2 gives ~16 m/s / ~0.3g).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and audit resolved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete; audit resolved"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new truth-anchor test exists and FAILS on the pre-fix code (red observed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: pre-fix lateral_capability=0.57g (absurd), tunnel cap=22.5 m/s. 2 truth-anchor tests added in TestLateralCapabilityTruthAnchor."
+        }
+      ],
+      "constraints": [
+        "test asserts PHYSICAL truth (3-5g lateral / ~63-66 m/s tunnel cap), not a mechanical x9.81 of an old value"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-data-model-fix": {
+      "id": "m2-data-model-fix",
+      "title": "Fix LateralParameters.lateral_capability (xG, drop rho) + canonical G constant",
+      "imperative": "In physics_data_models.py add a single named gravity constant (reuse/centralize; do not scatter 9.81). Change lateral_capability so mechanical = A0*tire_factor*g_track*G and aero = A2*speed**2*G (drop spurious rho, add xG). Ceiling stays m/s2 (now unit-consistent with mechanical+aero). Update the g-unit docstrings.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "truth-anchor red observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "truth-anchor red observed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lateral_capability applies xG and drops rho via the named G constant; truth-anchor portion exercising the data model now passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added canonical G_MS2 to physics_data_models; lateral_capability now mechanical=A0*tire*g_track*G_MS2, aero=A2*v^2*G_MS2 (dropped spurious rho). g-unit docstrings added. Truth-anchor data-model tests pass (3-5g, cap ~63m/s)."
+        }
+      ],
+      "constraints": [
+        "single canonical scaling constant",
+        "no dual convention"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-simulator-fix": {
+      "id": "m3-simulator-fix",
+      "title": "Fix _compute_speed_caps and _gsat_ceiling inline lateral scaling",
+      "imperative": "In physics_simulator.py apply the same convention to _compute_speed_caps (A0 term xG; denom = curvature - A2*G not A2*air_density) and _gsat_ceiling (car_lat = (A0*g_track + A2*v_ref**2)*G). Prefer reusing the canonical G constant / the data-model helper; if full de-dup is too large, use the single named constant identically and note inline duplication as triage.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "data-model fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "data-model fixed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sim caps + gsat use xG and drop the spurious air_density on the aero/denom term; full truth-anchor test passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "_compute_speed_caps: A0 term *G_MS2, denom=curvature-A2*G_MS2 (dropped air_density). _gsat_ceiling: car_lat=(A0*g_track+A2*v_ref^2)*G_MS2, pop_max uses G_MS2. Imported G_MS2. Sim truth-anchor (tunnel cap physical 58-75 m/s) passes."
+        }
+      ],
+      "constraints": [
+        "single canonical scaling",
+        "gsat pop_max clamp now meaningfully bites"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-consumer-audit-fix": {
+      "id": "m4-consumer-audit-fix",
+      "title": "Fix capability_envelope headroom-check units; confirm friction/apex/fallbacks",
+      "imperative": "In capability_envelope.py fix the ceiling-trust headroom check (ceiling - A0*g_track) to (ceiling - A0*g_track*G) so it is m/s2-consistent post-fix. Confirm friction_coupling.py and apex_extract.py delegate to lateral_capability (no inline mis-scaling / no pre-existing compensation to undo) and that braking/traction grip-ratio fallbacks ride the corrected lateral as intended. Record findings.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "simulator fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "simulator fixed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "headroom check unit-consistent; friction/apex/fallbacks audited with no double-correction; findings recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "capability_envelope L84 headroom fixed to (ceiling - A0*g_track*G_MS2). friction_coupling+apex delegate (no inline scaling, util is dimensionless ratio). Fallbacks ride corrected lateral (intended). MC sampler convention-agnostic. No double-correction. Audit recorded in g2/audit-findings.md."
+        }
+      ],
+      "constraints": [
+        "no double-correction; fix root not symptom"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-rebaseline-tests": {
+      "id": "m5-rebaseline-tests",
+      "title": "Re-baseline physics unit tests to physical g-unit truth",
+      "imperative": "Re-baseline the lateral expectations across the g2 test files from convention-A m/s2 inputs (A0=30) to PHYSICAL g-unit inputs (A0~1.5-3.2, A2~5e-4) so lateral_capability lands ~3-5g, and update ceiling/headroom expectations to the corrected convention. Each new value must be physically justified (not a blind x9.81). Cover test_physics_data_models, test_capability_envelope, test_lateral_envelope ceiling tests, test_physics_simulator caps/gsat, and any apex/friction expectations.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all source fixes in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all source fixes in place"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "re-baselined tests assert physical values and pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Re-baselined 7 convention-A failures to physical g-unit inputs (A0~2.5-3.1, A2~3e-4): data-model lateral_capability_at_speed; 2 lateral_envelope ceiling tests; 4 capability_envelope (2 braking-ratio clamp, ceiling-trust, anisotropy). _params default A0 30->3.0. Each value physically justified (3-5g). All 124 g2 tests pass."
+        }
+      ],
+      "constraints": [
+        "truth-anchored: physical justification per re-baselined value; do not blindly keep tests green"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-verify-suite": {
+      "id": "m6-verify-suite",
+      "title": "Full g2 verification suite green",
+      "imperative": "Run the full g2 verification command; all targeted physics tests green including the truth anchor and re-baselined expectations.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests re-baselined",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests re-baselined"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g2 suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_physics_data_models.py tests/unit/physics/test_capability_envelope.py tests/unit/physics/test_capability.py tests/unit/physics/test_lateral_envelope.py tests/unit/physics/test_physics_simulator.py tests/unit/physics/test_friction_coupling.py tests/unit/physics/test_apex_extract.py tests/unit/physics/test_ideal_lap_top_speed_invariant.py tests/unit/physics/test_regime_utilization.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_physics_data_models.py tests/unit/physics/test_capability_envelope.py tests/unit/physics/test_capability.py tests/unit/physics/test_lateral_envelope.py tests/unit/physics/test_physics_simulator.py tests/unit/physics/test_friction_coupling.py tests/unit/physics/test_apex_extract.py tests/unit/physics/test_ideal_lap_top_speed_invariant.py tests/unit/physics/test_regime_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-simplification": {
+      "id": "m7-simplification",
+      "title": "Simplification-limits check on touched src paths",
+      "imperative": "Run the simplification-limits check on touched src/physics paths if applicable; record result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification check run / recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Simplification check run. Touched functions clean (_gsat_ceiling 27L, _compute_speed_caps 39L); physics_data_models.py + capability_envelope.py PASS. Sole flag _sample_parameters 185L is PRE-EXISTING (untouched by diff) -> triage candidate."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m7-simplification",
+      "statement": "Pre-existing simplification violation: physics_simulator._sample_parameters is 185 lines (limit 100). NOT introduced by #522 (my edits are in _gsat_ceiling/_compute_speed_caps, both <40 lines). Candidate for a future refactor."
+    }
+  ],
+  "blockers": []
+}

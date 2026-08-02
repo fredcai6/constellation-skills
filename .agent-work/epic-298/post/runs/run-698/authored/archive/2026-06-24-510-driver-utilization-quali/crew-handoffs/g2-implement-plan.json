@@ -1,0 +1,50 @@
+{
+  "work_id": "510-driver-utilization-quali",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-red", "m2-green", "m3-simplification"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff",
+      "imperative": "Read CREW_CONTEXT.md, handoff, key reference files (car_prior.py, sim_evaluator.py, physics_simulator.py, capability_envelope.py). Confirm handoff complete.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "crew context + handoff loaded; handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop conditions all present)", "check": null, "satisfied": true}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "pass", "finding": "Handoff complete. Key seams understood: CarCeilingResult.params/.envelope from car_prior.py; resample_by_progress + BRAKING_DECEL_THRESHOLD from sim_evaluator.py; PhysicsSimulator.simulate_lap + _sample_parameters from physics_simulator.py. NOTE: monte_carlo_laps returns LapTimeDistribution (lap times only, NOT per-point speed profiles). Will implement per-point MC speed profiling by calling _sample_parameters+simulate_lap in a loop (same pattern, canonical path). The utilization package exists at src/physics/utilization/.", "evidence": [], "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "TDD red phase: write failing tests",
+      "imperative": "Write tests/unit/physics/test_regime_utilization.py with ALL required test cases. Run pytest — expect import errors or assertion failures (red). Tests must cover: (1) frontier U_r~1.0, (2) uniform-0.9 U_r~0.9, (3) partition tiling (four masks cover every point exactly once), (4) covariance monotonic (inflating cov increases sigma_U), (5) slow vs fast corner classification from a_lat threshold.",
+      "preconditions": [{"id": "p1", "statement": "context loaded and handoff complete", "check": null, "satisfied": true}],
+      "postconditions": [{"id": "c1", "statement": "pytest test_regime_utilization.py fails with import error (module not yet written)", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_regime_utilization.py -q 2>&1 | head -20"}, "satisfied": false}],
+      "constraints": ["no FastF1 or DB in tests", "synthetic arrays only", "L1-L4 evidence naming"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m2-green": {
+      "id": "m2-green",
+      "title": "TDD green phase: implement regime_utilization.py",
+      "imperative": "Write src/physics/utilization/regime_utilization.py. Pure core: regime_utilization(distance, curvature, v_real, v_ideal, *, config) -> RegimeUtilization with four tiling masks (braking/slow_corner/fast_corner/straight), U_r = regime-mean(v_real/v_ideal) clipped, consistency = 1-CV. Thin wrapper: estimate_driver_utilization(ceiling: CarCeilingResult, track_df, driver_distance, driver_speed, *, sim, n_mc_samples) using PhysicsSimulator for ideal lap and _sample_parameters loop for MC speed profiles. Run pytest until green.",
+      "preconditions": [{"id": "p1", "statement": "test file exists and is red", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "all tests in test_regime_utilization.py pass", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_regime_utilization.py -q"}, "satisfied": false}],
+      "constraints": ["no evo import", "single canonical sim path", "named constants for thresholds", "validate public inputs", "CC<20, func<100 lines, file<1000 lines"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m3-simplification": {
+      "id": "m3-simplification",
+      "title": "Simplification limits check",
+      "imperative": "Run py -m src.utils.simplification_limits --paths src/physics/utilization/regime_utilization.py tests/unit/physics/test_regime_utilization.py and fix any violations (CC>=20, func>=100 lines, file>=1000 lines).",
+      "preconditions": [{"id": "p1", "statement": "tests green", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "simplification_limits passes clean", "check": {"kind": "command", "command": "py -m src.utils.simplification_limits --paths src/physics/utilization/regime_utilization.py tests/unit/physics/test_regime_utilization.py"}, "satisfied": false}],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

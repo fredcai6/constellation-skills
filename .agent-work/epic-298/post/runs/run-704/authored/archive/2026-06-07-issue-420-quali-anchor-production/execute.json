@@ -1,0 +1,638 @@
+{
+  "work_id": "issue-420-quali-anchor-production",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan intent/scope against problem_statement.md, the issue body, and the architecture index. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed against problem statement + arch index",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan intent/scope confirmed vs problem_statement.md + issue + arch index"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 production blend + config + attach: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1. Dispatch a constellation-implementer subagent. Build (TDD): (a) a pure NaN-safe within-event z-blend function quali_pace_anchor(pi, anchor, alpha) in src/evo_predictor (new small module) that returns blended pi' = (1-a)*z(pi) + a*z(-anchor), drops drivers with missing/sentinel anchor from the blend (keeping their original pi), and is an exact no-op at alpha=0 and when fewer than 2 valid anchors; (b) two runtime config keys quali_pace_anchor_enabled(bool,default false) + quali_pace_anchor_alpha(float,default 0.5) threaded configs/evo/gold_defaults.toml -> gold_cycle/config.py -> manifest echo -> pipeline_manifest_v4 stage config -> _run_stage; (c) wire into sampled_runtime _run_stage gated on task=='quali' AND module_name=='driver_quali_power_from_race_weekend', replacing that field's ModuleFieldResult.pi via dataclasses.replace; sigma_pi handling documented and conservative. Default OFF this gate. Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded (e0 closed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "QUALI ONLY; gate strictly on driver_quali_power_from_race_weekend + task quali",
+        "Do NOT touch fusion.py, fusion_training/, scripts/fusion_replay/, docs/evo/fusion_rework_findings.md (sister #375)",
+        "Config key names must not collide with fusion-net keys; use quali_pace_anchor_ prefix",
+        "DB-only canon: anchor comes from DriverFeatures.qs_theoretical_best already in RaceFeatures; no new DB read; no FastF1",
+        "Missingness explicit (drop missing-anchor drivers from blend, keep their pi); no silent impute/zero",
+        "alpha=0 must be an exact ordering no-op; default OFF this gate",
+        "py -m src.utils.simplification_limits on touched src/ + tests/ paths must pass",
+        "TDD required: tests on synthetic/fixture data only; must NOT depend on generated records"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "None-safety bug in _nanmin2 found by review; coerce None->nan + test"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "attach_point": "per-module race_weekend head pi inside _run_stage pre-fusion (corrected)",
+            "anchor_field": "qs_best_raw",
+            "tests": "1553 passed 19 skipped"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "change": "anchor=min(qs_best_raw,lr_best_raw) via _nanmin2; attach+blend+config unchanged"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-3",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "fix": "_nanmin2 coerces None->nan; 1560 tests green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 2
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Fill REVIEWER_HANDOFF for G1. Dispatch a constellation-reviewer subagent. Verify: blend math + sign convention correct (faster->higher pi), NaN/sentinel handling explicit, alpha=0 exact no-op, gating exactly on the driver race_weekend quali module + quali task only, config chain complete and OFF by default, no forbidden-file touches, simplification_limits clean, tests synthetic-only and green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "anchor field changed to min(qs,lr); re-review"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "note": "independent reviewer: attach pre-fusion confirmed, sign correct via re-derivation, 1553 tests green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "note": "None reaches _nanmin2 -> math.isfinite(None) TypeError; fix specified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "note": "None fix verified; anchor=min(qs,lr); 1560 green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "If APPROVE: run the G1 unit tests + simplification_limits; advance. If BLOCK: rework or raise blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "G1 unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k \"anchor or quali_pace\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "re-verify after anchor + None fixes"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k \"anchor or quali_pace\" -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k \"anchor or quali_pace\" -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k \"anchor or quali_pace\" -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 acceptance reproduction: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G2. Dispatch a constellation-implementer subagent. Build a read-only acceptance harness scripts/accept_quali_anchor_420.py that: (1) regenerates driver_quali_power_from_race_weekend module records via inference on the committed gold bundle gold_cycle_260603_173742_2018thru2024 over 2018-2025 (using the existing backtest-latent-power-module --emit-module-record seam) IF records absent; (2) applies the PRODUCTION G1 blend function with the PRODUCTION anchor (qs_theoretical_best from the record feature payload, mapped by driver_id) and re-runs the same-pairs sign-acc diagnostic (import scripts/diagnose_quali_same_pairs primitives + diagnose_quali_evidence ceilings; do not fork) on the identical shared non-tie pair set; (3) sweeps alpha incl 0.5, reports overall + EASY(gap>=9) before/after vs ceiling for headline 2018-2024 and OOS 2025, plus recovered-fraction; (4) compares to the \u00a77.6.3 record-replay numbers and reports the delta. VERDICT: does the production path reproduce \u00a77.6.3 within reasonable tolerance? Capture full numeric output to evidence. Integrate IMPLEMENTER_RESULT incl the verdict + numbers + delta explanation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 blend + attach exist and pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 blend+attach approved and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with reproduction numbers + verdict (or clear data-unavailable blocker)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Read-only on DBs at C:/Programs/f1Brainz/data/ (absolute); inference-only on the committed gold bundle; NO retrain, NO param/manifest mutation",
+        "PYTHONIOENCODING=utf-8 in shell AND any child python subprocess env",
+        "Use the PRODUCTION G1 blend function (import it); do not reimplement the math",
+        "Anchor = production qs_theoretical_best (the production min-sector quali-sim pace); NOT the prototype's DB best_across_fp. Explain the lap-population difference in the verdict.",
+        "Import (never fork) scripts/diagnose_quali_same_pairs + diagnose_quali_evidence primitives so the pair population is identical to \u00a77.6.2/\u00a77.6.3",
+        "Do NOT touch fusion files (sister #375)",
+        "If DBs or the gold bundle are genuinely unavailable, STOP and report data-unavailable (verdict, not silent pass)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "G2 measured old qs_best_raw-only anchor (PARTIAL). Update harness to production min(qs,lr) anchor + re-run full scale."
+      },
+      "result": null,
+      "finding": "PARTIAL_REPRODUCTION: production anchor (qs_best_raw, short-stint) shows improvement at all alphas but is a weaker signal than prototype best_across_fp (all-clean-lap); alpha=0 reproduces baseline within 1pp confirming pi source is correct; NOT a G1 bug",
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "verdict": "PARTIAL_REPRODUCTION",
+            "harness": "scripts/accept_quali_anchor_420.py",
+            "output_file": ".agent-work/issue-420-quali-anchor-production/g2_accept_output.txt",
+            "json_file": ".agent-work/issue-420-quali-anchor-production/g2_accept_numbers.json",
+            "baseline_check": "PASS (alpha=0: overall=0.6200 EASY=0.6962 pairs=24070 vs ref 0.6153/0.6926/23862)",
+            "headline_alpha05": "overall=0.6624 EASY=0.7486 rec-frac=0.229 (vs \u00a77.6.3: 0.7452/0.8691/~0.68)",
+            "headline_alpha05_delta": "dlt_overall=-0.0828 dlt_EASY=-0.1205",
+            "oos_alpha05": "overall=0.6689 EASY=0.7574 (vs \u00a77.6.3: 0.7097/0.8451)",
+            "production_anchor_ceiling": "alpha=1.0: overall=0.6784 (baf_ceiling=0.8053) \u2014 qs_best_raw weaker than best_across_fp",
+            "anchor_explanation": "qs_best_raw uses SHORT-STINT (quali-sim classified) laps only; prototype best_across_fp uses ALL clean FP laps; same signal family, weaker production signal due to restricted lap population",
+            "events_used": "headline=130, oos=18"
+          },
+          "produced_by": "engine",
+          "ts": "2026-06-07"
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "verdict": "REPRODUCES",
+            "headline_a05_overall": "0.7492",
+            "headline_a05_easy": "0.8742",
+            "ref_a05_overall": "0.7452",
+            "oos_a05_overall": "0.7076",
+            "anchor": "min(qs_best_raw,lr_best_raw)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review (independent re-derivation)",
+      "imperative": "Fill REVIEWER_HANDOFF for G2. Dispatch a constellation-reviewer subagent that INDEPENDENTLY re-runs the acceptance harness (or re-derives the alpha=0.5 reproduction number from the captured records) and confirms: alpha=0 reproduces baseline; the production blend uses the real qs_theoretical_best anchor + the real G1 function; the same-pairs population matches \u00a77.6.2; the reported reproduction + delta-vs-\u00a77.6.3 are correct and honestly explained. Verdict APPROVE only if the numbers are reproducible and the verdict statement is supported. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (REPRODUCES) received for G2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "note": "independent re-derivation: a0=0.6163/0.6924, a0.5=0.7499/0.8736; REPRODUCES confirmed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "If APPROVE: record the reproduction verdict + numbers as the acceptance evidence; advance. If the production path CANNOT reproduce (and reviewer concurs it is a true negative not a bug): that is a VERDICT \u2014 record it, surface to user in review step, and carry into G3 (which then ships default OFF + documents the non-reproduction). If BLOCK on a bug: rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "acceptance verdict recorded with numbers (reproduces / does-not-reproduce, explained)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "VERDICT REPRODUCES: headline a0.5 0.7499/0.8736 (ref 0.7452/0.8691, +0.005); OOS a0.5 0.7094/0.8426; a0 reproduces baseline; anchor=min(qs,lr) buckets reconstructs best_across_fp in-machinery"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 default decision + docs + downstream statement: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G3. Dispatch a constellation-implementer subagent. Using G2's verdict: (1) write the DOWNSTREAM-IMPACT assessment (consumers of quali race_weekend pi: fusion precision-weighting which uses pi AND sigma_pi, gap-scale, calibration, gold artifacts \u2014 all fit on the un-anchored distribution; the z-blend changes pi MAGNITUDE not just ordering; assess what shifts, whether retrain is indicated, the safe activation story); (2) DECIDE default ON or OFF: ON only if acceptance reproduced AND downstream assessment finds activation safe without retrain; otherwise OFF (pre-authorized override of ruling 4) with the retrain-first case made; set configs/evo/gold_defaults.toml quali_pace_anchor_enabled accordingly (minimal localized edit) and alpha (0.5 unless G2 OOS fit clearly beats it); (3) write the new \u00a77.6.4 in docs/evo/prediction_ceiling_and_priorities.md (production attach point, acceptance reproduction numbers + delta-vs-\u00a77.6.3 explanation, chosen alpha + why, default ON/OFF + downstream rationale, config key + how to toggle). Integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 acceptance verdict recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 acceptance verdict REPRODUCES recorded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "I am the SOLE writer of docs/evo/prediction_ceiling_and_priorities.md this wave; do NOT touch fusion_rework_findings.md",
+        "Default decision must follow the evidence: ON requires reproduced acceptance AND safe-without-retrain; else OFF with the case made",
+        "gold_defaults.toml edit minimal + localized (sister #375 also edits this file)",
+        "alpha fit (if any) on 2018-2024 train years only; NEVER fit on eval seasons",
+        "Docs: current truth, valid commands, the config toggle documented",
+        "If touching any src/ here, run simplification_limits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "deliverable": "7.6.4 written + toml comment fixed; default OFF; alpha 0.5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Fill REVIEWER_HANDOFF for G3. Dispatch a constellation-reviewer subagent. Verify: downstream-impact statement is complete and technically correct (esp. the magnitude/precision-weighting concern); the default ON/OFF decision is consistent with G2 evidence + the downstream assessment and the rationale is logged; gold_defaults.toml edit is minimal/localized/correct; \u00a77.6.4 is accurate, cites the reproduced numbers, documents the toggle, and does not contradict \u00a77.6.3; no forbidden files touched. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "note": "all 7.6.4 numbers verified vs JSON; fusion downstream argument confirmed by re-reading fusion.py; default OFF consistent"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "If APPROVE: run the full focused test set (py -m pytest tests/unit/evo_predictor/ -k \"quali or anchor or scope\" -q) and confirm green; advance. If BLOCK: rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 REVIEW APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "focused quali/anchor/scope tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k \"quali or anchor or scope\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k \"quali or anchor or scope\" -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "predict_from_features in sampled_runtime.py is 153 lines (pre-existing, >100 limit); dedicated simplification split needed (not introduced by #420)"
+    }
+  ],
+  "blockers": []
+}

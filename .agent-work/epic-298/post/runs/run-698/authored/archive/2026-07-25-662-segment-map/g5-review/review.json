@@ -1,0 +1,166 @@
+{
+  "work_id": "662-g5-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 6 handoff steps (G1 ref -> G2 base tiling -> G3 sector lines+nest -> G4 corner attrs -> SegmentMap.build -> write_segment_map cold path) implemented and independently reproduced: pytest 7/7 green (incl. real Bahrain 2023 Q smoke, not skipped), simplification_limits PASS, and CLI re-run against a scratch DB reproduces the claimed n_segments=36/n_corner=13 and is idempotent (row count stays 1 on re-run of same weekend).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status confirms only 3 new files (derive.py, scripts/derive_segment_maps.py, test_derive.py); zero diff against docs/architecture/*, runtime.py, store.py, identity.py, frozen_constants.py (verified via git status --short on those exact paths, no output). write_segment_map always passes prior_map=None to store.write -- no parameter anywhere in the public surface exposes prior_map, so cold-path-only is structurally enforced, not just a default. No 'subphase'/adjacency reference anywhere in derive.py (grep-confirmed); next_ordinal/prev_ordinal mod-arithmetic in runtime.py is untouched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran both required commands with the pinned interpreter: 'pytest tests/unit/physics/segment_map/derivation/test_derive.py -v' -> 7 passed in 5.10s (incl. TestRealWeekendSmoke, genuinely executed not skipped -- environment has the main-checkout telemetry_store.db + damage_integrals.db + per-year DB); 'simplification_limits --paths derive.py scripts/derive_segment_maps.py' -> PASS (2 files checked). Read test_same_geometry_different_sector_draws_same_layout_id and test_build_write_get_by_version_reproduces_map source directly and confirmed they assert the exact load-bearing properties the handoff names (sector-independent hash; byte-identical round-trip incl. class_ids/membership).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against CREW_CONTEXT.md rules: DB-only access preserved (derive.py never imports FastF1/Jolpica -- goes through G1/G3's own store-first seams + SegmentMapStore only); no module-level mutable state or DB singleton in derive.py (only a frozen DEFAULT_VERSION_LABEL constant); CLI logs via logging.getLogger, no print() outside the script boundary; explicit year/gp_name/session_type on every call, no silent latest-value fallback; config knobs (ref_n_grid, sector_min_laps, grip_db_path, etc.) are named keyword args with defaults, not hidden inline values. Minor observation (non-blocking): the mixture/vocabulary XOR-precondition ValueError names the constraint but not a single field+expectation+actual triple -- acceptable for a paired-argument precondition, not a data-validation case the project rule targets.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "map_version divergence from the handoff's literal Close-Criterion-4 wording (map_version='v1') is CORRECT, not a spec deviation that breaks anything: store.py's segment_maps table primary-keys on map_version ALONE (global, not composite with gp_name/year/weekend), confirmed by reading the CREATE TABLE statement and by test_store.py's own precedent (map:testonia:v2, map:t:2023, map:t:2024 -- qualified strings used whenever >1 weekend is exercised). Verified live: a bare literal 'v1' for every weekend would collide via INSERT OR REPLACE the instant a second weekend was written; the implementer's weekend-qualified '{year}-{gp_name}-{session_type}:v1' avoids this and is within the handoff's own Authority grant ('you MAY decide ... the weekend key ... state them'). Commander should regrade/settle this as the recorded convention going forward (currently only stated in the impl result, not yet a decision: line in docs/architecture) -- routing as a reconciliation note, not a blocker.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "verify_fowler_pass.py exit 0: fowler pass ok (smells=12, flagged=[], overridden=['duplicated-code','data-clumps','primitive-obsession','long-parameter-list']). All 4 overrides carry a logged repo-standard (established G1-G4 signature conventions this gate is scoped read-only against) + reason. No smell flagged as a genuine blocker-level defect.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "fowler-pass",
+          "payload": {
+            "path": ".agent-work/662-segment-map/g5-review/fowler_pass.json",
+            "verdict": "ok"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "G5 (issue #662) assembly/persistence/derivation entrypoint APPROVED. Independently re-ran both required commands (pytest 7/7 green incl. the real Bahrain 2023 Q smoke, genuinely executed; simplification_limits PASS on 2 files). Independently reproduced a live CLI run (n_segments=36, n_corner=13, matches claimed evidence exactly) and confirmed idempotent INSERT OR REPLACE on re-run. Verified by reading source: layout_content_hash is fed the G2 base tiling's boundaries_m captured BEFORE nest_sectors ever runs (structurally sector-independent, stronger than the handoff's literal strip-after-nest wording), proven by two tests -- one showing two different sector draws hash identically while producing genuinely different persisted boundaries, one proving the literal strip-2-distances reading holds too. Store round-trip (build->write cold->get_by_version/get_current) reproduces geometry/membership/class_ids byte-identical -- confirmed by reading store.py's write/_load_map/_materialize_membership and the round-trip test. SegmentMap.build's own __post_init__ validation mechanically enforces the build invariants (non-corner membership==0, corner radius>0, monotone boundaries) regardless of assembly, so they cannot silently regress. Identity fields all correct: vocabulary_version==VocabularyRef.vocabulary_id, status='historical', config_fingerprint set and non-trivial, layout_id documented. map_version is weekend-qualified ('{year}-{gp_name}-{session_type}:v1') rather than the handoff's literal bare 'v1' -- verified this is REQUIRED correctness (store's PK is global on map_version alone; test_store.py's own precedent already uses qualified strings) and within the handoff's Authority grant, not a scope violation. Cold-path-only structurally enforced (no prior_map parameter exposed anywhere in the new public surface); no sub-phase/adjacency code added. No scope breach: git status shows only the 3 new allowed files changed; zero diff on docs/architecture/*, runtime.py, store.py, identity.py, frozen_constants.py. Fowler pass ok (rail exit 0): no blocking smells, 4 judgment-call overrides all logged against established G1-G4 conventions. One reconciliation note (non-blocking) on the map_version format and one triage candidate (.gitignore gap for data/segment_maps.db) routed to Commander."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Add /data/segment_maps.db to .gitignore (matching the existing named-.db-file precedent, e.g. /data/damage_integrals.db) before scripts/derive_segment_maps.py is run against its default output path in a tracked checkout -- confirmed via .gitignore grep: no /data/segment_maps.db or /data/*.db entry exists today."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g5-reviewer-662",
+    "status": "released",
+    "claimed_at": "2026-07-25T23:20:11.904209+00:00",
+    "last_heartbeat": "2026-07-25T23:26:00.379507+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T23:27:02.523862+00:00"
+  }
+}

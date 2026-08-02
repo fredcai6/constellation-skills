@@ -1,0 +1,257 @@
+{
+  "work_id": "511-g4-rework",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3,
+    "lease_stale_seconds": 1800
+  },
+  "items": [
+    "r0-context",
+    "r1-truth",
+    "r2-tests",
+    "r3-limits",
+    "r4-report",
+    "r5-result"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load context + verify rework handoff complete; lock the model empirically",
+      "imperative": "Read global-crew + global-everyone doctrine, CREW_CONTEXT/GLOSSARY if present, the g4-rework-addendum + original handoff + prior result + existing tyre_supplant.py/tests. Verify the rework handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Empirically lock the fuel-corrected model on real 2023 data (stint-ordinal FE + global linear fuel(lap_number) + per-compound tyre_life slope, scaled lstsq, median across races -> monotone SOFT>MEDIUM>HARD) and validate the synthetic recovery + naive confound. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "rework handoff verified complete; fuel-corrected model locked + monotone-up confirmed on real data; synthetic recovery + naive confound validated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-truth": {
+      "id": "r1-truth",
+      "title": "Reshape build_truth_cells (fuel-corrected cross-stint) + adjust verdict criterion",
+      "imperative": "Replace build_truth_cells' per-stint slope with the fuel-corrected cross-stint truth: per race, OLS lap_time ~ stint-ordinal fixed-effects + global linear fuel(lap_number) + per-compound tyre_life slope (scaled lstsq); per-(race,compound) gamma = deg_slope_raw, lap-count weight; within-race-centred deg_slope for scoring. Add deg_slope_raw to TRUTH_COLS. PURE lap-time + lap_number only (no physics/telemetry/#443). Per the Admiral-ratified verdict criterion, adjust classify_axis_verdict: GO = coverage + physics signal P>coinflip + physics-k monotone-up + LOO-honest + G3-separable (do NOT gate on beating the incumbent; report physics-vs-incumbent as CONTEXT); add the lap-time-family modality caveat; wire run_supplant to pass physics_monotone. Keep score_predictor/LOO/interval_overlap otherwise as-is. Evo-free.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r0-context attested c1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "module still evo-free; build_truth_cells exposes deg_slope_raw; API importable",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-511 && py -c \"import ast,sys; src=open('src/physics/layer2/tyre_supplant.py').read(); mods=[n.module or '' for n in ast.walk(ast.parse(src)) if isinstance(n,ast.ImportFrom)]+[a.name for n in ast.walk(ast.parse(src)) if isinstance(n,ast.Import) for a in n.names]; bad=[m for m in mods if 'evo_predictor' in m or 'latent_power' in m or 'compound_prior' in m]; print('EVO-FREE FAIL',bad) or sys.exit(1) if bad else print('evo-free ok')\" && py -c \"from src.physics.layer2.tyre_supplant import build_truth_cells, score_predictor, classify_axis_verdict, TRUTH_COLS; assert 'deg_slope_raw' in TRUTH_COLS, TRUTH_COLS; print('api ok', TRUTH_COLS)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r1-truth-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "Truth = pure lap-time + lap_number ONLY (no physics mass model, no telemetry/grip, no #443 magnitudes)",
+        "Do NOT modify W2/quali/store/G3/pooling/common modules"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r1-truth-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-511 && py -c \"import ast,sys; src=open('src/physics/layer2/tyre_supplant.py').read(); mods=[n.module or '' for n in ast.walk(ast.parse(src)) if isinstance(n,ast.ImportFrom)]+[a.name for n in ast.walk(ast.parse(src)) if isinstance(n,ast.Import) for a in n.names]; bad=[m for m in mods if 'evo_predictor' in m or 'latent_power' in m or 'compound_prior' in m]; print('EVO-FREE FAIL',bad) or sys.exit(1) if bad else print('evo-free ok')\" && py -c \"from src.physics.layer2.tyre_supplant import build_truth_cells, score_predictor, classify_axis_verdict, TRUTH_COLS; assert 'deg_slope_raw' in TRUTH_COLS, TRUTH_COLS; print('api ok', TRUTH_COLS)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-tests": {
+      "id": "r2-tests",
+      "title": "Update truth/verdict tests + add naive-inversion regression; full suite green",
+      "imperative": "Update the truth-channel tests to the reshaped model (lap_number column in the in-memory DB; new-truth recovery on an identified synthetic), update the verdict test(s) to the new GO criterion, and ADD a regression test: on synthetic with a known fuel ramp + known per-compound wear, the fuel-corrected truth recovers the wear ordering (SOFT>MEDIUM>HARD) while the naive per-stint slope is fuel-confounded (HARD/MEDIUM falsely negative) -> assert the naive slope is NOT what build_truth_cells uses. Keep all non-truth/non-verdict tests green.",
+      "preconditions": [
+        {
+          "id": "p2",
+          "statement": "r1-truth c2 satisfied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c3",
+          "statement": "pytest green (all prior unaffected tests + updated truth/verdict + new regression)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-511 && py -m pytest tests/unit/physics/layer2/test_tyre_supplant.py -q 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r2-tests-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r2-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-511 && py -m pytest tests/unit/physics/layer2/test_tyre_supplant.py -q 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r3-limits": {
+      "id": "r3-limits",
+      "title": "simplification_limits clean on changed files",
+      "imperative": "Run simplification_limits --paths on the module + test; fix any file/function-length or complexity violations.",
+      "preconditions": [
+        {
+          "id": "p3",
+          "statement": "r2-tests c3 satisfied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c4",
+          "statement": "simplification_limits PASS on both files",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-511 && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_supplant.py tests/unit/physics/layer2/test_tyre_supplant.py 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r3-limits-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r3-limits-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-511 && py -m src.utils.simplification_limits --paths src/physics/layer2/tyre_supplant.py tests/unit/physics/layer2/test_tyre_supplant.py 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-report": {
+      "id": "r4-report",
+      "title": "Real-data supplant report on the fuel-corrected truth (read-only)",
+      "imperative": "Re-run the real-data report on the canonical 2023 stores read-only: new truth-cell summary (expect monotone-up SOFT>MEDIUM>HARD from deg_slope_raw median), physics primary P, season-pooled LOO P, placeholder incumbent (compound_c_number) P, and magnitude R2 -- all against the corrected truth -- plus the per-axis verdict with the modality caveat. Paste the output.",
+      "preconditions": [
+        {
+          "id": "p4",
+          "statement": "r3-limits c4 satisfied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c5",
+          "statement": "report ran on canonical DBs read-only; new truth ladder + physics/LOO/incumbent P + R2 + verdict captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Open canonical DBs read-only (mode=ro)",
+        "Do NOT commit .db files",
+        "Incumbent is INJECTED (built outside the module)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-result": {
+      "id": "r5-result",
+      "title": "Overwrite g4-implementer-result.md with the REWORK section",
+      "imperative": "Overwrite .agent-work/511/crew-handoffs/g4-implementer-result.md adding a 'REWORK (truth reshape)' section: what changed in build_truth_cells (+ the verdict criterion adjustment), the 4 evidence blocks, and the SUPPLANT FINDING against the corrected truth (does physics NOW carry real degradation-ordering signal? per-axis: physics P vs truth + monotone-k + the gamma/#443 context framing). Keep a Workflow Feedback section. Return status complete.",
+      "preconditions": [
+        {
+          "id": "p5",
+          "statement": "r4-report c5 satisfied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c6",
+          "statement": "result md overwritten with REWORK section, 4 evidence blocks, supplant finding, workflow feedback",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

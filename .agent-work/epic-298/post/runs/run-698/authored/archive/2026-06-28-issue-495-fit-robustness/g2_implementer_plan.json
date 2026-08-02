@@ -1,0 +1,88 @@
+{
+  "work_id": "g2-issue-495-no-speed-stream",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-red-tests", "m2-calibration-guard", "m3-session-fit-guards", "m4-comment-and-status-sets", "m5-verify-full"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff",
+      "imperative": "Verify handoff is complete: task, intent, scope, exclusions, test mode, stop conditions, required evidence all present. Read all map anchors from source. Verify exact line numbers before editing.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "handoff complete; all anchor seams verified from source", "check": null, "satisfied": true}
+      ],
+      "constraints": [],
+      "status": "done",
+      "result": "Handoff complete. Seams verified: session_fit.py:236-241 (driver_streams + no_laps guard), :308-314 (except ValueError mapping); calibration.py:877-879 (windows block tp/tc.min()); fit_store.py:34 (stale comment). All confirmed from source."
+    },
+    "m1-red-tests": {
+      "id": "m1-red-tests",
+      "title": "TDD: write failing tests first (red)",
+      "imperative": "Write two new failing tests before any implementation: (a) test_fit_driver_no_speed_stream_returns_typed_skip in test_calibration_robustness.py — mock driver_streams to return empty speed dict and assert fit_driver returns no_speed_stream status; (b) test_calibrate_session_hp_empty_tc_raises_no_speed_stream — pass windows with empty tc slice and assert typed ValueError. Run tests to confirm RED.",
+      "preconditions": [
+        {"id": "p1", "statement": "context and seams verified", "check": null, "satisfied": true}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "new tests exist and FAIL (red) before implementation", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_calibration_robustness.py::TestNoSpeedStream -q 2>&1 | tail -5"}, "satisfied": false}
+      ],
+      "constraints": ["TDD required: red before green"],
+      "status": "pending"
+    },
+    "m2-calibration-guard": {
+      "id": "m2-calibration-guard",
+      "title": "Add no_speed_stream typed guard in calibration.py",
+      "imperative": "In calibration.py:877-879 if windows: block, add guard BEFORE tp_min/tc_min calls: raise ValueError('no_speed_stream: empty speed stream in calibration windows') when len(tc) < 1. Pattern-match existing typed raise at :899-902.",
+      "preconditions": [
+        {"id": "p1", "statement": "red tests exist", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "calibration test for empty tc raises no_speed_stream typed ValueError", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_calibration_robustness.py::TestNoSpeedStream::test_calibrate_session_hp_empty_tc_raises_no_speed_stream -q 2>&1 | tail -5"}, "satisfied": false}
+      ],
+      "constraints": ["only guard in windows: block; no change to no_accel_samples path"],
+      "status": "pending"
+    },
+    "m3-session-fit-guards": {
+      "id": "m3-session-fit-guards",
+      "title": "Add primary early guard + ValueError mapping in session_fit.py",
+      "imperative": "In session_fit.py: (1) after driver_streams() call (~line 236), add 'if len(spd_d[\"t\"]) == 0: return _err(\"no_speed_stream\")' mirroring the no_laps guard pattern; (2) in except ValueError mapping (~lines 308-314), add branch 'if msg.startswith(\"no_speed_stream\"): return _err(\"no_speed_stream\", msg)' before the generic fallthrough.",
+      "preconditions": [
+        {"id": "p1", "statement": "calibration guard in place", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "fit_driver early-guard test passes green", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_calibration_robustness.py::TestNoSpeedStream -q 2>&1 | tail -5"}, "satisfied": false}
+      ],
+      "constraints": ["no change to no_accel_samples semantics; no new statuses"],
+      "status": "pending"
+    },
+    "m4-comment-and-status-sets": {
+      "id": "m4-comment-and-status-sets",
+      "title": "Fix stale fit_store.py comment + add no_speed_stream to valid_statuses sets",
+      "imperative": "Update fit_store.py line 34 comment to: '# \"ok\" | \"error\" | \"no_laps\" | \"no_accel_samples\" | \"no_speed_stream\"'. In test_475_validation_breadth.py, add 'no_speed_stream' to the three valid_statuses sets at lines 87, 261, 573.",
+      "preconditions": [
+        {"id": "p1", "statement": "session_fit guards in place", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "fit_store.py comment updated; all three valid_statuses sets include no_speed_stream", "check": null, "satisfied": false}
+      ],
+      "constraints": ["comment-only change to fit_store.py; test-set changes only to test_475"],
+      "status": "pending"
+    },
+    "m5-verify-full": {
+      "id": "m5-verify-full",
+      "title": "Full verification: pytest + simplification_limits + Saudi DEV repro",
+      "imperative": "Run: (1) py -m pytest tests/unit/physics tests/unit/preprocessing -q; (2) py -m src.utils.simplification_limits on touched paths; (3) Saudi Arabia 2023 Q DEV repro command. All must pass/print no_speed_stream.",
+      "preconditions": [
+        {"id": "p1", "statement": "all implementation changes done", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "pytest green; simplification_limits clean; Saudi DEV prints no_speed_stream", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics tests/unit/preprocessing -q 2>&1 | tail -10"}, "satisfied": false}
+      ],
+      "constraints": ["no rebuild of fit store"],
+      "status": "pending"
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

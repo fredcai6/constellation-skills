@@ -1,0 +1,40 @@
+The diff is clean and correct. Here is the complete result:
+
+---
+
+## Result
+
+### Files edited
+
+- `docs/architecture/packets/evo_predictor.md`
+- `docs/architecture/index.md`
+
+No code touched. No non-architecture docs touched.
+
+---
+
+### Exact additions
+
+**`packets/evo_predictor.md` — `fusion.py` section** (one sentence appended):
+
+> Also contains `fuse_module_fields_correlated` — an OFFLINE-ONLY measurement variant (no production call-site): per-entity GLS fusion with a k×k cross-module error correlation matrix R (Σ_i = D_i R D_i). Production `fuse_module_fields_ordered` is unchanged.
+
+**`packets/evo_predictor.md` — `fusion_training/` section** (file list expanded, `_correlation.py` described, harness noted):
+
+- `_correlation.py` added to the split-across file list.
+- New sentence describing its two functions: `estimate_cross_module_correlation` (R from standardized residuals, pooled, shrunk toward I) and `mask_correlation_to_block` (cheap-B block mask). Marked offline/no production call-site.
+- One-liner at end of section: `Offline measurement harness: scripts/fusion_replay/ (numpy-only package; loads #371 per-event module records, reproduces production fusion, scores baseline vs correlated variants; reads the SQLite DB read-only for constructor↔driver mapping; generated records are gitignored artifacts; no production call-site; scripts are not map nodes).`
+
+**`index.md` — preamble** (one reconciliation sentence appended):
+
+> Reconciled 2026-06-06 for correlated-covariance fusion measurement (#373): additive doc-only update; no production behaviour changed. `fuse_module_fields_correlated` added to `src/evo_predictor/fusion.py` (offline/measurement-only variant; no production call-site; production `fuse_module_fields_ordered` unchanged). `fusion_training/_correlation.py` added (offline R estimator `estimate_cross_module_correlation` + block-mask constructor `mask_correlation_to_block`; no production call-site). `scripts/fusion_replay/` offline measurement harness (loads #371 per-event module records, scores baseline vs correlated variants) — packet prose only; scripts are not map nodes. Updated `fusion.py` and `fusion_training/` descriptions in `packets/evo_predictor.md`. No new container/component/edge/overlay changes.
+
+The `struct:evo.fusion` YAML component node in the index was left unchanged — its production purpose (precision-weighted fusion of module field results) is unaffected by the offline-only addition, and the packet is the authoritative detail page.
+
+---
+
+### `scripts/fusion_replay/` harness — decision and rationale
+
+**Added as packet prose; intentionally NOT added as a structural map node.**
+
+The established pattern in this repo (evidenced by multiple prior reconciliation entries: `validate_qs_compound_beta_regime.py`, `diagnose_quali_same_pairs.py`, `build_spread_target.py`, `diagnose_quali_gap_scale.py`, and the existing scripts table header "scripts are not structural map nodes") is that `scripts/` entries are documented as packet prose only. The `fusion_replay/` harness is offline-only measurement tooling, so it belongs in the same category. It is documented as a one-liner at the tail of the `fusion_training/` section — the most natural location since the harness consumes the outputs of that package.

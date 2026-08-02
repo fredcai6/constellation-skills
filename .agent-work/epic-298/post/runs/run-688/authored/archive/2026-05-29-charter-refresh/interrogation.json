@@ -1,0 +1,52 @@
+{
+  "verdict": "provisional",
+  "material_decisions": [
+    {
+      "decision": "Rigorous default changes agent behavior by forcing explicit planning gates, test-led logic changes, DB-only analysis, fail-fast contracts, no hidden fallback, no dual paths, and issue-backed compromises.",
+      "projection": ["orchestrator", "crew", "engine-config"]
+    },
+    {
+      "decision": "Accepted cost is slower iteration, more local verification, more documentation upkeep, fewer compatibility shortcuts, and more issue creation for deferred compromises.",
+      "projection": ["orchestrator", "crew"]
+    },
+    {
+      "decision": "Docs-only edits, exploratory notebooks/prototypes, and isolated scratch outputs may be pragmatic, but promotion requires tests, metrics, or docs.",
+      "projection": ["orchestrator"]
+    },
+    {
+      "decision": "DB/ingestion, evo/probability, latent_power/compound_prior contracts, physics/preprocessing, and committed report schemas require subsystem-specific evidence.",
+      "projection": ["orchestrator", "crew"]
+    },
+    {
+      "decision": "Correct agent behavior is proven by focused test commands, calibration/backtest metrics, schema/consumer checks, validation queries, L1-L4 physics evidence, or captured gate evidence.",
+      "projection": ["orchestrator", "crew", "checklist"]
+    },
+    {
+      "decision": "Commit sensitivity is resolved: local commits allowed after verification; push/open PR require explicit user ask unless publishing was requested; merge requires ask; force-push to main/master forbidden.",
+      "projection": ["orchestrator"]
+    }
+  ],
+  "contradictions_or_gaps": [
+    {
+      "gap": "The checklist engine exists in Constellation skill directories, not at repo-local scripts/checklist_engine.py as referenced by the Workbench docs.",
+      "status": "tracked",
+      "tracking_issue": "https://github.com/fredcai6/f1Brainz/issues/296"
+    },
+    {
+      "gap": "The live work record needed to be converted to a full engine-valid checklist.",
+      "status": "resolved",
+      "resolution": "Created charter.engine.json from bundled Charter template and drove it with the bundled engine."
+    },
+    {
+      "gap": "Archive policy for .agent-work packages was not explicit.",
+      "status": "resolved",
+      "resolution": "User decided context templates are not required committed artifacts; all other templates must be committed; Commander work logs are committed under .agent-work/archive when Commander work is finished."
+    }
+  ],
+  "recommended_edits": [
+    "Add explicit .agent-work archive policy to Orchestrator context or artifact policy.",
+    "Update charter.engine.json gate statuses through durable output gates.",
+    "Keep issue #296 as the exit-condition tracker for repo-local checklist engine assets or guidance revision."
+  ],
+  "open_questions": []
+}

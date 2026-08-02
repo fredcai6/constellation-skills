@@ -1,0 +1,65 @@
+{
+  "work_id": "522-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-store-gp-check", "m2-run-dashboard", "m3-verdict-md", "m4-docs-update", "m5-tests-verify"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff complete",
+      "imperative": "Read CREW_CONTEXT, GLOSSARY, handoff, physics packet, decision anchor. Verify handoff completeness.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "crew context + glossary + handoff loaded; handoff complete; stop conditions checked", "check": null, "satisfied": true}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "Handoff complete. GP names match store. G2 fix confirmed live in car_prior.py. No old clipped expectations in unit tests.", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m1-store-gp-check": {
+      "id": "m1-store-gp-check",
+      "title": "Confirm GP names in store",
+      "imperative": "Run EstimateStore.load(year=2023) and confirm Monaco/Italy/Great Britain/Singapore are present.",
+      "preconditions": [{"id": "p1", "statement": "context loaded and handoff complete", "check": null, "satisfied": true}],
+      "postconditions": [{"id": "c1", "statement": "GP names confirmed present in store", "check": null, "satisfied": true}],
+      "constraints": ["read-only store access"],
+      "status": "done", "status_detail": {}, "result": "All four GPs confirmed: Monaco, Italy, Great Britain, Singapore present. Exact spelling matches handoff command.", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m2-run-dashboard": {
+      "id": "m2-run-dashboard",
+      "title": "Run C1 dashboard with corrected ceiling",
+      "imperative": "Run `py scripts/driver_utilization_dashboard.py --db data/physics_estimates.db --cases 'Monaco:VER,Italy:VER,Great Britain:VER,Singapore:VER'` from repo root. Capture per-regime U + sigma.",
+      "preconditions": [{"id": "p1", "statement": "GP names confirmed", "check": null, "satisfied": true}],
+      "postconditions": [{"id": "c1", "statement": "Dashboard runs to completion; per-regime U + sigma captured for 4 cases", "check": {"kind": "command", "command": "py scripts/driver_utilization_dashboard.py --db data/physics_estimates.db --cases 'Monaco:VER,Italy:VER,Great Britain:VER,Singapore:VER'"}, "satisfied": false}],
+      "constraints": ["no store writes", "read-only"],
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m3-verdict-md": {
+      "id": "m3-verdict-md",
+      "title": "Author VERDICT.md with per-regime GO/CONTEXTUAL/NO-GO",
+      "imperative": "Write .agent-work/522-phase-align-utilization/VERDICT.md with before/after table, per-regime verdict grounded in actual numbers, statement that #518 phase-misalignment story was superseded by the lateral units bug.",
+      "preconditions": [{"id": "p1", "statement": "Dashboard numbers captured", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "VERDICT.md exists with before/after table and honest per-regime verdict", "check": null, "satisfied": false}],
+      "constraints": ["grounded in actual numbers", "honest covariance considered"],
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m4-docs-update": {
+      "id": "m4-docs-update",
+      "title": "Update physics.md + decision anchor doc",
+      "imperative": "Edit docs/architecture/packets/physics.md (utilization characterization-finding paragraph) and docs/architecture/decisions/ideal-lap-sim-two-sided-evaluator.md (characterization-finding + review-trigger). Factual minimal updates reflecting the units fix + new verdict.",
+      "preconditions": [{"id": "p1", "statement": "VERDICT.md authored with final numbers", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "Both doc files updated; #518 phase-misalignment superseded text present; new verdict numbers reflected", "check": null, "satisfied": false}],
+      "constraints": ["factual + minimal", "Cartographer reconciles later", "no car_prior.py changes"],
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m5-tests-verify": {
+      "id": "m5-tests-verify",
+      "title": "Run verification tests",
+      "imperative": "Run `py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py -q`. Check if any test encodes old clipped expectations; update if so.",
+      "preconditions": [{"id": "p1", "statement": "Docs updated", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "Tests pass; old clipped expectations corrected if found", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py -q"}, "satisfied": false}],
+      "constraints": ["note which tests changed and why"],
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

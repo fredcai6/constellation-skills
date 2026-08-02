@@ -1,0 +1,155 @@
+{
+  "work_id": "669-pilot-g2",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md doctrine, handoff, implementer result, pipeline.py, both scripts, all 5 test files. Verified fallback DB (53KB) + MAIN input stores + probe fixture (20KB) all present on disk.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff satisfied: 6 landed stages (C->D->E->G->H->PANEL) wired into ONE offline per-circuit command. GB full-chain RE-RUN by me: exit 0, provenance=fresh, all C/D/E/H PASS, all 6 slots ran, ~90s offline. Deliverables all present + untracked (git check-ignore-able): src/physics/pilot/{__init__,pipeline}.py, scripts/run_pilot_669.py, scripts/verify_pilot_results_669.py, tests/unit/physics/pilot/*.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Pure consumer confirmed. pipeline.py imports+calls landed modules (lazy imports from src.physics.{segment_map,layer2,fingerprint,utilization} + scripts.*), reimplements nothing, mints no constant (MAP_STABILITY_DRIFT_M imported line 697). git status --porcelain shows ONLY new untracked files (pilot pkg, 2 scripts, tests, agent-work, generated report) -- ZERO ' M' on any landed stage module. Two segment-map paths tripwired not unified (two_map_segment_tripwire). Exclusions respected.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 4 load-bearing items REPRODUCED independently: (1) GB run exit0 provenance=fresh, C n_segments=41==E e_segment_count=41 (tripwire silent flags=[]), median_drift_m=0.566<10, E within_anchor=True+positive_control=True, C/D/E/H all PASS; (2) pytest tests/unit/physics/pilot -q = 29 passed 0 skipped on Py3.14.3; (3) pyright = 0 errors 0 warnings 0 info; (4) verifier exit 0. D grip WORSENS (before_rms=0.44->after_rms=3.20) = known #663 null, correctly a PASS (fit ran+score produced), NOT a false-block.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints honored: OFFLINE (gitignored inputs from absolute MAIN paths, all exist; E --per-year-db = SCRATCH COPY f1_data_2023_scratch.db; NO tracked data/*.db dirtied -- git status data/ empty after run; no FastF1 cache touch, provenance=fresh proves store path). Strictly-pre: as_of_round=round_idx=circuit round, pipeline passes it to fit, no leakage in pipeline. grip-G mu=0 one-sided sigma+: pipeline does NOT point-subtract G (gate_grip_fit only reads harness reconciliation score). Fallback HONESTY: _fell_back stamps PROV_FELL_BACK+reason, no silent substitution; gating FAIL reported machine-broken not masked. 4 critic-hardening items NON-VACUOUS + actually ran (0 skipped): fallback DB(53KB)+probe(20KB) present.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes match diff: struct:physics.pilot NEW, consumes landed stages read-only; capability:pilot-orchestration; constraints offline/reversibility/frozen-consume/strictly-pre all verified against the run. Durable arch map stale-by-design for epic-659 (#671) -- no map edit expected. Decision anchors (fresh-vs-archived, two-segmap tripwire, pass-vs-limitation) exercised as recorded. No divergence requiring Commander reconcile. 3 implementer triage candidates are legit out-of-scope follow-ons.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell: flagged / overridden / absent. Record the pass to FOWLER_PASS, run verify_fowler_pass.py, then record pass/fail with a finding. Do NOT silently skip.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/669-pilot/g2-review/fowler_pass.json, verify_fowler_pass.py exit 0. 12/12 smells verdicted; 0 flagged; 3 overridden (long-method: run_circuit ~105-line linear single-level stage sequencing, thin-orchestrator standard; data-clumps + long-parameter-list: year/session_type/round + scratch-path bundle threaded via long keyword-only lists -- WIRING-ONLY tracer-bullet defers a context object, each param maps 1:1 to a real landed-stage input). Overrides surfaced as non-blocking g3-hardening observations. No smell rises to a defect.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. Thin offline orchestrator wiring 6 landed epic-659 stages into one per-circuit command; pure consumer, no landed-stage edit, no new model/constant. All 4 load-bearing items reproduced independently: GB full-chain exit0 provenance=fresh (C n_segments=41==E=41 tripwire-silent, median_drift=0.566<10, E within_anchor+positive_control True, C/D/E/H all PASS); 29 pytest passed 0 skipped Py3.14; pyright 0/0/0; verifier exit0. No tracked DB dirtied. 4 critic-hardening items non-vacuous + actually ran. 12/12 Fowler smells verdicted (0 flagged, 3 overridden = deferred g3 hardening). 1 non-blocking observation (report default-path)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4-quality",
+      "statement": "run_pilot_669.py default --report-path writes into docs/physics/ (tracked source dir), NOT under --out-dir, so even a scratch run leaves an untracked docs/physics/pilot_669_report.md in the tree (pilot_results.json correctly goes under --out-dir). Minor: the offline constraint says 'all run artifacts land under out-dir'. Non-blocking (g3 intentionally writes the committed report there); consider defaulting report-path under --out-dir for non-g3 runs."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g2-rev-669",
+    "status": "released",
+    "claimed_at": "2026-07-27T06:43:34.535338+00:00",
+    "last_heartbeat": "2026-07-27T06:49:28.626862+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-27T06:50:24.354443+00:00"
+  }
+}

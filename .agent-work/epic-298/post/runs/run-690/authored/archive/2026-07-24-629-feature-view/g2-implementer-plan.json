@@ -1,0 +1,265 @@
+{
+  "work_id": "629-feature-view-g2-impl",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-composer",
+    "m2-verification",
+    "m3-close-out"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md + GLOSSARY.md, plus the g2 handoff at .agent-work/629-feature-view/g2-implementer-handoff.md. Verify the handoff is complete (task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-composer": {
+      "id": "m1-composer",
+      "title": "build_weekend_state.py: compose WeekendStateRecord rows from a fitted WeekendStateModel's transform() output",
+      "imperative": "Write tests/unit/physics/feature_view/test_build_weekend_state.py FIRST: build a small synthetic frame mirroring tests/unit/physics/weekend_state/test_model.py's make_frame(seed=626, years=(2022,2023), n_rounds=12, n_con=8) with AXES=['drag_area_closed_m2','max_power_w','brake_decel_ms2'], fit a WeekendStateModel(axes=AXES) on a train split and transform() a held-out slice, then call build_weekend_state_records(model, transformed_df, model_version=...) and assert: (1) one WeekendStateRecord per input row; (2) a row with a real (non-NaN) {axis}_car_signal + sigma is marked axis_status[axis]=='resolved' with axis_sigma[axis] passed through UNCHANGED from the car_signal sigma; (3) a row where one axis's car_signal is forced NaN (e.g. by monkeypatching/dropping that car-season from the pool, or directly constructing a transformed_df row with NaN in that column) is marked axis_status[axis]=='unresolved' with axis_sigma[axis] widened via estimate_store_fields.effective_axis_sigma (strictly >= the unresolved sentinel fraction of the value, or a reference-value-based widening when the value itself is also NaN); (4) every produced record writes successfully into a FeatureViewStore(tmp_path db).insert_weekend_state without raising. Observe the test fail (module does not exist yet) -- attest c1. Then implement src/physics/feature_view/build_weekend_state.py: a build_weekend_state_records(model, transformed_df, *, model_version) -> list[WeekendStateRecord] function that enumerates axes via BOTH model.model_cols() and model.layer_sigma_cols() (do not hand-guess column names), builds axis_values/axis_sigma/axis_status per row with the resolved/unresolved rule stated above (a NEW convention this gate introduces -- document it explicitly in the module docstring per the handoff's Note on round_idx and the Protected Intent: never fabricate, never silently drop), and documents why round_idx is omitted from the stored record's natural key (gp_name already disambiguates within a year for session_type='Q'). No src.evo_predictor import anywhere in the new file. Iterate until test_build_weekend_state.py is green -- command-check c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_build_weekend_state.py written and observed failing (module absent) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "build_weekend_state.py implemented; test_build_weekend_state.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_build_weekend_state.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-composer-1"
+        }
+      ],
+      "constraints": [
+        "Reuse effective_axis_sigma/normalize_axis_status/UNRESOLVED_AXIS_SIGMA_FRAC from src.physics.layer2.estimate_store_fields (same import path store.py already uses) -- do not reimplement the widening logic",
+        "No src.evo_predictor import anywhere in build_weekend_state.py",
+        "Do NOT modify src/physics/feature_view/records.py or store.py (G1, frozen/closed)",
+        "Do NOT modify src/physics/weekend_state/ (read-only consumer)",
+        "Never fabricate an axis value/sigma/status -- an unresolved axis widens sigma via effective_axis_sigma, never zero-filled or dropped",
+        "Tests use tmp_path DB only, never a committed data/*.db path; no read of the real physics_estimates.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-composer-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_build_weekend_state.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-verification": {
+      "id": "m2-verification",
+      "title": "Full regional test suite + simplification_limits + no-evo-import + committed-path checks",
+      "imperative": "Run the full feature_view region test suite (G1's 27 + this gate's new tests, all green), the simplification_limits check on src/physics/feature_view, the evo-import grep, and the git check-ignore verification named in the handoff's Verification Commands. Paste all four command outputs verbatim into your running notes for the result file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "build_weekend_state.py implemented and its own test green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "py -m pytest tests/unit/physics/feature_view -q is green (all tests, G1 + G2)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verification-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits clean on src/physics/feature_view",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m src.utils.simplification_limits --paths src/physics/feature_view"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verification-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no evo_predictor import in the new file; new file is committed (not gitignored)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-629 && (grep -rn evo_predictor src/physics/feature_view/build_weekend_state.py || echo clean) && ! git check-ignore src/physics/feature_view/build_weekend_state.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verification-3"
+        }
+      ],
+      "constraints": [
+        "No new src.evo_predictor import surfaces anywhere in the touched region"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verification-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-verification-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m src.utils.simplification_limits --paths src/physics/feature_view",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-verification-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-629 && (grep -rn evo_predictor src/physics/feature_view/build_weekend_state.py || echo clean) && ! git check-ignore src/physics/feature_view/build_weekend_state.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-close-out": {
+      "id": "m3-close-out",
+      "title": "Write IMPLEMENTER_RESULT and hand off",
+      "imperative": "Write .agent-work/629-feature-view/g2-implementer-result.md per the handoff's Return Format, with verbatim pasted evidence (full pytest output, the concrete resolved/unresolved WeekendStateRecord example, simplification_limits output) -- not summarized. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all verification commands green and evidence captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g2-implementer-result.md written with verbatim evidence per Return Format",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipj629-g2",
+    "status": "released",
+    "claimed_at": "2026-07-24T15:56:50.813909+00:00",
+    "last_heartbeat": "2026-07-24T16:02:11.905230+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-24T16:02:17.156772+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "G2 handoff verified complete (task/seams/scope/exclusions/constraints/close criteria/evidence/verification commands/stop conditions all present); read model.py, frame.py, store.py, records.py, estimate_store_fields.py, test_model.py to confirm the cited seams match source exactly.",
+      "mechanical": false,
+      "ts": "2026-07-24T15:57:14.421565+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-composer",
+      "why": "Implemented build_weekend_state_records: enumerates axes via model.model_cols()+layer_sigma_cols()[-1], per-row/per-axis resolved iff value+sigma both non-NaN, unresolved widens via effective_axis_sigma (same import as store.py), NaN normalized to None so nothing is fabricated; round_idx omitted per handoff's pre-authorized decision; no evo_predictor import. All 6 new tests green.",
+      "mechanical": false,
+      "ts": "2026-07-24T15:59:30.458870+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-verification",
+      "why": "Full feature_view region suite (33 tests: G1's 27 + G2's 6 new) green; simplification_limits PASS on 4 files; no evo_predictor import; build_weekend_state.py not gitignored (check-ignore exit=1).",
+      "mechanical": false,
+      "ts": "2026-07-24T16:00:03.201353+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-close-out",
+      "why": "g2-implementer-result.md written per Return Format with verbatim evidence: TDD red/green pytest output, 33/33 full region suite, three concrete WeekendStateRecord examples (resolved / fully-unresolved / value-present-sigma-missing), simplification_limits PASS, evo-import grep clean, git check-ignore exit=1.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:02:11.905218+00:00"
+    }
+  ]
+}

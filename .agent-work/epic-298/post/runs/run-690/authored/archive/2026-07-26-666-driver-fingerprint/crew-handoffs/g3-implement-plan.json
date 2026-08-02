@@ -1,0 +1,422 @@
+{
+  "work_id": "666-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-scaffold-required-arg",
+    "m2-cutoff-keystone",
+    "m3-sigma-composition",
+    "m4-recency-and-k-cells",
+    "m5-verify-and-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md + references/global-everyone.md (inherited doctrine), then docs/agents/CREW_CONTEXT.md + GLOSSARY.md, then the g3-implement-handoff.md in full plus notes-666.md's #675 verdict. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + #675 verdict loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-scaffold-required-arg": {
+      "id": "m1-scaffold-required-arg",
+      "title": "Package skeleton + as_of_round required-no-default + minimal happy-path fit",
+      "imperative": "Create src/physics/fingerprint/fit.py with fit_driver_fingerprints(observables_db_path, store, driver, *, as_of_round, era, vocabulary, season, session_type='Q', map_version=None, channels=FINGERPRINT_CHANNELS, what_measure=DEFAULT_WHAT_MEASURE, allow_unverified=False) -- as_of_round is keyword-only with NO default (a TypeError falls out of Python itself, no manual check needed). Wire the raw sqlite3 read of driver_class_observables (class LIKE 'severity:%', round_idx<=as_of_round, ORDER BY for determinism), the per-(driver,class) recency-weighted aggregation, fit_two_way(values, teams=drivers, circuits=classes), and CellObservation writes via store.write_fingerprint -- enough to write a resolved cell for a simple 2-driver x 2-class synthetic DB. Create tests/unit/physics/fingerprint/test_fit.py with a first test asserting TypeError when as_of_round is omitted, and a smoke test that a simple synthetic DB produces a resolved cell with a plausible mean. TDD: write the tests first (observe ModuleNotFoundError/ImportError), then implement to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_fit.py written and observed failing (ModuleNotFoundError) before fit.py exists -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_fit.py written first; run against no fit.py -> ModuleNotFoundError: No module named 'src.physics.fingerprint.fit' (RED observed)"
+        },
+        {
+          "id": "c2",
+          "statement": "as_of_round-required test and smoke test pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k 'required or smoke'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-scaffold-required-arg-1"
+        }
+      ],
+      "constraints": [
+        "do NOT edit pooling.py/student_t.py/driver_utility.py",
+        "no data/.agent-work blob committed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-scaffold-required-arg-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k 'required or smoke'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-cutoff-keystone": {
+      "id": "m2-cutoff-keystone",
+      "title": "Strictly-pre cutoff over the ENTIRE input set (keystone)",
+      "imperative": "Implement/confirm the cutoff filters ALL driver_class_observables rows (every driver, feeding the field/parent pooling too) to round_idx<=as_of_round at the SQL read site, before any aggregation. Write the keystone test: build a temp DB with a target driver (VER) and a non-target driver (PER) across several in-cutoff rounds; fit at as_of_round=R; then (a) add a TARGET-driver row at round_idx>R and refit -- assert the target cell's mean AND sigma are byte-identical; (b) add a NON-TARGET-driver row at round_idx>R instead and refit -- assert the target cell's mean AND sigma are STILL byte-identical (proves parent/field pooling is also cut). Cite #628's measured 14.6x materiality precedent in the test docstring. TDD red (failing before the cutoff is wired) -> green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 scaffold green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed for the keystone test before the cutoff SQL filter existed -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED verified by temporarily stripping the round_idx<=as_of_round SQL clause: both keystone tests failed loudly (ValueError from the defensive \u0394round>=0 guard in _recency_weight, since a leaked round_idx=5 row with as_of_round=2 produced a negative \u0394round) -- proves the invariant is load-bearing, not decorative. Filter restored; tests pass."
+        },
+        {
+          "id": "c2",
+          "statement": "both poison forms (target-row, non-target-row) proven no-ops",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k cutoff"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-cutoff-keystone-1"
+        }
+      ],
+      "constraints": [
+        "cutoff must apply to the ENTIRE input set before any pooling"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-cutoff-keystone-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k cutoff",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-sigma-composition": {
+      "id": "m3-sigma-composition",
+      "title": "Sigma composition: single-site shared_floor, idempotence, G byte-identical, sigma_lapsampling present-zero",
+      "imperative": "Implement sigma_cell = sqrt(sigma0^2 + shared_floor^2 + g_sigma_onesided^2 + sigma_lapsampling^2) at one structural site: shared_floor = sqrt(fit_two_way(...).var_circuit) per channel, priced via a single helper function that calls pool_random_effects(shared_floor=...) exactly once per resolved cell. Write tests: (i) single-site -- mock.patch.object the module's pool_random_effects (wraps=real) and assert call_count == number of resolved cells; (ii) idempotence -- rerunning the fit on identical inputs yields byte-identical sigma (no cross-run compounding) PLUS a direct helper-level check that one application != a naive double-application; (iii) G byte-identical point -- two fits differing only in g_sigma_onesided assert identical mean, differing sigma; (iv) sigma_lapsampling present-but-zero -- assert the component is wired (nonzero input measurably widens sigma) and defaults to exactly zero contribution when NULL (not dropped from the formula). TDD red -> green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 cutoff keystone green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed for the sigma-composition tests before the composition/flooring site existed -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED verified by temporarily (a) double-calling pool_random_effects in _price_sigma_with_shared_floor and (b) dropping g_sigma_onesided/sigma_lapsampling from _compose_sigma: single-site spy failed 8!=4 calls, idempotence helper-check failed, G-byte-identical and lapsampling-widens tests both failed (sigma stopped differing). Both edits reverted; all 10 tests green."
+        },
+        {
+          "id": "c2",
+          "statement": "single-site, idempotence, and G-byte-identical tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k 'sigma or idempot or single_site or byte_identical or lapsampling'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-sigma-composition-1"
+        }
+      ],
+      "constraints": [
+        "do NOT edit pooling.py",
+        "shared_floor must NOT floor the driver-overall level"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-sigma-composition-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k 'sigma or idempot or single_site or byte_identical or lapsampling'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-recency-and-k-cells": {
+      "id": "m4-recency-and-k-cells",
+      "title": "Recency monotonicity, both-channel write, exactly-k-cells + unresolved",
+      "imperative": "Write tests: recency weighting is monotone (a recent round outweighs an old one at equal support); both channels (utilization/time_deficit_s, energy/deployment_share) are written for a (driver, era); a class with no in-cutoff support yields an unresolved row and the store always returns exactly vocabulary.k cells. Implement/adjust as needed. TDD red -> green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 sigma composition green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed before these behaviors were implemented -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED verified by temporarily (a) dropping recency from the averaging weight, (b) fitting only the first channel, (c) dropping fit.py's own unresolved-floor check: (a) and (b) failed as expected; (c) surprisingly still passed because store.write_fingerprint independently re-checks support_n>=floor (defense-in-depth, not a test gap -- documented in the result). All 3 edits reverted; 14/14 green."
+        },
+        {
+          "id": "c2",
+          "statement": "recency, both-channel, and k-cells/unresolved tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k 'recency or both_channel or k_cells or unresolved'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-recency-and-k-cells-1"
+        }
+      ],
+      "constraints": [
+        "exactly k cells per (driver, era, channel) always"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-recency-and-k-cells-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q -k 'recency or both_channel or k_cells or unresolved'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify-and-close": {
+      "id": "m5-verify-and-close",
+      "title": "Full green suite + simplification_limits + result artifact",
+      "imperative": "Run the full tests/unit/physics/fingerprint/test_fit.py suite green, run simplification_limits --paths on fit.py + test_fit.py, confirm clean git status (no data/.agent-work blob staged), write IMPLEMENTER_RESULT to g3-implement-result.md, and SendMessage a concise summary to cmdr-666.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_fit.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-and-close-3"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits passes on fit.py + test_fit.py",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m src.utils.simplification_limits --paths src/physics/fingerprint/fit.py tests/unit/physics/fingerprint/test_fit.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-and-close-4"
+        },
+        {
+          "id": "c3",
+          "statement": "g3-implement-result.md written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3-implement-result.md written with full evidence (keystone+sigma-once+G tests pasted, full test_fit.py run, wider regression run, simplification_limits, assumptions, stop conditions, workflow feedback)"
+        }
+      ],
+      "constraints": [
+        "no data/.agent-work blob staged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-and-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-and-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m src.utils.simplification_limits --paths src/physics/fingerprint/fit.py tests/unit/physics/fingerprint/test_fit.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-and-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_fit.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-and-close-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-666 && PYTHONPATH=. \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m src.utils.simplification_limits --paths src/physics/fingerprint/fit.py tests/unit/physics/fingerprint/test_fit.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3-666-impl",
+    "status": "released",
+    "claimed_at": "2026-07-26T15:06:35.184801+00:00",
+    "last_heartbeat": "2026-07-26T15:32:57.492451+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-26T15:33:11.089566+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Read handoff g3-implement-handoff.md in full + notes-666.md #675 verdict (class-level shared_floor=sqrt(var_circuit) per channel, applied once via pool_random_effects); read pooling.py (fit_two_way, pool_random_effects), student_t.py (predictive_t/FormulaRule/DEFAULT_NU_LOSS=4.0), fingerprint frozen_constants/address/vocabulary/store.py, reference_utilization_store.py's driver_class_observables schema, and the #675 diagnostic script. Handoff is complete: task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present. Plan built as 6 vertical slices (scaffold+required-arg, cutoff keystone, sigma composition, recency+k-cells, verify-and-close).",
+      "mechanical": false,
+      "ts": "2026-07-26T15:07:02.894459+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-scaffold-required-arg",
+      "why": "fit.py scaffold: raw sqlite3 read with round_idx<=as_of_round + class LIKE 'severity:%' filter, recency-weighted per-(driver,class) aggregation, fit_two_way(teams=drivers,circuits=classes), sigma0 from pool.var_resid/n_eff, CellObservation writes via store.write_fingerprint. Both required-arg and smoke tests green (2 passed).",
+      "mechanical": false,
+      "ts": "2026-07-26T15:09:38.090509+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-cutoff-keystone",
+      "why": "Both poison forms (target-driver future row, non-target-driver future row) proven no-ops: mean AND sigma byte-identical to clean. Cutoff filter applied once at the SQL read site over the entire input set (all drivers), before any grouping/pooling -- protects target cell, class-across-drivers parent, and field mean uniformly. #628 14.6x materiality precedent cited in test docstring.",
+      "mechanical": false,
+      "ts": "2026-07-26T15:11:16.963644+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-sigma-composition",
+      "why": "Single-site (spy call_count==resolved_count), idempotence (rerun byte-identical + helper double-apply != single-apply), G byte-identical point (mean equal, sigma differs), sigma_lapsampling present-but-zero (white-box aggregate=0.0 on NULL, black-box nonzero widens sigma) all proven green; genuine RED demonstrated for each by temporarily breaking the corresponding code path.",
+      "mechanical": false,
+      "ts": "2026-07-26T15:14:06.976556+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-recency-and-k-cells",
+      "why": "Recency monotonicity (weight function + end-to-end aggregate skew), both-channel write (utilization+energy both populated k cells), and exactly-k-cells+unresolved (thin-support c2 + data-absent c3 both unresolved, k=4 always) all proven green with genuine RED demonstrated for the first two; the third's fit.py-level floor check is redundant with store.py's own independent guard (belt-and-suspenders, confirmed not a gap).",
+      "mechanical": false,
+      "ts": "2026-07-26T15:16:51.131140+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify-and-close",
+      "why": "Full test_fit.py green (14/14), whole fingerprint package green (83/83), layer2 regression clean (1006 passed, confirms no drift from read-only pooling.py consumption), simplification_limits PASS after a complexity refactor of _aggregate_cells, git status clean (no data/.agent-work blob staged), g3-implement-result.md written with full evidence including genuine RED-then-restore sabotage proofs for the keystone, sigma-once, and G-byte-identical invariants.",
+      "mechanical": false,
+      "ts": "2026-07-26T15:32:57.492421+00:00"
+    }
+  ]
+}

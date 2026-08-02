@@ -1,0 +1,385 @@
+{
+  "work_id": "issue-292-latent-observability/execute",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1",
+    "g2",
+    "g3",
+    "g4"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/architecture/packets/evo_predictor.md, docs/architecture/packets/latent_power.md, issue 292, and interrogation.json. Confirm the frozen plan protects current stateless latent-power/gold-cycle/sampled-runtime observability without recursive training or objective changes, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, evo and latent_power packets, issue, and interrogation loaded; plan intent/scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded orchestrator/glossary/evo and latent_power packets, issue 292 via gh, interrogation.json, README/TESTING/docs guidance; frozen plan protects current stateless observability path and excludes recursive/objective/fantasy-training changes."
+        }
+      ],
+      "constraints": [
+        "Use py for Python commands.",
+        "No direct FastF1 calls from analysis/model/adapter/predictor code.",
+        "Do not implement recursive refinement or unrolled recursive training.",
+        "Do not change model objectives by default.",
+        "Keep current stateless module/gold-cycle/sampled-runtime path as the single execution path."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1": {
+      "id": "g1",
+      "title": "Flag empty usable module events",
+      "imperative": "Using TDD, add explicit module uncertainty diagnostic flags for empty or fully skipped usable event sets. The flag must be compact, stable, and visible in the JSON report summary/module entries without changing model training or calibration math.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Pilot e0-context complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "module uncertainty diagnostics expose empty usable event-set flags and focused tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer approves",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-1"
+        }
+      ],
+      "constraints": [
+        "Fail visibly in report flags; do not silently treat empty scored sets as clean.",
+        "Do not alter calibration objective, pairwise loss, model architecture, or training data selection."
+      ],
+      "directives": null,
+      "child_checklist": "g1-review.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2": {
+      "id": "g2",
+      "title": "Gate gold observability in compact validation",
+      "imperative": "Using TDD, extend compact pipeline validation so committed gold-cycle artifacts either contain or fail clearly on the issue-292 observability surfaces: module baseline comparisons, uncertainty calibration diagnostics, runtime/training parity, event usage with skipped/missing input reporting, and explicit soft/diagnostic flags. Update minimal validation fixtures accordingly.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 complete or not required for compact validation changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pipeline validation tests cover missing/malformed observability gates and focused tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_pipeline_validation.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer approves",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-2"
+        }
+      ],
+      "constraints": [
+        "Validation failures must name the missing field and owning artifact.",
+        "Validation must remain compact and parse committed artifacts only.",
+        "Do not require bulky generated arrays or outputs/evo_runs artifacts."
+      ],
+      "directives": null,
+      "child_checklist": "g2-review.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_pipeline_validation.py -v",
+            "exit": "0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_pipeline_validation.py -v",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-4",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "Document gate ownership",
+      "imperative": "Update report/validation documentation so each issue-292 gate has a clear owning artifact or validation section: temporal split invariants, invalid/DQ/non-classified handling, baseline comparisons, sigma/error diagnostics, failure-mode flags, field sanity, and sampled-runtime parity.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "observability fields and validation behavior are known",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1/g2 complete; validation script and tests define observability surfaces."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "documentation maps issue-292 gates to artifact owners and docs-only/focused tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer approves",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-1"
+        }
+      ],
+      "constraints": [
+        "Docs must describe current truth, not old recursive design.",
+        "Command-heavy docs updated in this gate must keep Last verified current."
+      ],
+      "directives": null,
+      "child_checklist": "g3-review.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0,
+            "passed": 81
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4": {
+      "id": "g4",
+      "title": "Final focused verification",
+      "imperative": "Run the focused evo tests affected by the change and compact pipeline validation. Record any unavoidable validation blocker as evidence rather than weakening the gates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "implementation and documentation gates complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-g3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "focused evo tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-1"
+        },
+        {
+          "id": "c2",
+          "statement": "compact pipeline validation completed",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/run_pipeline_validation.py --profile compact"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-2"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer approves final diff and evidence",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-3"
+        }
+      ],
+      "constraints": [
+        "Do not close by weakening validation expectations.",
+        "If compact pipeline validation fails on stale committed artifacts unrelated to the code gates, preserve the failure details as evidence and route follow-up rather than masking it."
+      ],
+      "directives": null,
+      "child_checklist": "g4-review.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0,
+            "passed": 81
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/run_pipeline_validation.py --profile compact",
+            "exit": 0,
+            "overall_status": "pass"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2",
+      "statement": "Regenerate committed unc_diag artifact (reports/evo/unc_diag_260526_004033_2018thru2024.json) after g1 summary counter additions; compact validation correctly fails until artifact refresh."
+    },
+    {
+      "id": "tc2",
+      "from": "g2",
+      "statement": "Refresh committed gold-cycle artifacts (2018thru2024 set): add fusion_train_rows, regenerate unc_diag with g1 summary counters, align train_years to canonical 2021-2024 or update canonical policy."
+    }
+  ],
+  "blockers": []
+}

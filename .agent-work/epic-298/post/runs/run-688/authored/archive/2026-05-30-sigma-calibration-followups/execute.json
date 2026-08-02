@@ -1,0 +1,515 @@
+{
+  "work_id": "sigma-calibration-followups",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md (or ORCHESTRATOR_CONTEXT.md), docs/agents/GLOSSARY.md, docs/architecture/packets/latent_power.md, docs/adr/0008-retro-delta-supervision.md, the #142 archive (.agent-work/archive/2026-05-30-issue-142-sigma-calibration/), and issues #303-306. Confirm protected intent: Student-t heavy-tail robustness (nu>2), mu objective unchanged (term B detaches mu), latent_power must not import evo (ADR 0001), one canonical path, Brier primary for gold comparison. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + ADR 0008 + latent_power packet + #142 archive + issues #303-306 loaded; protected intent confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context+ADR0008+packet+142archive+issues loaded; protected intent confirmed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1": {
+      "id": "g1",
+      "title": "#303 \u2014 remove the target_mode concept end-to-end + gold report schema v5",
+      "imperative": "Remove the vestigial target_mode field everywhere (it is always 'retro_delta' post-#142). (a) latent_power: drop target_mode + ALLOWED_TARGET_MODES + its validation from config.py and models.py (LossBundle); make modules.loss_from_pairwise unconditional retro_delta (drop the target_mode branch/plumbing, keep the target_mu requirement and its named error); remove the target_mode echo from training.py diagnostics rows and loss payload (keep retro_delta semantics + batch.outcome for eval). (b) evo: drop target_mode='retro_delta' kwarg in run.py (line ~246); drop the target_mode field + VALID_TARGET_MODES + validation from gold_cycle/config.py and any target_mode entries in its serialized dicts (lines ~322,~362); drop the target_mode passthrough in gold_cycle/runner.py (~575). (c) Schema: VERIFY whether the committed gold report run_config actually carries target_mode (reports.build_run_config did NOT at audit time; config.py serialization may). Bump REPORT_SCHEMA_VERSION 4->5 in gold_cycle/reports.py to mark the run_config/diagnostics shape change for this work; add 5 to any report consumers/readers that pin supported versions; update the gold_report_schema.py field registry (schema_version interpretation -> v5; remove any target_mode field entry if present) and docs/report_schemas/* if such a doc exists. Note: the v5 contract also reserves the |r/sigma| percentile fields that G2 populates. (d) Update affected tests (tests/unit/latent_power/test_config.py,test_models.py,test_modules.py,test_training.py; tests/unit/evo_predictor/test_gold_cycle_config.py,test_gold_cycle_runner.py,test_gold_module_cycle.py; tests/integration/test_retro_delta_smoke.py). One canonical path; no vestigial mode field; no behavior change to training math.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "target_mode removed; schema bumped to 5; latent_power + gold-cycle + retro smoke suites green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/latent_power tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py tests/integration/test_retro_delta_smoke.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-2"
+        },
+        {
+          "id": "c2",
+          "statement": "no residual target_mode/ALLOWED_TARGET_MODES/VALID_TARGET_MODES references in src (grep clean); REPORT_SCHEMA_VERSION == 5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rg clean in src; REPORT_SCHEMA_VERSION==5 (reviewer-verified)"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer approves (full removal, schema bump + consumers + doc move together, no training-math change)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-1"
+        }
+      ],
+      "constraints": [
+        "test-led; run focused suites before and after",
+        "use py for python",
+        "latent_power must not import evo (ADR 0001)",
+        "prefer one canonical execution path",
+        "report schema producer + committed consumers + schema doc move together"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "reviewer": "g1-reviewer-subagent"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py tests/integration/test_retro_delta_smoke.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "#304 phase 1 \u2014 surface |r/sigma| percentile instrumentation",
+      "imperative": "Extend the existing per-epoch r_over_sigma telemetry in latent_power/training.py from {p95,p99 on the last training batch} to a full percentile set {p50,p90,p95,p99} computed over the full validation/eval pairwise set, and surface those percentiles into (1) the persisted module training diagnostics (module_diagnostics.json) and (2) the gold report under the v5 fields declared in G1, tagged per-module so phase (quali/race_start/race) and scope (driver/constructor) are recoverable from existing module names. Add unit tests: percentiles present, finite, monotonic (p50<=p90<=p95<=p99); computed over the full eval set not just the last batch; gold report carries the fields. Capture a baseline |r/sigma| readout for the current promoted bundle gold_cycle_260530_042533_2018thru2024 (recompute from committed module_diagnostics or a no-train recompute) into .agent-work/sigma-calibration-followups/evidence/g2-rsigma-baseline.md. Keep latent_power domain-independent (no F1 phase/scope strings hard-coded in latent_power; tagging by module name happens on the evo/report side).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 complete: schema v5 contract owns the |r/sigma| fields",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 complete: schema v5 owns r/sigma fields"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "percentile instrumentation in training + report; latent_power + gold report tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/latent_power tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-3"
+        },
+        {
+          "id": "c2",
+          "statement": "baseline |r/sigma| readout captured as evidence",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "instrumentation-evidence"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-2"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer approves (full-eval computation, monotone percentiles, no F1 leakage into latent_power, fields surfaced)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-1"
+        }
+      ],
+      "constraints": [
+        "test-led",
+        "use py for python",
+        "latent_power must not import evo (ADR 0001) - no F1 phase/scope strings in latent_power",
+        "evidence is machine-checkable captured numbers",
+        "report producer + consumers + doc move together"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "reviewer": "g2-reviewer-subagent"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-2",
+          "type": "instrumentation-evidence",
+          "payload": {
+            "path": "evidence/g2-rsigma-baseline.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "#305 \u2014 optional separate Student-t nu for sigma-calibration term B",
+      "imperative": "Add student_t_nu_sigma: float | None = None to LatentPowerConfig with validation (None, or > 2.0 for finite Student-t variance). In modules.loss_from_pairwise, term B (the detached sigma Student-t NLL) uses (config.student_t_nu_sigma if not None else config.student_t_nu); term A (mean) keeps config.student_t_nu untouched. Wire end-to-end: run.py CLI arg --student-t-nu-sigma (default None), gold_cycle/config.py optional field + gold_cycle/runner.py _module_train_args passthrough. Unit tests: default None reproduces current shared-nu behavior exactly (loss values unchanged); setting student_t_nu_sigma changes only term B's nu and leaves term A's mu gradient unaffected; validation rejects values <= 2.0. No gold default change in this gate (knob only; the value to use, if any, is decided in G4).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 complete: target_mode cleanup landed (stable loss/config surface)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "student_t_nu_sigma knob wired latent_power->CLI->gold; default None backward-compatible; suites green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/latent_power/test_config.py tests/unit/latent_power/test_modules.py tests/unit/latent_power/test_losses.py tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer approves (term-A nu untouched, term-B uses override, None is bit-for-bit current behavior, nu>2 validation, end-to-end wiring)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-1"
+        }
+      ],
+      "constraints": [
+        "test-led",
+        "use py for python",
+        "latent_power must not import evo (ADR 0001)",
+        "preserve Student-t heavy-tail robustness (nu>2); mu objective unchanged (term B detaches mu)",
+        "tunable weights live in config",
+        "default None = no behavior change"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power/test_config.py tests/unit/latent_power/test_modules.py tests/unit/latent_power/test_losses.py tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4": {
+      "id": "g4",
+      "title": "#304 phase 2-3 + #306 \u2014 bounded research to written verdicts",
+      "imperative": "Using G2 instrumentation and the G3 knob, run bounded research (smoke / single-module, NOT a full gold cycle) and write verdicts. (A) nu sensitivity (#304): sweep nu in {2,3,4,6,8} on >=2 module families including driver_race_start_power_from_race_weekend (tight residuals) and a higher-variance quali module; readouts: |r/sigma| percentile shape, per-pair sigma std, corr(sigma_pi,log_loss), max delta pairwise log-loss. Verdict: keep shared nu=4, OR recommend ONE bounded default change (e.g. term-B student_t_nu_sigma=X) for G5; route deeper per-(phase,scope) nu tuning to a triage follow-up via flag-candidate. (B) race-start corr flip (#306): for driver_race_start_power_from_race_weekend export per-pair sigma + |r| distributions (current promoted bundle vs a fresh smoke), run an event-level outlier audit (leave-one-event-out + Spearman alongside Pearson), and a single-module lambda_sigma_nll sweep {0,0.5,1,2}; verdict: flat-signal artifact | needs lambda tuning | needs a per-pair uncertainty consumer. Save evidence/g4-nu-sweep.md, evidence/g4-racestart.md, and machine-readable JSON. Surface both verdicts + the recommended G5 setting (if any) to the human and get a decision.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 + g3 complete: instrumentation + term-B nu knob available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2+g3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "nu-sensitivity verdict + recommendation captured",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "research-verdict"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-2"
+        },
+        {
+          "id": "c2",
+          "statement": "race-start corr-flip verdict + recommendation captured",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "research-verdict"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-2"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer approves the evidence and verdicts",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-1"
+        },
+        {
+          "id": "c4",
+          "statement": "human decides the G5 setting (which default change, if any, enters the retrain)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-4"
+        }
+      ],
+      "constraints": [
+        "use py for python",
+        "no F1 live data; DB is canonical",
+        "evidence is machine-checkable captured numbers, not impressions",
+        "bounded: terminate in a verdict; deep per-(phase,scope) tuning -> flag-candidate, do not chase",
+        "latent_power must not import evo (ADR 0001)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-2",
+          "type": "research-verdict",
+          "payload": {
+            "topic": "nu-sweep",
+            "verdict": "keep_shared_nu_4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-3",
+          "type": "research-verdict",
+          "payload": {
+            "topic": "racestart",
+            "verdict": "flat_signal_artifact"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-4",
+          "type": "user-decision",
+          "payload": {
+            "decision": "approve-g5-defaults",
+            "student_t_nu": "4",
+            "student_t_nu_sigma": "null",
+            "lambda_sigma_nll": "1.0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5": {
+      "id": "g5",
+      "title": "Full gold retrain (always) + Brier-primary comparison + promote + docs",
+      "imperative": "Run ONE full gold cycle with the chosen settings from G4 (the approved default change if any, else current defaults) on schema v5 (producing the |r/sigma| fields). Produce: (1) Brier-primary comparison vs the current promoted baseline gold_cycle_260530_042533_2018thru2024 (log-loss + reliability supplemental) -> require no regression; (2) sigma_pi dynamic range + corr(sigma_pi,log_loss) deltas, including a race-start re-check against the G4 #306 verdict; (3) promote params/gold runtime bundles + uncertainty_calibration + sampled_runtime_manifest. Update docs: ADR 0008 (term-B nu knob, |r/sigma| instrumentation, schema v5, any default change), docs/architecture/packets/latent_power.md, gold_report_schema.py notes; reconcile happens at the spine reconcile step. Save evidence/g5-gold.md + evidence/g5-metrics-comparison.json. Closing issues #303-306 is deferred to the spine review/triage step (closing issues needs human approval).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 complete: G5 settings decided by human",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full gold retrain done; Brier-primary comparison vs promoted baseline captured (no regression); sigma_pi range/corr + race-start re-check captured",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "metrics-comparison"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-2"
+        },
+        {
+          "id": "c2",
+          "statement": "params/gold bundles + uncertainty_calibration + sampled_runtime_manifest promoted; promotion evidence recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "artifact-promotion"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-3"
+        },
+        {
+          "id": "c3",
+          "statement": "ADR 0008 + latent_power packet + schema notes updated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ADR 0008 + latent_power packet updated in 71a12a9"
+        },
+        {
+          "id": "c4",
+          "statement": "reviewer approves gold comparison, promotion, and docs",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-1"
+        }
+      ],
+      "constraints": [
+        "use py for python",
+        "Brier is primary for gold comparison against the stable promoted baseline",
+        "gold mode: allow_same_season_compound_prior=false (no leakage)",
+        "generated artifacts are derived - regenerate, do not hand-edit",
+        "report schema/consumers/docs move together"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-2",
+          "type": "metrics-comparison",
+          "payload": {
+            "verdict": "pass",
+            "slug": "gold_cycle_260530_152746_2018thru2024"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-3",
+          "type": "artifact-promotion",
+          "payload": {
+            "slug": "gold_cycle_260530_152746_2018thru2024"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1",
+      "statement": "Pre-existing broader tests/unit/evo_predictor failures (11) unrelated to #303: 7x LatentPowerConfig n_triangles_per_event kwarg (test_pipeline, test_race_power_bundle), 3x missing --retro-root CLI (test_latent_power_module_cli, test_run_cli_defaults), 1x test_race_start_adapter builds batch without target_mu. All reference surface removed by #142, not by this run. File as a cleanup issue."
+    }
+  ],
+  "blockers": []
+}

@@ -1,0 +1,799 @@
+{
+  "work_id": "fn-decomposition-and-bitrepro",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read ORCHESTRATOR_CONTEXT, GLOSSARY, CREW_CONTEXT, packets utils/evo_predictor/compound_prior, and the problem-statement.md. Confirm scope (Rec A 5 functions; Rec B spike+conditional-impl). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + problem statement loaded; scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context + problem statement loaded; scope confirmed (Rec A 5 fns, Rec B spike+conditional)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 decompose evo over-limit functions: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1. Behavior-preserving decomposition of: run.py::_build_parser (~201) and run.py::cmd_train_latent_power_module (~124); gold_cycle/config.py::_parse_and_validate (~142); gold_cycle/runner_support.py::_gold_preflight_coverage (CC=21, ~114). Extract focused helpers; NO behavior/signature/contract change. Identify the tests covering each function; if coverage is thin, add a characterization test FIRST (TDD-for-refactor), then refactor, keep green. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow superpowers:test-driven-development (characterization-first for this refactor; keep green).",
+        "NO behavior, signature, or caller-contract change \u2014 pure helper extraction.",
+        "Each new/edited function must be within simplification limits (<100 lines, CC<20).",
+        "Run py -m src.utils.simplification_limits --paths on touched files."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK: cmd_train_latent_power_module validation order inverted (retro-root check hoisted above compound-prior resolution); restore original order"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "127 passed",
+            "simplification": "PASS (3 files; was 5 violations)",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g1-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "rework": "round2",
+            "tests": "128 passed",
+            "simplification": "PASS",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g1-implementer-result-r2.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 decompose evo over-limit functions: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Inspect diff for run.py, config.py, runner_support.py + any test additions. Verify: each target function decomposed and now under limits; behavior/signatures unchanged (diff helpers against originals); tests covering each function are adequate and green; --paths passes on the 3 files. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Re-review after rework: verify cmd_train validation order now matches HEAD + regression test"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g1-review-result-r1.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g1-review-result-r2.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 decompose evo over-limit functions: integrate",
+      "imperative": "Check verdict. APPROVE: run verification commands, confirm postconditions, advance. BLOCK: rework or raise blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT round2: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evo region tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification --paths clean on the 3 evo files",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/evo_predictor/run.py src/evo_predictor/gold_cycle/config.py src/evo_predictor/gold_cycle/runner_support.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/evo_predictor/run.py src/evo_predictor/gold_cycle/config.py src/evo_predictor/gold_cycle/runner_support.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 decompose run_comparison: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G2. Behavior-preserving decomposition of scripts/run_sampled_runtime_comparison.py::run_comparison (~134) \u2014 extract e.g. the artifact-writing / summary-assembly block(s) into helpers. NO behavior/output/exit-code change. Characterization-first if coverage thin. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "none (independent of G1)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "independent of G1; ready"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow superpowers:test-driven-development (characterization-first).",
+        "NO behavior/output/exit-code change.",
+        "run_comparison and new helpers within simplification limits.",
+        "Run py -m src.utils.simplification_limits --paths on the script."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "tests": "74 passed",
+            "simplification": "PASS",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g2-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 decompose run_comparison: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify run_comparison decomposed and under limits; output/ordering/exit-code unchanged; rt-comparison tests green; --paths passes on the script. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 decompose run_comparison: integrate",
+      "imperative": "Check verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or raise blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "rt-comparison tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_sampled_runtime_comparison_manifest_resolution.py tests/unit/evo_predictor/test_sampled_runtime_comparison_reporting.py tests/unit/evo_predictor/test_sampled_runtime_comparison_parallel.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification --paths clean on the script",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths scripts/run_sampled_runtime_comparison.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_sampled_runtime_comparison_manifest_resolution.py tests/unit/evo_predictor/test_sampled_runtime_comparison_reporting.py tests/unit/evo_predictor/test_sampled_runtime_comparison_parallel.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths scripts/run_sampled_runtime_comparison.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 bit-reproducibility spike: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G3. Build a bounded measurement harness (reuse the #356 determinism smoke setup: ~2 modules, 2 train years, max_rounds=1). Measure run-to-run weight drift and training wall-time under: (baseline) current, (det) torch.use_deterministic_algorithms(True) + thread pinning (torch.set_num_threads(1)) + any deterministic-reduction env (e.g. CUBLAS not relevant on CPU; OMP pinning). Write a report (tests/ or .agent-work or docs) with measurements + a GO/NO-GO recommendation against the criterion: GO if det mode reaches weight drift < 1e-6 at < 2x baseline training time. Surface the go/no-go to the Commander. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "none (independent; reuses #356 determinism harness)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "independent; reuses #356 determinism harness"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with measurements + go/no-go recommendation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Bounded/deterministic harness; name seeds + tolerances.",
+        "Spike: no production-code change in this gate (measurement + report only).",
+        "Fair comparison: identical seeds/data, vary only the determinism knobs."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "finding": "root cause = seeding bug (fork_rng restores global state; training-loop dropout unseeded); seed -> 0.0 drift",
+            "recommendation": "NO-GO on det-flags; GO via one-line seeding fix in training.py",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g3-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 bit-reproducibility spike: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify the measurement methodology is sound (fair comparison, fixed seeds, correct deterministic flags, honest wall-time), the numbers support the recommendation, and the report is accurate. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G3"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 bit-reproducibility spike: integrate + surface go/no-go",
+      "imperative": "Check verdict. APPROVE: confirm the report + measurements exist, then SURFACE the go/no-go to the human (beneficial per criterion?) and record their decision. The decision sets whether G4 runs or is skipped. BLOCK: rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "human go/no-go decision recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "user-decision",
+          "payload": {
+            "decision": "GO - always-on seeding fix",
+            "note": "Fix unseeded training-loop dropout RNG in training.py (always-on); ship code fix + test + light sanity check this branch; full Brier re-validation + gold re-promotion = separate filed follow-up issue"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 conditional: implement deterministic-training mode: implement",
+      "imperative": "G3=GO (human-approved always-on fix). Fill IMPLEMENTER_HANDOFF \u2014 FIX the unseeded training-loop dropout RNG in src/latent_power/training.py so training is run-to-run reproducible (0.0 weight drift): seed the global torch RNG governing the training-loop dropout WITHOUT re-perturbing module init (per G3 reviewer note; today manual_seed lives only inside the restored fork_rng() block). Always-on (one canonical path; a real bug fix, not opt-in). Add a test proving 0.0 run-to-run weight drift; add a LIGHT quality sanity check (dropout still active; smoke-eval not degraded vs pre-fix). Update the #356 determinism test docstring/narrative that wrongly calls the drift 'intrinsic FP nondeterminism'. TDD. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 go/no-go = GO (else skip this gate)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 = GO (always-on seeding fix, human-approved)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python.",
+        "Follow superpowers:test-driven-development.",
+        "Always-on seeding fix (one canonical path); use an explicit/seeded generator pattern, not new unseeded global state.",
+        "Changes gold training output (seeded realization) \u2014 full Brier re-validation + gold re-promotion is a SEPARATE filed follow-up; this gate ships the code fix + test + light sanity check only.",
+        "DB-only; no new mutable module-level state.",
+        "Run py -m src.utils.simplification_limits --paths on touched files."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "fix": "manual_seed after fork_rng init; drift 3.9e-3 -> 0.0",
+            "tests": "4 repro + 201 latent_power + 2 #356 pass",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g4-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 conditional: implement deterministic-training mode: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: the seeding fix makes training run-to-run reproducible (0.0 drift test is real, not vacuous); module init is NOT re-perturbed (the fix governs the training-loop dropout specifically); dropout is still active (regularization intact); smoke-eval not degraded; the #356 docstring/narrative corrected; uses an explicit/seeded generator (no new unseeded global state); --paths clean. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for G4"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/fn-decomposition-and-bitrepro/crew-handoffs/g4-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 conditional: implement deterministic-training mode: integrate",
+      "imperative": "Check verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework. (If the gate was skipped due to NO-GO, this is skipped too.)",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE; tree independently verified correct"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "training reproducibility test green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest -q -k training_reproducibility"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest -q -k training_reproducibility",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g3-integrate",
+      "statement": "FILE AS ISSUE (user-approved): Re-validate + re-promote gold artifacts after the training-loop dropout seeding fix. Entry criteria: the seeding fix (this branch) is MERGED to main. Work: regenerate gold cycle with seeded training (now ~1.5h at utilization=max), compare Brier (primary) + reliability vs the current promoted baseline; if within tolerance, re-promote the new artifacts + update promoted slugs/reports; if regressed, investigate before promoting. Also revisit #356 test_utilization_determinism _WEIGHT_TOL (can tighten toward 0 now that training is bit-stable)."
+    },
+    {
+      "id": "tc2",
+      "from": "g4-implement",
+      "statement": "Decompose src/latent_power/training.py::train_latent_power_module (pre-existing cc=39, 244 lines; >limits). NOT one of Rec A's 5 surfaced functions and not introduced by #356 work; surfaced while landing the G4 seeding fix. Extract epoch loop / validation+early-stop / diagnostics assembly. Behavior-preserving."
+    }
+  ],
+  "blockers": []
+}

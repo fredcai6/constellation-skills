@@ -1,0 +1,1292 @@
+{
+  "work_id": "518-braking-ceiling-reeval",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-implement",
+    "g6-review",
+    "g6-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, the physics packet (docs/architecture/packets/physics.md) and the decision anchors (decoupled_1d_longitudinal, smoother_rounds_braking_knee, c1_driver_utilization_design, two_cycle_external_anchor_design). Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + physics packet + decision anchors loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 Calibrate decoupled estimator HPs across full 2023-Q: implement",
+      "imperative": "Build a reproducible calibration harness that sweeps/fits the decoupled_longitudinal estimator hyperparameters (tv_lambda, sig_a_soft_brake, sig_a_brake, sig_a_soft_other, sig_v) across the FULL 2023-Q season (all sessions, both cars per constructor) using the scoreboard metrics (braking_knee-vs-raw and non_throttle_ringing-vs-raw) as the objective. Decide and record a calibrated HP set (global-robust and/or per-session-class) with season-wide generalization evidence: per-session knee gap + ring_ok pass-rate vs the VER/3-circuit defaults. Output a calibration report (reports/physics/decoupled_hp_calibration_2023Q.{json,md}, gitignored) and persist the chosen HP set in code/config (named constants or a small calibration module, NOT hidden inline tuning). Surface per-session-vs-global HP choice as a decision candidate if it materially changes results. Fill IMPLEMENTER_HANDOFF; dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Use py, not python",
+        "Tunable HPs belong in named constants/config, not hidden inline",
+        "Physics model change: L1-L4 truth evidence; units/bounds explicit",
+        "no evo-region imports"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 decoupled_longitudinal.py, scoreboard.py, session_estimator.py, estimate_batch.py"
+        ],
+        "capability": [
+          "physics capability-frontier measurement \u2014 the decoupled longitudinal estimator HP noise model"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "decision:two_cycle_external_anchor_design \u2014 anchor is TV-denoised raw a_long"
+        ],
+        "decision": [
+          "decision:decoupled_1d_longitudinal \u2014 records the HP calibration basis",
+          "decision pressure: per-session vs global HPs"
+        ],
+        "evidence": [
+          "scoreboard braking_knee + non_throttle_ringing pass-rate across the full season"
+        ],
+        "confidence_flags": [
+          "decoupled_longitudinal HP defaults flagged VER/3-circuit in packet Known Limits \u2014 this gate addresses that limitation directly"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g1-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Fill REVIEWER_HANDOFF: verify the calibration harness is reproducible, the HP set is justified by season-wide evidence (not over-fit to 3 circuits), HPs live in named constants/config, and the scoreboard objective is honestly reported (incl. where it does NOT improve). Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "APPROVE: run the verification command, confirm calibrated HP set persisted + report produced, advance. BLOCK: rework or blocker. Harvest Workflow Feedback; log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "calibrated HP set persisted; layer2 physics tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 Side-by-side braking frontier + F_vehicle metric -> retire decision: implement",
+      "imperative": "Build the decoupled-estimator adapter (run estimate_longitudinal per lap over the contiguous classified samples with terrain theta/z from the #497 z-map, emit per-sample a_long + F_vehicle + sigma_a aligned to the KinematicSamples). Using the G1-calibrated HPs, fit BrakingView two ways on a representative multi-session set: (A) synthesis F_vehicle (gravity-free; the by-hand g*sin(theta) term removed) + per-sample sigma_a, vs (B) the incumbent clean_longitudinal_from_raw a_long. Produce a gravity-corrected F_vehicle braking-frontier metric and a side-by-side report comparing (a_b, b_b), covariance, raw_p99 knee, and the resulting ceiling per circuit (reports/physics/braking_sidebyside_2023Q.{json,md}, gitignored). State a clear retire/keep recommendation with the deciding numbers. Do NOT wire production yet. Fill IMPLEMENTER_HANDOFF; dispatch implementer; integrate result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 calibrated HP set available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "No production wiring in this gate (measurement only)",
+        "F_vehicle is gravity-free: do not double-subtract g*sin(theta)",
+        "honest covariance: carry per-sample sigma_a",
+        "no evo-region imports"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 decoupled_longitudinal.py, braking_view.py (clean_longitudinal_from_raw, BrakingView), session_braking.py, terrain.py"
+        ],
+        "capability": [
+          "physics capability-frontier measurement \u2014 the braking frontier input"
+        ],
+        "constraint": [
+          "decision:two_cycle_external_anchor_design",
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision:smoother_rounds_braking_knee \u2014 retire caveat resolves via these numbers",
+          "decision pressure: retire/keep clean_longitudinal_from_raw"
+        ],
+        "evidence": [
+          "side-by-side (a_b,b_b)+cov+ceiling deltas; gravity-corrected F_vehicle frontier metric"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g2-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Fill REVIEWER_HANDOFF: verify the adapter preserves the anchor-source invariant (TV-denoised raw, not re-read from a smoothed trajectory), F_vehicle is gravity-free with no double gravity subtraction, the side-by-side is apples-to-apples (same samples, same priors), and the retire recommendation follows from the numbers. Dispatch reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate + retire/wire decision",
+      "imperative": "APPROVE: run the verification command, confirm the side-by-side report exists. Then SURFACE the retire/keep recommendation + deciding numbers to the human and get an explicit retire-and-wire OR hold decision; attach it as a user-decision. BLOCK: rework or blocker. Harvest Workflow Feedback; log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "side-by-side report produced; layer2 physics tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c3",
+          "statement": "human ratified retire-and-wire (or hold) with the numbers in hand",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "user-decision",
+          "payload": {
+            "decision": "ADOPT-A: retire clean_longitudinal_from_raw for braking, wire synthesis F_vehicle in G3; verify downforce-pinned ceiling is sensible at G3 store repopulation (Option 2)",
+            "by": "user"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 Wire braking canonically + terrain scoreboard handle + repopulate store: implement",
+      "imperative": "Per the G2 decision: make the decoupled-estimator adapter the production braking-frontier input in session_braking.prepare_braking_frontier (gravity-free F_vehicle + per-sample sigma_a -> sigma_kin; remove the by-hand g*sin(theta) from BrakingView's braking de-conflation since F_vehicle is already gravity-free). Retire clean_longitudinal_from_raw from the braking path (keep only if G2 said hold). Add the terrain handle to the scoreboard CaseInputs seam (optional theta/z pool) so its self-test exercises the total-energy path (comment item 4). Re-run the full 2023-Q estimate_batch to repopulate the EstimateStore with the new a_b/b_b. Update decision:decoupled_1d_longitudinal and decision:smoother_rounds_braking_knee MEASURED->wired for braking. Fill IMPLEMENTER_HANDOFF; dispatch implementer; integrate result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 retire/wire decision ratified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "One canonical path: no dual longitudinal input left in the braking path",
+        "gravity counted exactly once (inside the estimator via F_vehicle)",
+        "Physics model change: L1-L4 truth evidence",
+        "no evo-region imports",
+        "store repopulation reproducible/idempotent"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 session_braking.py, braking_view.py, scoreboard.py (CaseInputs), estimate_batch.py, estimate_store.py",
+          "struct:physics \u2014 capability_envelope.py"
+        ],
+        "capability": [
+          "per-car capability ceiling \u2014 recalibrated via the repopulated EstimateStore"
+        ],
+        "constraint": [
+          "one canonical path",
+          "decision:two_cycle_external_anchor_design",
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision:decoupled_1d_longitudinal -> wired",
+          "decision:smoother_rounds_braking_knee -> retire caveat resolved"
+        ],
+        "evidence": [
+          "scoreboard acceptance preserved on the wired path; store repopulation reproducible"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "partial-wiring-complete-RBR-verified",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g3-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Fill REVIEWER_HANDOFF: verify single canonical longitudinal path for braking (clean_longitudinal_from_raw retired or its remaining role documented), gravity counted exactly once, per-sample sigma_a propagated, scoreboard acceptance preserved, store repopulation reproducible, decision anchors updated. Dispatch reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "APPROVE: run the verification command, confirm wired path + repopulated store + updated anchors, advance. BLOCK: rework or blocker. Harvest Workflow Feedback; log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "wired braking path green across layer2 + physics tests",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/ tests/unit/physics/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/ tests/unit/physics/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 Re-run C1 + lap-sampling sigma + verdict: implement",
+      "imperative": "Re-run the C1 driver-utilization characterization (scripts/driver_utilization_dashboard.py) on the recalibrated ceiling (repopulated EstimateStore). Add the deferred (#510 G2) lap-sampling sigma term to the utilization covariance in regime_utilization.py (honest covariance). Confirm whether U_braking / U_fast_corner still clip at 2.0 or now produce physical (<=1, ideally separating) signal; produce an updated GO/CONTEXTUAL/NO-GO readiness verdict per regime (VERDICT.md) with the deciding numbers. This is verdict-producing, not GO-guaranteed: report honestly where it lands. Fill IMPLEMENTER_HANDOFF; dispatch implementer; integrate result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 recalibrated ceiling/store available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "Honest covariance: lap-sampling sigma is first-class",
+        "Single canonical ideal-lap path (EstimateStore->car_prior->CapabilityEnvelope->PhysicsSimulator)",
+        "split_is_impure stays True",
+        "no evo-region imports",
+        "verdict is an honest outcome, not forced GO"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization \u2014 regime_utilization.py, car_prior.py, characterize.py; scripts/driver_utilization_dashboard.py"
+        ],
+        "capability": [
+          "per-regime driver utilization \u2014 the C1 re-eval consumer"
+        ],
+        "constraint": [
+          "decision:c1_driver_utilization_design",
+          "decision:ideal_lap_sim_two_sided_evaluator"
+        ],
+        "decision": [
+          "decision:c1_driver_utilization_design Review Trigger fires (ceiling recalibration changes trustworthy U)",
+          "decision pressure: updated GO/CONTEXTUAL/NO-GO per regime"
+        ],
+        "evidence": [
+          "U_braking/U_fast_corner no longer clip at 2.0 (or honest report that they still do); dashboard regenerates from new store; lap-sampling sigma in covariance"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete-NOGO-verdict",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g4-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4: review",
+      "imperative": "Fill REVIEWER_HANDOFF: verify the dashboard regenerates from the repopulated store via the single canonical path, the lap-sampling sigma is correctly added to the covariance, split_is_impure preserved, and the verdict follows honestly from the numbers (GO/CONTEXTUAL/NO-GO, not forced). Dispatch reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g4-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4: integrate",
+      "imperative": "APPROVE: run the verification command, confirm dashboard + verdict produced. SURFACE the per-regime verdict to the human (it is the headline deliverable). BLOCK: rework or blocker. Harvest Workflow Feedback; log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "utilization tests green (incl. lap-sampling sigma)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py tests/unit/test_utilization.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py tests/unit/test_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "G5 Diagnose + fix the ideal-lap simulator over-acceleration: implement",
+      "imperative": "[RE-PLANNED mid-run by user decision 2026-06-25: the original wider-views characterize/productize G5/G6 are DEFERRED to a follow-on issue; G4's NO-GO diagnosis redirected the run to the real C1 blocker.] Diagnose (systematic-debugging) WHY the canonical ideal-lap simulator (CapabilityEnvelope.from_parameters -> PhysicsSimulator.simulate_lap) accelerates the RBR ideal lap to ~206.9 m/s (745 km/h) when the measured straight-line capability (P_max=629 kW, CdA=1.130, rho=1.148) implies a physical drag-limited terminal velocity of only ~99 m/s (356 km/h). The capability MEASUREMENT is physical (terminal velocity correct, identical OLD vs WIRED); the bug is in the ideal-lap machinery (envelope straight-line model and/or the simulator's longitudinal integration ignoring the drag-limited top speed). Find the locus, fix it so the ideal lap tops out near the envelope's terminal velocity, with L1-L4 physics truth evidence (e.g. an ideal-lap-top-speed-vs-terminal-velocity invariant test). If diagnosis shows it is NOT a contained bug but a deep modeling gap, STOP and surface to the Commander before a fix. Fill IMPLEMENTER_HANDOFF; dispatch implementer; integrate result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 decoupled-estimator adapter wired/available",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
+        }
+      ],
+      "constraints": [
+        "Measurement only (no wider-view wiring this gate)",
+        "honest covariance",
+        "no evo-region imports"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 session_traction.py, power_drag_view.py, traction_view.py, session_coast.py, coast_view.py, decoupled_longitudinal.py"
+        ],
+        "capability": [
+          "physics capability-frontier measurement \u2014 throttle/coast longitudinal input"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision pressure: any wider view that regresses -> fix-or-hold at G6"
+        ],
+        "evidence": [
+          "per-view parameter shift (CdA,P_max,a_t,b_t,theta_R)+cov vs incumbent; regression flags"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete-sim-fixed",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g5-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5: review",
+      "imperative": "Fill REVIEWER_HANDOFF: verify the diagnosis is correct (the over-acceleration locus is real), the fix makes the ideal-lap top speed respect the drag-limited terminal velocity (~99 m/s for RBR) WITHOUT breaking other physics (cornering/braking sims still valid), L1-L4 truth evidence present, and no capability-measurement code was changed (the measurement is already physical). Dispatch reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g5-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5: integrate",
+      "imperative": "APPROVE: run the verification command, confirm the ideal-lap-top-speed fix + invariant test. BLOCK: rework or blocker. Harvest Workflow Feedback; log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G5",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "ideal-lap-top-speed fix + invariant test; physics suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-implement": {
+      "id": "g6-implement",
+      "title": "G6 Re-run C1 on the fixed simulator + updated verdict: implement",
+      "imperative": "With the G5 ideal-lap-top-speed fix in place, re-run the C1 driver-utilization (scripts/driver_utilization_dashboard.py) on the 4 RBR cases (wired store) and report whether u_braking / u_fast_corner now UN-CLIP from 2.0 (the G4 NO-GO was caused by the aphysical ideal lap, not ceiling depth -- a physical ideal lap is the real test of the #518 premise). Produce an UPDATED VERDICT.md with the per-regime GO/CONTEXTUAL/NO-GO on the fixed sim + the deciding OLD->NEW->FIXED numbers. Verdict-producing, honest -- if regimes still don't separate after the fix, report that. Then SURFACE the result to the human to evaluate (per their 'fix the sim bug first, then evaluate' direction). Fill IMPLEMENTER_HANDOFF; dispatch implementer; integrate result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G5 ideal-lap-top-speed fix landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-implement-1"
+        }
+      ],
+      "constraints": [
+        "One canonical longitudinal path: clean_longitudinal_from_raw fully retired (or held views tracked with an issue + exit condition)",
+        "no regressing view wired without an explicit human decision",
+        "Physics model change: L1-L4 evidence",
+        "no evo-region imports"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 session_traction.py, session_coast.py, braking_view.py (clean_longitudinal_from_raw retire), estimate_batch.py, decoupled_longitudinal.py"
+        ],
+        "capability": [
+          "physics capability-frontier measurement \u2014 single canonical longitudinal source"
+        ],
+        "constraint": [
+          "one canonical path",
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision:decoupled_1d_longitudinal -> fully wired",
+          "decision pressure: regressing-view fix-or-hold"
+        ],
+        "evidence": [
+          "no clean_longitudinal_from_raw importers remain (or held views tracked); store repopulated; all view tests green"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete-NOGO-persists-phase-misalignment",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g6-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-review": {
+      "id": "g6-review",
+      "title": "G6: review",
+      "imperative": "Fill REVIEWER_HANDOFF: verify the C1 re-run uses the fixed simulator via the single canonical path, the un-clip claim (or honest non-separation) is reproduced from the dashboard numbers, and the updated verdict follows honestly. Dispatch reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G6",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g6-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/518-braking-ceiling-reeval/crew-handoffs/g6-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-integrate": {
+      "id": "g6-integrate",
+      "title": "G6: integrate",
+      "imperative": "APPROVE: run the verification command, confirm single canonical path + repopulated store + updated anchors. If any view was HELD, confirm it is tracked with an issue + exit condition. BLOCK: rework or blocker. Harvest Workflow Feedback; log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G6",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "C1 re-run on fixed sim + updated verdict; utilization + sim tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ tests/unit/test_utilization.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/ tests/unit/test_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "Mexico/PER high-altitude flat-terrain ringing (3.95 m/s2 on both default+candidate HPs): the decoupled estimator runs altitude_assumed_flat; energy-channel needs the #497 terrain z-map on hilly/altitude circuits. Relates to #497 + the G3 terrain handle."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-integrate",
+      "statement": "Cartographer: decision:decoupled_1d_longitudinal Known-Limits 'HP defaults VER/3-circuit' flag is now resolved by season-wide true-regime evidence (DEFAULT 91.7% ringing_ok). Update packet Known Limits at reconcile."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-integrate",
+      "statement": "Calibration-harness raw-regime confound: the fast raw-regime sweep produces systematically lower ringing_ok than the production smoother regime; future calibration gates must validate on the true run_case regime before persisting/deciding. Consider folding _validate_true_regime.py into the calibrate CLI as a post-sweep step."
+    },
+    {
+      "id": "tc4",
+      "from": "g2-integrate",
+      "statement": "b_b/CdA-pinned braking-frontier re-compare: the cold-start side-by-side ceiling@80 is a weakly-identified a_b<->b_b ridge (NOT terrain; corr(hilliness,b_b excess)=-0.22, divergence largest at flat Monza/Singapore). Production pins b_b indirectly via PowerDrag-measured CdA. Re-run A-vs-B with measured CdA pin to confirm the ceiling gap collapses toward A before/at wiring."
+    },
+    {
+      "id": "tc5",
+      "from": "g3-implement",
+      "statement": "G3 continuation: wire Ferrari/McLaren/Williams/Mercedes r1-15 into data/physics_estimates_g3wired.db via 'py scripts/repopulate_g3wired_store.py' (~1.5h). Until then those 4 read OLD-braking; RBR (primary) fully wired. Needed for the full 10-case C1 verdict; RBR-only suffices for the primary verdict."
+    },
+    {
+      "id": "tc6",
+      "from": "g3-implement",
+      "statement": "Thread altitude_assumed_flat from the wired braking terrain through SessionEstimate (session_estimator hardcodes False; the wired braking path now genuinely uses terrain)."
+    },
+    {
+      "id": "tc7",
+      "from": "g4-implement",
+      "statement": "C1 braking/fast-corner REAL unblock (HIGH): the U-clip at 2.0 is NOT braking-frontier depth (G3 recalibration left u_braking/u_fast_corner bit-identical Delta 0.000). Root cause = ideal-lap shape/alignment: PhysicsSimulator ideal lap hits aphysical 206.9 m/s (745 km/h) top speed + is longitudinally phase-misaligned vs the real lap, so in the braking/corner masks v_ideal is at apex (~25 m/s) while v_real is still fast (~66) at the same grid index -> ratio 2.5-3.7 pinned at 2.0. Fix = physics-aware/phase-aligned ideal-lap comparison OR compare vs a per-regime capability frontier (not point-aligned ideal-lap speed) AND fix the aphysical straight-line envelope top speed. This supersedes #510's 'ceiling under-call' diagnosis. New issue."
+    },
+    {
+      "id": "tc8",
+      "from": "g4-implement",
+      "statement": "Aphysical ideal-lap straight-line top speed (HIGH, may be same root or separable): the CapabilityEnvelope/PhysicsSimulator produces 206.9 m/s ideal-lap top speed for RBR (real lap maxes ~95 m/s). The straight-line power-drag envelope is grossly unconstrained/miscalibrated. Affects ALL C1 regimes via the ideal-lap denominator. Investigate envelope P_max/CdA/top-speed cap."
+    },
+    {
+      "id": "tc9",
+      "from": "g4-integrate",
+      "statement": "DEFERRED (user re-plan 2026-06-25): the original G5/G6 wider-views characterize+productize (decoupled a_long into Traction/PowerDrag/Coast, single canonical longitudinal path) was deferred when the user redirected #518's remaining gates to the ideal-lap simulator fix. Pick up as a follow-on issue: characterize the decoupled estimator's blast-radius on the throttle/coast views, then productize if clean."
+    },
+    {
+      "id": "tc10",
+      "from": "g4-integrate",
+      "statement": "CORRECTION to tc8: the aphysical ideal-lap top speed is NOT an envelope/measurement miscalibration -- the measured P_max=629kW/CdA=1.130 imply a PHYSICAL 99 m/s (356 km/h) drag-limited terminal velocity, identical OLD vs WIRED. The bug is in the ideal-lap MACHINERY (CapabilityEnvelope.from_parameters straight-line model and/or PhysicsSimulator.simulate_lap integration) producing 206.9 m/s = 2.1x terminal. Being fixed in the re-planned G5."
+    },
+    {
+      "id": "tc11",
+      "from": "g6-implement",
+      "statement": "CONFIRMED THE C1 BINDING CONSTRAINT (strengthens tc7, HIGH): even on the G5-fixed PHYSICAL ideal lap, u_braking/u_fast_corner stay pinned at 2.0 (Delta 0.000 vs pre-fix, both stores). Root cause = ~3.3-3.8x LONGITUDINAL PHASE MISALIGNMENT: the point-aligned (shared distance grid) v_real/v_ideal comparison puts the real lap's braking/corner points against ideal-lap samples deep in the apex (v_ideal 17-25 vs v_real 63-66). The real unblock = a phase-aligned / physics-aware ideal-lap comparison OR a per-regime capability-frontier comparison (NOT point-aligned ideal-lap speed). This is THE C1 unblock; ceiling recalibration (#518) confirmed irrelevant to it (OLD vs WIRED <=0.04)."
+    },
+    {
+      "id": "tc12",
+      "from": "g6-implement",
+      "statement": "Straight-U over-call after the G5 fix (MED): the now-physical (lower) ideal lap mildly UNDER-calls straight speed -> straight U crossed from <1 to >1 (Italy 0.71->1.07, GB 0.83->1.23). Softer than the corner clip (ratio 1.08 vs 3.3) but straight U is no longer cleanly interpretable. Likely the ideal lap is slightly conservative on straights (power/traction frontier) -- investigate alongside the phase-alignment fix."
+    }
+  ],
+  "blockers": []
+}

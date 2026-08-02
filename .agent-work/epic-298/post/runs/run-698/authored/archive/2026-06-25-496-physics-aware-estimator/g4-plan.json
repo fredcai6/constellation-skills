@@ -1,0 +1,65 @@
+{
+  "work_id": "496-physics-aware-estimator-g4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-suite", "m2-single-path", "m3-proof", "m4-verdict", "m5-result"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Crew context, handoff, all inputs loaded; handoff complete verified (task, intent, scope, exclusions, evidence, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "crew context + all g3 inputs + handoff complete", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m1-suite": {
+      "id": "m1-suite",
+      "title": "Re-confirm focused suite green",
+      "imperative": "Run py -m pytest tests/unit/physics tests/unit/preprocessing -q and capture the count. This MUST pass.",
+      "preconditions": [{"id": "p1", "statement": "context loaded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "focused suite green; count captured", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics tests/unit/preprocessing -q"}, "satisfied": false}],
+      "constraints": ["stop if not green"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m2-single-path": {
+      "id": "m2-single-path",
+      "title": "Confirm single canonical path",
+      "imperative": "Grep src/physics/layer2 to confirm: only decoupled_longitudinal.py is the estimator; no [v,a] shim; StintSmoother untouched; clean_longitudinal_from_raw untouched. State evidence plainly.",
+      "preconditions": [{"id": "p1", "statement": "suite green", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "single canonical [E_total,F_vehicle] estimator; no v,a shim; 2D smoother + clean_longitudinal_from_raw untouched", "check": null, "satisfied": false}],
+      "constraints": ["no code changes allowed"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m3-proof": {
+      "id": "m3-proof",
+      "title": "Re-run prove_synthesis_496.py and confirm exit 0 + table",
+      "imperative": "Run py scripts/prove_synthesis_496.py. Capture exit code, 3-circuit table. Confirm dashboard regenerates (reports/physics/synthesis_proof_2023Q.png).",
+      "preconditions": [{"id": "p1", "statement": "single path confirmed", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "exit 0; table reproduces Bahrain gap+1.15, Monaco ring_ok, Belgium no-regress; dashboard exists", "check": {"kind": "command", "command": "py scripts/prove_synthesis_496.py"}, "satisfied": false}],
+      "constraints": ["no code changes allowed"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m4-verdict": {
+      "id": "m4-verdict",
+      "title": "Write VERDICT.md",
+      "imperative": "Write .agent-work/496-physics-aware-estimator/VERDICT.md with GO/CONTEXTUAL/NO-GO verdict, justification from scoreboard numbers, 3-circuit table, honest scope, not-done list, retire-assessment, decision candidates, remainder list for Triage.",
+      "preconditions": [{"id": "p1", "statement": "proof re-run confirmed", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "VERDICT.md exists with verdict, justification, table, scope caveat, remainder list", "check": null, "satisfied": false}],
+      "constraints": ["honest; do NOT inflate; do NOT retire clean_longitudinal_from_raw"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Write IMPLEMENTER_RESULT g4-implement-result.md",
+      "imperative": "Write the IMPLEMENTER_RESULT file at .agent-work/496-physics-aware-estimator/crew-handoffs/g4-implement-result.md: verdict, done-done checklist, remainder, assumptions, stop conditions, out-of-scope, workflow feedback. Reference VERDICT.md.",
+      "preconditions": [{"id": "p1", "statement": "VERDICT.md written", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "g4-implement-result.md exists with all required sections", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

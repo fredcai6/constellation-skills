@@ -1,0 +1,310 @@
+{
+  "work_id": "issue-375-race-day-conditioned-net-g2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-tests-red",
+    "m2-net-module",
+    "m3-g2-script",
+    "m4-run-measurement",
+    "m5-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context and verify handoff",
+      "imperative": "Read CREW_CONTEXT (via problem-statement.md), G1 verdict (last section of fusion_rework_findings.md), investigation findings. Verify: task=G2 BUILD, scope=race-only (G1 verdict), success bar race>=+0.00364 pairwise-LL vs Model1, antisymmetry hard constraint, honest-null valid. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded; G1 scope=race-only; success bar race>=+0.00364; antisymmetry hard constraint; honest-null valid",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded; G1 scope=race-only; success bar race>=+0.00364; antisymmetry hard constraint; honest-null valid"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-tests-red": {
+      "id": "m1-tests-red",
+      "title": "TDD red: write unit tests for fusion_conditioned_net.py",
+      "imperative": "Write tests/unit/evo_predictor/test_fusion_conditioned_net.py BEFORE implementing the module. Tests must: (1) assert antisymmetry logit(-x)==-logit(x) exactly for ConditionedOrderingHead; (2) assert head separation: ordering head has no uncertainty output, uncertainty head has no ordering leverage; (3) assert shape/contract for forward pass; (4) assert prior_pos_delta feature is antisymmetric under i<->j swap. Confirm tests FAIL (ImportError or AttributeError) since module does not exist yet.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded from m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests file written; tests fail with ImportError (module not yet implemented)",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib; f=pathlib.Path('tests/unit/evo_predictor/test_fusion_conditioned_net.py'); exit(0 if f.exists() and 'ConditionedOrderingHead' in f.read_text() else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-tests-red-1"
+        }
+      ],
+      "constraints": [
+        "py not python; PYTHONIOENCODING=utf-8",
+        "tests must exercise antisymmetry, head separation, and shape/contract",
+        "do NOT import from fusion_conditioned_net yet \u2014 module does not exist"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-tests-red-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib; f=pathlib.Path('tests/unit/evo_predictor/test_fusion_conditioned_net.py'); exit(0 if f.exists() and 'ConditionedOrderingHead' in f.read_text() else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-net-module": {
+      "id": "m2-net-module",
+      "title": "TDD green: implement src/evo_predictor/fusion_conditioned_net.py",
+      "imperative": "Implement fusion_conditioned_net.py: ConditionedOrderingHead (OddMLP antisymmetric-by-construction with in_dim=5 for [4 delta-pi + 1 prior-pos-delta]; logit(x)=g(x)-g(-x)); ConditionedUncertaintyHead (simple MLP, per-event s_e prediction, zero ordering leverage); encode_prior_pos_delta helper (prior_pos_j - prior_pos_i) / max_pos float); module-level __all__. Scale-only normalization in the ordering head (same as OddMLP in metalearner, preserves antisymmetry). Make all tests pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests written and confirmed red",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests written and confirmed red (ModuleNotFoundError)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all fusion_conditioned_net tests pass; antisymmetry holds exactly",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_fusion_conditioned_net.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-net-module-1"
+        }
+      ],
+      "constraints": [
+        "py not python; PYTHONIOENCODING=utf-8",
+        "antisymmetry is a HARD constraint: logit(-x)==-logit(x) must hold numerically",
+        "uncertainty head MUST be distinct: no shared parameters with ordering head",
+        "prefer torch (2.10 CPU installed); no sklearn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-net-module-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_fusion_conditioned_net.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-g2-script": {
+      "id": "m3-g2-script",
+      "title": "Implement scripts/fusion_replay/g2_conditioned_net.py",
+      "imperative": "Build the offline eval script: (1) build_g2_dataset() extends g1_ordering_reconcile.build_g1_dataset() to add prior_pos_delta features per pair (prior_pos_j - prior_pos_i normalized; NaN pairs dropped); (2) _loso_cv_conditioned() reusing metalearner LOSO/bootstrap infrastructure; (3) uncertainty_dataset_from_records() loads per-event s_e from params/spread_target/ and builds per-event feature vectors from module pi spread; (4) run_g2_task() applies frozen success bar (race>=+0.00364) and produces WIN/NULL call; (5) CLI with --records-dir, --out, --bootstrap, --seed, --tasks. All floats JSON-serialisable.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fusion_conditioned_net.py implemented and tests passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "fusion_conditioned_net.py implemented; 19 tests passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g2_conditioned_net.py importable and all existing fusion/metalearner tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k \"fusion or metalearner or replay or record\" -q --tb=short"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-g2-script-1"
+        }
+      ],
+      "constraints": [
+        "py not python; PYTHONIOENCODING=utf-8",
+        "reuse metalearner LOSO/bootstrap/seed machinery; do not reinvent",
+        "success bar frozen before training: race>=+0.00364 pairwise-LL vs Model1",
+        "honest-null: if net fails bar, report NULL \u2014 do not inflate results"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-g2-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k \"fusion or metalearner or replay or record\" -q --tb=short",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-run-measurement": {
+      "id": "m4-run-measurement",
+      "title": "Run G2 offline measurement",
+      "imperative": "Run: PYTHONIOENCODING=utf-8 py -m scripts.fusion_replay.g2_conditioned_net --records-dir .agent-work/issue-375-race-day-conditioned-net/records --out .agent-work/issue-375-race-day-conditioned-net/evidence/g2_conditioned_net.json --bootstrap 1000 --seed 0 --tasks race. Capture stdout to evidence/g2_conditioned_net_run.log. Check seeds 1,2 for stability. Apply the frozen bar mechanically and record WIN or NULL.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2_conditioned_net.py script complete; all tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2_conditioned_net.py complete; all fusion/metalearner tests passing (331 passed, 13 skipped)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g2_conditioned_net.json and g2_conditioned_net_run.log written to evidence dir",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import json, pathlib; d=json.loads(pathlib.Path('.agent-work/issue-375-race-day-conditioned-net/evidence/g2_conditioned_net.json').read_text()); print('race_result:', d.get('race', {}).get('win_null', 'MISSING'))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-run-measurement-1"
+        }
+      ],
+      "constraints": [
+        "PYTHONIOENCODING=utf-8 in shell AND child envs",
+        "apply bar mechanically; honest-null is a valid successful outcome",
+        "seed stability: run at seeds 0, 1, 2 and confirm verdict is not seed-fragile"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-run-measurement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import json, pathlib; d=json.loads(pathlib.Path('.agent-work/issue-375-race-day-conditioned-net/evidence/g2_conditioned_net.json').read_text()); print('race_result:', d.get('race', {}).get('win_null', 'MISSING'))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-evidence": {
+      "id": "m5-evidence",
+      "title": "Run simplification_limits, write IMPLEMENTER_RESULT",
+      "imperative": "Run py -m src.utils.simplification_limits on touched src/ and tests/ paths. Compile all evidence into IMPLEMENTER_RESULT.md. Include: files changed, WIN/NULL call per task, key numbers, test pass evidence, seed stability, assumptions.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "measurement complete and evidence captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "measurement complete; WIN for race; JSON+log written"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification_limits pass on touched paths; IMPLEMENTER_RESULT.md written",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/evo_predictor/fusion_conditioned_net.py tests/unit/evo_predictor/test_fusion_conditioned_net.py scripts/fusion_replay/g2_conditioned_net.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-evidence-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits src/evo_predictor/fusion_conditioned_net.py tests/unit/evo_predictor/test_fusion_conditioned_net.py scripts/fusion_replay/g2_conditioned_net.py",
+            "exit": 2
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/evo_predictor/fusion_conditioned_net.py tests/unit/evo_predictor/test_fusion_conditioned_net.py scripts/fusion_replay/g2_conditioned_net.py",
+            "exit": 0,
+            "stdout": "PASS (3 files checked)"
+          },
+          "produced_by": "agent",
+          "ts": "2026-06-07"
+        },
+        {
+          "id": "e-m5-evidence-3",
+          "type": "file",
+          "payload": {
+            "path": ".agent-work/issue-375-race-day-conditioned-net/IMPLEMENTER_RESULT.md"
+          },
+          "produced_by": "agent",
+          "ts": "2026-06-07"
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

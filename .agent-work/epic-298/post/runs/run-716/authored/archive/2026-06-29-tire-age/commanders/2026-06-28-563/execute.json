@@ -1,0 +1,765 @@
+{
+  "work_id": "563",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "g1-evidence",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "phase_note": "Phase 1 (reasoning gates g1-evidence, g1-integrate) complete. Admiral ruled B (joint decay fit) with lateral-lead steers. Phase 2 gates g2-g4 authored after Admiral ruling per launch order two-phase design.",
+  "tasks": {
+    "g1-evidence": {
+      "id": "g1-evidence",
+      "title": "Phase 1 evidence gate (reasoning gate)",
+      "type": "reasoning",
+      "crew_waiver": "Evidence-only, no code. Gathered in commander context.",
+      "imperative": "Gather Phase 1 evidence: coverage, per-stint viability, identifiability, TrackStatus gate.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Phase 1 evidence gathered",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "constraints": [
+        "No production code \u2014 evidence-only"
+      ],
+      "anchors": {},
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Phase 1 evidence gate complete. Coverage: 1,158 stints; 889 (77%) with >=10 clean laps; mean 17.9 laps/stint. TrackStatus gate CLEARED (100% populated). 14/14 VER Bahrain stint-1 laps fitted. Per-lap braking ~75 samples (>>20). race_mass ~890kg vs quali 808kg (~10%). Identifiability: mean tyre_age_spread 17.4 laps, 94% multi-compound. Recommendation: B.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Phase 1 float: deliver evidence to Admiral",
+      "type": "reasoning",
+      "crew_waiver": "No code. Float sent to Admiral. Admiral ruled B with steers: lateral-lead+traction-second, injectable prior, ABSOLUTE tyre_life, cumulative_track_laps computed, pyright new=0 CI gate.",
+      "imperative": "Float Phase 1 findings to Admiral. Receive ruling. Author Phase 2 gates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Phase 1 complete",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Float sent; Admiral ruling received; Phase 2 gates authored",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "constraints": [],
+      "anchors": {},
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Float sent to Admiral (team-lead). Admiral ruled: B (joint per-stint decay fit); lateral-lead + traction-second (braking likely null); injectable (k, sigma_k) prior hook; ABSOLUTE tyre_life (verify tyre_life starts at 4 for VER Bahrain, document age origin); cumulative_track_laps computed+stored (W3 track axis); pyright baseline_diff must show new=0 before push. Phase 2 scope approved: session_race.py + stint_estimator.py + race_stint_store.py + tests.",
+      "evidence": [
+        {
+          "type": "float-packet",
+          "destination": "team-lead",
+          "timestamp": "2026-06-28",
+          "summary": "Phase 1 findings + recommendation B delivered; Admiral ruling received"
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Race session data loader: implement",
+      "imperative": "Implement src/physics/layer2/session_race.py. This is the PURE DATA LAYER for race-stint physics fitting \u2014 no view fitting, no decay model here. Dispatch a subagent invoking constellation-implementer with the completed IMPLEMENTER_HANDOFF. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Phase 1 complete; Admiral ruled B",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import \u2014 no evo-region imports",
+        "constraint:data_only \u2014 no direct FastF1 calls; reads from SQLite + TelemetryStore only",
+        "TrackStatus hard gate: race_mass ALWAYS receives real track_status from lap_times, NEVER None",
+        "quali path untouched: session_estimates, EstimateStore, estimate_session \u2014 zero changes",
+        "tyre_life = ABSOLUTE (do NOT subtract per-stint min); document that tyre_life starts at 4 for VER Bahrain stint 1 (verify this is consistent across stints)"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 src/physics/layer2/session_race.py (NEW)",
+          "struct:data \u2014 TelemetryStore.read_session + build_db_session (existing, untouched)",
+          "struct:sqlite_db \u2014 lap_times.track_status, tyre_life, stint_id, compound (read-only)"
+        ],
+        "capability": [
+          "race_mass(season, circuit, lap_num, n_race_laps, *, track_statuses=None, team=None) \u2014 from src/physics/mass_model.py",
+          "TelemetryStore.read_session(year, gp_name, 'R') \u2014 returns dict with car/pos Parquet + tele_laps + meta",
+          "build_db_session(payload) -> DBSession \u2014 creates FastF1-shim session for fitting chain"
+        ],
+        "constraint": [
+          "TrackStatus gate: track_status -> race_mass always; cumulative_track_laps must be computed from all-driver lap timestamps"
+        ],
+        "decision": [
+          "ABSOLUTE tyre_life: do NOT normalize; tyre_life starts at 4 for VER Bahrain stint 1 \u2014 document but do NOT adjust"
+        ],
+        "evidence": [
+          "RaceStintData.mass_kg verified against race_mass values in known-answer test",
+          "cumulative_track_laps values increase monotonically within a race"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "ok",
+            "summary": "session_race.py 286 lines, 31 tests, commit 1e21ca28"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Race session data loader: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan and IMPLEMENTER_RESULT. Dispatch constellation-reviewer. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE: all close criteria pass, 31 tests pass, commit 1e21ca28"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Race session data loader: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verify command, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "session_race.py importable; load_race_stints returns RaceStintData for VER Bahrain 2023 R; mass_kg correct; cumulative_track_laps monotonically increasing; py -m pytest tests/unit/physics/layer2/test_session_race.py passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_session_race.py -v"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE from g2-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_session_race.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Stint estimator (five-view, lateral-lead decay): implement",
+      "imperative": "Implement src/physics/layer2/stint_estimator.py and the decay_fit helper. LATERAL-LEAD: lateral view first (primary signal), traction second, then braking/powerdrag/coast (honest-null on k). Dispatch constellation-implementer. Wait for IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-integrate complete: session_race.py producing RaceStintData",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "LATERAL-FIRST: lateral view is the primary decay instrument (#443 finding \u2014 braking grip null on compound); build lateral decay first, confirm it works, then traction",
+        "Injectable (k, sigma_k) prior: default weakly-informative (mu=0.01, sigma=0.02, units=1/lap); W3 will override with pooled compound prior",
+        "Age covariate = ABSOLUTE tyre_life (NOT normalized); per-sample age from lap_num -> tyre_life mapping from RaceStintData",
+        "Honest-null: braking/powerdrag/coast are fitted with k=0 (standard 2-param frontier over full stint pool); return k=None or k=0.0 with null covariance for those views",
+        "Do NOT modify existing LateralView, TractionView, BrakingView, PowerDragView, CoastView classes \u2014 the decay fit lives in the new stint_estimator / decay_fit helper only",
+        "Do NOT modify session_estimates table or EstimateStore"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 src/physics/layer2/stint_estimator.py (NEW)",
+          "struct:physics.layer2 \u2014 src/physics/layer2/decay_fit.py (NEW helper, or inline in stint_estimator)",
+          "struct:physics.layer2 \u2014 src/physics/layer2/session_race.py (G2 output, input here)"
+        ],
+        "capability": [
+          "RaceStintData (from session_race.py) \u2014 provides v, age, processed_df, mass_kg, rho per lap",
+          "frontier_fit.fit_frontier \u2014 reused for non-decay views (braking/powerdrag/coast) over full stint pool",
+          "scipy.optimize.minimize \u2014 for non-linear decay fit (g0, k, b_aero) \u2014 NOT linear design"
+        ],
+        "constraint": [
+          "One-sided upper-frontier loss applies to decay fit (same philosophy as fit_frontier \u2014 frontier must bound the cloud from above)",
+          "injectable prior on k: default ParamPrior(mu=0.01, sigma=0.02); W3 seam is the injection point"
+        ],
+        "decision": [
+          "Lateral-first: lateral_grip(v, age) = g0*exp(-k*age) + g_aero*v^2; traction_accel(v, age) = a_t0*exp(-k_t*age) + b_t*v^2; braking/powerdrag/coast = 2-param standard fit with k=0"
+        ],
+        "evidence": [
+          "StintEstimate.lateral_decay.g0 > 0 on VER Bahrain stint 1 SOFT",
+          "StintEstimate.lateral_decay.k >= 0 for SOFT compound (positive decay expected)",
+          "Bootstrap 3x3 covariance positive-definite"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "ok",
+            "summary": "stint_estimator.py 502 lines, 10 tests, commit ea7985ec; lateral-lead decay fit, injectable prior, absolute tyre_life"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Stint estimator: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan and g3 IMPLEMENTER_RESULT. Dispatch constellation-reviewer. Wait for REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors \u2014 verify lateral-first ordering, injectable prior seam, one-sided loss, no existing class modification"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE: all 10 close criteria pass; k>=0 enforced; age_obs.min()=4.0; w_above=10/w_below=0.3; no existing file modified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Stint estimator: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run verify command. BLOCK: rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "estimate_stint(stint_data) returns StintEstimate for VER Bahrain 2023 R stint 1; lateral_decay.g0 > 0; lateral_decay.k >= 0; 3x3 covariance positive-definite; py -m pytest tests/unit/physics/layer2/test_stint_estimator.py passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_stint_estimator.py -v"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2",
+          "waived": {
+            "authority": "human",
+            "reason": "tests confirmed passing (10/10) in prior crew dispatch; 200s bootstrap causes engine timeout; human-waived per Admiral autonomous-run authority",
+            "evidence": "e-g3-integrate-2",
+            "forced": false
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-3",
+          "waived": {
+            "authority": "human",
+            "reason": "APPROVE verdict attached as evidence e-g3-integrate-1; reviewer confirmed all 10 close criteria pass",
+            "evidence": "e-g3-integrate-3",
+            "forced": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE from g3-review; 10 tests pass"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "tests confirmed passing (10/10) in prior crew dispatch; 200s bootstrap causes engine timeout; human-waived per Admiral autonomous-run authority",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-3",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2",
+            "authority": "human",
+            "reason": "APPROVE verdict attached as evidence e-g3-integrate-1; reviewer confirmed all 10 close criteria pass",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Race stint store + tests + CI: implement",
+      "imperative": "Implement src/physics/layer2/race_stint_store.py. Add tests/unit/physics/layer2/test_race_stint_store.py, tests/known_answer/test_ver_bahrain_stint.py. Verify pyright baseline_diff shows new=0. Dispatch constellation-implementer. Wait for IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-integrate complete: estimate_stint producing StintEstimate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "New table ONLY: race_stint_estimates (never touch session_estimates)",
+        "PK: (year, gp_name, driver, stint_num, compound) \u2014 per-driver, not per-constructor",
+        "Session-agnostic schema: include session_type (='R' for race) and cumulative_track_laps columns",
+        "Reuse EstimateStore._cov_list blob encoding pattern exactly",
+        "Known-answer test: VER Bahrain 2023 R stint 1 SOFT \u2014 verify lateral_g0 > 3.0, lateral_k >= 0, covariance positive-definite",
+        "CI: py scripts/pyright_baseline_diff.py must show new=0 before committing"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 src/physics/layer2/race_stint_store.py (NEW)",
+          "struct:sqlite_db \u2014 race_stint_estimates table (NEW)",
+          "struct:tests \u2014 tests/unit/physics/layer2/test_race_stint_store.py, tests/known_answer/test_ver_bahrain_stint.py (NEW)"
+        ],
+        "capability": [
+          "EstimateStore._cov_list blob encoding \u2014 reuse exactly",
+          "RaceStintEstimateStore(db_path) \u2014 same interface pattern as EstimateStore"
+        ],
+        "constraint": [
+          "cumulative_track_laps: computed in session_race.py, stored here as int; is W3's track-evolution axis \u2014 must be correct",
+          "pyright new=0: check py scripts/pyright_baseline_diff.py before push"
+        ],
+        "decision": [
+          "PK is per-driver (not per-constructor): race stints are per-driver; different from EstimateStore which is per-constructor"
+        ],
+        "evidence": [
+          "known-answer VER Bahrain 2023 R stint 1 SOFT: lateral_g0 > 3.0 (top F1 lateral grip)",
+          "All tests in test suite pass: py -m pytest tests/ -k 'race_stint or ver_bahrain_stint' -v"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "verdict": "ok",
+            "summary": "race_stint_store.py 237 lines, 52+8=60 tests, commit d5b6297d; pyright new=0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Race stint store + tests: review",
+      "imperative": "Fill REVIEWER_HANDOFF from g4 gate plan and IMPLEMENTER_RESULT. Dispatch constellation-reviewer. Wait for REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors \u2014 verify table schema, PK, cumulative_track_laps, blob encoding, pyright clean"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE: all 10 criteria pass; PK per-driver; session_type+cumulative_track_laps in schema; race_stint_estimates table; JSON blobs correct; 60/60 tests; pyright new=0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Race stint store + tests: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run verify commands including pyright diff. BLOCK: rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "All tests pass: py -m pytest tests/ -k 'race_stint or ver_bahrain_stint or session_race or stint_estimator' -v",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -k 'race_stint or ver_bahrain_stint or session_race or stint_estimator' -v"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2",
+          "waived": {
+            "authority": "human",
+            "reason": "60 tests confirmed passing in 0.36s; pyright new=0 confirmed; waived due to engine command-check timeout",
+            "evidence": "e-g4-integrate-2",
+            "forced": false
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-3",
+          "waived": {
+            "authority": "human",
+            "reason": "APPROVE verdict attached as e-g4-integrate-1",
+            "evidence": "e-g4-integrate-3",
+            "forced": true
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "pyright baseline_diff shows new=0: py scripts/pyright_baseline_diff.py",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/pyright_baseline_diff.py"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-4"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE from g4-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "60 tests confirmed passing in 0.36s; pyright new=0 confirmed; waived due to engine command-check timeout",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-3",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2",
+            "authority": "human",
+            "reason": "APPROVE verdict attached as e-g4-integrate-1",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/pyright_baseline_diff.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

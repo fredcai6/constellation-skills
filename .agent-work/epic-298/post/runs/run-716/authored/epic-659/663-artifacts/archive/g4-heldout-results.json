@@ -1,0 +1,282 @@
+{
+  "gate": "g4-implement",
+  "issue": 663,
+  "year": 2023,
+  "db_path": "C:/Programs/f1Brainz/data/f1_data_2023.db",
+  "split": {
+    "scheme": "team-stratified 50/50",
+    "seed": 663
+  },
+  "truth_side": {
+    "regression_free": true,
+    "pace_proxy": "median of fastest 3 clean laps per (driver, compound)",
+    "min_laps_per_cell": 3
+  },
+  "aggregate": {
+    "n_cells": 37,
+    "n_circuits": 4,
+    "n_improved": 0,
+    "before_rms": 3.019341171200782,
+    "after_rms": 7.715145258927067,
+    "after_evo_rms": 26.287439543524897,
+    "after_swap_rms": 8.61549376542033,
+    "before_mae": 1.9584054054054054,
+    "after_mae": 6.213464527507138,
+    "after_evo_mae": 21.363399395622285,
+    "after_swap_mae": 7.275806048886389
+  },
+  "leakage_check": {
+    "truth_side_regression_free": true,
+    "split_disjoint_all_circuits": true,
+    "negative_control_swap_hurts": true
+  },
+  "verdict": "NULL: subtracting G does NOT improve (it worsens) held-out reconciliation",
+  "circuits": [
+    {
+      "gp_name": "Monaco",
+      "pair": "FP2/FP3",
+      "status": "ok",
+      "n_fit_drivers": 10,
+      "n_heldout_drivers": 10,
+      "n_cells": 10,
+      "before_rms": 0.8034124718972186,
+      "after_rms": 3.4887111586303554,
+      "evo_rms": 5.257697924292302,
+      "swap_rms": 4.610911577794063,
+      "before_mae": 0.7272000000000005,
+      "after_mae": 3.1435522096434907,
+      "evo_mae": 4.986946999710122,
+      "swap_mae": 4.449552209643494,
+      "fit_diag": [
+        {
+          "session": "FP2",
+          "fit_status": "ok",
+          "session_offset": 93.19940911232531,
+          "curve_asymptote": -107640.29491452806,
+          "curve_rate": 1.9685214248883521e-07,
+          "curve_offset_correlation": -0.9999999999567973,
+          "n_stints_used": 26,
+          "cumulative_track_laps_max": 547
+        },
+        {
+          "session": "FP3",
+          "fit_status": "ok",
+          "session_offset": 91.27797323853892,
+          "curve_asymptote": -0.6166424574022646,
+          "curve_rate": 0.0027570373646553874,
+          "curve_offset_correlation": 0.6625365481077212,
+          "n_stints_used": 12,
+          "cumulative_track_laps_max": 361
+        }
+      ],
+      "fit_drivers": [
+        "BOT",
+        "GAS",
+        "HAM",
+        "LEC",
+        "MAG",
+        "PIA",
+        "SAR",
+        "STR",
+        "TSU",
+        "VER"
+      ],
+      "heldout_drivers": [
+        "ALB",
+        "ALO",
+        "DEV",
+        "HUL",
+        "NOR",
+        "OCO",
+        "PER",
+        "RUS",
+        "SAI",
+        "ZHO"
+      ]
+    },
+    {
+      "gp_name": "Spain",
+      "pair": "FP1/FP2",
+      "status": "ok",
+      "n_fit_drivers": 10,
+      "n_heldout_drivers": 10,
+      "n_cells": 15,
+      "before_rms": 4.327104497621168,
+      "after_rms": 10.9062844614847,
+      "evo_rms": 26.243065673261675,
+      "swap_rms": 11.42965184106754,
+      "before_mae": 3.199466666666667,
+      "after_mae": 9.49252094321687,
+      "evo_mae": 24.965437271725683,
+      "swap_mae": 9.986430029285694,
+      "fit_diag": [
+        {
+          "session": "FP1",
+          "fit_status": "ok",
+          "session_offset": 84.34472511659881,
+          "curve_asymptote": 21.886382158807592,
+          "curve_rate": 0.0046509267495003295,
+          "curve_offset_correlation": -0.594106041170733,
+          "n_stints_used": 19,
+          "cumulative_track_laps_max": 530
+        },
+        {
+          "session": "FP2",
+          "fit_status": "ok",
+          "session_offset": 101.9943163680636,
+          "curve_asymptote": -18.290511192988188,
+          "curve_rate": 0.0048554600707319635,
+          "curve_offset_correlation": -0.7504014666178789,
+          "n_stints_used": 21,
+          "cumulative_track_laps_max": 612
+        }
+      ],
+      "fit_drivers": [
+        "BOT",
+        "GAS",
+        "HAM",
+        "LEC",
+        "MAG",
+        "PIA",
+        "SAR",
+        "STR",
+        "TSU",
+        "VER"
+      ],
+      "heldout_drivers": [
+        "ALB",
+        "ALO",
+        "DEV",
+        "HUL",
+        "NOR",
+        "OCO",
+        "PER",
+        "RUS",
+        "SAI",
+        "ZHO"
+      ]
+    },
+    {
+      "gp_name": "Netherlands",
+      "pair": "FP1/FP2",
+      "status": "ok",
+      "n_fit_drivers": 10,
+      "n_heldout_drivers": 8,
+      "n_cells": 5,
+      "before_rms": 2.2531868542133813,
+      "after_rms": 4.29836545228345,
+      "evo_rms": 9.680986171230742,
+      "swap_rms": 5.594274754528017,
+      "before_mae": 1.7041999999999973,
+      "after_mae": 4.015706462810641,
+      "evo_mae": 9.558841252036572,
+      "swap_mae": 4.612106462810635,
+      "fit_diag": [
+        {
+          "session": "FP1",
+          "fit_status": "ok",
+          "session_offset": 88.15408057338274,
+          "curve_asymptote": 35.50533678165728,
+          "curve_rate": 0.0010499168720540042,
+          "curve_offset_correlation": 0.7416784404722678,
+          "n_stints_used": 23,
+          "cumulative_track_laps_max": 465
+        },
+        {
+          "session": "FP2",
+          "fit_status": "ok",
+          "session_offset": 93.69721536260867,
+          "curve_asymptote": -0.5921983288201407,
+          "curve_rate": 0.00464141119609448,
+          "curve_offset_correlation": -0.10434675266723284,
+          "n_stints_used": 26,
+          "cumulative_track_laps_max": 514
+        }
+      ],
+      "fit_drivers": [
+        "ALB",
+        "ALO",
+        "BOT",
+        "GAS",
+        "LEC",
+        "MAG",
+        "NOR",
+        "RUS",
+        "TSU",
+        "VER"
+      ],
+      "heldout_drivers": [
+        "HAM",
+        "HUL",
+        "OCO",
+        "PER",
+        "PIA",
+        "RIC",
+        "SAR",
+        "ZHO"
+      ]
+    },
+    {
+      "gp_name": "Saudi Arabia",
+      "pair": "FP1/FP2",
+      "status": "ok",
+      "n_fit_drivers": 10,
+      "n_heldout_drivers": 10,
+      "n_cells": 7,
+      "before_rms": 1.8750660940731811,
+      "after_rms": 5.399363202425945,
+      "evo_rms": 45.501290243998056,
+      "swap_rms": 7.725194314389154,
+      "before_mae": 1.2394285714285718,
+      "after_mae": 5.142331279860419,
+      "evo_mae": 45.47150604355075,
+      "swap_mae": 7.407474137003271,
+      "fit_diag": [
+        {
+          "session": "FP1",
+          "fit_status": "ok",
+          "session_offset": 70.83606106207023,
+          "curve_asymptote": 42.44267796130919,
+          "curve_rate": 0.048028813371910346,
+          "curve_offset_correlation": -0.999277775600878,
+          "n_stints_used": 23,
+          "cumulative_track_laps_max": 443
+        },
+        {
+          "session": "FP2",
+          "fit_status": "ok",
+          "session_offset": 111.16523582576056,
+          "curve_asymptote": -20.868936018964845,
+          "curve_rate": 0.0011632962336333005,
+          "curve_offset_correlation": 0.6542143052722867,
+          "n_stints_used": 26,
+          "cumulative_track_laps_max": 535
+        }
+      ],
+      "fit_drivers": [
+        "BOT",
+        "GAS",
+        "HAM",
+        "LEC",
+        "MAG",
+        "PIA",
+        "SAR",
+        "STR",
+        "TSU",
+        "VER"
+      ],
+      "heldout_drivers": [
+        "ALB",
+        "ALO",
+        "DEV",
+        "HUL",
+        "NOR",
+        "OCO",
+        "PER",
+        "RUS",
+        "SAI",
+        "ZHO"
+      ]
+    }
+  ]
+}

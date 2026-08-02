@@ -1,0 +1,39 @@
+{
+  "work_id": "cmdr-461",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 cmdr-461: py used throughout; engine integrate command-checks authored as `py -m pytest ... -q` ran clean (engine imperatives still hard-code python — standing contradiction navigated)."
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 cmdr-461: review-result artifact attached (not attested) to BOTH g2-review and g2-integrate so the APPROVE-match check passed at integrate; user-decision attached at triage/review."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 cmdr-461: G2 implementer and reviewer dispatched via Agent tool, recorded in crew-runs.json via run_crew.py --dispatch external + --verify-result, recover_crews before each dispatch (no claude CLI launcher in this harness)."
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 cmdr-461: spine compact step skipped with reason; harness auto-compaction + context was compacted mid-run."
+    },
+    {
+      "op": "retire",
+      "id": "fastf1-posdata-decimetres",
+      "reason": "Convention now documented in code (src/preprocessing/trajectory/loaders.py module docstring + docs/architecture/packets/preprocessing.md, commit 35d41472, chore/461-trajectory-hygiene). Playbook reminder is redundant when the binding unit is embedded at the seam where it matters. Scope was 'project' — correct home is the codebase, not the agent playbook."
+    },
+    {
+      "op": "add",
+      "id": "attest-which-postconditions",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "When attesting a spine postcondition (not precondition), use `attest ... --which postconditions --cond <id>`; bare `attest --cond <id>` is refused with 'preconditions not found'. For execute.json task preconditions, bare `attest --cond <id>` is correct (default). The distinction is spine vs execute.json, not step type.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 cmdr-461: spine attest refused 'preconditions c1 not found' on execute step; fixed by adding --which postconditions."
+    }
+  ]
+}

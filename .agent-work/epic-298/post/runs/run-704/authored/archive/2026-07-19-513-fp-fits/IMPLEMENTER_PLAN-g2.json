@@ -1,0 +1,276 @@
+{
+  "work_id": "513-fp-fits-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fp-mass",
+    "m2-run-purpose",
+    "m3-fp-lap-latent",
+    "m4-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus .agent-work/513-fp-fits/handoff-g2.md and GATE_PROTOCOL.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); confirm src/physics/mass_model.py and src/physics/layer2/session_race.py (the reuse pattern) read cleanly. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + session_race read pattern loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fp-mass": {
+      "id": "m1-fp-mass",
+      "title": "fp_mass distribution contract in mass_model.py",
+      "imperative": "Add FpMass NamedTuple (mass_kg, sigma_kg), NOMINAL_FP_FUEL_KG, FP_FUEL_INTERCEPT_SIGMA_KG constants, and fp_mass(season, *, fuel_kg=None, fuel_sigma_kg=None, team=None) -> FpMass to src/physics/mass_model.py per handoff-g2.md close criteria (mass_kg = SEASON_BASE_KG[season] + fuel_kg + team_offset; sigma_kg reflects fuel uncertainty; None fuel_kg uses NOMINAL_FP_FUEL_KG + FP_FUEL_INTERCEPT_SIGMA_KG). Do NOT touch quali_mass/race_mass. Write failing tests FIRST in tests/unit/physics/test_mass_model.py (FpMass shape, default distribution, explicit fuel_kg/sigma override, negative-value ValueError, unknown-season KeyError, invariant SEASON_BASE_KG[season] < mass_kg < quali_mass(season)+MAX_FUEL_KG). Attest c1 (red observed) BEFORE implementing, then implement and get c2 green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new fp_mass/FpMass tests written and observed failing (ImportError/AttributeError) \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "fp_mass + FpMass implemented; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_mass_model.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fp-mass-1"
+        }
+      ],
+      "constraints": [
+        "physics-region: no evo_predictor/latent_power/compound_prior/fastf1 imports",
+        "named tunable constants with docstrings flagging calibration placeholders",
+        "do not change quali_mass/race_mass/race_mass_sigma behavior"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fp-mass-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_mass_model.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-run-purpose": {
+      "id": "m2-run-purpose",
+      "title": "classify_run_purpose pure function",
+      "imperative": "In new src/physics/layer2/fp_lap_latent.py, add classify_run_purpose(...) -> str classifying a lap into {out, push, in, long_run} EMERGENTLY from lap_time-vs-session-best and pit/stint position (never from a session-type label). Add PUSH_MARGIN_FRAC and any other named tunable constants used, docstring-flagged as calibration placeholders. Write failing tests FIRST in new tests/unit/physics/test_fp_lap_latent.py covering out/in/push/long_run classification, boundary cases (single-lap stint, missing lap_time), determinism. Attest c1 (red) then implement to green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fp_mass landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: classify_run_purpose tests written and observed failing \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "classify_run_purpose implemented; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-run-purpose-1"
+        }
+      ],
+      "constraints": [
+        "run_purpose classification is pure and deterministic, no DB/IO",
+        "no session-type label as an input"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-run-purpose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fp-lap-latent": {
+      "id": "m3-fp-lap-latent",
+      "title": "extract_fp_lap_latent DB extractor + FpLapLatent + fuel_kg_est",
+      "imperative": "Add FpLapLatent dataclass, fuel_kg_est(lap_in_stint, run_purpose, ...) (start_fuel-by-run_purpose minus burn*lap_in_stint, floored at reserve; burn from mass_model.DEFAULT_BURN_PER_LAP_KG), START_FUEL_PUSH_KG/START_FUEL_LONGRUN_KG/FP_FUEL_RESERVE_KG named constants, and extract_fp_lap_latent(year, gp, session_type, *, db_path, driver=None) -> list[FpLapLatent] to src/physics/layer2/fp_lap_latent.py, mirroring session_race.py's _get_session_id / read-only sqlite pattern for lap_times (add lap_time to the selected columns; compound read directly from lap_times.compound, never inferred). Each lap's mass_kg/mass_sigma_kg comes from mass_model.fp_mass(year, fuel_kg=..., fuel_sigma_kg=...). Write failing tests FIRST in tests/unit/physics/test_fp_lap_latent.py using an in-memory/tmp_path sqlite fixture (NEVER a real data/*.db) with a synthetic session+lap_times covering a push lap and a long-run lap. Attest c1 (red) then implement to green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "classify_run_purpose landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: extract_fp_lap_latent tests written and observed failing \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "extract_fp_lap_latent implemented; tests pass; no real data/*.db read",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-fp-lap-latent-1"
+        }
+      ],
+      "constraints": [
+        "physics-region: no evo_predictor/latent_power/compound_prior/fastf1 imports",
+        "DB opened read-only",
+        "tests use tmp_path/in-memory sqlite only, never data/*.db",
+        "compound OBSERVED not inferred",
+        "no fit output feeds fp_mass/fuel (non-circular)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-fp-lap-latent-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Full evidence pass: combined tests, value table, simplification limits",
+      "imperative": "Run the full required-evidence test command (both test files together), produce a push-lap-vs-long-run-lap fp_mass value table for 2023 (mass ordering + sigma) using extract-level constants, and run py -m src.utils.simplification_limits --paths on the two touched/new src files. Confirm git status shows no data/*.db changes. Attest c1 with all evidence captured.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fp_mass, classify_run_purpose, extract_fp_lap_latent all green individually",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "combined suite green; value table produced; simplification-limits run; data/ clean",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_mass_model.py tests/unit/physics/test_fp_lap_latent.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
+        }
+      ],
+      "constraints": [
+        "no data/*.db committed or modified"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_mass_model.py tests/unit/physics/test_fp_lap_latent.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipI-513-g2impl-1",
+    "status": "released",
+    "claimed_at": "2026-07-19T13:45:57.238822+00:00",
+    "last_heartbeat": "2026-07-19T13:57:15.678458+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T13:57:21.594455+00:00"
+  }
+}

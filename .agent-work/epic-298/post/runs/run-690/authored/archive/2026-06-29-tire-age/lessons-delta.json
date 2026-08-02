@@ -1,0 +1,68 @@
+{
+  "work_id": "tire-age",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "diagnose-first-decide-fix",
+      "grounding": "ADMIRAL_LOG 2026-06-29: W2 Phase 1 evidence gate produced fit-viability/identifiability map before any code; fit-shape B ruled from evidence with no wasted code gates. W3 G4: crew caught fuel-confounded/rank-deficient truth channel before baking, preventing shipping an artifact-based verdict. cmdr-563 lessons-delta.json confirm op independently records the W2 confirmation."
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": "ADMIRAL_LOG 2026-06-29 WAVE 3 progress: 'state-noted/resumable; will FLOAT at G2 close if coverage collapses.' INCIDENT detached-compute death: 'Inspected (state note made it trivial): its 7 G2 workers were harness-tracked background Bash...' — recovery from Admiral's detached compute was trivial because the state note was current."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "ADMIRAL_LOG 2026-06-29 INCIDENT (stall #2 + fence violation): 'cmdr-563 committed its work area on the branch (0cb63e70 = .agent-work/archive/2026-06-28-563/*, fence violation; branch never pushed).' git reset --hard HEAD~1 required to strip the violation before push."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-claimed-side-effects",
+      "grounding": "ADMIRAL_LOG 2026-06-29: After ADMIRAL ERROR #1 (merged PR #565 with failing pyright), Admiral explicitly verified pyright check row directly on all subsequent merges — 'pyright row verified PASS directly (not watch-exit)' documented for PR #571, #572, #573."
+    },
+    {
+      "op": "confirm",
+      "id": "idle-artifact-completeness-distinguisher",
+      "grounding": "ADMIRAL_LOG 2026-06-29 INCIDENT (idle, not stalled — DONE artifacts) x2: cmdr-562 accepted via artifact gate (3 commits + PR #564 OPEN); cmdr-443 accepted via artifact gate (5 commits + PR #565 OPEN). Also: ADMIRAL ERROR #2 documents the one misapplication (idle-while-crew-active) that grounds the amend."
+    },
+    {
+      "op": "confirm",
+      "id": "loo-residual-diagnostic-over-self-weighted-predictor",
+      "grounding": "ADMIRAL_LOG 2026-06-29 cmdr-443 INCIDENT: 'circular-target bug: b_lat-race_mean(b_lat) == lat feature -> P=0.98; caught via LOO<0.95 sanity check.' RULING/milestone G4 rework: 'Crew caught my ruling's empirical basis was an ARTIFACT: stint fixed-effects = rank-deficient.' Two independent catches in one run."
+    },
+    {
+      "op": "amend",
+      "id": "admiral-close-after-merge-verified",
+      "statement": "Issue close is a separate step sequenced strictly after the merge is CONFIRMED, not after gate checks pass. Sequence: verify checks green, merge, verify main HEAD advanced, then close. Never batch the close with gate verification. When verifying checks green, read each non-required check row explicitly (e.g. pyright) — the `gh pr checks --watch` exit code only reflects required checks; a failing non-required check is invisible to watch exit 0.",
+      "grounding": "ADMIRAL_LOG 2026-06-29 ADMIRAL ERROR #1: 'merged PR #565 while its pyright check was FAILING (41 new errors)... Root cause: I gated on gh pr checks --watch EXIT CODE, but that only reflects required checks... Process fix: never gate a merge on the watch exit alone — explicitly read the pyright check result (gh pr checks row) before merging.' Forward-fix PR #571 required. Subsequent merges document 'pyright row verified PASS directly (not watch-exit)'."
+    },
+    {
+      "op": "amend",
+      "id": "idle-artifact-completeness-distinguisher",
+      "statement": "A commander idle_notification does not distinguish done from stalled. Gate classification on artifact completeness: commit on branch AND open PR both present -> done; otherwise -> stalled (regardless of idle reason). Before classifying idle+uncommitted as a stall, check crew-runs.json for active crew agents — idle + uncommitted is NOT a stall if a crew is actively running for that work-id. Recovery for a stall = SendMessage return-and-continue with the same agent; do NOT kill and relaunch (idle/available means context is intact; two-agents-in-worktree risk otherwise). When a commander pattern-recurrently stalls at the push/PR/archive step across multiple nudge attempts (not just once), the Admiral should plan to own those closeout mechanics directly — the launch-order warning alone is insufficient.",
+      "grounding": "ADMIRAL_LOG 2026-06-29 ADMIRAL ERROR #2 (idle-while-crew-active mis-call) + INCIDENT (stall #2 + fence violation) cmdr-563 + INCIDENT/recovery W3 archive takeover cmdr-511 ('stalled 4x at the archive sequence... took over W3 closeout mechanics'). W3 LO explicitly warned 'drive through it' yet cmdr-511 still stalled 4x — pattern is structural."
+    },
+    {
+      "op": "amend",
+      "id": "loo-residual-diagnostic-over-self-weighted-predictor",
+      "statement": "Any residual / calibration / stability diagnostic computed over a self-weighted or smoothing predictor (drift fit, RTS smoother, kernel) MUST use leave-one-out (out-of-sample) prediction. A self-inclusive form pins the prediction to each point's own value and is structurally blind to the very failure it exists to detect (sigma-too-small / over-claiming, between-session instability). When a crew flags this class once, sweep the whole module for sibling diagnostics rather than fixing only the flagged instance. Apply the same LOO discipline to the TARGET variable in a supplant/evaluation test: a truth channel derived from the same signal family as the feature, or algebraically collinear with it, yields spuriously high LOO P — gate with P>=0.95-means-leakage. Also verify the truth OLS is full-rank; within-stint fixed-effects + tyre_life are collinear (lap_number = offset + tyre_life within a stint), so use driver or race fixed-effects for the fuel term.",
+      "grounding": "ADMIRAL_LOG 2026-06-29 cmdr-443 INCIDENT (circular-target P=0.98 caught via LOO<0.95) + RULING/milestone G4 rework (stint-FE rank-deficient lstsq artifact, corrected to driver-FE). Two independent target-channel catches in one run."
+    },
+    {
+      "op": "retire",
+      "id": "commander-no-touch-crew-managed-resource",
+      "reason": "runs-since-confirmed=9 (one tick from auto-dormant); 2 mentions, 1 confirm total. Core serialize-ownership principle is implicit in float-before-crossing-named-fence + shared-files-not-on-mission-branch. Retiring to free a cap slot for admiral-owns-long-batch-compute (high-impact fresh evidence, two incidents: epic-453 + tire-age G2). Can reenter if the specific race-condition pattern recurs.",
+      "grounding": "ADMIRAL_LOG 2026-06-29 tire-age closeout lessons audit; playbook at 20/20 cap requires a retire to add admiral-owns-long-batch-compute."
+    },
+    {
+      "op": "add",
+      "id": "admiral-owns-long-batch-compute",
+      "scope": "admiral",
+      "task_class": "general-workflow",
+      "statement": "Multi-hour batch compute must be Admiral-owned and OS-detached (e.g. PowerShell Start-Process -WindowStyle Hidden, which survives all three fleet-doctrine kill vectors). A commander's harness-tracked background workers die when the subagent idles — guaranteed strand. Pattern: Admiral launches detached workers, records PIDs + state note, uses a durable watcher (Wait-Process) rather than a harness-tracked background; CLIs must be idempotent/resumable so partial runs continue. A commander may discover or diagnose batch scope, but must not be the one running multi-hour compute.",
+      "grounding": "ADMIRAL_LOG 2026-06-29 INCIDENT detached-compute death: cmdr-511's 7 G2 harness-background workers died on subagent idle (~59 of ~889 stints) -> Admiral re-ran OS-detached (Start-Process -WindowStyle Hidden), durable Wait-Process watcher, idempotent CLI, merged 7 part DBs = 1,040 estimates error=0. Corroborated by epic-453 AGENT_FEEDBACK ('Detached-process execution (Start-Process hidden) finally beat the session-limit / background-task kill vector')."
+    }
+  ]
+}

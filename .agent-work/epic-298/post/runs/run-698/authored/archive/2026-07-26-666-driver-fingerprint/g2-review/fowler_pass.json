@@ -1,0 +1,20 @@
+{
+  "work_id": "666-g2-review",
+  "diff_ref": "uncommitted working tree, C:/Programs/f1brainz-wt/epic659-666: src/physics/fingerprint/{address,vocabulary,store}.py + tests/unit/physics/fingerprint/{test_address,test_vocabulary,test_store}.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, epic #659 binding owner ruling 4 (dormant slots present-but-unused)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "flagged", "finding": "The (driver, era, vocabulary, channel, what_measure) 5-argument key recurs verbatim across write_fingerprint, get_fingerprint, and row_count in store.py, and duplicates CellAddress's own six identity fields (address.py). CellAddress already exists as the value object that should carry this clump, but the store's PUBLIC API takes the fields unpacked rather than a key/address object -- a candidate for a small FingerprintKey/query-object parameter bundling (driver, era, vocabulary, channel, what_measure) at the public boundary. Not a correctness issue (every call site in the tests is internally consistent) -- a maintainability observation for G3/G4 as more call sites accrue.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "flagged", "finding": "Same root cause as the data-clump above: write_fingerprint/get_fingerprint/row_count re-derive a CellAddress internally per class_id from five loose str primitives rather than accepting the CellAddress (or a partial-key value object) that address.py already defines to solve exactly this identity problem. The docstring claims the store 'mirrors the house store pattern' -- true for schema/migration/idempotency style, but the house precedent's write() takes ONE bundled record object (ReferenceLapProduct / GripEstimateRecord in reference_utilization_store.py / grip_store.py), while write_fingerprint here takes 6 loose params. Worth reconciling in G3 when the fit path becomes the caller, not a G2 blocker.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "flagged", "finding": "write_fingerprint(self, driver, era, vocabulary, channel, what_measure, observations, *, allow_unverified=False) has 6 required params + 1 kwonly. Same root cause as data-clumps/primitive-obsession above -- a single finding, not double-counted as a separate defect.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "overridden", "finding": "", "override": {"repo_standard": "epic #659 binding owner ruling 4, cited verbatim in address.py's module docstring and store.py's class docstring: 'lowest-dimensionality, dormant slots present-but-unused rather than added later as a breaking schema change.' FINGERPRINT_CHANNELS (channel dimension) and RESERVED_WHAT_MEASURES (4 Build-2 what_measure slots) are otherwise a textbook speculative-generality smell -- unused hooks for a future that may not arrive.", "reason": "This is a deliberate, epic-level architectural decision (avoid a future breaking schema/PK change by reserving the dimension now), not a guess by this implementer -- the ruling is a project-level standard that explicitly subordinates the smell, and the store's write path actively REFUSES to populate the reserved slots (ReservedWhatMeasureError) rather than silently half-supporting them, so the generality stays inert rather than speculative-and-untested."}},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

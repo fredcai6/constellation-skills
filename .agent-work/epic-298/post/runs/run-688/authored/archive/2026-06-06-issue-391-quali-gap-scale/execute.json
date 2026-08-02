@@ -1,0 +1,568 @@
+{
+  "work_id": "issue-391-quali-gap-scale",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and docs/architecture/packets/evo_predictor.md for the bounded problem. Confirm the frozen plan's intent and scope (quali mean gap-magnitude expression via per-event exchange rate; smallest default-preserving mechanism; gap-MAE OOS vs global-constant baseline; ordering KPIs flat by design; no retrain), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + evo_predictor packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ORCHESTRATOR_CONTEXT+GLOSSARY loaded (spine context step); evo_predictor packet read; frozen plan intent+scope confirmed consistent with packet (spread_target frame expected_gap=s*(pi_i-pi_j), params/spread_target/<y>/<r>/quali.json artifacts, compute_pace_gaps observable, default-preserving, no retrain, gap-MAE OOS vs global-constant w/ CF1+CF2 carry-forward variants)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Gap-scale module: implement",
+      "imperative": "Create the pure module src/evo_predictor/quali_gap_scale.py. PUBLIC API: (1) expected_gap_ij(pi_i: float, pi_j: float, s: float) -> float = s*(pi_i - pi_j) (fraction-of-median units; the #386 contract function); (2) expected_gaps(pi: Mapping[str,float], s: float, *, reference='median') -> Dict[str,float] returning per-driver gap-to-reference (s*(pi_d - ref(pi))), the field-level expression; (3) prediction-time scale providers -- TWO carry-forward variants (Admiral correction) plus the baseline: (3a) carry_forward_scale(history: Sequence[SpreadTargetRecord-or-float]) -> Optional[float] = LAST-KNOWN prior-event quali s_e (None if no history); (3b) same_circuit_prior_year_scale(prior_year_record_or_value) -> Optional[float] = the SAME-CIRCUIT PRIOR-YEAR quali s_e (None if absent) -- same artifact, different lookup key (spread is plausibly track-structured: Monaco vs Monza); (3c) global_constant_scale(records) -> float (mean/median s_e over a fitting pool; the status-quo-ante baseline that both carry-forward variants must beat). NOTE the vacuous 'persistence baseline' is DROPPED -- it was identical to carry_forward_scale (Admiral). Validate inputs (name field/expectation/actual on failure). NO change to spread_target.py, no retro touch, no pi-semantics change, DB not required by the pure module (circuit->round resolution from get_calendar happens in the harness, not the pure module; the pure provider takes the already-looked-up prior-year record/value). Write tests/unit/evo_predictor/test_quali_gap_scale.py covering the formula (sign, scale, monotone-invariance of ORDER under positive s), reference handling, empty/single-driver, both carry-forward variants' None-on-empty, and constant-scale aggregation. Fill IMPLEMENTER_HANDOFF; play implementer in-context (no nested dispatch per Admiral order) with strict role discipline. Run targeted pytest, pyright on touched, py -m src.utils.simplification_limits on touched. Return IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "pi stays dimensionless; gap via exchange rate only; no retro re-solve; no sigma/disagreement_rate work.",
+        "DEFAULT-PRESERVING: new file only; no existing -pi consumer altered.",
+        "py not python; targeted pytest only; pyright-clean on touched; simplification_limits on touched src/tests.",
+        "No FastF1 in analysis/model/adapter code; DB is the only data source if any DB access is needed."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "quali_gap_scale.py + test_quali_gap_scale.py created; API expected_gap_ij/expected_gaps/carry_forward_scale(CF1)/same_circuit_prior_year_scale(CF2)/global_constant_scale; persistence dropped",
+            "tests": "36 passed",
+            "pyright": "0 errors",
+            "simplification_limits": "PASS",
+            "blockers": "none",
+            "evidence_path": ".agent-work/issue-391-quali-gap-scale/evidence/g1-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Gap-scale module: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan + IMPLEMENTER_RESULT. Inspect the diff (quali_gap_scale.py + its test). Verify: formula correctness (s*(pi_i-pi_j)); positive-s order-invariance preserved (sign of expected_gap matches sign of pi-diff); reference handling correct; input validation present with named messages; default-preserving (no existing file touched beyond the new module + test); tests meaningful and green; pyright + simplification_limits clean. Play reviewer in-context with role discipline. Return REVIEW_RESULT with verdict APPROVE or BLOCK.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received (e-g1-implement-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "quali_gap_scale.py + tests verified from worktree: formula correct, positive-s order invariance holds, reference handling correct, named input validation, default-preserving (2 new files only), CF1+CF2+baseline present, persistence dropped. 36 tests green, pyright 0, simplification PASS.",
+            "process_note": "files initially mis-created in main repo (cwd slip); moved to worktree, re-verified green",
+            "evidence_path": ".agent-work/issue-391-quali-gap-scale/evidence/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Gap-scale module: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "quali_gap_scale module + unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_quali_gap_scale.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "source": "g1-review e-g1-review-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_quali_gap_scale.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Gap-MAE measurement harness + OOS result: implement",
+      "imperative": "Create scripts/diagnose_quali_gap_scale.py (DB + committed artifacts; stdlib + numpy; py; deterministic; foreground <=10 min). For each quali event with a committed quali s_e (params/spread_target/<y>/<r>/quali.json), read-only retro quali pi (retro_loader), and observed quali gaps (compute_pace_gaps over db.get_quali_best_valid_laps_batch): compute predicted pairwise gaps under these scale sources -- (A) EVENT-CONDITIONED s (the committed per-event quali s_e = the achievable label-side ceiling, for reference); the TWO prediction-time CARRY-FORWARD variants that must beat the baseline (Admiral correction): (CF1) LAST-PRIOR-EVENT carry-forward s_hat_e (last-known prior quali event s_e, as-of safe), and (CF2) SAME-CIRCUIT PRIOR-YEAR s_hat_e (prior-year same-GP quali s_e via get_calendar GP-name lookup; as-of safe -- prior year is always before the event); and (B) GLOBAL-CONSTANT s (single s fit on the train pool, the status-quo-ante baseline that must fall). DROP the vacuous persistence source (it was identical to CF1 -- Admiral). Metric: pairwise gap-MAE = mean |predicted_gap_ij - observed_gap_ij| over undirected non-tie pairs, plus a calibration view (slope/intercept or binned predicted-vs-observed). Slice: OVERALL and MIDFIELD (both drivers' quali positions in 6-15, matching diagnose_quali_same_pairs MIDFIELD_LO/HI). Regimes: OOS 2025 (clean, primary) and a LOSO-style/train-pool view for context; never pool across regimes. ALSO report the ordering KPIs (pairwise sign-acc / rank proxy) under each scale source to DEMONSTRATE they are FLAT/identical across scales (the monotone-invariance confirmation; reuse the pairwise sign primitive convention). DETERMINE THE WINNER between CF1 and CF2 by OOS midfield gap-MAE and emit it as the recommended default \u015d_e source in the JSON (field e.g. recommended_shat_source). Write evidence JSON to .agent-work/issue-391-quali-gap-scale/evidence/quali_gap_scale_numbers.json and print a report. Add a focused test (tests/unit/evo_predictor/ or tests/regression/) on the harness's pure scoring helpers (gap-MAE on a tiny synthetic event; flat-ordering assertion; winner-selection helper). Fill IMPLEMENTER_HANDOFF; play implementer in-context. Run the script foreground, capture numbers, run targeted pytest + pyright + simplification_limits on touched. Return IMPLEMENTER_RESULT INCLUDING the headline numbers (gap-MAE event-conditioned vs CF1 vs CF2 vs global-constant, OOS midfield), the chosen-default winner, and the flat-ordering confirmation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "gap-scale module exists (g1 closed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 closed; gap-scale module exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with measured numbers and no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "NO retrain, NO NN inference: only committed s_e + read-only retro pi + DB. If any path needs a retrain or multi-hour run -> STOP and report.",
+        "As-of discipline: the prediction-time s_hat_e must use ONLY prior-event s_e (no leakage of the event's own label into its prediction).",
+        "Reuse, do not fork: import compute_pace_gaps, the gap-scale module, and the retro_loader; midfield band matches the existing same-pairs diagnostic.",
+        "py not python; targeted pytest only; pyright-clean on touched; simplification_limits on touched.",
+        "HONEST-OUTCOME: if NEITHER carry-forward variant (CF1 last-prior-event, CF2 same-circuit-prior-year) beats global-constant on midfield gap-MAE OOS, report that plainly -- it is a valid result and the #386 contract deliverable stands regardless."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "diagnose_quali_gap_scale.py + 18 harness tests; OOS 2025 midfield gap-MAE measured for event/cf1/cf2/global_const",
+            "headline_oos_midfield": "event=0.001949 cf1=0.003258 cf2=0.003825 global_const=0.003255",
+            "outcome": "HONEST NULL: neither CF beats global-constant; winner=global_const",
+            "flat_ordering": "identical sign-acc 0.938776 across all scales, spread=0.0, is_flat=True",
+            "tests": "18 passed",
+            "pyright": "0 errors",
+            "simplification": "PASS",
+            "blockers": "none",
+            "evidence_path": ".agent-work/issue-391-quali-gap-scale/evidence/g2-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Gap-MAE measurement harness + OOS result: review",
+      "imperative": "Fill REVIEWER_HANDOFF from gate plan + IMPLEMENTER_RESULT. Inspect scripts/diagnose_quali_gap_scale.py + its test + the numbers JSON. Verify: gap-MAE math correct (|pred-obs| over valid pairs, fraction-of-median units consistent on both sides); as-of safety of BOTH carry-forward variants (CF1 last-prior-event uses only events strictly before; CF2 same-circuit-prior-year uses only the prior season -- no same-event leakage); global-constant baseline is a single s over the train pool; midfield slice matches the established band; OOS regime not pooled with train; the flat-ordering confirmation is genuinely computed (not asserted); the recommended-default winner (CF1 vs CF2) is selected by the measured OOS midfield gap-MAE and matches the JSON; the win/no-win statement (vs global-constant) matches the JSON numbers; reuse (no forked ceiling/gap math). Confirm honest-outcome reporting. Play reviewer in-context. Return REVIEW_RESULT verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "harness math + sign convention consistent with spread_target; both CF variants as-of safe; global-constant single train-pool s; midfield band matches; OOS not pooled; flat-ordering genuinely computed (spread 0.0); winner by measured MAE excludes label; honest-null faithfully reported; reuse confirmed. 18 tests green, pyright 0, simplification PASS.",
+            "evidence_path": ".agent-work/issue-391-quali-gap-scale/evidence/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Gap-MAE measurement harness + OOS result: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates. Record the headline gap-MAE result (win or honest-null) for the run report.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "harness scoring tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_quali_gap_scale_harness.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "source": "g2-review e-g2-review-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_quali_gap_scale_harness.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Doc note + #386 contract recording: implement",
+      "imperative": "Append a doc note recording the reconciled acceptance + result. In docs/evo/prediction_ceiling_and_priorities.md, add a subsection under or after \u00a79 (append-shaped, do not rewrite prior text) titled e.g. '9.6 Quali mean gap scale (#391)': (1) the MONOTONE-INVARIANCE finding (a positive per-event scalar on pi-differences cannot move ordering KPIs -- algebraic; so 'meaningful' was reconciled to gap-MAGNITUDE error, not ordering); (2) the mechanism (pure expected_gap = s*(pi_i-pi_j); prediction-time s_hat_e via carry-forward; default-preserving) AND the two carry-forward variants evaluated (CF1 last-prior-event, CF2 same-circuit-prior-year) with the SHIPPED DEFAULT being the measured winner and the rationale for the choice; (3) the MEASURED numbers from g2 (gap-MAE event-conditioned vs CF1 vs CF2 vs global-constant, OOS midfield; calibration; ordering KPIs confirmed flat) -- cite the evidence JSON path; (4) the #386 CONTRACT: what #386 (Thrust B epic) consumes (the phase-agnostic expected_gap function with the LABEL s_e as the reference baseline its 'excess flip risk beyond the gap' is measured against), and WHERE (module src/evo_predictor/quali_gap_scale.py + the committed s_e artifact), INCLUDING the quali-vs-race ownership note (this module owns the quali gap-scale expression; the race phase shares the same expected_gap contract but is owned elsewhere). Update docs/architecture/packets/evo_predictor.md to add the quali_gap_scale.py module entry (one-line role, #391) near the spread_target.py entry. Keep edits append/additive; cite real numbers (no placeholders). Fill IMPLEMENTER_HANDOFF; play implementer in-context. Return IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "measured numbers available (g2 closed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 closed; measured numbers available"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Append-shaped doc edits; do not rewrite prior \u00a79 text or contradict it.",
+        "Cite REAL g2 numbers and the evidence JSON path; no placeholders.",
+        "Keep documentation current rule: contract/ownership/data-flow note must match the shipped module."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "appended prediction_ceiling \u00a79.6 + evo_predictor packet entry; cites real g2 numbers (event 0.001949/cf1 0.003258/cf2 0.003825/global_const 0.003255), honest null, flat-ordering 0.938776, #386 contract + quali-vs-race ownership note",
+            "tests": "54 passed (gap-scale + harness)",
+            "changed": "2 doc files only, append-shaped",
+            "blockers": "none",
+            "evidence_path": ".agent-work/issue-391-quali-gap-scale/evidence/g3-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Doc note + #386 contract recording: review",
+      "imperative": "Fill REVIEWER_HANDOFF from gate plan + IMPLEMENTER_RESULT. Inspect the doc diff (prediction_ceiling_and_priorities.md \u00a79.6 + evo_predictor packet). Verify: monotone-invariance argument stated correctly; numbers cited match the g2 evidence JSON exactly (event-conditioned, CF1, CF2, global-constant, OOS midfield); the shipped-default \u015d_e source matches the measured winner and the choice is documented with rationale; the #386 contract (what + where) is accurate and matches the shipped module/artifact, including the phase-agnostic expected_gap + label-s_e reference and the quali-vs-race ownership note; edits are append-shaped and do not contradict prior text; architecture packet entry accurate. Play reviewer in-context. Return REVIEW_RESULT verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "\u00a79.6 + packet entry accurate: monotone-invariance correct, numbers match JSON exactly, shipped default=measured winner (global_const) w/ rationale, #386 contract phase-agnostic+label-s_e+quali-vs-race ownership note correct, append-shaped no contradiction. 54 tests green.",
+            "evidence_path": ".agent-work/issue-391-quali-gap-scale/evidence/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Doc note + #386 contract recording: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command (full touched-suite + simplification_limits as applicable), confirm postconditions, advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched evo_predictor gap-scale tests still green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_quali_gap_scale.py tests/unit/evo_predictor/test_quali_gap_scale_harness.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "source": "g3-review e-g3-review-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_quali_gap_scale.py tests/unit/evo_predictor/test_quali_gap_scale_harness.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-review",
+      "statement": "Learned as-of feature->s_e head for the quali gap scale (the #375-shaped predict-s_e-from-features deliverable explicitly deferred from #391). Motivation: g2 measured a ~40% gap-MAE headroom between the label-side event-conditioned ceiling (OOS 2025 midfield 0.001949) and every cheap prediction-time source (cf1 0.003258, cf2 0.003825, global-constant 0.003255); neither carry-forward heuristic captures the genuine event-to-event spread structure (cross-event CV ~0.80). A feature-conditioned predictor of s_e could close that headroom. Scope: as-of feature contract + a bounded fit/calibration; may be retrain-shaped (Admiral approval gate)."
+    }
+  ],
+  "blockers": []
+}

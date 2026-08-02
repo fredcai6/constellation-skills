@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "mechanical": {
+    "run": "cmdr-698",
+    "project": "f1Brainz",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "plan",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cmdr-698-plan@1c10a2c63599c99f12219fb12a66b7b62e585b93",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cmdr-698",
+    "generated_at": "2026-08-02T20:34:08Z"
+  }
+}

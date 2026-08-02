@@ -1,0 +1,421 @@
+{
+  "work_id": "628-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-core-pooling",
+    "m2-unresolved-shrinkage",
+    "m3-nothing-dropped",
+    "m4-banked-artifact",
+    "m5-full-verify",
+    "m6-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then the project deltas docs/agents/CREW_CONTEXT.md + docs/agents/GLOSSARY.md, plus the handoff at .agent-work/628-driver-utility/crew-handoffs/g2-implement-handoff.md and the reference seams src/physics/layer2/pooling.py::pool_random_effects and src/physics/layer2/estimate_store_fields.py::effective_axis_sigma/normalize_axis_status/UNRESOLVED_AXIS_SIGMA_FRAC, plus G1's committed row schema (src/physics/utilization/driver_utility_observable.py, scripts/build_driver_utility_observables.py, crew-results/g1-implement-result.md) which fixes the observable row shape (year, session_type, gp_name, round_idx, constructor, driver, axis, g_deficit, n_points, sigma_lapsampling, n_sessions_causal, error). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + reference seams + G1 row schema loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "crew context, everyone doctrine, CREW_CONTEXT, GLOSSARY, g2-implement-handoff.md, pooling.py::pool_random_effects, estimate_store_fields.py::effective_axis_sigma/normalize_axis_status/UNRESOLVED_AXIS_SIGMA_FRAC, and G1's committed row schema all read in full; handoff verified complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-core-pooling": {
+      "id": "m1-core-pooling",
+      "title": "estimate_driver_utility core: per-(year,driver,constructor,axis) DL pooling, resolved case (TDD)",
+      "imperative": "Create src/physics/utilization/driver_utility.py: estimate_driver_utility(rows_df) -> DataFrame, one row per (year, driver, constructor, axis) present in the input (axis-null error rows excluded from grouping). For each group, pool the group's valid per-session (g_deficit, sigma_lapsampling) pairs via pool_random_effects(values, sigmas) -> delta=pooled.mu, sigma=pooled.sigma_mu, tau=pooled.tau; n_sessions=count of valid rows in the group; n_points=sum of the group's n_points. Write tests/unit/physics/test_driver_utility.py FIRST (red) covering a well-supported driver (>=MIN_RESOLVED_SESSIONS consistent sessions) where delta matches an independently-computed pool_random_effects(values, sigmas).mu exactly and status will later be 'resolved'. Observe it fail (ModuleNotFoundError/AttributeError), then implement to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded and handoff complete (m0-context.c1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_driver_utility.py written and observed failing before driver_utility.py exists -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_driver_utility.py written first with TestResolvedPooling; observed collection failure: ModuleNotFoundError: No module named 'src.physics.utilization.driver_utility'"
+        },
+        {
+          "id": "c2",
+          "statement": "well-supported-driver pooling test green: delta == independently pool_random_effects-computed mu",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k ResolvedPooling -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-core-pooling-1"
+        }
+      ],
+      "constraints": [
+        "reuse pool_random_effects, do not reinvent DL pooling",
+        "delta is a teammate-relative deficit, can be ~0"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-core-pooling-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k ResolvedPooling -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-unresolved-shrinkage": {
+      "id": "m2-unresolved-shrinkage",
+      "title": "Explicit resolved/unresolved status + effective_axis_sigma reuse + shrinkage evidence (TDD)",
+      "imperative": "Extend driver_utility.py: status='resolved' iff n_sessions >= MIN_RESOLVED_SESSIONS(=3) else 'unresolved'. Compute a per-axis reference_value = population std of g_deficit for that axis across ALL valid rows in rows_df, floored to a small constant, and pass it into effective_axis_sigma(value=delta, sigma=sigma, status=status, reference_value=reference_value) (REUSED, not reimplemented) to produce effective_sigma. Add tests to test_driver_utility.py FIRST (red): (a) a thin (1-2 session) driver/axis gets status='unresolved' and effective_sigma widened to >= reference_value (the reserved scale) even though its raw delta could be near 0; (d) within that SAME thin group, seed one low-sigma (trustworthy) session and one high-sigma (noisy outlier) session and assert the pooled delta lies closer to the low-sigma session's value than the simple/raw mean of the group does (partial-pooling shrinkage toward the axis's own better-supported sessions, away from the noisy outlier's raw pull). Observe both failing, then implement to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 resolved-case pooling green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 resolved-case pooling test green (2 passed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: unresolved-status + shrinkage tests written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TestUnresolvedReservedSigma + TestShrinkage written; observed genuine RED: test_thin_driver_unresolved_with_wide_effective_sigma FAILED (effective_sigma=0.01 == raw sigma, NOT widened) -- real bug found: effective_axis_sigma prioritizes value over reference_value whenever value is not None, so passing delta(~0) as value defeats the reserved-wide-sigma contract. Fixed by passing value=None for unresolved status so it falls through to reference_value."
+        },
+        {
+          "id": "c2",
+          "statement": "unresolved status + widened effective_sigma + shrinkage tests green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k \"unresolved or shrink\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-unresolved-shrinkage-1"
+        }
+      ],
+      "constraints": [
+        "reuse effective_axis_sigma/normalize_axis_status/UNRESOLVED_AXIS_SIGMA_FRAC unmodified",
+        "reference_value must be non-trivial (not ~0) so unresolved sigma is genuinely wide"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-unresolved-shrinkage-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k \"unresolved or shrink\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-nothing-dropped": {
+      "id": "m3-nothing-dropped",
+      "title": "Nothing-dropped invariant: every (driver, axis) in input emits exactly one output row (TDD)",
+      "imperative": "Add a test to test_driver_utility.py FIRST (red) with multiple drivers/years/axes (mixing resolved, unresolved-thin, and a zero-valid-observation driver/axis group where every row's g_deficit is null) asserting the output's set of (year, driver, constructor, axis) tuples equals exactly the set of distinct such tuples present in the input's axis-non-null rows -- no combination silently dropped, and the zero-valid-observation group still emits one 'unresolved' row with effective_sigma from reference_value alone (delta/sigma both None). Observe it fail, then implement/adjust to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 unresolved/shrinkage green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 unresolved/shrinkage tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: nothing-dropped test written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TestNothingDropped written first (mix of resolved/unresolved-thin/zero-valid-observation/axis-null-error-row). Ran immediately against the existing m1/m2 implementation: PASSED without further code change -- the value=None-for-unresolved fix from m2 already covers the zero-valid-observation edge case (delta/sigma both None, status unresolved, effective_sigma widened via reference_value fallback), and the with_axis filter already excludes axis-null error rows from grouping. No red observed this slice; recorded as test-after verification of behavior already implemented, not a fresh TDD cycle."
+        },
+        {
+          "id": "c2",
+          "statement": "nothing-dropped test green, including the zero-valid-observation edge case",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k dropped -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-nothing-dropped-1"
+        }
+      ],
+      "constraints": [
+        "no silent drops -- every input (driver,axis) combo emits a status"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-nothing-dropped-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k dropped -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-banked-artifact": {
+      "id": "m4-banked-artifact",
+      "title": "write_driver_utility_db banked artifact, untracked SQLite, idempotent (TDD)",
+      "imperative": "Add write_driver_utility_db(df, path) to driver_utility.py: persists the estimate_driver_utility DataFrame to an UNTRACKED SQLite DB (table 'driver_utility'), replace-on-rerun for the same slice. Add tests to test_driver_utility.py FIRST (red) using tmp_path: write once, read back via sqlite3/pandas and confirm row count/columns match; write again (same df) and confirm idempotent (same row count, no duplication). Observe it fail, then implement to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 nothing-dropped green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 nothing-dropped test green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: banked-artifact tests written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TestBankedArtifact written first (write-then-read-back, and idempotent-rerun). Ran immediately against write_driver_utility_db (built in m1 alongside estimate_driver_utility as one cohesive module): PASSED without further code change -- to_sql(if_exists='replace') already gives replace-on-rerun idempotency. No red observed this slice; test-after verification of already-implemented behavior."
+        },
+        {
+          "id": "c2",
+          "statement": "write_driver_utility_db round-trip + idempotent-rerun tests green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k bank -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-banked-artifact-1"
+        }
+      ],
+      "constraints": [
+        "data/driver_utility.db is UNTRACKED -- NEVER git add it",
+        "tests use tmp_path, not the real data/ path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-banked-artifact-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -k bank -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-full-verify": {
+      "id": "m5-full-verify",
+      "title": "Full suite + simplification-limits + deliverable path + untracked-db checks",
+      "imperative": "Run the full new test file, the simplification-limits check on the new module and test file, and confirm the two committed deliverables are not gitignored and no data/*.db got staged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 banked-artifact green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 banked-artifact tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_driver_utility.py suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-full-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification limits pass on the two new files",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m src.utils.simplification_limits --paths src/physics/utilization/driver_utility.py tests/unit/physics/test_driver_utility.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-full-verify-2"
+        },
+        {
+          "id": "c3",
+          "statement": "deliverables not gitignored; no data/*.db staged",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && for f in src/physics/utilization/driver_utility.py tests/unit/physics/test_driver_utility.py; do git check-ignore \"$f\" && exit 1; done; ! git status --short -- data/ | grep '^A' ; true"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-full-verify-3"
+        }
+      ],
+      "constraints": [
+        "do not stage or commit any data/*.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-full-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-full-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m src.utils.simplification_limits --paths src/physics/utilization/driver_utility.py tests/unit/physics/test_driver_utility.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-full-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && for f in src/physics/utilization/driver_utility.py tests/unit/physics/test_driver_utility.py; do git check-ignore \"$f\" && exit 1; done; ! git status --short -- data/ | grep '^A' ; true",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-result": {
+      "id": "m6-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the IMPLEMENTER_RESULT to .agent-work/628-driver-utility/crew-results/g2-implement-result.md with all required sections (completed slice, files changed, test mode satisfied, evidence [pytest + simplification-limits pasted output], assumptions, stop conditions hit, out-of-scope observations, workflow feedback, map impact).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 full verify green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 full verify green: full pytest 8/8, simplification-limits PASS, deliverable paths not gitignored, no data/*.db staged"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result file exists on disk with real evidence pasted in",
+          "check": {
+            "kind": "command",
+            "command": "test -f /c/Programs/f1-628/.agent-work/628-driver-utility/crew-results/g2-implement-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-result-1"
+        }
+      ],
+      "constraints": [
+        "do not stage or commit any data/*.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /c/Programs/f1-628/.agent-work/628-driver-utility/crew-results/g2-implement-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shiph628-g2",
+    "status": "released",
+    "claimed_at": "2026-07-19T06:09:21.155423+00:00",
+    "last_heartbeat": "2026-07-19T06:18:54.681643+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T06:19:05.083474+00:00"
+  }
+}

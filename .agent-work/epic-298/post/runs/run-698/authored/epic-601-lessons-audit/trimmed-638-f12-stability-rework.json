@@ -1,0 +1,15 @@
+{
+  "tick": true,
+  "work_id": "638-f12-stability-rework",
+  "ops": [
+    {
+      "op": "add",
+      "id": "no-broad-process-kill-in-multiship-session",
+      "scope": "commander",
+      "statement": "In a multi-ship/fleet session, NEVER broad-kill processes (e.g. `taskkill //IM python.exe`) \u2014 it kills sibling ships' compute. Kill by explicit PID, and check `ps -W` start-time/ownership before any sweep; treat clustered same-timestamp processes you didn't launch as a sibling's.",
+      "grounding": ".agent-work/staged-feedback/638-f12-stability-rework/AGENT_FEEDBACK.md 2026-07-18 (Where I improvised): I ran `taskkill //IM python.exe` to clear a stray diagnostic, which in a multi-ship session could have killed sibling ships' compute; corrected to surgical `kill <pid>` after checking ps timestamps (7 clustered sibling procs were spared on the next sweep).",
+      "bank_reason": "Re-observe whether surgical-PID discipline holds under fleet contention, and whether a shared convention (ship-tagged process names / a ps-ownership helper) is needed to make orphan-sweeping safe \u2014 a single incident doesn't yet prove the general mechanism.",
+      "task_class": "general-workflow"
+    }
+  ]
+}

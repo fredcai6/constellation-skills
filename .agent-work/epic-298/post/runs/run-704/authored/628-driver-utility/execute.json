@@ -1,0 +1,747 @@
+{
+  "work_id": "628-driver-utility",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-freeze",
+    "g5-run"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read inherited global doctrine + docs/agents/ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, docs/architecture/decisions/c1-driver-utilization-design.md, and .agent-work/628-driver-utility/{problem-statement,mission-frame,plan-design,critic-disposition}.md. Confirm the frozen plan intent/scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + plan artifacts + critic disposition loaded; intent/scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 observable module + resumable batch CLI: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1 and dispatch constellation-implementer. Build src/physics/utilization/driver_utility_observable.py: a PURE function that given (a strictly_pre causal CarCeilingResult for constructor@round, a driver best-lap (distance,speed) trace, and the track ribbon/curvature) computes per-regime ABSOLUTE speed-deficit observables g_axis = mean(v_ideal_causal - v_real) over the 4 tiling regimes, REUSING regime_utilization._build_regime_masks and PhysicsSimulator.simulate_lap. NO ratio (no v_real/v_ideal) anywhere. Emit per-(year,driver,gp,round,axis) rows with n_points and a lap-sampling sigma. ALSO a resumable batch CLI scripts/build_driver_utility_observables.py: for a (year,session_type,rounds,drivers) slice, uses session_fit.fit_best_lap_trace (LEAN, skips the MAP fit) for v_real, build_car_ceiling(strictly_pre=True) for v_ideal (one per constructor-round, cached across the two cars), persists rows to an UNTRACKED scratch DB data/driver_utility_observables.db, IDEMPOTENT skip-if-present (resumable). Reads telemetry via the existing load_quali_session seam (DB-only). Unit tests: driver-at-ceiling -> g approx 0; driver 5% slow in corners -> g>0 on corner regimes and approx 0 on straight; resume skips existing rows; NO occurrence of a division of observed by capability. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "no FastF1 in analysis (load_quali_session telemetry-store seam only)",
+        "NEVER commit data/*.db",
+        "no observed/capability division anywhere"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization \u2014 new driver_utility_observable.py; scripts/build_driver_utility_observables.py",
+          "car_prior.build_car_ceiling(strictly_pre=True)",
+          "regime_utilization._build_regime_masks",
+          "session_fit.fit_best_lap_trace"
+        ],
+        "capability": [
+          "capability: per-driver per-axis absolute access deficit (produced observable)"
+        ],
+        "constraint": [
+          "constraint: DB-only analysis",
+          "constraint: NEVER commit data/*.db",
+          "assumption: lean trace ~28s/case, batch OS-detached in G5"
+        ],
+        "decision": [
+          "decision:c1_driver_utilization_design \u2014 reuse causal ceiling; decision pressure: strictly_pre for the falsifiable gate (surface at reconcile)"
+        ],
+        "evidence": [
+          "claim: at-ceiling->g0, corner-slow->g>0 corners ~0 straight; no ratio present"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "observable module + resumable CLI; 8/8 tests; F4 grep clean; idempotent CLI smoke",
+            "result_path": ".agent-work/628-driver-utility/crew-results/g1-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Fill REVIEWER_HANDOFF and dispatch constellation-reviewer. Re-run G1 tests; grep the new module+CLI to CONFIRM no observed/capability division exists (the load-bearing F4 check); confirm regime masks reused (not reinvented), strictly_pre ceiling used, lean trace path, resumable idempotency, and that no data/*.db is staged. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 F4 no-division is the load-bearing review check"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/628-driver-utility/crew-results/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "Check verdict. APPROVE: re-run tests, confirm no data/*.db staged (git status data/), advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "observable module + CLI land; unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility_observable.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility_observable.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 driver-utility latent + explicit-unknown status + banked artifact: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G2 and dispatch constellation-implementer. Build src/physics/utilization/driver_utility.py: a partial-pooling (random-effects, reuse pool_driver.pool_random_effects-style shrinkage) estimator over the G1 observable rows -> per (driver,axis) delta (shrunk mean deficit) + sigma. Every axis carries an EXPLICIT resolved/unresolved status: when support is thin / sigma too large, mark axis unresolved and inflate sigma via the UNRESOLVED_AXIS_SIGMA_FRAC sentinel machinery from estimate_store (REUSE it; do not invent a parallel one) -> a RESERVED high-uncertainty slot, nothing dropped silently. Produce a banked artifact (an UNTRACKED parquet/sqlite table data/driver_utility.db) with columns (year, driver, constructor, axis, delta, sigma, status, n_sessions, n_points). delta is teammate-relative (note in docstring). Unit tests: thin-support driver shrinks toward 0; status flips to unresolved below support threshold and sigma inflates; artifact schema present; every axis emitted with a status (nothing silently absent).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 observable rows + schema exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "reuse UNRESOLVED_AXIS_SIGMA_FRAC + *_status machinery",
+        "nothing dropped silently",
+        "NEVER commit data/*.db",
+        "py not python"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization \u2014 new driver_utility.py",
+          "estimate_store.UNRESOLVED_AXIS_SIGMA_FRAC + *_status",
+          "pool_driver.pool_random_effects (shrinkage prior art)"
+        ],
+        "capability": [
+          "capability: driver-utility latent (race-history prior), banked artifact"
+        ],
+        "constraint": [
+          "constraint(OWNER HARD): explicit resolved/unresolved status per axis; reserved slots; nothing dropped"
+        ],
+        "decision": [
+          "decision pressure: additive teammate-relative latent (surface at reconcile)"
+        ],
+        "evidence": [
+          "claim: shrinkage + status-flip + full-axis-coverage unit-tested"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "driver-utility latent estimator (pool_random_effects) + explicit resolved/unresolved status via reused effective_axis_sigma + banked untracked artifact; 8/8 tests; value=None fix for unresolved reserved-sigma",
+            "result_path": ".agent-work/628-driver-utility/crew-results/g2-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Fill REVIEWER_HANDOFF and dispatch constellation-reviewer. Re-run G2 tests; confirm the explicit-unknown contract (every axis has a status; unresolved -> reserved inflated-sigma slot via the REUSED sentinel, not a parallel invention); confirm shrinkage behavior; confirm no data/*.db staged. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors \u2014 explicit-unknown contract is the load-bearing review check"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/628-driver-utility/crew-results/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "Check verdict. APPROVE: re-run tests, confirm no data/*.db staged, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "latent estimator + status + artifact land; unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 held-out gate harness: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G3 and dispatch constellation-implementer. Build src/physics/utilization/driver_utility_gate.py: fit delta on TRAIN rounds (via G2), then on HELD-OUT rounds compute BOTH gate limbs OUT-OF-SAMPLE: (1) RECOMPOSITION: predicted v_real_axis = v_ideal_causal - delta_driver_axis; report held-out RMSE vs the delta=0 (car-only) baseline, PER AXIS. (2) PER-AXIS STRUCTURE: cross-driver variance of the per-axis-CENTERED deficit (subtract the axis mean = car/calibration offset; the variance of the centered deficit is the driver signal) -- corner axes should carry meaningful centered-variance, the straight/power axis approx 0. CRITICAL (critic SERIOUS-1): treat the straight/power axis as a CALIBRATION-CONFOUNDED NEGATIVE CONTROL (measured u_straight>1 => ceiling under-predicts straights), NOT a validated 0; falsifiable weight is on the corner axes; label it so in the output. Emit a reputational smell-test table (delta ranking vs driver reputations) explicitly labeled NON-GATING. Unit tests on SYNTHETIC data: known delta recovered out-of-sample; centering removes the car offset; a LEAKAGE SELF-TEST -- feeding a through-W (non-causal) ceiling on a HIGH-LEVERAGE early-season round must visibly INFLATE replication vs strictly_pre by a pre-committed magnitude, and null inflation is interpreted as EITHER immaterial-apparatus OR underpowered, never silently a pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 latent + G1 observable exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "out-of-sample only (no self-inclusive prediction)",
+        "centered variance for limb 2",
+        "straight axis = confounded negative control",
+        "leakage self-test on high-leverage round",
+        "py not python"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization \u2014 new driver_utility_gate.py"
+        ],
+        "capability": [
+          "capability: falsifiable held-out gate (recomposition + per-axis structure)"
+        ],
+        "constraint": [
+          "constraint: no observed/capability; out-of-sample; centered variance; confounded-axis honesty"
+        ],
+        "decision": [
+          "decision pressure: strictly_pre causal ceiling for held-out (breaks within-session leak; cross-round only attenuated -- named limit)"
+        ],
+        "evidence": [
+          "claim: delta recovered OOS; centering works; leakage self-test powered on high-leverage round"
+        ],
+        "confidence_flags": [
+          "straight/power axis calibration-confounded (critic SERIOUS-1) -> negative-control framing"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "held-out gate harness: OOS recomposition + centered per-axis structure + straight=confounded-negative-control + powered leakage self-test (0.55-0.70 vs 0.15) + honest-null first-class; 13 tests",
+            "result_path": ".agent-work/628-driver-utility/crew-results/g3-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Fill REVIEWER_HANDOFF and dispatch constellation-reviewer. Re-run G3 tests; CONFIRM: out-of-sample prediction (no self-inclusive leak; loo-residual-diagnostic lesson), centered-variance for limb 2, straight axis labeled confounded negative control, leakage self-test genuinely powered (high-leverage round, pre-committed magnitude, null != silent pass), reputational table labeled non-gating, no observed/capability division. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors \u2014 OOS + centered variance + leakage self-test are load-bearing"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/628-driver-utility/crew-results/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "Check verdict. APPROVE: re-run tests, confirm no data/*.db staged, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate harness lands; synthetic unit tests pass (incl. leakage self-test)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility_gate.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-628 && py -m pytest tests/unit/physics/test_driver_utility_gate.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-freeze": {
+      "id": "g4-freeze",
+      "title": "G4 methodology FREEZE (reasoning gate, crew-waived)",
+      "imperative": "REASONING GATE (deliverable is a frozen document in my own context; crew waived because it is a methodology note, not code). Write .agent-work/628-driver-utility/frozen-methodology.md BEFORE running any real-data numbers: (a) the exact train/held-out round split for the bounded 2023-Q slice; (b) the pass / honest-null RUBRIC per limb (recomposition: held-out RMSE improvement over delta=0 baseline threshold on CORNER axes; per-axis structure: centered cross-driver variance ranking corner>>straight replicates OOS); (c) the COVERAGE/OUTCOME FIREWALL (critic MINOR-3): MAY inspect support/coverage (fit_status ok, regime point counts) to form the split; MUST NOT inspect deficit values/outcomes; (d) straight/power axis is a CONFOUNDED NEGATIVE CONTROL, not a validated 0; (e) the leakage self-test high-leverage round + pre-committed inflation magnitude. Attest c1 once the file exists and freezes these before numbers.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 harness exists to freeze a rubric against",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "frozen-methodology.md written with split+rubric+firewall+confounded-axis+self-test BEFORE any real numbers seen",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "freeze before numbers",
+        "coverage-inspection allowed, outcome-inspection forbidden"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization gate methodology"
+        ],
+        "capability": [
+          "capability: frozen falsifiable rubric"
+        ],
+        "constraint": [
+          "constraint: freeze-before-numbers; coverage/outcome firewall"
+        ],
+        "decision": [],
+        "evidence": [
+          "claim: methodology frozen pre-numbers"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-run": {
+      "id": "g5-run",
+      "title": "G5 run bounded slice + held-out verdict (reasoning gate, crew-waived)",
+      "imperative": "REASONING GATE (running already-reviewed G1-G3 code on real data + interpreting; crew waived, I verify side-effects myself). STATE-NOTE first (.agent-work/628-driver-utility/state-note.md: step/next-cmd/PID/expected-artifact). Launch the G1 batch CLI OS-DETACHED via Start-Process -WindowStyle Hidden on the frozen 2023-Q bounded slice; POLL the scratch-DB row count IN-TURN (never idle a watcher). When rows land, run G2 estimator (bank the artifact) + G3 gate per the FROZEN methodology; produce held-out numbers (recomposition per axis, centered per-axis structure), the PASS/honest-null disposition, the reputational smell-test (non-gating), named limits (cross-round attenuation, no external ground truth, straight-axis confounding), and DB-clean confirmation (git checkout -- data/ any dirtied DBs). Write the numbers into the verdict. Attest c1 once held-out numbers + disposition exist and data/ is clean.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "methodology frozen (G4) + G1/G2/G3 approved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "held-out gate numbers + PASS/honest-null disposition produced per frozen methodology; data/ clean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "state-note before detach",
+        "Start-Process -WindowStyle Hidden",
+        "poll artifacts in-turn",
+        "NEVER commit data/*.db",
+        "honest-null is a complete deliverable"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.utilization"
+        ],
+        "capability": [
+          "capability: held-out gate verdict on bounded 2023-Q"
+        ],
+        "constraint": [
+          "constraint: detached compute, poll-not-idle, DB hygiene"
+        ],
+        "decision": [
+          "decision pressure: compute-ownership (bounded ~1-2h commander-detached vs Admiral batch) -> float if it overruns"
+        ],
+        "evidence": [
+          "claim: gate result reproduces on the live store"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "data/driver_utility_observables.db (and data/driver_utility.db) not covered by a .gitignore glob \u2014 only individually-named .db files are ignored. Add a glob so new scratch DBs can't be accidentally committed."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-integrate",
+      "statement": "G1 Fowler non-blocking: duplicated _validate_inputs vs regime_utilization; identifier-tuple data clump across CLI helpers; long param lists on _process_constructor/_process_driver. Candidate refactor (shared validation + a small identity dataclass)."
+    },
+    {
+      "id": "tc3",
+      "from": "g2-integrate",
+      "statement": "effective_axis_sigma value-beats-reference_value precedence is a caller trap (value=delta\u22480 silently defeats reserved-\u03c3); add a docstring warning on the seam in estimate_store_fields.py."
+    },
+    {
+      "id": "tc4",
+      "from": "g3-integrate",
+      "statement": "driver_utility_gate.run_gate refits estimate_driver_utility twice on the same TRAIN frame (via _fit_train_delta and _resolved_delta_frame, duplicated resolved-filter predicate). Harmless on synthetic; factor before/around G5 real-batch to avoid a redundant refit."
+    }
+  ],
+  "blockers": []
+}

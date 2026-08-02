@@ -1,0 +1,20 @@
+{
+  "work_id": "624-phase0-g2-review",
+  "diff_ref": "scripts/g2_wide_sigma_ab.py (new, ~467 lines), .agent-work/624-phase0/G2_FINDINGS.md and run logs/JSON",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "run_stage() (scripts/g2_wide_sigma_ab.py:248-334) is ~85 lines mixing feature-build, conditional injection, runtime invocation, metric scoring, JSON serialization, and print output in one function. Non-blocking observation: acceptable for a disposable single-purpose probe/CLI stage-runner (matches the analysis-script convention CREW_CONTEXT permits print()-in-scripts), but would be worth splitting (build -> predict -> score -> persist) if this script graduates beyond Phase-0.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "normalize_team/match_constructor/EXTRA_ALIASES (lines 133-159) are byte-for-byte reimplemented from scripts/g1_correlation_screen.py rather than imported, per an in-file comment ('to keep this script standalone'). This follows g1's own precedent (g1's docstring cites the editable-install .pth worktree trap as its reason for not importing src.* cross-checkout) but the .pth trap specifically concerns src.* resolving to the wrong checkout via the global editable install -- it does not obviously extend to importing a sibling scripts/ file, which isn't part of the installed package. No CREW_CONTEXT/GLOSSARY line formally sanctions duplicating logic between sibling probe scripts, so this is flagged as a minor non-blocking observation rather than auto-overridden: worth a shared scripts/_g_common.py helper if a g3 probe repeats the pattern a third time.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "year/gp_name/db/round_num travel together across a couple of functions but each call site's grouping is natural (matches the underlying DB query shape); not a clump warranting a value object.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "physics_axes uses dict[str, dict[str, float]] rather than a dataclass, but it is only ever produced/consumed as a JSON-serializable payload (the script's actual output contract), so a dict is the right shape here, not a smell.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "run_stage(args, injected) takes an argparse.Namespace bag plus one bool -- standard CLI-script pattern, not a long positional list.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "feature_set.runtime_context / result.stage_snapshots['quali'] are single-hop attribute/index accesses on a small number of well-named intermediate objects, not a chain.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "--check mirrors g1's precedent and the handoff's own Verification Commands section; no unused generality (e.g. no --stage values beyond the three actually used, no config hooks nobody calls).", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The long module docstring documents genuine reasoning (seam anchors with line numbers, sigma-widening formula rationale) that is load-bearing for review, not a cover for confusing code -- the code itself is straightforward.", "override": null}
+  ],
+  "rail_exception": null
+}

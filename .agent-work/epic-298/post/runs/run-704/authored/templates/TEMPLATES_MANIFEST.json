@@ -1,0 +1,217 @@
+{
+  "generated": "2026-06-10",
+  "source_commit": "01b89497205cdbaac148193d7ebb541020e036ae",
+  "baseline_origin": "baseline-promoted",
+  "templates": [
+    {
+      "skill": "constellation-admiral",
+      "template": "ADMIRAL_LOG.template.md",
+      "sha256": "ae59bdb165539ce30bfb1ecebfa2b348482bdd96e428a2fe73f6f25ce08521b1"
+    },
+    {
+      "skill": "constellation-admiral",
+      "template": "ADMIRAL_SPINE.template.json",
+      "sha256": "10a23bedc5ea5895adec5a746211a3b38398a33c0d889308b488aa64c1b69585"
+    },
+    {
+      "skill": "constellation-admiral",
+      "template": "LATITUDE_CONTRACT.template.md",
+      "sha256": "a1c75441ca2e6fdb9179f05950cbd52816a9028e8318728b4c9cfa3eae263e8e"
+    },
+    {
+      "skill": "constellation-admiral",
+      "template": "LAUNCH_ORDER.template.md",
+      "sha256": "7f82ec321a8fd06ee9565ba3a738c7caf8fae739e4f7f55648260937e662d649"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "ARCHITECTURE_DECISION.template.md",
+      "sha256": "a018ea8e1c668f8ea42375fa43b457970dd77f066443ebff120bce5549a520eb"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "ARCHITECTURE_INDEX.template.md",
+      "sha256": "ef4bb035286510a7458c5387506894dc40c5667ebab8c2552b045c0d579184a3"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "ARCHITECTURE_PACKET.template.md",
+      "sha256": "fd78562b65807b281039934cff393d463c2ef549a852c47455b94d7955d9aa65"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "CARTOGRAPHER.template.json",
+      "sha256": "5227ebdd77c284e416cff4688f8fa94f0d4bc4ccd3ecfd3b9662fda7bd18eca1"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "MAP_BUILD.template.md",
+      "sha256": "0e4d75fc6e93c009810733c2ab82e40e65dddcfb10d0b6126c9ae2cb08ec1e5d"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "AGENTS.pointer.template.md",
+      "sha256": "70733e78a5976437f45985ea571e0ecccb678b852ca8586e23ec3e615c6096a1"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "AGENT_GUIDE.template.md",
+      "sha256": "7abb046f58717e7a59eb21fb66f44348fe6a74a145cdf9dcde897db8ff16c32e"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CHARTER.template.json",
+      "sha256": "c8da224e4dc78e225d97c1e1184400c7a9faa641b08a6b4d4cb8dd88a9caf845"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CHARTER_OPEN_QUESTIONS.template.md",
+      "sha256": "8a1be2be5d9cc7f17cb923517e3b7239ba63acc9a3ab8668d59c93bb708cad40"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CHARTER_STARTING_QUESTIONS.template.md",
+      "sha256": "a5cda8e389c3735359332386ff8f6324713701a1bcc471d3855caac2a4353f9b"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CLAUDE.pointer.template.md",
+      "sha256": "650af80278bca3324c9a19c70c0abacdfdcfaf3dd2782e279fd00aa1d7625429"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CREW_CONTEXT.template.md",
+      "sha256": "4a1ca9830aa2e09710b87c737ec958a01bf664f417e2d7860d347a35fe7b081c"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "ENGINE_CONFIG.template.json",
+      "sha256": "49ec04c49da9dc61099718780328a785542db1ca0e2328f38b831bf47b1cdca3"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "GLOSSARY.template.md",
+      "sha256": "0f8a1a67590e97a50b8c278a4c45f7c4d79d2a02cf8ac18e305ae94438a1484c"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "ORCHESTRATOR_CONTEXT.template.md",
+      "sha256": "32f4c544fa53dd677672eb0608ab6831ef9ec76e205a6d1c46f4ce4772b078bb"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "COMMANDER_SPINE.template.json",
+      "sha256": "1957abbca72a3b2a754d193e00137c50d2e7fb585955d34c8aaeab3674d66d2c"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "COMMANDER_STARTING_QUESTIONS.template.md",
+      "sha256": "91ba7dfc8e9445c3da5c6cbb590577c5cccc2234f198ab02b585e209aaa5569f"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "EXECUTE_PLAN.template.json",
+      "sha256": "ef2645c200afacd9db629006362eb0c5f89e9a46477f988ab38bf5c7b39fac3d"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "IMPLEMENTER_HANDOFF.template.md",
+      "sha256": "30547a3172be51f1282c944ecce2b5fcfce37b3d6e82662b261a923859f0d4e0"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "MISSION_FRAME.template.md",
+      "sha256": "4de61b8df7d54645b1ee0cf45c8cc71e26f79005c87a4d0ad5063fbd9379198a"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "REVIEWER_HANDOFF.template.md",
+      "sha256": "1d248c937cd43dc79f8f5a59b7a4f788857bcb1023fc9efa07655082c6b3df78"
+    },
+    {
+      "skill": "constellation-implementer",
+      "template": "IMPLEMENTER_PLAN.template.json",
+      "sha256": "2d03f0ef4b234fb0b77f3ca95b08f1f16e8c379f1f2c35e8c09727b5acd7a26c"
+    },
+    {
+      "skill": "constellation-implementer",
+      "template": "IMPLEMENTER_RESULT.template.md",
+      "sha256": "d63151384072b0c4af708eeb72def0dd6e4ab379b11eb993524d5618b2154e97"
+    },
+    {
+      "skill": "constellation-interrogator",
+      "template": "INTERROGATION.template.json",
+      "sha256": "870bc8009031e1d6301ae2fa646e3a66b313ee8c224fd107ab55c12e97af5099"
+    },
+    {
+      "skill": "constellation-lessons-auditor",
+      "template": "LESSONS_AUDIT.template.json",
+      "sha256": "bd0c959be8f89c3156c86521f72d4e7f061b4859ac0e0c11ab0ce8e43172ec45"
+    },
+    {
+      "skill": "constellation-lessons-auditor",
+      "template": "LESSON_CANDIDATES.template.md",
+      "sha256": "9f2625d7984f17a8a24182f280638104e4b747d3950e2701b851bca41637520b"
+    },
+    {
+      "skill": "constellation-lessons-auditor",
+      "template": "RUN_BRIEF.template.md",
+      "sha256": "cb49207af9d2ad139481148ed5d8a11772e5d85419b92c30b7bf58d02b79af73"
+    },
+    {
+      "skill": "constellation-reviewer",
+      "template": "REVIEW_RESULT.template.md",
+      "sha256": "b6c85a4fe66f1d137664c728703a1dd0182ea358808a4a0a7a490477f62abbe2"
+    },
+    {
+      "skill": "constellation-reviewer",
+      "template": "REVIEW_SURVEY.template.json",
+      "sha256": "f5fd2ef43e9ea0e30363f3bdcd96bee0a8c4b29a6daf1cb80f7ca66b25d8a43f"
+    },
+    {
+      "skill": "constellation-scout",
+      "template": "SCOUT.template.json",
+      "sha256": "458236ab9eb290484c6b844c7ee6cc54af7842b411c907d1f7ea885f8aed897e"
+    },
+    {
+      "skill": "constellation-scout",
+      "template": "SCOUT_REPORT.template.md",
+      "sha256": "9ef33e1b9210a90df80816c35f795aa56413525811ccc0ceb6f3ae443adedac3"
+    },
+    {
+      "skill": "constellation-triage",
+      "template": "TRIAGE_RECOMMENDATION.template.md",
+      "sha256": "f2a969fd2b052a338467898fdfdac4645f4ce91c84ff4ec530260c7a3cd5ba15"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "AGENT_FEEDBACK.template.md",
+      "sha256": "de1c15cc7e915a01cadbedb11122432642f17babfe5990f11fe5f037c0498bac"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "CONSTELLATION_FEEDBACK.template.md",
+      "sha256": "8927ca3ccdd646f65f41adda9b2b239462806811bc6981bd23fb4d54e5924894"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "DEFAULT.template.json",
+      "sha256": "a68802d59bcc8c06cd71fc3c417ede6bc7794000b16daa983f37a462b4c7047b"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "LESSONS.template.md",
+      "sha256": "7ed222ca6abba48fd49181d80b197c718e6ad0a93a1d20848d0d981df21bced1"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "STATE_NOTE.template.md",
+      "sha256": "a158a2625eb6947f9507e0c9f8278125b1722802f5a46b6fd0104d1a0f1678c8"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "WORKFLOW_CLOSEOUT.template.md",
+      "sha256": "91caf2e2d86ca003d5dc49f239e1250848868b984dbf55319ec003cf79ba3a08"
+    }
+  ]
+}

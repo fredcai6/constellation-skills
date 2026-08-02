@@ -1,0 +1,297 @@
+{
+  "work_id": "cmdr-602",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-agents",
+    "g2-claude",
+    "g3-review-pr"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope from MISSION_FRAME.md + PROBLEM_STATEMENT.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan intent+scope confirmed from MISSION_FRAME.md + PROBLEM_STATEMENT.md"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-agents": {
+      "id": "g1-agents",
+      "title": "AGENTS.md: consolidate mission statement",
+      "imperative": "Reasoning gate (crew-waived: doc-only deliverable, content fully specified by launch order Pre-Rulings, context already held by the Commander -- see global-orchestrator.md Crew gate vs reasoning gate). Edit AGENTS.md in the worktree to add the epic #601 mission statement: winning the owner's ~20-player F1 fantasy league live during 2026; delta-sum + progressive bingo scoring on a pre-quali predicted top-10; bar = league winners ~674 pts/season vs model walk-forward-equivalent ~853 (find ~7.5 pts/race); decision metric = model's own fantasy pts/race vs ACTUAL race results (self-contained), league placement informational-only, never gates development; co-pilot race-week command loop; secondary goal = physics-derived explainers (substack horizon 2027). Keep tight -- bootstrap file, not an essay. Preserve existing AGENTS.md pointer content (docs/AGENT_GUIDE.md pointer, README/TESTING/architecture-index/DOCUMENTATION pointers, Critical runtime notes) unless the mission section subsumes it. Attest each invariant below individually against the written file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e0-context complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "AGENTS.md states the fantasy-league mission (~20-player league, live 2026, winning framing)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "AGENTS.md Mission section: 'winning the owner's ~20-player F1 fantasy league, live during the 2026 season'"
+        },
+        {
+          "id": "c2",
+          "statement": "AGENTS.md states the scoring mechanism (delta-sum + progressive bingo on pre-quali predicted top-10) and the 674/853/~7.5pts bar",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "delta-sum + progressive bingo scoring stated; 674/853/~7.5pts bar stated verbatim"
+        },
+        {
+          "id": "c3",
+          "statement": "AGENTS.md states the decision-metric regime (self-contained fantasy pts/race vs actual; league placement informational-only, never gates development)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Decision metric paragraph: self-contained fantasy pts/race vs actual; league placement informational-only, never gates development"
+        },
+        {
+          "id": "c4",
+          "statement": "AGENTS.md states the co-pilot race-week loop and the physics-explainer secondary goal (substack horizon 2027)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Co-pilot loop (race-week command) and Secondary goal (physics explainers, substack horizon 2027) both stated"
+        },
+        {
+          "id": "c5",
+          "statement": "AGENTS.md stays tight (bootstrap style preserved, no essay-length expansion); existing pointer content intact or deliberately superseded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added section is 17 lines; existing pointer/testing content fully preserved below it unchanged; file stays a bootstrap pointer doc"
+        }
+      ],
+      "constraints": [
+        "file-ownership fence: AGENTS.md only in this gate",
+        "no other doc edited"
+      ],
+      "anchors": {
+        "structural": [
+          "AGENTS.md (repo root)"
+        ],
+        "capability": [],
+        "constraint": [
+          "launch-order Pre-Ruling: keep AGENTS.md tight"
+        ],
+        "decision": [],
+        "evidence": [
+          "launch-order Mission section (verbatim content source)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-claude": {
+      "id": "g2-claude",
+      "title": "CLAUDE.md: source-verified evo_predictor architecture pointer",
+      "imperative": "Reasoning gate (crew-waived: doc-only, source verification already done and recorded in PROBLEM_STATEMENT.md). CLAUDE.md's issue-cited stale text does not exist (git-history-verified: file created fresh 2026-07-05, never described the 24-param/scorer.py/ranker.py path). Do NOT fabricate a literal replacement for text that was never there. Instead add a concise, source-verified evo_predictor architecture pointer in CLAUDE.md's existing lean style: live system = 3-stage sampled race-weekend simulator (src/evo_predictor/sampled_runtime.py: quali -> race_start -> race stages), 12 production neural latent-power modules (6 *_from_race_weekend + 6 *_from_recent_history, module_adapters/_registry.py), Bradley-Terry field solve (src/latent_power/field_solve.py) + precision-weighted fusion (src/evo_predictor/fusion.py fuse_module_fields_ordered). Must not claim ranker.py exists or that scorer.py still implements the 24-param scorer (it doesn't -- current scorer.py holds unrelated distance helpers). Attest each invariant individually.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-agents complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-agents complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "CLAUDE.md does not claim to be fixing pre-existing stale text (no false claim the 24-param description was ever in this file)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "New section is titled 'evo_predictor architecture (live)' -- describes current state only, makes no claim about fixing prior text"
+        },
+        {
+          "id": "c2",
+          "statement": "CLAUDE.md names sampled_runtime.py as the live 3-stage sampled race-weekend simulator",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "States sampled_runtime.py as the 3-stage (quali -> race_start -> race) sampled race-weekend simulator"
+        },
+        {
+          "id": "c3",
+          "statement": "CLAUDE.md states 12 production latent-power modules (6 race_weekend + 6 recent_history) and does not claim ranker.py exists or scorer.py still implements the 24-param scorer",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "States 12 modules (6+6); explicitly states no ranker.py exists and scorer.py's current content is unrelated distance helpers, not the 24-param scorer"
+        },
+        {
+          "id": "c4",
+          "statement": "CLAUDE.md names Bradley-Terry field solve + precision-weighted fusion",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Names Bradley-Terry field solve + precision-weighted fusion (fuse_module_fields_ordered)"
+        },
+        {
+          "id": "c5",
+          "statement": "CLAUDE.md stays in its existing lean pointer style (no essay expansion)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added section is 7 lines, matches existing bullet/pointer style, no essay expansion"
+        }
+      ],
+      "constraints": [
+        "file-ownership fence: CLAUDE.md only in this gate",
+        "no other doc edited",
+        "no fabricated 'stale text replaced' narrative"
+      ],
+      "anchors": {
+        "structural": [
+          "CLAUDE.md (repo root)",
+          "src/evo_predictor/sampled_runtime.py",
+          "src/evo_predictor/module_adapters/_registry.py",
+          "src/latent_power/field_solve.py",
+          "src/evo_predictor/fusion.py"
+        ],
+        "capability": [],
+        "constraint": [
+          "launch-order Pre-Ruling: verify live architecture from source before writing it"
+        ],
+        "decision": [],
+        "evidence": [
+          "PROBLEM_STATEMENT.md verification section (line-level source citations)"
+        ],
+        "confidence_flags": [
+          "docs/architecture/packets/evo_predictor.md scorer.py entry is stale -- floated as triage, not fixed here"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review-pr": {
+      "id": "g3-review-pr",
+      "title": "Self-review, commit, push, open PR",
+      "imperative": "Reasoning gate. Self-review both edits against the docs-change evidence bar (ORCHESTRATOR_CONTEXT.md: correct repo/domain, valid commands, existing references, current workflow current). Verify git diff touches ONLY AGENTS.md + CLAUDE.md. Commit on feat/602-mission-consolidation, push, open PR via gh pr create -F <tempfile body> (Windows heredoc lesson). Attest postconditions.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-claude complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-claude complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git diff (name-only) against base is exactly AGENTS.md + CLAUDE.md, nothing else",
+          "check": {
+            "kind": "command",
+            "command": "cd '.claude/worktrees/602-mission' && git diff --name-only 5e8e92d7 HEAD | sort | diff - <(printf 'AGENTS.md\\nCLAUDE.md\\n')"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-pr-2"
+        },
+        {
+          "id": "c2",
+          "statement": "self-review confirms docs-change evidence bar met (correct repo/domain, valid commands, existing references, current)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Self-review vs ORCHESTRATOR_CONTEXT docs-change bar: correct repo/domain (F1Brainz-specific), no new commands introduced (valid, unchanged), all referenced source files exist and were verified (sampled_runtime.py, module_adapters/_registry.py, field_solve.py, fusion.py), current workflow reflected accurately; neither file is a command-heavy doc under docs/DOCUMENTATION.md so no Last-verified stamp required"
+        },
+        {
+          "id": "c3",
+          "statement": "branch pushed and PR opened",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Pushed to origin/feat/602-mission-consolidation; PR #611 opened: https://github.com/fredcai6/f1Brainz/pull/611"
+        }
+      ],
+      "constraints": [
+        "push+PR pre-cleared this wave; merge/close stay with Admiral"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-pr-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd '.claude/worktrees/602-mission' && git diff --name-only 5e8e92d7 HEAD | sort | diff - <(printf 'AGENTS.md\\nCLAUDE.md\\n')",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-review-pr-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd '.claude/worktrees/602-mission' && git diff --name-only 5e8e92d7 HEAD | sort | diff - <(printf 'AGENTS.md\\nCLAUDE.md\\n')",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-claude",
+      "statement": "docs/architecture/packets/evo_predictor.md's scorer.py entry ('Scores drivers given features and the 24-parameter vector. Used in legacy path.') no longer matches the file's actual current content -- src/evo_predictor/scorer.py now holds unrelated small distance helpers (_circuit_distance, _compound_distance). Packet drift discovered during #602 CLAUDE.md architecture verification; out of this run's AGENTS.md+CLAUDE.md fence. Candidate: Cartographer reconcile/fix on a future pass."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-claude",
+      "statement": "Issue #602's premise (CLAUDE.md documents a stale 24-param/scorer.py/ranker.py evo_predictor path) is factually false -- CLAUDE.md was created fresh 2026-07-05 (eba82d2b) and has never contained that content. The ACTUAL stale description lives in the operator's personal Claude Code session MEMORY.md (auto-loaded into every session's context, not part of this git repo, outside any Commander file-ownership fence). Candidate: the operator (or a future run explicitly scoped to touch MEMORY.md) should update or retire the stale 'evo_predictor Architecture'/'Key Files (evo_predictor)' sections of that memory file to match the live sampled_runtime.py architecture -- this run cannot action it (outside repo, outside fence)."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "commander-cmdr-602-triage",
+    "status": "released",
+    "claimed_at": "2026-07-12T18:20:27.493507+00:00",
+    "last_heartbeat": "2026-07-12T18:20:36.540446+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": "commander-cmdr-602-execute",
+    "takeover_reason": "resuming to flag triage candidates found during g2-claude source verification",
+    "released_at": "2026-07-12T18:20:40.169994+00:00"
+  }
+}

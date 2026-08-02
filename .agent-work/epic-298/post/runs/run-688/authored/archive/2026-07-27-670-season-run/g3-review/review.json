@@ -1,0 +1,182 @@
+{
+  "work_id": "670-season-run-g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-new-method"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read references/global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, g3-reviewer-handoff.md, g3-implementer-handoff.md, g3-implementer-result.md.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff fully satisfied: run_season_panel_670.py runs all 4 instruments over the 20 covered circuits (independently reproduced: raw circuit read + season_results intersection both give the same 20, Bahrain/Saudi excluded); rotating-block enumerate_rotating_half_partitions gives K=10 (independently verified via direct call). New test file exists with 10 real tests. Task statement (generalize ONLY the split scheme, re-apply frozen rules byte-unchanged, no new instrument) honored.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "In-scope only: git status shows ONLY the two allowed new files (scripts/run_season_panel_670.py, tests/.../test_panel_corpus.py) plus .agent-work scratch under this gate's own tree. Confirmed via git diff --stat that src/physics/instrument_panel/* and scripts/instrument_panel_668_report.py have ZERO diff (untouched). docs/architecture/* has zero diff. git check-ignore exit 1 confirms both new files are trackable, not accidentally ignored. Grep confirms no 'random'/seed usage and no local re-definition of any frozen rule name (r_floor, compare_channels_by_class, grand_two_way_center, main_effect_margin_uncertainty, widen_sigma_for_margin_uncertainty, out_of_sample_coverage, frozen_replication_thresholds, decide_channel_from_mean_r) -- all enter only via import. NOTE (out-of-scope, not a g3 violation): git status also shows ' M data/f1_data_2023.db' (binary-identical size, 0 insertions/deletions -- likely a WAL/journal touch from an earlier gate g1/g2's stage-E runs, not from this script, which never opens the tracked DB per grep) and ' M src/physics/pilot/pipeline.py' (adds budget_s/refutil_db params to run_circuit -- this is g1/g2 scaffolding for the season pipeline run, not part of g3's two-file scope; g3's script does not import from pipeline.py at all).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran every claimed piece of evidence: (1) pytest tests/unit/physics/instrument_panel/test_panel_corpus.py -q -> 10 passed (matches claim). (2) pytest tests/unit/physics/instrument_panel -q -> 67 passed (57 pre-existing + 10 new, matches claim, zero regressions). (3) pyright scripts/run_season_panel_670.py tests/.../test_panel_corpus.py -> 0 errors/0 warnings/0 informations (matches claim). (4) Real run (--no-write) over the actual scratch corpus -> instrument1 numbers match exactly (utilization car_reference_share=0.692648/energy=0.819744, n=1524 both channels). (5) --check-reproduce -> 'REPRODUCE CHECK: PASS' (matches claim). (6) Direct interactive call to read_covered_circuits_with_severity + intersect_with_covered_season_results -> 20 circuits, Bahrain and Saudi both absent (independently confirms the 20-circuit/exclusion claim, not just trusting the report text). (7) enumerate_rotating_half_partitions on the real 20-circuit list -> K=10 (independently confirms claim). All required + confirmatory evidence in the handoff is present and reproduces exactly as claimed -- no unreproduced assertions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "OFFLINE: grep for fastf1/requests/urllib/http in run_season_panel_670.py finds only docstring mentions of 'no FastF1'; no import or network call. Pinned interpreter: all verification commands in this review ran via the pinned C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe, never bare py. Frozen rules byte-unchanged: verified in r2-scope (zero diff on src/physics/instrument_panel/* and the #668 script; no local re-def of any frozen name). Student-t sigma preserved: replication.py imports from src.common.student_t (predictive_t) at line 54 and out_of_sample_coverage/widen_sigma_for_margin_uncertainty (both imported unchanged by the new script, transitively via the #668 script's _sigma_honesty_checks_for_channel) implement the out-of-sample Student-t coverage check -- untouched. No new instrument/model: run_season_panel_670.py calls instrument1_variance_decomposition, instrument4_construction_check, instrument4_whole_lap_calibration all IMPORTED unchanged; the only new logic is the partition enumeration + the corpus-scale read-adapter wiring (instruments_2_3_replication_corpus, read_official_best_laps_corpus, drivers_per_circuit) -- these are read-adapter/wiring, not a new instrument. Central new-method adjudication is the dedicated appended check r4a-new-method.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No un-reconciled architecture divergence: Map Impact's structural anchors (enumerate_rotating_half_partitions, run_season_panel) match the handoff's Map Anchors (which explicitly named enumerate_2v2_partitions as the thing to replace). decision:panel-corpus-split-scheme grade (guess, leans g3-implement) is consistent between implementer and reviewer handoffs -- no silent re-grading. Three items flagged as triage candidates (tc1: season-scale unresolved/unmeasurable verdict routed to G5/Admiral; tc2: rotating-block adjacent-partition correlation is a methodological nuance worth a follow-up sensitivity check, NOT a new-method violation; tc3: #668's unexported private helpers forced duplication -- tooling debt candidate).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to .agent-work/670-season-run/g3-review/fowler_pass.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[duplicated-code], overridden=[]). Only real smell: duplicated-code (build_half_cells/half_cell_sem/_metric_field copied verbatim from the #668 script's unexported private helpers) -- disclosed by the implementer, non-decision-rule aggregation arithmetic, routed as triage candidate tc3, not a blocker. All other baseline smells absent.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4a-new-method": {
+      "id": "r4a-new-method",
+      "title": "New-method adjudication (Admiral-delegated)",
+      "imperative": "Adjudicate whether the rotating-block deterministic-averaged split scheme crosses into NEW STATISTICAL METHOD (forbidden) or is a legitimate read-adapter generalization of the landed exhaustive-2v2-averaged scheme. State a reasoned verdict; BLOCK+FLOAT to Admiral if it crosses.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "VERDICT: legitimate read-adapter generalization, does NOT cross into new statistical method. Reasoning: (1) The estimator/decision machinery -- compare_channels_by_class, grand_two_way_center (double-centering), r_floor, channel_tie_margin (via frozen_replication_thresholds), main_effect_margin_uncertainty, widen_sigma_for_margin_uncertainty, out_of_sample_coverage, and critically decide_channel_from_mean_r (the F12-registered average-then-decide rule) -- are IMPORTED and byte-unchanged, independently confirmed: zero diff on src/physics/instrument_panel/* and scripts/instrument_panel_668_report.py; grep + the implementer's own test (test_no_local_reimplementation_of_frozen_rule_names) show none of these names is locally re-defined or reassigned in the new script; they only appear as import statements or call-sites. (2) The ONLY new logic is enumerate_rotating_half_partitions, which replaces enumerate_2v2_partitions (hard-coded to exactly 4 circuits, producing the 3 EXHAUSTIVE 2v2 partitions). This is a partition-ENUMERATION/sampling-design function, not a statistic: it feeds the SAME downstream averaging-then-decide pipeline (_combine_class_verdict -> decide_channel_from_mean_r) that #668 already used over its 3 exhaustive partitions -- only the source and count of partitions changed (K=10 fixed deterministic rotating-block partitions in place of K=3 exhaustive ones), not what is computed FROM those partitions or how the final call is made. (3) The construction itself (sort to canonical order, slide a contiguous half-window, K=n/2 distinct partitions) is a standard systematic/circular sampling design (akin to round-robin/circular block designs), not an invented statistic -- it contains no probability model, no new tunable threshold, no new formula for r or sigma. (4) It satisfies every element of the Admiral's pre-ruled SHAPE verbatim: deterministic (independently confirmed: two independent calls with different input orderings produce byte-identical partitions), seed-free (grep + the implementer's own structural test confirm no random/np.random/seed anywhere), balanced (independently confirmed: every partition splits into two equal n/2 halves covering the full circuit set with empty intersection), averaged over K>1 fixed partitions (K=10, confirmed), and the exact construction is stated in the report (SPLIT_SCHEME_NOTE, independently read). The Admiral's ruling explicitly delegated ONLY the exact construction choice to the implementer while freezing everything else -- rotating-block is a reasonable, disclosed instantiation of that delegated choice, not an unauthorized expansion of latitude. (5) One nuance NOT rising to a blocker (flagged separately as triage candidate tc2): unlike the #668 case where K=3 was EXHAUSTIVE (zero correlation-among-samples question), the rotating-block's stride-1 sliding window makes adjacent k-partitions differ by only one circuit, so the K=10 samples are structurally correlated rather than independent or exhaustive -- this is a legitimate open question about how well this specific systematic design's variance-reduction property matches the exhaustive case, worth a follow-up sensitivity check, but it is a DESIGN-QUALITY question about the partitioning choice, not evidence that a new statistic/decision-rule was introduced. CONCLUSION: no BLOCK, no float to Admiral required on the new-method question -- the central adjudication clears.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g3 (#670 season-scale instrument panel) APPROVED. Central Admiral-delegated adjudication: the rotating-block deterministic-averaged split scheme is a legitimate read-adapter generalization of the landed exhaustive-2v2-averaged scheme, NOT a new statistical method -- every frozen r-computation/decision-rule function (compare_channels_by_class, grand_two_way_center, r_floor, channel_tie_margin, out_of_sample_coverage, decide_channel_from_mean_r) is imported byte-unchanged; only the partition ENUMERATION (K=n/2 rotating-block vs K=3 exhaustive) generalizes, feeding the identical downstream averaging-then-decide pipeline. Deterministic/seed-free/balanced/K>1-averaged all independently reproduced. All required+confirmatory evidence independently re-run and matched exactly (10+67 tests pass, pyright 0, real run, --check-reproduce PASS, 20-circuit/Bahrain-Saudi-exclusion/K=10 independently reconfirmed by direct calls). No scope violation; #668 report/script and src/physics/instrument_panel/* untouched; no random/seed; pinned interpreter used throughout. Fowler pass clean except one disclosed, non-blocking duplicated-code smell (unexported #668 helpers). Three triage candidates flagged (season-scale null routing, partition-correlation follow-up, tooling-debt export)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Season-scale replication verdict is mostly unresolved/unmeasurable (only severity:c1 fully unmeasurable, others unresolved -- no channel clears r_floor after double-centering at 20-circuit scale). Honest small-signal result per no-frame-kill doctrine, not a defect -- but routes a real question to G5 season report/Admiral: is this a genuine season-scale null, or does double-centering remove too much signal at this N? Independently confirmed via real run (severity:c0 mean_r util=0.278 vs r_floor=0.500, etc)."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "Methodological nuance (not a blocker, not new-method): the rotating-block (stride-1 sliding window) construction makes ADJACENT k-partitions differ by only ONE circuit swapping halves, so the K=10 samples are structurally correlated (not independent draws from the partition space), unlike the #668 4-circuit case where K=3 was EXHAUSTIVE (every distinct partition, no correlation-among-samples question). This may understate/overstate the variance-reduction benefit relative to a less-correlated systematic design (e.g. a coprime stride). Worth a follow-up sensitivity check (e.g. compare against a non-adjacent stride) before the season-scale replication verdict is treated as tightly calibrated -- routed to G5/Admiral, not a defect in this bounded read-adapter."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "Tooling debt (implementer-surfaced, seconded): #668 script's build_half_cells/half_cell_sem/_resolved_grid are private module-level helpers, not exported API, so this read-adapter had to DUPLICATE ~35 lines of pure aggregation arithmetic (confirmed byte-identical to the #668 originals) rather than import them. Candidate: export these as public API (or move to src/physics/instrument_panel/replication.py as pure injectable utilities) so a future corpus-scale adapter imports rather than duplicates."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3-reviewer-670",
+    "status": "released",
+    "claimed_at": "2026-07-27T11:04:02.544654+00:00",
+    "last_heartbeat": "2026-07-27T11:11:09.237648+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-27T11:12:10.307825+00:00"
+  }
+}

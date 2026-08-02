@@ -1,0 +1,48 @@
+# G4 smoke run config — bounded training to exercise all three output families
+# (mains backtests/, loso_folds/heldout_*/backtests/, uncertainty_calibration_fit/backtests/)
+# with emit_module_record = true.
+#
+# IMPORTANT: output_dir and report_dir are inside the evidence/ directory so
+# the smoke run writes NOTHING outside the agent-work evidence area.
+
+schema_version = 1
+profile_name = "g4_smoke_emit_module_record"
+mode = "smoke"
+
+[data]
+train_years = [2022, 2023]
+eval_year = 2024
+db_root = "data"
+compound_prior_root = "params/gold/compound_prior"
+race_start_target_lap = 3
+retro_root = "params/retro_truth"
+
+[training]
+epochs = 2
+seed = 0
+learning_rate = 0.0001
+hidden_dim = 32
+dropout = 0.2
+optimizer = "adam"
+weight_decay = 0.0
+early_stop_patience = 2
+restore_best_checkpoint = true
+min_delta = 0.0
+session_dropout_k = 0
+session_dropout_session_prob = 0.7
+
+[uncertainty]
+enable_sigma_calibration = true
+lambda_sigma_nll = 0.0
+
+[runtime]
+n_samples = 5
+materialize_race_start_order_from_lap_times = false
+emit_fusion_train_rows = "leave_one_season_out"
+allow_same_season_compound_prior = false
+utilization = "background"
+emit_module_record = true
+
+[outputs]
+output_dir = ".agent-work/issue-371-module-record/evidence/smoke_output"
+report_dir = ".agent-work/issue-371-module-record/evidence/smoke_reports"

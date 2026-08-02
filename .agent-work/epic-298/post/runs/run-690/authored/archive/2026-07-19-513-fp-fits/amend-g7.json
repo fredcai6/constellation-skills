@@ -1,0 +1,25 @@
+{
+ "ops": [
+  {
+   "op": "rescope",
+   "id": "g7",
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "verdict artifact exists (main-repo epic dir per launch order)",
+     "check": {
+      "kind": "command",
+      "command": "test -f C:/Programs/f1Brainz/.agent-work/epic-601/wave8-513-verdict.md"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "bounded compute executed + verdict content complete (honest-scoping)",
+     "check": null,
+     "satisfied": false
+    }
+   ]
+  }
+ ]
+}

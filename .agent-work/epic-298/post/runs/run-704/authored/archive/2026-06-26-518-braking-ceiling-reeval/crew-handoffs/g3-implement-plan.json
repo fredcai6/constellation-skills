@@ -1,0 +1,255 @@
+{
+  "work_id": "518-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-wire-frontier",
+    "m2-scoreboard-terrain",
+    "m3-suite-green",
+    "m4-repopulate-store"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff, the G2 adapter (decoupled_braking_input.py), the G2 result (gravity-once contract), and the production seams (session_braking, braking_view, scoreboard, estimate_batch/store, session_estimator, dashboard). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + G2 adapter + G2 result + production seams loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read handoff, G2 adapter, G2 result, and all production seams in full; handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-wire-frontier": {
+      "id": "m1-wire-frontier",
+      "title": "Wire decoupled adapter as the canonical braking frontier input",
+      "imperative": "In session_braking.prepare_braking_frontier, replace the per-driver clean_longitudinal_from_raw + gradient_at_positions loop with the G2 adapter's build_decoupled_braking_input: feed BrakingFrontierData with a_long = F_vehicle/m (gravity-free), theta = zeros, sigma_kin = per-sample sigma_a. Gravity counted ONCE (estimator z-map); BrakingView no longer re-subtracts g*sin(theta). ONE canonical braking input (adapter); clean_longitudinal_from_raw no longer the direct frontier a_long (still present: adapter anchor + throttle/coast). Add/extend unit tests in tests/unit/physics/layer2/ for the wired prepare_braking_frontier (synthetic, no FastF1). TDD/test-after: write tests, run green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "prepare_braking_frontier uses the adapter (theta=0, F_vehicle/m, per-sample sigma_a); braking tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_session_braking_wired.py tests/unit/physics/layer2/test_decoupled_braking_input.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-wire-frontier-1"
+        }
+      ],
+      "constraints": [
+        "gravity counted exactly once (F_vehicle/m + theta=0)",
+        "ONE canonical braking path (no dual/flagged input)",
+        "do NOT delete clean_longitudinal_from_raw",
+        "do NOT touch session_traction/session_coast",
+        "decision:two_cycle_external_anchor_design (anchor = TV-denoised RAW a_long)",
+        "honest per-sample sigma first-class"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-wire-frontier-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_session_braking_wired.py tests/unit/physics/layer2/test_decoupled_braking_input.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-scoreboard-terrain": {
+      "id": "m2-scoreboard-terrain",
+      "title": "Add optional terrain handle to scoreboard.CaseInputs",
+      "imperative": "Add an OPTIONAL theta/z pool to scoreboard.CaseInputs (additive/optional). Existing FLAT cases must stay byte-identical when no terrain supplied (default None). Extend tests/unit/physics/layer2/test_scoreboard.py to exercise both the FLAT-unchanged path and a supplied-terrain path. Keep existing scoreboard tests green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 wiring complete and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 wiring complete and green (17 passed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "CaseInputs accepts optional terrain; FLAT path byte-identical without it; scoreboard tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_scoreboard.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-scoreboard-terrain-1"
+        }
+      ],
+      "constraints": [
+        "additive/optional only",
+        "FLAT path byte-identical when no terrain supplied",
+        "constraint:physics_region_no_evo_import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-scoreboard-terrain-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_scoreboard.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-suite-green": {
+      "id": "m3-suite-green",
+      "title": "Full touched-path suite green + simplification clean",
+      "imperative": "Run the full required test scope green and the simplification limits clean on touched paths. Fix any regressions from the wiring.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 + m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 + m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full layer2 + physics unit suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/ tests/unit/physics/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-suite-green-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification limits clean on touched paths",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/physics/layer2/session_braking.py src/physics/layer2/scoreboard.py src/physics/layer2/decoupled_braking_input.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-suite-green-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-suite-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/ tests/unit/physics/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-suite-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/physics/layer2/session_braking.py src/physics/layer2/scoreboard.py src/physics/layer2/decoupled_braking_input.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-repopulate-store": {
+      "id": "m4-repopulate-store",
+      "title": "Repopulate NEW EstimateStore with wired braking + verify ceiling",
+      "imperative": "Write a repopulation script that builds a NEW store file (data/physics_estimates_g3wired.db, OLD preserved) with the wired braking input, for constructors RBR/Ferrari/McLaren/Williams/Mercedes across 2023-Q through the dashboard's max target round (15, Singapore). FORCE re-estimation. Capture a spot-circuit check that the wired braking knee (a_b/b_b from the store) matches the G2 synthesis a_b (deep floor preserved), and a pinned-ceiling verification note (did the cold ceiling gap collapse). Report runtime + manifest. Stay active / poll if backgrounded.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "wiring + suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "wiring + full suite green (592 passed), simplification clean"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new store file exists with wired-braking rows at the C1 scope (old store preserved)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "NEW store data/physics_estimates_g3wired.db: RBR r1-15 wired (15/15, 0 errors); other 4 constructors OLD-seeded (clean continuation baseline, 0 wired today); OLD store pristine. Commander revised: RBR-full only, pause before the other 4."
+        },
+        {
+          "id": "c2",
+          "statement": "spot-circuit wired knee matches G2 synthesis a_b; pinned-ceiling note produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RBR dashboard targets: Monaco a_b 26.61 (matches G2 synthesis 26.74); pinned ceiling physical (b_b>=0, no a_brake(80)<0); cold->pin gap -0.59 (tightens not under-calls); Italy/GB high-speed ceiling deeper (+2.01/+2.00). manifest n_sessions_causal 6/10/14/15 matches #510."
+        }
+      ],
+      "constraints": [
+        "preserve the OLD store",
+        "store repopulation reproducible",
+        "STOP+surface if pinned ceiling under-calls high-speed braking"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Commander decision: expand store scope from RBR-only to the FULL 5-constructor C1 set (RBR done as checkpoint; Ferrari/McLaren/Williams/Mercedes r1-15 now in-scope, not a continuation). Script made truly resumable (seed-only-if-absent + --resume skip-wired)."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 1
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,367 @@
+{
+  "work_id": "663-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md) and the handoff + named source files (grip_store.py, session_race.py, tyre_supplant.py, student_t.py, schema.sql). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff loaded; handoff complete; source files read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Vectorized cumulative-track-laps helper + regression test",
+      "imperative": "Create src/physics/layer2/grip_baseline.py with a single-SQL-query vectorized per-session cumulative-track-laps helper matching compute_cumulative_track_laps EXACTLY (COUNT of lap_times rows with lap_number < X, all cars, ignoring valid_lap/track_status). Write tests/unit/physics/layer2/test_grip_baseline.py with a regression test comparing the vectorized output to compute_cumulative_track_laps on real (session_id,lap_number) pairs from data/f1_data_2023.db. They must match exactly.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "cumulative helper matches compute_cumulative_track_laps on real 2023 data",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k cumulative"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "match compute_cumulative_track_laps exactly",
+        "one SQL query per session"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k cumulative",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Generalized session-type reader + saturating-curve core fit (predictive_t)",
+      "imperative": "Add a local session_type-generalized clean-lap reader (mirrors _read_clean_race_laps, parameterized session_type) and the saturating-curve + free-offset core fit. Feed reader output to race_degradation_slopes UNCHANGED for the tyre-supplant wear correction. Fit grip = offset + asymptote*(1-exp(-rate*cum_laps)) on the corrected pace; derive all GripEstimateRecord fields (curve_asymptote/rate/session_offset + sigmas via predictive_t, curve_offset_correlation from the fit covariance). Test a synthetic normal session produces fit_status='ok' and all fields.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 helper in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "normal-fit synthetic session yields ok record with all curve fields and predictive_t sigmas",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k normal_fit"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
+        }
+      ],
+      "constraints": [
+        "reuse race_degradation_slopes unchanged",
+        "use predictive_t for Student-t residuals",
+        "generalized reader local to grip_baseline.py (do not edit tyre_supplant.py)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k normal_fit",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Thin-session wide-sigma fallback (frozen)",
+      "imperative": "Implement the frozen thin-session rule: normal fit only if >=2 usable driver-stints of >=MIN_STINT_LAPS(4) laps. Below floor: never drop; estimate session_offset via within-weekend nearest-neighbor extrapolation (nearest normal-fit session's curve evaluated at this session's cumulative position), sigma inflated by named THIN_SESSION_SIGMA_INFLATION; fit_status='thin_fallback', fallback_reason set. All-thin degenerate -> field-wide prior (no crash). Test a 2-lap-stint fixture yields thin_fallback with inflated sigma, non-null record.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 core fit in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "2-lap-stint fixture -> thin_fallback, inflated sigma, never dropped/NULL",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k thin"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
+        }
+      ],
+      "constraints": [
+        "frozen: floor=2 stints of 4 laps, wide-sigma fallback, never drop the record"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k thin",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Rain-flag re-estimation (frozen Mission requirement)",
+      "imperative": "Decode sessions.rainfall (little-endian int64 wet-sample count) to a rain flag (count>0). When rain, re-estimate the offset fit with a SEPARATE named constant RAIN_SIGMA_INFLATION widening session_offset_sigma vs the equivalent dry fit. Real tested effect. Test asserts rain-fit session_offset_sigma is numerically wider than the dry-fit sigma on identical data.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 core fit in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "rain-fit session_offset_sigma demonstrably > dry-fit sigma (direct numeric compare)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k rain"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
+        }
+      ],
+      "constraints": [
+        "frozen Mission requirement: real tested sigma effect, separate named constant from thin"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q -k rain",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5": {
+      "id": "m5",
+      "title": "DB-facing wrapper end-to-end + full suite + simplification gate",
+      "imperative": "Add the DB-facing fit_session_grip_baseline wrapper (reads laps + rainfall from db_path, assembles a GripEstimateRecord, error_record on failure). Smoke-test it end-to-end on a real 2023 session. Run the FULL test file green, then run simplification_limits on both new files and address findings.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 and m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full test_grip_baseline.py passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
+        },
+        {
+          "id": "c3",
+          "statement": "simplification_limits passes on both new files",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths src/physics/layer2/grip_baseline.py tests/unit/physics/layer2/test_grip_baseline.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-2"
+        }
+      ],
+      "constraints": [
+        "DB-only analysis",
+        "self-check simplification_limits before returning"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_baseline.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths src/physics/layer2/grip_baseline.py tests/unit/physics/layer2/test_grip_baseline.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr663-g2-impl",
+    "status": "released",
+    "claimed_at": "2026-07-25T16:28:43.727262+00:00",
+    "last_heartbeat": "2026-07-25T16:36:00.253301+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T16:36:06.622590+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff complete (all sections present); grip_store/session_race/tyre_supplant/student_t/schema read; rain col decoded (int64 wet-count)",
+      "mechanical": false,
+      "ts": "2026-07-25T16:28:55.957424+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "vectorized cumulative helper = single GROUP BY + exclusive prefix sum; matches compute_cumulative_track_laps exactly on 3 real 2023 R sessions",
+      "mechanical": false,
+      "ts": "2026-07-25T16:34:05.641121+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "generalized reader parameterizes session_type; race_degradation_slopes reused unchanged for wear correction; curve_fit saturating form; sigmas via predictive_t(nu_loss=DEFAULT_NU_LOSS,FormulaRule,n_eff=n_stints); curve_offset_correlation=corr(asymptote,offset) from pcov",
+      "mechanical": false,
+      "ts": "2026-07-25T16:34:28.299462+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "thin floor=2 stints of 4 laps; below->nearest-normal-neighbor curve at this cum, sigma*3.0; all-thin->field prior on own-mean pace, wide sigma; record never dropped",
+      "mechanical": false,
+      "ts": "2026-07-25T16:35:16.390909+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "rainfall int64 blob decoded (count>0=rain); rain widens session_offset_sigma by RAIN_SIGMA_INFLATION=4.0 (dry 0.0296 -> rain 0.1184, factor 4.000); mean unchanged; composes with thin",
+      "mechanical": false,
+      "ts": "2026-07-25T16:35:20.597465+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "DB wrapper fits real 2023 Bahrain(dry)/Netherlands(wet) end-to-end; full suite 12/12 green; simplification_limits PASS on both files",
+      "mechanical": false,
+      "ts": "2026-07-25T16:36:00.253281+00:00"
+    }
+  ]
+}

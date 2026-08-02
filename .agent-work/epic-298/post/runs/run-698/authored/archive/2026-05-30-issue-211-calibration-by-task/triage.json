@@ -1,0 +1,116 @@
+{
+  "work_id": "issue-211-calibration-by-task",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "classify",
+    "write"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load candidates and authority",
+      "imperative": "Candidates: tc1 (fusion correlation de-weighting, from interrogation), tc2 (pre-existing test file failure \u2014 now moot, deleted by refactor). Issue authority: autonomous for non-trivial issue creation per ORCHESTRATOR_CONTEXT.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "candidates and issue authority loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc1: fusion correlation weakness; tc2: resolved by refactor deletion"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "classify": {
+      "id": "classify",
+      "title": "Classify candidates",
+      "imperative": "tc1: architecture weakness \u2014 fusion independence assumption breaks when modules share input data; pairwise rank-error correlations needed to de-weight correlated module pairs. tc2: resolved \u2014 test file deleted by refactor, no action needed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "candidates loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every candidate classified with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc1=architecture weakness (precision inflation from correlated modules); tc2=resolved (test file deleted by refactor)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "write": {
+      "id": "write",
+      "title": "Write recommendations",
+      "imperative": "tc1: write issue-ready recommendation and create GitHub issue. tc2: close as resolved.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "issue-ready recommendations written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc1: GitHub issue #314 filed; tc2: resolved (test file deleted by refactor, no action needed)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-write-1",
+          "type": "artifact",
+          "payload": {
+            "evidence_type": "github-issue",
+            "note": "tc1 filed as https://github.com/fredcai6/f1Brainz/issues/314 - Investigate and mitigate precision inflation from correlated modules in fusion"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        },
+        {
+          "id": "e-write-2",
+          "type": "artifact",
+          "payload": {
+            "evidence_type": "resolution",
+            "note": "tc2: test_gold_runtime_bundle_schema_alignment.py deleted by refactor PR; pre-existing failure resolved, no issue needed"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,18 @@
+evo: re-validate qs_* push-beta on median-relative encoding (#380, resume)
+
+Rebased onto current main (d801832; PRs #400/#401/#402/#404). PR #400 replaced
+the practice-feature minmax encoding with median-relative; the predecessor's
+cross-compound evidence was measured on the old encoding and was stale.
+
+Re-ran scripts/validate_qs_compound_beta_regime.py against the new encoding.
+The cross-compound improvement SURVIVES and is marginally stronger:
+2022-2025 CROSS +0.60pp (0.7131->0.7191) vs OVERALL +0.26pp (0.7014->0.7040),
+~2.3x the overall delta. The signal is encoding-invariant by construction:
+the push beta adjusts raw lap times upstream of normalization, and the harness
+scores within-event pairwise order, which a monotone (median-relative)
+normalization preserves -- so NO beta-unit change was required.
+
+Updates the section 8.1 validation numbers in prediction_ceiling_and_priorities.md
+to the fresh measurement and records the encoding-invariance rationale.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

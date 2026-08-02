@@ -1,0 +1,357 @@
+{
+  "work_id": "627-g5-tier2-fracture-quant",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-dualcda",
+    "m2-griptriplet",
+    "m3-along",
+    "m4-sharedtraj",
+    "m5-doc",
+    "m6-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the relevant packet (decoupled-1d-longitudinal.md, cross_view.py, estimate_store.py, x7-basis-map-RESULT.md). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-everyone.md, global-crew.md, HANDOFF.md, decoupled-1d-longitudinal.md, cross_view.py, estimate_store.py, x7-basis-map-RESULT.md. Handoff is complete: task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present. Confirmed worktree isolation (estimate_store.__file__ under C:\\Programs\\f1-627). Confirmed 2023 Q store loads (216 rows) from C:/Programs/f1Brainz/data/physics_estimates.db. Found G3's exact input numbers in .agent-work/627-unified-basis/g3-implement/monza_final_table.json + IMPLEMENTER_RESULT.md for the DUAL-CdA reproduction."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-dualcda": {
+      "id": "m1-dualcda",
+      "title": "Fracture 1: DUAL-CdA \u2014 closed, reproduce G3 numbers",
+      "imperative": "Create scripts/tier2_fracture_analysis.py (ASCII) with a fracture_1_dual_cda() function that calls the REAL src.physics.layer2.cross_view.fuse_dual_cda with the G3-cited RBR Monza and Mercedes Monza input numbers (sourced from .agent-work/627-unified-basis/g3-implement/monza_final_table.json \u2014 cda_pd, sigma_pd_honest, cda_co, sigma_co_honest, shared_rel) and prints the reproduced z / fused sigma, asserting they match the cited G3 values (RBR z=6.80 refused; Mercedes z=2.03 fused sigma 0.046 vs component 0.049/0.056, ~18% tighter). Do not modify cross_view.py (read-only per handoff).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context loaded, handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script exists and running it prints the DUAL-CdA section with reproduced z=6.80 (RBR, refused) and z=2.03 (Mercedes, fused sigma ~0.046, ~18% tighter)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'DUAL-CdA'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-dualcda-1"
+        }
+      ],
+      "constraints": [
+        "read-only on cross_view.py/estimate_store.py",
+        "ASCII only",
+        "py launcher"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-dualcda-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'DUAL-CdA'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-griptriplet": {
+      "id": "m2-griptriplet",
+      "title": "Fracture 2: GRIP-TRIPLET \u2014 partial correlation controlling for circuit",
+      "imperative": "Add fracture_2_grip_triplet(db_path) to the script: load EstimateStore(db_path).load(year=2023, session_type='Q', status='ok') GUARDED (skip gracefully with a message if db_path does not exist), drop rows with NaN in lateral_mech_grip_g/brake_decel_ms2/traction_accel_ms2, compute RAW pairwise Pearson correlations, then circuit-controlled (residualize by demeaning each variable within its gp_name group) partial correlations for the 3 pairs, and derive a bound: max tightening of pooled grip sigma a joint solve could achieve = (1 - sqrt(1 - r_max^2)) * 100% using the max |circuit-controlled r|. Print both raw and controlled correlations and the bound number. Guard: if DB absent, bounded-defer with an explicit reason (no crash).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 DUAL-CdA section done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-dualcda complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script prints GRIP-TRIPLET section with raw + circuit-controlled correlations for the 3 pairs and a numeric tightening-bound percentage, using the real 2023 Q store at C:/Programs/f1Brainz/data/physics_estimates.db",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'GRIP-TRIPLET'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-griptriplet-1"
+        }
+      ],
+      "constraints": [
+        "DB-guarded (must not crash if DB missing)",
+        "ASCII only",
+        "read-only DB access"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-griptriplet-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'GRIP-TRIPLET'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-along": {
+      "id": "m3-along",
+      "title": "Fracture 3: a_long \u2014 bounded-defer with sigma bound from #523 table",
+      "imperative": "Add fracture_3_a_long() to the script: encode the #523 Config-C parity per-view sigma shifts (Belgium/Monaco/Bahrain, TractionView/PowerDragView/CoastView) from docs/architecture/decisions/decoupled-1d-longitudinal.md as data, compute and print the max |shift| in sigma units as the cross-view a_long inconsistency bound, state BOUNDED-DEFER (structural HONEST-NULL, decision:decoupled_1d_longitudinal, do not re-merge), and cite issue #644 for any live re-run infeasibility. Do NOT touch decoupled_longitudinal.py or any view/estimator.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 GRIP-TRIPLET section done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-griptriplet complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script prints an A_LONG section stating BOUNDED-DEFER with a numeric max-sigma bound (citing decision:decoupled_1d_longitudinal and #644) derived from the #523 table",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'A_LONG\\|a_long'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-along-1"
+        }
+      ],
+      "constraints": [
+        "do NOT re-wire or modify the decoupled a_long path",
+        "ASCII only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-along-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'A_LONG\\|a_long'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-sharedtraj": {
+      "id": "m4-sharedtraj",
+      "title": "Fracture 4: SHARED-TRAJECTORY-NOISE \u2014 bound from correlated fit sigmas",
+      "imperative": "Add fracture_4_shared_trajectory_noise(db_path) to the script: from the same guarded 2023 Q store load, compute raw and circuit-controlled Pearson correlation between brake_decel_ms2_sigma and traction_accel_ms2_sigma (proxy for shared session-level fit noisiness across the braking/traction views that share sample_cache) and convert to a pooled-sigma-underestimate bound via (sqrt(1+r)-1)*100%. State this is a conservative/upper-bound proxy (also captures the already-known CdA-pin sharing, not trajectory noise alone) and bounded-defer a tighter number pending a live perturbation re-fit (cite #644 if infeasible under current load).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 A_LONG section done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-along complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script prints a SHARED-TRAJECTORY-NOISE section with the raw+controlled correlation and a numeric pooled-sigma-underestimate bound percentage, or an explicit guarded skip reason if DB absent",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'SHARED-TRAJECTORY'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-sharedtraj-1"
+        }
+      ],
+      "constraints": [
+        "DB-guarded",
+        "ASCII only",
+        "no re-fit / no production default changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-sharedtraj-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py scripts/tier2_fracture_analysis.py | grep -i 'SHARED-TRAJECTORY'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-doc": {
+      "id": "m5-doc",
+      "title": "Write docs/physics/627-tier2-fractures.md",
+      "imperative": "Write docs/physics/627-tier2-fractures.md with one numbered subsection per fracture (DUAL-CdA, GRIP-TRIPLET, A_LONG, SHARED-TRAJECTORY-NOISE), each stating CLOSED or BOUNDED-DEFER with its numeric bound, the estimator/method used, and citations (G3 monza_final_table.json, decoupled-1d-longitudinal.md #523/#546, x7-basis-map-RESULT.md, #644 where relevant). Paste the actual script output as evidence in the doc.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 SHARED-TRAJECTORY-NOISE section done, full script runs end to end",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-sharedtraj complete, full script runs end to end (verified below)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/physics/627-tier2-fractures.md exists with 4 numbered fracture subsections, each with a NAME + numeric bound",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && grep -c '^## ' docs/physics/627-tier2-fractures.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-doc-1"
+        }
+      ],
+      "constraints": [
+        "ASCII only",
+        "no production default changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-doc-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && grep -c '^## ' docs/physics/627-tier2-fractures.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Final verification + worktree isolation re-check",
+      "imperative": "Re-run the worktree isolation assertion and the full script end to end; confirm all four fracture numbers print; confirm no data/*.db writes occurred (git status clean on data/); confirm no production files were modified outside the allowed scope. Write IMPLEMENTER_RESULT.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "doc written and script complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "doc written (6 headings), script complete with all 4 fracture sections."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "worktree isolation assertion prints under C:\\Programs\\f1-627, full script run captured, git status clean on data/, IMPLEMENTER_RESULT.md written",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-627 && py -c \"import src.physics.layer2.estimate_store as m; print(m.__file__)\" && py scripts/tier2_fracture_analysis.py && git status --porcelain -- data/"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-1"
+        }
+      ],
+      "constraints": [
+        "no data/*.db writes",
+        "no production default changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-627 && py -c \"import src.physics.layer2.estimate_store as m; print(m.__file__)\" && py scripts/tier2_fracture_analysis.py && git status --porcelain -- data/",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipF-627",
+    "status": "released",
+    "claimed_at": "2026-07-19T00:53:08.441474+00:00",
+    "last_heartbeat": "2026-07-19T01:03:07.220840+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T01:04:02.527721+00:00"
+  }
+}

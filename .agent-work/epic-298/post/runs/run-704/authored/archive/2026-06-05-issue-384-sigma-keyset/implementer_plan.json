@@ -1,0 +1,286 @@
+{
+  "work_id": "issue-384-sigma-keyset-impl",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-constant-and-pin",
+    "m2-rework-diag-tests",
+    "m3-pipeline-fixture",
+    "m4-doc-note",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff complete",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, GLOSSARY, the g1 handoff, producer gold_module_cycle.uncertainty_calibration, consumer module_uncertainty_diagnostics, and the two test files. Verify handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CREW_CONTEXT + GLOSSARY read; handoff complete (task/intent/scope/exclusions/evidence/testmode/stop all present); producer+consumer+both test files loaded"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-constant-and-pin": {
+      "id": "m1-constant-and-pin",
+      "title": "Align _SIGMA_ERROR_CORR_KEYS + add structural pin test (TDD)",
+      "imperative": "TDD: first add the structural pin test (imports consumer _SIGMA_ERROR_CORR_KEYS AND derives producer sigma keys live from gold_module_cycle.uncertainty_calibration() output; asserts set-equality) and observe it RED against the current (wrong) constant. Then change _SIGMA_ERROR_CORR_KEYS to ('corr_sigma_pi_trace_vs_nll','corr_sigma_pi_trace_vs_rank_mae') + update its comment, observe GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pin test passes; constant aligned to producer",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py::test_consumer_sigma_keys_equal_producer_sigma_keys tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py::test_producer_actually_emits_two_sigma_channels -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-constant-and-pin-3"
+        }
+      ],
+      "constraints": [
+        "consumer aligns to producer; no brier/log_loss; no field_std widening; no producer/schema edit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-constant-and-pin-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -q -k pin_or_producer_consumer or true",
+            "exit": 4
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-constant-and-pin-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -q -k consumer_sigma_keys_equal_producer or producer_actually_emits",
+            "exit": 4
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-constant-and-pin-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py::test_consumer_sigma_keys_equal_producer_sigma_keys tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py::test_producer_actually_emits_two_sigma_channels -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-rework-diag-tests": {
+      "id": "m2-rework-diag-tests",
+      "title": "Rework drifted diagnostics test fixtures + wrong-sign tests",
+      "imperative": "Rework _make_module_result / _make_result_with_correlations to emit producer-real sigma keys (nll+rank_mae); repoint log_loss/brier wrong-sign+insignificant tests to nll; preserve n-aware significance + summary-count coverage. Add a test that the gate fires on a significantly-negative nll correlation (proving multi-channel, not rank_mae alone).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "diagnostics test file green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-rework-diag-tests-1"
+        }
+      ],
+      "constraints": [
+        "convert coverage, do not delete it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-rework-diag-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-pipeline-fixture": {
+      "id": "m3-pipeline-fixture",
+      "title": "Fix stale pipeline-validation correlation fixture",
+      "imperative": "Update test_pipeline_validation.py::_gold_module_observability correlations block to producer-real keys (corr_sigma_pi_trace_vs_nll, corr_sigma_pi_trace_vs_rank_mae, corr_field_std_vs_nll, corr_field_std_vs_rank_mae). Confirm the file still passes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pipeline_validation test file green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_pipeline_validation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-pipeline-fixture-1"
+        }
+      ],
+      "constraints": [
+        "fixture honesty only; do not change assertions"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-pipeline-fixture-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_pipeline_validation.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-doc-note": {
+      "id": "m4-doc-note",
+      "title": "Append resolution note under design-doc 6.2 F2",
+      "imperative": "Append a minimal resolution note (new lines, not a rewrite) under docs/evo/prediction_ceiling_and_priorities.md 6.2 F2 bullet: F2 resolved by aligning consumer _SIGMA_ERROR_CORR_KEYS to producer sigma channels (nll+rank_mae) with a structural producer-consumer pin test; ref #384.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "append-shaped note present referencing #384",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Appended RESOLVED (#384) sub-note under F2 bullet; existing F2 prose untouched; references #384 and the structural pin test name"
+        }
+      ],
+      "constraints": [
+        "append-shaped only; do not rewrite existing F2 prose"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Full targeted verification (pytest + simplification_limits + pyright)",
+      "imperative": "Run targeted pytest over both test files, simplification_limits over touched src/test paths, pyright over the touched src module. Capture all output for evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all targeted checks pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py tests/unit/evo_predictor/test_pipeline_validation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py tests/unit/evo_predictor/test_pipeline_validation.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

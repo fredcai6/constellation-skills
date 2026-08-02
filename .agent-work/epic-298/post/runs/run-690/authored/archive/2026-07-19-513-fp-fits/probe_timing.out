@@ -1,0 +1,7 @@
+LOAD 2023 Hungary FP2: 1.7s  rho=1.150 fallback=False
+2026-07-19 10:24:56,156 - root - INFO - Logging configured successfully
+2026-07-19 10:24:56,157 - root - INFO - FastF1 cache directory set to: C:\Programs\f1-513\data\telemetry
+  VER: 125.7s  apexes=118
+  NOR: 72.0s  apexes=122
+  HAM: 118.6s  apexes=224
+MEAN per-driver: 105.4s  => ~20 drivers/session ~ 2109s  => 6 weekends x4 sessions x20 drv ~ 843 min

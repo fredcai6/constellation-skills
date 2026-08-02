@@ -1,0 +1,122 @@
+{
+  "work_id": "issue-446-g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, the handoff, the diff, and the implement result. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All baseline context loaded: CREW_CONTEXT.md, handoff g1-review.md, implement result g1-implement-RESULT.md, commit 3ee04fe diff (src/, tests/, docs/ only), and all 6 implementation source files. Context is sufficient to review all close criteria.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCKER: The handoff requires that sector-loop anchor positions (s1, s2, s3) are CO-ESTIMATED FREE PARAMETERS with reported uncertainty. The implementation claims to co-estimate all three, but s3_est is unpacked from x[2] on line 130 of sector_anchor.py yet NEVER referenced in the residuals computation (_build_residuals_fn). The s3 sector residual is (t_end - t_s2) - off['s3'], which depends only on s2_est and the actual last sample time -- s3_est has zero gradient. Confirmed experimentally: when s3_true=3000m and x0[2]=4250m (initial guess), the optimizer leaves s3_fit=4250m because it has no gradient to move it. The fitted s3 in fitted_anchors_m is effectively the initial guess (0.85 * lap_length_m), not a co-estimated calibration parameter. This violates the core constraint 'anchors-are-calibration-parameters'. Furthermore, the known-answer recovery test (test_sector_anchor_recovers_anchor_positions) uses known_anchors[3] = 0.85*5000=4250m, which exactly matches x0[2]=0.85*5000=4250m -- so the test always passes trivially for s3 regardless of whether s3 is being estimated. The test is tautological for s3.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope is clean. Only the 9 allowed files were changed in src/tests/docs (confirmed via git show --name-only). No windowed_estimator.py, no src/physics/, no evo/latent_power/compound_prior modules touched. No fastf1 or DB imports appear in any new source file. The .agent-work/ scratch files (engine plan) are properly excluded from review scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Evidence partially demonstrates behavior but contains a masked gap. (1) 'py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q' independently confirmed: 47 passed in 0.30s. (2) 'py -m src.utils.simplification_limits --paths ...' independently confirmed: PASS 7 files. (3) However, the claimed L1 known-answer recovery for s3 is spurious: the test uses known_anchors[3]=0.85*lap_length_m, which equals the optimizer initial guess x0[2]=0.85*lap_length_m. The test cannot detect that s3 is not being estimated (confirmed by running with s3_true=3000 vs initial=4250 -- s3_fit remains 4250). The evidence bundle does not actually demonstrate that s3 is recovered as a co-estimated free parameter.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Checking all inherited rules and close criteria: (1) THREE PRIMITIVES MATCH ISSUE CONTRACT: PASS -- contract.py, sector_anchor.py, covariance_gate.py, cross_residual.py all present and structurally correct. (2) ANCHORS ARE CO-ESTIMATED FREE PARAMETERS: FAIL (BLOCKER) -- s1/s2 are free; s3 is NOT (see r1-handoff). (3) CROSS-RESIDUAL IS DIAGNOSTIC WITH NO PASS/FAIL: PASS -- CrossResidualDiagnostic has no 'passed' field; CrossResidualBlock.to_dict() contains no 'passed' key; test_diagnostic_is_not_a_gate confirms this; test_report_cross_residual_is_diagnostic_block confirms in serialized output. (4) COVARIANCE-CONSISTENCY GATE HONESTY: PASS -- formula is mean(r^2/sigma^2), both directions tested (inflated chi-sq<0.5 fails, deflated chi-sq>2 fails, matching ~1 passes). (5) KNOWN-ANSWER TESTS NON-TAUTOLOGICAL: PARTIAL FAIL -- covariance tests and cross-residual recovery tests are genuine (injected sigma/offset, independently assert recovery). But the s3 anchor recovery is tautological (known=initial guess, so gate always passes for s3 regardless). (6) REPORT SCHEMA PRODUCER + DOC AGREE FIELD-FOR-FIELD: PASS -- GradingReport.to_dict() emits exactly the fields documented in trajectory_grading_report.md; both schema_version fields say '1.0'; cross_residual block doc matches CrossResidualBlock implementation. (7) INPUT VALIDATION NAMES FIELD/EXPECTATION/ACTUAL: PASS -- all validation messages include field name and value; degenerate inputs (empty splits, negative tol, missing sector, zero variance, non-monotone timestamps) raise descriptively. (8) NO FORBIDDEN IMPORTS: PASS -- confirmed by grep; only comment in __init__.py mentions forbidden names. (9) NO FASTF1/DB IO: PASS -- confirmed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes are honest and match the diff. Structural anchor (struct:preprocessing) is correctly identified; the new submodule was added there. Capabilities claimed (trajectory grading + three primitives + report schema) match what was implemented. Constraints honored accurately stated EXCEPT the s3 co-estimation claim is incorrect (s3 is described as free with Jacobian-based uncertainty but it is not in practice). The s_finish=0.0 fixed-reference decision is correctly surfaced. Triage candidates (s_finish as potential free parameter; scipy new dep) are appropriate. No architecture baseline drift: the new module is correctly isolated in preprocessing. No doc contradictions observed.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: BLOCKER: The handoff requires that sector-loop anchor positions (s1, s2, s3) are CO-ESTIMATED FREE PARAMETERS with reported uncertainty. The implementation claims to co-estimate all three, but s3_est is unpacked from x[2] on line 130 of sector_anchor.py yet NEVER referenced in the residuals computation (_build_residuals_fn). The s3 sector residual is (t_end - t_s2) - off['s3'], which depends only on s2_est and the actual last sample time -- s3_est has zero gradient. Confirmed experimentally: when s3_true=3000m and x0[2]=4250m (initial guess), the optimizer leaves s3_fit=4250m because it has no gradient to move it. The fitted s3 in fitted_anchors_m is effectively the initial guess (0.85 * lap_length_m), not a co-estimated calibration parameter. This violates the core constraint 'anchors-are-calibration-parameters'. Furthermore, the known-answer recovery test (test_sector_anchor_recovers_anchor_positions) uses known_anchors[3] = 0.85*5000=4250m, which exactly matches x0[2]=0.85*5000=4250m -- so the test always passes trivially for s3 regardless of whether s3 is being estimated. The test is tautological for s3.",
+      "r3-evidence: Evidence partially demonstrates behavior but contains a masked gap. (1) 'py -m pytest tests/unit/preprocessing/test_trajectory_grading.py -q' independently confirmed: 47 passed in 0.30s. (2) 'py -m src.utils.simplification_limits --paths ...' independently confirmed: PASS 7 files. (3) However, the claimed L1 known-answer recovery for s3 is spurious: the test uses known_anchors[3]=0.85*lap_length_m, which equals the optimizer initial guess x0[2]=0.85*lap_length_m. The test cannot detect that s3 is not being estimated (confirmed by running with s3_true=3000 vs initial=4250 -- s3_fit remains 4250). The evidence bundle does not actually demonstrate that s3 is recovered as a co-estimated free parameter.",
+      "r4-quality: Checking all inherited rules and close criteria: (1) THREE PRIMITIVES MATCH ISSUE CONTRACT: PASS -- contract.py, sector_anchor.py, covariance_gate.py, cross_residual.py all present and structurally correct. (2) ANCHORS ARE CO-ESTIMATED FREE PARAMETERS: FAIL (BLOCKER) -- s1/s2 are free; s3 is NOT (see r1-handoff). (3) CROSS-RESIDUAL IS DIAGNOSTIC WITH NO PASS/FAIL: PASS -- CrossResidualDiagnostic has no 'passed' field; CrossResidualBlock.to_dict() contains no 'passed' key; test_diagnostic_is_not_a_gate confirms this; test_report_cross_residual_is_diagnostic_block confirms in serialized output. (4) COVARIANCE-CONSISTENCY GATE HONESTY: PASS -- formula is mean(r^2/sigma^2), both directions tested (inflated chi-sq<0.5 fails, deflated chi-sq>2 fails, matching ~1 passes). (5) KNOWN-ANSWER TESTS NON-TAUTOLOGICAL: PARTIAL FAIL -- covariance tests and cross-residual recovery tests are genuine (injected sigma/offset, independently assert recovery). But the s3 anchor recovery is tautological (known=initial guess, so gate always passes for s3 regardless). (6) REPORT SCHEMA PRODUCER + DOC AGREE FIELD-FOR-FIELD: PASS -- GradingReport.to_dict() emits exactly the fields documented in trajectory_grading_report.md; both schema_version fields say '1.0'; cross_residual block doc matches CrossResidualBlock implementation. (7) INPUT VALIDATION NAMES FIELD/EXPECTATION/ACTUAL: PASS -- all validation messages include field name and value; degenerate inputs (empty splits, negative tol, missing sector, zero variance, non-monotone timestamps) raise descriptively. (8) NO FORBIDDEN IMPORTS: PASS -- confirmed by grep; only comment in __init__.py mentions forbidden names. (9) NO FASTF1/DB IO: PASS -- confirmed."
+    ],
+    "summary": "BLOCK on two linked defects: (1) s3 sector-anchor is NOT a co-estimated free parameter -- s3_est unpacked but never used in residuals, giving it zero gradient; s3_fit stays at the initial guess. (2) The known-anchor recovery test for s3 uses known_anchors[3]=0.85*lap_length_m which exactly equals x0[2]=0.85*lap_length_m, masking the defect -- tautological for s3. The s1/s2/covariance/cross-residual/schema/scope checks all pass."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

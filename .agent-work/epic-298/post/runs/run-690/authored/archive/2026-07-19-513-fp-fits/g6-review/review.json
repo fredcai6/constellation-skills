@@ -1,0 +1,155 @@
+{
+  "work_id": "513-fp-fits-g6-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, windows.md, checklist-engine.md, CREW_CONTEXT.md, GLOSSARY.md, engine-config.json, handoff-g6-review.md, GATE_PROTOCOL.md, CRITIC_TRIAGE.md, result-g6-implement.md, and the full source of the 3 new files (fp_gate.py 915 lines, fp_representativeness_gate.py 158 lines, test_fp_representativeness_gate.py 704 lines) plus their upstream dependency fp_representativeness.py (G4, reused verbatim by the LEARNED arm).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ANTI-RIG (most important): traced observation_features() (fp_representativeness.py:277-308) -- computed ONLY from (latent.fuel_kg_est, latent.compound, latent.run_purpose, track_evolution, session_max_track_evolution). In _build_null_weekends every observation (near+far, all 4 cars) shares compound=MEDIUM, run_purpose=push, fuel_kg_est=15.0=quali_fuel_kg, track_evolution=None(->neutral 0.5) -- an IDENTICAL features tuple. Therefore learned_weight() returns the SAME scalar for every observation under ANY fitted params, mathematically forcing the weighted mean to the plain arithmetic mean regardless of what fit_weight_params converges to -- this is a structural proof, not an empirical accident. Clock genuinely wins because it reads real signal (hours_to_q 1.0 near vs 20.0 far x2, exp-decay weight ratio 0.96 single near vs 0.872 combined far) that the fixture deliberately gives ONLY to clock. Reproduced: 36/36 pass incl. NULL. LEAKAGE: fit_weight_params(train_weekends,...) closes over no other data source; run_lowo excludes held_out from train before calling it; both dedicated shuffle tests (direct + through run_lowo) pass, confirming byte-identical fitted params. DIVERGENT-CASE NORMALIZATION: _min_max_normalize is applied identically/symmetrically to both norm_learned and norm_clock over the same pooled set -- an arm-agnostic scale fix (clock=unbounded exp decay vs learned=bounded logistic), not a thumb on the scale; documented TDD RED (false HONEST_NULL on raw-scale diff) substantiates it was a genuine bug fix. NO session-type hardcoding: clock_weight/learned_weight source-scanned (session_type absent); only build_gate_observations uses session_type, purely for leakage-guarded track-evolution session-max bucketing. Both channels present (evaluate_gate=PRIMARY, secondary_power_gate=SECONDARY/matched-sigma-or-confounded). Protocol sections 1/4/5/6/7/8 (LOWO, paired bootstrap, divergent read, emergence, leakage, sandbagging) all implemented and tested. Independently reproduced all 3 verification commands: pytest 36 passed; simplification_limits --baseline PASS (3 files); git status --short data/ clean (no output).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --short shows exactly the 3 claimed new files (scripts/fp_representativeness_gate.py, src/physics/layer2/fp_gate.py, tests/unit/physics/layer2/test_fp_representativeness_gate.py) plus .agent-work/ workflow artifacts -- no other src/ or tests/ files touched. git diff --stat vs HEAD on the frozen upstream G2/G4/G5 modules (fp_representativeness.py, fp_lap_latent.py, mass_model.py) is empty -- learned_weight reuses fp_representativeness.observation_weight verbatim without modifying it, as claimed. The throwaway scripts/_g6_smoke_extractor.py used for the CLI smoke run is confirmed absent from the worktree (genuinely deleted, not left as scope creep). No data/*.db read or written. No imports from src/evo_predictor, src/latent_power, src/compound_prior, or fastf1 found in fp_gate.py (physics-region-only constraint respected).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran (not trusted from the report) all 3 handoff verification commands from a fresh shell: (1) pytest tests/unit/physics/layer2/test_fp_representativeness_gate.py -q -> 36 passed in 3.88s, matching the report's 36/36; (2) py -m src.utils.simplification_limits --baseline --paths <3 files> -> PASS (3 files checked); (3) git status --short data/ -> empty/clean, confirming no DB read/write. Read the full test file source (not just names) for the 3 load-bearing fixtures: POSITIVE (push carries TRUE ranking, long_run carries REVERSED, genuinely different representativeness features between the two groups so a correct fit legitimately favors push) and NULL (traced and confirmed structurally in r1, not just asserted) both behave exactly as the report claims. LEAKAGE tests read line-by-line: both directly assert byte-identical WeightParams before/after shuffling held-out Q targets. TDD evidence in result-g6-implement.md (RED->GREEN per m1-m6, including the genuine m4 logic-bug RED, not just import-error REDs) is consistent with what the diff and tests show -- the divergent-case normalization fix is present in fp_gate.py:581-613 exactly as described. Evidence is present, fresh (this run, not a stale leftover), and demonstrates the claimed behavior.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against CREW_CONTEXT.md project rules: (1) no mutable module-level state/impure cache/DB singleton in fp_gate.py -- grep confirms only immutable constants (SPLIT_HASH, FROZEN_2023_WEEKENDS tuple, CLOCK_DECAY_HOURS, DEFAULT_L2_PENALTY); (2) print()/logging split -- fp_gate.py has zero print() calls, print() confined to the CLI script as required; (3) randomness controlled -- paired_bootstrap uses an explicit np.random.default_rng(seed), never global RNG state, and evidence names seeds throughout; (4) validation exceptions descriptive -- _load_extractor and sandbagging_demo raise ValueError naming what's wrong; (5) no bare except: anywhere in the 2 src files; (6) one canonical representation -- the GateExtractor Protocol is the single injectable seam, no dual-format acceptance; (7) DB-only data access -- N/A here (no DB access at all in G6, correctly deferred to G7's real extractor); (8) region verification run -- physics-region focused suite matches TESTING.md mapping (tests/unit/physics/); (9) docstrings follow project convention, each public function/dataclass names its GATE_PROTOCOL.md section reference, consistent with surrounding fp_representativeness.py style. No CREW_CONTEXT review-blocker triggered.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes verified against the diff: structural anchors (new fp_gate.py under struct:physics.layer2, new scripts/fp_representativeness_gate.py under struct:physics) match what git status shows -- no overstatement, no missing anchor. Capabilities-added claim (evaluate_gate PRIMARY + secondary_power_gate SECONDARY are now real, tested, callable) matches the diff and the 36 passing tests. Constraints touched (leakage F6, divergent-case-read normalization F4, emergence F3, honest-both-channels reporting) all independently re-verified in r1/r3, not just taken on the implementer's word. 2 decision candidates were correctly surfaced (not silently decided beyond the implementer's authority): DEFAULT_L2_PENALTY=1e-3 regularization and the min-max normalization fix -- both flagged as decision-candidates for G7/Ship review with honest rationale, and both are genuinely load-bearing (without L2 shrinkage, Nelder-Mead saturates on the clean synthetic fixtures; without normalization, the POSITIVE fixture false-NULLs). Trust-limitation claim about fp_lap_latent's constant fuel_sigma_kg independently grep-verified accurate (fp_lap_latent.py:353 -> mass_model.py:334, no explicit fuel_sigma_kg passed, resolves to FP_FUEL_INTERCEPT_SIGMA_KG=15.0) -- routed as tc1 (a reviewer-confirmed, not just implementer-claimed, triage candidate) so Commander/Triage tracks the SECONDARY-channel follow-on. No divergence from recorded architecture requiring Commander reconciliation; SPLIT_HASH f1725bd81cd3eefa in fp_gate.py matches GATE_PROTOCOL.md exactly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "REWORK VERIFIED: the blocking long-method/complexity finding is resolved. Implementer split divergent_case_read into _pooled_normalized_weight_diffs (41 lines) + _fold_divergent_deltas (34 lines) + divergent_case_read (now 59 lines). Independently re-ran py -m src.utils.simplification_limits --paths <3 files> WITHOUT --baseline (the strict check that originally caught the violation) -> PASS (3 files checked), zero violations, all AST-measured function spans well under 99 lines. Read the extracted helpers line-by-line and confirmed the split is purely mechanical -- same pooling/normalization/threshold/per-fold-skip logic relocated, not altered. Test file is byte-identical (703 lines, unchanged) and 36/36 tests still pass, confirming behavior preservation, not just a line-count trick. Fowler pass record updated (long-method: flagged -> absent with the resolution documented) and re-verified via verify_fowler_pass.py (exit 0). Remaining flagged smells (duplicated-code, data-clumps) stay non-blocking observations as before; speculative-generality override stands unchanged.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "REWORK CYCLE: G6 held-out gate harness APPROVED. The sole blocker from the prior consolidation (divergent_case_read at 100 lines / complexity 20, 1 unit over the project's machine-enforced simplification limits under the strict non-baseline check) is resolved -- the implementer extracted _pooled_normalized_weight_diffs + _fold_divergent_deltas helpers, independently re-verified as a behavior-preserving split (36/36 tests unchanged, test file byte-identical, strict simplification_limits --paths now PASS with zero violations). All substantive correctness findings from the original pass stand unchanged and re-confirmed: the NULL fixture is structurally (not just empirically) proven immune to rigging; LEAKAGE is structurally guarded (2 dedicated shuffle tests); the divergent-case min-max normalization is a symmetric, arm-agnostic scale fix; no session-type hardcoding; both channels honestly reported; GATE_PROTOCOL.md sections 1/4/5/6/7/8 all implemented and tested; all handoff verification commands independently reproduced (git status --short data/ clean, both --baseline and strict simplification_limits PASS)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Reviewer-verified (grep-confirmed accurate): fp_lap_latent.py:353 calls fp_mass(year, fuel_kg=fuel_est) with no explicit fuel_sigma_kg, so mass_model.fp_mass (mass_model.py:334) resolves every real FP lap's sigma to the constant FP_FUEL_INTERCEPT_SIGMA_KG=15.0. secondary_power_gate's min_distinct_sigma=2 guard will therefore almost certainly report CONFOUNDED_NOT_EVIDENTIAL on the real G7 2023 batch -- correct/honest per protocol F1, but Triage should track the named follow-on (G7 or later: fp_lap_latent.extract_fp_lap_latent supplying a per-run-varying fuel_sigma_kg, e.g. narrower after a known fuel-rig event) so the SECONDARY channel can ever become evidential."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipI-513-rework-1784481778",
+    "status": "released",
+    "claimed_at": "2026-07-19T17:22:58.616391+00:00",
+    "last_heartbeat": "2026-07-19T17:24:00.697519+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/f1-513",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T17:24:01.586563+00:00"
+  }
+}

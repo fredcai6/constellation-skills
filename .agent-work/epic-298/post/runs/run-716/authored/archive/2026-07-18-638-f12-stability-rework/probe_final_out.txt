@@ -1,0 +1,36 @@
+Loading FULL data...
+
+=== 1. FIXED k=4 (log space, FULL data) ===
+  split 0: stat=0.5818 PASS (wmin_A=0.1869 wmin_B=0.1147)
+  split 1: stat=0.4856 PASS (wmin_A=0.1859 wmin_B=0.1314)
+  split 2: stat=0.4725 PASS (wmin_A=0.0965 wmin_B=0.2122)
+  split 3: stat=0.8557 PASS (wmin_A=0.0427 wmin_B=0.2027)
+  split 4: stat=0.3055 PASS (wmin_A=0.2106 wmin_B=0.1091)
+  n_pass = 5/5  [floor=0.05]
+
+=== 2. log + bootstrap-modal-k k_range=(2,4) B=25 (FULL data) ===
+Traceback (most recent call last):
+  File "C:\Programs\f1-638\.agent-work\638-f12-stability-rework\probe_final.py", line 120, in <module>
+    main()
+    ~~~~^^
+  File "C:\Programs\f1-638\.agent-work\638-f12-stability-rework\probe_final.py", line 112, in main
+    kb, mb, cb_ct = boot_modal(np.concatenate([dbc[c] for c in cb]), seed)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Programs\f1-638\.agent-work\638-f12-stability-rework\probe_final.py", line 92, in boot_modal
+    gfull = GaussianMixture(n_components=kbest, random_state=seed).fit(X)
+  File "C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\mixture\_base.py", line 199, in fit
+    self.fit_predict(X, y)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\base.py", line 1403, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\mixture\_base.py", line 268, in fit_predict
+    log_prob_norm, log_resp = self._e_step(X, xp=xp)
+                              ~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\mixture\_base.py", line 331, in _e_step
+    log_prob_norm, log_resp = self._estimate_log_prob_resp(X, xp=xp)
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\mixture\_base.py", line 573, in _estimate_log_prob_resp
+    log_prob_norm = _logsumexp(weighted_log_prob, axis=1, xp=xp)
+  File "C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\utils\_array_api.py", line 1359, in _logsumexp
+    exp = xp.exp(array - shift)
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 10.0 MiB for an array with shape (329315, 4) and data type float64

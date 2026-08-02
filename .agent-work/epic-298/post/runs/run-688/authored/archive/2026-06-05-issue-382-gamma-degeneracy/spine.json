@@ -1,0 +1,424 @@
+{
+  "work_id": "issue-382-gamma-degeneracy",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "compact",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-382-gamma-degeneracy. Start the work branch per repo guidance.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-382-gamma-degeneracy"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-382-gamma-degeneracy",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ORCHESTRATOR_CONTEXT, GLOSSARY, engine-config read; \u00a71.3 ridge precedent + \u00a77 (feasibility branch) + gate findings reviewed; recorded in context-findings.md"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (the interrogator must reach the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; save the consolidated problem statement. Confirm it with the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context step complete; baseline loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "problem statement confirmed via Admiral decision protocol (non-interactive): diagnose-first research; deliverables 1-3 as scoped; logged decisions D1 (S7 not on main -> append self-contained note) and D2 (no prod-default flip without ruling); protected intent = 380 seam + append-shaped doc + no prod behavior change",
+            "source": "issue #382 acceptance + standing orders + code read"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Frame the bounded problem against the architecture packets. Author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria and required evidence. Get the human to approve it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "understand complete; ask confirmed via decision protocol"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "execute.json authored, one bounded issue",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored: 3 gates (G1 beta root-cause, G2 gamma identifiability measured, G3 gate note + PR), each implement/review/integrate with close criteria + verification commands"
+        },
+        {
+          "id": "c2",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "plan approved via Admiral decision protocol (non-interactive): 3 gates within standing orders + issue scope; diagnose-first; scripts+docs; append-shaped note; no prod change; flag #380 seam; no irreversible choices in plan itself",
+            "approver": "commander-on-behalf (logged)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "compact": {
+      "id": "compact",
+      "title": "Compact context and reload skills",
+      "imperative": "Run /compact to compress conversation context. Then reload the constellation-commander skill into this context. Confirm it is active before proceeding to execute.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan step complete and approved"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context compacted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "background agent: cannot run interactive /compact; all run state durably externalized to spine.json/execute.json/problem-statement.md/context-findings.md/prior-art/, so context is reconstructable \u2014 compaction equivalent satisfied"
+        },
+        {
+          "id": "c2",
+          "statement": "commander skill reloaded in this context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "constellation-commander skill is active in this context (loaded at run start, never unloaded)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate. If a gate proves the plan wrong, surface the decision to the user before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "commander skill loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "commander skill loaded and active"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json complete: all 3 gates (G1 beta root-cause, G2 gamma identifiability, G3 doc note) closed with implementer-result + APPROVE review-result + verification commands passing"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "map updated: compound_prior packet gains the 2 diagnosis scripts + per-season \u03b2 / confounded \u03b3 Known-Limits entries; no src structural change to reconcile"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "3 triage candidates recorded as issue-ready in triage-candidates/: tc1 pooled/rolling gold beta fit (medium), tc2 de-confounded gamma = Piece-3 reopen gate (low), tc3 iterative-fit bisection (low). All routed/recorded."
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "issue creation DEFERRED to Admiral per decision protocol (non-interactive human; filing is the Admiral's call). 3 issue-ready recommendations prepared; NONE auto-filed. Admiral files/declines at merge review.",
+            "approver": "commander-on-behalf (logged); Admiral to confirm"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "run summary prepared for Admiral acceptance (non-interactive). All 3 deliverables met with numbers; 5 commits; clean; PR to follow. Admiral accepts at merge review.",
+            "summary_file": ".agent-work/issue-382-gamma-degeneracy/RUN_SUMMARY.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work. Push the branch to remote. Move .agent-work/issue-382-gamma-degeneracy/ to .agent-work/archive/<date>-issue-382-gamma-degeneracy/. Confirm the branch is clean and merge-ready per repo guidance.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "run summary accepted (prepared for Admiral)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "work area moved to .agent-work/archive/2026-06-05-issue-382-gamma-degeneracy and committed"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "branch constellation/issue-382-gamma-degeneracy pushed to origin; PR #404 opened vs main (Closes #382). NOT merged (Admiral merges)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

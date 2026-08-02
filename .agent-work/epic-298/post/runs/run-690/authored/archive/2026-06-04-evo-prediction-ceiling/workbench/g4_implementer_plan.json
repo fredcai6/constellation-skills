@@ -1,0 +1,154 @@
+{
+  "work_id": "g4-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-sec13",
+    "m2-thrustB-sec4-sec5"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g4 handoff, and the g1 evidence packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + g1 evidence loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CREW_CONTEXT+GLOSSARY+g4 handoff+g1 evidence loaded; handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop/return all present); G1 evidence corroborates corrected facts"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-sec13": {
+      "id": "m1-sec13",
+      "title": "Correct \u00a71.3 race-start sigma framing",
+      "imperative": "Edit ONLY docs/evo/prediction_ceiling_and_priorities.md \u00a71.3: replace the race-start sigma_corr bullet so it gives the decomposition (recent_history driver -0.119 / constructor -0.092; race_weekend +0.108 / +0.206), states all four are insignificant at n=24 with r_crit~0.40, p>0.33, CIs spanning 0, and that the calibrated-sigma LEVEL is coverage-aligned (not 'too high / too flat'); remove the 'leaving predictability on the table' overclaim. Keep the well-calibrated-mean-link bullet. Do not touch durable facts (CV~0 label collapse).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "\u00a71.3 corrected; doc still contains figure 0.119; verification command exits 0",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; t=pathlib.Path('docs/evo/prediction_ceiling_and_priorities.md').read_text(encoding='utf-8'); sys.exit(0 if '0.119' in t else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-sec13-1"
+        }
+      ],
+      "constraints": [
+        "docs/evo/prediction_ceiling_and_priorities.md ONLY",
+        "no .agent-work path references",
+        "do not over-correct into 'perfectly calibrated' overclaim",
+        "durable facts unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-sec13-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; t=pathlib.Path('docs/evo/prediction_ceiling_and_priorities.md').read_text(encoding='utf-8'); sys.exit(0 if '0.119' in t else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-thrustB-sec4-sec5": {
+      "id": "m2-thrustB-sec4-sec5",
+      "title": "Reframe \u00a73 Thrust B, \u00a74, and \u00a75 table row",
+      "imperative": "Edit ONLY docs/evo/prediction_ceiling_and_priorities.md: reframe \u00a73 Thrust B 'race-start sigma mis-level' bounded-first-win as the honest-diagnostic fix (n-aware significance gate on sigma_error_correlation_wrong_sign; insignificant advisory flag), note the re-level was evaluated and declined as unsupported, distinguish the post-hoc level lever (alpha*trace+beta*dof, monotone in trace -> sign-preserving) from the training-time production lever (lambda_sigma_nll, #142, out of scope); update \u00a74 accordingly; update the \u00a75 durable/model-bound 'race-start sigma_corr sign/level' row to 'insignificant at n=24' rather than a defect; note the deferred fused-Brier confirmation at the next gold cycle. Keep durable rows unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "\u00a71.3 corrected",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-sec13 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "\u00a73/\u00a74/\u00a75 reframed; doc still contains figure 0.119; verification command exits 0",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; t=pathlib.Path('docs/evo/prediction_ceiling_and_priorities.md').read_text(encoding='utf-8'); sys.exit(0 if '0.119' in t else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-thrustB-sec4-sec5-2"
+        }
+      ],
+      "constraints": [
+        "docs/evo/prediction_ceiling_and_priorities.md ONLY",
+        "no .agent-work path references",
+        "issue refs #325/#142 must be real",
+        "durable rows unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-thrustB-sec4-sec5-1",
+          "type": "doc-edit",
+          "payload": {
+            "file": "docs/evo/prediction_ceiling_and_priorities.md",
+            "sections": "1.3,3-ThrustB,4(items 2 and new 6),5-table-row",
+            "verification": "0.119 present; exit 0",
+            "durable_untouched": "true",
+            "agent_work_refs": "0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-thrustB-sec4-sec5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; t=pathlib.Path('docs/evo/prediction_ceiling_and_priorities.md').read_text(encoding='utf-8'); sys.exit(0 if '0.119' in t else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

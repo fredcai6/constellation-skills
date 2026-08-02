@@ -1,0 +1,155 @@
+{
+  "work_id": "627-unified-basis-g5",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, handoff (HANDOFF.md), and IMPLEMENTER_RESULT.md. Ready to verify diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 4 fractures carry a number, per close criteria. Independently re-ran py scripts/tier2_fracture_analysis.py: output matches doc verbatim, exit 0. dual-CdA CLOSED cites G3 real numbers and reproduces via a live fuse_dual_cda call (verified cross_view.py unmodified, read-only import). grip-triplet uses circuit-demeaned residual Pearson (a genuine circuit-fixed-effect partial correlation, not raw), max|r|=0.107, bound 0.6% via Var(A|B)=Var(A)(1-r^2) -- math checks out. a_long bounded-defer 13.4sigma transcribed correctly from decoupled-1d-longitudinal.md Config-C tables (verified every one of 18 entries against source doc, matches exactly); explicitly NOT re-merged, decision:decoupled_1d_longitudinal cited and confirmed as a real anchor. shared-trajectory-noise gives an honest method-scoped null (r floored at 0 -> 0.0% bound) with explicit scope statement of what was/wasn't tested, cites #644 (a real handoff-named issue).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain: only scripts/tier2_fracture_analysis.py, docs/physics/627-tier2-fractures.md, and .agent-work/627-unified-basis/ (engine-owned plan state) are untracked/changed. git status --porcelain src/ and data/ both empty -- confirmed no view/estimator/a_long re-wiring, no production default/store-schema change, no data/*.db writes. cross_view.py and estimate_store.py confirmed read-only-imported (function calls only, no edits). Matches Allowed Scope and Specific Exclusions exactly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran py scripts/tier2_fracture_analysis.py (default DB path, live 216-row/22-circuit 2023 Q store): exit 0, output byte-for-byte matches the doc's pasted 'Full script output' section. Also re-ran with a nonexistent --db-path: fractures 2/4 print an explicit 'DB not found ... BOUNDED-DEFER' skip line and exit 0 (no crash) -- DB-guard behavior independently confirmed, not just implementer-claimed. Inline asserts (z=6.80/2.03, fused sigma ~0.046) passed silently (no AssertionError) confirming the dual-CdA reproduction is live, not hardcoded print statements.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff constraints: (1) every fracture carries a number -- verified all 4. (2) a_long not re-merged -- confirmed via git status src/ empty + doc's explicit framing. (3) constraint:physics_region_no_evo_import -- confirmed: module-level imports are stdlib only (argparse/math/os/sys/itertools); src.physics.layer2.{cross_view,estimate_store} imports are deferred INSIDE functions and are physics-region, not evo. verify_simplification_limits --paths scripts/tier2_fracture_analysis.py -> PASS. Script is ASCII-only per its own header claim (independently verified via .decode('ascii')). CREW_CONTEXT physics-and-units rule (truth-anchored evidence) satisfied: fracture 1 is L4-style parity with a real function call; fractures 2/4 are live-computed from the canonical DB; fracture 3 transcribes a decision doc's already-adjudicated numbers (appropriate given the explicit no-re-wire exclusion).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No unreconciled architecture divergence. Map Impact notes accurate: struct:physics.layer2 (new read-only-consumer script + doc) is a correct minor addition, decision:decoupled_1d_longitudinal is correctly NOT re-opened (bounded-defer only, cites the anchor). The tc8/tc1 out-of-scope finding (main store's cross_view_covariance unpopulated) is pre-flagged in the handoff as a known non-blocker and is routed to Triage here (tc1), not silently dropped.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to .agent-work/627-unified-basis/g5-review/fowler_pass.json; scripts/verify_fowler_pass.py exits 0. All 12 baseline smells visited. 1 flagged (duplicated-code: near-verbatim DB-not-found guard repeated in fracture_2 and fracture_4 -- minor, non-blocking observation for Commander). 1 overridden (comments-as-deodorant: dense provenance comments are traceability per CREW_CONTEXT data-semantics rule, not confusion-compensation -- logged standard+reason). Remaining 10 smells absent.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g5 APPROVE: all 4 x7-basis fractures independently reproduced with a genuine number each. dual-CdA CLOSED (18.1% tighter, live fuse_dual_cda re-run matches G3 z=6.80/2.03 exactly). grip-triplet BOUNDED-DEFER <=0.6% via a real circuit-fixed-effect partial correlation (demeaned residuals), not raw Pearson. a_long BOUNDED-DEFER <=13.4sigma, structural HONEST-NULL, every transcribed number verified against decoupled-1d-longitudinal.md's Config-C tables, no re-wiring (src/ untouched). shared-trajectory-noise BOUNDED-DEFER <=0.0%, honest method-scoped null with explicit tested/not-tested statement, cites #644. Independent re-run of py scripts/tier2_fracture_analysis.py (default DB and a bad --db-path) both exit 0 and match claimed output byte-for-byte. data/ and src/ both git-clean. 1 minor Fowler observation (duplicated DB-guard block) routed as non-blocking; 1 out-of-scope triage candidate (main store's unpopulated cross_view_covariance) routed, matches handoff's pre-flagged non-blocker."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Known out-of-scope (per handoff, not a g5 blocker): main's data/physics_estimates.db has cross_view_covariance == None on every row because the store snapshot predates a run that persisted G3's fused values (CoastView's CdA is production-pinned to PowerDrag's posterior, so fused_cda stays inert on the live pathway). A future gate wanting to query fused-CdA directly from the store (rather than reproducing g3's captured JSON, as g5 did) needs a fresh record_from_estimate run with an independently-fit Coast. Route to Triage as a store-refit follow-on."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipf627-g5review",
+    "status": "released",
+    "claimed_at": "2026-07-19T01:07:08.012317+00:00",
+    "last_heartbeat": "2026-07-19T01:11:41.830243+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T01:12:21.520463+00:00"
+  }
+}

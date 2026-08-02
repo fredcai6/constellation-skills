@@ -1,0 +1,264 @@
+{
+  "cache_cleared": false,
+  "cache_policy": "preserve",
+  "collector_command": "scripts/collect_evo_data.py --seasons 2026 --gp Great Britain --sessions FP1 SQ S Q R --report-json .agent-work/cmdr-603/collect-report-gb.json --report-md .agent-work/cmdr-603/collect-report-gb.md",
+  "created_at": "2026-07-12T18:24:40+00:00",
+  "db_path": "C:/Programs/f1Brainz/data/f1_data_2026.db",
+  "dry_run": false,
+  "event_delay_s": 0.0,
+  "events_requested": [
+    "Great Britain"
+  ],
+  "failures": [],
+  "fastf1_cache_dir": "C:\\Programs\\f1Brainz\\data\\telemetry",
+  "max_retries": 3,
+  "overall_status": "pass",
+  "request_delay_s": 55.0,
+  "schema_version": 1,
+  "seasons_requested": [
+    2026
+  ],
+  "session_results": [
+    {
+      "elapsed_s": 8.745,
+      "exception_message": null,
+      "exception_type": null,
+      "fastf1_cache_used": false,
+      "finished_at": "2026-07-12T18:19:33+00:00",
+      "gp_name": "Great Britain",
+      "inserted_or_updated_counts": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 613,
+        "session_rows": 0,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 613,
+        "weather_rows": 84
+      },
+      "reason": "collection completed and row-count validation passed",
+      "retry_count": 0,
+      "round_num": 9,
+      "row_counts_after": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 613,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 613,
+        "weather_rows": 84
+      },
+      "row_counts_before": {
+        "classification_rows": 0,
+        "driver_count": 0,
+        "lap_rows": 0,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 0,
+        "weather_rows": 0
+      },
+      "season": 2026,
+      "session_name": "FP1",
+      "started_at": "2026-07-12T18:19:24+00:00",
+      "status": "success",
+      "status_code": "SUCCESS",
+      "traceback_excerpt": null,
+      "warnings": []
+    },
+    {
+      "elapsed_s": 6.868,
+      "exception_message": null,
+      "exception_type": null,
+      "fastf1_cache_used": false,
+      "finished_at": "2026-07-12T18:20:35+00:00",
+      "gp_name": "Great Britain",
+      "inserted_or_updated_counts": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 236,
+        "session_rows": 0,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 236,
+        "weather_rows": 60
+      },
+      "reason": "collection completed and row-count validation passed",
+      "retry_count": 0,
+      "round_num": 9,
+      "row_counts_after": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 236,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 236,
+        "weather_rows": 60
+      },
+      "row_counts_before": {
+        "classification_rows": 0,
+        "driver_count": 0,
+        "lap_rows": 0,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 0,
+        "weather_rows": 0
+      },
+      "season": 2026,
+      "session_name": "SQ",
+      "started_at": "2026-07-12T18:20:28+00:00",
+      "status": "success",
+      "status_code": "SUCCESS",
+      "traceback_excerpt": null,
+      "warnings": []
+    },
+    {
+      "elapsed_s": 8.361,
+      "exception_message": null,
+      "exception_type": null,
+      "fastf1_cache_used": false,
+      "finished_at": "2026-07-12T18:21:38+00:00",
+      "gp_name": "Great Britain",
+      "inserted_or_updated_counts": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 372,
+        "session_rows": 0,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 372,
+        "weather_rows": 79
+      },
+      "reason": "collection completed and row-count validation passed",
+      "retry_count": 0,
+      "round_num": 9,
+      "row_counts_after": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 372,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 372,
+        "weather_rows": 79
+      },
+      "row_counts_before": {
+        "classification_rows": 0,
+        "driver_count": 0,
+        "lap_rows": 0,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 0,
+        "weather_rows": 0
+      },
+      "season": 2026,
+      "session_name": "S",
+      "started_at": "2026-07-12T18:21:30+00:00",
+      "status": "success",
+      "status_code": "SUCCESS",
+      "traceback_excerpt": null,
+      "warnings": []
+    },
+    {
+      "elapsed_s": 10.366,
+      "exception_message": null,
+      "exception_type": null,
+      "fastf1_cache_used": false,
+      "finished_at": "2026-07-12T18:22:43+00:00",
+      "gp_name": "Great Britain",
+      "inserted_or_updated_counts": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 309,
+        "session_rows": 0,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 309,
+        "weather_rows": 84
+      },
+      "reason": "collection completed and row-count validation passed",
+      "retry_count": 0,
+      "round_num": 9,
+      "row_counts_after": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 309,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 309,
+        "weather_rows": 84
+      },
+      "row_counts_before": {
+        "classification_rows": 0,
+        "driver_count": 0,
+        "lap_rows": 0,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 0,
+        "weather_rows": 0
+      },
+      "season": 2026,
+      "session_name": "Q",
+      "started_at": "2026-07-12T18:22:33+00:00",
+      "status": "success",
+      "status_code": "SUCCESS",
+      "traceback_excerpt": null,
+      "warnings": []
+    },
+    {
+      "elapsed_s": 6.822,
+      "exception_message": null,
+      "exception_type": null,
+      "fastf1_cache_used": false,
+      "finished_at": "2026-07-12T18:23:45+00:00",
+      "gp_name": "Great Britain",
+      "inserted_or_updated_counts": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 1113,
+        "session_rows": 0,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 1113,
+        "weather_rows": 156
+      },
+      "reason": "collection completed and row-count validation passed",
+      "retry_count": 0,
+      "round_num": 9,
+      "row_counts_after": {
+        "classification_rows": 22,
+        "driver_count": 22,
+        "lap_rows": 1113,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 1113,
+        "weather_rows": 156
+      },
+      "row_counts_before": {
+        "classification_rows": 0,
+        "driver_count": 0,
+        "lap_rows": 0,
+        "session_rows": 1,
+        "telemetry_rows": 0,
+        "tyre_life_rows": 0,
+        "weather_rows": 0
+      },
+      "season": 2026,
+      "session_name": "R",
+      "started_at": "2026-07-12T18:23:38+00:00",
+      "status": "success",
+      "status_code": "SUCCESS",
+      "traceback_excerpt": null,
+      "warnings": []
+    }
+  ],
+  "sessions_requested": [
+    "FP1",
+    "SQ",
+    "S",
+    "Q",
+    "R"
+  ],
+  "source_worklist_path": null,
+  "summary_counts": {
+    "attempted": 5,
+    "failed": 0,
+    "planned": 0,
+    "skipped": 0,
+    "success": 5
+  },
+  "warnings": []
+}

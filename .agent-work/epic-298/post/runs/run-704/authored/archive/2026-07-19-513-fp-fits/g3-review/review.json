@@ -1,0 +1,192 @@
+{
+  "work_id": "513-fp-fits",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-rework-verify"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 3 close criteria met and independently reproduced: (1) EstimateRecord.cumulative_track_laps field self-heals via generic _cols-driven ALTER (dynamic from dataclass fields, same mechanism as mass_kg_assumed, no special-casing needed) -- test_cumulative_track_laps_self_heals_on_legacy_db passes; (2) session_cumulative_track_laps signature matches spec exactly (year, gp, session_type, constructor, db_path, *, session_id=None) -> Optional[int], anchors on constructor's fastest valid_lap=1 lap via _fastest_clean_lap_number (ORDER BY lap_time ASC LIMIT 1), returns compute_cumulative_track_laps(session_id, anchor_lap, db_path) verbatim, returns None on missing session/constructor/clean-lap (4 None-path tests + 1 happy-path anchor-selection test, all pass); (3) record_from_estimate gains cumulative_track_laps=None optional kwarg stored as-is, populate_cumulative_track_laps_for_demo UPDATEs only named-weekend existing rows (no INSERT, no estimate_batch call). Reproduced: 125 passed (matches result-g3-implement.md claim exactly).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Exactly 4 files touched, all within allowed scope: src/physics/layer2/estimate_store.py, src/physics/layer2/session_race.py (both explicitly allowed), plus their test files (handoff named tests/unit/physics/test_estimate_store.py which does not exist -- actual path tests/unit/physics/layer2/test_estimate_store.py, a stale-path correction the implementer documented; test_session_race.py extension is the session_race test the handoff anticipated 'if needed'). Exclusions honored: session_estimator.py untouched, views untouched, no data/*.db read/written (git status --short data/ empty), no estimate_batch call in the demo populate helper (confirmed by reading its body -- raw UPDATE only), compute_cumulative_track_laps byte-unchanged (diff hunk shows only trailing context + new functions after it, zero lines touch its body).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence present and independently reproduced, all matching the claimed outputs exactly: full target-file run (125 passed), self-heal-on-legacy-store test isolated and green (1 passed), git status --short data/ empty (clean). Additionally reproduced the two TDD-milestone selectors named in result-g3-implement.md's Workflow Feedback (test_estimate_store -k cumulative_track_laps -> 5 passed; test_session_race -k SessionCumulativeTrackLaps -> 5 passed, confirming the plan's under-selecting -k filter was correctly worked around, not gamed) and test_estimate_batch.py (6 passed) confirming zero regression for existing record_from_estimate callers that pass no cumulative_track_laps kwarg.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "One genuine NEW project-standard violation, independently reproduced: 'py -m src.utils.simplification_limits --paths src/physics/layer2/estimate_store.py src/physics/layer2/session_race.py' -> FAIL, 2 violations. Of the 2, session_race.py's file_lines=1366 (limit <1000) and load_race_stints=170 lines are BOTH PRE-EXISTING (confirmed via git-stash-and-rerun against HEAD: session_race.py was already 1268 lines / already over the limit before this diff touched it, and load_race_stints is untouched by this diff) -- not this gate's defect. BUT tests/unit/physics/layer2/test_estimate_store.py crossed the threshold BECAUSE of this diff: 888 lines at HEAD (under the <1000 limit) -> 1005 lines after the +117-line #513 addition (now over it). CREW_CONTEXT.md's Verification-By-Region section states this check is required for every source change and is an explicit 'Review blocker when skipped or failing on in-scope Python' -- the implementer's evidence never ran/reported this check. Severity: MEDIUM/should-fix, not a functional or correctness defect (purely a line-count lint threshold on a test file, 5 lines over) -- remediation is trivial (split the new #513 G3 test class into a companion file, e.g. test_estimate_store_track_laps.py). All OTHER CREW_CONTEXT rules checked and PASS: physics-region import boundary clean (no evo/latent_power/compound_prior/fastf1 imports in either src file, grepped and confirmed empty), no module-level mutable state or DB singleton introduced, missingness handled intentionally (None returned + explicit no_lap counter, never zero-filled/guessed), no print() added to src/ (grep found only pre-existing print() calls elsewhere in session_race.py, none in the new diff hunks), self-heal migration is the same generic dataclass-field-driven ALTER mechanism as mass_kg_assumed (no special-casing).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence requiring Commander reconciliation. Map Impact notes verified accurate against the actual diff: struct:physics.layer2 anchors (EstimateRecord.cumulative_track_laps, record_from_estimate kwarg, populate_cumulative_track_laps_for_demo, session_cumulative_track_laps + 2 private helpers, compute_cumulative_track_laps reused unchanged) all match line-for-line. The one decision candidate surfaced (constructor->driver resolution via session_classifications.team vs estimate_batch's live-FastF1 _group_by_team seam) is ALREADY logged in execute.json's triage_candidates as tc2 ('#646 seam: ... these paths are not guaranteed to agree at scale -- reconcile before the real cumulative_track_laps backfill relies on the seam') -- confirmed present, correctly routed, and per dispatcher instruction not re-blocked here. No new component/container boundary crossed (physics.layer2 struct anchor already exists per #627's reconciliation entry in docs/architecture/index.md); this is an additive capability within an already-mapped module, appropriately left for Cartographer/Commander to fold in at cleanup rather than an in-gate doc update. Precedent check: #627 previously split estimate_store.py into estimate_store_fields.py specifically to stay under the file-length limit -- confirms the r4-quality simplification_limits finding is an actively-enforced project practice, not dead-letter doctrine.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline catalog visited (12/12), rail script verify_fowler_pass.py PASSED (fowler_pass.json at .agent-work/513-fp-fits/g3-review/fowler_pass.json). 8 smells absent (long-method, large-class, feature-envy, primitive-obsession, shotgun-surgery, message-chains, speculative-generality, comments-as-deodorant). 4 present-but-overridden with logged repo-standard reasons, all tracing to the same root cause: the new code deliberately FOLLOWS this file's pre-existing established conventions (ro-uri/fallback connect idiom, flat session-identity tuples, keyword-only optional-kwarg bolt-on, additive wide-schema self-heal store) rather than introducing new smells, consistent with global-crew.md's minimal-change/no-speculative-abstraction doctrine for a tightly-scoped gate. duplicated-code override flagged as a worthwhile future triage candidate (consolidate the ro-uri/fallback pattern into a shared _ro_query helper across 8+ call sites) -- not a defect of this gate. Zero smells flagged as blocking.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "fowler-pass",
+          "payload": {
+            "path": ".agent-work/513-fp-fits/g3-review/fowler_pass.json",
+            "flagged": "none",
+            "overridden": "duplicated-code,data-clumps,long-parameter-list,divergent-change"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-rework-verify": {
+      "id": "r7-rework-verify",
+      "title": "Rework verify: simplification_limits fix",
+      "imperative": "Independently reproduce the implementer's claim that splitting the new #513 tests into test_estimate_store_cumulative.py resolves the r4-quality BLOCK (test_estimate_store.py's simplification_limits file_lines violation). Verify no new violation, full suite still green, data/ clean. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Rework independently reproduced and confirmed to resolve the prior BLOCK. (1) 'py -m src.utils.simplification_limits --baseline --paths tests/unit/physics/layer2/test_estimate_store.py tests/unit/physics/layer2/test_estimate_store_cumulative.py' -> PASS (2 files checked), no new violation -- reproduced verbatim. (2) A strict non-baseline run over all 4 touched files does surface cyclomatic_complexity=26 in test_fit_quality_metadata_populated_and_round_trips (test_estimate_store.py) plus the 2 already-known pre-existing session_race.py violations; independently confirmed via git-ancestor check that 27b6eac9 (where this test already exists, git show 27b6eac9:...test_estimate_store.py | grep -c def test_fit_quality... = 1) is an ancestor of HEAD, AND the current diff (git diff -- tests/unit/physics/layer2/test_estimate_store.py) shows ZERO lines touching that test function -- genuinely pre-existing, not introduced by this gate, correctly not re-blocked (same principle as session_race.py's pre-existing violations). (3) Full target suite reproduced: 125 passed (test_estimate_store.py 23+25=48/48, test_estimate_store_cumulative.py 5/5, test_session_race.py 72/72) -- matches claim exactly, and the 5 tests exist ONLY in the new companion file (checked test_estimate_store.py's diff: the old test bodies are gone, replaced by a 7-line pointer comment -- no duplication). (4) test_estimate_batch.py still 6/6 green; compute_cumulative_track_laps still byte-unchanged (re-diffed). (5) git status --short data/ empty. Read the full companion file test_estimate_store_cumulative.py: pure tmp_path sqlite, no real DB, self-contained (no cross-test-file import), matches the project's own stated precedent for companion test files. Prior BLOCK finding is RESOLVED.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r4-quality: One genuine NEW project-standard violation, independently reproduced: 'py -m src.utils.simplification_limits --paths src/physics/layer2/estimate_store.py src/physics/layer2/session_race.py' -> FAIL, 2 violations. Of the 2, session_race.py's file_lines=1366 (limit <1000) and load_race_stints=170 lines are BOTH PRE-EXISTING (confirmed via git-stash-and-rerun against HEAD: session_race.py was already 1268 lines / already over the limit before this diff touched it, and load_race_stints is untouched by this diff) -- not this gate's defect. BUT tests/unit/physics/layer2/test_estimate_store.py crossed the threshold BECAUSE of this diff: 888 lines at HEAD (under the <1000 limit) -> 1005 lines after the +117-line #513 addition (now over it). CREW_CONTEXT.md's Verification-By-Region section states this check is required for every source change and is an explicit 'Review blocker when skipped or failing on in-scope Python' -- the implementer's evidence never ran/reported this check. Severity: MEDIUM/should-fix, not a functional or correctness defect (purely a line-count lint threshold on a test file, 5 lines over) -- remediation is trivial (split the new #513 G3 test class into a companion file, e.g. test_estimate_store_track_laps.py). All OTHER CREW_CONTEXT rules checked and PASS: physics-region import boundary clean (no evo/latent_power/compound_prior/fastf1 imports in either src file, grepped and confirmed empty), no module-level mutable state or DB singleton introduced, missingness handled intentionally (None returned + explicit no_lap counter, never zero-filled/guessed), no print() added to src/ (grep found only pre-existing print() calls elsewhere in session_race.py, none in the new diff hunks), self-heal migration is the same generic dataclass-field-driven ALTER mechanism as mass_kg_assumed (no special-casing)."
+    ],
+    "summary": "G3 (cumulative_track_laps unlock) APPROVED after one rework cycle. All 3 handoff close criteria independently reproduced and verified across both review passes: additive self-heal (generic dataclass-field-driven ALTER, matches mass_kg_assumed precedent), session_cumulative_track_laps matches spec exactly and reuses compute_cumulative_track_laps BYTE-UNCHANGED, record_from_estimate's new kwarg is backward-compatible/byte-identical by default, demo populate is strictly UPDATE-only over existing named-weekend rows. 125/125 tests reproduced green (including the new companion file), git status --short data/ clean, physics-region import boundary clean, no real backfill. The sole BLOCK from the first pass (test_estimate_store.py crossing the simplification_limits 1000-line threshold) was resolved by splitting the new #513 tests into test_estimate_store_cumulative.py, independently verified in r7-rework-verify: no new simplification_limits violation, the one remaining strict-mode finding (cyclomatic_complexity=26) is confirmed pre-existing and untouched by this diff. tc2 (constructor-resolution seam mismatch) remains correctly logged and not re-blocked per dispatcher instruction. Fowler pass: 12/12 baseline smells visited, rail cleared, 0 flagged as blocking, 4 overridden with logged repo-standard reasons. Two non-blocking triage candidates remain open (ro-uri/fallback consolidation; the file-split itself, now resolved -- kept for audit trail).",
+    "override_reason": "r4-quality's original fail (test_estimate_store.py crossed simplification_limits file_lines threshold, 888->1005) is superseded by r7-rework-verify: the implementer split the #513 tests into a companion file (test_estimate_store_cumulative.py, 194 lines); independently reproduced -- simplification_limits --baseline over both files now PASSes with no new violation, the one strict-mode finding that remains (cyclomatic_complexity=26 in test_fit_quality_metadata_populated_and_round_trips) is confirmed pre-existing (untouched by this diff, present at ancestor commit 27b6eac9), full 125-test suite still green with zero duplication, data/ still clean, compute_cumulative_track_laps still byte-unchanged. All other checks (r1-r3, r5, r6) already passed on first pass. No open defect remains."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "Consolidate the repeated try:_ro_uri-connect/except-OperationalError-fallback-connect block (now 8+ occurrences in src/physics/layer2/session_race.py including this gate's 2 new helpers) into a shared _ro_query(db_path, query, params) helper -- a future dedicated cleanup issue, not a defect of any single gate."
+    },
+    {
+      "id": "tc2",
+      "from": "r4-quality",
+      "statement": "tests/unit/physics/layer2/test_estimate_store.py crossed the project's 1000-line simplification_limits threshold (888 -> 1005 lines) as a direct result of this gate's +117-line #513 G3 test additions. Trivial fix: split the new 'cumulative_track_laps column (additive self-heal...)' test block into a companion file (e.g. test_estimate_store_track_laps.py), matching the project's own precedent of splitting estimate_store.py itself into estimate_store_fields.py at #627 for the same reason."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "reviewer-513-g3-rework-1784473151",
+    "status": "released",
+    "claimed_at": "2026-07-19T14:59:12.309050+00:00",
+    "last_heartbeat": "2026-07-19T14:59:54.633824+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T14:59:58.939904+00:00"
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "work_id": "624-phase0-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-join-design",
+    "m2-script-run",
+    "m3-findings-check",
+    "m4-evidence-package"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), then docs/agents/CREW_CONTEXT.md + GLOSSARY.md if present, plus the g1-implement handoff and PRE_REGISTRATION.md / PROBLEM_STATEMENT.md. Verify handoff completeness (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + pre-registration + problem statement loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-join-design": {
+      "id": "m1-join-design",
+      "title": "Verify DB schemas + design join (no code yet beyond exploration)",
+      "imperative": "Confirm exact schemas/signatures from source (not guessed): session_estimates columns (physics_estimates.db), sessions/lap_times/session_classifications columns (f1_data_<year>.db), and the reference pace-gap formula (compute_pace_gaps / build_quali_pace_gap_history in src/evo_predictor/quali_pace_gap_history.py). Resolve the constructor<->team name mismatch (session_estimates constructor names vs session_classifications team names) with a verified per-year alias/containment matching scheme -- document the scheme. Attest c1 once verified against live DB queries (not just source reading).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "schemas + pace-gap formula + team/constructor alias scheme verified against live DB reads",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "cite exact seam signatures from source before using them",
+        "no NN inference, no sampler"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-script-run": {
+      "id": "m2-script-run",
+      "title": "Build scripts/g1_correlation_screen.py and produce a real run",
+      "imperative": "Write scripts/g1_correlation_screen.py: pure DB/pandas, absolute paths into C:/Programs/f1Brainz/data/, computes actual_pace_gap/recent_history_baseline/quali_error per (year,round,driver), broadcasts constructor physics axes onto drivers, computes primary axis (lateral_total_grip_g) Pearson+Spearman+n+95%CI plus the 9 secondary axes + power_to_drag composite (clearly labeled secondary). Prints join-stage row counts. Run it standalone from cwd C:/Programs/f1-624 and capture full stdout.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "join design verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "py scripts/g1_correlation_screen.py runs from repo root, exit 0, prints headline result + join-stage row counts",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-624 && py scripts/g1_correlation_screen.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-script-run-1"
+        }
+      ],
+      "constraints": [
+        "no src/ modification",
+        "no sampler/NN invocation",
+        "PYTHONIOENCODING=utf-8 if non-ASCII printed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-script-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-624 && py scripts/g1_correlation_screen.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-findings-check": {
+      "id": "m3-findings-check",
+      "title": "Write G1_FINDINGS.md and implement --check",
+      "imperative": "Write .agent-work/624-phase0/G1_FINDINGS.md (method recap, primary result n/coef/CI, full 11-axis+composite table, honest read per critic disposition F7, explicit broadcast-simplification note). Record the headline numbers in a machine-parseable line the script itself parses. Implement --check in the script: re-run analysis, compare recomputed headline to the recorded value, exit 0 on match else 1. Verify.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script produces a real run",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "py scripts/g1_correlation_screen.py --check exits 0 and reproduces the recorded headline",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-624 && py scripts/g1_correlation_screen.py --check"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-findings-check-1"
+        }
+      ],
+      "constraints": [
+        "G1_FINDINGS.md is local-only, never committed on the mission branch",
+        "primary axis is NOT re-derived after seeing the number"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-findings-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-624 && py scripts/g1_correlation_screen.py --check",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence-package": {
+      "id": "m4-evidence-package",
+      "title": "Deliverable-path checks, evidence, IMPLEMENTER_RESULT",
+      "imperative": "Confirm git check-ignore exits 1 for scripts/g1_correlation_screen.py (not gitignored). Capture git status/diff --stat showing exactly the two new files. Write IMPLEMENTER_RESULT.md and send it. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "findings + --check verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git check-ignore confirms script tracked; git status/diff --stat captured; IMPLEMENTER_RESULT.md written",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-624 && ! git check-ignore scripts/g1_correlation_screen.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-package-1"
+        }
+      ],
+      "constraints": [
+        "no destructive git ops",
+        "no commit unless asked"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-package-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-624 && ! git check-ignore scripts/g1_correlation_screen.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g1-implement-shipb624",
+    "status": "released",
+    "claimed_at": "2026-07-18T01:53:36.614495+00:00",
+    "last_heartbeat": "2026-07-18T01:57:53.431469+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T01:58:49.182328+00:00"
+  }
+}

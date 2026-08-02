@@ -1,0 +1,596 @@
+{
+  "db_path": "C:/Programs/f1Brainz/.agent-work/archive/2026-07-26-664-reference-laps/artifacts/reference_utilization_run.db",
+  "year": 2023,
+  "session_type": "Q",
+  "as_of_round": 9,
+  "vocabulary": {
+    "vocabulary_id": "severity:2023:v1",
+    "rules_era": "drs1-mguk1-mguh1",
+    "k": 4,
+    "class_ids": [
+      "severity:2023:v1:c0",
+      "severity:2023:v1:c1",
+      "severity:2023:v1:c2",
+      "severity:2023:v1:c3"
+    ],
+    "f12_verdict": "UNVERIFIED",
+    "f12_provenance": "#667 bounded validation -- bounded-slice taxonomy, not F12-PASS"
+  },
+  "circuits_requested": [
+    "Great Britain"
+  ],
+  "circuits_processed": [
+    "Great Britain"
+  ],
+  "circuits_skipped": [],
+  "drivers": [
+    "VER",
+    "PER",
+    "LEC",
+    "SAI"
+  ],
+  "priors": [
+    {
+      "driver": "VER",
+      "circuit": "Great Britain",
+      "channel": "utilization",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "VER",
+      "circuit": "Great Britain",
+      "channel": "energy",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "PER",
+      "circuit": "Great Britain",
+      "channel": "utilization",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "PER",
+      "circuit": "Great Britain",
+      "channel": "energy",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "LEC",
+      "circuit": "Great Britain",
+      "channel": "utilization",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "LEC",
+      "circuit": "Great Britain",
+      "channel": "energy",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "SAI",
+      "circuit": "Great Britain",
+      "channel": "utilization",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    },
+    {
+      "driver": "SAI",
+      "circuit": "Great Britain",
+      "channel": "energy",
+      "corner_share": 0.42174533307785167,
+      "mean": null,
+      "scale": null,
+      "nu": null,
+      "thin_classes": [
+        "severity:2023:v1:c0",
+        "severity:2023:v1:c1",
+        "severity:2023:v1:c2",
+        "severity:2023:v1:c3"
+      ],
+      "weight_on_thin": 1.0,
+      "resolved_mask": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "fully_thin": true,
+      "vocabulary_version": "severity:2023:v1",
+      "map_version": "2023-Great Britain-Q:v1",
+      "cells": [
+        {
+          "class_id": "severity:2023:v1:c0",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c1",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c2",
+          "status": "unresolved",
+          "support_n": null
+        },
+        {
+          "class_id": "severity:2023:v1:c3",
+          "status": "unresolved",
+          "support_n": null
+        }
+      ]
+    }
+  ],
+  "thin_surfacing": {
+    "priors_with_thin_classes": [
+      {
+        "driver": "VER",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "VER",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "PER",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "PER",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "LEC",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "LEC",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "SAI",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      },
+      {
+        "driver": "SAI",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "thin_classes": [
+          "severity:2023:v1:c0",
+          "severity:2023:v1:c1",
+          "severity:2023:v1:c2",
+          "severity:2023:v1:c3"
+        ]
+      }
+    ],
+    "priors_with_weight_on_thin": [
+      {
+        "driver": "VER",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "VER",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "PER",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "PER",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "LEC",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "LEC",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "SAI",
+        "circuit": "Great Britain",
+        "channel": "utilization",
+        "weight_on_thin": 1.0
+      },
+      {
+        "driver": "SAI",
+        "circuit": "Great Britain",
+        "channel": "energy",
+        "weight_on_thin": 1.0
+      }
+    ],
+    "fully_thin_priors": [
+      {
+        "driver": "VER",
+        "circuit": "Great Britain",
+        "channel": "utilization"
+      },
+      {
+        "driver": "VER",
+        "circuit": "Great Britain",
+        "channel": "energy"
+      },
+      {
+        "driver": "PER",
+        "circuit": "Great Britain",
+        "channel": "utilization"
+      },
+      {
+        "driver": "PER",
+        "circuit": "Great Britain",
+        "channel": "energy"
+      },
+      {
+        "driver": "LEC",
+        "circuit": "Great Britain",
+        "channel": "utilization"
+      },
+      {
+        "driver": "LEC",
+        "circuit": "Great Britain",
+        "channel": "energy"
+      },
+      {
+        "driver": "SAI",
+        "circuit": "Great Britain",
+        "channel": "utilization"
+      },
+      {
+        "driver": "SAI",
+        "circuit": "Great Britain",
+        "channel": "energy"
+      }
+    ],
+    "thin_resolved_cells_near_floor": []
+  },
+  "honest_statement": "Measured, not asserted: the join produced 8 priors over 1 present circuit(s) ['Great Britain'] (requested ['Great Britain']; skipped [] as absent). Thin exposure is SURFACED, not hidden: 8 priors carry >=1 unresolved severity class (thin_classes), 8 carry non-zero weight_on_thin (an unknown class WIDENS the prior via the fat unresolved sigma term), 8 are fully thin (prior/mean None -- a loud honest absence), and 0 resolved cells cleared the 1.0 floor only narrowly (< 10.0). The join's honest-\u03c3 invariants (uniform-composition reduction, fat unresolved widening, loud identity refusal) are gated by g1's T7 tests; this harness demonstrates them on real observations."
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "crew_id": "constellation/644-physics-fit-headless-hang/g1-implement/implementer/attempt-1",
+    "work_id": "644-physics-fit-headless-hang",
+    "gate": "g1-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/644-physics-fit-headless-hang/g1-implement/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/644-physics-fit-headless-hang/crew-handoffs/g1-implement-handoff.md",
+    "result": ".agent-work/644-physics-fit-headless-hang/crew-handoffs/g1-implement-result.md",
+    "stdout": ".agent-work/644-physics-fit-headless-hang/crew-runs/g1-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/644-physics-fit-headless-hang/crew-runs/g1-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-07-19T03:24:11.978102+00:00",
+    "last_heartbeat": "2026-07-19T03:24:11.978102+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external"
+  }
+]

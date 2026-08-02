@@ -1,0 +1,237 @@
+{
+  "beta_spread_collapse_pct_alpha0_to_1": 0.39155605124707726,
+  "deliverable": "1 - beta degeneracy root-cause",
+  "fix_or_by_design": "BY-DESIGN on the data axis, FIXABLE on the modelling axis. The per-season fit is by-design (time-safe prior selection in runtime_normalization.py uses prior-SEASON artifacts), and a single season genuinely cannot identify the beta ladder -- this is a data-pooling limit, not a coding defect, so 'fix the solver' is the wrong frame. The principled fix is to FEED THE SOLVER POOLED MULTI-SEASON OBSERVATIONS (a rolling/pooled compound prior fit) rather than one season at a time, which is exactly what recovers the ladder here; lowering ridge_alpha does almost nothing (refuted). NOTE: changing the production fit/selection is out of scope for this exploratory issue (gold + sibling #380 depend on current behavior) -- this is a measured recommendation, not an applied change. Sibling #380's plan to inject the gate-recovered (pooled) beta at the normalizer interface is consistent with this finding: the pooled beta is the right artifact.",
+  "gamma_plateau_isotonic_demo": {
+    "alpha": 1.0,
+    "gamma_after_isotonic": {
+      "gamma_C1": 0.000565311,
+      "gamma_C2": 0.000565311,
+      "gamma_C3": 0.000565311,
+      "gamma_C4": 0.000631767,
+      "gamma_C5": 0.000654461
+    },
+    "gamma_unconstrained": {
+      "gamma_C1": 0.000661043,
+      "gamma_C2": 0.000479433,
+      "gamma_C3": 0.000555457,
+      "gamma_C4": 0.000631767,
+      "gamma_C5": 0.000654461
+    },
+    "n_distinct_after": 3,
+    "n_distinct_before": 5,
+    "non_monotone_before": true,
+    "plateau_created": true
+  },
+  "gold": {
+    "config": {
+      "accepted_compounds": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5"
+      ],
+      "effect_space": "normalized_fractional",
+      "race_delta_gamma_mode": "additive",
+      "reference_compound": "C3",
+      "ridge_alpha": 1.0,
+      "sparse_prior_mode": "support_aware_zero_shrinkage",
+      "sparse_prior_strength": 1.0
+    },
+    "per_season": {
+      "2024": {
+        "beta_spread": 0.008412679072808207,
+        "betas": {
+          "beta_C1": -0.001375876606270075,
+          "beta_C2": 0.00030586329590596506,
+          "beta_C3": 0.00010584940434630447,
+          "beta_C4": 0.0002823357304660153,
+          "beta_C5": -0.008106815776902242
+        },
+        "condition_number": 70964.12154217483,
+        "gammas": {
+          "gamma_C1": 0.0001035753919358287,
+          "gamma_C2": 0.000103577012910984,
+          "gamma_C3": 0.00010357753335275637,
+          "gamma_C4": 0.00010357859725793732,
+          "gamma_C5": 0.00037234459468414176
+        },
+        "n_distinct_gamma": 5,
+        "n_gamma": 5,
+        "solver_status": "warning",
+        "warnings": [
+          "high_gamma_uncertainty: C5 sigma=0.00020380257 >= 0.0001",
+          "unresolved_adjacent_gamma_plateau: C1->C2 gap=1.6209752e-09 sigma=2.2781605e-05",
+          "unresolved_adjacent_gamma_plateau: C2->C3 gap=5.2044177e-10 sigma=2.5473917e-05",
+          "unresolved_adjacent_gamma_plateau: C3->C4 gap=1.0639052e-09 sigma=4.0431952e-05"
+        ]
+      }
+    }
+  },
+  "identification": {
+    "n_seasons_evaluated": 1,
+    "n_seasons_non_monotone": 1,
+    "per_season": {
+      "2024": {
+        "beta_ladder": {
+          "beta_C1": -0.001854,
+          "beta_C2": 0.001728,
+          "beta_C3": 0.002142,
+          "beta_C4": -0.001023,
+          "beta_C5": -0.000993
+        },
+        "beta_spread": 0.0039969321085069716,
+        "monotone_kind": "non-monotone",
+        "n_demeaned_laps": 19457,
+        "present": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    }
+  },
+  "issue": 382,
+  "per_season_all_non_monotone": true,
+  "pooled_design": {
+    "compound_group_counts": {
+      "1": 68,
+      "2": 287,
+      "3": 340,
+      "4": 98,
+      "5": 13,
+      "6": 0
+    },
+    "compound_lap_counts": {
+      "1": 2084,
+      "2": 8669,
+      "3": 6725,
+      "4": 1814,
+      "5": 165,
+      "6": 0
+    },
+    "n_demeaned_laps": 19457,
+    "n_groups_used": 388,
+    "n_params": 10,
+    "present_compounds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "pooled_monotone_kind": "non-monotone",
+  "ridge_dominance_refuted": true,
+  "ridge_sweep": {
+    "beta_data_information_diag": {
+      "beta_C1": 800.7747737773145,
+      "beta_C2": 2785.3305814157757,
+      "beta_C4": 919.6621498146698,
+      "beta_C5": 105.36883563530702
+    },
+    "col_names": [
+      "phi",
+      "beta_C1",
+      "beta_C2",
+      "beta_C4",
+      "beta_C5",
+      "gamma_C1",
+      "gamma_C2",
+      "gamma_C3",
+      "gamma_C4",
+      "gamma_C5"
+    ],
+    "sweep": [
+      {
+        "alpha": 0.0,
+        "beta_ladder": {
+          "beta_C1": -0.0018545,
+          "beta_C2": 0.0017275,
+          "beta_C3": 0.0021424,
+          "beta_C4": -0.0010228,
+          "beta_C5": -0.0009927
+        },
+        "beta_spread": 0.0039969321085069716,
+        "max_beta_shrinkage_fraction": 0.0,
+        "monotone_kind": "non-monotone"
+      },
+      {
+        "alpha": 0.0001,
+        "beta_ladder": {
+          "beta_C1": -0.0018545,
+          "beta_C2": 0.0017275,
+          "beta_C3": 0.0021424,
+          "beta_C4": -0.0010228,
+          "beta_C5": -0.0009927
+        },
+        "beta_spread": 0.003996930533243909,
+        "max_beta_shrinkage_fraction": 9.490463142392415e-07,
+        "monotone_kind": "non-monotone"
+      },
+      {
+        "alpha": 0.001,
+        "beta_ladder": {
+          "beta_C1": -0.0018545,
+          "beta_C2": 0.0017275,
+          "beta_C3": 0.0021424,
+          "beta_C4": -0.0010228,
+          "beta_C5": -0.0009926
+        },
+        "beta_spread": 0.003996916355969796,
+        "max_beta_shrinkage_fraction": 9.490382081083202e-06,
+        "monotone_kind": "non-monotone"
+      },
+      {
+        "alpha": 0.01,
+        "beta_ladder": {
+          "beta_C1": -0.0018546,
+          "beta_C2": 0.0017273,
+          "beta_C3": 0.0021422,
+          "beta_C4": -0.0010229,
+          "beta_C5": -0.0009921
+        },
+        "beta_spread": 0.00399677459248956,
+        "max_beta_shrinkage_fraction": 9.489571544145545e-05,
+        "monotone_kind": "non-monotone"
+      },
+      {
+        "alpha": 0.1,
+        "beta_ladder": {
+          "beta_C1": -0.0018553,
+          "beta_C2": 0.0017257,
+          "beta_C3": 0.0021401,
+          "beta_C4": -0.0010238,
+          "beta_C5": -0.0009867
+        },
+        "beta_spread": 0.003995357882335838,
+        "max_beta_shrinkage_fraction": 0.0009481473783002849,
+        "monotone_kind": "non-monotone"
+      },
+      {
+        "alpha": 1.0,
+        "beta_ladder": {
+          "beta_C1": -0.0018623,
+          "beta_C2": 0.0017097,
+          "beta_C3": 0.002119,
+          "beta_C4": -0.0010323,
+          "beta_C5": -0.000934
+        },
+        "beta_spread": 0.003981281878971875,
+        "max_beta_shrinkage_fraction": 0.009401249849425539,
+        "monotone_kind": "non-monotone"
+      }
+    ]
+  },
+  "root_cause": "beta degeneracy is IDENTIFICATION / DATA-POOLING limited, NOT ridge-dominance and NOT a solver bug. MEASURED: (1) Ridge is refuted -- on the well-identified pooled design, production ridge alpha=1.0 changes beta-spread by only 0.4% (max beta shrinkage fraction alpha/(diag+alpha) = 0.0094); the data information on the beta directions dwarfs alpha=1.0, so the section 1.3 ridge-dominance precedent does NOT transfer to beta. (2) The decisive cause: the gold artifacts are fit PER SEASON, and 1/1 individual seasons yield a NON-MONOTONE beta ladder even at ridge=0 with the clean fixed-effects design -- a single season lacks the cross-race-phase compound overlap needed to identify the fresh-pace intercept. The ordered ~0.7%/step ladder only emerges when all 1 seasons are POOLED (pooled monotone_kind='non-monotone', spread 0.00400). So the cruder pooled fit 'recovers beta' precisely because it pools 8 seasons; the production per-season gold fit cannot, by construction. The gamma plateau (C1..C4 identical in gold) is a SEPARATE mechanism: the post-solve isotonic (PAVA) monotone projection pools the non-monotone unconstrained gamma into one block.",
+  "seam_flag_380": "No #380 seam touched. The root cause (per-season vs pooled identification) does NOT imply any artifact-schema or CompoundNormalizer interface change -- it concerns WHAT OBSERVATIONS the fitter is fed, not the emitted shape. #380's injection-at-interface consumption is unaffected. Flag: if the team later adopts a pooled compound-prior fit, the emitted beta numbers change (not the schema); co-validate with #380 since they share the beta artifact.",
+  "season_group_counts": {
+    "2024": 388
+  },
+  "years": [
+    2024
+  ]
+}

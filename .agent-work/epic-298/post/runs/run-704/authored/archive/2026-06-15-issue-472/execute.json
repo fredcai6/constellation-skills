@@ -1,0 +1,243 @@
+{
+  "work_id": "issue-472",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement", "g1-review", "g1-integrate",
+    "g2-implement", "g2-review", "g2-integrate",
+    "g3-implement", "g3-review", "g3-integrate",
+    "g4-implement", "g4-review", "g4-integrate",
+    "g5-implement", "g5-review", "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Context already loaded in parent spine. Confirm frozen plan: 5 independent gaps, each a bounded fix. Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "execution context confirmed", "check": null, "satisfied": false}],
+      "constraints": ["py not python", "worktree C:/Programs/f1Brainz-worktrees/cmdr-472", "never modify live params/gold"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Gap 1 (promote_gold repoint + runbook): implement",
+      "imperative": "Dispatch implementer for gap 1. Task: (a) In scripts/promote_gold.py, after the candidate is moved to params/gold/ and _finalize_provenance runs, scan reports/evo/ for any fusion_<slug>.sampled_runtime_manifest.json whose provenance.static_fusion_config_path contains a slug-named path (fusion_<slug>.json); repoint it to params/gold/fusion/fusion.json. This is a targeted file scan + rewrite in the promote() function after step 3. (b) In docs/evo/analysis_refresh.md, add a mandatory post-promotion step: 'After promotion, run py scripts/run_pipeline_validation.py --profile compact and verify all 7 sections are pass before committing.' Place it in the Gold lifecycle & promotion section. Test: add a unit test in tests/unit/ that creates a synthetic manifest with a slug-named static_fusion_config_path, calls promote() with a temp dir fixture, and asserts the repointed path is params/gold/fusion/fusion.json in the promoted manifest.",
+      "preconditions": [{"id": "p1", "statement": "e0-context complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": ["py not python", "test-led", "do not run promote against live params/gold", "simplification_limits on touched paths"],
+      "anchors": {
+        "structural": ["struct:evo — scripts/promote_gold.py, scripts/migrate_gold_to_constant_names.py, src/evo_predictor/gold_provenance.py"],
+        "capability": ["gold promotion: constant-name live gold at params/gold/"],
+        "constraint": ["never modify live params/gold beyond read; use temp dirs in tests"],
+        "decision": ["constant-name gold design: fusion.json not fusion_<slug>.json in params/gold/fusion/"],
+        "evidence": ["test: synthetic manifest repoint passes; simplification_limits clean"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Gap 1: review",
+      "imperative": "Review the g1 implementer result. Verify: (1) promote() repoints static_fusion_config_path in all matching reports/evo/ manifests after the move; (2) runbook addition is in the correct location and uses a valid command; (3) test exercises the repoint logic with a fixture, not the live gold; (4) simplification_limits ran clean on touched paths.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Gap 1: integrate",
+      "imperative": "Check g1 REVIEW_RESULT verdict. APPROVE: run py -m pytest tests/unit/ -k promote_gold -v --tb=short in the worktree; confirm pass. Commit: 'fix(promote_gold): repoint static_fusion_config_path after constant-name promotion + runbook mandate'. BLOCK: rework.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "promote_gold repoint test passes", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-472 && py -m pytest tests/unit/ -k promote -v --tb=short"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Gap 2 (assemble_trained_sampled_runtime_manifest anchor-drop warn + runbook): implement",
+      "imperative": "Dispatch implementer for gap 2. Task: (a) In scripts/assemble_trained_sampled_runtime_manifest.py, add a loud warning (print to stderr + logging.warning) when the script is invoked WITHOUT --source-manifest AND the gold_details report's sampled_runtime_manifest contains an active quali_pace_anchor (enabled=true). Message: 'WARNING: assembling trained manifest without --source-manifest will DROP the quali_pace_anchor (active in source gold). Use finish_step3b.py or pass --source-manifest to preserve the anchor.' The anchor-active check reads the gold manifest if discoverable (best-effort; do not fail if not found). (b) In docs/evo/analysis_refresh.md Step 3b, replace the assemble_trained_sampled_runtime_manifest.py invocation with the finish_step3b.py / write_trained_sampled_runtime_manifest canonical path. Update the note to explain: 'assemble_trained_sampled_runtime_manifest.py is a recovery script for environments without outputs/evo_runs; it supports --source-manifest to preserve the anchor but is NOT the canonical Step 3b path when gold artifacts are present.' Test: unit test that calls the script's warn-check function with a manifest containing enabled=true anchor and no --source-manifest, asserts the warning fires.",
+      "preconditions": [{"id": "p1", "statement": "g1-integrate complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": ["py not python", "test-led", "do not change the anchor-preservation behavior of the existing --source-manifest path"],
+      "anchors": {
+        "structural": ["struct:evo — scripts/assemble_trained_sampled_runtime_manifest.py, src/evo_predictor/fusion_training/_manifest.py"],
+        "capability": ["trained manifest assembly: anchor preservation via --source-manifest"],
+        "constraint": ["anchor-drop fix is warn/guard, not breakage of existing invocation contract"],
+        "decision": ["finish_step3b.py / write_trained_sampled_runtime_manifest is canonical Step 3b path when outputs/evo_runs present"],
+        "evidence": ["test: warn fires when anchor active and no --source-manifest"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Gap 2: review",
+      "imperative": "Review g2 implementer result. Verify: (1) warning fires when anchor is active and no --source-manifest; (2) --source-manifest path is unchanged; (3) runbook Step 3b directs to write_trained_sampled_runtime_manifest/finish_step3b.py as canonical; (4) unit test exercises the warn path; (5) simplification_limits clean.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Gap 2: integrate",
+      "imperative": "Check g2 REVIEW_RESULT verdict. APPROVE: run py -m pytest tests/unit/ -k assemble_trained -v --tb=short; confirm pass. Commit: 'fix(assemble-manifest): warn on anchor-drop when no --source-manifest + runbook Step 3b canonical path'. BLOCK: rework.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "anchor-drop warn test passes", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-472 && py -m pytest tests/unit/ -k assemble_trained -v --tb=short"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Gap 3 (mtime-fragile manifest auto-discovery): implement",
+      "imperative": "Dispatch implementer for gap 3. Task: In scripts/run_sampled_runtime_comparison.py, modify _discover_latest_glob() to raise ManifestResolutionError (or a new ValueError with a clear message) when MORE THAN ONE candidate matches the glob AND all candidates share the same mtime (same-second resolution is fine: compare st_mtime as integers/rounded to 1s). Message must say: 'Ambiguous manifest auto-discovery: N candidates share the same mtime for pattern <pattern>; pass --default-manifest/--trained-manifest explicitly.' Also update _manifest_candidate_paths to pass through the ambiguity signal. In docs/evo/analysis_refresh.md Step 4, add a note: 'After a batch manifest rewrite (materialize step), mtimes may be identical. Always pass --default-manifest and --trained-manifest explicitly when re-running Step 4 after Step 3b to avoid wrong-manifest scoring.' Test: unit test for _discover_latest_glob with two temp files at identical mtime; assert it raises with the expected message.",
+      "preconditions": [{"id": "p1", "statement": "g2-integrate complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": ["py not python", "test-led", "explicit path still works; only auto-discovery raises on ambiguity"],
+      "anchors": {
+        "structural": ["struct:evo — scripts/run_sampled_runtime_comparison.py"],
+        "capability": ["sampled runtime comparison: manifest resolution"],
+        "constraint": ["named/explicit failures over silent fallbacks (project tenet)"],
+        "decision": ["ambiguous same-mtime auto-discovery must refuse, not silently pick"],
+        "evidence": ["test: same-mtime candidates raise; single-candidate and explicit path still resolve"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Gap 3: review",
+      "imperative": "Review g3 implementer result. Verify: (1) same-mtime multi-candidate set raises with a clear message naming the pattern and candidate count; (2) single-candidate and explicit --default-manifest/--trained-manifest paths unaffected; (3) runbook Step 4 warns about the explicit-manifest pattern; (4) unit test covers the ambiguity case; (5) simplification_limits clean.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Gap 3: integrate",
+      "imperative": "Check g3 REVIEW_RESULT verdict. APPROVE: run py -m pytest tests/unit/ -k sampled_runtime_comparison -v --tb=short (or the specific test file); confirm pass. Commit: 'fix(run-sampled-comparison): refuse ambiguous same-mtime manifest auto-discovery + runbook note'. BLOCK: rework.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "ambiguous-mtime test passes", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-472 && py -m pytest tests/unit/ -k sampled_runtime_comparison -v --tb=short"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Gap 4 (run_tests.py timeout + --cov guard): implement",
+      "imperative": "Dispatch implementer for gap 4. Task: (a) In run_tests.py run_command(), change the hardcoded timeout=300 to a parameter (default 300 for unit, 900 for integration — use 900s for integration to cover the 7-10min NN tests). Alternatively add a per-call override: run_unit_tests() passes timeout=300, run_integration_tests() passes timeout=900. The run_command() signature gains timeout: int = 300. (b) In run_unit_tests(), wrap --cov/--cov-report flags in a check: import importlib; pytest_cov_available = importlib.util.find_spec('pytest_cov') is not None. Only pass --cov/--cov-report flags if pytest_cov_available. Print a warning when cov skipped. (c) Update TESTING.md: document that py run_tests.py --integration uses a 900s timeout, and that coverage requires pytest-cov (py -m pip install pytest-cov). Test: unit test that run_command receives the correct timeout kwarg for integration vs unit (mock subprocess.run). Simplification_limits on run_tests.py.",
+      "preconditions": [{"id": "p1", "statement": "g3-integrate complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": ["py not python", "test-led where testable; verify --unit without pytest-cov installed works (use importlib.util.find_spec)"],
+      "anchors": {
+        "structural": ["run_tests.py, TESTING.md"],
+        "capability": ["test runner: integration timeout, coverage conditional"],
+        "constraint": ["run_tests.py is a scripts-layer helper, not src/; simplification_limits still applies"],
+        "decision": ["900s integration timeout covers documented 7-10min NN tests"],
+        "evidence": ["test: run_command timeout kwarg; --unit without pytest-cov doesn't crash"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Gap 4: review",
+      "imperative": "Review g4 implementer result. Verify: (1) integration path uses timeout=900 (or >= 600); (2) --cov flags are conditional on pytest-cov importability; (3) TESTING.md updated with accurate timeout and cov install note; (4) test covers timeout routing and cov-guard; (5) simplification_limits clean on run_tests.py.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g4-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Gap 4: integrate",
+      "imperative": "Check g4 REVIEW_RESULT. APPROVE: run py -m pytest tests/unit/ -k run_tests -v --tb=short; confirm pass. Commit: 'fix(run_tests): raise integration timeout to 900s; guard --cov on pytest-cov availability'. BLOCK: rework.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "run_tests unit tests pass", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-472 && py -m pytest tests/unit/ -k run_tests -v --tb=short"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "Gap 5 (oracle_all_states permutation ValueError): implement",
+      "imperative": "Dispatch implementer for gap 5. Root-cause: oracle_lap_n_positions from get_race_start_order may have fewer drivers than the race features field (e.g. a driver recorded Q but not race_start_order for that round), causing the strict-permutation check in _validate_sampled_positions to fail. The oracle_all_states backtest then raises non-fatally inside the runner.py for-loop, leaving oracle_all_states event_count=0. Fix: In src/evo_predictor/sampled_runtime.py (or wherever oracle positions are applied before _validate_sampled_positions), when oracle_all_states is the mode and oracle_lap_n_positions does not cover all feature drivers, convert the missing drivers' lap-N positions to use their quali positions as fallback (already available in oracle_grid_positions from the same race) — dense-filling the field to a valid permutation. If no quali position is available for a missing driver, skip that driver's oracle position (keep original model prediction for that slot) rather than raising. The fix must be in the oracle-state application layer (sampled_runtime.predict or _apply_oracle_state), NOT in _validate_sampled_positions (that validator is correct). Test: unit test with synthetic oracle_all_states inputs where oracle_lap_n is missing one driver; assert the backtest scores successfully (no ValueError) and the missing driver falls back to quali position.",
+      "preconditions": [{"id": "p1", "statement": "g4-integrate complete", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": ["py not python", "test-led", "do not change _validate_sampled_positions contract", "if root-cause differs from hypothesis, implementer surfaces a decision candidate before fixing"],
+      "anchors": {
+        "structural": ["struct:evo — src/evo_predictor/sampled_runtime.py, src/evo_predictor/sample_state_adapter.py, src/evo_predictor/sampled_backtest.py"],
+        "capability": ["oracle_all_states diagnostic backtest: combines grid + lap-N oracle inputs"],
+        "constraint": ["diagnostic backtest is non-fatal; fix must be clean skip-with-reason not a silent wrong answer"],
+        "decision": ["if root-cause is structural (not a driver-count mismatch), surface as decision candidate before fixing"],
+        "evidence": ["test: oracle_all_states with partial lap-N succeeds or skips cleanly"],
+        "confidence_flags": ["root-cause hypothesis: oracle_lap_n driver set smaller than feature field — verify in code before implementing"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "Gap 5: review",
+      "imperative": "Review g5 implementer result. Verify: (1) oracle_all_states no longer raises ValueError for partial oracle_lap_n sets; (2) fix is in the right layer (oracle application, not the validator); (3) any skip path is clean (skip-with-reason, not silent); (4) unit test exercises the partial-oracle case; (5) simplification_limits clean on touched src/ paths.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g5", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g5-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "Gap 5: integrate",
+      "imperative": "Check g5 REVIEW_RESULT. APPROVE: run py -m pytest tests/unit/evo_predictor/ -v --tb=short; confirm pass. Also run py -m pytest tests/unit/ -k oracle -v --tb=short. Commit: 'fix(oracle-all-states): handle partial oracle_lap_n driver set cleanly'. BLOCK: rework.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g5", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "evo unit suite passes", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-472 && py -m pytest tests/unit/evo_predictor/ -v --tb=short"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

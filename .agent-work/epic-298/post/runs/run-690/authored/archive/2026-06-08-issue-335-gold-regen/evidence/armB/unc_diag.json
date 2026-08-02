@@ -1,0 +1,1089 @@
+{
+  "created_at_utc": "2026-06-08T08:45:42+00:00",
+  "eval_year": 2025,
+  "module_count": 12,
+  "modules": [
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.1,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.3944709060290921,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.1314205589094328,
+        "corr_field_std_vs_rank_mae": -0.3158649956070697,
+        "corr_sigma_pi_trace_vs_nll": 0.3987357817425675,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.6660563624152414
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "constructor",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 3,
+        "high_uncertainty_good_result": 0,
+        "low_uncertainty_bad_result": 0,
+        "low_uncertainty_good_result": 3,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "race_weekend",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.6256606504321098,
+          "mean_pairwise_sign_accuracy": 0.6791666746139526,
+          "mean_rank_mae": 2.2750000000000004,
+          "mean_spearman": 0.4651515151515151
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.786634324118495,
+          "mean_pairwise_sign_accuracy": 0.7749999985098839,
+          "mean_rank_mae": 1.375,
+          "mean_spearman": 0.7179653679653679
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.756612990051508,
+          "mean_pairwise_sign_accuracy": 0.7625000029802322,
+          "mean_rank_mae": 1.65,
+          "mean_spearman": 0.7036796536796536
+        }
+      ],
+      "module_name": "constructor_quali_power_from_race_weekend",
+      "raw_objective": 0.9076155094649678,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8084736689925194,
+          "mean_pairwise_sign_accuracy": 0.7888888865709305,
+          "mean_rank_mae": 1.3333333333333333,
+          "mean_spearman": 0.7545454545454544
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.7247529439628124,
+          "mean_pairwise_sign_accuracy": 0.7361111119389534,
+          "mean_rank_mae": 1.7666666666666666,
+          "mean_spearman": 0.6413419913419913
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.635681351646781,
+          "mean_pairwise_sign_accuracy": 0.6916666775941849,
+          "mean_rank_mae": 2.2,
+          "mean_spearman": 0.49090909090909085
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "quali"
+    },
+    {
+      "alpha": 2.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.1,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.2501631695211411,
+      "correlations": {
+        "corr_field_std_vs_nll": 0.7716488488090625,
+        "corr_field_std_vs_rank_mae": -0.45229682646263847,
+        "corr_sigma_pi_trace_vs_nll": -0.43095710877497073,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.4657377371448533
+      },
+      "diagnostic_flags": [
+        "sigma_error_correlation_wrong_sign"
+      ],
+      "entity_scope": "constructor",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 3,
+        "low_uncertainty_bad_result": 1,
+        "low_uncertainty_good_result": 2,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "recent_history",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.6062149703502655,
+          "mean_pairwise_sign_accuracy": 0.7513888999819756,
+          "mean_rank_mae": 1.7000000000000002,
+          "mean_spearman": 0.7136363636363635
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.7199821919202805,
+          "mean_pairwise_sign_accuracy": 0.8222222253680229,
+          "mean_rank_mae": 1.325,
+          "mean_spearman": 0.7848484848484848
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.9642023518681526,
+          "mean_pairwise_sign_accuracy": 0.7472222372889519,
+          "mean_rank_mae": 1.7750000000000001,
+          "mean_spearman": 0.6227272727272726
+        }
+      ],
+      "module_name": "constructor_quali_power_from_recent_history",
+      "raw_objective": 0.8371604077364206,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.7111325860023499,
+          "mean_pairwise_sign_accuracy": 0.8388888984918594,
+          "mean_rank_mae": 1.2,
+          "mean_spearman": 0.8348484848484848
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.9007971286773682,
+          "mean_pairwise_sign_accuracy": 0.7625000104308128,
+          "mean_rank_mae": 1.65,
+          "mean_spearman": 0.6666666666666665
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.6784697994589806,
+          "mean_pairwise_sign_accuracy": 0.7194444537162781,
+          "mean_rank_mae": 1.9500000000000002,
+          "mean_spearman": 0.6196969696969696
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "quali"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.1,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.3152234424689336,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.05449318331736783,
+        "corr_field_std_vs_rank_mae": -0.09128723016937346,
+        "corr_sigma_pi_trace_vs_nll": 0.01181308538694841,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.2060027741967059
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "constructor",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 3,
+        "low_uncertainty_bad_result": 2,
+        "low_uncertainty_good_result": 2,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "race_weekend",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.1007607877254486,
+          "mean_pairwise_sign_accuracy": 0.8416666612029076,
+          "mean_rank_mae": 1.0416666666666665,
+          "mean_spearman": 0.8064935064935065
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.0272632706910372,
+          "mean_pairwise_sign_accuracy": 0.8444444388151169,
+          "mean_rank_mae": 1.0583333333333333,
+          "mean_spearman": 0.7967532467532468
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.062610350549221,
+          "mean_pairwise_sign_accuracy": 0.8624999895691872,
+          "mean_rank_mae": 1.0166666666666666,
+          "mean_spearman": 0.8216450216450215
+        }
+      ],
+      "module_name": "constructor_race_power_from_race_weekend",
+      "raw_objective": 0.6126697073947543,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.0449094995856285,
+          "mean_pairwise_sign_accuracy": 0.8583333194255829,
+          "mean_rank_mae": 0.9666666666666666,
+          "mean_spearman": 0.8142857142857143
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.0320754665881395,
+          "mean_pairwise_sign_accuracy": 0.8388888910412788,
+          "mean_rank_mae": 1.125,
+          "mean_spearman": 0.7939393939393938
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.1136494427919388,
+          "mean_pairwise_sign_accuracy": 0.8513888791203499,
+          "mean_rank_mae": 1.025,
+          "mean_spearman": 0.8166666666666667
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.1,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.3452974804378304,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.3905104092440015,
+        "corr_field_std_vs_rank_mae": -0.5265168026590125,
+        "corr_sigma_pi_trace_vs_nll": 0.3593655297213789,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.5740209078646807
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "constructor",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 4,
+        "high_uncertainty_good_result": 1,
+        "low_uncertainty_bad_result": 2,
+        "low_uncertainty_good_result": 1,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "recent_history",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.7500236295163631,
+          "mean_pairwise_sign_accuracy": 0.7180555611848831,
+          "mean_rank_mae": 1.95,
+          "mean_spearman": 0.55
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.7723961025476456,
+          "mean_pairwise_sign_accuracy": 0.7319444492459297,
+          "mean_rank_mae": 1.95,
+          "mean_spearman": 0.6363636363636362
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8063832372426987,
+          "mean_pairwise_sign_accuracy": 0.7736111134290695,
+          "mean_rank_mae": 1.775,
+          "mean_spearman": 0.659090909090909
+        }
+      ],
+      "module_name": "constructor_race_power_from_recent_history",
+      "raw_objective": 0.8458599488347832,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.7720903754234314,
+          "mean_pairwise_sign_accuracy": 0.7486111149191856,
+          "mean_rank_mae": 1.8250000000000002,
+          "mean_spearman": 0.6606060606060605
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8658682033419609,
+          "mean_pairwise_sign_accuracy": 0.7722222283482552,
+          "mean_rank_mae": 1.625,
+          "mean_spearman": 0.6984848484848485
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.6908443905413151,
+          "mean_pairwise_sign_accuracy": 0.7027777805924416,
+          "mean_rank_mae": 2.225,
+          "mean_spearman": 0.48636363636363633
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.05,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.14845750486971931,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.21937972024727154,
+        "corr_field_std_vs_rank_mae": -0.34047042517415865,
+        "corr_sigma_pi_trace_vs_nll": 0.08110423564332252,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.2525957635128779
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "constructor",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 1,
+        "low_uncertainty_bad_result": 1,
+        "low_uncertainty_good_result": 1,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "race_weekend",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.3655610382556915,
+          "mean_pairwise_sign_accuracy": 0.8999999910593033,
+          "mean_rank_mae": 0.725,
+          "mean_spearman": 0.8954545454545454
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.3864634749479592,
+          "mean_pairwise_sign_accuracy": 0.9055555462837219,
+          "mean_rank_mae": 0.7166666666666667,
+          "mean_spearman": 0.9049783549783549
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.6354190483689308,
+          "mean_pairwise_sign_accuracy": 0.9555555507540703,
+          "mean_rank_mae": 0.3416666666666667,
+          "mean_spearman": 0.9625541125541124
+        }
+      ],
+      "module_name": "constructor_race_start_power_from_race_weekend",
+      "raw_objective": 0.350429464314512,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.4275318649597466,
+          "mean_pairwise_sign_accuracy": 0.9236111044883728,
+          "mean_rank_mae": 0.5583333333333333,
+          "mean_spearman": 0.9145021645021645
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.5945697203278542,
+          "mean_pairwise_sign_accuracy": 0.9444444328546524,
+          "mean_rank_mae": 0.45,
+          "mean_spearman": 0.9545454545454545
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.3653419762849808,
+          "mean_pairwise_sign_accuracy": 0.8930555507540703,
+          "mean_rank_mae": 0.775,
+          "mean_spearman": 0.8939393939393938
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race_start"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.05,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.13622863429216028,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.3034466656880242,
+        "corr_field_std_vs_rank_mae": -0.2707213802755707,
+        "corr_sigma_pi_trace_vs_nll": -0.05051097040506342,
+        "corr_sigma_pi_trace_vs_rank_mae": -0.14126876154514284
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "constructor",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 1,
+        "low_uncertainty_bad_result": 2,
+        "low_uncertainty_good_result": 2,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "recent_history",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.2645786926150322,
+          "mean_pairwise_sign_accuracy": 0.8861110955476761,
+          "mean_rank_mae": 0.8250000000000001,
+          "mean_spearman": 0.8878787878787878
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.4453654047101736,
+          "mean_pairwise_sign_accuracy": 0.9277777746319771,
+          "mean_rank_mae": 0.5750000000000001,
+          "mean_spearman": 0.9227272727272726
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.5935516133904457,
+          "mean_pairwise_sign_accuracy": 0.9291666597127914,
+          "mean_rank_mae": 0.55,
+          "mean_spearman": 0.9469696969696969
+        }
+      ],
+      "module_name": "constructor_race_start_power_from_recent_history",
+      "raw_objective": 0.3113196802084654,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.3960616569966078,
+          "mean_pairwise_sign_accuracy": 0.9041666612029076,
+          "mean_rank_mae": 0.7,
+          "mean_spearman": 0.9015151515151514
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.5806804895401,
+          "mean_pairwise_sign_accuracy": 0.9402777627110481,
+          "mean_rank_mae": 0.5249999999999999,
+          "mean_spearman": 0.959090909090909
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.3267535641789436,
+          "mean_pairwise_sign_accuracy": 0.8986111059784889,
+          "mean_rank_mae": 0.7250000000000001,
+          "mean_spearman": 0.896969696969697
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race_start"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.5,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.26270814045732743,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.43511609251020456,
+        "corr_field_std_vs_rank_mae": -0.5041319289044193,
+        "corr_sigma_pi_trace_vs_nll": 0.5711963341611839,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.6855657532599886
+      },
+      "diagnostic_flags": [],
+      "entity_scope": "driver",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 3,
+        "high_uncertainty_good_result": 0,
+        "low_uncertainty_bad_result": 1,
+        "low_uncertainty_good_result": 1,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "race_weekend",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.7176568955183029,
+          "mean_pairwise_sign_accuracy": 0.6815789490938187,
+          "mean_rank_mae": 4.387499999999999,
+          "mean_spearman": 0.4892857142857142
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.804930429905653,
+          "mean_pairwise_sign_accuracy": 0.7164473757147789,
+          "mean_rank_mae": 3.825,
+          "mean_spearman": 0.5930451127819549
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8773274347186089,
+          "mean_pairwise_sign_accuracy": 0.7664473727345467,
+          "mean_rank_mae": 3.225,
+          "mean_spearman": 0.7120300751879698
+        }
+      ],
+      "module_name": "driver_quali_power_from_race_weekend",
+      "raw_objective": 0.9944015055471963,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8080487288534641,
+          "mean_pairwise_sign_accuracy": 0.7240131571888924,
+          "mean_rank_mae": 3.7125,
+          "mean_spearman": 0.6026315789473684
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.9079934880137444,
+          "mean_pairwise_sign_accuracy": 0.7759868502616882,
+          "mean_rank_mae": 3.0374999999999996,
+          "mean_spearman": 0.7462406015037593
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.6838725432753563,
+          "mean_pairwise_sign_accuracy": 0.6644736900925636,
+          "mean_rank_mae": 4.6875,
+          "mean_spearman": 0.4454887218045112
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "quali"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.5,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.2501464874707557,
+      "correlations": {
+        "corr_field_std_vs_nll": 0.8904507509273424,
+        "corr_field_std_vs_rank_mae": -0.6538055449525373,
+        "corr_sigma_pi_trace_vs_nll": 0.8548216300034901,
+        "corr_sigma_pi_trace_vs_rank_mae": -0.5965798794197132
+      },
+      "diagnostic_flags": [
+        "sigma_error_correlation_wrong_sign"
+      ],
+      "entity_scope": "driver",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 1,
+        "low_uncertainty_bad_result": 1,
+        "low_uncertainty_good_result": 2,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "recent_history",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.07508435472846031,
+          "mean_pairwise_sign_accuracy": 0.7078947462141514,
+          "mean_rank_mae": 4.175,
+          "mean_spearman": 0.5656015037593984
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.13165736012160778,
+          "mean_pairwise_sign_accuracy": 0.7799342051148415,
+          "mean_rank_mae": 3.3,
+          "mean_spearman": 0.713157894736842
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.14899350237101316,
+          "mean_pairwise_sign_accuracy": 0.7427631542086601,
+          "mean_rank_mae": 3.8249999999999997,
+          "mean_spearman": 0.6400375939849623
+        }
+      ],
+      "module_name": "driver_quali_power_from_recent_history",
+      "raw_objective": 0.959996709035794,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.049285195767879486,
+          "mean_pairwise_sign_accuracy": 0.7269736863672733,
+          "mean_rank_mae": 4.025,
+          "mean_spearman": 0.5868421052631578
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.15078697446733713,
+          "mean_pairwise_sign_accuracy": 0.7457236796617508,
+          "mean_rank_mae": 3.55,
+          "mean_spearman": 0.6671052631578948
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": 0.15566304698586464,
+          "mean_pairwise_sign_accuracy": 0.7578947395086288,
+          "mean_rank_mae": 3.7249999999999996,
+          "mean_spearman": 0.6648496240601502
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "quali"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.1,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.5708542046250767,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.024701257956773852,
+        "corr_field_std_vs_rank_mae": 0.06386953190280387,
+        "corr_sigma_pi_trace_vs_nll": 0.19637518406284624,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.15473556716802778
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "driver",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 0,
+        "low_uncertainty_bad_result": 1,
+        "low_uncertainty_good_result": 1,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "race_weekend",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.9965730234980583,
+          "mean_pairwise_sign_accuracy": 0.7889275848865509,
+          "mean_rank_mae": 2.650077399380805,
+          "mean_spearman": 0.736844869526758
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8346588648855686,
+          "mean_pairwise_sign_accuracy": 0.7574604526162148,
+          "mean_rank_mae": 3.249544203646371,
+          "mean_spearman": 0.645374465575704
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.076426412910223,
+          "mean_pairwise_sign_accuracy": 0.8148778825998306,
+          "mean_rank_mae": 2.6291666666666664,
+          "mean_spearman": 0.7693977591036414
+        }
+      ],
+      "module_name": "driver_race_power_from_race_weekend",
+      "raw_objective": 0.956354167537766,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8441588059067726,
+          "mean_pairwise_sign_accuracy": 0.7587633356451988,
+          "mean_rank_mae": 3.2637254901960784,
+          "mean_spearman": 0.6526334217897685
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.1426389068365097,
+          "mean_pairwise_sign_accuracy": 0.8272660821676254,
+          "mean_rank_mae": 2.351973684210526,
+          "mean_spearman": 0.8074561403508771
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.9208605885505676,
+          "mean_pairwise_sign_accuracy": 0.775236502289772,
+          "mean_rank_mae": 2.913089095287238,
+          "mean_spearman": 0.6915275320654578
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.1,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.47187232239222526,
+      "correlations": {
+        "corr_field_std_vs_nll": 0.04597735660827958,
+        "corr_field_std_vs_rank_mae": 0.1429614152471537,
+        "corr_sigma_pi_trace_vs_nll": 0.2882154124859761,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.26813496886402105
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "driver",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 0,
+        "low_uncertainty_bad_result": 0,
+        "low_uncertainty_good_result": 4,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "recent_history",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.9061511904001236,
+          "mean_pairwise_sign_accuracy": 0.7662366777658463,
+          "mean_rank_mae": 3.0396886824905405,
+          "mean_spearman": 0.6689453412944124
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.1600013300776482,
+          "mean_pairwise_sign_accuracy": 0.8378311023116112,
+          "mean_rank_mae": 2.2241142070863433,
+          "mean_spearman": 0.8250566674038036
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.955436937045306,
+          "mean_pairwise_sign_accuracy": 0.7752924039959908,
+          "mean_rank_mae": 3.106578947368421,
+          "mean_spearman": 0.6897556390977444
+        }
+      ],
+      "module_name": "driver_race_power_from_recent_history",
+      "raw_objective": 0.9943966847797588,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.1740681678056717,
+          "mean_pairwise_sign_accuracy": 0.8423998132348061,
+          "mean_rank_mae": 2.1806931544547643,
+          "mean_spearman": 0.8360529080053073
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -0.8392809028737247,
+          "mean_pairwise_sign_accuracy": 0.7392651438713074,
+          "mean_rank_mae": 3.4374999999999996,
+          "mean_spearman": 0.6126382131800088
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.0082403868436813,
+          "mean_pairwise_sign_accuracy": 0.7976952269673347,
+          "mean_rank_mae": 2.75218868249054,
+          "mean_spearman": 0.7350665266106442
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.05,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.314497668248569,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.2327547363870746,
+        "corr_field_std_vs_rank_mae": -0.30959052342157445,
+        "corr_sigma_pi_trace_vs_nll": 0.3172672737884615,
+        "corr_sigma_pi_trace_vs_rank_mae": 0.27958502957285397
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "driver",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 2,
+        "high_uncertainty_good_result": 1,
+        "low_uncertainty_bad_result": 0,
+        "low_uncertainty_good_result": 3,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "race_weekend",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.402497131144628,
+          "mean_pairwise_sign_accuracy": 0.8830796405673027,
+          "mean_rank_mae": 1.7482456140350877,
+          "mean_spearman": 0.8776758071649712
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.7152439653873444,
+          "mean_pairwise_sign_accuracy": 0.9286184161901474,
+          "mean_rank_mae": 1.1375,
+          "mean_spearman": 0.9548872180451127
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.6181592866778374,
+          "mean_pairwise_sign_accuracy": 0.915175125002861,
+          "mean_rank_mae": 1.1813725490196076,
+          "mean_spearman": 0.9264415634674923
+        }
+      ],
+      "module_name": "driver_race_start_power_from_race_weekend",
+      "raw_objective": 0.9057727578810492,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.7275512665510178,
+          "mean_pairwise_sign_accuracy": 0.9288909286260605,
+          "mean_rank_mae": 1.116232370141039,
+          "mean_spearman": 0.9571608248562582
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.6718326061964035,
+          "mean_pairwise_sign_accuracy": 0.9232090637087822,
+          "mean_rank_mae": 1.1789473684210527,
+          "mean_spearman": 0.9474624060150375
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.3365165104623884,
+          "mean_pairwise_sign_accuracy": 0.8747731894254684,
+          "mean_rank_mae": 1.771938424492604,
+          "mean_spearman": 0.8543813578062803
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race_start"
+    },
+    {
+      "alpha": 1.0,
+      "alpha_boundary_hit": false,
+      "beta": 0.05,
+      "beta_boundary_hit": false,
+      "calibrated_objective": 0.31038667649777013,
+      "correlations": {
+        "corr_field_std_vs_nll": -0.21155825478490953,
+        "corr_field_std_vs_rank_mae": -0.20734390313889225,
+        "corr_sigma_pi_trace_vs_nll": -0.022609157411669082,
+        "corr_sigma_pi_trace_vs_rank_mae": -0.1367835192637793
+      },
+      "diagnostic_flags": [
+        "corr_field_std_vs_nll_near_zero",
+        "corr_field_std_vs_rank_mae_near_zero",
+        "corr_sigma_pi_trace_vs_nll_near_zero",
+        "corr_sigma_pi_trace_vs_rank_mae_near_zero",
+        "sigma_error_correlation_insignificant"
+      ],
+      "entity_scope": "driver",
+      "event_count": 24,
+      "event_flag_counts": {
+        "field_spread_outlier_high": 6,
+        "field_spread_outlier_low": 6,
+        "high_uncertainty_bad_result": 0,
+        "high_uncertainty_good_result": 1,
+        "low_uncertainty_bad_result": 2,
+        "low_uncertainty_good_result": 2,
+        "uncertainty_outlier_high": 6,
+        "uncertainty_outlier_low": 6
+      },
+      "evidence_source": "recent_history",
+      "field_std_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.305702704936266,
+          "mean_pairwise_sign_accuracy": 0.8781217783689499,
+          "mean_rank_mae": 1.70796783625731,
+          "mean_spearman": 0.8578210231461005
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.6865433156490326,
+          "mean_pairwise_sign_accuracy": 0.9202850833535194,
+          "mean_rank_mae": 1.1532894736842105,
+          "mean_spearman": 0.956766917293233
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.5711206048727036,
+          "mean_pairwise_sign_accuracy": 0.9109149277210236,
+          "mean_rank_mae": 1.2440187478500173,
+          "mean_spearman": 0.9428281180893411
+        }
+      ],
+      "module_name": "driver_race_start_power_from_recent_history",
+      "raw_objective": 0.9164425529368797,
+      "scored_event_count": 24,
+      "sigma_pi_trace_bins": [
+        {
+          "bin": "low",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.4302433468401432,
+          "mean_pairwise_sign_accuracy": 0.890727125108242,
+          "mean_rank_mae": 1.5255847953216373,
+          "mean_spearman": 0.888095238095238
+        },
+        {
+          "bin": "mid",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.5641146004199982,
+          "mean_pairwise_sign_accuracy": 0.9060650989413261,
+          "mean_rank_mae": 1.3909442724458205,
+          "mean_spearman": 0.9394893483709272
+        },
+        {
+          "bin": "high",
+          "event_count": 8,
+          "mean_pairwise_nll": -1.5690086781978607,
+          "mean_pairwise_sign_accuracy": 0.9125295653939247,
+          "mean_rank_mae": 1.18874699002408,
+          "mean_spearman": 0.9298314720625092
+        }
+      ],
+      "skipped_event_count": 0,
+      "task": "race_start"
+    }
+  ],
+  "report_type": "module_uncertainty_diagnostics",
+  "schema_version": 1,
+  "summary": {
+    "modules_with_alpha_boundary_hit": 0,
+    "modules_with_beta_boundary_hit": 0,
+    "modules_with_empty_usable_event_set": 0,
+    "modules_with_fully_skipped_usable_event_set": 0,
+    "modules_with_near_zero_uncertainty_error_correlation": 9,
+    "modules_with_wrong_sign_uncertainty_error_correlation": 2
+  },
+  "train_years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ]
+}

@@ -1,0 +1,63 @@
+
+==============================================================================
+#381 SAME-PAIRS: trained quali model vs DUAL data-only ceiling
+==============================================================================
+Ceiling agg: theoretical-best (min-sectors). NORMAL weekends only.
+Shared pairs per event; ceiling recomputed on each regime's event set.
+
+==============================================================================
+HEADLINE — LOSO-held 2018-2024
+==============================================================================
+channel          | model (pi)             best_across_fp         blend_rank            
+--------------------------------------------------------------------------------------
+race_weekend     | 0.6792 (ev=130,p=23862)   0.8061 (p=23862)   0.8078 (p=23862)
+recent_history   | 0.7786 (ev=130,p=23862)   0.8061 (p=23862)   0.8078 (p=23862)
+
+  residual = ceiling_acc - model_acc (the localized model-side gap):
+    race_weekend      vs best_across_fp = +0.1269   vs blend_rank = +0.1286   (blend-prod slice = +0.0017)
+    recent_history    vs best_across_fp = +0.0275   vs blend_rank = +0.0292   (blend-prod slice = +0.0017)
+    [race_weekend accounting] records=149 used_normal=130 sprint_skip=18 missing_fp/q=1
+    [recent_history accounting] records=149 used_normal=130 sprint_skip=18 missing_fp/q=1
+
+==============================================================================
+OOS CONFIRMATION — clean 2025
+==============================================================================
+channel          | model (pi)             best_across_fp         blend_rank            
+--------------------------------------------------------------------------------------
+race_weekend     | 0.7700 (ev=18,p=3352)   0.7643 (p=3352)   0.7709 (p=3352)
+recent_history   | 0.7581 (ev=18,p=3352)   0.7643 (p=3352)   0.7709 (p=3352)
+
+  residual = ceiling_acc - model_acc (the localized model-side gap):
+    race_weekend      vs best_across_fp = -0.0057   vs blend_rank = +0.0009   (blend-prod slice = +0.0066)
+    recent_history    vs best_across_fp = +0.0063   vs blend_rank = +0.0128   (blend-prod slice = +0.0066)
+    [race_weekend accounting] records=24 used_normal=18 sprint_skip=6 missing_fp/q=0
+    [recent_history accounting] records=24 used_normal=18 sprint_skip=6 missing_fp/q=0
+
+==============================================================================
+AXIS (i) — recent-history drag (STANDALONE per-channel; PRIMARY)
+==============================================================================
+Model sign accuracy on shared pairs: race_weekend vs recent_history.
+Drag = race_weekend - recent_history (positive => recent_history is the weaker standalone quali channel).
+  headline 2018-2024   race_weekend=0.6792  recent_history=0.7786  drag=-0.0994
+  OOS 2025             race_weekend=0.7700  recent_history=0.7581  drag=+0.0119
+  fusion-combined delta: OMITTED (Admiral Q3 — no committed fusion artifact scored here without retrain).
+
+==============================================================================
+AXIS (ii) — close-gap / midfield concentration
+==============================================================================
+Where does the model lose vs the ceiling? Sign accuracy by target Q-position gap band and midfield band (headline 2018-2024, race_weekend channel).
+band                     | model          best_across_fp   blend_rank     n_pairs     
+------------------------------------------------------------------------------------
+adjacent (gap=1)         | 0.5446        0.5848          0.5839     2365     (modelgap_vs_baf=+0.0402)
+near (gap 2-3)           | 0.5961        0.6723          0.6739     4355     (modelgap_vs_baf=+0.0762)
+mid (gap 4-8)            | 0.6695        0.8081          0.8095     8797     (modelgap_vs_baf=+0.1386)
+far (gap>=9)             | 0.7709        0.9365          0.9392     8345     (modelgap_vs_baf=+0.1656)
+midfield (both pos 6-15) | 0.6006        0.6880          0.6807     5621     (modelgap_vs_baf=+0.0874)
+overall                  | 0.6792        0.8061          0.8078     23862    (modelgap_vs_baf=+0.1269)
+
+==============================================================================
+AXIS (iii) — evidence-weighting residual (summary)
+==============================================================================
+The model-vs-ceiling residual (above) IS the localized model-side gap: the model has the same evidence the ceiling distils but does not order it as well. See per-regime residual lines.
+
+[wrote] C:\Programs\f1Brainz-worktrees\cmdr-451\.agent-work\issue-381-same-pairs\evidence\same_pairs_numbers.json

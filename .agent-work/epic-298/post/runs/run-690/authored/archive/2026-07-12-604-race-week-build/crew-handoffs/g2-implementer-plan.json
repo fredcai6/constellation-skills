@@ -1,0 +1,258 @@
+{
+  "work_id": "604-g2-race-week-cli",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-cli-skeleton",
+    "m2-stage-wiring",
+    "m3-tests",
+    "m4-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/604-race-week-build/crew-handoffs/g2-implementer-handoff.md and the referenced scripts/race_week_stages.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; G1 signatures re-verified against actual source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-cli-skeleton": {
+      "id": "m1-cli-skeleton",
+      "title": "Build scripts/race_week.py CLI skeleton (argparse, global + per-subcommand args, db-path resolution, round-number resolution)",
+      "imperative": "Create scripts/race_week.py: argparse with subcommands collect-check/predict/optimize/explain/run; global args --year --race --output-root --force; predict/run args --manifest --compound-prior-root --db-path/--db-root; optimize/run --lane with choices=('mean','risk','balanced'); implement db-path resolution order (--db-path > --db-root/f1_data_{year}.db > Config.db_path_for_year(year), NEVER Config.DATABASE_PATH) and round-number resolution via get_calendar(year).index(gp_name)+1 surfacing a clear error for both unknown year (KeyError) and unknown gp_name (ValueError). Do not wire stage calls yet. Attest any check:null precondition before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scripts/race_week.py exists, parses --help and each subcommand's --help without error",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py scripts/race_week.py --help && py scripts/race_week.py predict --help && py scripts/race_week.py optimize --help"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-cli-skeleton-1"
+        }
+      ],
+      "constraints": [
+        "never let db_path resolution reach Config.DATABASE_PATH by default",
+        "argparse choices=(\"mean\",\"risk\",\"balanced\") for --lane"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-cli-skeleton-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py scripts/race_week.py --help && py scripts/race_week.py predict --help && py scripts/race_week.py optimize --help",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-stage-wiring": {
+      "id": "m2-stage-wiring",
+      "title": "Wire subcommands to G1's stage functions with checkpointing, skip/force resumption, and hard/soft gate ordering",
+      "imperative": "Implement collect-check (calls discover_sessions_stage, writes 01_sessions.json, prints summary, report-only), predict (loads 01 checkpoint, calls predict_stage with resolved db_path, resumption via should_skip_stage/--force), optimize (calls optimize_stage with prediction_checkpoint_path, validates lane), explain (calls explain_stage, always exits 0), and run (chains all four; aborts loudly nonzero if predict or optimize fails; explain is NEVER invoked and no 04_explainer.* file is written/touched on that failure path). Attest any check:null precondition before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "CLI skeleton in place and --help works for all subcommands",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "py -c import of scripts/race_week.py succeeds (module wires without error) and simplification_limits passes on the file",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import scripts.race_week\" && py -m src.utils.simplification_limits --paths scripts/race_week.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-stage-wiring-1"
+        }
+      ],
+      "constraints": [
+        "run aborts loudly if predict/optimize fails; explain never invoked in that case",
+        "explain_stage itself always exits 0 (writes STUB on failure)",
+        "--force and hash-mismatch are two different rerun paths, not conflated"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-stage-wiring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import scripts.race_week\" && py -m src.utils.simplification_limits --paths scripts/race_week.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tests": {
+      "id": "m3-tests",
+      "title": "Write tests/unit/scripts/test_race_week_cli.py covering all Close Criteria behaviors",
+      "imperative": "Write tests/unit/scripts/test_race_week_cli.py: argument parsing/defaults, db-path resolution order (all three branches, including the automated acceptance test that resolved db_path equals str(Config.db_path_for_year(year)) and is NOT str(Config.DATABASE_PATH) when neither --db-path nor --db-root given), lane validation (argparse-level rejection of a 4th value), resumption skip/rerun decisions (both --force and hash-mismatch paths tested separately), the failure-injection hard/soft gate ordering test (mock predict_stage or optimize_stage to raise, assert run exits nonzero/raises, explain_stage mock call_count==0, no 04_explainer.* file on disk), and the invalid --race test (unknown GP name propagates a clear ValueError, not swallowed). Mock race_week_stages's stage functions throughout -- no real DB/FastF1/prediction calls. TDD red observed first if a test surface point is genuinely new behavior; attest c1 with the red evidence, then make tests pass for c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "CLI wired to stage functions per m2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed for at least the failure-injection and db-path-resolution tests before the final implementation made them pass (manual attest, not a command check)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "full test_race_week_cli.py suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_cli.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tests-1"
+        }
+      ],
+      "constraints": [
+        "no real DB/FastF1/prediction calls in unit tests"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_cli.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Final verification, deliverable-path checks, and result file",
+      "imperative": "Run the handoff's full verification commands (both test files together, simplification_limits), confirm git check-ignore exits 1 for both new files, write .agent-work/604-race-week-build/crew-handoffs/g2-implementer-result.md per the Return Format, and message cmdr-604b a short completion note. Attest any check:null precondition before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests pass per m3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "combined test run (G1 stages + G2 cli) passes, simplification_limits passes, both new files are not gitignored",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_stages.py tests/unit/scripts/test_race_week_cli.py -q && py -m src.utils.simplification_limits --paths scripts/race_week.py && (git check-ignore scripts/race_week.py; test $? -eq 1) && (git check-ignore tests/unit/scripts/test_race_week_cli.py; test $? -eq 1)"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
+        }
+      ],
+      "constraints": [
+        "IMPLEMENTER_RESULT.md written before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_stages.py tests/unit/scripts/test_race_week_cli.py -q && py -m src.utils.simplification_limits --paths scripts/race_week.py && (git check-ignore scripts/race_week.py; test $? -eq 1) && (git check-ignore tests/unit/scripts/test_race_week_cli.py; test $? -eq 1)",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g2-impl-604",
+    "status": "released",
+    "claimed_at": "2026-07-12T21:24:58.646724+00:00",
+    "last_heartbeat": "2026-07-12T21:34:06.921107+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".claude/worktrees/604-build",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-12T21:35:35.971181+00:00"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "work_id": "669-pilot",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "delegated-commander-foreground-poll-over-watcher-yield",
+      "grounding": ".agent-work/staged-feedback/669-pilot/AGENT_FEEDBACK.md 2026-07-27 669-pilot: the detached g3 3-circuit run was polled in-context (bounded 15s loops + the bg completion notify), never ended-turn-to-wait; the run completed exit 0 and was integrated (verifier + report augment + attest) in the same turn."
+    },
+    {
+      "op": "confirm",
+      "id": "admiral-owns-long-batch-compute",
+      "grounding": ".agent-work/staged-feedback/669-pilot/AGENT_FEEDBACK.md 2026-07-27 669-pilot: the pilot ran BOUNDED (3 circuits, ~65-90s/circuit E-dominated) with a per-stage 180s timeout; the report explicitly routes the full-season run (~22 rounds, ~30-45min E alone) to detached-batch infra as admiral-owned, not a single delegated-commander foreground call."
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/staged-feedback/669-pilot/AGENT_FEEDBACK.md 2026-07-27 669-pilot: user-decision/implementer-result/review-result artifact postconditions satisfied via attach (understand/plan/triage/review; g2-implement/g2-review), review-result referenced at g2-integrate.c2 via --evidence e-g2-review-1; attest --which used only for null-check conditions; command checks (g2-integrate.c1 pytest, g3-run.c3 verifier) satisfied by advance re-running them, never attest."
+    },
+    {
+      "op": "confirm",
+      "id": "worktree-untracked-data",
+      "grounding": ".agent-work/staged-feedback/669-pilot/AGENT_FEEDBACK.md 2026-07-27 669-pilot: the worktree's data/ held only tracked f1_data_*.db; the gitignored input stores (physics_estimates.db, telemetry_store.db, damage_integrals.db) were read from absolute MAIN paths C:/Programs/f1Brainz/data/ throughout g1/g2/g3, and E's --per-year-db used a SCRATCH COPY of f1_data_2023.db so no tracked DB was dirtied."
+    },
+    {
+      "op": "add",
+      "id": "mandatory-full-chain-smoke-before-unattended-run",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "For an unattended/AFK run that builds a multi-stage pipeline, gate the build on a MANDATORY end-to-end smoke on one real slice BEFORE the unattended run (not just unit tests) — integration-only silent-correctness bugs (e.g. a provenance/branch inversion) pass every unit test and surface only when the whole chain runs against real data.",
+      "grounding": ".agent-work/staged-feedback/669-pilot/AGENT_FEEDBACK.md 2026-07-27 669-pilot: the cold-critic's mandatory 'first full-chain run must NOT be the unattended g3 run' (fix #1) caught a FastF1-fallthrough detector that false-matched a benign 'fastf1' mention and parked a genuinely-fresh E run as fell-back — every one of the 29 unit tests passed; only the GB full-chain smoke exposed it.",
+      "bank_reason": "re-observe across future pipeline-wiring runs whether a mandatory pre-unattended end-to-end smoke repeatedly catches integration-only silent bugs the unit suite misses — if it recurs it earns a standing gate; if not, it was one-off."
+    }
+  ]
+}

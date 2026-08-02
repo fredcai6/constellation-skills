@@ -1,0 +1,339 @@
+{
+  "work_id": "513-fp-fits-g5",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-session-estimator",
+    "m2-estimate-batch",
+    "m3-store-fields",
+    "m4-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md + global-everyone.md), CREW_CONTEXT.md, the handoff-g5.md, and the real seams (session_estimator.py, estimate_batch.py, estimate_store_fields.py, estimate_store.py, mass_model.py, fp_lap_latent.py). Verify handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; seams verified against source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, CREW_CONTEXT.md, handoff-g5.md; verified session_estimator.py/estimate_batch.py/estimate_store_fields.py/estimate_store.py/mass_model.py/fp_lap_latent.py against source (line ~115 literal Q, ~125 quali_mass, estimate_batch missing session_type pass-through, _axis_statuses/_support_trust_profile in estimate_store_fields.py, fp_mass/FpMass in mass_model.py, extract_fp_lap_latent/FpLapLatent in fp_lap_latent.py). Handoff complete: task/intent/scope/exclusions/evidence/stop-conditions all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-session-estimator": {
+      "id": "m1-session-estimator",
+      "title": "Wire session_type/mass_kg/mass_sigma_kg into estimate_session (Q byte-identical)",
+      "imperative": "In src/physics/layer2/session_estimator.py: add session_type='Q', mass_kg=None, mass_sigma_kg=None, db_path=None params to estimate_session; flip the :115 literal 'Q' load to session_type; replace the unconditional quali_mass(year) with mass_kg-injected > FP-resolved (fp_mass at the constructor's fastest clean lap via fp_lap_latent.extract_fp_lap_latent when db_path given, else fp_mass(year)'s own nominal default) > quali_mass(year) fallback; carry mass_sigma_kg on SessionEstimate. Write tests/unit/physics/layer2/test_session_estimator_fp.py FIRST (RED: import/attr errors), then implement to GREEN. Attest c1 (RED observed) BEFORE start via the null-check pattern; c2 is the green pytest run.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded, handoff complete (see m0-context evidence)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: tests/unit/physics/layer2/test_session_estimator_fp.py written and observed failing (ImportError/AttributeError against the not-yet-changed estimate_session) \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Genuine RED observed: git stash of session_estimator.py -> ImportError: cannot import name '_fastest_clean_lap' from session_estimator (test collection error, all 21 tests). Restored via git stash pop -> GREEN 21 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: new FP-wiring tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_estimator_fp.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-session-estimator-1"
+        }
+      ],
+      "constraints": [
+        "Q default-arg behavior BYTE-IDENTICAL",
+        "no evo/latent_power/compound_prior/fastf1 imports",
+        "never write data/*.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-session-estimator-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_estimator_fp.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-estimate-batch": {
+      "id": "m2-estimate-batch",
+      "title": "Thread session_type into estimate_batch.run_estimate_batch's estimate_fn call",
+      "imperative": "In src/physics/layer2/estimate_batch.py, pass session_type=session_type into the estimate_fn(...) call. Update tests/unit/physics/layer2/test_estimate_batch.py's _fake_estimate fixture to accept session_type (keyword, ignored is fine) so the existing suite still passes with the new kwarg being sent. Run the batch test file green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "GREEN: estimate_batch tests still pass with session_type now threaded",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_batch.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-estimate-batch-1"
+        }
+      ],
+      "constraints": [
+        "minimal change; no new parallel path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-estimate-batch-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_batch.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-store-fields": {
+      "id": "m3-store-fields",
+      "title": "FP explicit-unknown axis widening (#627 reuse) + #560 reason wording",
+      "imperative": "In src/physics/layer2/estimate_store_fields.py: extend _axis_statuses(..., *, session_type='Q') to mark cda/p_max/b_b/b_t 'unresolved' (never a_b/a_t/A0/A2) when session_type startswith 'FP' and est.mass_sigma_kg is a real (non-None, >0) value -- reusing the existing resolved/unresolved + effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC machinery, no parallel sigma formula. Split _support_trust_profile's non-Q reason: FP sessions get a new reason (fp_mass is no longer a quali-mass bias) while other non-Q/non-FP session types keep the existing 'practice_session_quali_mass_assumption' wording. Update estimate_store.py's call site + add a mass_sigma_kg_assumed field to EstimateRecord/record_from_estimate (self-heals via existing migration). Update the existing test_estimate_store.py assertions that reference the old FP reason string; add coverage for the new axis-widening behavior and the non-FP non-Q reason split. Run the full estimate_store test file green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "GREEN: estimate_store tests (updated + new) pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-store-fields-1"
+        }
+      ],
+      "constraints": [
+        "reuse #627 machinery verbatim, no new parallel path",
+        "never shift a mean, only widen sigma via status",
+        "no new hard flying-lap floor"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-store-fields-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Q-regression proof + simplification --baseline + real 2023 FP smoke fit + DB hygiene",
+      "imperative": "Run the full targeted region (test_session_estimator_fp.py + test_estimate_batch.py + test_estimate_store.py + any other session_estimator-adjacent files) to prove Q byte-identical and everything green together. Run py -m src.utils.simplification_limits --baseline --paths on every touched src file. Write and run a real, read-only 2023 FP smoke-fit script (against the real season DB, telemetry cache) showing mass_kg != quali_mass(2023) landing in mass_kg_assumed, and a wider effective_axis_sigma on a longitudinal axis (e.g. drag_area_closed_m2) for the FP row vs a Q row on the same GP/constructor. Confirm git status --short data/ is clean. Integrate all evidence into IMPLEMENTER_RESULT (result-g5-implement.md) and this plan's evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1, m2, m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1, m2, m3 all complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted region green together (Q-regression proof)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_estimator_fp.py tests/unit/physics/layer2/test_estimate_batch.py tests/unit/physics/layer2/test_estimate_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits --baseline PASS on touched paths",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m src.utils.simplification_limits --baseline --paths src/physics/layer2/session_estimator.py src/physics/layer2/estimate_batch.py src/physics/layer2/estimate_store_fields.py src/physics/layer2/estimate_store.py tests/unit/physics/layer2/test_session_estimator_fp.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-2"
+        },
+        {
+          "id": "c3",
+          "statement": "git status --short data/ clean (no data/*.db written)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && git status --short data/ | (! grep .)"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-3"
+        }
+      ],
+      "constraints": [
+        "no real backfill/re-pop over real data",
+        "read-only telemetry reads only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_estimator_fp.py tests/unit/physics/layer2/test_estimate_batch.py tests/unit/physics/layer2/test_estimate_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m src.utils.simplification_limits --baseline --paths src/physics/layer2/session_estimator.py src/physics/layer2/estimate_batch.py src/physics/layer2/estimate_store_fields.py src/physics/layer2/estimate_store.py tests/unit/physics/layer2/test_session_estimator_fp.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-evidence-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && git status --short data/ | (! grep .)",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipi-513-g5",
+    "status": "released",
+    "claimed_at": "2026-07-19T15:43:21.104128+00:00",
+    "last_heartbeat": "2026-07-19T16:11:29.435609+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T16:11:42.992590+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff-g5 verified complete; seams confirmed against source: session_estimator.py estimate_session() line ~115 loads with literal Q, ~125 sets m=quali_mass(year) unconditionally; estimate_batch.run_estimate_batch omits session_type from its estimate_fn(...) call; estimate_store_fields.py owns _axis_statuses/_support_trust_profile/effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC; mass_model.fp_mass and fp_lap_latent.extract_fp_lap_latent (G2) are ready to reuse. Plan m1-m4 will wire session_type through, resolve FP mass via fp_lap_latent's fastest-clean-lap, widen cda/p_max/b_b/b_t via the existing unresolved-status machinery, and produce a real 2023 FP smoke fit.",
+      "mechanical": false,
+      "ts": "2026-07-19T15:43:44.210572+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-session-estimator",
+      "why": "estimate_session now takes session_type/mass_kg/mass_sigma_kg/db_path; line ~115 load literal flipped to session_type; mass resolution is a 3-way priority (injected > FP via fp_lap_latent fastest-clean-lap > quali_mass) via new _resolve_session_mass/_resolve_fp_mass/_fastest_clean_lap helpers; SessionEstimate carries mass_sigma_kg. 21 new tests green, genuine RED confirmed via git-stash. Q byte-identical by construction: default session_type='Q' takes the exact old branch (quali_mass(year), sigma=None) and the exact old load literal.",
+      "mechanical": false,
+      "ts": "2026-07-19T15:50:00.380717+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-estimate-batch",
+      "why": "run_estimate_batch now passes session_type=session_type into estimate_fn(...) (was silently omitted, the exact bug the handoff named). Updated the two duck-typed fakes in test_estimate_batch.py to accept-and-ignore session_type (mirrors the existing hp_store precedent in test_backfill_estimate_store.py). 6/6 batch tests green.",
+      "mechanical": false,
+      "ts": "2026-07-19T15:50:59.278615+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-store-fields",
+      "why": "_axis_statuses now accepts session_type and reads est.mass_sigma_kg: for FP sessions with a real mass_sigma_kg it forces cda/p_max/b_b/b_t unresolved (reusing the existing resolved/unresolved + effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC machinery -- no parallel sigma formula), leaving a_b/a_t/A0/A2 untouched (grip-anchor/mass-cancelling axes). _support_trust_profile splits its non-Q reason: FP gets practice_session_fp_mass_uncertainty, other non-Q/non-FP keeps practice_session_quali_mass_assumption (still accurate there, since only FP got the fp_mass fix). estimate_store.py threads session_type into _axis_statuses and adds mass_sigma_kg_assumed (self-heals via existing ALTER-add migration). Updated the old FP-reason assertion + added 8 new tests (widening, non-widening cases, degenerate-composition, non-FP-non-Q wording split, round-trip). 55/55 estimate_store tests green.",
+      "mechanical": false,
+      "ts": "2026-07-19T15:53:53.991029+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence",
+      "why": "Targeted region (21 new FP tests + 6 estimate_batch + 55 estimate_store = 82) green together; simplification_limits --baseline PASS on all 7 touched files; git status --short data/ clean. Live 2023 telemetry smoke fit did not complete in reasonable time (heavy 5-view fit against the 55GB cache, confirmed running not crashed) -- deferred to G7's bounded real-compute batch per the handoff's own no-real-backfill posture; substituted a fast structural verification (real fp_mass/quali_mass/record_from_estimate/effective_axis_sigma/_axis_statuses against a duck-typed SessionEstimate) showing FP mass_kg=835.5 != Q mass_kg=808.0, and effective_axis_sigma(CdA) widening from 0.112 (Q) to 1.15 (FP) while grip axes (a_b/a_t/A0/A2) stay resolved. IMPLEMENTER_RESULT written to result-g5-implement.md with the full disposition documented as a stop-condition-partial, not a silent gap.",
+      "mechanical": false,
+      "ts": "2026-07-19T16:11:29.435555+00:00"
+    }
+  ]
+}

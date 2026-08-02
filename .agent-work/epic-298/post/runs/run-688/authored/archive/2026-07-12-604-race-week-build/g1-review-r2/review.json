@@ -1,0 +1,141 @@
+{
+  "work_id": "604-race-week-build-g1-review-r2",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the rework handoff, the original BLOCK finding (g1-review-result.md), and the implementer's rework result (g1-implementer-result-r2.md). Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the rework handoff, the original BLOCK finding (g1-review-result.md), and the implementer rework result (g1-implementer-result-r2.md).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Fix actually holds: live repro of previously-raising calls",
+      "imperative": "Reproduce explain_stage(<valid stem>, None) and explain_stage(<valid stem>, \"\") yourself, live, against the current worktree code (do not trust the implementer's pasted transcript alone). Confirm both now return cleanly (a dict with a status field) instead of raising. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced live in a fresh python process against C:/Programs/f1Brainz/.claude/worktrees/604-build: explain_stage('some/stem', None) -> {'status':'stub', 'reason':'TypeError: ...'} and explain_stage('some/stem', '') -> {'status':'stub', 'reason':\"ValueError: WindowsPath('.') has an empty name\"}. Both return a dict with a status field, no exception propagates. Also confirmed the actual side effect: the stub file was physically written at C:/Users/fredc/AppData/Local/Temp/race_week_explainer.STUB.md with the expected reason text. Matches implementer's before/after transcript exactly (same exception types/messages) and matches the previously-BLOCKing repro in g1-review-result.md exactly on the before side.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift: only explain_stage + 2 tests changed",
+      "imperative": "Confirm no other function in scripts/race_week_stages.py changed from the version already APPROVED-equivalent in the first review pass (discover_sessions_stage, predict_stage, optimize_stage, checkpoint I/O, compute_stage_inputs_hash, should_skip_stage untouched). Confirm scope stayed inside scripts/race_week_stages.py + tests/unit/scripts/test_race_week_stages.py only; no scripts/race_week.py; no src/ changes. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain in the worktree (run by me) shows only the two sanctioned untracked files as additions: scripts/race_week_stages.py, tests/unit/scripts/test_race_week_stages.py. No scripts/race_week.py, no src/ changes. Read the full current race_week_stages.py (319 lines): discover_sessions_stage, predict_stage, optimize_stage, checkpoint I/O helpers, compute_stage_inputs_hash, should_skip_stage structurally match the exact quotes/line-behavior the first review confirmed (db_path=db_path with no 'or' fallback at line 187; VALID_LANES check raises before generate_report is called at line 239 vs 245; generate_report called exactly once, write_beam_search_report never called directly). Only explain_stage's body changed (Path/with_name construction moved inside try, stub_path Optional-init + tempdir fallback) plus one new top-level 'import tempfile' -- matches implementer's claimed diff shape exactly. Out-of-scope observation: an untracked out/04_explainer.STUB.md (dated before this review session) exists in the worktree -- a stray artifact from a prior manual/dev run using a relative path, not one of the two sanctioned files and not written by anything in this review session; flagged, not a scope violation of this gate. The pre-existing data/f1_data_2026.db modified-binary item from the first review is still present, unchanged, already flagged there.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Fallback stub path is sane; new tests exercise the real failure mode; full suite passes",
+      "imperative": "Check where tempfile.gettempdir() actually resolves to and whether writing race_week_explainer.STUB.md there is a reasonable choice (not silently writing into the repo/cwd). Confirm the two new regression tests (test_explain_stage_none_explainer_path_does_not_raise, test_explain_stage_empty_string_explainer_path_does_not_raise) actually exercise the failure mode (correct exception type asserted, not just superficially named). Re-run the full test suite (tests/unit/scripts/test_race_week_stages.py) yourself and confirm it passes. Re-run py -m src.utils.simplification_limits --paths scripts/race_week_stages.py yourself. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "tempfile.gettempdir() resolves to C:/Users/fredc/AppData/Local/Temp (verified live) -- a per-user OS temp dir, writable, never the repo/cwd; reasonable fallback choice, not silently broken. Went beyond trusting the two new tests' names: temporarily reverted explain_stage to the pre-fix shape (Path()/with_name() moved back before the try: block, restoring the exact bug), re-ran just the two new tests, and confirmed BOTH FAIL with the exact same uncaught TypeError/ValueError as the original BLOCK finding -- proving they genuinely exercise the failure mode, not just superficially named. Restored the fixed file and re-ran the full suite: 33/33 passed again (verified via diff-free copy-back + rerun). Independently re-ran the full suite fresh (before the revert-test too): 33 passed in 0.20s, same test names/order as implementer's pasted output. Independently re-ran py -m src.utils.simplification_limits --paths scripts/race_week_stages.py: PASS (1 files checked).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Constraints untouched: db-path/compound-prior threading, no-double-write",
+      "imperative": "Re-verify db-path/compound-prior threading and the no-double-write constraint (from the original g1-review handoff) are still intact and untouched by this rework (they should be unaffected since only explain_stage changed). Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Re-verified live against the current worktree module (not just re-read text): predict_stage's source contains no 'db_path or' fallback pattern (SimpleNamespace threads db_path=db_path verbatim, confirmed 0 occurrences by inspect.getsource scan) -- db-path threading constraint intact, unaffected by the explain_stage-only rework. hasattr(rws, 'write_beam_search_report') is False -- the module still never imports/calls write_beam_search_report directly, so the no-double-write constraint (generate_report's single internal write) is intact. Both constraints are outside explain_stage's diff surface and structurally unreachable from it, consistent with the implementer's claim that only explain_stage + one import changed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the rework diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture-significant divergence. This rework is a trivial local bug fix confined entirely to explain_stage's exception-handling shape (construction moved inside try + a fixed fallback path) plus one stdlib import -- no seam/interface signature changed, no new structural/capability/constraint/decision impact beyond restoring the already-documented never-raises contract to be actually true. Agrees with implementer's Map Impact note. No new triage candidate needed from this pass; the doc-staleness triage candidate (tc1, docs/design/race_week_seam.md best_max claim) filed in the first review's survey still stands and is unaffected. Minor observation (not architecture-significant, not filed as triage): a stray untracked out/04_explainer.STUB.md exists in the worktree, predating this session -- likely leftover from a prior manual dev run using a relative path; harmless, but worth a glance before commit so it doesn't ride along.",
+      "evidence": [
+        {
+          "id": "e-r5-reconciliation-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/604-race-week-build/crew-handoffs/g1-review-result-r2.md",
+            "summary": "explain_stage rework independently re-verified: fix holds live, new tests proven non-vacuous via revert-and-reprove, 33/33 suite green, simplification_limits PASS, no scope drift, db-path/no-double-write constraints intact"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "explain_stage rework fix independently re-verified: live repro of explainer_path=None/'' both now return cleanly (dict with status field); reverted-and-reran the two new regression tests to confirm they genuinely fail against the pre-fix code (proving they exercise the real failure mode, not superficial); full 33/33 suite independently re-run green; simplification_limits PASS; no other function changed (git status shows only the two sanctioned files); db-path/compound-prior threading and no-double-write constraints re-verified live and intact; tempdir fallback path is a reasonable, non-repo-writing choice."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "reviewer-g1-r2",
+    "status": "released",
+    "claimed_at": "2026-07-12T21:17:20.740914+00:00",
+    "last_heartbeat": "2026-07-12T21:20:43.767525+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/f1Brainz/.claude/worktrees/604-build",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-12T21:20:50.169605+00:00"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "gate": "g4",
+  "verdict": "APPROVE",
+  "commit": "d5b6297d",
+  "branch": "feat/563-race-fit-path",
+  "reviewed_at": "2026-06-28",
+  "checks": [
+    {"id": 1, "desc": "Import RaceStintStore, RaceStintRecord works", "result": "PASS"},
+    {"id": 2, "desc": "upsert uses INSERT OR REPLACE (idempotent)", "result": "PASS"},
+    {"id": 3, "desc": "has(year, gp_name, driver, stint_num, compound) works", "result": "PASS"},
+    {"id": 4, "desc": "load(year=...) returns DataFrame", "result": "PASS"},
+    {"id": 5, "desc": "PK includes driver/stint_num/compound, NOT constructor", "result": "PASS"},
+    {"id": 6, "desc": "session_type and cumulative_track_laps columns present", "result": "PASS"},
+    {"id": 7, "desc": "JSON blob encoding on all 5 covariance columns", "result": "PASS"},
+    {"id": 8, "desc": "Table named race_stint_estimates (not session_estimates)", "result": "PASS"},
+    {"id": 9, "desc": "60 tests pass (~0.37s)", "result": "PASS", "detail": "60 passed in 0.37s"},
+    {"id": 10, "desc": "pyright_baseline_diff.py new=0", "result": "PASS", "detail": "base=2 head=2 new=0 fixed=0"}
+  ],
+  "scope_check": {
+    "files_changed": [
+      "src/physics/layer2/race_stint_store.py",
+      "tests/unit/physics/layer2/test_race_stint_store.py",
+      "tests/known_answer/test_ver_bahrain_stint.py",
+      "src/physics/layer2/stint_estimator.py"
+    ],
+    "expected_count": 4,
+    "actual_count": 4,
+    "stint_estimator_diff": "TYPE_CHECKING addition only, no logic changes",
+    "pre_branch_files_modified": false
+  },
+  "blockers": [],
+  "out_of_scope_observations": [
+    "load() status defaults to None (all rows), intentionally differs from EstimateStore; documented in docstring",
+    "record_from_stint_estimate uses getattr defensively for optional covariance fields — correct",
+    "_sigma() clamps negative diagonal to 0 for numerical safety — correct"
+  ]
+}

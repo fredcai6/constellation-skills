@@ -1,0 +1,259 @@
+{
+  "work_id": "g3-parallelize-gold-loops",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-parallel-jobs",
+    "m3-runner",
+    "m4-runner-support",
+    "m5-green",
+    "m6-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read CREW_CONTEXT, handoff, runner.py, runner_support.py, utilization.py, run.py cmd_train/cmd_backtest, config.py, both test files. Capture simplification baseline (runner.py clean; _collect_loso_fusion_train_rows CC=20/lines=135 and _gold_preflight_coverage CC=21/lines=114 are PRE-EXISTING). Confirm handoff complete.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff loaded; pre-existing simplification violations recorded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context+handoff loaded; pre-existing violations: _collect_loso_fusion_train_rows CC=20/lines=135, _gold_preflight_coverage CC=21/lines=114; runner.py clean"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "Write failing job-build-order tests (TDD RED)",
+      "imperative": "Add a new test module tests/unit/evo_predictor/test_gold_cycle_parallel_jobs.py asserting: (1) parallel_jobs.run_train_backtest is module-level and importable; (2) a TrainBacktestJob dataclass is frozen and picklable carrying train Namespace + backtest templates (no bundle) + key; (3) build_*_jobs helpers (or the loop functions in background mode) produce jobs in the SAME order/args as the prior nested loops for _train_all_modules, _collect_loso_fusion_train_rows (fold-outer/module-inner), _blocked_calibration_module_rows (module-outer/prediction-year backtests). Run -> expect RED (import/attribute errors).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new tests fail for the right reason (module/symbol missing)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "6 tests RED: ModuleNotFoundError parallel_jobs + ImportError build_*_jobs"
+        }
+      ],
+      "constraints": [
+        "touch only the new test file; no impl yet"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-parallel-jobs": {
+      "id": "m2-parallel-jobs",
+      "title": "Create parallel_jobs.py (job dataclass + module-level worker)",
+      "imperative": "Add src/evo_predictor/gold_cycle/parallel_jobs.py: frozen dataclass TrainBacktestJob(train_args: Namespace, backtest_templates: tuple[Namespace,...] (no bundle), key: str); module-level run_train_backtest(job)->dict that lazily imports cmd_train_latent_power_module/cmd_backtest_latent_power_module from src.evo_predictor.run, runs train, sets bundle=manifest on each template, runs each backtest, returns {key, manifest_path, backtest_outputs:[paths]}. Only picklable primitives/paths cross. logging.getLogger(__name__). Make m1 partly green (dataclass+worker tests).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red tests confirmed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "red tests confirmed failing (6 failed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "parallel_jobs.py created; dataclass+worker importable and within simplification limits",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "parallel_jobs.py created; dataclass+worker tests green; simplification PASS"
+        }
+      ],
+      "constraints": [
+        "module-level, spawn-safe; no DB handles/tensors in job; no print()"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-runner": {
+      "id": "m3-runner",
+      "title": "Resolve plan once + convert _train_all_modules",
+      "imperative": "In run_cycle: import resolve_resource_plan/run_jobs from src.utils.utilization + psutil; resolve plan = resolve_resource_plan(config.runtime.utilization, available_mem_gb=psutil.virtual_memory().available/1024**3) once, thread plan into the three phase fns. Rewrite _train_all_modules to pre-create modules_dir, build TrainBacktestJob list in module order, call run_jobs(jobs, run_train_backtest, plan, on_complete=...), assemble module_manifests in INPUT order. Keep arg values identical to today.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "parallel_jobs.py exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "parallel_jobs.py exists and tested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_train_all_modules uses run_jobs; plan resolved once and threaded; same args/order",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan resolved once in run_cycle and threaded into 3 phase fns; _train_all_modules uses run_jobs; build_main test green; runner.py simplification PASS (extracted _finalize_and_write_reports)"
+        }
+      ],
+      "constraints": [
+        "do NOT touch _run_sampled_backtest_phase (G4); no schema change; input-order assembly"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-runner-support": {
+      "id": "m4-runner-support",
+      "title": "Convert LOSO + blocked-calibration loops",
+      "imperative": "Rewrite _collect_loso_fusion_train_rows and _blocked_calibration_module_rows to accept plan, pre-create per-fold/per-module dirs before dispatch, build TrainBacktestJob lists in the SAME nested order (LOSO: fold-outer/module-inner; calibration: module-outer with N prediction-year backtest templates), call run_jobs(..., on_complete=ETA logging), and consume results in INPUT order to assemble all_rows / calibration_rows. Keep per_event/build_module_report_row parsing in the parent. Extract helpers to keep functions within simplification limits.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "_train_all_modules converted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "_train_all_modules converted in runner.py"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both runner_support loops use run_jobs with input-order assembly; ETA in on_complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "both loops use run_jobs with input-order assembly (zip units/results for LOSO; per-result backtest_outputs for calibration); ETA via on_complete; per-fold dirs pre-created before dispatch; _collect_loso refactored UNDER limits (was CC20/135)"
+        }
+      ],
+      "constraints": [
+        "plan threaded from run_cycle; row parsing unchanged; no new simplification violation; do not worsen pre-existing ones"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-green": {
+      "id": "m5-green",
+      "title": "Run named test files GREEN (background, non-spawning)",
+      "imperative": "Run py -m pytest tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_fusion_train_rows.py tests/unit/evo_predictor/test_gold_cycle_parallel_jobs.py -q. Confirm all pass and that loop-exercising tests run at utilization=background (in-process, no ProcessPool spawn).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all impl changes done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all impl changes done (m2-m4 complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "named test files pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_fusion_train_rows.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-green-1"
+        }
+      ],
+      "constraints": [
+        "unit tests must not spawn a ProcessPool"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_fusion_train_rows.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-evidence": {
+      "id": "m6-evidence",
+      "title": "Simplification limits classification",
+      "imperative": "Run py -m src.utils.simplification_limits --paths src/evo_predictor/gold_cycle/parallel_jobs.py src/evo_predictor/gold_cycle/runner.py src/evo_predictor/gold_cycle/runner_support.py and classify each failure pre-existing vs new. NEW violations must be fixed; confirm parallel_jobs.py and all new/edited functions are within limits.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests green (40 passed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no NEW simplification violation; pre-existing ones not worsened",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "NO NEW violations. parallel_jobs.py + runner.py PASS; runner_support.py only failure is PRE-EXISTING _gold_preflight_coverage (CC21/L114, untouched). _collect_loso improved from CC20/L135 to under-limit. Test files PASS."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

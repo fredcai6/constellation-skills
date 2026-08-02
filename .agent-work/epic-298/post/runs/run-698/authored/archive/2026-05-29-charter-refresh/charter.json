@@ -1,0 +1,116 @@
+{
+  "work_id": "2026-05-29-charter-refresh",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "intent",
+    "explore",
+    "interrogate",
+    "rigor",
+    "orchestrator-context",
+    "crew-context",
+    "glossary",
+    "engine-config",
+    "project-templates",
+    "closeout"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load existing context",
+      "status": "completed",
+      "result": "Loaded AGENTS.md instructions, docs/AGENT_GUIDE.md, README.md, TESTING.md, docs/DOCUMENTATION.md, docs/architecture/index.md, docs/agents/*, skill instructions, checklist-engine reference, rigorous default, engineering rubric, and interrogation protocol.",
+      "evidence": [
+        "Read current repo bootstrap docs and durable agent context.",
+        "Read historical PROJECT_PHILOSOPHY and rich agent context from git history.",
+        "Confirmed checklist engine is available from the Constellation skill bundle; repo-local engine assets are tracked separately."
+      ]
+    },
+    "intent": {
+      "id": "intent",
+      "title": "Capture project intent",
+      "status": "completed",
+      "result": "Intent recovered from current README, AGENTS instructions, historical PROJECT_PHILOSOPHY, and prior agent context: personal F1 prediction/fantasy strategy tool; probabilistic outputs affect betting/fantasy choices; DB is canonical; clarity and fail-fast contracts are preferred over backwards compatibility.",
+      "evidence": [
+        "README.md project purpose",
+        "docs/agents/* current context",
+        "git history: d115c11/cc35b65 PROJECT_PHILOSOPHY; 16ae9de/ec1de3d agent context"
+      ]
+    },
+    "explore": {
+      "id": "explore",
+      "title": "Explore existing code",
+      "status": "completed",
+      "result": "High-level implementation understood from README and architecture map: SQLite ingestion, compound prior, evo feature construction, latent_power, sampled runtime, strategy, physics/preprocessing, and stale/dead legacy analysis/reporting paths.",
+      "evidence": [
+        "README.md architecture diagram",
+        "docs/architecture/index.md structural domains and packets",
+        "TESTING.md region map"
+      ]
+    },
+    "interrogate": {
+      "id": "interrogate",
+      "title": "Interrogate doctrine",
+      "status": "in_progress",
+      "result": null,
+      "evidence": []
+    },
+    "rigor": {
+      "id": "rigor",
+      "title": "Set rigor and prune",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    },
+    "orchestrator-context": {
+      "id": "orchestrator-context",
+      "title": "Write ORCHESTRATOR_CONTEXT",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    },
+    "crew-context": {
+      "id": "crew-context",
+      "title": "Write CREW_CONTEXT",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    },
+    "glossary": {
+      "id": "glossary",
+      "title": "Write GLOSSARY",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    },
+    "engine-config": {
+      "id": "engine-config",
+      "title": "Write engine config",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    },
+    "project-templates": {
+      "id": "project-templates",
+      "title": "Seed project templates",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    },
+    "closeout": {
+      "id": "closeout",
+      "title": "Compile and archive",
+      "status": "pending",
+      "result": null,
+      "evidence": []
+    }
+  },
+  "blockers": [],
+  "triage_candidates": [
+    {
+      "id": "T-001",
+      "statement": "Repo-local checklist-engine assets are tracked separately in issue #296 if local copies are required instead of bundled skill execution."
+    }
+  ]
+}

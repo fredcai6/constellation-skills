@@ -1,0 +1,66 @@
+{
+  "work_id": "510-driver-utilization-quali",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load the handed-in goal and context (what you are resolving) and the starting questions, if any. Read the glossary and the topic's relevant code/docs. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "<starting question: what capability is being added or changed?>",
+      "imperative": "<frame from behavior first: what capability is being added/changed (present tense), concrete examples/use cases incl. edge cases, architecturally meaningful events, governing rules/constraints/assumptions. Ask one question at a time with a recommended answer; explore the codebase if it can answer; append follow-ups and new branches; skip questions overcome by earlier answers>",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "As-of slice + filter-vs-smoother for the week-to-week car prior",
+      "imperative": "Resolve which as-of slice of the drift-updated car prior is the denominator for weekend W's utilization (prior-only causal filter vs posterior/smoother), and whether the existing fit_drift is causal or batch.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "Resolved: C1 measures per-(driver,quali) per-regime utilization vs a cross-session week-to-week-updated constructor capability frontier (both drivers incl. measured, through-W posterior, causal as-of made derivable); split is acknowledged impure; needs scalar->PhysicsParameterSet bridge + per-regime decomposition + honest covariance + dashboard + verdict. Measured, NOT wired. See PROBLEM_STATEMENT.md",
+    "findings": []
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

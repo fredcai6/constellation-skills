@@ -1,0 +1,414 @@
+{
+  "work_id": "629-g5-build-feature-view",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-composer-primary-source",
+    "m2-refinement-precedence",
+    "m3-read-surface",
+    "m4-import-boundary-and-sole-surface",
+    "m5-e2e-real-composed-data",
+    "m6-full-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the handoff g5-implementer-handoff.md in full, and the cited source seams: records.py (FeatureViewRow, CarBasisPosteriorRecord, WeekendStateRecord, SESSION_ORDER, session_ordinal), store.py (FeatureViewStore.load_as_of, insert_feature_view_row, load_feature_view_rows -- the append-only INSERT-only contract and the as-of-scoped read), build_weekend_state.py + build_car_basis.py as the sibling composer pattern (both pure composers, no DB writes to their own inputs, module docstring states design decisions explicitly), and the two G1 protected-gate tests (test_append_only_contract.py, test_as_of_leakage.py) this gate must re-prove on real composed data. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + all cited seams read and understood; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-composer-primary-source": {
+      "id": "m1-composer-primary-source",
+      "title": "build_feature_view.py: primary car_basis_posterior source + reserved composite + write, TDD",
+      "imperative": "Write tests/unit/physics/feature_view/test_build_feature_view.py first: import build_feature_view_row from the not-yet-existing src/physics/feature_view/build_feature_view.py and assert the import fails (RED, ModuleNotFoundError). Then create build_feature_view.py with build_feature_view_row(store: FeatureViewStore, year, gp_name, constructor, *, as_of_session, model_version) -> FeatureViewRow that: calls store.load_as_of(year, gp_name, constructor, as_of_session) exactly once (never re-implements session filtering); among the returned car_basis_posterior rows, picks the one with the highest session_ordinal(session_type) (most-recent-present) and seeds weekend_relative_basis/axis_sigma from its axis_values/axis_sigma; sets circuit_conditional_composite=None always (document RESERVED in the module docstring per the handoff -- nothing in Phases 2-4 computes one yet); sets written_at via datetime.now(timezone.utc).isoformat(); writes the row via store.insert_feature_view_row and returns it. Cover with tests: (a) car_basis_posterior present across FP1/FP2/Q for one constructor -> primary picks the Q (highest-ordinal present) row's values when as_of_session='Q'; (b) as_of_session='FP2' with FP1/FP2/FP3 present -> picks FP2, not FP3 (FP3 excluded by load_as_of's own as-of restriction, not by this composer); (c) circuit_conditional_composite is always None on every produced row; (d) the produced row round-trips through store.insert_feature_view_row/load_feature_view_rows. State the constructor-grain (per-constructor not per-car) and 2026-no-gate notes explicitly in the module docstring (do not implement a gate).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_build_feature_view.py written, observed failing (module does not exist) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "build_feature_view.py exists; primary-source (most-recent-present car_basis) + reserved-composite + round-trip tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_build_feature_view.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-composer-primary-source-2"
+        }
+      ],
+      "constraints": [
+        "reuse store.load_as_of for every read -- never reimplement session filtering",
+        "circuit_conditional_composite is always None -- never fabricate a value",
+        "no src.evo_predictor import",
+        "do not modify records.py/store.py/build_weekend_state.py/build_car_basis.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-composer-primary-source-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view/test_build_feature_view.py -q",
+            "exit": "0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-composer-primary-source-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_build_feature_view.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-refinement-precedence": {
+      "id": "m2-refinement-precedence",
+      "title": "weekend_state refinement/override precedence rule, TDD",
+      "imperative": "Add failing tests first proving the precedence rule (RED where the current implementation would get it wrong -- e.g. a naive unconditional override): (1) car_basis_posterior has axis X resolved with value V1; weekend_state (as_of_session='Q') has axis X status 'unresolved' -- after composing, weekend_relative_basis[X] must still be V1 (car_basis survives, NOT clobbered by the unresolved weekend_state axis); (2) car_basis_posterior has axis X resolved V1, weekend_state has axis X status 'resolved' with a DIFFERENT value V2 -- after composing, weekend_relative_basis[X] must be V2 (weekend_state, the more-refined signal, overrides when it has a real resolved answer), and axis_sigma[X] must be weekend_state's own sigma too. Implement: after seeding from car_basis_posterior (m1), if the weekend_state DataFrame (from the same load_as_of call) has any row at-or-before the cutoff, take its most-recent-present row (mirrors the primary-source picking rule) and, for each axis where THAT row's own axis_status[axis] == 'resolved', overwrite weekend_relative_basis[axis]/axis_sigma[axis] with the weekend_state row's value+sigma for that axis; an unresolved weekend_state axis must never touch weekend_relative_basis. Document this precedence rule explicitly in the module docstring (a real design decision, not incidental), including that today only as_of_session=='Q' can trigger it since build_weekend_state.py's model only processes Q rows.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 primary-source composer exists and its tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: precedence tests written and observed failing against a naive/absent override implementation -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "resolved-car_basis-survives-unresolved-weekend_state AND weekend_state-resolved-overrides tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_build_feature_view.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-refinement-precedence-1"
+        }
+      ],
+      "constraints": [
+        "an unresolved weekend_state axis must NEVER clobber a resolved car_basis value",
+        "override is per-axis, keyed on that row's own axis_status, never a blanket dataframe-present override"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-refinement-precedence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_build_feature_view.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-read-surface": {
+      "id": "m3-read-surface",
+      "title": "read.py: sole evo-facing direct key lookup, TDD",
+      "imperative": "Write tests/unit/physics/feature_view/test_read.py first: import read_feature_view from the not-yet-existing src/physics/feature_view/read.py and assert the import fails (RED, ModuleNotFoundError). Then create read.py with read_feature_view(store: FeatureViewStore, year, gp_name, constructor, as_of_session, model_version) -> Optional[FeatureViewRow] that calls store.load_feature_view_rows(year=year, gp_name=gp_name) once, filters in Python to the exact (constructor, model_version, as_of_session) triple, and returns the matching row reconstructed as a FeatureViewRow, or None when no row matches (never raises). Set __all__ = ['read_feature_view']. Cover with tests: (a) a row written via store.insert_feature_view_row is read back with all fields matching; (b) a lookup for an as_of_session/model_version/constructor combination that was never written returns None, not an exception; (c) two rows differing only in constructor or model_version don't cross-match.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 refinement precedence implemented and tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_read.py written, observed failing (module does not exist) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "read.py exists; round-trip, none-when-missing, and no-cross-match tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_read.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-read-surface-1"
+        }
+      ],
+      "constraints": [
+        "read_feature_view never raises for a missing row -- returns None",
+        "no additional session filtering here -- the row was already as-of-restricted at write time",
+        "no src.evo_predictor import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-read-surface-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_read.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-import-boundary-and-sole-surface": {
+      "id": "m4-import-boundary-and-sole-surface",
+      "title": "Whole-package import-boundary test + __all__ sole-surface contract test",
+      "imperative": "Write tests/unit/physics/feature_view/test_import_boundary.py: a test that scans EVERY .py file under src/physics/feature_view/ (derive the directory from the imported package's __file__, not a hardcoded relative path) and asserts zero occurrences of the substring 'evo_predictor' anywhere in the package -- covering ALL files (G1-G5), not just this gate's two new ones. Add a second test in the same file (or fold into test_read.py) asserting src.physics.feature_view.read.__all__ == ['read_feature_view'] exactly -- the explicit sole-public-surface contract. This is an inspection-style check (not new production logic), so collapse TDD to the single green postcondition per the test-after convention.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "read.py exists with __all__ set",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "whole-package no-evo-import scan passes; read.__all__ == ['read_feature_view'] confirmed",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_import_boundary.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-import-boundary-and-sole-surface-1"
+        }
+      ],
+      "constraints": [
+        "scan the WHOLE package directory, not just build_feature_view.py/read.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-import-boundary-and-sole-surface-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_import_boundary.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-e2e-real-composed-data": {
+      "id": "m5-e2e-real-composed-data",
+      "title": "End-to-end: re-verify append-only + as-of leakage on REAL G2/G3-composed data",
+      "imperative": "Write tests/unit/physics/feature_view/test_e2e_integration.py: build a small synthetic WeekendStateModel (mirror test_build_weekend_state.py's make_frame/holdout.split/fit/transform convention) for one (year, gp_name, constructor) key, run it through the REAL build_weekend_state_records (G2) to get a Q-session WeekendStateRecord, and write it via FeatureViewStore.insert_weekend_state. Separately build a synthetic EstimateStore seeded with EstimateRecords (mirror test_build_car_basis.py's make_estimate_record convention) for the SAME (year, gp_name, constructor) across FP1/FP2/FP3/Q, each session carrying a DISTINCT sentinel value on one axis (e.g. drag_area_closed_m2 = 101/102/103/104 for FP1/FP2/FP3/Q), run it through the REAL build_car_basis_posterior_records (G3), and write the resulting CarBasisPosteriorRecords via FeatureViewStore.insert_car_basis_posterior. Then, via THIS gate's build_feature_view_row: (a) AS-OF LEAKAGE -- build+write the row at as_of_session='FP1' and assert weekend_relative_basis[sentinel_axis] == the FP1 sentinel only (never FP2/FP3/Q's sentinel values), and build+write at as_of_session='FP3' and assert it traces to the FP3 sentinel (never Q's); (b) APPEND-ONLY -- build+write at as_of_session='FP1' with model_version=1, then again with model_version=2 (a genuine version bump), and via read_feature_view confirm the model_version=1 row's fields are byte-identical to what was originally composed (not mutated by the v2 write); then attempt a THIRD build+write at as_of_session='FP1' with model_version=1 again (identical natural key) and assert it raises sqlite3.IntegrityError -- proving append-only holds through the REAL composer path end-to-end, not just G1's synthetic fixtures. This is an integration proof over already-built composers (m1-m3), not new production logic -- collapse TDD to the single green postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 import-boundary and sole-surface tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "e2e test passes: as-of leakage and append-only both re-proven on real G2/G3-composed data",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_e2e_integration.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-e2e-real-composed-data-1"
+        }
+      ],
+      "constraints": [
+        "use REAL build_weekend_state_records/build_car_basis_posterior_records -- no hand-built records substituting for the composers",
+        "do not duplicate load_as_of's session-filtering logic -- if this cannot be built without duplicating it, stop and escalate per the handoff's Stop Conditions"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-e2e-real-composed-data-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view/test_e2e_integration.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-full-verify": {
+      "id": "m6-full-verify",
+      "title": "Full suite + regression slice + simplification_limits + evidence collection + result file",
+      "imperative": "Run the full feature_view test directory, the layer2/weekend_state regression slice (this gate's required no-regression check on the two consumed regions), simplification_limits over src/physics/feature_view, and the grep/check_ignore verification commands from the handoff. Collect verbatim evidence: full pytest output for both suites, the primary/refinement override before/after example, the e2e test's captured append-only + as-of-leakage assertions, simplification_limits output. Write C:/Programs/f1-629/.agent-work/629-feature-view/g5-implementer-result.md per the handoff's Return Format with this evidence pasted verbatim.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 e2e test passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "feature_view suite green (all prior + new), layer2/weekend_state regression slice green, simplification_limits clean, grep for evo_predictor empty, git check-ignore exit 1 for both new files, result file written",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1-629 && export PATH=\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps:$PATH\" && py -m pytest tests/unit/physics/feature_view tests/unit/physics/layer2 tests/unit/physics/weekend_state -q && py -m src.utils.simplification_limits --paths src/physics/feature_view && (grep -rln \"evo_predictor\" src/physics/feature_view/ || echo clean) && git check-ignore src/physics/feature_view/read.py; echo exit=$? && git check-ignore src/physics/feature_view/build_feature_view.py; echo exit=$?"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipJ-629",
+    "status": "active",
+    "claimed_at": "2026-07-24T16:55:07.285770+00:00",
+    "last_heartbeat": "2026-07-24T17:02:26.889438+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff verified complete (task/scope/exclusions/evidence/test-mode/stop-conditions all present). Cited seams read: records.py's 4 frozen dataclasses + SESSION_ORDER/session_ordinal, store.py's append-only INSERT-only contract + load_as_of's by-construction session_type IN (...) restriction + load_feature_view_rows, build_weekend_state.py/build_car_basis.py as the pure-composer pattern to mirror (module docstring states design decisions, never DB-writes own inputs), and both G1 protected tests (test_append_only_contract.py: IntegrityError on duplicate natural key + byte-identical older row; test_as_of_leakage.py: SQL-shape session-scope checker with a negative control) that G5's e2e test must re-prove on real G2/G3-composed data. CREW_CONTEXT.md/GLOSSARY.md read (DB-only doctrine, as-of-cutoff discipline, verification-by-region table).",
+      "mechanical": false,
+      "ts": "2026-07-24T16:55:28.709688+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-composer-primary-source",
+      "why": "build_feature_view.py created as one coherent composer covering both m1 (primary car_basis_posterior source, most-recent-present picking via session_ordinal, reserved circuit_conditional_composite=None, ISO-8601 written_at, insert via store.insert_feature_view_row) and m2 (weekend_state refinement/override precedence, per-axis keyed on that row's own resolved status) -- same judgment call G3/G4 made per their own why_trails: staging a single composer half-implemented across two gates would be more brittle. All 10 tests in test_build_feature_view.py pass, including both m1-scoped (primary-picks-Q, primary-picks-FP2-not-FP3, composite-always-None, round-trip, written_at-format) and m2-scoped (resolved-car_basis-survives-unresolved-weekend_state, resolved-weekend_state-overrides, per-axis-not-blanket, no-weekend_state-row-leaves-car_basis-untouched) tests.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:57:10.021917+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-refinement-precedence",
+      "why": "Precedence rule genuinely verified RED: temporarily replaced the per-axis-resolved-status override with a naive unconditional dict.update() override, re-ran the two targeted precedence tests, confirmed both failed (9.99 != 1.04 for the unresolved-survives case; None != 1040.0 for the per-axis-not-blanket case since the naive override wiped the axis weekend_state never carried). Restored the real per-axis-status-gated implementation (already present from m1's coherent build) and re-ran: all 10 tests green, including the two RED-proven precedence tests. Docstring already states the precedence rule explicitly (module docstring section 'Primary source / refinement precedence').",
+      "mechanical": false,
+      "ts": "2026-07-24T16:58:11.247877+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-read-surface",
+      "why": "read.py created: direct key lookup via load_feature_view_rows(year, gp_name) + Python-side filter to (constructor, model_version, as_of_session), returns None never raises when unmatched, __all__ = ['read_feature_view']. All 7 tests pass: round-trip fields, none-on-unmatched-as_of, none-on-empty-store, no cross-match on constructor, no cross-match on model_version, __all__ contract, no-evo-import.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:59:10.704629+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-import-boundary-and-sole-surface",
+      "why": "test_import_boundary.py scans all .py files in the whole src/physics/feature_view package directory (derived via imported package __file__, not a hardcoded path) for the substring 'evo_predictor' -- covers all G1-G5 files (records.py, store.py, build_weekend_state.py, build_car_basis.py, build_lap_evidence.py, build_feature_view.py, read.py, __init__.py), asserts zero occurrences, with a sanity floor (>=6 files) so the assertion isn't vacuous. Passes. The __all__ == ['read_feature_view'] sole-surface contract is already asserted in test_read.py::test_all_is_exactly_read_feature_view (folded there per the handoff's explicit 'or fold into an existing file' allowance).",
+      "mechanical": false,
+      "ts": "2026-07-24T16:59:42.829659+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-e2e-real-composed-data",
+      "why": "test_e2e_integration.py: real WeekendStateModel (fit on full synthetic frame, transform on the target weekend's full field, session_type Q) run through the REAL build_weekend_state_records (G2); real EstimateStore seeded with sentinels 101/102/103/104 for FP1/FP2/FP3/Q run through the REAL build_car_basis_posterior_records (G3). Composed via build_feature_view_row + read back via read_feature_view: AS-OF LEAKAGE -- as-of FP1 traces only to sentinel 101.0 (never 102/103/104); as-of FP3 traces to 103.0 (never Q's 104.0). APPEND-ONLY -- model_version 1->2 bump at the same as_of_session leaves v1's re-read byte-identical (weekend_relative_basis/axis_sigma/written_at all match); a third build at the identical (year,gp_name,constructor,model_version=1,as_of_session=FP1) key raised a REAL sqlite3.IntegrityError with UNIQUE constraint failed via the actual composer path, and no duplicate row landed (len==1 verified). Both G1 protected properties re-proven end-to-end on real G2/G3-composed data. Passed on first run (captured stdout pasted into result evidence).",
+      "mechanical": false,
+      "ts": "2026-07-24T17:02:22.909592+00:00"
+    }
+  ]
+}

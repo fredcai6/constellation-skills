@@ -1,0 +1,244 @@
+{
+  "work_id": "sigma-calibration-followups-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-latent-power",
+    "m2-evo-schema",
+    "m3-configs-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read CREW_CONTEXT, GLOSSARY, the G1 handoff, and the evo_predictor/latent_power packets. Verify handoff completeness (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read CREW_CONTEXT, handoff, packets; complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-latent-power": {
+      "id": "m1-latent-power",
+      "title": "Remove target_mode from latent_power (config/models/modules/training) + tests",
+      "imperative": "Delete target_mode field+ALLOWED_TARGET_MODES+validation from config.py; drop target_mode field+ClassVar+validation from LossBundle (keep sigma_nll); drop target_mode local/kwarg in modules.loss_from_pairwise (reword target_mu guard to name field, no dead mode name); remove target_mode from training.py diagnostics row + last_loss_payload, reword the two target_mu-required messages. Update tests. NO training-math change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "latent_power suite green with target_mode gone",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/latent_power -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-latent-power-2"
+        }
+      ],
+      "constraints": [
+        "Training math unchanged",
+        "latent_power must not import evo_predictor",
+        "one canonical path: no mode field/alias/fallback"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-latent-power-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power -q",
+            "exit": 1
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-latent-power-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-evo-schema": {
+      "id": "m2-evo-schema",
+      "title": "Remove target_mode from evo_predictor + bump REPORT_SCHEMA_VERSION 4->5 + regen schema doc + tests",
+      "imperative": "Drop target_mode kwarg in run.py config build; remove target_mode field/VALID_TARGET_MODES/validation/serialized+override-map entries in gold_cycle/config.py; drop target_mode passthrough in runner._module_train_args; set REPORT_SCHEMA_VERSION=5 in reports.py; update gold_report_schema.py schema_version interpretation to reflect v5 (target_mode removed); regenerate docs/evo/gold_module_training_cycle_report_schema.md via write_markdown_schema. Update evo tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evo gold-cycle + report-schema suites green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_gold_report_schema.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-evo-schema-1"
+        }
+      ],
+      "constraints": [
+        "Do NOT touch gold config input schema_version/SUPPORTED_SCHEMA_VERSIONS",
+        "Committed report schema: producer+consumers+docs move together",
+        "Do NOT regenerate gold training artifacts"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-evo-schema-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_gold_report_schema.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-configs-close": {
+      "id": "m3-configs-close",
+      "title": "Clean dead target_mode from configs/evo TOML + full close-criteria verification",
+      "imperative": "Remove now-dead target_mode lines from configs/evo/*.toml (loader no longer reads them). Then run all three close criteria: full focused pytest suite green, src grep clean, REPORT_SCHEMA_VERSION==5.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full close-criteria pytest suite exits 0",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/latent_power tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py tests/integration/test_retro_delta_smoke.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-configs-close-1"
+        },
+        {
+          "id": "c2",
+          "statement": "rg target_mode|ALLOWED_TARGET_MODES|VALID_TARGET_MODES in src returns no matches",
+          "check": {
+            "kind": "command",
+            "command": "rg -q \"target_mode|ALLOWED_TARGET_MODES|VALID_TARGET_MODES\" src && exit /b 1 || exit /b 0"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-configs-close-2"
+        },
+        {
+          "id": "c3",
+          "statement": "REPORT_SCHEMA_VERSION == 5",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from src.evo_predictor.gold_cycle.reports import REPORT_SCHEMA_VERSION as v; assert v==5, v\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-configs-close-3"
+        }
+      ],
+      "constraints": [
+        "configs/evo/*.toml are inputs to the modified loader; document this scope touch"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-configs-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power tests/unit/evo_predictor/test_gold_cycle_config.py tests/unit/evo_predictor/test_gold_cycle_runner.py tests/unit/evo_predictor/test_gold_module_cycle.py tests/integration/test_retro_delta_smoke.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-configs-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "rg -q \"target_mode|ALLOWED_TARGET_MODES|VALID_TARGET_MODES\" src && exit /b 1 || exit /b 0",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-configs-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"from src.evo_predictor.gold_cycle.reports import REPORT_SCHEMA_VERSION as v; assert v==5, v\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m3-configs-close",
+      "statement": "11 pre-existing failures in tests/unit/evo_predictor unrelated to G1: 7x LatentPowerConfig unexpected kwarg 'n_triangles_per_event' (test_pipeline/test_race_power_bundle), 3x CLI tests missing required --retro-root (test_latent_power_module_cli/test_run_cli_defaults), 1x test_race_start_adapter batch missing target_mu. Not caused by target_mode removal; close-criteria suite is fully green."
+    }
+  ],
+  "blockers": []
+}

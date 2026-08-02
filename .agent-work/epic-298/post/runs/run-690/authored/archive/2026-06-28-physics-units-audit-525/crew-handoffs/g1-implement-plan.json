@@ -1,0 +1,242 @@
+{
+  "work_id": "525-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-audit",
+    "m2-map",
+    "m3-dispositions",
+    "m4-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the handoff (.agent-work/525/crew-handoffs/g1-implement-handoff.md), PROBLEM_STATEMENT.md, and the physics packet (docs/architecture/packets/physics.md). Verify handoff completeness (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + problem statement + packet loaded; handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop/return all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All context docs read: CREW_CONTEXT, GLOSSARY, handoff, PROBLEM_STATEMENT, physics packet. Handoff complete: task/intent/scope/exclusions/evidence/test-mode(inspection-only)/stop/return all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-audit": {
+      "id": "m1-audit",
+      "title": "Source-grounded producer/consumer unit audit (all channels)",
+      "imperative": "Read every cited seam in src/physics/** directly and verify each unit-convention claim. For each channel (lateral, longitudinal/power, braking, traction, coast, terrain): identify every producer and every consumer of each model parameter; record the EXACT formula + unit each side assumes with file:symbol(:line) citations. Independently confirm from source whether sim_evaluator/fit_batch/session_fit consume the shared LateralParameters consumer. Identify overloaded/ambiguous terms (two lateral conventions, rho-in-aero, duplicated G_MS2, anything else). Find channels beyond the listed set. EVIDENCE-ONLY: read-only probes allowed; no src/tests edits.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every parameter's producer/consumer convention read from source with file:symbol citations; lateral-consumer-feeds-sim_evaluator/fit_batch fact confirmed from source; overloaded-term inventory drafted; no src/tests modified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All channels read from source: lateral (2 producers A0/A2 - lateral_envelope.py m/s2 conv-A + lateral_view.py g-units conv-B; shared consumers lateral_capability/_compute_speed_caps/CapabilityEnvelope all conv-A m/s2 with rho-in-aero); longitudinal (longitudinal_fit theta_D=CdA/2m m^-1, theta_P=W/kg, theta_R m/s2; layer2 power_drag_view p_max=W cda=m2); braking (braking_fit + braking_view both m/s2, a_b m/s2 b_b 1/m - CONVENTION-CONSISTENT); traction (traction_fit + traction_view both m/s2 - consistent); coast (coast_view theta_R m/s2 cda m2); terrain (theta_rad/bank_rad radians, z meters - consistent). Independently confirmed: sim_evaluator.py:243 + fit_batch->fit_driver->session_fit:239 consume conv-A LateralParameters from LateralEnvelopeFit, NOT the g-unit store, NOT car_prior. car_prior g->m/s2 conversion only on C1 utilization path. Overloaded terms: 2 lateral conventions; rho-in-aero (consumer hardcodes A2*rho*v2 forcing car_prior to divide rho back out of g-coef); G_MS2 in braking_fit imported by car_prior lateral; MASS_KG duplicated longitudinal_fit:44 vs session_fit:57; g=9.81 duplicated 8+ places. No src/tests modified."
+        }
+      ],
+      "constraints": [
+        "EVIDENCE-ONLY: no src/ or tests/ edits",
+        "constraint:physics_region_no_evo_import (do not introduce evo coupling proposals)",
+        "cite file:symbol for every claim"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-map": {
+      "id": "m2-map",
+      "title": "Write AUDIT_MAP.md",
+      "imperative": "Write .agent-work/525/AUDIT_MAP.md: the producer->consumer unit-convention map covering EVERY physics model parameter at EACH producer and EACH consumer, with file:symbol(:line) citations and the exact formula + unit each side assumes. One section per channel (lateral, longitudinal/power, braking, traction, coast, terrain, plus any extra channel found).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 audit complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 audit complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "AUDIT_MAP.md exists on disk and covers all channels/parameters with citations",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; sys.exit(0 if pathlib.Path('.agent-work/525/AUDIT_MAP.md').exists() else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-map-1"
+        }
+      ],
+      "constraints": [
+        "EVIDENCE-ONLY: write only the artifact, no src/tests edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-map-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; sys.exit(0 if pathlib.Path('.agent-work/525/AUDIT_MAP.md').exists() else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-dispositions": {
+      "id": "m3-dispositions",
+      "title": "Write AUDIT_DISPOSITIONS.md",
+      "imperative": "Write .agent-work/525/AUDIT_DISPOSITIONS.md: inventory every overloaded/ambiguous term (two lateral conventions, rho-in-aero A2*rho*v2 vs A2*v2, duplicated G_MS2, plus anything else) each with where-overloaded + de-overload options + fix-local-vs-route-out disposition + reasoning. PLUS canonical-lateral recommendation (A unitless/g-coef everywhere vs B m/s2-at-consumer) with HONEST blast-radius enumerating every file/test touched and the independently-confirmed sim_evaluator/fit_batch fact. PLUS rho-in-aero disposition: pure representation/conversion change OR needs a refit (if refit, flag stop-and-route). RECOMMEND ONLY, do not decide.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 audit complete and m2 map written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 audit complete; m2 map written; blast-radius test evidence gathered (test_car_prior, test_lateral_view, test_lateral_envelope, test_physics_simulator, test_capability_envelope, test_published_f1_data)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "AUDIT_DISPOSITIONS.md exists with full overloaded-term inventory + A/B recommendation + blast-radius + rho disposition",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; sys.exit(0 if pathlib.Path('.agent-work/525/AUDIT_DISPOSITIONS.md').exists() else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-dispositions-1"
+        }
+      ],
+      "constraints": [
+        "RECOMMEND not decide",
+        "EVIDENCE-ONLY: write only the artifact"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-dispositions-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; sys.exit(0 if pathlib.Path('.agent-work/525/AUDIT_DISPOSITIONS.md').exists() else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "Verify deliverables and zero source changes",
+      "imperative": "Confirm both audit artifacts exist and that no tracked src/ or tests/ file was changed. Write the IMPLEMENTER_RESULT to .agent-work/525/crew-handoffs/g1-implement-result.md per the template.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both audit artifacts written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "both audit artifacts written"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both audit artifacts exist",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; sys.exit(0 if (pathlib.Path('.agent-work/525/AUDIT_MAP.md').exists() and pathlib.Path('.agent-work/525/AUDIT_DISPOSITIONS.md').exists()) else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no tracked src/ or tests/ file changed",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import subprocess,sys; out=subprocess.run(['git','status','--porcelain','src/','tests/'],capture_output=True,text=True).stdout; sys.exit(1 if out.strip() else 0)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-2"
+        }
+      ],
+      "constraints": [
+        "EVIDENCE-ONLY"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; sys.exit(0 if (pathlib.Path('.agent-work/525/AUDIT_MAP.md').exists() and pathlib.Path('.agent-work/525/AUDIT_DISPOSITIONS.md').exists()) else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import subprocess,sys; out=subprocess.run(['git','status','--porcelain','src/','tests/'],capture_output=True,text=True).stdout; sys.exit(1 if out.strip() else 0)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

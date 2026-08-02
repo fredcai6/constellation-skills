@@ -1,0 +1,91 @@
+{
+  "work_id": "issue-314-fusion-correlation",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "classify",
+    "write"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load candidates and authority",
+      "imperative": "Candidates: tc1 (fusion correction follow-up, conditional), tc2 (arch doc \u2014 resolved by reconcile), tc-runner-complexity (pre-existing run_cycle violation). Authority: autonomous for non-trivial issue creation per ORCHESTRATOR_CONTEXT.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-ctx-1",
+          "type": "artifact",
+          "payload": {
+            "note": "3 candidates loaded from execute.json triage_candidates + reviewer observations"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "classify": {
+      "id": "classify",
+      "title": "Classify candidates",
+      "imperative": "tc1: architecture weakness / research hardening \u2014 conditional on real data. tc2: resolved \u2014 arch doc updated by reconcile. tc-runner-complexity: cleanup \u2014 pre-existing violation.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "write": {
+      "id": "write",
+      "title": "Write recommendations",
+      "imperative": "tc1: conditional \u2014 do not file now; record that correction issue should be filed after first gold run with the diagnostic if |r| > 0.6 for any pair. tc2: close resolved. tc-runner-complexity: recommend filing cleanup issue.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "issue-ready recommendations written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc1 filed as #316; tc2 resolved; tc-runner-complexity filed as #317"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-write-1",
+          "type": "artifact",
+          "payload": {
+            "note": "tc1 -> issue #316 (assess fusion correlations after gold run); tc2 -> resolved by reconcile; tc-runner-complexity -> issue #317 (run_cycle refactor)"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

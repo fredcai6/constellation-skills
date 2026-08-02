@@ -1,0 +1,74 @@
+{
+  "work_id": "451-g3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-setup-dirs", "m2-retrain-wide", "m3-emit-rw", "m4-harness", "m5-evidence", "m6-result"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Verify context and git status clean",
+      "imperative": "Read handoff; confirm handoff is complete (task, intent, scope, exclusions, evidence, stop conditions). Run git status --porcelain src/ and confirm EMPTY (no feature edit).",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "handoff complete; git status src/ is empty (clean adapter)", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-451 && git status --porcelain src/"}, "satisfied": true}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "Handoff complete. git status src/ is empty — adapter is at reverted 23-feature production form. G2 control OOS baseline = 0.5868 confirmed from g2_numbers.json.", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m1-setup-dirs": {
+      "id": "m1-setup-dirs",
+      "title": "Create records_g3_wide dir and copy rh_2025 from records_g2_control",
+      "imperative": "mkdir .agent-work/451/records_g3_wide; copy rh_2025.record.json and rh_2025.record.npz from records_g2_control into records_g3_wide (same rh as G2 control ensures shared-pairs set matches G2 exactly).",
+      "preconditions": [{"id": "p1", "statement": "context loaded and git clean", "check": null, "satisfied": true}],
+      "postconditions": [{"id": "c1", "statement": "records_g3_wide/rh_2025.record.json exists", "check": {"kind": "command", "command": "ls C:/Programs/f1Brainz-worktrees/cmdr-451/.agent-work/451/records_g3_wide/rh_2025.record.json"}, "satisfied": false}],
+      "constraints": ["work only in .agent-work/451/**"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m2-retrain-wide": {
+      "id": "m2-retrain-wide",
+      "title": "Wide-net (hidden_dim 384) retrain OOS (train 2018-2024, eval 2025, seed 0)",
+      "imperative": "Run train-latent-power-module for driver_quali_power_from_race_weekend with --hidden-dim 384, --train-years 2018..2024, --eval-year 2025, --seed 0. FOREGROUND. Capture stdout. Use artifact-root .agent-work/451/scratch_runs --run-name g3_wide_oos. Do NOT edit src/.",
+      "preconditions": [{"id": "p1", "statement": "records_g3_wide and scratch_runs dirs ready", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "latent_power_manifest.json exists in trained bundle dir under g3_wide_oos", "check": {"kind": "command", "command": "ls C:/Programs/f1Brainz-worktrees/cmdr-451/.agent-work/451/scratch_runs/g3_wide_oos/"}, "satisfied": false}],
+      "constraints": ["no src edit; --seed 0; FOREGROUND; <=10 min; utf-8"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m3-emit-rw": {
+      "id": "m3-emit-rw",
+      "title": "Emit rw_2025 record from trained bundle into records_g3_wide",
+      "imperative": "Find latent_power_manifest.json under g3_wide_oos, use its parent dir as --bundle. Run backtest-latent-power-module --emit-module-record --eval-year 2025 --module driver_quali_power_from_race_weekend --records-dir .agent-work/451/records_g3_wide.",
+      "preconditions": [{"id": "p1", "statement": "retrain completed with manifest", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "rw_2025.record.json exists in records_g3_wide", "check": {"kind": "command", "command": "ls C:/Programs/f1Brainz-worktrees/cmdr-451/.agent-work/451/records_g3_wide/rw_2025.record.json"}, "satisfied": false}],
+      "constraints": ["no src edit; emit only 2025"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m4-harness": {
+      "id": "m4-harness",
+      "title": "Run diagnose_quali_same_pairs.py UNMODIFIED on records_g3_wide",
+      "imperative": "Set QUALI_SAME_PAIRS_RECORDS_DIR=.agent-work/451/records_g3_wide, run scripts/diagnose_quali_same_pairs.py UNMODIFIED. Capture stdout. Extract rw_acc, ceiling, pairs for 2025.",
+      "preconditions": [{"id": "p1", "statement": "rw_2025 and rh_2025 in records_g3_wide", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "harness prints rw / ceiling / pairs for 2025", "check": null, "satisfied": false}],
+      "constraints": ["diagnose_quali_same_pairs.py UNMODIFIED"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m5-evidence": {
+      "id": "m5-evidence",
+      "title": "Write g3_numbers.json",
+      "imperative": "Write .agent-work/451/evidence/g3_numbers.json with keys wide_net (dict: hidden_dim, rw, ceiling, pairs, split), control_ref (0.5868), capacity_excluded (bool).",
+      "preconditions": [{"id": "p1", "statement": "harness run completed with numbers captured", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "g3_numbers.json has required keys", "check": {"kind": "command", "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-451 && PYTHONIOENCODING=utf-8 py -c \"import json;d=json.load(open('.agent-work/451/evidence/g3_numbers.json'));print('wide_net' in d, d.get('capacity_excluded'))\" 2>&1"}, "satisfied": false}],
+      "constraints": ["report numbers + direction only; do not decide verdict"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m6-result": {
+      "id": "m6-result",
+      "title": "Write g3-implementer-result.md",
+      "imperative": "Write IMPLEMENTER_RESULT to .agent-work/451/evidence/g3-implementer-result.md. Include: wide-net rw vs control 0.5868, ceiling, pairs, capacity_excluded reasoning, files changed, git src/ clean confirmation, assumptions, stop conditions, workflow feedback.",
+      "preconditions": [{"id": "p1", "statement": "g3_numbers.json written", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "g3-implementer-result.md exists", "check": {"kind": "command", "command": "ls C:/Programs/f1Brainz-worktrees/cmdr-451/.agent-work/451/evidence/g3-implementer-result.md"}, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,245 @@
+{
+  "work_id": "issue-292-latent-observability/g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-baseline",
+    "m2-red",
+    "m3-green",
+    "m4-final"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1 handoff, and relevant evo/latent-power context. Verify the handoff is complete: task, intent, allowed scope, exclusions, required evidence, test mode, and stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context, glossary, handoff, and relevant evo context loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded CREW_CONTEXT, GLOSSARY, g1 handoff; scope limited to diagnostics producer + focused tests."
+        }
+      ],
+      "constraints": [
+        "Use py for Python commands.",
+        "DB-only analysis; no direct FastF1 calls from analysis/model/adapter/predictor code.",
+        "Do not alter calibration objective, pairwise loss, model architecture, or training data selection.",
+        "Keep current stateless module/gold-cycle/sampled-runtime path as the single execution path."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-baseline": {
+      "id": "m1-baseline",
+      "title": "Run focused baseline tests",
+      "imperative": "Run/read the existing focused module uncertainty diagnostics tests before changing source or test code. If current code already satisfies g1, stop with evidence instead of churning.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "existing focused tests ran before source/test changes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-baseline-1"
+        }
+      ],
+      "constraints": [
+        "Do not modify files before this baseline evidence step completes."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-red": {
+      "id": "m2-red",
+      "title": "Add failing observability tests",
+      "imperative": "Add focused failing tests for compact, stable flags on empty usable event sets and fully skipped usable event sets in module uncertainty diagnostics JSON summary/module entries.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline focused tests complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-baseline complete; 43 passed pre-change"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new g1 tests fail before implementation for missing diagnostic flags",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Tests only in this step.",
+        "Flags must be compact, stable strings.",
+        "No model training, calibration math, or recursive behavior changes."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "skipped",
+      "status_detail": {
+        "reason": "TDD red step intentionally exits nonzero; red failure evidence attached, proceed to implementation per Pilot steering."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-red-1",
+          "type": "red-test-evidence",
+          "payload": {
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit_code": "1",
+            "outcome": "expected red failure after tests-only edit"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-green": {
+      "id": "m3-green",
+      "title": "Implement minimal report flags",
+      "imperative": "Implement the minimal module uncertainty diagnostic/report code to pass the new tests while preserving training and calibration math.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red tests observed for missing flags",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 red evidence attached; 3 expected failures for missing flags/counters"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "module uncertainty diagnostics expose empty and fully skipped usable event flags; focused tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-green-1"
+        }
+      ],
+      "constraints": [
+        "Do not alter calibration objective, pairwise loss, model architecture, or training data selection.",
+        "Scope limited to module_uncertainty_diagnostics.py and its focused tests."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-final": {
+      "id": "m4-final",
+      "title": "Final scope and evidence pass",
+      "imperative": "Inspect the final diff for gate scope, confirm no forbidden training/calibration/model objective changes, and record final focused test evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "implementation tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-green complete; 45 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "final focused tests pass after scope review",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-final-1"
+        }
+      ],
+      "constraints": [
+        "Do not push.",
+        "Do not close issues.",
+        "Do not archive Commander/Pilot work area."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-final-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

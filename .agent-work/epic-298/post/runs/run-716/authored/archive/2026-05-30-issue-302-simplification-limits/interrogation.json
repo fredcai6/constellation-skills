@@ -1,0 +1,83 @@
+{
+  "work_id": "issue-302-simplification-limits",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q3"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load GitHub issue #302, run_tests.py --compliance limits, 14-file >1000-line scan, REVIEW_SURVEY.template.json. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Scope: tooling-only vs include file splits in #302?",
+      "imperative": "Issue #302 deliverables are verifier + agent wiring + consolidated run_tests.py. Repo has 14 Python files >=1000 lines (models.py 2816, database.py 2485, etc.). Does this issue land tooling with baseline grandfathering only, or also split one/more mega-files in the same PR?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Hybrid: ship full verifier+wiring; split 2 mega-files in-PR (race_report, database); baseline allowlist for remaining 12; triage GitHub issues per region for burn-down.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Which two mega-files to split in this PR?",
+      "imperative": "Recommend race_report.py (1006 lines, single class, 1 test file, reporting region) + database.py (2485 lines, natural query groupings, data region). Alternate: race_report + models.py (higher evo risk). Confirm pair.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Grandfathering for unsplit baseline offenders?",
+      "imperative": "For the 12 remaining >=1000-line files not split in #302, commit baseline allowlist JSON so verifier passes with --baseline until follow-up issues remove entries. Confirm.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "RESOLVED",
+    "findings": []
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

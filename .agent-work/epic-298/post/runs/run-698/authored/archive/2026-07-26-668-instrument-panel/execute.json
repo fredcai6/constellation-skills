@@ -1,0 +1,1342 @@
+{
+  "work_id": "668-instrument-panel",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-diagnose",
+    "g2-variance-implement",
+    "g2-variance-review",
+    "g2-variance-integrate",
+    "g3-replication-implement",
+    "g3-replication-review",
+    "g3-replication-integrate",
+    "g4-scorecard-implement",
+    "g4-scorecard-review",
+    "g4-scorecard-integrate",
+    "g5-f12-signoff",
+    "g6-finalize-implement",
+    "g6-finalize-review",
+    "g6-finalize-integrate",
+    "g7-realrun-implement",
+    "g7-realrun-review",
+    "g7-realrun-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan intent + scope from PROBLEM_STATEMENT.md / MISSION_FRAME.md / PLAN_DECISIONS.md and the launch order. Note the active lessons conditioning this run (attach-not-attest artifact checks; run_crew --backend external; no --from-child on the gated child; staged-feedback fence; foreground-poll crews; scope regression to import graph; self-authored reasoning-gate checks still need scrutiny). Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent + scope + active lessons confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-diagnose": {
+      "id": "g1-diagnose",
+      "title": "F12 diagnosis + pre-registration proposal (reasoning gate; EVIDENCE-ONLY, no outcome computed)",
+      "imperative": "REASONING GATE (no crew \u2014 the diagnosis + proposal is analysis the Commander holds context for; self-review the checks per lesson:self-authored-reasoning-gate-checks-need-review-scrutiny). EVIDENCE-ONLY: read SUPPORT counts (n_points) and STRUCTURE only \u2014 NEVER a replication/coverage/scorecard OUTCOME. (1) Locate the real GB-2023-Q observables + reference own-DBs (they live in the MAIN checkout .agent-work/archive/, not this worktree) and characterize the driver x class SUPPORT distribution (n_points per cell; resolved vs unresolved at FINGERPRINT_UNRESOLVED_SUPPORT_FLOOR). (2) Probe realizable split-half units: per-driver timed-lap counts (f1_data_2023.db lap_times), whether per-lap v_real speed telemetry exists on disk for GB-Q, and segment-instances per severity class. (3) Build a synthetic noise model from #665's generative model + the observed support. (4) Write the 1-page F12 pre-registration proposal to .agent-work/668-instrument-panel/F12_PREREGISTRATION.md: recommended REPLICATION_THRESHOLD, REPLICATION_MIN_SUPPORT_N + the r_floor(n) support-scaling formula, the channel-comparison decision rule + tie margin, the split-half-unit registration (recommended unit + rationale + honest bounded-slice caveat + the no-valid-split -> zero-size-is-complete no-frame-kill branch), and the golf-correction method = DOUBLE-CENTERING (remove driver AND class main effects; replicate the interaction residual on raw observables; a data transform, NOT a fitted interaction term). Consume #660 layer2/frozen_constants (scorecard triple already frozen) + #666 fingerprint/frozen_constants; mint NO frozen module yet (owner may adjust values). Attest c1 (support+structure characterized, no outcome computed) and c2 (F12 proposal written). AFTER this gate closes, FLOAT the proposal to the Admiral (SendMessage main) and BLOCK the real-data run at g5-f12-signoff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "GB-Q support distribution + split-half realizability characterized from SUPPORT/STRUCTURE only; no replication/coverage/scorecard outcome computed (F12 firewall)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "1-page F12 pre-registration proposal written (REPLICATION_* recommended values + r_floor(n) + channel-comparison + split-half-unit registration + double-centering method + noise model)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-diagnose-1"
+        }
+      ],
+      "constraints": [
+        "F12: evidence-only, no outcome; consume #660/#666 frozen constants; mint no inline literals; no-frame-kill"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/frozen_constants.py (append target)",
+          "src/physics/fingerprint/frozen_constants.py (consume)",
+          "src/physics/utilization/reference_utilization_store.py (driver_class_observables)",
+          "data/f1_data_2023.db lap_times",
+          "scripts/pooling_imbalance_validation_665.py (noise model)"
+        ],
+        "capability": [
+          "frozen-constant discipline (F12)",
+          "driver-utilization measurement"
+        ],
+        "constraint": [
+          "constraint:strictly-pre",
+          "constraint:no-inline-literals",
+          "constraint:no-frame-kill"
+        ],
+        "decision": [
+          "decision:replication-deferred \u2014 #660 defers REPLICATION_* to this panel, owner-signature gated @grade: settled/human \u00b7 leans g1",
+          "decision:split-half-unit \u2014 placeholder resolved by this probe + owner signature @grade: placeholder \u00b7 leans g1,g3"
+        ],
+        "evidence": [
+          "support distribution grounds r_floor(n); split-half realizability grounds the unit registration"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-diagnose-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "F12_PREREGISTRATION.md",
+            "statement": "F12 pre-registration proposal written from support/structure only (no outcome); REPLICATION_MIN_SUPPORT_N=15, REPLICATION_THRESHOLD=0.5, r_floor cap=0.7 ref=100, CHANNEL_TIE_MARGIN=0.1; cross-circuit 2v2 split-half (4 circuits x 4 drivers found on slice); double-centering method; scope discrepancy floated"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-variance-implement": {
+      "id": "g2-variance-implement",
+      "title": "Instrument 1 (variance decomposition): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer via run_crew.py --backend external. Build a PURE variance-decomposition module in src/physics/instrument_panel/ that splits segment-time variance into car-reference / driver-utilization / residual shares using the additive TwoWayPool arithmetic (frac_team/frac_circuit/frac_resid reinterpreted; teams=drivers=driver-utilization, circuits=classes=car-reference axis per the #664/#666 convention) \u2014 NO bespoke model, NO interaction term (owner ruling 4). Driver-utilization share reads as a FLOOR. Synthetic tests: each share falsifiable against a synthetic actual = a*car + b*driver + noise ground truth (reuse #665's generative model). F12-INDEPENDENT \u2014 no real DB, no frozen REPLICATION_* needed. pyright-0 on the pinned interpreter. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded (F12-independent; may build before sign-off)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "F12-independent gate; context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned, no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-variance-implement-1"
+        }
+      ],
+      "constraints": [
+        "pure module; synthetic-only tests; no interaction term; own-db if any artifact; pyright-0"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/pooling.py TwoWayPool",
+          "src/physics/utilization/reference_lap_product.py",
+          "src/physics/instrument_panel/ (new)"
+        ],
+        "capability": [
+          "driver-utilization measurement (variance sizing)"
+        ],
+        "constraint": [
+          "constraint:lowest-dimensionality (no interaction term)",
+          "constraint:no-frame-kill (driver share = floor)"
+        ],
+        "decision": [
+          "decision:consume-frozen-scorecard-triple \u2014 n/a here"
+        ],
+        "evidence": [
+          "claim: each share recovers its synthetic ground-truth coefficient"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-variance-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "variance_decomposition.py + 7 synthetic tests green; pyright-0; additive TwoWayPool mapping frac_circuit=car-ref, frac_team=driver-util(floor), frac_resid=residual"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-variance-review": {
+      "id": "g2-variance-review",
+      "title": "Instrument 1 (variance decomposition): review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer via run_crew.py --backend external. Verify: shares sum to 1 and are non-negative; the additive-no-interaction constraint honored; driver-utilization share exposed as a floor; synthetic recovery genuinely falsifiable; pyright-0. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-variance-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-variance-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-variance-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "tests reproduce 7/7, pyright-0, axis mapping verified against source, swap-falsification confirms tests non-tautological, pooling.py unmodified, no interaction term"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-variance-integrate": {
+      "id": "g2-variance-integrate",
+      "title": "Instrument 1 (variance decomposition): integrate",
+      "imperative": "APPROVE: re-run the test command yourself, then advance (command postcondition re-runs on advance). BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "variance-decomposition synthetic tests pass",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_variance_decomposition.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-variance-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-variance-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-variance-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 see g2-variance-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-variance-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_variance_decomposition.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-replication-implement": {
+      "id": "g3-replication-implement",
+      "title": "Instruments 2+3 (golf-corrected split-half replication + sigma-honesty + channel comparison): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer via run_crew.py --backend external. Build a PURE module in src/physics/instrument_panel/ for: (2) golf-corrected split-half replication + sigma-honesty, and (3) the per-class channel comparison. GOLF-CORRECTION = DOUBLE-CENTERING (subtract BOTH the driver main effect AND the class main effect from each (driver,class) observation; replicate the residual driver x class interaction on the RAW driver_class_observables substrate, NOT pooled cell points). This is a data transform, NOT a fitted interaction term (owner ruling 4 respected). Split-half unit = the one registered in F12_PREREGISTRATION.md (parameterize it; the module takes the split + thresholds as INJECTED params so it is F12-INDEPENDENT and buildable before sign-off \u2014 do NOT bake the frozen values). sigma-honesty coverage MUST be OUT-OF-SAMPLE (held-out half / LOO), never self-referential (lesson:loo-residual-diagnostic-over-self-weighted-predictor). Coverage via predictive_t (non-Gaussian). Channel comparison: run replication per class in BOTH channels (utilization=time_deficit_s, energy=deployment_share); the better-replicating channel earns join weight there per the registered decision rule. THREE-ARM synthetic falsifier (extend #665's generative model with a TRUE driver x class INTERACTION term): (a) pure overall-skill -> ~0 corrected agreement; (b) pure shared-class, zero interaction -> ~0 corrected agreement; (c) injected interaction -> recovers its strength. Include the no-valid-split -> zero-size-is-complete branch (no frame-kill). pyright-0 on the pinned interpreter. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "F12 proposal written (g1) so the split-half unit + method are known; thresholds injected not baked (F12-independent build)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "F12 proposal written (g1); thresholds injected (F12-independent build)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned, no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-replication-implement-1"
+        }
+      ],
+      "constraints": [
+        "double-centering (not per-driver demean); replicate on raw observables not pooled points; out-of-sample sigma-honesty; 3-arm interaction-bearing synthetic falsifier; thresholds injected; no interaction TERM in any model; pyright-0"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/pooling.py (additive, no interaction)",
+          "src/physics/utilization/reference_utilization_store.py driver_class_observables",
+          "src/common/student_t.py predictive_t",
+          "scripts/pooling_imbalance_validation_665.py (extend generator with interaction)",
+          "src/physics/fingerprint/address.py FINGERPRINT_CHANNELS"
+        ],
+        "capability": [
+          "driver-utilization measurement (replication sizing)"
+        ],
+        "constraint": [
+          "constraint:lowest-dimensionality",
+          "constraint:no-baked-normality (Student-t coverage)",
+          "constraint:no-frame-kill"
+        ],
+        "decision": [
+          "decision:golf-correction-is-DOUBLE-CENTERING \u2014 remove driver AND class main effects; replicate interaction residual on raw observables @grade: settled/measured \u00b7 leans g3",
+          "decision:split-half-unit \u2014 from F12 registration @grade: placeholder->settled at g5 signoff"
+        ],
+        "evidence": [
+          "claim:golf-correction-removes-skill (3-arm synthetic: pure-skill~0, pure-class~0, interaction recovers)",
+          "claim:coverage-is-distribution-not-gaussian",
+          "sigma-honesty is out-of-sample"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-replication-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "replication.py: double-centering golf-correction (interaction-replication r spans classes so negative control discriminates), 3-arm falsifier (a=.011,b=.0006,c=.06->.98), negative control r_double=.0006 vs r_demean=.685 on arm b, OOS sigma-honesty (correct .906 vs understated .504 detected), Student-t nu=3.5, injected thresholds, 18 tests green pyright-0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-replication-review": {
+      "id": "g3-replication-review",
+      "title": "Instruments 2+3: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer via run_crew.py --backend external. SCRUTINIZE HARD (load-bearing hazard): the golf-correction is TRUE double-centering (both main effects removed) and replicates the interaction residual on RAW observables not pooled points; the 3-arm synthetic falsifier's generator carries a real driver x class interaction term and the pure-shared-class arm actually reports ~0 (a broken correction must FAIL this); sigma-honesty coverage is out-of-sample not self-referential; no fitted interaction term sneaks in; Student-t (not Gaussian) coverage; thresholds injected not baked; pyright-0. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-replication-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-replication-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-replication-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 independent from-scratch verification: within-class double-center==demean (1.11e-16), cross-class module r matches independent calc, negative control genuine; 18 tests + all numbers reproduce; Student-t; injected thresholds; no join/DB"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-replication-integrate": {
+      "id": "g3-replication-integrate",
+      "title": "Instruments 2+3: integrate",
+      "imperative": "APPROVE: re-run the test command yourself, then advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "replication + sigma-honesty + channel-comparison + 3-arm synthetic falsifier tests pass",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_replication_channel.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-replication-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-replication-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-replication-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 see g3-replication-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-replication-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_replication_channel.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-scorecard-implement": {
+      "id": "g4-scorecard-implement",
+      "title": "Instrument 4 (composed-sector scorecard): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer via run_crew.py --backend external. Build a PURE scorecard module in src/physics/instrument_panel/: segment predictions sum into composed FIA sectors. Two SEPARATED claims (review T11): (a) position-sum EXACTNESS = a construction identity (segments sum exactly to the composed sector); (b) predicted sector-time DISTRIBUTION CALIBRATION (central values AND coverage via predictive_t, non-Gaussian) vs official sector times. DIAGNOSTIC for size; GATING ONLY on the ALREADY-FROZEN SECTOR_CALIB_GROSS_MISCALIB_BOUND (consume from #660 src/physics/layer2/frozen_constants.py \u2014 mint nothing). Use the distance->FIA-sector-line mapping in src/physics/segment_map/derivation/sector_nesting.py. STRICTLY-PRE: predictions built from strictly-pre inputs; official sector times enter ONLY as the post-hoc comparison target (no leakback). Synthetic tests: exact position-sum identity; coverage path exercises the heavy-tail (Student-t) branch; gross-miscalib gate fires only below the frozen bound. F12-INDEPENDENT. pyright-0. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded (F12-independent; consumes already-frozen SECTOR_CALIB_*)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "F12-independent; consumes already-frozen SECTOR_CALIB_*"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned, no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-scorecard-implement-1"
+        }
+      ],
+      "constraints": [
+        "consume SECTOR_CALIB_* (no remint); position-sum=construction check; calibration=real anchor; gate only on frozen gross-miscalib bound; no sector-outcome leakback; Student-t coverage; pyright-0"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/frozen_constants.py SECTOR_CALIB_* (consume)",
+          "src/physics/segment_map/derivation/sector_nesting.py",
+          "src/data/database/ get_lap_times (official sectors)",
+          "src/common/student_t.py predictive_t"
+        ],
+        "capability": [
+          "composed-sector validation"
+        ],
+        "constraint": [
+          "constraint:strictly-pre (no leakback)",
+          "constraint:no-baked-normality",
+          "constraint:no-inline-literals (consume frozen bound)"
+        ],
+        "decision": [
+          "decision:consume-frozen-scorecard-triple \u2014 #660 already froze it @grade: settled/inherited \u00b7 leans g4"
+        ],
+        "evidence": [
+          "claim:position-sum-construction (exact)",
+          "claim:no-leakback",
+          "claim:coverage-is-distribution-not-gaussian"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-scorecard-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "sector_scorecard.py: position-sum exactness + Student-t coverage + consume-frozen SECTOR_CALIB_* + gross-miscalib gate; 11 tests green pyright-0; n_eff=min(members) Build-1 default flagged"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-scorecard-review": {
+      "id": "g4-scorecard-review",
+      "title": "Instrument 4: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer via run_crew.py --backend external. Verify: position-sum is an exact construction identity; calibration coverage is Student-t (non-Gaussian); GATING only on the consumed frozen gross-miscalib bound (no re-minted literal); NO sector-outcome leakback into the strictly-pre predictions; pyright-0. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-scorecard-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-scorecard-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-scorecard-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 position-sum exact, Student-t (scipy.stats.t) confirmed, triple imported not re-minted (grep 0 hits), gate flips exactly at 0.50/0.49, no leakback param, min(n_eff) sound; 11 tests+80-sweep green pyright-0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-scorecard-integrate": {
+      "id": "g4-scorecard-integrate",
+      "title": "Instrument 4: integrate",
+      "imperative": "APPROVE: re-run the test command yourself, then advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scorecard synthetic tests pass (position-sum identity + Student-t coverage + gross-miscalib gate)",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_sector_scorecard.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-scorecard-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-scorecard-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-scorecard-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 see g4-scorecard-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-scorecard-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_sector_scorecard.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-f12-signoff": {
+      "id": "g5-f12-signoff",
+      "title": "F12 owner sign-off checkpoint (HARD GATE \u2014 blocks the real-data run)",
+      "imperative": "REASONING GATE (no crew). This gate is the HARD BLOCK: the real-data run (g6/g7) may not proceed until the Admiral returns the OWNER's sign-off on the F12 pre-registration proposal (F12_PREREGISTRATION.md). By now the proposal was floated to the Admiral after g1. Poll ACTIVELY for the Admiral's reply (do not idle-yield); when the sign-off arrives, record the signed values (the owner may have adjusted them from the proposal) and attach a user-decision evidence item citing the Admiral's sign-off message (attach g5-f12-signoff --type user-decision --field cite='ADMIRAL:F12 owner sign-off'). If sign-off has not arrived and no more F12-independent work remains, reach up (refresh-request) rather than proceeding. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "F12 proposal written (g1) and the three synthetic instruments built (g2/g3/g4)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "F12 proposal written (g1) + all three synthetic instruments built/reviewed/integrated (g2/g3/g4)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "F12 owner sign-off received via the Admiral; signed frozen values recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "owner sign-off captured as a user-decision citing the Admiral",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-f12-signoff-1"
+        }
+      ],
+      "constraints": [
+        "HARD GATE \u2014 no real-data outcome run before this closes"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/frozen_constants.py (finalize target at g6)"
+        ],
+        "capability": [
+          "frozen-constant discipline (F12)"
+        ],
+        "constraint": [
+          "constraint:F12-signoff-before-real-run"
+        ],
+        "decision": [
+          "decision:replication-deferred \u2014 owner signature closes it @grade: settled/human \u00b7 leans g6,g7"
+        ],
+        "evidence": [
+          "the signed values are what g6 writes; g7 wires them"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-f12-signoff-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "ADMIRAL:F12 owner sign-off (Fred signed as-is 2026-07-26)",
+            "statement": "Owner signed: MIN_SUPPORT_N=15, THRESHOLD=0.5, r_floor=0.5+0.2*clip((100-n)/100,0,1), CHANNEL_TIE_MARGIN=0.1, double-centering, uniform 0.5 base both channels. Cross-circuit scope ruled. 4-circuit support re-confirm: MIN_SUPPORT_N=15 HOLDS. Freeze as-signed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-finalize-implement": {
+      "id": "g6-finalize-implement",
+      "title": "Finalize the signed REPLICATION_* frozen set: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer via run_crew.py --backend external. Append the FINAL named REPLICATION_* frozen set to src/physics/layer2/frozen_constants.py with the OWNER-SIGNED values from g5 (REPLICATION_THRESHOLD, REPLICATION_MIN_SUPPORT_N, the r_floor(n) formula, the channel-comparison decision rule + tie margin, the split-half-unit id) \u2014 documented in place, F12-clean, mirroring the module's existing style; no inline literals elsewhere. Wire the replication/channel modules (g3) to CONSUME these constants (replace injected defaults). A test asserts the named set exists with the signed values and that g3's module reads them. pyright-0. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "F12 owner sign-off received (g5 closed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "F12 owner sign-off received (g5 complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned, no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-finalize-implement-1"
+        }
+      ],
+      "constraints": [
+        "signed values only; no inline literals; consume-not-remint discipline; pyright-0"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/frozen_constants.py (append)",
+          "src/physics/instrument_panel/ replication module (wire to consume)"
+        ],
+        "capability": [
+          "frozen-constant discipline (F12)"
+        ],
+        "constraint": [
+          "constraint:no-inline-literals"
+        ],
+        "decision": [
+          "decision:replication-deferred \u2014 finalized with signed values @grade: settled/human \u00b7 leans g6"
+        ],
+        "evidence": [
+          "named set present with signed values; g3 module consumes it"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-finalize-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "signed REPLICATION_* frozen (exact), frozen_replication_thresholds() factory, refinement 2 (main_effect_margin_uncertainty + widen_sigma + thin_classes), 49/49 tests green pyright-0, DB clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-finalize-review": {
+      "id": "g6-finalize-review",
+      "title": "Finalize frozen set: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer via run_crew.py --backend external. Verify the frozen values match the owner-signed set exactly; F12-clean (documented, no derivation-from-data); no inline literals elsewhere; the replication module consumes them; pyright-0. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-finalize-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g6-finalize-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-finalize-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 5 signed values byte-exact, factory consumes no re-mint, refinement 2 quadrature-adds main-effect SE before predictive_t (OOS Student-t) + surfaces thin classes, no fitted interaction, frozen_constants diff clean, 49/49 tests+pyright-0 reproduced, DB clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-finalize-integrate": {
+      "id": "g6-finalize-integrate",
+      "title": "Finalize frozen set: integrate",
+      "imperative": "APPROVE: re-run the test command yourself, then advance. BLOCK: rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "frozen-set test passes (named REPLICATION_* set present with signed values; consumed by the replication module)",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_replication_frozen_constants.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-finalize-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-finalize-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-finalize-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 see g6-finalize-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-finalize-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_replication_frozen_constants.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-realrun-implement": {
+      "id": "g7-realrun-implement",
+      "title": "Real-data run on GB-2023-Q + versioned report: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer via run_crew.py --backend external. Run ALL FOUR instruments on the GB-2023-Q slice against the real observables/reference own-DBs (located in g1) + f1_data_2023.db official sectors, wiring the signed frozen values. Emit a WRITTEN, VERSIONED report (own path under docs/ or an artifacts dir \u2014 NEVER an f1_data DB, #632) containing: variance shares incl. the driver-utilization FLOOR; golf-corrected (double-centered) replication per class per channel + the sigma-honesty verdict; the channel-comparison winners (which channel earns join weight per class); the composed-sector scorecard central values AND coverage vs official sectors + the gross-miscalib gate result; the exact frozen constants used (with values); and the 1-CIRCUIT BOUNDED-SCOPE note routing multi-circuit breadth to #670. Honor no-frame-kill: report a small/zero size as a COMPLETE result. STRICTLY-PRE: as_of_round threaded; no sector-outcome leakback. Interpreter PIN + verify import fastf1 before the run; DB-BLOB GUARD (never stage f1_data DBs). pyright-0. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "signed frozen set finalized (g6) and F12 sign-off in hand (g5)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rework; g6 signed set + g5 sign-off in hand"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned; versioned report emitted with all four instruments + constants + bounded-scope note",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-realrun-implement-2"
+        }
+      ],
+      "constraints": [
+        "real-data run ONLY after sign-off; no-frame-kill; strictly-pre no leakback; own-db artifacts; DB-BLOB GUARD; interpreter PIN; pyright-0"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/instrument_panel/ (all four)",
+          "reference_utilization.db / driver_class_observables (archive own-DBs)",
+          "data/f1_data_2023.db lap_times",
+          "src/physics/layer2/frozen_constants.py"
+        ],
+        "capability": [
+          "driver-utilization measurement (the exit instrument)",
+          "composed-sector validation"
+        ],
+        "constraint": [
+          "constraint:no-frame-kill",
+          "constraint:strictly-pre",
+          "constraint:db-only",
+          "constraint:own-db (#632)"
+        ],
+        "decision": [
+          "decision:split-half-unit \u2014 signed @grade: settled/human \u00b7 leans g7"
+        ],
+        "evidence": [
+          "report reproduces; no leakback; bounded-scope honest"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK: py -m src.utils.simplification_limits (CREW_CONTEXT-mandated) fails on the new script \u2014 instruments_2_3_replication complexity 26>20, render_markdown 125 lines>100. Surgical refactor (extract helpers), output must stay byte-identical."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-realrun-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "cross-circuit real run: Inst1 driver-util FLOOR=0.0 (car-ref ~0.85); Inst2/3 c0/c3 replicate util r0.84/0.81, c2 unresolved, c1 unmeasurable, sigma-honesty 144/144 covered; Inst4 position-sum passes, per-sector composition not on-disk -> #670 + whole-lap substitute; a real bug caught by no-leakback test + fixed; 57/57 tests pyright-0 DB clean"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g7-realrun-implement",
+            "reason": "Reviewer BLOCK: py -m src.utils.simplification_limits (CREW_CONTEXT-mandated) fails on the new script \u2014 instruments_2_3_replication complexity 26>20, render_markdown 125 lines>100. Surgical refactor (extract helpers), output must stay byte-identical.",
+            "ts": "2026-07-27T04:14:56.545130+00:00"
+          }
+        },
+        {
+          "id": "e-g7-realrun-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "REWORK: simplification_limits PASS (helpers extracted), report byte-identical (.md diff exit0, .json deep-equal), JSON key-order stabilized, 57 tests green pyright-0 DB clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g7-realrun-review": {
+      "id": "g7-realrun-review",
+      "title": "Real-data run + report: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer via run_crew.py --backend external. Verify: the reported numbers REPRODUCE when re-run; no sector-outcome leakback (as_of_round threaded, official sectors used only as comparison target); the golf-corrected replication used double-centering; coverage is Student-t; the report honestly SIZES (no-frame-kill \u2014 a small/zero size is stated plainly, not spun); the bounded 1-circuit scope + #670 routing is explicit; frozen constants cited with values; no f1_data DB staged; pyright-0. Wait for and integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (rework) received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-realrun-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g7-realrun-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-realrun-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE (re-review) \u2014 simplification_limits PASS, report byte-identical (regens diff empty, values match attempt-1 exactly incl var_team=0.0), 57 tests+pyright-0, pure extract-function refactor, DB clean. All 6 substantive judgments confirmed attempt-1."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-realrun-integrate": {
+      "id": "g7-realrun-integrate",
+      "title": "Real-data run + report: integrate",
+      "imperative": "APPROVE: re-run the reproduce/no-leakback test yourself, then advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "report reproduces + no-leakback + bounded-scope test passes",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_panel_report.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-realrun-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-realrun-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-realrun-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE \u2014 see g7-realrun-review (re-review after complexity rework)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-realrun-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_panel_report.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-variance-review",
+      "statement": "tests/unit/physics/test_damage_tractability.py stalls the physics region suite indefinitely (pre-existing, unrelated to #668) \u2014 investigate/quarantine so the region suite can run to completion"
+    },
+    {
+      "id": "tc2",
+      "from": "g6-finalize-review",
+      "statement": "duplicated-code: a shared axis-grouping helper could de-duplicate main_effect_margin_uncertainty() vs _axis_means() in replication.py (simplify-pass candidate, non-blocking)"
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Plan intent/scope + active lessons confirmed; entering g1 F12 diagnosis (evidence-only, no outcome computed).",
+      "mechanical": false,
+      "ts": "2026-07-27T01:34:15.210959+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-diagnose",
+      "why": "F12 diagnosis done: located archive own-DBs; slice is 4 drivers x 4 classes x 4 circuits (richer than GB-only assumption) -> cross-circuit split-half available. Support grounded (c0/c2 strong, c3 moderate, c1 empty; gap at ~15). Proposal written with grounded REPLICATION_* values + double-centering + cross-circuit unit. No outcome computed. Floating proposal + scope discrepancy to Admiral next; real-data run blocks at g5.",
+      "mechanical": false,
+      "ts": "2026-07-27T01:38:29.270788+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-variance-implement",
+      "why": "Instrument 1 built: pure variance decomposition via additive TwoWayPool (no interaction), driver-util share=floor, 7 synthetic-recovery tests green, pyright-0. Result artifact verified fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T01:47:42.368576+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g2-variance-review",
+      "why": "Reviewer APPROVE with independent swap-mapping falsification; result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T01:58:08.677731+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-variance-integrate",
+      "why": "APPROVE verdict + tests re-run green (engine re-runs the pytest command). Instrument 1 complete.",
+      "mechanical": false,
+      "ts": "2026-07-27T01:58:21.091495+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-replication-implement",
+      "why": "Instruments 2+3 built. Implementer caught+resolved a real degeneracy: within-class across-drivers, double-centering==demean (correlation const-invariant), so interaction-replication r must span classes for the negative control to discriminate. Resolution verified mathematically sound; numbers confirm (arm b r_double=.0006 vs r_demean=.685). Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T02:28:13.004755+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g3-replication-review",
+      "why": "Reviewer APPROVE with independent numpy verification of the cross-class resolution (the load-bearing correctness). Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T02:36:49.138031+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-replication-integrate",
+      "why": "APPROVE + engine re-runs the replication pytest (18 tests green). Load-bearing Instruments 2+3 complete.",
+      "mechanical": false,
+      "ts": "2026-07-27T02:37:09.634370+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g4-scorecard-implement",
+      "why": "Instrument 4 built: two separated claims (position-sum construction + Student-t distribution calibration), consumes frozen triple, gates only on gross-miscalib. n_eff=min(members) Build-1 default (reviewer to confirm). Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T02:51:35.879889+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g4-scorecard-review",
+      "why": "Reviewer APPROVE with independent gate-sweep + grep + source checks. Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:02:05.954286+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-scorecard-integrate",
+      "why": "APPROVE + engine re-runs scorecard pytest (11 green). Instrument 4 complete. All four instruments built (synthetic-validated). Next: g5 F12 sign-off hard gate.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:02:13.341475+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g5-f12-signoff",
+      "why": "F12 owner sign-off received via Admiral; values signed as-is; cross-circuit scope ruled; 4-circuit support re-confirm HOLDS (MIN_SUPPORT_N=15 in the gap). Refinement 1 (within-half centering) already in g3; refinement 2 folded into g6. Real-data run UNBLOCKED.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:06:28.156289+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g6-finalize-implement",
+      "why": "Signed frozen set appended exactly; module consumes via factory; refinement 2 (main-effect uncertainty into OOS sigma-honesty + thin-class surfacing) added; 49/49 instrument_panel tests green pyright-0; DB-BLOB GUARD clean. Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:21:45.903865+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g6-finalize-review",
+      "why": "Reviewer APPROVE with byte-exact signed-value check + refinement 2 verification. Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:30:15.248538+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g6-finalize-integrate",
+      "why": "APPROVE + engine re-runs test_replication_frozen_constants.py. Signed frozen set finalized + refinement 2. Next: g7 real-data cross-circuit run + report.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:30:20.364819+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g7-realrun-implement",
+      "why": "Real-data cross-circuit run + versioned report emitted. Small signal honestly sized (no-frame-kill): driver-util floor 0.0, 2-3 classes replicate, scorecard per-sector gap routed to #670. Report reproduces, no leakback (bug caught+fixed by the test), DB clean. Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T03:58:29.824635+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g7-realrun-implement",
+      "reopen": true,
+      "reason": "Reviewer BLOCK: py -m src.utils.simplification_limits (CREW_CONTEXT-mandated) fails on the new script \u2014 instruments_2_3_replication complexity 26>20, render_markdown 125 lines>100. Surgical refactor (extract helpers), output must stay byte-identical.",
+      "ts": "2026-07-27T04:14:56.545130+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g7-realrun-implement",
+      "why": "Rework complete: complexity gate passes, report output byte-identical, all results unchanged. Re-verified simplification_limits myself. Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T04:26:31.163545+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g7-realrun-review",
+      "why": "Re-review APPROVE: complexity blocker cleared, output byte-identical, all substantive results confirmed. Result fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T04:36:12.872309+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g7-realrun-integrate",
+      "why": "APPROVE + engine re-runs test_panel_report.py. All four instruments run on the cross-circuit real slice; versioned report emitted; honest no-frame-kill sizing. Execute complete.",
+      "mechanical": false,
+      "ts": "2026-07-27T04:36:18.165879+00:00"
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "work_id": "513-fp-followup-rx-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, handoff-rx-review.md, handoff-real-extractor.md, fp_gate.py:1-140 (Protocol shapes), and the implementation file fp_gate_real_extractor.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Change satisfies handoff-rx-review.md: RealGateExtractor + make_extractor implements fp_gate.GateExtractor against real telemetry seams (session_fit.load_quali_session, session_braking._driver_samples, apex_extract.extract_apex_observations, capability.apex_pace, fp_lap_latent.extract_fp_lap_latent, mass_model.fp_mass, session_race.session_cumulative_track_laps), all call signatures verified against actual source. Emits exactly the frozen RawFpObservation/RawQTarget shapes (field-by-field checked against fp_gate.py:69-131). Grain (per constructor/session) matches the documented, pre-approved demo simplification -- not blocked per instruction. NOTE (does not affect this narrow verdict): the ORIGINAL implementer handoff (handoff-real-extractor.md) also required a real-telemetry integration smoke + result-real-extractor.md; neither exists -- implementer's own gated plan (IMPLEMENTER_PLAN-g7-real-extractor.json) is stuck in-progress at m2-real-smoke since 18:06:55Z with no further journal entries, yet code was committed at 18:28:52Z. Flagged at r5/triage, not a block here since it falls outside my reviewer handoff's 4 named BLOCK conditions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope respected: only new files touched (src/physics/layer2/fp_gate_real_extractor.py, tests/unit/physics/layer2/test_fp_gate_real_extractor.py). git diff-tree --name-only -r 807556b7 confirms exactly these two files. Frozen harness untouched since G6 froze it: git diff --stat 8860d8e4..HEAD -- fp_gate.py fp_representativeness.py is EMPTY, and git diff-tree of the G7 commit itself touches neither file. (The reviewer handoff's literal repro command 'git diff --stat 27b6eac9..HEAD -- fp_gate.py fp_representativeness.py' is non-empty, but that is because fp_gate.py/fp_representativeness.py were themselves CREATED within that range by an earlier commit (8860d8e4, G6) -- not modified by G7. Corrected to the post-freeze base; see workflow feedback.)",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All evidence in the handoff's own Verify list reproduced independently: (1) pytest tests/unit/physics/layer2/test_fp_gate_real_extractor.py -q -> 13 passed. (2) simplification_limits --baseline --paths fp_gate_real_extractor.py -> PASS (1 files checked). (3) git status --short data/ -> empty/clean. (4) frozen-harness diff-stat -- see r2-scope for the corrected base; zero changes confirmed. (5) Protocol shapes: RawFpObservation emitted with car_id=constructor(str), session_type(str), hours_to_q(float via nominal_hours_to_q lookup), latent(FpLapLatent via _representative_latent), track_evolution(Optional[int] via session_cumulative_track_laps), session_max_track_evolution=None, grip_value(float via per_car_grip_values/apex_pace), power_value=None, fp_mass_sigma_kg(float via mass_model.fp_mass(year).sigma_kg) -- exact field-for-field match against fp_gate.py:69-131. RawQTarget(car_id, grip_capability, power_capability=None) matches fp_gate.py:114-126. All downstream seam call signatures (load_quali_session, _driver_samples, extract_apex_observations, apex_pace, extract_fp_lap_latent, fp_mass, session_cumulative_track_laps) verified against their actual definitions -- no signature mismatches. (6) physics-region: grep confirms no evo_predictor/latent_power/compound_prior/fastf1 imports (only docstring prose mentions them as excluded). (7) no data/*.db writes: all sqlite3.connect usages execute only SELECT statements (grepped for INSERT/UPDATE/DELETE -- none present); read-only URI used with a same-DB fallback connection on URI-open failure, never on write intent.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against CREW_CONTEXT.md rules: (a) DB-only data access -- reads via SQLite only, no FastF1/live-API imports. (b) validation exceptions name field+expectation+actual: nominal_hours_to_q raises ValueError naming the unknown session_type and the known set. (c) 'never raise on missing driver/session -- skip with logged reason' constraint honored throughout (logger.warning at every skip point: no classifications rows, no team, _driver_samples failure, no samples, no session row, extract_fp_lap_latent failure, no representative latent). (d) small composable units: heavy lifting factored into pure helpers (nominal_hours_to_q, cap_laps_by_time, lap_frames, per_car_grip_values) that are independently unit-tested; only the top-level orchestration methods are longer (see r6-fowler long-method finding, non-blocking). (e) naming/documentation conventions match sibling modules (session_race.py/fp_lap_latent.py SQLite helper pattern, per module's own docstring). No hidden fallback that would silently corrupt behavior: the _query() same-DB-fallback only fires on read-only-URI open failure, still executes the same fixed SELECT text.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture-map reconciliation needed for the code itself (a thin adapter satisfying an already-documented Protocol; nothing here changes public seams other modules depend on). One process-integrity gap flagged as triage candidate tc1: the implementer's own gated plan and the illustrative demo run both stalled before completion (real-telemetry smoke + result-real-extractor.md never produced), yet the code was committed anyway. Does not affect this review's verdict per the narrow BLOCK criteria in handoff-rx-review.md, but Commander should treat G7 as evidence-incomplete pending a completed real-telemetry run.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline-catalog pass recorded at .agent-work/513-fp-followup/rx-review/FOWLER_PASS.json, cleared verify_fowler_pass.py rail (12/12 smells visited: flagged=[long-method, duplicated-code], overridden=[data-clumps (matches sibling session_race.py/fp_lap_latent.py SQLite-helper convention), primitive-obsession (str car_id/session_type required by the FROZEN Protocol dataclasses), long-parameter-list (make_extractor's 7 kwargs are the handoff's explicitly DECIDED factory signature)], absent=[large-class, feature-envy, shotgun-surgery, divergent-change, message-chains, speculative-generality, comments-as-deodorant]). Both flagged items (fp_observations' length; _ordered_drivers queried twice per session) are minor, non-blocking cleanup opportunities appropriate for a follow-up, not this thin illustrative-demo module.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE against the narrow BLOCK criteria in handoff-rx-review.md. src/physics/layer2/fp_gate_real_extractor.py (RealGateExtractor + make_extractor) satisfies the frozen fp_gate.GateExtractor Protocol exactly: emitted RawFpObservation/RawQTarget shapes verified field-for-field against fp_gate.py:69-131, and every downstream seam call (load_quali_session, _driver_samples, extract_apex_observations, apex_pace, extract_fp_lap_latent, fp_mass, session_cumulative_track_laps) verified signature-correct against actual source. No edit to the frozen harness (fp_gate.py / fp_representativeness.py / GATE_PROTOCOL untouched since G6's freeze at 8860d8e4; the G7 commit 807556b7 touches only the two new files). No evo/latent_power/compound_prior/fastf1 imports. No data/*.db writes (read-only SELECT-only SQLite access, confirmed by grep + git status --short data/ clean). 13/13 tests green; simplification_limits --baseline PASS. Fowler pass clears the rail (2 minor non-blocking flags: fp_observations length, a duplicate _ordered_drivers query; 3 defensible overrides logged). One IMPORTANT non-blocking gap flagged as triage candidate tc1: the required real-telemetry integration smoke and result-real-extractor.md (per the ORIGINAL implementer handoff, not this review's narrower charter) were never produced -- the implementer's own gated plan stalled mid-flight and the illustrative demo run (run_demo.py) is stalled at its start line with no live process. This means the code's core intent ('prove the pipeline runs end-to-end on real telemetry') remains unverified beyond mocked/synthetic tests; recommend Commander require a completed real-telemetry run before treating G7 as done, even though it does not block THIS shape/scope/region/no-write review."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "G7's own implementer plan (.agent-work/513-fp-followup/IMPLEMENTER_PLAN-g7-real-extractor.json) is incomplete: journal ends at seq 8 ('start m2-real-smoke', 2026-07-19T18:06:55Z) with no advance/attach/evidence after that. m2 (real 2023-Hungary-FP2 integration smoke: observation count + one RawFpObservation repr) and m3 (final simplification_limits re-run + writing .agent-work/513-fp-followup/result-real-extractor.md + SendMessage to team-lead) were never completed -- result-real-extractor.md does not exist anywhere in the worktree. crew-runs.json's rx/implementer/attempt-1 entry is still status='running', completed_at=null, heartbeat frozen at the run's start (17:57:58Z). Yet commit 807556b7 (the code under this review) was authored at 18:28:52Z, ~22 minutes after the plan went silent. The associated illustrative demo (run_demo.py / DEMO_STATE_NOTE.md) is also stalled: DEMO_RESULT.txt contains only the 'start' line (mtime 18:20Z), no 'DEMO COMPLETE'/'DEMO FAILED' line, and no run_demo.py process is currently alive. Net effect: the Protected Intent stated in handoff-real-extractor.md -- 'prove the pipeline runs end-to-end on real telemetry, de-risk the eventual powered run' -- has NOT actually been demonstrated; only the mock-session/synthetic-fixture unit tests have run. This review's narrow BLOCK criteria (frozen-file edit / wrong shapes / region-import violation / db write) do not cover this gap, so it does not change this review's verdict, but Commander/team-lead should treat the G7 slice as evidence-incomplete until a real-telemetry smoke actually runs to completion and result-real-extractor.md is written."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipI-513-rxreview",
+    "status": "released",
+    "claimed_at": "2026-07-19T18:29:59.911039+00:00",
+    "last_heartbeat": "2026-07-19T18:35:29.325241+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T18:36:12.714120+00:00"
+  }
+}

@@ -1,0 +1,7 @@
+# Fence citation — 624-phase0
+
+This Commander run operates under Admiral launch order `ShipB-624` (epic #601, issue #624 Phase 0 probes). Per the launch order's **File Ownership** section: "Sole writer this wave of: your verdict `C:/Programs/f1Brainz/.agent-work/epic-601/wave1b-624-verdict.md`, and a findings dir `C:/Programs/f1-624/.agent-work/624-phase0/`" — this run is not granted write authority over the shared, cross-commander durable logs at `C:/Programs/f1Brainz/.agent-work/AGENT_FEEDBACK.md`, `LESSONS.md`, or `CONSTELLATION_FEEDBACK.md` (the standing `lesson:shared-files-not-on-mission-branch`, confirmed across every prior delegated-commander run this repo has logged: "Return lessons-delta.json and feedback entries in the closeout report; the Admiral applies them centrally").
+
+Accordingly, this run's durable-log write is staged here (`.agent-work/staged-feedback/624-phase0/`: `AGENT_FEEDBACK.md`, `lessons-delta.json`, `CONSTELLATION_FEEDBACK.md`) rather than written directly to the shared main-checkout files, per `constellation-commander-delegated`'s fencing doctrine. The Admiral harvests this trio into the shared durable root at epic closeout.
+
+This staged trio is validated: `lessons-delta.json` is well-formed JSON and passes the `apply_lessons_delta.py` schema/field validation (confirmed via `--dry-run` against a disposable scratch copy of `LESSONS.md` — the only rejection was the active-lesson CAP, a business-rule the Admiral resolves at real-apply time by retiring or deferring, not a malformed op).

@@ -1,0 +1,222 @@
+{
+  "work_id": "663-g4-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-probe",
+    "m2-harness",
+    "m3-simplify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited crew + everyone global doctrine, the g4-implement handoff in FULL, and the load-bearing source (grip_baseline.py fit_grip_baseline_from_laps + weekend_neighbors, grip_store.py get_grip_at, tyre_supplant.py). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew+everyone doctrine + handoff + 3 source files read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-probe": {
+      "id": "m1-probe",
+      "title": "Probe 2023 DB, select circuit/session-pair scope, check stop condition",
+      "imperative": "Run a read-only sqlite probe against C:/Programs/f1Brainz/data/f1_data_2023.db to measure, per circuit and session, clean-lap counts, usable driver-stints, compound coverage, rain flag, and same-driver/same-compound cross-session overlap for candidate session pairs (FP-vs-FP). Select 3-5 contrasting circuits (street / high-speed / technical) with enough same-driver/same-compound cross-session laps to run a meaningful reconciliation. If the DB lacks enough such laps ANYWHERE, hit the stop condition and report rather than fabricate. Attest c1 with the chosen scope + justification.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine+handoff+source loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scope (circuits + session pairs) selected with data-adequacy evidence, or stop condition documented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Scope: Monaco FP2/FP3 (street/low-speed, 17 cells), Spain FP1/FP2 (aero, 26), Netherlands FP1/FP2 (banked-technical, 13), Saudi Arabia FP1/FP2 (high-speed street, 14). All dry. 10 teams x2 drivers -> clean team-stratified 50/50 split. Stop condition NOT hit."
+        }
+      ],
+      "constraints": [
+        "DB-only, path passed explicitly",
+        "state exact scope, no full-season claim"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-harness": {
+      "id": "m2-harness",
+      "title": "Build held-out reconciliation harness end to end",
+      "imperative": "Write tests/unit/physics/layer2/test_grip_heldout.py: per chosen session pair, split drivers 50/50 stratified-by-team fixed-seed (disjoint asserted), fit G on fit-set laps only via fit_grip_baseline_from_laps (lap-frame seam), upsert to a temp GripStore, then for held-out drivers compute RAW-pace cross-session reconciliation error BEFORE vs AFTER subtracting each session's G via get_grip_at, bucketed by compound + coarse tyre-age/fuel proxy (NO regression on the truth side -> leakage-avoidance by design). Assert harness ran, split disjoint, a numeric per-circuit result exists, and the leakage/rank check passed; do NOT assert after<before. PRINT before/after per-circuit + aggregate and write .agent-work/663-grip-g/g4-heldout-results.json. Test-after evidence. Attest c1 (harness reasoned/reviewed), then advance c2 (pytest exit 0).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "scope selected (m1 done)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-probe complete: scope selected"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "harness authored; honest-null operationalization + leakage-by-design verified by inspection",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Honest-null operationalization verified by inspection: pytest asserts harness-ran + disjoint-split + numeric-result + regression-free-truth-side + neg-control-computed; NO assert after<before. Leakage-by-design: truth side = raw fastest-3 push pace, no OLS. Scientific verdict (NULL) printed+JSON, never asserted."
+        },
+        {
+          "id": "c2",
+          "statement": "pytest harness runs to completion exit 0 (regardless of scientific outcome), prints real before/after numbers",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_heldout.py -q -s"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-harness-1"
+        }
+      ],
+      "constraints": [
+        "only new file tests/unit/physics/layer2/test_grip_heldout.py",
+        "do not modify grip_baseline/grip_store/grip_batch/tyre_supplant",
+        "pytest exit 0 regardless of scientific result",
+        "genuinely disjoint split asserted in-test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-harness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_heldout.py -q -s",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-simplify": {
+      "id": "m3-simplify",
+      "title": "simplification_limits clean on the new file",
+      "imperative": "Run the project simplification_limits self-check over the new test file and address anything it flags. Advance c1 (command exit 0).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "harness green (m2 done)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete, harness green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification_limits clean on tests/unit/physics/layer2/test_grip_heldout.py",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths tests/unit/physics/layer2/test_grip_heldout.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-simplify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-simplify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths tests/unit/physics/layer2/test_grip_heldout.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr663-g4-impl",
+    "status": "released",
+    "claimed_at": "2026-07-25T17:09:55.882542+00:00",
+    "last_heartbeat": "2026-07-25T17:29:32.148656+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T17:29:42.534586+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). G = per-session curve over cumulative_track_laps; reconciliation reduces to whether fit-set-derived (G_A-G_B) predicts held-out driver raw (pace_A-pace_B). Leakage-avoidance by design: raw bucketed pace on truth side, no OLS. Honest-null: assert harness-ran+disjoint+numeric+leakage-check, never after<before.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:10:14.136040+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-probe",
+      "why": "4 contrasting dry circuits selected; each has >=13 same-driver/same-compound cross-session cells (>=~6 survive the 50/50 split), fit-set retains >=~4 usable stints/session for a real 'ok' G fit. Team stratification fully populated.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:12:12.227039+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-harness",
+      "why": "Measured NEGATIVE: subtracting G worsens held-out cross-session reconciliation (before RMS 3.02s -> after 7.72s, +155%, 0/4 circuits improved). Cause: per-session saturating-curve fits structurally unidentified on FP data (offset<->asy corr ~=-1.0, offsets 102-111s) -- confirmed G-intrinsic (full-field fit equally degenerate), not a split artifact. Curve-only variant even worse (26s); swap neg-control confirms directional signal. Honest-null: complete valid deliverable.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:26:31.317491+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-simplify",
+      "why": "simplification_limits PASS after refactor (extracted _rms/_mae/_pooled_metrics/_print_report/_write_artifact; test fn complexity/length now under limits). Numbers unchanged.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:29:32.148635+00:00"
+    }
+  ]
+}

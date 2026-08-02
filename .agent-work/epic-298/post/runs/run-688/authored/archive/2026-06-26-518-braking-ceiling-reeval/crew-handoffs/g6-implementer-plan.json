@@ -1,0 +1,243 @@
+{
+  "work_id": "518-g6-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-run-old",
+    "m2-run-wired",
+    "m3-tests",
+    "m4-verdict"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g6-implement-handoff.md, and the G4 VERDICT.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + G4 VERDICT loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-run-old": {
+      "id": "m1-run-old",
+      "title": "Re-run C1 dashboard on OLD store (fixed sim)",
+      "imperative": "Run the dashboard fresh on the OLD store with the G5-fixed sim live: py scripts/driver_utilization_dashboard.py --cases 'Monaco:VER,Italy:VER,Great Britain:VER,Singapore:VER' --mc-samples 50 --seed 42 --db data/physics_estimates.db. Capture the real ASCII table + the per-regime U for all 4 RBR cases. 4/4 ok or honest per-case errors.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "OLD-store dashboard re-ran on the fixed sim; CSV reports/physics/driver_util_subset_2023.csv regenerated; per-regime U captured (real numbers)",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pandas as pd; d=pd.read_csv('reports/physics/driver_util_subset_2023.csv'); rbr=d[d.constructor=='Red Bull Racing']; assert len(rbr)==4; assert set(rbr.gp_name)=={'Monaco','Italy','Great Britain','Singapore'}; assert (rbr.split_is_impure==True).all(); print('OLD CSV fresh: 4 RBR rows', sorted(rbr.gp_name))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-run-old-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "offline cache",
+        "single canonical ideal-lap path",
+        "split_is_impure=True",
+        "do NOT re-fix sim / change car_prior / fits / store / thresholds"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-run-old-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pandas as pd; d=pd.read_csv('reports/physics/driver_util_subset_2023.csv'); rbr=d[d.constructor=='Red Bull Racing']; assert len(rbr)==4; assert set(rbr.gp_name)=={'Monaco','Italy','Great Britain','Singapore'}; assert (rbr.split_is_impure==True).all(); print('OLD CSV fresh: 4 RBR rows', sorted(rbr.gp_name))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-run-wired": {
+      "id": "m2-run-wired",
+      "title": "Re-run C1 dashboard on WIRED store (fixed sim)",
+      "imperative": "Run the dashboard fresh on the WIRED store with the G5-fixed sim live: py scripts/driver_utilization_dashboard.py --cases 'Monaco:VER,Italy:VER,Great Britain:VER,Singapore:VER' --mc-samples 50 --seed 42 --db data/physics_estimates_g3wired.db. Capture the real ASCII table + the per-regime U for all 4 RBR cases. 4/4 ok or honest per-case errors.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "OLD store re-run complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "WIRED-store dashboard re-ran on the fixed sim; CSV reports/physics/driver_util_subset_2023__physics_estimates_g3wired.csv regenerated; per-regime U captured (real numbers)",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pandas as pd; d=pd.read_csv('reports/physics/driver_util_subset_2023__physics_estimates_g3wired.csv'); rbr=d[d.constructor=='Red Bull Racing']; assert len(rbr)==4; assert set(rbr.gp_name)=={'Monaco','Italy','Great Britain','Singapore'}; assert (rbr.split_is_impure==True).all(); print('WIRED CSV fresh: 4 RBR rows', sorted(rbr.gp_name))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-run-wired-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "offline cache",
+        "single canonical ideal-lap path",
+        "split_is_impure=True",
+        "do NOT re-fix sim / change car_prior / fits / store / thresholds"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-run-wired-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pandas as pd; d=pd.read_csv('reports/physics/driver_util_subset_2023__physics_estimates_g3wired.csv'); rbr=d[d.constructor=='Red Bull Racing']; assert len(rbr)==4; assert set(rbr.gp_name)=={'Monaco','Italy','Great Britain','Singapore'}; assert (rbr.split_is_impure==True).all(); print('WIRED CSV fresh: 4 RBR rows', sorted(rbr.gp_name))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tests": {
+      "id": "m3-tests",
+      "title": "Verify physics + utilization unit tests green",
+      "imperative": "Run the required test surface and confirm green: py -m pytest tests/unit/physics/ tests/unit/test_utilization.py -q. No production code is expected to change; this confirms the fixed sim + utilization path are intact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both stores re-run",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/unit/physics + test_utilization green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ tests/unit/test_utilization.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tests-1"
+        }
+      ],
+      "constraints": [
+        "keep suite green"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/ tests/unit/test_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verdict": {
+      "id": "m4-verdict",
+      "title": "Build comparison table + write updated VERDICT.md",
+      "imperative": "Build the PRE-FIX(G4) -> POST-FIX-OLD -> POST-FIX-WIRED per-regime per-case table from the fresh numbers + the preserved G4 numbers. Answer (a) did u_braking/u_fast un-clip from 2.0? (b) are regimes physical (<=1) / separating? (c) does WIRED ceiling differ from OLD on the fixed sim? Overwrite VERDICT.md with per-regime GO/CONTEXTUAL/NO-GO on the fixed sim, deciding numbers, G4 pre-fix preserved as reference, honest caveats. Honest, not forced.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both stores re-run; tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "VERDICT.md updated with per-regime verdict + pre-fix->post-fix->OLD-vs-WIRED table + explicit un-clip statement + G4 reference preserved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "verdict"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verdict-1"
+        }
+      ],
+      "constraints": [
+        "verdict honest, not forced",
+        "do NOT edit docs/architecture",
+        "RBR-only scope"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verdict-1",
+          "type": "verdict",
+          "payload": {
+            "path": ".agent-work/518-braking-ceiling-reeval/VERDICT.md",
+            "verdict": "braking/fast NO-GO (still clipped 2.0), straight/slow CONTEXTUAL trending NO-GO"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

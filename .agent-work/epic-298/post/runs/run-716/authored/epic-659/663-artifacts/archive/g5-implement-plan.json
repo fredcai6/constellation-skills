@@ -1,0 +1,251 @@
+{
+  "work_id": "g5-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-calibrate",
+    "m2-harness",
+    "m3-simplify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff complete",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the g5 handoff in full (incl. g4-context block), grip_baseline.py, student_t.py, and g4's approved harness test_grip_heldout.py + g4-implement-result.md. Verify the handoff carries task/intent/scope/exclusions/required-evidence/test-mode/stop-conditions; block if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + grip_baseline + student_t + g4 harness/result + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-calibrate": {
+      "id": "m1-calibrate",
+      "title": "Calibrate synthetic shape to real data + prove real fit is callable on synthetic laps",
+      "imperative": "Write a scratch probe that (a) fits ONE real 2023 FP session via fit_grip_baseline_from_laps to observe residual scale, cumulative_track_laps range, n_stints and the reported curve_offset_correlation (calibration), and (b) builds ONE synthetic replicate (injected offset/asymptote/rate + field spread + noise over a realistic cumulative_track_laps axis, realistic stints), calls the REAL fit_grip_baseline_from_laps on it, and prints finite recovered params, reported sigmas, curve_offset_correlation, and an interval-coverage check via predictive_t. Confirms the pipeline is genuinely callable on synthetic data before scaling to >=50 replicates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "scratch probe runs, imports the real fit_grip_baseline_from_laps, fits a synthetic replicate, and prints finite recovery + separability numbers",
+          "check": {
+            "kind": "command",
+            "command": "\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-f1Brainz/75f751ad-3984-44e8-a745-c0c90f57a861/scratchpad/g5_calibrate_probe.py\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-calibrate-1"
+        }
+      ],
+      "constraints": [
+        "Do NOT reimplement the fit; import fit_grip_baseline_from_laps.",
+        "Read-only on grip_baseline/grip_store/student_t and the real DB."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-calibrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-f1Brainz/75f751ad-3984-44e8-a745-c0c90f57a861/scratchpad/g5_calibrate_probe.py\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-harness": {
+      "id": "m2-harness",
+      "title": "Build the full synthetic-recovery harness (>=50 replicates, both rates, honest-null)",
+      "imperative": "Write tests/unit/physics/layer2/test_grip_synthetic_recovery.py: >=50 replicates varying noise seed AND injected regime (rate / x-window bend), each genuinely calling fit_grip_baseline_from_laps. Per replicate compute (a) parameter-recovery: recovered asymptote+rate+offset land within the fit's OWN 2-sigma predictive interval (built via predictive_t) of the injected truth; (b) separability: |curve_offset_correlation| < 0.8. Report BOTH pooled rates with the 90% threshold as a REPORTED verdict (never a pytest assert on the science), plus a regime breakdown diagnosing WHY. Write .agent-work/663-grip-g/g5-synthetic-results.json. Pytest asserts ONLY harness validity (>=50 replicates ran, all finite, real fit called, both rates computed) and exits 0 regardless of pass/fail.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "calibration done; real fit confirmed callable on synthetic laps",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "harness imports fit_grip_baseline_from_laps (not reimplemented) and uses predictive_t for the interval",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'from src.physics.layer2.grip_baseline import' tests/unit/physics/layer2/test_grip_synthetic_recovery.py && grep -q 'fit_grip_baseline_from_laps' tests/unit/physics/layer2/test_grip_synthetic_recovery.py && grep -q 'predictive_t' tests/unit/physics/layer2/test_grip_synthetic_recovery.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-harness-1"
+        },
+        {
+          "id": "c2",
+          "statement": "pytest runs the full replicate count, computes+reports both rates, writes the artifact, and exits 0 regardless of scientific pass/fail",
+          "check": {
+            "kind": "command",
+            "command": "\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_synthetic_recovery.py -q -s"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-harness-2"
+        }
+      ],
+      "constraints": [
+        "Exact path tests/unit/physics/layer2/test_grip_synthetic_recovery.py.",
+        "No assert on recovery_rate>=0.90 or separability_rate>=0.90.",
+        "Do not modify grip_baseline/grip_store/grip_batch/tyre_supplant or the g4 test.",
+        "Report the real numbers; no manufactured pass, no manufactured drama."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-harness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'from src.physics.layer2.grip_baseline import' tests/unit/physics/layer2/test_grip_synthetic_recovery.py && grep -q 'fit_grip_baseline_from_laps' tests/unit/physics/layer2/test_grip_synthetic_recovery.py && grep -q 'predictive_t' tests/unit/physics/layer2/test_grip_synthetic_recovery.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-harness-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_synthetic_recovery.py -q -s",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-simplify": {
+      "id": "m3-simplify",
+      "title": "simplification_limits clean on the new harness",
+      "imperative": "Run simplification_limits on the new test file; resolve any flag or record why it is inherent. Confirm git check-ignore exit 1 (committable).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "harness written and pytest green (honest-null)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "simplification_limits PASS on the new file",
+          "check": {
+            "kind": "command",
+            "command": "\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths tests/unit/physics/layer2/test_grip_synthetic_recovery.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-simplify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-simplify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "\"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths tests/unit/physics/layer2/test_grip_synthetic_recovery.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g5-impl-cmdr663",
+    "status": "released",
+    "claimed_at": "2026-07-25T17:47:04.446129+00:00",
+    "last_heartbeat": "2026-07-25T17:57:22.572350+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T17:57:29.154410+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete (all 8 required sections present). g4 already found the real negative: per-session curve fits are structurally unidentified on FP data (offset<->asymptote corr ~= +-1, absurd offsets). g5 must test that SAME identifiability synthetically with known truth; design must match real session shapes and honestly map recovery/separability vs regime, not force a pass.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:47:27.823727+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-calibrate",
+      "why": "Calibrated to real 2023 FP: field-pooled residual RMS ~14-17s (driver spread + uncorrected fuel, NOT iid noise), x_max~460-610, curve amplitude (asymptote) only ~1.5-25s and often absurd, real corr near +-1 on degenerate sessions (Monaco -1.000, Netherlands -0.995) but moderate on others (GB -0.335, Spain -0.745). Mechanism: curve amplitude tiny vs pooled residual -> SNR~0.1 -> offset/asymptote alias. Probe confirms real fit callable on synthetic laps and that even SNR~6 already gives corr -0.89 and biased asymptote. Harness design = regime sweep over SNR (|asy|/noise) x curve-bend, report rates+per-regime breakdown.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:51:44.900010+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-harness",
+      "why": "Harness built + runs (72 replicates, exit 0). MEASURED: recovery 91.7% (marginal PASS, driven by wide low-SNR sigmas; high-SNR/high-bend only 66.7%), separability 37.5% (FAIL, median |corr| 0.824). Separability failure is intrinsic to the offset+asymptote*(1-exp(-rate*x)) form -> present even at estimator best case and pinned at +-1 wall at real SNR. Independently CONFIRMS g4's real-data identifiability diagnosis synthetically. Honest-null: both rates reported, no assert on the science.",
+      "mechanical": false,
+      "ts": "2026-07-25T17:54:54.654183+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-simplify",
+      "why": "simplification_limits PASS after extracting _regime_summary/_median_abs_corr/_clears helpers from _summarize (was cyclo 20, limit <20). Also hardened seed derivation to a deterministic BASE_SEED*100000+ri*1000+k (was process-varying hash()) so the harness is byte-reproducible; re-verified pytest exit 0 twice with identical rates (recovery 94.4% PASS, separability 31.9% FAIL, median|corr| 0.835). File committable (check-ignore exit 1).",
+      "mechanical": false,
+      "ts": "2026-07-25T17:57:22.572328+00:00"
+    }
+  ]
+}

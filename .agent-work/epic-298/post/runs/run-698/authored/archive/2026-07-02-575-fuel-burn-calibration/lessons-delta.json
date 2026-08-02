@@ -1,0 +1,21 @@
+{
+  "work_id": "575-fuel-burn-calibration",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": "AGENT_FEEDBACK.md 2026-07-02 575: py used throughout across g1-g4 + engine command-checks; spine imperatives hard-code python C:/... (resolves on this machine) — standing contradiction navigated."
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": "AGENT_FEEDBACK.md 2026-07-02 575: user-decision + review-result artifact postconditions attached (not attested) across understand/plan/triage/review and every gN-review/gN-integrate."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": "AGENT_FEEDBACK.md 2026-07-02 575: 5 implement/review cycles dispatched via run_crew.py --dispatch external + Agent-tool subagents (no claude CLI binary); recover_crews + registry, no collisions."
+    }
+  ]
+}

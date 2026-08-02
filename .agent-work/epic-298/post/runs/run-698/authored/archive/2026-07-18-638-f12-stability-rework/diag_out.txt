@@ -1,0 +1,142 @@
+Loading (READ-ONLY)...
+22 circuits, 612615 rows
+Fitting k=1..6 per half for all 5 splits (once each)...
+  split 0 fitted (N_a=283300, N_b=329315)
+  split 1 fitted (N_a=244655, N_b=367960)
+  split 2 fitted (N_a=344221, N_b=268394)
+  split 3 fitted (N_a=323690, N_b=288925)
+  split 4 fitted (N_a=294323, N_b=318292)
+
+=== A. BASELINE (shipped BIC over full N) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== B. BIC-vs-k, split0 halfA (N=283300) ===
+  k=1: BIC=1499207 penalty=63 LL/pt=-2.64586 wmin=1.000
+  k=2: BIC=1148503 penalty=138 LL/pt=-2.02676 dLL/pt=+0.61910 wmin=0.301
+  k=3: BIC=1093498 penalty=213 LL/pt=-1.92955 dLL/pt=+0.09721 wmin=0.206
+  k=4: BIC=1049907 penalty=289 LL/pt=-1.85248 dLL/pt=+0.07707 wmin=0.084
+  k=5: BIC=1067321 penalty=364 LL/pt=-1.88309 dLL/pt=-0.03060 wmin=0.095
+  k=6: BIC=1032682 penalty=439 LL/pt=-1.82182 dLL/pt=+0.06127 wmin=0.020 <FLOOR>
+
+=== C. Descriptor density shape (pooled) ===
+  radius_m: p1=20.62 p10=39.35 p25=61.78 p50=102.88 p75=207.78 p90=415.71 p99=1168.93
+  lateral_g: p1=0.51 p10=1.21 p25=1.88 p50=2.60 p75=3.29 p90=4.05 p99=5.13
+
+=== D. FIXED k=2 (locations only; not support-driven) ===
+  split 0: k_a=2 k_b=2 stat=1.1146 FAIL
+  split 1: k_a=2 k_b=2 stat=1.0197 FAIL
+  split 2: k_a=2 k_b=2 stat=1.6542 FAIL
+  split 3: k_a=2 k_b=2 stat=0.8136 PASS
+  split 4: k_a=2 k_b=2 stat=1.1135 FAIL
+  n_pass = 1/5
+
+=== D. FIXED k=3 (locations only; not support-driven) ===
+  split 0: k_a=3 k_b=3 stat=4.2217 FAIL
+  split 1: k_a=3 k_b=3 stat=0.5855 PASS
+  split 2: k_a=3 k_b=3 stat=3.6771 FAIL
+  split 3: k_a=3 k_b=3 stat=1.4097 FAIL
+  split 4: k_a=3 k_b=3 stat=1.4296 FAIL
+  n_pass = 1/5
+
+=== D. FIXED k=4 (locations only; not support-driven) ===
+  split 0: k_a=4 k_b=4 stat=3.4629 FAIL
+  split 1: k_a=4 k_b=4 stat=1.5086 FAIL
+  split 2: k_a=4 k_b=4 stat=3.3107 FAIL
+  split 3: k_a=4 k_b=4 stat=0.9004 PASS
+  split 4: k_a=4 k_b=4 stat=3.7515 FAIL
+  n_pass = 1/5
+
+=== E1. effective-N-capped BIC (n_eff_cap=300) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E1. effective-N-capped BIC (n_eff_cap=500) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E1. effective-N-capped BIC (n_eff_cap=1000) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E1. effective-N-capped BIC (n_eff_cap=2000) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E1. effective-N-capped BIC (n_eff_cap=5000) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E1. effective-N-capped BIC (n_eff_cap=10000) ===
+  split 0: k_a=4 k_b=6 stat=inf FAIL
+  split 1: k_a=6 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E4. narrower k_range=(2, 3) (BIC over full N) ===
+  split 0: k_a=3 k_b=3 stat=4.2217 FAIL
+  split 1: k_a=3 k_b=2 stat=inf FAIL
+  split 2: k_a=3 k_b=3 stat=3.6771 FAIL
+  split 3: k_a=3 k_b=3 stat=1.4097 FAIL
+  split 4: k_a=3 k_b=3 stat=1.4296 FAIL
+  n_pass = 0/5
+
+=== E4. narrower k_range=(2, 4) (BIC over full N) ===
+  split 0: k_a=4 k_b=4 stat=3.4629 FAIL
+  split 1: k_a=4 k_b=2 stat=inf FAIL
+  split 2: k_a=4 k_b=4 stat=3.3107 FAIL
+  split 3: k_a=4 k_b=3 stat=inf FAIL
+  split 4: k_a=3 k_b=4 stat=inf FAIL
+  n_pass = 0/5
+
+=== E2. subsample-budget (n_sub=2000) ===
+  split 0: k_a=5 k_b=5 stat=3.0061 FAIL
+  split 1: k_a=5 k_b=3 stat=inf FAIL
+  split 2: k_a=3 k_b=4 stat=inf FAIL
+  split 3: k_a=6 k_b=4 stat=inf FAIL
+  split 4: k_a=3 k_b=3 stat=1.4519 FAIL
+  n_pass = 0/5
+
+=== E2. subsample-budget (n_sub=5000) ===
+  split 0: k_a=4 k_b=5 stat=inf FAIL
+  split 1: k_a=5 k_b=3 stat=inf FAIL
+  split 2: k_a=5 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=4 stat=inf FAIL
+  split 4: k_a=3 k_b=3 stat=1.9886 FAIL
+  n_pass = 0/5
+
+=== E2. subsample-budget (n_sub=10000) ===
+  split 0: k_a=6 k_b=6 stat=2.8129 FAIL
+  split 1: k_a=5 k_b=3 stat=inf FAIL
+  split 2: k_a=4 k_b=6 stat=inf FAIL
+  split 3: k_a=5 k_b=4 stat=inf FAIL
+  split 4: k_a=3 k_b=3 stat=1.7996 FAIL
+  n_pass = 0/5
+
+SUMMARY: first-passing effN cap = None

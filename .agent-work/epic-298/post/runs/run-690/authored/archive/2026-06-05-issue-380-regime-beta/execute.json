@@ -1,0 +1,394 @@
+{
+  "work_id": "issue-380-regime-beta",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm ORCHESTRATOR_CONTEXT + GLOSSARY + compound_prior packet + problem_statement.md are loaded; confirm frozen plan intent and scope. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 push-beta anchor + two-normalizer routing: implement",
+      "imperative": "Create src/evo_predictor/compound_push_regime.py holding the gate-recovered push-regime beta_C* (C1 +0.003012, C2 +0.001237, C3 0.0, C4 -0.002422, C5 -0.005498, C6 -0.007365) with provenance comment to docs/evo/compound_crossover_gate_findings.md, and build_push_regime_normalizer(race_artifact: CompoundPriorArtifact) -> CompoundNormalizer that returns a CompoundNormalizer over a replace()'d artifact with beta_C* overridden for compounds present in accepted_compounds and gamma_C* + all other fields UNCHANGED. Add optional quali_sim_compound_normalizer param (default None) to compute_practice_features and compute_constructor_race_features_from_laps in practice_preprocessor/_compute.py; route the quali_sim/short_run bucket compute calls (qs_adj, qs_rep_adj, short_quantiles, short_bucket_repeatability, and constructor short equivalents) to (quali_sim_compound_normalizer or compound_normalizer); long_run calls keep compound_normalizer. None default => byte-identical behaviour. Add unit tests. Fill IMPLEMENTER_HANDOFF; this environment has no subagent dispatch, so the Commander executes the handoff in-context with implementer discipline. Attach implementer-result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "INJECT behind existing CompoundNormalizer interface; do NOT modify compound_prior fitter (#382 lane)",
+        "Do NOT touch lr_* normalization or the long_run path",
+        "Do NOT pull feasibility-branch preprocessor refactor or pace-encoding-368 changes (#379 lane / unrelated)",
+        "py for python; DB is only data source",
+        "run py -m src.utils.simplification_limits on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "push-regime anchor module + qs/lr two-normalizer routing; 66 targeted tests green; pyright clean; no new simplification violation under canonical baseline",
+            "files": "src/evo_predictor/compound_push_regime.py (new); src/evo_predictor/practice_preprocessor/_compute.py; tests/unit/evo_predictor/test_compound_push_regime.py (new, 13); tests/unit/evo_predictor/test_practice_preprocessor.py (+3)",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Review the G1 diff against close criteria: beta values match findings exactly and are monotone-down; build_push_regime_normalizer leaves gamma + non-beta fields untouched; quali_sim_compound_normalizer=None is byte-identical; only quali_sim buckets rerouted; lr_* path untouched; no compound_prior fitter edits; no sibling-lane bleed. Fill REVIEWER_HANDOFF; execute review in-context with reviewer independence (re-run tests, inspect diff fresh). Attach review-result with verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "diff tightly scoped to _compute.py + new evo module + tests; beta exact/monotone; only qs rerouted, lr untouched; None byte-identical; no compound_prior or sibling-lane edits; 68 tests green; pyright clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "On APPROVE, run the verification command and confirm green; advance. On BLOCK, rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "push-beta anchor + routing land; targeted tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_practice_preprocessor.py tests/unit/evo_predictor/test_compound_push_regime.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_practice_preprocessor.py tests/unit/evo_predictor/test_compound_push_regime.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "G1 approved; command check green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_practice_preprocessor.py tests/unit/evo_predictor/test_compound_push_regime.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 config flag wiring + validation + doc note: implement",
+      "imperative": "Add qs_compound_beta_regime = \"race\" to configs/evo/gold_defaults.toml [data] with comments (race=default current behaviour; push=gate-recovered fresh-pace beta for qs_*, lr_* unchanged), modeled on recent_history_form_encoding. Thread the flag through gold_cycle/config.py and the path that builds compound_normalizer (gold_cycle/runner.py / runner_support.py and/or data_adapter/_build.py) so that when 'push', a push normalizer is built via build_push_regime_normalizer(race_artifact) and passed as quali_sim_compound_normalizer to compute_practice_features; 'race' keeps None. Validate gracefully degrading flag (unknown value => clear error naming field/expectation/actual). Produce cross-compound-subset validation evidence (a small repeatable harness/script under scripts/ or .agent-work evidence using the DB: compare FP3-beats-model gap on cross-compound qs_* pairs race vs push, expecting narrowing on the cross-compound subset and ~no overall movement). Append a \u00a77/\u00a78 note to docs/evo/prediction_ceiling_and_priorities.md recording the shipped encoding (APPEND-shaped). Attach implementer-result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 integrated (anchor + routing available)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Flag default 'race' preserves current behaviour exactly",
+        "Doc edits APPEND-shaped only",
+        "Do NOT pull pace-encoding-368 gold_defaults changes",
+        "Stay in evo lane"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "qs_compound_beta_regime flag (default race) wired config->training->pipeline->data_adapter; unknown-value validation; cross-compound validation evidence (CROSS +0.55pp vs OVERALL +0.29pp, 2022-2025); appended section 8 doc note. 343 targeted tests green; pyright clean on 9 touched files; canonical simplification clean. Fixed 3 downstream test fakes for the new kwarg.",
+            "files": "gold_defaults.toml; gold_cycle/config.py; gold_cycle/runner_support.py; module_training_orchestration.py; run.py; pipeline.py; data_adapter/_build.py; scripts/validate_qs_compound_beta_regime.py (new); docs/evo/prediction_ceiling_and_priorities.md (append); 3 test files",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Review G2 diff: flag default-preserving and plumbed correctly; unknown-value validation present; push path builds and routes the push normalizer to qs_* only; validation evidence shows cross-compound-subset narrowing with ~no overall movement (honest); doc note append-shaped and accurate; no unrelated config bleed. Fill REVIEWER_HANDOFF; review in-context independently. Attach review-result with verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "flag default-preserving + plumbed config->training->pipeline->data_adapter; unknown-value validation (config + resolver); push routes to qs only via _resolve_quali_sim_normalizer deriving from race artifact; cross-compound validation honest (CROSS>OVERALL); doc append-only; no pace-encoding bleed; 343 tests green incl orchestration/pipeline/run; pyright clean; canonical simplification clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "On APPROVE, run verification (targeted tests + pyright on touched src) and confirm green; advance. On BLOCK, rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "flag wiring + validation land; targeted tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_practice_preprocessor.py tests/unit/evo_predictor/test_compound_push_regime.py tests/unit/evo_predictor/test_gold_cycle_config.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "G2 approved; command check green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_practice_preprocessor.py tests/unit/evo_predictor/test_compound_push_regime.py tests/unit/evo_predictor/test_gold_cycle_config.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "Pre-existing: compute_practice_features (complexity 20->21, 277->290 lines) and compute_constructor_race_features_from_laps (35->36, 202->214) exceed strict per-function limits on main already; both in practice_preprocessor (#379 lane). Consider decomposition. Not a canonical --baseline (file_lines) violation."
+    }
+  ],
+  "blockers": []
+}

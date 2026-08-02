@@ -1,0 +1,82 @@
+[live] session load 7.3s rho=1.1480283106796993
+{
+  "constructor": "Ferrari",
+  "drivers": [
+    "LEC",
+    "SAI"
+  ],
+  "elapsed": 11.0,
+  "cda_pd": 1.0119609900234032,
+  "sigma_pd_fit": 0.01422022590723213,
+  "cda_co": 0.7704630871365764,
+  "sigma_co_fit": 0.030870988470307253,
+  "coast_n": 1101,
+  "sigma_pd_total": 0.04577881007596521,
+  "sigma_co_total": 0.04528357648729657,
+  "z_fit_sigma": NaN,
+  "legit_fit_sigma": false,
+  "z_total_sigma": 5.684267060918471,
+  "legit_total_sigma": false,
+  "fused_sigma_total": null
+}
+{
+  "constructor": "McLaren",
+  "drivers": [
+    "NOR",
+    "PIA"
+  ],
+  "elapsed": 11.4,
+  "cda_pd": 1.100131853519057,
+  "sigma_pd_fit": 0.014889669976343545,
+  "cda_co": 0.8640222765916474,
+  "sigma_co_fit": 0.03343073730032197,
+  "coast_n": 1858,
+  "sigma_pd_total": 0.049593496541087995,
+  "sigma_co_total": 0.04997947568733296,
+  "z_fit_sigma": NaN,
+  "legit_fit_sigma": false,
+  "z_total_sigma": 5.148549414796182,
+  "legit_total_sigma": false,
+  "fused_sigma_total": null
+}
+{
+  "constructor": "Mercedes",
+  "drivers": [
+    "HAM",
+    "RUS"
+  ],
+  "elapsed": 10.5,
+  "cda_pd": 1.0868723936628857,
+  "sigma_pd_fit": 0.03112920554372667,
+  "cda_co": 0.9898417695150066,
+  "sigma_co_fit": 0.02334186732990166,
+  "coast_n": 1569,
+  "sigma_pd_total": 0.05615355890159611,
+  "sigma_co_total": 0.0485433547814322,
+  "z_fit_sigma": NaN,
+  "legit_fit_sigma": false,
+  "z_total_sigma": 2.0325013939336833,
+  "legit_total_sigma": true,
+  "fused_sigma_total": 0.04599387772210633
+}
+{
+  "constructor": "Aston Martin",
+  "drivers": [
+    "ALO",
+    "STR"
+  ],
+  "elapsed": 7.1,
+  "cda_pd": 1.0891778109958021,
+  "sigma_pd_fit": 0.037948052798125034,
+  "cda_co": 0.766368760645233,
+  "sigma_co_fit": 0.031439995557137744,
+  "coast_n": 1128,
+  "sigma_pd_total": 0.06027872990620934,
+  "sigma_co_total": 0.04554583752452633,
+  "z_fit_sigma": NaN,
+  "legit_fit_sigma": false,
+  "z_total_sigma": 5.705273028689322,
+  "legit_total_sigma": false,
+  "fused_sigma_total": null
+}
+wrote C:\Programs\f1-627\.agent-work\627-unified-basis\g3-implement\monza_multiteam_result.json

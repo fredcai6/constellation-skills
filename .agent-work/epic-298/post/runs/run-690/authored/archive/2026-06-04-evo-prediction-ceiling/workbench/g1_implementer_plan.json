@@ -1,0 +1,283 @@
+{
+  "work_id": "g1-sigma-significance-probe",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-skeleton",
+    "m2-significance",
+    "m3-level-coverage",
+    "m4-evidence-json",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read CREW_CONTEXT.md, GLOSSARY.md, the g1 handoff, engine-config.json, and probe the input details.json + calibration artifact shape. Verify handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; input data shape understood (12 modules, 4 race_start, 24 event rows 2025, entity_count all None, per-module fitted alpha/beta in artifact)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context+glossary+handoff loaded; data shape confirmed: 12 modules/4 race_start/24 2025-event rows/entity_count all None/per-module fitted alpha-beta in artifact; pearson matches engine embedded corr"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-skeleton": {
+      "id": "m1-skeleton",
+      "title": "Harness skeleton: load, stats helpers, --selftest",
+      "imperative": "Create sigma_significance_probe.py with: JSON loader; numpy/scipy-optional stats helpers (pearson, Fisher-z CI, t-based p-value, r_crit(n), seeded bootstrap percentile CI) that degrade to stdlib math/random/statistics; and a --selftest flag validating r_crit and Fisher-z on a known case. Must exit 0 on --selftest.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "--selftest passes (known-case r_crit and Fisher-z within tolerance)",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py --selftest"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-skeleton-1"
+        }
+      ],
+      "constraints": [
+        "files ONLY under .agent-work/evo-prediction-ceiling/evidence/",
+        "no torch",
+        "no new pip deps",
+        "deterministic seeded bootstrap"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-skeleton-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py --selftest",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-significance": {
+      "id": "m2-significance",
+      "title": "Part (a): per-module sigma_corr significance",
+      "imperative": "For all 12 modules compute sigma_corr=pearson(sigma_pi_trace, rank_mae_vs_retro_bt) over the 24 event rows; report point estimate, bootstrap percentile 95% CI, Fisher-z 95% CI, two-sided p vs rho=0, significant/indistinguishable verdict. Cross-check vs embedded engine corr. Print r_crit(n=24, alpha=0.05). Emit compact stdout table; highlight the 4 race_start modules.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "skeleton selftest green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "skeleton selftest green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "stdout shows per-module sigma_corr + both CIs + p + verdict for all 12 (4 race_start flagged) and r_crit(n=24); my pearson matches embedded engine corr",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-significance-1"
+        }
+      ],
+      "constraints": [
+        "statistically honest: report indistinguishable-from-0 when that is the truth"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-significance-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-level-coverage": {
+      "id": "m3-level-coverage",
+      "title": "Part (b): per-phase level/flatness + mis-level verdict",
+      "imperative": "Using per-module fitted alpha,beta from the uncertainty_calibration artifact (primary) and noting the task-level identity alpha=1,beta=0 caveat (insufficient_data), compute calibrated_sigma=alpha*sigma_pi_trace+beta*effective_dof per event with effective_dof=max(entity_count-1,1)=1 (entity_count is None -> fall back to 1, SAY SO). Report per-phase (quali/race/race_start) mean(calibrated_sigma) vs mean(realized rank_mae_vs_retro_bt) and ratio, plus CV(sigma) vs CV(error). End with explicit verdict: race_start mis-leveled (too high and/or too flat) vs quali/race, or coverage-aligned.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "part (a) printed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "part (a) printed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "stdout shows per-phase level/flatness summary + entity_count=None fallback note + explicit race_start mis-level-vs-coverage-aligned verdict",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-level-coverage-1"
+        }
+      ],
+      "constraints": [
+        "do not manufacture a mis-level the numbers do not support"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-level-coverage-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence-json": {
+      "id": "m4-evidence-json",
+      "title": "Write machine-readable g1_evidence.json",
+      "imperative": "Write .agent-work/evo-prediction-ceiling/evidence/g1_evidence.json with per-module sigma_corr stats, r_crit, per-phase level/flatness numbers, verdicts, provenance (source paths, seed, lib availability, entity_count fallback).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "parts (a) and (b) computed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "parts a+b computed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g1_evidence.json exists and is valid JSON with required keys",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import json;d=json.load(open('.agent-work/evo-prediction-ceiling/evidence/g1_evidence.json',encoding='utf-8'));assert 'per_module' in d and 'r_crit' in d and 'per_phase' in d and 'verdicts' in d;print('OK keys',sorted(d.keys()))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-json-1"
+        }
+      ],
+      "constraints": [
+        "files ONLY under evidence/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-json-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import json;d=json.load(open('.agent-work/evo-prediction-ceiling/evidence/g1_evidence.json',encoding='utf-8'));assert 'per_module' in d and 'r_crit' in d and 'per_phase' in d and 'verdicts' in d;print('OK keys',sorted(d.keys()))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Final verification: clean run exits 0",
+      "imperative": "Run the exact verification command from the handoff and confirm exit 0 with full table + verdicts + r_crit + g1_evidence.json present. Capture stdout for IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all prior steps green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all prior gates green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py exits 0 and prints table + verdicts + r_crit",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/evo-prediction-ceiling/evidence/sigma_significance_probe.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "666-driver-fingerprint-g1-review",
+  "diff_ref": "Uncommitted worktree at C:/Programs/f1brainz-wt/epic659-666 (epic659/666-driver-fingerprint): src/physics/fingerprint/__init__.py, src/physics/fingerprint/frozen_constants.py, scripts/fingerprint_class_coverage_675.py, tests/unit/physics/fingerprint/__init__.py, tests/unit/physics/fingerprint/test_frozen_constants.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md; g1-implement-handoff.md Close Criteria (binding pin of #665's method/call style)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "fingerprint_class_coverage_675.py's _naive_group_sem, _axis_totals, draw_ground_truth, draw_synthetic_long_form, and run_fit_two_way_branch are near-verbatim copies of the same-named functions in scripts/pooling_imbalance_validation_665.py. Non-blocking here: extracting a shared harness-utility module was out of this gate's Allowed Scope (new files only under src/physics/fingerprint/, scripts/fingerprint_class_coverage_675.py, tests/unit/physics/fingerprint/), and #665's script is explicitly read-only/not-edited. Worth a future triage item (e.g. a shared src/physics/layer2/ or scripts/ harness helper module) if a third such coverage/synthetic-recovery script appears.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "overridden", "finding": "", "override": {"repo_standard": "g1-implement-handoff.md Close Criteria: the coverage harness must FAITHFULLY reproduce #665's method, including its call conventions.", "reason": "driver_sigma/class_sigma/obs_sigma travel together as separate keyword args through draw_ground_truth/draw_synthetic_long_form/run_channel_primary/score_repetition, which is a mild data clump -- but this is the exact signature shape #665's own harness uses (verified by direct comparison against pooling_imbalance_validation_665.py), and the handoff's binding requirement is byte-for-byte structural fidelity to that method, not independent redesign. Introducing a parameter object here would diverge from the pinned reference method for a cosmetic gain, which the handoff explicitly does not want."}},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

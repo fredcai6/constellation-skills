@@ -1,0 +1,295 @@
+{
+  "work_id": "g3-multi-session-strawman",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-write-driver",
+    "m2-run-sessions",
+    "m3-verify-reports",
+    "m4-write-verdict",
+    "m5-write-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read CREW_CONTEXT.md and verify handoff is complete. Handoff has: task (exploration driver + verdict), intent (honest reporting), scope (scripts/ + evidence/ + VERDICT.md), exclusions (no harness changes, no re-pull, no DB writes), evidence (3 JSON reports + VERDICT.md), test mode (inspection-only), stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context loaded; handoff complete \u2014 task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete: task(driver+verdict), intent(honest-null OK), scope(scripts/+evidence/+VERDICT.md), exclusions(no harness mods/no re-pull/no DB writes), test-mode(inspection-only), stop-conditions all present"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-write-driver": {
+      "id": "m1-write-driver",
+      "title": "Write scripts/run_trajectory_grading_strawman.py",
+      "imperative": "Write the exploration driver that calls runner.run_grading over 3 sessions: 2023 Belgium Q (quali, cached), 2023 Belgium R (race, cached), 2022 Spain R (race, different year, cached). Document session picks + why in the header. Use ~5 drivers per session. Write one JSON per session to .agent-work/issue-446/evidence/ with 'grading' in filename. Tol_sector_s=0.050 (50ms). Set PYTHONIOENCODING=utf-8 or sys.stdout.reconfigure if needed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scripts/run_trajectory_grading_strawman.py exists and imports cleanly",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import ast, pathlib; ast.parse(pathlib.Path('C:/Programs/f1Brainz-worktrees/cmdr-446/scripts/run_trajectory_grading_strawman.py').read_text(encoding='utf-8')); print('parse ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-write-driver-1"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "no harness modifications",
+        "tol_sector_s=0.050"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-write-driver-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import ast, pathlib; ast.parse(pathlib.Path('C:/Programs/f1Brainz-worktrees/cmdr-446/scripts/run_trajectory_grading_strawman.py').read_text(encoding='utf-8')); print('parse ok')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-run-sessions": {
+      "id": "m2-run-sessions",
+      "title": "Run strawman driver foreground over 3 sessions",
+      "imperative": "Run py scripts/run_trajectory_grading_strawman.py from the worktree root. This runs the 3 sessions foreground (never background). If a session errors, diagnose: if it is a harness bug, STOP and raise blocker; if it is a data issue, skip that session and try an alternate cached session (e.g. 2024 Bahrain Q). Log output to a file and also display.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "driver script exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "scripts/run_trajectory_grading_strawman.py exists and parses cleanly"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "3 JSON report files exist under .agent-work/issue-446/evidence/ with 'grading' in name",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import glob, sys; files=glob.glob('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/evidence/*grading*.json'); print(files); sys.exit(0 if len(files)>=3 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-run-sessions-1"
+        }
+      ],
+      "constraints": [
+        "foreground run",
+        "offline only",
+        "no DB writes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-run-sessions-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import glob, sys; files=glob.glob('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/evidence/*grading*.json'); print(files); sys.exit(0 if len(files)>=3 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify-reports": {
+      "id": "m3-verify-reports",
+      "title": "Verify report schema validity and extract key numbers",
+      "imperative": "Load each JSON report and verify: schema_version=1.0, anchor_gate block exists (passed, max_residual_s, tol_s, n_laps), covariance_gate block exists (passed, reduced_chi_sq, band, n_samples), cross_residual_diagnostic block exists (per_lap_offset_s, per_lap_arc_residual_m, lap_closure_m, n_laps). Extract and record key numbers for the verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "3 report files on disk",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "3 JSON reports on disk"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all 3 reports parse as valid JSON with required keys",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import glob,json; files=glob.glob('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/evidence/*grading*.json'); [json.load(open(f,encoding='utf-8')) for f in files]; print('all valid JSON')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-reports-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-reports-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import glob,json; files=glob.glob('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/evidence/*grading*.json'); [json.load(open(f,encoding='utf-8')) for f in files]; print('all valid JSON')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-write-verdict": {
+      "id": "m4-write-verdict",
+      "title": "Write .agent-work/issue-446/VERDICT.md",
+      "imperative": "Write the verdict: per-session key numbers (anchor residuals RMS/median/max + pass/fail at 50ms; covariance reduced chi-square + pass/fail; cross-residual per-lap offsets range+stability). Then state the DISCRIMINATION CONCLUSION: does the harness discriminate or is it an honest null at 50ms with co-estimated anchors? Numbers must be traceable to the reports. Do not overclaim.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all reports verified and key numbers extracted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all 3 reports verified schema-valid; key numbers extracted"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "VERDICT.md exists with per-session numbers and clear discrimination-or-honest-null conclusion",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from pathlib import Path; t=Path('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/VERDICT.md').read_text(encoding='utf-8'); print('exists, len=', len(t))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-write-verdict-1"
+        }
+      ],
+      "constraints": [
+        "honest reporting; do not soften null into win"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-write-verdict-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"from pathlib import Path; t=Path('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/VERDICT.md').read_text(encoding='utf-8'); print('exists, len=', len(t))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-write-result": {
+      "id": "m5-write-result",
+      "title": "Write IMPLEMENTER_RESULT and commit",
+      "imperative": "Write IMPLEMENTER_RESULT to .agent-work/issue-446/crew-handoffs/g3-implement-RESULT.md. Then commit: scripts/run_trajectory_grading_strawman.py + VERDICT.md on branch issue-446-grading-harness. Do NOT commit the bulky JSON reports. Do NOT push.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "VERDICT.md written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "VERDICT.md written with per-session numbers and discrimination conclusion"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RESULT.md exists; commit created with script + verdict (no JSON evidence)",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from pathlib import Path; t=Path('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/crew-handoffs/g3-implement-RESULT.md').read_text(encoding='utf-8'); print('exists, len=', len(t))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-write-result-1"
+        }
+      ],
+      "constraints": [
+        "do NOT commit JSON evidence files"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-write-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"from pathlib import Path; t=Path('C:/Programs/f1Brainz-worktrees/cmdr-446/.agent-work/issue-446/crew-handoffs/g3-implement-RESULT.md').read_text(encoding='utf-8'); print('exists, len=', len(t))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3-impl-1",
+    "status": "released",
+    "claimed_at": "2026-06-11T15:47:52.461126+00:00",
+    "last_heartbeat": "2026-06-11T15:47:52.461126+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-06-11T15:54:38.218958+00:00"
+  }
+}

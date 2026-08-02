@@ -1,0 +1,290 @@
+{
+  "work_id": "518-braking-ceiling-reeval-g4-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-lapsampling-sigma",
+    "m2-db-arg",
+    "m3-reeval-run",
+    "m4-verdict",
+    "m5-final-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + confirm wired scope",
+      "imperative": "Read the g4 handoff, CREW_CONTEXT/GLOSSARY if present, the touched source (regime_utilization.py, characterize.py, driver_utilization_dashboard.py) and tests. Confirm the wired-store scope by querying fitted_at>=2026-06-25 (RBR r1-15 fully wired; Ferrari/Mercedes stray Bahrain only -> RBR-only verdict). Capture the OLD #510 baseline U for the 4 RBR/VER cases. Verify handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop/return). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded; handoff complete; wired scope confirmed RBR-only (r1-15); OLD baseline captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read in full; source+tests read; scope confirmed RBR r1-15 wired (Ferrari/Mercedes only stray Bahrain); OLD baseline captured from reports/physics/driver_util_subset_2023.csv"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-lapsampling-sigma": {
+      "id": "m1-lapsampling-sigma",
+      "title": "Add lap-sampling SEM sigma in quadrature (envelope sigma kept separate)",
+      "imperative": "TEST-AFTER. Add a per-regime lap-sampling sigma = std(ratio[mask])/sqrt(n) to the pure core regime_utilization (computed in _u_and_consistency or alongside it; it needs ratio[mask] and n). Add new frozen-dataclass fields sigma_u_lapsampling_* (per regime) AND sigma_u_total_* = sqrt(envelope^2 + lapsampling^2); KEEP existing sigma_u_* (the envelope sigma) separately reportable and unchanged. Update RegimeUtilization docstring + module 'Honest covariance' docstring + estimate_driver_utilization Notes (resolve the 'future lap-sampling hook' TODO). Thread the new fields through UtilizationRow (characterize.py) and rows_to_dataframe. Add a unit test in tests/unit/physics/test_regime_utilization.py: synthetic known ratio spread -> known SEM -> known quadrature combination, AND assert envelope sigma still reported separately. Do NOT weaken split_is_impure (always True) or change envelope-sigma math.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete; context loaded; handoff complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lap-sampling sigma + total sigma added; envelope sigma still separate; docstrings updated; threaded through characterize; new unit test passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_regime_utilization.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-lapsampling-sigma-1"
+        }
+      ],
+      "constraints": [
+        "envelope sigma must remain separately reportable (additive, not replacement)",
+        "split_is_impure stays True",
+        "constraint:physics_region_no_evo_import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-lapsampling-sigma-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_regime_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-db-arg": {
+      "id": "m2-db-arg",
+      "title": "Add --db arg to dashboard (default OLD for back-compat)",
+      "imperative": "Add a --db CLI arg to scripts/driver_utilization_dashboard.py (default = OLD data/physics_estimates.db for back-compat) so it can target either store. Add a --cases arg or --rbr-only flag is NOT required, but support running a subset; keep _DEFAULT_CASES intact. Wire the new total/lapsampling sigma columns into the printed table / CSV if present. Keep dashboard test green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete (new sigma fields exist)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete; new sigma fields exist"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "--db arg added and defaults to OLD; dashboard test green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_driver_utilization_dashboard.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-db-arg-1"
+        }
+      ],
+      "constraints": [
+        "no live FastF1/Jolpica calls; offline cache only",
+        "single canonical ideal-lap path preserved"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-db-arg-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_driver_utilization_dashboard.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-reeval-run": {
+      "id": "m3-reeval-run",
+      "title": "Run OLD vs WIRED for the 4 RBR/VER cases (apples-to-apples)",
+      "imperative": "Run the dashboard characterization for the 4 RBR/VER cases (Monaco, Italy, Great Britain, Singapore) on BOTH stores with identical MC settings (seed=42, mc-samples=50): OLD data/physics_estimates.db and WIRED data/physics_estimates_g3wired.db. Capture per-case OLD->NEW U for all four regimes + the new lap-sampling/total sigma. Determine whether u_braking and u_fast_corner un-clip from 2.0 (and whether they land <=1, ideally separating). Save reports to reports/physics/ (gitignored). Report real output inline.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete (--db arg works)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete; --db arg works, verified by parse tests"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "OLD->NEW U comparison table for 4 RBR cases produced from real runs; un-clip determination made",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "OLD vs WIRED run complete (4/4 ok each, mc=50 seed=42). HEADLINE: u_braking 2.0->2.0 and u_fast_corner 2.0->2.0 in ALL 4 RBR cases \u2014 STILL CLIP, did NOT un-clip. Root cause diagnosed: ideal-lap/real-lap longitudinal phase+envelope mismatch (ideal top speed 207m/s aphysical, ideal brakes deeper; in real-braking mask ideal mean 25m/s vs real 66m/s -> ratio ~2.5-3.7), NOT braking-frontier depth. Only u_straight responds (Italy +0.134). CSVs: reports/physics/driver_util_subset_2023.csv (OLD), ...__physics_estimates_g3wired.csv (NEW)"
+        }
+      ],
+      "constraints": [
+        "RBR-only scope; ignore Ferrari/Mercedes stray rows",
+        "offline cache only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-verdict": {
+      "id": "m4-verdict",
+      "title": "Write VERDICT.md (per-regime GO/CONTEXTUAL/NO-GO + deciding numbers)",
+      "imperative": "Write .agent-work/518-braking-ceiling-reeval/VERDICT.md: per-regime GO/CONTEXTUAL/NO-GO readiness call grounded in the m3 numbers; the OLD->NEW U comparison table; explicit un-clip statement for u_braking/u_fast_corner; the RBR-only wired-scope statement (other 4 constructors = documented continuation); honest caveats (impure split, lap-sampling sigma now first-class, single canonical path). Honest verdict \u2014 do NOT force GO.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete (numbers in hand)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete; OLD->NEW numbers + root-cause diagnosis in hand"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "VERDICT.md exists with per-regime verdict, comparison table, un-clip statement, RBR-scope statement, caveats",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "verdict"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verdict-1"
+        }
+      ],
+      "constraints": [
+        "verdict-producing not GO-guaranteed; call it honestly"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verdict-1",
+          "type": "verdict",
+          "payload": {
+            "path": ".agent-work/518-braking-ceiling-reeval/VERDICT.md",
+            "summary": "per-regime: straight CONTEXTUAL, slow_corner NO-GO, braking+fast_corner NO-GO (still clip 2.0, \u03940.000)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-final-evidence": {
+      "id": "m5-final-evidence",
+      "title": "Final evidence: full test command green + simplification clean",
+      "imperative": "Run the full required test command green and simplification clean on touched paths. Capture real output for the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete; VERDICT.md written"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full required test suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py tests/unit/test_utilization.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-final-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification clean on touched paths",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/physics/utilization/regime_utilization.py src/physics/utilization/characterize.py scripts/driver_utilization_dashboard.py tests/unit/physics/test_regime_utilization.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-final-evidence-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-final-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_regime_utilization.py tests/unit/physics/test_driver_utilization_dashboard.py tests/unit/test_utilization.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-final-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/physics/utilization/regime_utilization.py src/physics/utilization/characterize.py scripts/driver_utilization_dashboard.py tests/unit/physics/test_regime_utilization.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

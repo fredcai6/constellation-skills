@@ -1,0 +1,495 @@
+{
+  "ceiling_agg": "theoretical_best_min_sectors",
+  "regimes": {
+    "headline_2018_2024": {
+      "race_weekend": {
+        "channel": "race_weekend",
+        "model": {
+          "acc": 0.6710669684016428,
+          "events": 130,
+          "pairs": 23862
+        },
+        "best_across_fp": {
+          "acc": 0.8060933702120526,
+          "events": 130,
+          "pairs": 23862
+        },
+        "blend_rank": {
+          "acc": 0.8077696756349007,
+          "events": 130,
+          "pairs": 23862
+        },
+        "event_accounting": {
+          "records_total": 149,
+          "used_normal": 130,
+          "sprint_skipped": 18,
+          "missing_fp_or_q": 1
+        },
+        "strata_model": {
+          "adjacent (gap=1)": {
+            "acc": 0.5429175475687104,
+            "agree": 1284,
+            "pairs": 2365
+          },
+          "near (gap 2-3)": {
+            "acc": 0.5912743972445464,
+            "agree": 2575,
+            "pairs": 4355
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.6612481527793566,
+            "agree": 5817,
+            "pairs": 8797
+          },
+          "far (gap>=9)": {
+            "acc": 0.7593768723786699,
+            "agree": 6337,
+            "pairs": 8345
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.5895748087528909,
+            "agree": 3314,
+            "pairs": 5621
+          },
+          "overall": {
+            "acc": 0.6710669684016428,
+            "agree": 16013,
+            "pairs": 23862
+          }
+        },
+        "strata_best_across_fp": {
+          "adjacent (gap=1)": {
+            "acc": 0.5847780126849894,
+            "agree": 1383,
+            "pairs": 2365
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6723306544202067,
+            "agree": 2928,
+            "pairs": 4355
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.8081164033193134,
+            "agree": 7109,
+            "pairs": 8797
+          },
+          "far (gap>=9)": {
+            "acc": 0.9364889155182744,
+            "agree": 7815,
+            "pairs": 8345
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6879558797367017,
+            "agree": 3867,
+            "pairs": 5621
+          },
+          "overall": {
+            "acc": 0.8060933702120526,
+            "agree": 19235,
+            "pairs": 23862
+          }
+        },
+        "strata_blend_rank": {
+          "adjacent (gap=1)": {
+            "acc": 0.5839323467230444,
+            "agree": 1381,
+            "pairs": 2365
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6739380022962113,
+            "agree": 2935,
+            "pairs": 4355
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.8094805047175173,
+            "agree": 7121,
+            "pairs": 8797
+          },
+          "far (gap>=9)": {
+            "acc": 0.9392450569203116,
+            "agree": 7838,
+            "pairs": 8345
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6806618039494752,
+            "agree": 3826,
+            "pairs": 5621
+          },
+          "overall": {
+            "acc": 0.8077696756349007,
+            "agree": 19275,
+            "pairs": 23862
+          }
+        }
+      },
+      "recent_history": {
+        "channel": "recent_history",
+        "model": {
+          "acc": 0.7786019612773447,
+          "events": 130,
+          "pairs": 23862
+        },
+        "best_across_fp": {
+          "acc": 0.8060933702120526,
+          "events": 130,
+          "pairs": 23862
+        },
+        "blend_rank": {
+          "acc": 0.8077696756349007,
+          "events": 130,
+          "pairs": 23862
+        },
+        "event_accounting": {
+          "records_total": 149,
+          "used_normal": 130,
+          "sprint_skipped": 18,
+          "missing_fp_or_q": 1
+        },
+        "strata_model": {
+          "adjacent (gap=1)": {
+            "acc": 0.584355179704017,
+            "agree": 1382,
+            "pairs": 2365
+          },
+          "near (gap 2-3)": {
+            "acc": 0.653272101033295,
+            "agree": 2845,
+            "pairs": 4355
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7741275434807321,
+            "agree": 6810,
+            "pairs": 8797
+          },
+          "far (gap>=9)": {
+            "acc": 0.9037747153984422,
+            "agree": 7542,
+            "pairs": 8345
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6520192136630493,
+            "agree": 3665,
+            "pairs": 5621
+          },
+          "overall": {
+            "acc": 0.7786019612773447,
+            "agree": 18579,
+            "pairs": 23862
+          }
+        },
+        "strata_best_across_fp": {
+          "adjacent (gap=1)": {
+            "acc": 0.5847780126849894,
+            "agree": 1383,
+            "pairs": 2365
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6723306544202067,
+            "agree": 2928,
+            "pairs": 4355
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.8081164033193134,
+            "agree": 7109,
+            "pairs": 8797
+          },
+          "far (gap>=9)": {
+            "acc": 0.9364889155182744,
+            "agree": 7815,
+            "pairs": 8345
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6879558797367017,
+            "agree": 3867,
+            "pairs": 5621
+          },
+          "overall": {
+            "acc": 0.8060933702120526,
+            "agree": 19235,
+            "pairs": 23862
+          }
+        },
+        "strata_blend_rank": {
+          "adjacent (gap=1)": {
+            "acc": 0.5839323467230444,
+            "agree": 1381,
+            "pairs": 2365
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6739380022962113,
+            "agree": 2935,
+            "pairs": 4355
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.8094805047175173,
+            "agree": 7121,
+            "pairs": 8797
+          },
+          "far (gap>=9)": {
+            "acc": 0.9392450569203116,
+            "agree": 7838,
+            "pairs": 8345
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6806618039494752,
+            "agree": 3826,
+            "pairs": 5621
+          },
+          "overall": {
+            "acc": 0.8077696756349007,
+            "agree": 19275,
+            "pairs": 23862
+          }
+        }
+      }
+    },
+    "oos_2025": {
+      "race_weekend": {
+        "channel": "race_weekend",
+        "model": {
+          "acc": 0.712708830548926,
+          "events": 18,
+          "pairs": 3352
+        },
+        "best_across_fp": {
+          "acc": 0.7643198090692124,
+          "events": 18,
+          "pairs": 3352
+        },
+        "blend_rank": {
+          "acc": 0.7708830548926014,
+          "events": 18,
+          "pairs": 3352
+        },
+        "event_accounting": {
+          "records_total": 24,
+          "used_normal": 18,
+          "sprint_skipped": 6,
+          "missing_fp_or_q": 0
+        },
+        "strata_model": {
+          "adjacent (gap=1)": {
+            "acc": 0.540785498489426,
+            "agree": 179,
+            "pairs": 331
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6006546644844517,
+            "agree": 367,
+            "pairs": 611
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7044534412955465,
+            "agree": 870,
+            "pairs": 1235
+          },
+          "far (gap>=9)": {
+            "acc": 0.8280851063829787,
+            "agree": 973,
+            "pairs": 1175
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6078184110970997,
+            "agree": 482,
+            "pairs": 793
+          },
+          "overall": {
+            "acc": 0.712708830548926,
+            "agree": 2389,
+            "pairs": 3352
+          }
+        },
+        "strata_best_across_fp": {
+          "adjacent (gap=1)": {
+            "acc": 0.5287009063444109,
+            "agree": 175,
+            "pairs": 331
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6366612111292962,
+            "agree": 389,
+            "pairs": 611
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7562753036437248,
+            "agree": 934,
+            "pairs": 1235
+          },
+          "far (gap>=9)": {
+            "acc": 0.9055319148936171,
+            "agree": 1064,
+            "pairs": 1175
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6582597730138714,
+            "agree": 522,
+            "pairs": 793
+          },
+          "overall": {
+            "acc": 0.7643198090692124,
+            "agree": 2562,
+            "pairs": 3352
+          }
+        },
+        "strata_blend_rank": {
+          "adjacent (gap=1)": {
+            "acc": 0.56797583081571,
+            "agree": 188,
+            "pairs": 331
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6382978723404256,
+            "agree": 390,
+            "pairs": 611
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7481781376518218,
+            "agree": 924,
+            "pairs": 1235
+          },
+          "far (gap>=9)": {
+            "acc": 0.9208510638297872,
+            "agree": 1082,
+            "pairs": 1175
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6658259773013872,
+            "agree": 528,
+            "pairs": 793
+          },
+          "overall": {
+            "acc": 0.7708830548926014,
+            "agree": 2584,
+            "pairs": 3352
+          }
+        }
+      },
+      "recent_history": {
+        "channel": "recent_history",
+        "model": {
+          "acc": 0.758054892601432,
+          "events": 18,
+          "pairs": 3352
+        },
+        "best_across_fp": {
+          "acc": 0.7643198090692124,
+          "events": 18,
+          "pairs": 3352
+        },
+        "blend_rank": {
+          "acc": 0.7708830548926014,
+          "events": 18,
+          "pairs": 3352
+        },
+        "event_accounting": {
+          "records_total": 24,
+          "used_normal": 18,
+          "sprint_skipped": 6,
+          "missing_fp_or_q": 0
+        },
+        "strata_model": {
+          "adjacent (gap=1)": {
+            "acc": 0.552870090634441,
+            "agree": 183,
+            "pairs": 331
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6235679214402619,
+            "agree": 381,
+            "pairs": 611
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7449392712550608,
+            "agree": 920,
+            "pairs": 1235
+          },
+          "far (gap>=9)": {
+            "acc": 0.8995744680851064,
+            "agree": 1057,
+            "pairs": 1175
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6380832282471627,
+            "agree": 506,
+            "pairs": 793
+          },
+          "overall": {
+            "acc": 0.758054892601432,
+            "agree": 2541,
+            "pairs": 3352
+          }
+        },
+        "strata_best_across_fp": {
+          "adjacent (gap=1)": {
+            "acc": 0.5287009063444109,
+            "agree": 175,
+            "pairs": 331
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6366612111292962,
+            "agree": 389,
+            "pairs": 611
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7562753036437248,
+            "agree": 934,
+            "pairs": 1235
+          },
+          "far (gap>=9)": {
+            "acc": 0.9055319148936171,
+            "agree": 1064,
+            "pairs": 1175
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6582597730138714,
+            "agree": 522,
+            "pairs": 793
+          },
+          "overall": {
+            "acc": 0.7643198090692124,
+            "agree": 2562,
+            "pairs": 3352
+          }
+        },
+        "strata_blend_rank": {
+          "adjacent (gap=1)": {
+            "acc": 0.56797583081571,
+            "agree": 188,
+            "pairs": 331
+          },
+          "near (gap 2-3)": {
+            "acc": 0.6382978723404256,
+            "agree": 390,
+            "pairs": 611
+          },
+          "mid (gap 4-8)": {
+            "acc": 0.7481781376518218,
+            "agree": 924,
+            "pairs": 1235
+          },
+          "far (gap>=9)": {
+            "acc": 0.9208510638297872,
+            "agree": 1082,
+            "pairs": 1175
+          },
+          "midfield (both pos 6-15)": {
+            "acc": 0.6658259773013872,
+            "agree": 528,
+            "pairs": 793
+          },
+          "overall": {
+            "acc": 0.7708830548926014,
+            "agree": 2584,
+            "pairs": 3352
+          }
+        }
+      }
+    }
+  },
+  "notes": {
+    "fusion_delta": "OMITTED \u2014 no committed fusion artifact is scored here without retraining (Admiral Q3 honest-omission).",
+    "constructor_quali": "OMITTED \u2014 driver_quali primary (Admiral Q4); constructor records were not emitted in g1.",
+    "pair_convention": "undirected C(N,2); records store directed N*(N-1) but the harness primitive is undirected.",
+    "shared_pairs": "per event, model/-pi, best_across_fp, blend_rank and target restricted to one common driver set."
+  }
+}

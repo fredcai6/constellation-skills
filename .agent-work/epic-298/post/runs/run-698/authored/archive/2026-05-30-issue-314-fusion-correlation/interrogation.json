@@ -1,0 +1,73 @@
+{
+  "work_id": "issue-314-fusion-correlation",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["i0-context", "q1", "q2", "q3", "q4"],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Goal: issue #314 — compute pairwise rank-error correlations from event_level_metrics, evaluate correction to fusion independence assumption.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": null, "finding": null,
+      "evidence": [{"id":"e-ctx-1","type":"artifact","payload":{"note":"fusion.py, task_calibration.py, calibration.py, gold_module_cycle.py, runner_support.py read; event_level_metrics structure confirmed: rows have year, round_num, task, mean_absolute_rank_error, sigma_pi_trace, entity_count, event_id"},"produced_by":"engine","ts":"2026-05-30"}],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Scope: diagnostic-only or diagnostic + correction?",
+      "imperative": "Ask: is the deliverable (A) diagnostic only or (B) diagnostic + correction?",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "A — diagnostic only. No fusion contract change this run. Triage candidate: file correction issue if high correlations observed.",
+      "finding": "Scope is diagnostic-only. Pairwise rank-error correlation matrix as a gold-cycle diagnostic. Correction follow-up issue spawned if results show material correlations.",
+      "evidence": [{"id":"e-q1-1","type":"user-decision","payload":{"verdict":"A — diagnostic only","note":"user: 'yeah A sounds right, but we should make sure that we spawn an issue to follow up on the correction if testing shows its necessary'"},"produced_by":"engine","ts":"2026-05-30"}],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Correction mechanism: tension inflation or off-diagonal?",
+      "imperative": "Ask about correction knob.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "skipped", "status_detail": {}, "result": "Skipped — no correction in scope for this run.",
+      "finding": null, "evidence": [], "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Event join key consistency",
+      "imperative": "Confirm join key for cross-module correlation.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "Code-resolved: join on (year, round_num). event_id format is inconsistent across adapters; year + round_num are always parsed and stored in every event_level_metrics row (runner_support.py:714-715, gold_module_cycle.py:59-60).",
+      "finding": "Join key: (year, round_num, task). Reliable across all modules.", "evidence": [], "rework_count": 0
+    },
+    "q4": {
+      "id": "q4",
+      "title": "Task scope: per-task or pooled?",
+      "imperative": "Ask: separate correlation matrix per task, or pooled?",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "Per-task matrices (A). Train years only — standard per existing calibration code (eval year excluded).",
+      "finding": "Separate N×N correlation matrix per task (quali/race_start/race), computed from train-years-only event_level_metrics rows, joined on (year, round_num).",
+      "evidence": [{"id":"e-q4-1","type":"user-decision","payload":{"verdict":"per-task","note":"user confirmed 'yeah good with a'"},"produced_by":"engine","ts":"2026-05-30"}],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "statement": "Implement a new gold-cycle diagnostic: pairwise rank-error correlation analysis across modules, per fusion task. One new function build_fusion_correlation_diagnostics(modules, train_years, eval_year) in a new file src/evo_predictor/gold_cycle/fusion_diagnostics.py. For each task, joins each module's event_level_metrics rows on (year, round_num), computes Pearson r of mean_absolute_rank_error series for every module pair, returns structured dict keyed by task then module-pair. Runner calls it and stores result in summary and detail. Schema updated. Reports renderer adds a correlation section. No fusion contract change. Triage candidate: if any module pair shows |r| > threshold, pre-draft and file a correction-phase issue.",
+    "protected_intent": "Diagnostic only — no fusion change this run. Correlation values drive a future decision, not an immediate one. Eval year excluded from correlation computation to avoid leakage.",
+    "out_of_scope": ["Changing fusion.py contract", "Modifying FusionStepConfig.covariance_tension_inflation", "Off-diagonal covariance terms", "Any backtest comparison"]
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "title": "Fusion correlation correction",
+      "description": "If pairwise rank-error correlation diagnostic reveals any module pair with |r| > 0.6 for any task, file a follow-up issue for: evaluate de-weighting mechanism (covariance_tension_inflation or joint covariance), gate on held-out Brier improvement before merging fusion contract change.",
+      "classification": "pending-evidence",
+      "action": "assess at triage step after diagnostic is implemented"
+    }
+  ],
+  "blockers": []
+}

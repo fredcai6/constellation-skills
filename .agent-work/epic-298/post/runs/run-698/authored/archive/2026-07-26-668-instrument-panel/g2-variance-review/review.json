@@ -1,0 +1,155 @@
+{
+  "work_id": "g2-variance-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone.md + global-crew.md (bundled), docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the g2-variance-review handoff + g2-variance-implement handoff/result, the diff (git status --porcelain shows only new untracked dirs: .agent-work/, src/physics/instrument_panel/, tests/unit/physics/instrument_panel/; git diff on pooling.py is empty), and pooling.py source directly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff asked for Instrument 1: decompose_segment_time_variance(values, drivers, classes)->VarianceShares with car_reference_share/driver_utilization_share/residual_share (bounded [0,1], summing ~1.0) + a floor flag, built purely on fit_two_way from src/physics/layer2/pooling.py with NO interaction term, TDD-tested via synthetic recovery. Diff delivers exactly this: variance_decomposition.py wraps fit_two_way(values, teams=drivers, circuits=classes) unmodified, returns VarianceShares(car_reference_share=frac_circuit, driver_utilization_share=frac_team, residual_share=frac_resid, driver_utilization_is_floor=True, n=pool.n). 7 synthetic-recovery tests reproduce green (7 passed in 0.49s, verified myself). pyright-0 reproduced myself. No scope exceeded.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows ONLY new untracked paths: .agent-work/668-instrument-panel/** (workflow artifacts), src/physics/instrument_panel/** (new), tests/unit/physics/instrument_panel/** (new). git diff on src/physics/layer2/pooling.py is empty (byte-identical, unmodified, confirmed by reading the file: fit_two_way/TwoWayPool are exactly as documented, no edits). No #660/#664/#666/#667 producer module touched. No f1_data_*.db present/written (confirmed no data/ changes in git status). No interaction term added (function is a 5-line pass-through: pool=fit_two_way(...); return VarianceShares(...)). Allowed scope fully respected; specific exclusions all respected.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced BOTH load-bearing evidences myself, not trusted from the report: (1) pytest tests/unit/physics/instrument_panel/test_variance_decomposition.py -q -> 7 passed in 0.49s (matches implementer claim exactly). (2) pyright on variance_decomposition.py -> 0 errors, 0 warnings, 0 informations (matches claim). Independently wrote a scratch script (outside repo, read-only) reusing the SAME generative model against fit_two_way directly: correct mapping reproduces pure_car -> car_reference=0.999/driver_utilization=0.000 and pure_driver -> car_reference=0.000/driver_utilization=0.997 (matches test thresholds <0.1). Then SWAPPED the mapping (car_reference<-frac_team, driver_utilization<-frac_circuit) on the identical synthetic data: pure_car swapped driver_utilization=0.999 (test asserts <0.1 -> would FAIL), pure_driver swapped car_reference=0.997 (test asserts <0.1 -> would FAIL). Confirms the two per-share falsification tests genuinely depend on the correct mapping and would fail if swapped -- not tautological. Also confirmed a hardcoded constant share (e.g. driver_utilization always 0.33 across the b-sweep) fails the monotonic-rise assertion (shares[-1] > shares[0]+0.1) -- hardcoding is caught too. Confirmatory sum/bounds evidence (shares in [0,1] summing to ~1.0 via _assert_valid_shares) is exercised on every one of the 7 tests, not just one spot example.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraint checks: (1) Pure/deterministic -- confirmed, no I/O, no RNG in production code, numpy-only arithmetic delegated to fit_two_way. (2) Additive-pool-only / no interaction term -- confirmed by reading pooling.py's fit_two_way (y=mu+team_effect+circuit_effect+residual, no cross term) and variance_decomposition.py (5-line pass-through, adds nothing). (3) Driver-utilization=floor -- driver_utilization_is_floor is a hardcoded True field, always set, matches constraint:no-frame-kill. (4) F12-independent -- no DB import, no REPLICATION_* reference anywhere in the new files (grep-confirmed by reading full file contents). (5) Structure/state rules (CREW_CONTEXT) -- no module-level mutable state, no DatabaseManager, no impure caching. (6) simplification_limits -- reproduced myself: 'PASS (4 files checked)' on src/physics/instrument_panel + tests/unit/physics/instrument_panel. (7) Physics truth-anchoring (L1-L4) -- the synthetic-recovery tests use a BALANCED grid (n_reps=8 per driver x class cell), for which fit_two_way's method-of-moments is exact per its own docstring, so recovery-to-known-coefficient is L1/L2-level truth anchoring, satisfying 'new physics models need truth-anchored tests.' (8) Region verification -- handoff scoped required evidence to the narrow test file; I additionally ran the reused seam's own suite (tests/unit/physics/layer2/test_pooling.py, 15 tests) together with the new instrument_panel tests: 22 passed in 0.56s, confirming the read-only reuse didn't disturb pooling.py's own contract. A full tests/unit/physics/ region run (per CREW_CONTEXT's per-region-verification rule) was attempted but stalled indefinitely inside an UNRELATED pre-existing file (tests/unit/physics/layer2/test_damage_tractability.py, nothing to do with this diff) well past 2 minutes with zero new output; I stopped it rather than let it block the review indefinitely -- flagged below as a workflow/out-of-scope observation, not a blocker, since the targeted seam-suite + new-module suite both pass and no existing file was touched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes in the implementer result match the diff: new structural anchor src/physics/instrument_panel/ (variance_decomposition.py, VarianceShares, decompose_segment_time_variance) is real and matches what was built; pooling.py listed as read-only reuse is confirmed unmodified (empty git diff); capability claim (driver-utilization/car-reference variance sizing) matches the function's actual behavior; constraint claims (lowest-dimensionality / no-frame-kill) verified true in code, not just asserted. Decision-candidate note correctly states the axis mapping and no-interaction rule were PINNED by commander authority upstream (launch order + #665/#675 convention) and were followed, not re-litigated -- appropriate, no un-surfaced authority gap. No architecture-significant divergence from the recorded map; nothing here needs Commander reconciliation beyond ordinary archive/merge. One triage-worthy observation (not a reconciliation blocker): the full tests/unit/physics/ region suite hangs on an unrelated pre-existing file (test_damage_tractability.py) -- worth a follow-up ticket for Commander/Triage since it affects region-verification confidence for ANY future physics-region change, independent of this diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to fowler_pass_g2.json and cleared scripts/verify_fowler_pass.py (exit 0: 'fowler pass ok ... smells=12, flagged=[], overridden=[]'). All 12 baseline smells rendered a verdict; all 12 verdicted absent -- the module is a deliberately thin, well-scoped pass-through (5-line function, 5-field value dataclass, 3-param signature matching the wrapped seam) with no duplication, no envy, no chains, no speculative hooks, and a long docstring that documents a genuinely non-obvious asymmetry rather than papering over unclear code. No overrides needed, so no repo-standard-subordination log was required.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE: variance-decomposition instrument (Instrument 1, #668) does exactly what the handoff asked, fully in-scope, pooling.py unmodified. Axis mapping (drivers->frac_team=driver-utilization, classes->frac_circuit=car-reference) verified against fit_two_way source and independently confirmed to genuinely falsify -- reproduced the shipped generative model directly against fit_two_way and showed the swapped mapping would fail 2 of the 7 tests, and a hardcoded share would fail the monotonic test. No interaction term / no bespoke model added. pytest (7 passed) and pyright (0 errors) reproduced myself and match claims exactly. Fowler pass: all 12 baseline smells absent, rail-verified. One non-blocking triage candidate flagged: an unrelated pre-existing hang in tests/unit/physics/layer2/test_damage_tractability.py defeats full physics-region verification generally."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tests/unit/physics/layer2/test_damage_tractability.py (or a fixture it shares) hangs/stalls the full 'py -m pytest tests/unit/physics/ -q' region run well past 2 minutes with zero new output -- observed independently of and unrelated to the g2-variance-decomposition diff (git diff on that file is empty). Worth a triage ticket: it silently defeats CREW_CONTEXT's per-region-verification rule for the whole physics region, not just this change."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-668-g2var",
+    "status": "released",
+    "claimed_at": "2026-07-27T01:49:56.281875+00:00",
+    "last_heartbeat": "2026-07-27T01:56:34.244734+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-27T01:57:23.811101+00:00"
+  }
+}

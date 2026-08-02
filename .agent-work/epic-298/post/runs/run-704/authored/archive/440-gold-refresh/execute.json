@@ -1,0 +1,423 @@
+{
+  "work_id": "440-gold-refresh",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-tests",
+    "g2-goldcycle",
+    "g3-step2gate",
+    "g4-fusion",
+    "g5-materialize",
+    "g6-rtcompare",
+    "g7-validation",
+    "g8-step6-ledger",
+    "g9-candidate-fantasy",
+    "g10-walkforward",
+    "g11-pr"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Runbook docs/evo/analysis_refresh.md read end-to-end; mission frame + LESSONS Active loaded; HARD STOP + pre-rulings internalized. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "runbook + frame + lessons + hard-stop loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-tests": {
+      "id": "g1-tests",
+      "title": "Step 1: unit + integration tests",
+      "imperative": "Run py run_tests.py --unit then --integration. Both green (integration may take 10-15 min). Capture log. Attest c1 with pass counts.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unit + integration suites green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "py launcher; utf-8 child env"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-goldcycle": {
+      "id": "g2-goldcycle",
+      "title": "Step 2: gold module training cycle",
+      "imperative": "Run gold-cycle --config configs/evo/gold_defaults.toml --utilization max teeing to logs/gold_cycle_latest.log. FOREGROUND poll. Record slug. Attest c1 on clean exit + slug captured.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gold cycle complete; slug + artifacts present",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "resume exit 0; slug gold_cycle_260611_231027_2018thru2024; artifacts present; non-fatal oracle_all_states diag failure recorded"
+        }
+      ],
+      "constraints": [
+        "--utilization max; tee to log; SKIP Step 0"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-step2gate": {
+      "id": "g3-step2gate",
+      "title": "Step 2 gate: fusion-train-row health (REQUIRED)",
+      "imperative": "Verify fusion_train_rows carry non-null pairwise_nll (>0 rows). Verify retro-truth coverage both entity scopes (driver legacy + constructor subdir) across train+eval years. FLOAT to Admiral on any anomaly. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "gold cycle complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 complete, gold details JSON present"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "non-null pairwise_nll confirmed; retro-truth coverage complete both scopes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "1788/1788 non-null pairwise_nll; retro-truth driver==constructor counts all 8 years; no anomaly (wrong-sign sigma corr flags are documented #314/#316 signals, recorded)"
+        }
+      ],
+      "constraints": [
+        "gate REQUIRED before Step 3"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-fusion": {
+      "id": "g4-fusion",
+      "title": "Step 3: static hierarchical fusion training",
+      "imperative": "Run run_static_hierarchical_fusion_training.py with gold slug inputs, train 2018-2024 eval 2025, --output-dir .  Record fusion slug. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "step-2 gate passed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "step-2 gate PASS"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fusion config + reports + trained manifest written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "fusion slug fusion_260612_000020_2018thru2024; config+summary+details+md+trained manifest written; candidate_train_event_count=149 matches retro-truth train total all 3 tasks"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-materialize": {
+      "id": "g5-materialize",
+      "title": "Step 3b: materialize bundles + assemble trained manifest (REQUIRED)",
+      "imperative": "Run materialize_runtime_bundles.py then assemble_trained_sampled_runtime_manifest.py --race-start-target-lap 3. Mind slug-timestamp gotcha. Attest c1 on relative paths + provenance block present.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fusion trained",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "fusion complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "bundles materialized; manifests repo-relative; provenance block present",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "12 bundles materialized to params/gold/runtime_bundles/gold_cycle_260611_231027_2018thru2024; trained manifest assembled under fusion slug 000020 + manually repointed (timestamp gotcha); checkpoint validation: gold/static_fusion/manifest_portability PASS, report_alignment pending Step 4 as documented"
+        }
+      ],
+      "constraints": [
+        "--race-start-target-lap 3"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g6-rtcompare": {
+      "id": "g6-rtcompare",
+      "title": "Step 4: sampled runtime comparison",
+      "imperative": "Run run_sampled_runtime_comparison.py --race-start-target-lap 3 --output-dir reports/evo. Record metric_deltas_trained_minus_default + fused Brier. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "manifests materialized",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "manifests portable+aligned-ready"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "rt comparison report present; both branches 24 races; deltas + Brier captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rt_comparison_260612_000503: 24/24 both branches, finite pass; deltas trained-default MAE -0.425 brier -0.0847 logloss -5.485 spearman -0.175; trained fused Brier 0.19592 vs 0.2008 baseline (#390)"
+        }
+      ],
+      "constraints": [
+        "--race-start-target-lap 3"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g7-validation": {
+      "id": "g7-validation",
+      "title": "Step 5: pipeline validation 7/7",
+      "imperative": "Run run_pipeline_validation.py --profile compact. ALL 7 sections must pass. Capture the validation table. Attest c1 only when 7/7 green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "rt comparison done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rt comparison fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pipeline_validation 7/7 pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "pipeline_validation overall PASS; all 7 runbook sections + provenance green @ 2026-06-12T00:44:55Z"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g8-step6-ledger": {
+      "id": "g8-step6-ledger",
+      "title": "Step 6 artifacts + perf-history ledger (#433)",
+      "imperative": "PYTHONUTF8=1. Regenerate Step-6 strategy/fantasy fixtures + report. Regenerate perf-history ledger (#433). Re-run validation if strategy fixtures changed. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "validation green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "validation green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Step-6 artifacts + perf ledger regenerated (not stale)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "fixtures+beam examples regenerated; Bahrain strategy report from NEW trained backtest; performance_ledger.jsonl rebuilt (7 runs, latest 260611 gold) --check OK; validation re-run overall PASS"
+        }
+      ],
+      "constraints": [
+        "PYTHONUTF8=1 for Step-6 scripts"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g9-candidate-fantasy": {
+      "id": "g9-candidate-fantasy",
+      "title": "Build candidate + multi-season fantasy candidate-vs-live",
+      "imperative": "Build candidate into params/gold_candidate via migrate_gold_to_constant_names.py --gold-root params/gold_candidate. Run run_multiseason_fantasy_backtest.py --candidate-gold-root params/gold_candidate (refuses live gold \u2014 correct). Record candidate-vs-live fantasy. promote_gold.py --dry-run preview ONLY. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Step-6 + ledger done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "validation green, artifacts fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "candidate built + evaluated; dry-run previewed; NO real promotion",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "HARD STOP: no real promote_gold.py; no live-gold mutation"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g10-walkforward": {
+      "id": "g10-walkforward",
+      "title": "Walk-forward 2025 backtest (#439)",
+      "imperative": "Run the #439 walk-forward harness for leakage-free total fantasy vs prior baseline reports/walkforward/multiseason_fantasy.{json,md}. Needs clean per-race export. If periods exceed budget, deliver partial-but-honest split per pre-ruling 13 and report exactly what remains. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "candidate fantasy done",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "walk-forward fantasy vs baseline computed OR honest partial split reported",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "leakage-free; partial-but-honest beats heroic-and-dead"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g11-pr": {
+      "id": "g11-pr",
+      "title": "Pyright spot-check + commit + PR",
+      "imperative": "Pyright spot-check any src/ touched. Commit artifacts (NOT CSV/PNG, NOT the two pre-existing modified docs, NOT LESSONS/AGENT_FEEDBACK). Push branch. Open PR 'Part of #453, addresses #440'. Attest c1 with PR number.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "walk-forward done/split",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "PR opened; pyright clean on touched src",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never Closes; commit-scope fence"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-440",
+    "status": "active",
+    "claimed_at": "2026-06-11T17:46:20.371724+00:00",
+    "last_heartbeat": "2026-06-12T02:30:26.949993+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

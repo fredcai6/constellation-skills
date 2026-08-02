@@ -1,0 +1,306 @@
+{
+  "work_id": "issue-297",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5"
+  ],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "Add stage_snapshot_metrics() to sampled_backtest.py",
+      "imperative": "Add a function stage_snapshot_metrics(snapshot: StageSnapshot, actual_results: Mapping[str, int]) -> dict[str, float] to sampled_backtest.py that scores a StageSnapshot.pairwise_probability_matrix against an actual result dict (driver_id -> position). Use the same pairwise log-loss and Brier formulas as sampled_order_metrics. Extend SampledBacktestRaceResult and backtest_sampled_runtime to include per_stage_metrics: dict[str, dict[str, float]] keyed by task. Truth sources: 'quali' -> session_classifications Q, 'race_start' -> race_start_order at target_lap, 'race' -> session_classifications R (already present). Wire stage truth lookups into _oracle_state_for_mode/backtest_sampled_runtime for all 3 tasks. Unit tests in tests/unit/evo_predictor/ covering: stage_snapshot_metrics contract, correct scores against synthetic StageSnapshot, missing-truth graceful skip.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "stage_snapshot_metrics() exists in sampled_backtest.py and is tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "SampledBacktestRaceResult.per_stage_metrics field populated for all 3 tasks",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "focused unit tests pass: py -m pytest tests/unit/evo_predictor/ -k sampled_backtest -x",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k sampled_backtest -x -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-1"
+        }
+      ],
+      "constraints": [
+        "No changes to gold_cycle/runner.py in this gate \u2014 isolate scoring logic first"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k sampled_backtest -x -q 2>&1 | tail -5",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "Wire sampled-runtime backtest into gold cycle runner",
+      "imperative": "In gold_cycle/runner.py, after sampled_manifest assembly (~line 184), add a new step that: (1) loads the assembled sampled runtime from the manifest via sampled_runtime_from_manifest(); (2) calls backtest_sampled_runtime() twice \u2014 once with mode='sampled_state', once with mode='oracle_all_states' \u2014 over eval_year using the effective DB; (3) stores both SampledBacktestResult objects in a local variable sampled_backtest_results: dict[str, SampledBacktestResult | None] keyed by mode. Wrap each call in try/except so a single mode failure does not abort the cycle; log a warning and store None. Pass sampled_backtest_results forward to report building. Do not yet change task_calibration_diagnostics shape.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 complete: stage_snapshot_metrics wired and tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gold cycle runner calls backtest_sampled_runtime for sampled_state and oracle_all_states",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "smoke test passes: py -m pytest tests/unit/evo_predictor/ -k gold_cycle -x",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k gold_cycle -x -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-1"
+        }
+      ],
+      "constraints": [
+        "No sampled-runtime failure should abort the gold cycle \u2014 fail-safe with warning"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k gold_cycle -x -q 2>&1 | tail -5",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "Route sampled-runtime scores into task_calibration_diagnostics",
+      "imperative": "Update build_task_calibration_diagnostics() in task_calibration.py to accept an optional sampled_backtest_results: dict[str, SampledBacktestResult | None] | None parameter. For each task (quali/race_start/race), compute per-mode aggregate metrics from the backtest results (mean across events of pairwise_log_loss_against_actual_order, pairwise_brier_against_actual_order, mean_sample_mae, expected_position_mae, event_count). Add a parallel 'sampled_runtime' key to each task entry: { 'sampled_state': { ...metrics, 'event_count': N }, 'oracle_all_states': { ...metrics, 'event_count': N } }. Absent or None results yield null metrics with event_count=0. Update runner.py to pass sampled_backtest_results to build_task_calibration_diagnostics. Unit tests covering: correct aggregation, None-safety, both modes present.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 complete: runner wires backtest results",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "task_calibration_diagnostics[task].sampled_runtime populated for both modes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "unit tests pass: py -m pytest tests/unit/evo_predictor/ -k task_calibration -x",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k task_calibration -x -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-1"
+        }
+      ],
+      "constraints": [
+        "Backwards-compatible: sampled_backtest_results=None must produce same output as before for existing callers"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k task_calibration -x -q 2>&1 | tail -5",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4": {
+      "id": "g4",
+      "title": "Update gold report schema and schema doc",
+      "imperative": "In gold_report_schema.py, add ReportField entries for: task_calibration_diagnostics[task].sampled_runtime, task_calibration_diagnostics[task].sampled_runtime.sampled_state, task_calibration_diagnostics[task].sampled_runtime.oracle_all_states, and each metric sub-field (pairwise_log_loss_against_actual_order, pairwise_brier_against_actual_order, mean_sample_mae, expected_position_mae, event_count) with correct type/direction/interpretation. Run write_markdown_schema() to regenerate docs/evo/gold_module_training_cycle_report_schema.md. Verify validate_documented_fields() passes on a synthetic summary/details fixture.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 complete: sampled_runtime key shape is final",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "validate_documented_fields passes on gold report with sampled_runtime fields",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "schema doc regenerated and committed alongside code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "schema validation test passes: py -m pytest tests/unit/evo_predictor/ -k schema -x",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -k schema -x -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-1"
+        }
+      ],
+      "constraints": [
+        "Producer + schema doc + any registered consumers must change atomically in this gate"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -k schema -x -q 2>&1 | tail -5",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5": {
+      "id": "g5",
+      "title": "Full region test suite green and gold-cycle smoke verify",
+      "imperative": "Run the full evo unit suite and the gold-cycle smoke/integration tests. Confirm all pass. Run: py -m pytest tests/unit/evo_predictor/ -x -q and py -m pytest tests/integration/ -x -q --timeout=300. Fix any failures introduced by this change. Confirm no regressions in sampled_backtest, task_calibration, gold_cycle, or schema tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 complete: schema updated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full evo unit suite passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/ -x -q 2>&1 | tail -10"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-2"
+        },
+        {
+          "id": "c2",
+          "statement": "no new test failures relative to pre-change baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -x -q 2>&1 | tail -10",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/ -x -q 2>&1 | tail -10",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

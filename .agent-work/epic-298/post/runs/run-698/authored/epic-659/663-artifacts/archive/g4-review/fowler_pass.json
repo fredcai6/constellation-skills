@@ -1,0 +1,20 @@
+{
+  "work_id": "663-grip-g-g4-review",
+  "diff_ref": "tests/unit/physics/layer2/test_grip_heldout.py (new file, ~465 lines)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, references/global-crew.md (minimal change, no speculative abstraction; print() allowed in tests)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "flagged", "finding": "The four parallel metric lists (before/after/after_evo/after_swap) travel together through _reconcile_circuit and _pooled_metrics as separate variables; a small metric-tuple/dataclass would bind them. Low-priority observation, non-blocking -- they stay locally clear.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "references/global-crew.md: 'Make the minimal change; no speculative abstraction'", "reason": "_cell_pace returns positional tuples (median, cum, n) and uses (driver,compound) tuple keys rather than dataclasses; in a single-file test harness these are local and clear, and introducing value objects would be speculative abstraction the doctrine forbids."}},
+    {"smell": "long-parameter-list", "verdict": "flagged", "finding": "_fit_and_store(store, gp_name, session_type, laps, session_id, fit_drivers, rain_flag) takes 7 positional args. Called once; mirrors fit_grip_baseline_from_laps's own signature. Low-priority observation, non-blocking.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "", "override": {"repo_standard": "CREW_CONTEXT Physics/Units + global-crew 'match in-file documentation conventions'; this is a GATING scientific harness", "reason": "The file is heavily commented, but the comments carry scientific methodology rationale (why fastest-3 push pace, why the swap negative control, the leakage-discipline argument) that a reviewer/commander must read to trust a GATING null -- they justify non-obvious method choices, they do not paper over unclear code."}}
+  ],
+  "rail_exception": null
+}

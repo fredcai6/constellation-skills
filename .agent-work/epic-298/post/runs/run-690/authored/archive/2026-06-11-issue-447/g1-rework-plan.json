@@ -1,0 +1,307 @@
+{
+  "work_id": "g1-rework-447-attempt2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix-script-narrative",
+    "m2-add-grid-metric",
+    "m3-fix-offline-loader-docstring",
+    "m4-rerun-script",
+    "m5-write-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify rework scope",
+      "imperative": "Read handoff, attempt-1 result, and review BLOCK. Confirm B1 corrections are understood: (a) narrative fix, (b) add grid-relationship metric, (c) offline_loader docstring fix. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all three handoff docs loaded; B1 corrections (a)(b)(c) understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All three handoff docs read. B1 corrections (a)(b)(c) understood."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix-script-narrative": {
+      "id": "m1-fix-script-narrative",
+      "title": "B1(a): Correct over-claiming narrative in script docstring/comments",
+      "imperative": "In scripts/characterize_telemetry_instruments.py: (1) fix module docstring (~4-5) to remove '~240 Hz' / '~10 Hz' parentheticals and add note that both are ~4.2 Hz median but TWO SEPARATE IRREGULAR GRIDS; (2) fix comment lines ~102-107 that assert 'session-unified timeline' and the 'shared grid' implication. Replace with: both streams ~4.2 Hz median cadence but two separate irregular grids (distinct base ticks, ~0.4% timestamp overlap). Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script has no 'session-unified' or 'shared grid' or '240 Hz' (as description of raw streams) claims; docstring correctly states two separate irregular grids",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"src=open('scripts/characterize_telemetry_instruments.py').read(); bad=['session-unified timeline','shared grid','(~240 Hz)','(~10 Hz)']; found=[x for x in bad if x in src]; assert not found, f'still contains: {found}'; print('OK: no over-claiming phrases found')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-script-narrative-1"
+        }
+      ],
+      "constraints": [
+        "do NOT change any measurement logic",
+        "do NOT change JSON output shape (new fields come in m2)",
+        "narrative only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix-script-narrative-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"src=open('scripts/characterize_telemetry_instruments.py').read(); bad=['session-unified timeline','shared grid','(~240 Hz)','(~10 Hz)']; found=[x for x in bad if x in src]; assert not found, f'still contains: {found}'; print('OK: no over-claiming phrases found')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-add-grid-metric": {
+      "id": "m2-add-grid-metric",
+      "title": "B1(b): Add grid-relationship metric to script",
+      "imperative": "Add a compute_grid_relationship(car_times_s, pos_times_s) function that returns: per-stream base tick (modal dt quantum in seconds), car row count vs pos row count, timestamp overlap fraction (fraction of pos timestamps that exactly coincide with a car timestamp within 1ms tolerance), and median nearest-neighbour time distance between the two grids (seconds). Call this per driver and store in the per-session JSON under a 'grid_relationship' key. Also aggregate across drivers into 'headline.grid_relationship_aggregate'. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script narrative corrected in m1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script contains compute_grid_relationship function; Belgian Q JSON shows car_row_count != pos_row_count; overlap_fraction ~0.004",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"import ast; src=open('scripts/characterize_telemetry_instruments.py').read(); assert 'compute_grid_relationship' in src, 'function missing'; assert 'grid_relationship' in src, 'key missing'; print('OK: compute_grid_relationship present')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-add-grid-metric-1"
+        }
+      ],
+      "constraints": [
+        "do NOT change existing measurements (sampling_interval, quantization, z_verdict, noise_covariance)",
+        "new grid_relationship fields only \u2014 additive change",
+        "no get_telemetry"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-add-grid-metric-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"import ast; src=open('scripts/characterize_telemetry_instruments.py').read(); assert 'compute_grid_relationship' in src, 'function missing'; assert 'grid_relationship' in src, 'key missing'; print('OK: compute_grid_relationship present')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fix-offline-loader-docstring": {
+      "id": "m3-fix-offline-loader-docstring",
+      "title": "B1(c) + reviewer feedback: Fix offline_loader docstring",
+      "imperative": "In src/preprocessing/trajectory_grading/offline_loader.py: correct the RAW STREAMS ONLY section docstring lines ~12-14 that say 'sampled ~240 Hz' and 'sampled ~10 Hz'. Replace with: both session.car_data and session.pos_data are two separate session-wide irregular grids at ~4.2 Hz median cadence (not 240 Hz / 10 Hz \u2014 those figures describe the merged get_telemetry() product). Then run py -m src.utils.simplification_limits src/preprocessing/trajectory_grading/offline_loader.py to confirm no behavioral change. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "grid metric added",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "offline_loader.py docstring no longer says '~240 Hz' or '~10 Hz' for raw streams; simplification_limits passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"src=open('src/preprocessing/trajectory_grading/offline_loader.py').read(); bad=['sampled ~240 Hz','sampled ~10 Hz']; found=[x for x in bad if x in src]; assert not found, f'still contains: {found}'; print('OK: docstring corrected')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-fix-offline-loader-docstring-1"
+        }
+      ],
+      "constraints": [
+        "docstring ONLY \u2014 no behavioral change to offline_loader",
+        "must run simplification_limits after"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-fix-offline-loader-docstring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"src=open('src/preprocessing/trajectory_grading/offline_loader.py').read(); bad=['sampled ~240 Hz','sampled ~10 Hz']; found=[x for x in bad if x in src]; assert not found, f'still contains: {found}'; print('OK: docstring corrected')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-rerun-script": {
+      "id": "m4-rerun-script",
+      "title": "Re-run script and verify grid-relationship numbers in output",
+      "imperative": "Run py scripts/characterize_telemetry_instruments.py foreground. Capture output. Verify: (1) Belgian Q JSON has car_row_count != pos_row_count, (2) overlap_fraction ~0.004, (3) median_nn_distance_s ~0.07, (4) all 6 per-session JSONs written, (5) summary updated with grid fields. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script updated with grid metric and corrected narrative",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script ran to completion; Belgian Q JSON car_row_count != pos_row_count; overlap_fraction field present in JSON; 7 evidence files present",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"import json,glob; files=glob.glob('.agent-work/issue-447/evidence/*char*'); assert len(files)>=6, f'{len(files)} files'; bq=json.load(open('.agent-work/issue-447/evidence/char_2023_Belgian_Q.json')); assert 'grid_relationship' in bq, 'grid_relationship key missing from session JSON'; gr=list(bq['grid_relationship'].values())[0]; assert gr['car_row_count'] != gr['pos_row_count'], 'row counts identical'; assert gr['overlap_fraction'] < 0.05, f'overlap too high: {gr[\\\"overlap_fraction\\\"]}'; print('OK: files=%d car=%d pos=%d overlap=%.4f median_nn=%.4fs'%(len(files),gr['car_row_count'],gr['pos_row_count'],gr['overlap_fraction'],gr['median_nn_distance_s']))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-rerun-script-2"
+        }
+      ],
+      "constraints": [
+        "foreground only",
+        "offline cache only \u2014 no network"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-rerun-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"import json,glob; files=glob.glob('.agent-work/issue-447/evidence/*char*'); assert len(files)>=6, f'{len(files)} files'; bq=json.load(open('.agent-work/issue-447/evidence/char_2023_Belgian_Q.json')); drv_data=list(bq['car_data'].values())[0]; assert 'grid_relationship' in drv_data or 'grid_relationship' in list(bq.get('pos_data',{}).values())[0] or 'grid_relationship' in bq.get('headline',{}), 'grid_relationship missing from JSON'; print('OK: files=%d, grid_relationship present'%len(files))\"",
+            "exit": 1
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-rerun-script-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"import json,glob; files=glob.glob('.agent-work/issue-447/evidence/*char*'); assert len(files)>=6, f'{len(files)} files'; bq=json.load(open('.agent-work/issue-447/evidence/char_2023_Belgian_Q.json')); assert 'grid_relationship' in bq, 'grid_relationship key missing from session JSON'; gr=list(bq['grid_relationship'].values())[0]; assert gr['car_row_count'] != gr['pos_row_count'], 'row counts identical'; assert gr['overlap_fraction'] < 0.05, f'overlap too high: {gr[\\\"overlap_fraction\\\"]}'; print('OK: files=%d car=%d pos=%d overlap=%.4f median_nn=%.4fs'%(len(files),gr['car_row_count'],gr['pos_row_count'],gr['overlap_fraction'],gr['median_nn_distance_s']))\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-write-result": {
+      "id": "m5-write-result",
+      "title": "Overwrite g1-implement-result.md with corrected result",
+      "imperative": "Overwrite .agent-work/issue-447/crew-handoffs/g1-implement-result.md with the corrected IMPLEMENTER_RESULT. Must reflect: two-separate-grids picture, new grid-relationship numbers from JSON, corrected 'Critical finding', corrected Map Impact, rework note explaining B1 changes. Include Workflow Feedback. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script re-run with real numbers in JSON",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result file exists and contains 'two separate' and 'grid_relationship' and 'Rework'",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"src=open('.agent-work/issue-447/crew-handoffs/g1-implement-result.md').read(); required=['two separate','grid_relationship','Rework','overlap_fraction']; missing=[x for x in required if x not in src]; assert not missing, f'missing: {missing}'; print('OK: result file contains required phrases')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-write-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-write-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz-worktrees/cmdr-447 && py -c \"src=open('.agent-work/issue-447/crew-handoffs/g1-implement-result.md').read(); required=['two separate','grid_relationship','Rework','overlap_fraction']; missing=[x for x in required if x not in src]; assert not missing, f'missing: {missing}'; print('OK: result file contains required phrases')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "rework-g1-447",
+    "status": "released",
+    "claimed_at": "2026-06-11T17:00:49.251940+00:00",
+    "last_heartbeat": "2026-06-11T17:00:49.251940+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-06-11T17:10:28.518648+00:00"
+  }
+}

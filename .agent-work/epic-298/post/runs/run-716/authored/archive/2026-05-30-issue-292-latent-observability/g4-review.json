@@ -1,0 +1,29 @@
+{
+  "work_id": "issue-292-latent-observability/g4-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-canonical-years",
+    "r2-artifacts",
+    "r3-gates-not-weakened",
+    "r4-focused-tests",
+    "r5-compact-validation"
+  ],
+  "tasks": {
+    "r0-context": {"id": "r0-context", "title": "Load g4 diff and evidence", "imperative": "Review execute.json g4 criteria, regen evidence, and changed files.", "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null, "status": "complete", "status_detail": {}, "result": "pass", "finding": null, "evidence": [], "rework_count": 0},
+    "r1-canonical-years": {"id": "r1-canonical-years", "title": "Canonical train years", "imperative": "Validation, tests, and schema docs use 2018-2024 aligned with gold_defaults.toml.", "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null, "status": "complete", "status_detail": {}, "result": "pass", "finding": null, "evidence": [], "rework_count": 0},
+    "r2-artifacts": {"id": "r2-artifacts", "title": "Committed artifacts", "imperative": "Gold unc_diag counters, fusion_train_rows, fusion siblings, rt_comparison siblings present and cross-linked.", "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null, "status": "complete", "status_detail": {}, "result": "pass", "finding": "rt_comparison metrics reused from prior run; manifests/paths refreshed to 2018-2024 set", "evidence": [], "rework_count": 0},
+    "r3-gates-not-weakened": {"id": "r3-gates-not-weakened", "title": "Validation gates intact", "imperative": "No relaxation of observability checks or alignment rules.", "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null, "status": "complete", "status_detail": {}, "result": "pass", "finding": null, "evidence": [], "rework_count": 0},
+    "r4-focused-tests": {"id": "r4-focused-tests", "title": "Focused evo tests", "imperative": "81-test bundle passes.", "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null, "status": "complete", "status_detail": {}, "result": "pass", "finding": "81 passed", "evidence": [], "rework_count": 0},
+    "r5-compact-validation": {"id": "r5-compact-validation", "title": "Compact validation", "imperative": "py scripts/run_pipeline_validation.py --profile compact exits 0.", "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null, "status": "complete", "status_detail": {}, "result": "pass", "finding": "overall_status=pass", "evidence": [], "rework_count": 0}
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "rt_comparison metric payloads are from the May-17 2021-2024 comparison run with updated manifest alignment; live backtest regen failed on singular matrix in current gold runtime bundles — follow-up if fresh metrics required"
+    ]
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

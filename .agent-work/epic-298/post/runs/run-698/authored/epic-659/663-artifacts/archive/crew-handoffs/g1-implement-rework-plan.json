@@ -1,0 +1,188 @@
+{
+  "work_id": "663-grip-g-g1-implement-rework",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix",
+    "m2-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the rework handoff at .agent-work/663-grip-g/crew-handoffs/g1-implement-rework-handoff.md, the prior g1-implement-result.md, and the g1-review-result.md BLOCK reasoning it responds to. Verify the rework handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + rework handoff + prior implement/review results loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix": {
+      "id": "m1-fix",
+      "title": "Restructure the two over-complex test functions in test_grip_store.py",
+      "imperative": "In tests/unit/physics/layer2/test_grip_store.py ONLY, restructure `test_error_record_never_loses_a_failure` (CC=20) and `test_load_roundtrips_field_values` (CC=22) so each drops below the repo's cyclomatic-complexity limit (<20), without weakening what is asserted -- e.g. collapse the flat sequence of field-by-field asserts into an expected-vs-actual dict compared in a loop, or split into narrower helper-backed tests. Preserve test_error_record_never_loses_a_failure's mechanism (error_record() call, nulled-fields check, store.upsert + has + load-by-status round trip) and test_load_roundtrips_field_values' mechanism (upsert one _ok_record(), load it back, check every field value survives) exactly -- only the assertion SHAPE changes. Do not touch src/physics/layer2/grip_store.py or any other file. Attest c1 (manual read-through: no assertion dropped, same fields checked) before running the two command checks c2/c3.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and rework handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: rework handoff verified complete, prior implement/review results loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "manual read-through: restructured tests assert the same fields/values as before, nothing dropped -- test-after run, no TDD red step required",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read-through confirms: test_load_roundtrips_field_values checks the same 19 fields (now via a dict+loop) plus rain_flag separately; test_error_record_never_loses_a_failure checks the same 11 nulled fields (now via a list+loop helper) plus fit_status/error/fitted_at and the store round-trip. No assertion dropped."
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits reports zero violations on both files",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths tests/unit/physics/layer2/test_grip_store.py src/physics/layer2/grip_store.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-1"
+        },
+        {
+          "id": "c3",
+          "statement": "full test_grip_store.py suite still passes (same or greater assertion coverage)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-2"
+        }
+      ],
+      "constraints": [
+        "tests/unit/physics/layer2/test_grip_store.py only",
+        "do not touch src/physics/layer2/grip_store.py",
+        "do not weaken test coverage",
+        "keep the additive-migration test's mechanism unchanged (out of scope for this rework anyway -- only the two named functions are over-limit)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m src.utils.simplification_limits --paths tests/unit/physics/layer2/test_grip_store.py src/physics/layer2/grip_store.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-fix-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1brainz-wt/epic659-663 && \"/c/Users/fredc/AppData/Local/Microsoft/WindowsApps/py.exe\" -m pytest tests/unit/physics/layer2/test_grip_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-evidence": {
+      "id": "m2-evidence",
+      "title": "Collect required evidence and write IMPLEMENTER_RESULT",
+      "imperative": "Confirm src/physics/layer2/grip_store.py is untouched (git diff / git status). Paste both verification commands' full outputs (simplification_limits clean, pytest -q). Write IMPLEMENTER_RESULT to .agent-work/663-grip-g/crew-handoffs/g1-implement-result.md (overwrite attempt 1's result), following the template, and return it as the final message text. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "simplification_limits clean and pytest green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-fix complete: simplification_limits PASS, pytest 9/9 green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "grip_store.py confirmed untouched; both evidence outputs pasted verbatim; IMPLEMENTER_RESULT.md written (overwriting attempt-1 result)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "grip_store.py confirmed untouched (git status --porcelain shows only test file as changed, plus .agent-work scratch; grip_store.py never opened with an edit tool). Both evidence outputs pasted verbatim. IMPLEMENTER_RESULT.md written to .agent-work/663-grip-g/crew-handoffs/g1-implement-result.md, overwriting attempt 1's result."
+        }
+      ],
+      "constraints": [
+        "evidence must be pasted verbatim, not summarized",
+        "confirm no diff to src/physics/layer2/grip_store.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g1-implement-rework-cmdr663",
+    "status": "released",
+    "claimed_at": "2026-07-25T16:09:39.414460+00:00",
+    "last_heartbeat": "2026-07-25T16:12:41.576846+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T16:12:51.173653+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Rework handoff is a narrow fix: two test functions in test_grip_store.py (test_error_record_never_loses_a_failure CC=20, test_load_roundtrips_field_values CC=22) exceed the simplification_limits cyclomatic-complexity gate <20, per g1-review-result.md's BLOCK. Fix scope is the test file only, restructure assertion shape without weakening coverage or touching grip_store.py.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:10:10.022503+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix",
+      "why": "Restructured both over-complex test functions into expected-vs-actual dict/list + loop shapes (test_load_roundtrips_field_values, test_error_record_never_loses_a_failure), preserving every field checked and both tests' mechanisms. simplification_limits now PASS (2 files, 0 violations); pytest 9/9 still passes. grip_store.py untouched.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:11:34.558658+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-evidence",
+      "why": "Fix scope closed: simplification_limits PASS, pytest 9/9 green, grip_store.py untouched, IMPLEMENTER_RESULT written and evidence pasted verbatim.",
+      "mechanical": false,
+      "ts": "2026-07-25T16:12:41.576836+00:00"
+    }
+  ]
+}

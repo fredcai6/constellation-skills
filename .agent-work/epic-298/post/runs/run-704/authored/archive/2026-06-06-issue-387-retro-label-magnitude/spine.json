@@ -1,0 +1,436 @@
+{
+  "work_id": "issue-387-retro-label-magnitude",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "compact",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-387-retro-label-magnitude. Start the work branch per repo guidance.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-387-retro-label-magnitude"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-387-retro-label-magnitude",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ORCHESTRATOR_CONTEXT, GLOSSARY, engine-config loaded; lane = retro truth solve / latent_power supervision"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (the interrogator must reach the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; save the consolidated problem statement. Confirm it with the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context step complete; ORCHESTRATOR_CONTEXT+GLOSSARY+engine-config loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {
+        "blocker_resolved": "Admiral ruling received and user-ratified 2026-06-06 (see e-understand-2 / RULING.md). D1 option-2 accepted; D2 build-now-in-#387; D3 binding design. Blocker cleared; understand re-entered in-progress to advance on the satisfied user-decision postcondition.",
+        "prior_blocker": "Option-1-fails finding (measured): magnitude-preserving re-solve preserves ordering perfectly but cannot restore event-to-event spread at ANY ridge; magnitude structurally absent from clean binary-outcome BT. Resolved by Admiral ruling."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "finding",
+          "payload": {
+            "summary": "option-1-fails: re-solve preserves ordering perfectly (spearman=1.0, 0 sign flips) but cannot restore event-to-event spread CV at any lambda; magnitude is structurally absent from binary-outcome BT (0 upsets in 65k+ pairs). Recommend option 2."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-understand-2",
+          "type": "user-decision",
+          "payload": {
+            "decision": "D1 option-2 accepted; D2 build-now-in-387; D3 binding design recorded",
+            "ruled_by": "Admiral (user-ratified 2026-06-06)",
+            "artifact": ".agent-work/issue-387-retro-label-magnitude/RULING.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Frame the bounded problem against the architecture packets. Author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria and required evidence. Get the human to approve it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "understand complete; Admiral ruling D1/D2/D3 ratified (e-understand-2)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "execute.json authored, one bounded issue",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored: 3 grounded gates; validated parseable"
+        },
+        {
+          "id": "c2",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "plan approved: faithful decomposition of ratified D1/D2/D3 order sheet; no decision beyond rulings; artifact shape deferred to reconcile per D3.8",
+            "basis": "user-ratified rulings 2026-06-06 (RULING.md)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "compact": {
+      "id": "compact",
+      "title": "Compact context and reload skills",
+      "imperative": "Run /compact to compress conversation context. Then reload the constellation-commander skill into this context. Confirm it is active before proceeding to execute.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context compacted",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "commander skill reloaded in this context",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "skipped",
+      "status_detail": {
+        "reason": "/compact is a user-level CLI the agent cannot invoke (engine-quirks); harness auto-compaction covers it; commander skill already active in-context"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate. If a gate proves the plan wrong, surface the decision to the user before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "commander skill loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "constellation-commander skill active in this context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json fully complete: G1/G2/G3 all closed with integrated implementer+review evidence; 3 commits 947a6da/79768c7/91aadff"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "packet + index updated for race_pace_gap/spread_target + artifact; check_arch_map.py OK; no new nodes/edges/overlays"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "3 candidates recorded as issue-ready recommendations in triage-candidates/TRIAGE_RECOMMENDATIONS.md; none filed (candidates 1+2 are probable duplicates of fleet #386/#388/#389/#391; candidate 3 low-priority data note)"
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "record-only, do not file: candidates 1+2 duplicate the named fleet consumers (#386 sigma / #391 mean head), candidate 3 is a low-priority 2018 data note; filing deferred to Admiral who holds the fleet view",
+            "basis": "ORCHESTRATOR_CONTEXT issue-authority + avoid fleet-duplicate noise; recommendations preserved in run package"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "run accepted: done-bar met - spread-target artifact (per-event s_e race/race_start/quali, clamp flags, companion disagreement rate) + derivation + tests + candidate-selection evidence + append-shaped doc; 86 tests green, pyright clean, simplification PASS, arch map consistent",
+            "basis": "all #387 done-bar criteria verified; 4 commits ready; brief authorizes push+PR"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work. Push the branch to remote. Move .agent-work/issue-387-retro-label-magnitude/ to .agent-work/archive/<date>-issue-387-retro-label-magnitude/. Confirm the branch is clean and merge-ready per repo guidance.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "run summary accepted"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "run package moved to .agent-work/archive/2026-06-06-issue-387-retro-label-magnitude and committed (391682e)"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "5 commits pushed to origin; PR #407 opened closing #387 (not merged)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,208 @@
+{
+  "generated_at": "2026-07-27T08:18:26.634910+00:00",
+  "year": 2023,
+  "session_type": "Q",
+  "budget_s": 480,
+  "refutil_db": "C:\\Programs\\f1brainz-wt\\epic659-670\\.agent-work\\670-season-run\\smoke\\scratch\\refutil_smoke.db",
+  "per_year_db": "C:\\Programs\\f1brainz-wt\\epic659-670\\.agent-work\\670-season-run\\smoke\\scratch\\f1_data_2023_scratch.db",
+  "rounds": {
+    "Great Britain": {
+      "round_idx": 10,
+      "status": "covered",
+      "n_drivers": 2,
+      "vocabulary": {
+        "vocabulary_id": "severity:2023:v1",
+        "k": 4
+      },
+      "vocabulary_divergent": false,
+      "result": {
+        "circuit": "Great Britain",
+        "round_idx": 10,
+        "provenance": "fresh",
+        "provenance_reason": "fresh E run completed",
+        "slots": {
+          "maps": {
+            "ran": true,
+            "numbers": {
+              "n_segments": 41,
+              "k": 4,
+              "map_version": "2023-Great Britain-Q:v1",
+              "median_drift_m": 0.5656155094955579,
+              "max_drift_m": 50.40117986720679,
+              "n_boundaries_a": 38,
+              "n_boundaries_b": 38
+            },
+            "note": "segment map derived + persisted; drift gated"
+          },
+          "grip_g": {
+            "ran": true,
+            "numbers": {
+              "fit_counts": {
+                "fitted": 1,
+                "skipped": 0,
+                "errors": 0,
+                "sessions_missing": 0
+              },
+              "heldout": {
+                "per_circuit": [
+                  {
+                    "circuit": "Great Britain",
+                    "pair": "FP2/FP3",
+                    "status": "ok",
+                    "n_cells": 2,
+                    "before_rms": 0.44067221378254157,
+                    "after_rms": 3.203938643643242,
+                    "swap_rms": 4.055975285586407
+                  }
+                ],
+                "pooled": {
+                  "n_cells": 2,
+                  "n_circuits": 1,
+                  "n_improved": 0,
+                  "before_rms": 0.44067221378254157,
+                  "before_mae": 0.40400000000000347,
+                  "after_rms": 3.203938643643242,
+                  "after_mae": 3.1812292590508306,
+                  "after_evo_rms": 236669.79731743538,
+                  "after_evo_mae": 236669.79731712904,
+                  "after_swap_rms": 4.055975285586407,
+                  "after_swap_mae": 3.9892292590508376,
+                  "verdict": "NULL: subtracting G does NOT improve (it worsens) held-out reconciliation",
+                  "swap_hurts": true
+                },
+                "n_ok": 1
+              }
+            },
+            "note": "grip-G fit + held-out reconciliation score"
+          },
+          "observables": {
+            "ran": true,
+            "numbers": {
+              "provenance": "fresh",
+              "reason": "fresh E run completed",
+              "observables_db": "C:\\Programs\\f1brainz-wt\\epic659-670\\.agent-work\\670-season-run\\smoke\\scratch\\refutil_smoke.db",
+              "n_rows": 12,
+              "map_version": "2023-Great Britain-Q:v1",
+              "e_segment_count": 41,
+              "within_anchor": true,
+              "positive_control_fired": true,
+              "returncode": 0,
+              "timed_out": false
+            },
+            "note": "E fresh: fresh E run completed"
+          },
+          "fingerprint": {
+            "ran": true,
+            "numbers": {
+              "k": 4,
+              "gate": {
+                "passed": true,
+                "numbers": {
+                  "n_groups": 4,
+                  "n_cells": 16,
+                  "n_resolved": 16,
+                  "k": 4
+                },
+                "detail": "k cells per group, resolved finite"
+              },
+              "n_groups": 4
+            },
+            "note": "k cells per group, resolved finite"
+          },
+          "join_prior": {
+            "ran": true,
+            "numbers": {
+              "n_priors": 4,
+              "n_finite_mean": 4,
+              "sample": [
+                {
+                  "driver": "VER",
+                  "channel": "utilization",
+                  "mean": 2.5479646367493576,
+                  "scale": 76.24819490469959,
+                  "nu": 4.0,
+                  "corner_share": 0.42174533307785167,
+                  "fully_thin": false,
+                  "weight_on_thin": 0.0
+                },
+                {
+                  "driver": "VER",
+                  "channel": "energy",
+                  "mean": 0.19574609273804636,
+                  "scale": 76.23747816606802,
+                  "nu": 4.0,
+                  "corner_share": 0.42174533307785167,
+                  "fully_thin": false,
+                  "weight_on_thin": 0.0
+                }
+              ]
+            },
+            "note": "4/4 priors non-null finite mean"
+          },
+          "panel": {
+            "ran": true,
+            "numbers": {
+              "instruments": [
+                1
+              ],
+              "produced_keys": [
+                "instrument1"
+              ]
+            },
+            "note": "panel dry-run produced ['instrument1']"
+          }
+        },
+        "gating": {
+          "C": {
+            "passed": true,
+            "numbers": {
+              "median_drift_m": 0.5656155094955579,
+              "threshold_m": 10.0
+            },
+            "detail": "median drift 0.5656155094955579 < 10.0 m"
+          },
+          "D": {
+            "passed": true,
+            "numbers": {
+              "fitted": 1,
+              "n_ok": 1,
+              "before_rms": 0.44067221378254157,
+              "after_rms": 3.203938643643242,
+              "swap_rms": 4.055975285586407,
+              "verdict": "NULL: subtracting G does NOT improve (it worsens) held-out reconciliation"
+            },
+            "detail": "grip-G fit completed (1 sessions); held-out score produced over 1 circuit(s): NULL: subtracting G does NOT improve (it worsens) held-out reconciliation (before_rms=0.44067221378254157, after_rms=3.203938643643242)"
+          },
+          "E": {
+            "passed": true,
+            "numbers": {
+              "n_rows": 12,
+              "within_anchor": true,
+              "positive_control_fired": true
+            },
+            "detail": "observables non-empty; jackknife anchored + control fired"
+          },
+          "H": {
+            "passed": true,
+            "numbers": {
+              "n_priors": 4,
+              "n_finite_mean": 4,
+              "n_fully_thin": 0,
+              "t7_invariants_passed": true
+            },
+            "detail": "at least one non-null finite-mean prior; t7 invariants pass"
+          }
+        },
+        "flags": []
+      }
+    }
+  },
+  "vocabulary_guard": {
+    "established": {
+      "vocabulary_id": "severity:2023:v1",
+      "k": 4
+    },
+    "flagged_rounds": []
+  },
+  "parked_rounds": []
+}

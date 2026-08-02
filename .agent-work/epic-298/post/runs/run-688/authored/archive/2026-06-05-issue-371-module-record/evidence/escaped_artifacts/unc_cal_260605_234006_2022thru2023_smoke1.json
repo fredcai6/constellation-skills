@@ -1,0 +1,607 @@
+{
+  "eval_year": 2024,
+  "excluded_eval_year": 2024,
+  "fit_method": "blocked_train_year_split",
+  "fit_prediction_years": [
+    2023
+  ],
+  "fit_train_years": [
+    2022
+  ],
+  "fit_years": [
+    2022,
+    2023
+  ],
+  "modules": {
+    "constructor_quali_power_from_race_weekend": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:constructors:quali"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "constructor_quali_power_from_recent_history": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:constructor_quali_history"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "constructor_race_power_from_race_weekend": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:constructors"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "constructor_race_power_from_recent_history": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:constructor_race_history"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "constructor_race_start_power_from_race_weekend": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:constructor_race_start"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "constructor_race_start_power_from_recent_history": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:constructor_race_start_recent_history"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "driver_quali_power_from_race_weekend": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:quali"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "driver_quali_power_from_recent_history": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:quali_history"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "driver_race_power_from_race_weekend": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "driver_race_power_from_recent_history": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "driver_race_start_power_from_race_weekend": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    },
+    "driver_race_start_power_from_recent_history": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "calibration_grid": {
+        "alpha_values": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0,
+          8.0
+        ],
+        "beta_values": [
+          0.0,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ]
+      },
+      "effective_dof_rule": "max(entity_count - 1, 1)",
+      "eval_year_leakage_detected": false,
+      "excluded_eval_year": 2024,
+      "fit_event_count": 1,
+      "fit_event_ids": [
+        "2023:1:Bahrain:driver_race_start_recent_history"
+      ],
+      "fit_method": "blocked_train_year_split",
+      "fit_prediction_years": [
+        2023
+      ],
+      "fit_status": "insufficient_data",
+      "fit_train_years": [
+        2022
+      ],
+      "objective_calibrated": null,
+      "objective_raw": null,
+      "regularization": {
+        "alpha_prior": 1.0,
+        "beta_prior": 0.0,
+        "regularization_strength": 0.01
+      },
+      "target_metric": "rank_mae",
+      "warnings": [
+        "insufficient_calibration_data"
+      ]
+    }
+  },
+  "schema_version": 1,
+  "source_report_summary_path": ".agent-work\\issue-371-module-record\\evidence\\smoke_reports\\gold_cycle_260605_234006_2022thru2023_smoke1.summary.json"
+}

@@ -1,0 +1,36 @@
+{
+  "work_id": "666-driver-fingerprint",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/staged-feedback/666-driver-fingerprint/AGENT_FEEDBACK.md 2026-07-26 666-driver-fingerprint: attach (not attest) used for EVERY artifact-check postcondition across the run — user-decision at understand/plan/triage/review, implementer-result at g1-g4 gN-implement, review-result at g1-g4 gN-review AND gN-integrate (attached to both so the APPROVE-match check passed at integrate); attest --which preconditions/postconditions used only for check:null conditions; attest never attempted on artifact checks."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": ".agent-work/staged-feedback/666-driver-fingerprint/AGENT_FEEDBACK.md 2026-07-26 666-driver-fingerprint: AGENT_FEEDBACK + lessons-delta + CONSTELLATION_FEEDBACK written to the staged-feedback trio (this dir) with a FENCE.md, never to the shared .agent-work/*.md; git status throughout showed only untracked src/physics/fingerprint/, tests/unit/physics/fingerprint/, scripts/fingerprint_*.py — no .agent-work path and no data blob ever staged; archive c4 git-change-policy will enforce it."
+    },
+    {
+      "op": "confirm",
+      "id": "from-child-refuses-on-gated-checklist",
+      "grounding": ".agent-work/staged-feedback/666-driver-fingerprint/AGENT_FEEDBACK.md 2026-07-26 666-driver-fingerprint: spine execute step (child_checklist=execute.json, gated) closed by attesting execute.c1 (check:null) DIRECTLY once execute.json reported DONE — no --from-child attempted, exactly as the lesson prescribes. The lesson's guidance held: --from-child is survey-only; a gated child is closed by a plain attest of the parent's null postcondition."
+    },
+    {
+      "op": "confirm",
+      "id": "delegated-commander-foreground-poll-over-watcher-yield",
+      "grounding": ".agent-work/staged-feedback/666-driver-fingerprint/AGENT_FEEDBACK.md 2026-07-26 666-driver-fingerprint: all 8 crew dispatches (g1-g4 implement+review) used synchronous foreground Agent-tool dispatch (run_in_background:false), blocking in-turn until each returned; the ~3-min offline slice-gen ran foreground/timed; ZERO background-watcher yields, ZERO Admiral idle-nudges across the whole run. The bounded-foreground-poll discipline held at 8-crew scale."
+    },
+    {
+      "op": "confirm",
+      "id": "self-authored-reasoning-gate-checks-need-review-scrutiny",
+      "grounding": ".agent-work/staged-feedback/666-driver-fingerprint/AGENT_FEEDBACK.md 2026-07-26 666-driver-fingerprint: before freezing the integrate command postconditions (PYTHONPATH=. pinned-python -m pytest ...), I empirically verified the interpreter/PYTHONPATH discipline by running an existing physics test end-to-end (test_pooling 15/15 green) so the frozen self-authored check was known-correct against reality before the plan froze — applying the scrutiny the lesson prescribes to my own plan-time-authored checks rather than trusting them."
+    },
+    {
+      "op": "mention",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/staged-feedback/666-driver-fingerprint/AGENT_FEEDBACK.md 2026-07-26 666-driver-fingerprint: all 8 crews dispatched via the Agent tool with run_crew.py --backend external registering each attempt + --verify-result confirming freshness + recover_crews.py before each dispatch; the first-class external backend worked cleanly with zero dispatch-mechanism friction (corroborates the fixed-upstream resolution — no re-bank)."
+    }
+  ]
+}

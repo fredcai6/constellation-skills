@@ -1,0 +1,276 @@
+{
+  "work_id": "625-segmentation-substrate-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-generalize-contiguous-runs",
+    "m2-straight-arcs",
+    "m3-corner-descriptors",
+    "m4-full-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's global-crew.md and global-everyone.md, the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the handoff g1-implement-handoff.md, and the current source of src/physics/layer2/arcs.py, src/physics/layer2/session_braking.py (actual call-site check), src/physics/layer2/braking_report.py, src/physics/layer2/grip_bin_obs.py, src/physics/physics_data_models.py (_VALID_REGIMES), src/physics/constants.py (GRAVITY_MS2), and tests/unit/physics/layer2/test_arcs.py. Verify handoff completeness and that identify_braking_arcs's real signature matches the handoff's description. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; identify_braking_arcs real signature confirmed against handoff",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-generalize-contiguous-runs": {
+      "id": "m1-generalize-contiguous-runs",
+      "title": "Generalize _contiguous_runs to accept a regimes set; identify_braking_arcs unchanged externally",
+      "imperative": "Edit src/physics/layer2/arcs.py: change _contiguous_runs(samples, min_len) to _contiguous_runs(samples, min_len, regimes: set[str]) matching against `s.regime in regimes` instead of the hardcoded single-regime equality check. Update identify_braking_arcs's body to call _contiguous_runs(samples, min_len, {_BRAKE_REGIME}) -- its own public signature (identify_braking_arcs(samples, min_len=3, frontier_decel_quantile=0.6)) and behavior stay byte-identical for existing callers (braking_report.py:plot_arcs). Run the existing test_arcs.py suite -- all pre-existing tests must still pass unmodified.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_contiguous_runs generalized (regimes param, no duplicated logic); identify_braking_arcs signature/behavior unchanged; all 3 pre-existing test_arcs.py tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_arcs.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-generalize-contiguous-runs-1"
+        }
+      ],
+      "constraints": [
+        "identify_braking_arcs public call signature frozen",
+        "no duplicate of _contiguous_runs logic",
+        "no evo_predictor/latent_power/compound_prior imports"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-generalize-contiguous-runs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_arcs.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-straight-arcs": {
+      "id": "m2-straight-arcs",
+      "title": "Add StraightArc dataclass + identify_straight_arcs, mirroring BrakingArc pattern",
+      "imperative": "In src/physics/layer2/arcs.py add: frozen dataclass StraightArc(sample_indices: list[int], length_m: float, duration_s: float, top_speed_ms: float) with a docstring citing the physical formula for each field; identify_straight_arcs(samples, min_len) grouping contiguous samples whose regime is in {'straight_throttle','straight_coast','straight_brake'} (the non-'corner' members of src.physics.physics_data_models._VALID_REGIMES) via the now-generalized _contiguous_runs, applying the same min_len convention identify_braking_arcs uses. length_m = cumulative straight-line position delta over the run (matches BrakingArc's own field-computation style); duration_s = (last.timestamp_ms - first.timestamp_ms) / 1000.0; top_speed_ms = max(sample.speed for sample in run). Add test classes to tests/unit/physics/layer2/test_arcs.py covering: contiguous straight runs across all 3 straight regimes become one StraightArc, a corner sample breaks the run, min_len filtering, and the four field computations on a synthetic fixture. Do not remove or weaken any existing test.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: _contiguous_runs generalized and existing tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "StraightArc + identify_straight_arcs implemented and new tests pass alongside all pre-existing test_arcs.py tests",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_arcs.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-straight-arcs-1"
+        }
+      ],
+      "constraints": [
+        "reuse _contiguous_runs, do not duplicate its loop",
+        "mirror BrakingArc's field-shape conventions",
+        "docstrings cite the physical formula/reasoning"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-straight-arcs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_arcs.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-corner-descriptors": {
+      "id": "m3-corner-descriptors",
+      "title": "New src/physics/layer2/corner_descriptors.py: bin_row_to_descriptor + descriptors_from_frame",
+      "imperative": "Create src/physics/layer2/corner_descriptors.py with: bin_row_to_descriptor(mu_lat_p90: float, v_mean: float) -> tuple[float, float] returning (radius_m, lateral_g) where lateral_g = mu_lat_p90 (already g-units per grip_bin_obs.py docstring, do NOT re-divide by G) and radius_m = v_mean**2 / (mu_lat_p90 * GRAVITY_MS2) (import GRAVITY_MS2 from src.physics.constants); guard degenerate input (mu_lat_p90 <= 0 or NaN in either input) by raising ValueError -- document this choice in the docstring along with the v^2/(mu*g) circular-motion derivation. descriptors_from_frame(df: pandas.DataFrame) -> numpy.ndarray shape (N,2) columns [radius_m, lateral_g], one row per surviving grip_bin_obs-shaped row (columns mu_lat_p90, v_mean), DROPPING (not erroring on) rows where mu_lat_p90 <= 0 or NaN in either column. Write tests/unit/physics/layer2/test_corner_descriptors.py covering: normal (radius, lateral_g) computation against hand-computed expected values, the ValueError guard for mu_lat_p90<=0 and for NaN inputs, descriptors_from_frame drops bad rows and returns the right shorter shape, and an all-good frame returns full N rows in the right column order.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: StraightArc/identify_straight_arcs implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "corner_descriptors.py implemented; new test_corner_descriptors.py all pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_corner_descriptors.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-corner-descriptors-1"
+        }
+      ],
+      "constraints": [
+        "GRAVITY_MS2 imported from src.physics.constants, never hardcoded 9.81",
+        "mu_lat_p90 is already g-units -- no re-division by G",
+        "no DB I/O, pure functions only",
+        "no evo_predictor/latent_power/compound_prior imports"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-corner-descriptors-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_corner_descriptors.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-full-evidence": {
+      "id": "m4-full-evidence",
+      "title": "Full required-evidence run + simplification_limits + write IMPLEMENTER_RESULT",
+      "imperative": "Run the exact Required Evidence command from the handoff (both test files together, -v), confirm pre-existing test_arcs.py case count is unchanged (count before/after) and all pass. Run py -m src.utils.simplification_limits over the touched src/ and tests/ paths per project norm. Write IMPLEMENTER_RESULT to .agent-work/625-segmentation-substrate/crew-handoffs/g1-implement-result.md using the template, citing the _contiguous_runs before/after signature diff hunk as required evidence. Attach it as evidence e-g1-implement-result via attach --type implementer-result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete: corner_descriptors.py implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "combined required-evidence test run passes, all cases including pre-existing ones",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_arcs.py tests/unit/physics/layer2/test_corner_descriptors.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-evidence-2"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written and attached",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-evidence-1"
+        }
+      ],
+      "constraints": [
+        "no commits unless asked",
+        "evidence pasted verbatim, not paraphrased"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-full-evidence-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/625-segmentation-substrate/crew-handoffs/g1-implement-result.md",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-full-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_arcs.py tests/unit/physics/layer2/test_corner_descriptors.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipC-625-g1-impl-1",
+    "status": "released",
+    "claimed_at": "2026-07-18T04:23:37.624271+00:00",
+    "last_heartbeat": "2026-07-18T04:30:56.900862+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T04:31:07.000476+00:00"
+  }
+}

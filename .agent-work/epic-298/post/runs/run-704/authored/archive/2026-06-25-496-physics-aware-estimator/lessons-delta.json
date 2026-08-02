@@ -1,0 +1,64 @@
+{
+  "work_id": "496-physics-aware-estimator",
+  "tick": true,
+  "ops": [
+    {
+      "op": "retire",
+      "id": "subprocess-utf8-io",
+      "reason": "Superseded: the engine has owned utf-8 stdio since 2026-06-11; the residual 'set utf-8 in other captured subprocesses' clause never recurred (0 confirms in 9 runs). Retired to free a cap slot for portfolio-worktree-spikes."
+    },
+    {
+      "op": "retire",
+      "id": "per-year-db-not-main",
+      "reason": "Subsumed by worktree-untracked-data (confirmed 5x), which already mandates absolute per-year-DB paths in handoffs; the standalone 'main db has 0 rows' note never confirmed in 7 runs. Retired to stay under the cap while adding portfolio-worktree-spikes."
+    },
+    {
+      "op": "add",
+      "id": "portfolio-worktree-spikes",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "For an open research problem, explore-then-decide via PARALLEL worktree spikes (each a throwaway Agent isolation:worktree prototype of one mechanism) measured on a COMMON, tested scoreboard built as gate 1 BEFORE the spikes — so they are directly comparable and a structural finding no single spike sees can emerge. Productionize only the winner(s) in a later synthesis gate; keep the losers as documented negative results.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496 entry (What worked): 5 parallel Sonnet worktree spikes on the G1 scoreboard revealed the braking defect is TWO problems (Bahrain bandwidth -> M7, Monaco 2D-coupling -> M3), corroborated across spikes; only the M7+M3 pair was productionized in G3 (GO)."
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496 (Friction): the load-bearing M3 bandwidth fact + the winning sig_a_soft~=0.10 magnitude lived only in the G2 spike result, not the G3 handoff -> the implementer rediscovered them (an extension of this lesson to prior-gate findings); the g3 impl also verified the terrain seams from source before use."
+    },
+    {
+      "op": "confirm",
+      "id": "spine-lease-stale-long-crew",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: the spine lease went stale 3x across the long G3 background build + the two redundant 13.5-min full-suite re-runs; re-claimed --force --reason each time."
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: STATE_NOTE.md rewritten before each crew dispatch and before the background G3/G4 detaches (step/slug/next-command/pid/expected-artifact)."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: all crews (5 spikes + G1/G2/G3/G4 impl+review + cartographer) dispatched via the Agent tool, recorded in crew-runs.json via run_crew.py --dispatch external + --verify-result, recover_crews before each."
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: spine compact step skipped with reason; harness auto-compaction + the user ran /compact this session."
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: review-result attached (not attested) to BOTH gN-review and gN-integrate across all 4 gates; user-decision/verdict artifacts attached at understand/plan/g2-integrate/triage/review/g4-integrate."
+    },
+    {
+      "op": "confirm",
+      "id": "cross-session-findings-on-issue",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: the synthesis readiness handoff (wiring + multi-session calibration + F_vehicle metric + retire side-by-side) posted as a #518 comment AT triage time, plus a #509 progress comment, so the downstream fleet inherits the findings rather than session scratch."
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25 496: py used throughout; engine integrate command-checks authored as `py -m pytest ... -q` ran clean (engine imperatives still hard-code python — standing contradiction navigated)."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "work_id": "epic-659/665",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "constellation-slash-workid-parsing-gaps",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "Multiple constellation-commander scripts assume a work_id has no internal '/', breaking under this repo's own nested Commander-under-Admiral convention (epic-<N>/<issue>, e.g. epic-659/665). CONFIRMED TWICE, independently, in the SAME run: (1) run_crew.py --verify-result <session>: load_registry_for_resume parses work_id as session.split('/')[1] (one segment), dropping everything after the first '/' -- every verify call against a genuinely-fresh crew REFUSES 'no crew recorded' despite crew-runs.json holding the exact session_name. (2) verify_agent_feedback.py --phase archive: _current_run_archive_dirs only enumerates archive/'s DIRECT children and string-matches path.name == work_id or path.name.endswith(f'-{work_id}') -- both are UNSATISFIABLE by any real filesystem entry name when work_id itself contains '/' (a single path segment can never literally contain the separator character), so a correctly-archived nested work area (.agent-work/archive/<date>-epic-N/<issue>/) can never pass this check, regardless of naming. Workarounds used: (1) call run_crew.load_registry/verify_external_result directly via a one-off script, bypassing the CLI parser; (2) waive archive.c1 with --force + authority=commander-self, citing this exact defect.",
+      "grounding": ".agent-work/staged-feedback/epic-659/665/AGENT_FEEDBACK.md 2026-07-25 epic-659/665 entry (Friction/unclear): (1) reproduced on all 4 crew-verification calls this run, root cause read directly from run_crew.py's load_registry_for_resume; (2) reproduced once at archive closeout, root cause read directly from verify_agent_feedback.py's _current_run_archive_dirs (only iterates archive_root.iterdir(), no recursive/segment-aware match).",
+      "bank_reason": "Two independent within-run confirmations across two different scripts (not a one-off) strongly suggest a systemic gap rather than a single-script bug -- banked to see whether a third recurrence (a different script, or a different repo using the same nested work-id convention) confirms this is worth a shared utility fix (e.g. a single work_id-safe parsing/matching helper both scripts import) versus two unrelated narrow bugs that happen to share a symptom.",
+      "target": "constellation-commander scripts/run_crew.py load_registry_for_resume + scripts/verify_agent_feedback.py _current_run_archive_dirs"
+    },
+    {
+      "op": "add",
+      "id": "cite-external-precedent-once-thread-verbatim",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "When a gate plan cites the SAME external code precedent (e.g. 'mirrors module X's pattern') across multiple gate imperatives/handoffs for one code region (e.g. an implement gate and its review gate), author the characterization ONCE from a direct source read (ideally in the mission frame) and thread it verbatim into every downstream handoff -- do not re-describe the same precedent freshly per gate. A commander who characterizes it correctly in one gate's imperative but incorrectly (or more loosely) in another's frozen handoff creates a genuine, source-verifiable drift a reviewer will independently discover and correctly BLOCK on, costing a full rework cycle for a defect that was never in the implementer's control.",
+      "grounding": ".agent-work/staged-feedback/epic-659/665/AGENT_FEEDBACK.md 2026-07-25 epic-659/665 entry (What worked / Instruction adherence): g1-review's execute.json imperative correctly named driver_utility.py's real #628 mechanism (status+widening), but g1-implement's frozen HANDOFF_g1-implement.md Task.e described an invented, unsupported two-level pooling scheme instead -- reviewer BLOCKed attempt 1 with a grep-verified finding (exactly one pool_random_effects call site in driver_utility.py), explicitly separating this as a commander planning-drift defect, not an implementer defect.",
+      "bank_reason": "Single-run observation (n=1, per the sibling 624-phase0 lesson's own precedent for not over-banking a first instance) -- need to see whether this recurs on a future run citing an external precedent across multiple gates before it's clear the fix should be a doctrine addition (e.g. commander-core.md's mission-frame section explicitly requiring precedent characterizations to be authored once and threaded, not just anchored) versus this run's particular oversight.",
+      "target": "constellation-commander references/commander-core.md Mission frame section"
+    }
+  ]
+}

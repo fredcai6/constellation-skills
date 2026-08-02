@@ -1,0 +1,54 @@
+[
+  {
+    "session": "constellation/cmdr-470/g1/implementer/attempt-1",
+    "work_id": "cmdr-470",
+    "gate": "g1",
+    "role": "implementer",
+    "worktree": ".",
+    "attempt": 1,
+    "status": "completed",
+    "launcher": "agent-tool",
+    "handoff": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-handoff.md",
+    "result": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-result.md",
+    "launched_at": "2026-06-13T17:37:55.017704+00:00"
+  },
+  {
+    "session": "constellation/cmdr-470/g1/implementer/attempt-2",
+    "work_id": "cmdr-470",
+    "gate": "g1",
+    "role": "implementer",
+    "worktree": ".",
+    "attempt": 2,
+    "status": "running",
+    "launcher": "agent-tool",
+    "handoff": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-handoff.md",
+    "result": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-result-p0.md",
+    "launched_at": "2026-06-13T17:54:49.341427+00:00"
+  },
+  {
+    "session": "constellation/cmdr-470/g1/reviewer/attempt-1",
+    "work_id": "cmdr-470",
+    "gate": "g1",
+    "role": "reviewer",
+    "worktree": ".",
+    "attempt": 1,
+    "status": "running",
+    "launcher": "agent-tool",
+    "handoff": ".agent-work/cmdr-470/crew-handoffs/g1-reviewer-handoff.md",
+    "result": ".agent-work/cmdr-470/crew-handoffs/g1-reviewer-result.md",
+    "launched_at": "2026-06-13T18:02:47.119183+00:00"
+  },
+  {
+    "session": "constellation/cmdr-470/g1/implementer/attempt-3",
+    "work_id": "cmdr-470",
+    "gate": "g1",
+    "role": "implementer",
+    "worktree": ".",
+    "attempt": 3,
+    "status": "running",
+    "launcher": "agent-tool",
+    "handoff": "inline",
+    "result": ".agent-work/cmdr-470/crew-handoffs/g1-implementer-result-cliguard.md",
+    "launched_at": "2026-06-13T18:13:20.017403+00:00"
+  }
+]

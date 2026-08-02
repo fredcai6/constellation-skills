@@ -1,0 +1,1073 @@
+{
+  "work_id": "670-season-run",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-run",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-synthesis"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine + project deltas (ORCHESTRATOR_CONTEXT, GLOSSARY) and the frozen LAUNCH_ORDER-670 + PROBLEM_STATEMENT + MISSION_FRAME under .agent-work/670-season-run/. Confirm the frozen plan intent/scope. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + frozen launch order loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 season runner + E-budget plumbing: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1. Task: (a) thread TWO run-parameters through src/physics/pilot/pipeline.py::run_circuit -> run_stage_e as pure plumbing (defaults unchanged; NOT a frozen-constant edit): `budget_s` (raise the E per-circuit timeout) AND a `refutil_db` override (so all rounds can write ONE shared observables slice). (b) build scripts/run_season_670.py: a PURE CONSUMER that enumerates the 22 2023-Q rounds, reads each round's actual driver grid from f1_data_2023 session_classifications (Q), calls run_circuit per round with that round's drivers + a raised budget (~480s) + a SHARED refutil_db path so E's INSERT-OR-REPLACE accumulates all rounds into ONE consolidated slice (driver_class_observables + reference_laps) -- NO hand-rolled merge (per pipeline docstring: shared --db accumulates cleanly). Collect per-round CircuitResult -> season_results.json. Also build scripts/verify_season_artifacts_670.py (the g2 acceptance check): exit 0 iff season_results.json exists AND the consolidated slice has >=1 covered round with fresh provenance AND both are non-empty. VOCABULARY GUARD: before/at the season pooled-fingerprint stage, assert all covered rounds share the SAME severity vocabulary_id and k (the pooled fit uses map_version=None and only filters class LIKE 'severity:%'); a divergent taxonomy across circuits must PARK/FLAG that round, never silently blend incompatible strata. OFFLINE only; copy tracked f1_data_2023.db to a scratch path ONCE (never dirty the tracked DB); a missing round/driver PARKS (no FastF1 pull) and is recorded. Add tests/unit/physics/pilot/test_season_runner.py (grid-read, park-on-missing, shared-db-accumulates, budget+refutil threaded, vocabulary-guard flags divergence, no-tracked-db-write; use a tiny synthetic/monkeypatched runner - do NOT run real E in the unit test). Dispatch constellation-implementer with the handoff; wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded; frozen plan confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rework: context intact; reopened for per-round fault isolation fix"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
+        }
+      ],
+      "constraints": [
+        "OFFLINE only; never write tracked data/f1_data_*.db; frozen constants consumed not minted; budget is a run-param not a frozen edit; Student-t sigma preserved; pyright-0 on new code; py=pinned 3.14 interpreter for all project code"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:run_circuit \u2014 src/physics/pilot/pipeline.py, per-circuit orchestrator (thread budget_s)",
+          "struct:run_stage_e \u2014 subprocess E, budget_s kwarg",
+          "struct:build_class_utilization_observables.py \u2014 E CLI, INSERT OR REPLACE accumulates"
+        ],
+        "capability": [
+          "capability:season-scale-run \u2014 run the landed pipeline over 22 rounds x per-round grid, offline"
+        ],
+        "constraint": [
+          "constraint:offline-only",
+          "constraint:no-tracked-db-write",
+          "constraint:frozen-consumed-not-minted",
+          "constraint:budget-is-run-param"
+        ],
+        "decision": [
+          "decision:consolidated-slice \u2014 merge per-circuit refutil DBs into one slice via INSERT-OR-REPLACE accumulation @grade: settled/measured \u00b7 leans g1-implement,g3-implement,g4-implement"
+        ],
+        "evidence": [
+          "claim:full-per-round-2023Q-coverage (verified at understand)",
+          "claim:provenance=fresh where stores cover the round"
+        ],
+        "confidence_flags": [
+          "epic-659 docs/architecture map deferred to #671; framed vs source, not a packet"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "session": "constellation/670-season-run/g1/implementer/attempt-1",
+            "result_path": ".agent-work/670-season-run/crew-results/g1-implementer-result.md",
+            "summary": "season runner + budget/refutil plumbing + verify script + 15 tests; 44 pilot tests pass; pyright-0"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+            "ts": "2026-07-27T08:24:40.000596+00:00"
+          }
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "session": "constellation/670-season-run/g1/implementer/attempt-2",
+            "result_path": ".agent-work/670-season-run/crew-results/g1-implementer-rework-result.md",
+            "summary": "per-round fault isolation: raising round parks with diagnosis + continues; TDD RED->GREEN; 17+46 tests pass; pyright-0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 season runner: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: run_circuit->run_stage_e budget_s + refutil_db threading is pure plumbing (defaults unchanged, no frozen-set edit); run_season_670.py is a pure consumer (mints no constant, builds no model); OFFLINE (no fastf1 import/online); NEVER writes a tracked data/f1_data_*.db (scratch copy only); per-round grid read from the DB; park-on-missing honest; the SHARED-refutil-DB accumulation is correct (no silent row drop/dup) and there is NO hand-rolled merge; the VOCABULARY GUARD actually flags a divergent severity taxonomy across rounds before the pooled fit (not vacuous); verify_season_artifacts_670.py can actually fail (test the negative); new tests are real and do NOT invoke real E. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rework IMPLEMENTER_RESULT received + verified fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g1-implement"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g1-reviewer-result.md",
+            "note": "independent re-run 15+44 passed, pyright-0, DB-path traced, vocab-guard non-vacuous"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+            "ts": "2026-07-27T08:24:40.000596+00:00"
+          }
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g1-reviewer-rework-result.md",
+            "note": "rework re-review: per-round isolation correct, tests genuine, 17+46 pass reproduced, pyright-0, scope clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 season runner: integrate",
+      "imperative": "On APPROVE, run the g1 tests yourself, then advance. On BLOCK, rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rework REVIEW_RESULT APPROVE received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "season-runner unit tests pass (grid-read, park, merge, budget-threaded, no-tracked-db-write)",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/pilot/test_season_runner.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g1-implement"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+            "ts": "2026-07-27T08:24:40.000596+00:00"
+          }
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/pilot/test_season_runner.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+            "ts": "2026-07-27T08:24:40.000596+00:00"
+          }
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g1-reviewer-rework-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/pilot/test_season_runner.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-run": {
+      "id": "g2-run",
+      "title": "G2 detached season compute (execution)",
+      "imperative": "REASONING/OPS GATE (crew-waived: this runs the G1 deliverable, it is not new code). STATE-NOTE-FIRST: (re)write STATE_NOTE.md (step/slug/next-cmd/PID/expected-artifact) BEFORE launching. Launch scripts/run_season_670.py DETACHED at the OS level (PowerShell Start-Process -WindowStyle Hidden) with the pinned 3.14 interpreter, raised E budget (~480s/circuit), OFFLINE, out-dir under .agent-work/670-season-run/artifacts. SendMessage main a one-liner when the run STARTS. Poll to completion with BOUNDED in-turn waiters (each window under the reap threshold; verify liveness via PowerShell Get-Process CPU) - never idle-wait, never a single long watcher. Auto-park on hang with a precise diagnosis (do NOT thrash/retry-loop). On completion: verify season_results.json + the consolidated slice DB exist and are non-empty, confirm the tracked data/f1_data_*.db is UNMODIFIED (git status; git checkout -- if needed), record per-round provenance/gating + parked rounds + real wall-time. SendMessage main when it COMPLETES or PARKS. Attest c2/c3; c1 is the command verify.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 season runner landed + reviewed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 rework landed+reviewed APPROVE; runner now isolates per-round failures"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "season_results.json + consolidated observables slice exist and are non-empty (>=1 covered round with fresh provenance)",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe scripts/verify_season_artifacts_670.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-run-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reversibility held: tracked data/f1_data_*.db UNMODIFIED after the run (git status clean for data/)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git status --porcelain data/ EMPTY after the full run: tracked data/f1_data_*.db pristine; E used the scratch copy f1_data_2023_scratch.db"
+        },
+        {
+          "id": "c3",
+          "statement": "per-round provenance/gating + parked rounds + real wall-time recorded; main pinged at START and COMPLETE/PARK",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "recorded: 20 covered (r3-22, all fresh) + 2 parked (Bahrain r1/Saudi r2, no strictly-prior data) + Brazil r20 E-gate boundary-drift caveat + vocab_flagged=0 + wall-time 1.98h; main pinged at START and COMPLETE"
+        }
+      ],
+      "constraints": [
+        "OFFLINE only; never touch the 38GB FastF1 cache; never write tracked DBs; detached + resumable; auto-park not thrash"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:run_season_670.py \u2014 the G1 detached runner"
+        ],
+        "capability": [
+          "capability:season-scale-run"
+        ],
+        "constraint": [
+          "constraint:offline-only",
+          "constraint:reversibility-owner-afk",
+          "constraint:detached-state-note-first"
+        ],
+        "decision": [],
+        "evidence": [
+          "claim:machine runs end-to-end offline at season scale"
+        ],
+        "confidence_flags": [
+          "long unattended overnight compute; the reversibility contract is load-bearing"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g1-implement"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe scripts/verify_season_artifacts_670.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 instrument panel over the full corpus: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G3. Task: build scripts/run_season_panel_670.py (or a bounded extension of the #668 read-adapter) that runs ALL FOUR instruments over the CONSOLIDATED season slice from G2 (~22 circuits x 20 drivers). Generalize ONLY the cross-circuit SPLIT SCHEME (the pilot's enumerate_2v2_partitions hard-requires exactly 4 circuits): faithfully extend the original's EXHAUSTIVE-2v2-averaged idea using a DETERMINISTIC balanced split-half scheme over the available circuits (NOT random-seeded -- a seed would add a new degree of freedom; e.g. circuits sorted by round then a fixed set of balanced half/half partitions), averaging r over the partitions and re-applying the SAME imported frozen decision rules (r_floor, channel_tie_margin, out_of_sample_coverage, frozen_replication_thresholds) UNCHANGED - mint NO constant, re-derive NO decision logic, build NO new instrument. Instruments 1/4 consume the corpus slice directly. Emit the season panel report (md + machine-readable json) to an isolated out-dir path (NOT the committed #668 report path). Document the split scheme in the report as a read-adapter choice. Add tests/unit/physics/instrument_panel/test_panel_corpus.py (split-scheme is balanced + deterministic; frozen rules imported-not-reimplemented; runs on a small synthetic multi-circuit slice; reproduce-identical). Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 produced the consolidated season slice",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 produced the consolidated slice: 20 covered circuits w/ severity observables + reference_laps"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "frozen constants imported not minted; no new instrument/model; OFFLINE; Student-t sigma preserved; the committed #668 report is NOT overwritten; pyright-0 on new code; pinned 3.14 interpreter"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:instrument_panel_668_report.py::run_panel \u2014 4-instrument read-adapter (CIRCUITS/DRIVERS hard-wired)",
+          "struct:enumerate_2v2_partitions \u2014 4-circuit split (generalize)",
+          "struct:src/physics/instrument_panel/replication.py::compare_channels_by_class \u2014 works on any two halves"
+        ],
+        "capability": [
+          "capability:cross-circuit-replication-at-corpus-scale"
+        ],
+        "constraint": [
+          "constraint:frozen-consumed-not-minted",
+          "constraint:no-new-method",
+          "constraint:offline-only"
+        ],
+        "decision": [
+          "decision:panel-corpus-split-scheme \u2014 repeated balanced split-half over N circuits, fixed seed/count, frozen rules unchanged @grade: guess \u00b7 leans g3-implement \u00b7 settle: document as read-adapter choice; surface in FOR-OWNER block; float if beyond latitude"
+        ],
+        "evidence": [
+          "claim:cross-circuit replication is meaningful over the full corpus (the deliverable's premise)"
+        ],
+        "confidence_flags": [
+          "epic-659 map deferred to #671; framed vs source"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "session": "constellation/670-season-run/g3/implementer/attempt-1",
+            "result_path": ".agent-work/670-season-run/crew-results/g3-implementer-result.md",
+            "summary": "panel over 20-circuit corpus; rotating-block K=10 deterministic averaged split; frozen rules imported; 10+67 tests pass; reproduce byte-identical"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 panel over corpus: review",
+      "imperative": "Fill REVIEWER_HANDOFF. INDEPENDENTLY ADJUDICATE (cold-critic #6), do not merely confirm labeling: does the deterministic balanced split-half scheme cross into NEW STATISTICAL METHOD (forbidden by ruling 4) versus a legitimate read-adapter generalization of the original exhaustive-2v2-averaged scheme? State your verdict with reasoning. Verify: ALL frozen decision rules/thresholds are IMPORTED, not re-minted or re-derived; the split is DETERMINISTIC (no random seed) + balanced + documented; builds no new instrument/model; OFFLINE; the committed #668 report is untouched; Student-t sigma preserved; all 4 instruments produced over the corpus; tests real. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 IMPLEMENTER_RESULT received + verified fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g3-reviewer-result.md",
+            "note": "new-method adjudication: does NOT cross (frozen rules imported byte-unchanged, only partition enumeration scaled); 10+67 reproduced, K=10, 20 circuits"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 panel over corpus: integrate",
+      "imperative": "On APPROVE, run the g3 tests yourself, then advance. On BLOCK, rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW APPROVE received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "corpus-panel unit tests pass (balanced+deterministic split; frozen rules imported; reproduce-identical)",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_panel_corpus.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g3-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/instrument_panel/test_panel_corpus.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 held-out-weekend diagnostic (strictly-pre): implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G4. Task: build scripts/run_heldout_diagnostic_670.py that, over the consolidated season slice, for each held-out weekend W (round R with sufficient strictly-prior data) predicts each driver's per-class utilization observable using THREE priors, then scores them against W's ACTUAL observed observable. ALL THREE arms are STRICTLY-PRE -- every DRIVER-PERFORMANCE input must be drawn only from rounds < R: (1) fingerprint x composition = join_weekend_prior(W composition, driver cells fit as_of_round=R-1); (2) driver-overall-only baseline = join_weekend_prior(UNIFORM composition, the SAME cells) [the join's T7-1 unweighted-cell-mean form - the ONE documented baseline; state+justify per #667 TC-1]; (3) golf null = the field/no-driver-term prediction: predict every driver's per-class observable by the STRICTLY-PRIOR field mean per class (pooled over rounds<R, NO driver term) weighted by W's composition -- pin this definition explicitly in code + report; its field pool MUST exclude round R. LEAKAGE-CRITICAL, covering EVERY arm's inputs: the fingerprint fit AND the golf-null field pool MUST see ZERO round-R (or later) rows -- use as_of_round=R-1 / round_idx<R (fit uses round_idx<=as_of_round INCLUSIVE); assert in code AND test each arm. COMPOSITION HANDLING (leakage-flagged by cold critic): W's composition is the circuit corner-severity time-share = a TRACK-GEOMETRY property (corner mix), used identically as track structure by all three arms; document explicitly that it is track layout (not the predicted driver's performance), note it is derived from W's reference lap, and -- where a strictly-prior same-circuit composition exists in the slice (prior year is NOT in a 2023-only slice, so this may be absent) -- add a sensitivity readout; surface the composition-source caveat prominently in the report. Score via a predictive metric honoring Student-t sigma (mean predictive log-score + interval coverage + mean |resid|); report per-prior aggregate + per-class/per-channel breakdown. Emit the diagnostic report (md+json) to an isolated out-dir. STATE in the report that this sizes COMPOSITION-WEIGHTING value (arm1 vs arm2) and WHOLE-DRIVER-TERM value (arms 1/2 vs golf null) -- not the full hierarchical pool vs an independent aggregate. Add tests/unit/physics/fingerprint/test_heldout_diagnostic.py incl.: LEAKAGE-GUARD tests for BOTH the fingerprint fit AND the golf-null field pool (no round>=R rows enter either); golf-null-is-the-floor sanity; T7-1-baseline-equals-uniform-composition. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 produced the consolidated season slice (rounds 1..N)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 slice has covered rounds 3-22; field-reference composition confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "ZERO leakage: as_of_round strictly < R (=R-1); Student-t sigma preserved (no baked normality); build NO new model - compose join_weekend_prior + landed cells; one documented baseline; OFFLINE; pyright-0; pinned 3.14 interpreter"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:join_weekend_prior \u2014 src/physics/fingerprint/join.py (T7-1: uniform composition -> unweighted cell mean; arms 1+2)",
+          "struct:fit_driver_fingerprints \u2014 round_idx <= as_of_round INCLUSIVE (=> use R-1)",
+          "struct:golf-null-arm \u2014 field per-class mean pooled over rounds<R (NO driver term) x W composition; NEW code in run_heldout_diagnostic_670.py, its field pool excludes round R"
+        ],
+        "capability": [
+          "capability:size-the-join-value \u2014 fingerprint x composition vs driver-overall-only vs golf null, strictly-pre"
+        ],
+        "constraint": [
+          "constraint:zero-leakage-strictly-pre (ALL THREE arms' inputs)",
+          "constraint:student-t-preserved",
+          "constraint:no-new-model",
+          "constraint:one-documented-baseline",
+          "constraint:composition-is-track-geometry-documented"
+        ],
+        "decision": [
+          "decision:diagnostic-baseline \u2014 join T7-1 uniform-composition form (same code path, composition flattened) @grade: guess \u00b7 leans g4-implement \u00b7 settle: state+justify in report per #667 TC-1",
+          "decision:composition-source \u2014 use W corner-mix as track geometry (documented + caveated), strictly-prior sensitivity where available @grade: guess \u00b7 leans g4-implement \u00b7 settle: report caveat + surface to Admiral"
+        ],
+        "evidence": [
+          "claim:leakage-guard \u2014 no round>=R rows enter EITHER the fingerprint fit OR the golf-null field pool (asserted in code + 2 tests)",
+          "claim:golf-null is the floor both priors must beat"
+        ],
+        "confidence_flags": [
+          "diagnostic correctness is subtle-and-silent (leakage) \u2014 the launch order's stated reason for OPUS tier + robust review"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "session": "constellation/670-season-run/g4/implementer/attempt-1",
+            "result_path": ".agent-work/670-season-run/crew-results/g4-implementer-result.md",
+            "summary": "3-arm strictly-pre diagnostic; leakage guards (fit as_of=R-1 internal + golf pool<R) counterfactual-proven; composition=field row; |resid|: comp-weighting helps (0.854<1.143), driver term thin vs golf null 0.830; log-score confounded by #666 g_sigma~1e9; 5/5+108 tests, pyright-0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 held-out diagnostic: review",
+      "imperative": "Fill REVIEWER_HANDOFF. HARD FOCUS on ZERO LEAKAGE across ALL THREE arms: independently verify (a) the fingerprint fit for held-out W at round R sees no round>=R rows (as_of_round=R-1; run the guard test AND reason about the SQL cutoff), and (b) the golf-null field pool ALSO excludes round R. ROW-CONTENT leakage (cold-critic #8): confirm each per-round observable VALUE (time_deficit_s/deployment_share, computed upstream in E) is derived from strictly that round's OWN session -- not a cross-round-pooled statistic that smuggles future info; if you cannot rule it out from source, say so and BLOCK on it. COMPOSITION (cold-critic #4): confirm W's composition is used only as track-geometry corner-mix (shared identically by all arms) and the caveat is documented. Verify: driver-overall baseline is exactly the join T7-1 uniform-composition form (documented); golf null carries no driver term; the report states the comparison sizes composition-weighting (arm1 vs arm2) + whole-driver-term (vs golf null), not the full pool vs an independent aggregate (cold-critic #7); Student-t sigma preserved (no normal approximation); no new model; scoring metric sound; OFFLINE; tests real. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G4 IMPLEMENTER_RESULT received + verified fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors \u2014 REVIEW EMPHASIS: zero-leakage strictly-pre"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g4-reviewer-result.md",
+            "note": "both leakage guards counterfactual-proven discriminating; sigma-artifact real not metric-shopping; composition=field row; T7-1; student-t; join/fit/frozen untouched"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 held-out diagnostic: integrate",
+      "imperative": "On APPROVE, run the g4 tests yourself (incl. leakage guard), then advance. On BLOCK, rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW APPROVE received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "diagnostic unit tests pass INCL. the leakage-guard (round-R rows never enter the fit) + T7-1-baseline + golf-null-floor",
+          "check": {
+            "kind": "command",
+            "command": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/670-season-run/crew-results/g4-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-synthesis": {
+      "id": "g5-synthesis",
+      "title": "G5 season report + FOR-OWNER allocation block (synthesis)",
+      "imperative": "REASONING GATE (crew-waived: prose/diagnosis synthesizing numbers I already hold from G2-G4; I pre-authored the operative invariants as postconditions). Write the committed season report docs/physics/season_670_report.md assembling: (1) the season panel (all 4 instruments over the corpus) from G3; (2) the held-out diagnostic (fingerprint x composition vs driver-overall-only vs golf null, strictly-pre) from G4; (3) a 'FOR OWNER -- allocation decisions' block presenting EVIDENCE (NOT decisions) for the 3 owner calls: variance shares -> Build-2 effort; per-class/per-channel replication -> which axes+channel earn join weight; sector calibration -> whether reference-lap work precedes fingerprint work; (4) parked rounds/gaps + per-round provenance/gating; (5) real wall-time; (6) map-impact prose (no docs/architecture edit; that is #671). HONOR no-frame-kill: a small/fat-sigma signal is reported as a COMPLETE deliverable, never as failure. Do NOT make the 3 decisions. Then attest the postconditions.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 panel + G4 diagnostic complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 panel + G4 diagnostic complete + APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "season report contains all 4 panel instruments over the corpus + the strictly-pre held-out diagnostic (3 priors) + per-round provenance/gating + parked rounds + real wall-time",
+          "check": {
+            "kind": "command",
+            "command": "bash -c 'f=docs/physics/season_670_report.md; grep -qi \"instrument\" \"$f\" && grep -qi \"held-out\" \"$f\" && grep -qi \"golf\" \"$f\" && grep -qi \"provenance\" \"$f\" && grep -qi \"wall\" \"$f\"'"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-synthesis-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the 'FOR OWNER -- allocation decisions' block is present and presents EVIDENCE for all 3 decisions WITHOUT deciding them",
+          "check": {
+            "kind": "command",
+            "command": "bash -c 'grep -qi \"FOR OWNER\" docs/physics/season_670_report.md && grep -qi \"variance\" docs/physics/season_670_report.md && grep -qi \"replication\" docs/physics/season_670_report.md && grep -qi \"calibration\" docs/physics/season_670_report.md'"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-synthesis-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no-frame-kill honored (a small/fat-sigma signal reported as complete, not failure); the 3 decisions are NOT made by the commander",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "no-frame-kill honored: thin driver-term + parked rounds framed as complete-with-gap routing to structural work; the 3 allocation decisions are presented as EVIDENCE only (Read: ... is the owner's call) and explicitly NOT decided by the commander"
+        }
+      ],
+      "constraints": [
+        "no docs/architecture edit (map fence, #671); present evidence not decisions; no-frame-kill"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:season_670_report.md \u2014 the committed deliverable"
+        ],
+        "capability": [
+          "capability:build-1-exit-instrument \u2014 sizes value for the 3 owner allocation decisions"
+        ],
+        "constraint": [
+          "constraint:owner-decides-not-commander",
+          "constraint:no-frame-kill",
+          "constraint:map-fence-671"
+        ],
+        "decision": [],
+        "evidence": [
+          "claim:the report SIZES value; it does not re-establish join correctness (#667 did)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-synthesis-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "bash -c 'f=docs/physics/season_670_report.md; grep -qi \"instrument\" \"$f\" && grep -qi \"held-out\" \"$f\" && grep -qi \"golf\" \"$f\" && grep -qi \"provenance\" \"$f\" && grep -qi \"wall\" \"$f\"'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-synthesis-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "bash -c 'grep -qi \"FOR OWNER\" docs/physics/season_670_report.md && grep -qi \"variance\" docs/physics/season_670_report.md && grep -qi \"replication\" docs/physics/season_670_report.md && grep -qi \"calibration\" docs/physics/season_670_report.md'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "G2/G3/G5 must actively consume season_results.json vocabulary_divergent/vocabulary_guard.flagged_rounds and SURFACE flagged rounds in the season report (the guard is detective-not-preventive; a flagged round must not be silently trusted as cleanly pooled)."
+    },
+    {
+      "id": "tc2",
+      "from": "g3-review",
+      "statement": "Rotating-block split-half has adjacent-partition correlation (K=n/2 windows overlap); worth a future sensitivity check vs a wider deterministic partition family. Not new-method, not blocking."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-review",
+      "statement": "Tooling debt: run_season_panel_670.py duplicates #668's private aggregation helpers rather than importing them; export them from instrument_panel_668_report.py for reuse."
+    },
+    {
+      "id": "tc4",
+      "from": "g4-review",
+      "statement": "#666/#700 sigma calibration: the landed fit's predictive sigma folds in g_sigma_onesided (~1e9, 20% of rows >1e6) which makes the held-out log-score vacuous (coverage 1.0) for the fingerprint arms. Calibrate the grip-term contribution so predictive log-score becomes informative."
+    },
+    {
+      "id": "tc5",
+      "from": "g4-review",
+      "statement": "Multi-season held-out variant: the whole-driver-term value was thin/near-null vs the golf null on the bounded 2023 slice; re-test driver-term value over multiple seasons (deeper prior history per held-out weekend) before allocating join weight to the driver axis."
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "All context loaded at spine context/understand/plan: doctrine, ORCHESTRATOR_CONTEXT, LESSONS, LAUNCH_ORDER-670, PROBLEM_STATEMENT, MISSION_FRAME. Frozen plan intent/scope confirmed. Entering g1.",
+      "mechanical": false,
+      "ts": "2026-07-27T07:45:04.200744+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "G1 implementer landed: run_circuit forwards budget_s+refutil_db to E; run_season_670.py (22-round slate, per-round DB grid, scratch-copy-once, shared-refutil accumulation, vocabulary guard); verify_season_artifacts_670.py; 15 new tests + 29 existing pilot tests pass; pyright-0. Result verified fresh.",
+      "mechanical": false,
+      "ts": "2026-07-27T08:06:16.372931+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer APPROVE with independent verification: re-ran both suites (15+44 passed), pyright-0, traced DB-open sites (tracked DB only shutil.copy'd), vocab guard non-vacuous + honestly recorded. Triage candidate logged for downstream flagged-round consumption.",
+      "mechanical": false,
+      "ts": "2026-07-27T08:15:28.882954+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "APPROVE verdict; re-running g1 tests via the c1 command postcondition to confirm green in my own hands.",
+      "mechanical": false,
+      "ts": "2026-07-27T08:15:46.260426+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-implement",
+      "reopen": true,
+      "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+      "ts": "2026-07-27T08:24:40.000596+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g1-review",
+      "reopen": true,
+      "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+      "ts": "2026-07-27T08:24:40.000596+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g1-integrate",
+      "reopen": true,
+      "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+      "ts": "2026-07-27T08:24:40.000596+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g2-run",
+      "reopen": true,
+      "reason": "Season runner lacks per-round fault isolation: round 1 (no strictly-prior sessions for E's car ceiling) and round 2 (empty sample points) crash inside run_circuit (derive_pilot_vocabulary on empty class_ids), killing all 22 rounds. Runner must isolate per-round failures -> PARK the failing round with a diagnosis and continue. Discovered at g2-run first launch (watcher caught it in ~2min). Synthetic-runner unit tests never exercised a real E-empty round.",
+      "ts": "2026-07-27T08:24:40.000596+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g1-implement",
+      "why": "Rework landed: run_season now wraps each round in try/except -> parks the failing round (round 1/2 no-strictly-prior-data, or any stage failure) with a diagnostic reason and continues; season completes over working rounds. TDD-proven, 17+46 tests pass, pyright-0, diff self-verified.",
+      "mechanical": false,
+      "ts": "2026-07-27T08:31:51.497334+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g1-review",
+      "why": "Rework re-review APPROVE, independently reproduced (17+46 pass, pyright-0); per-round isolation parks-and-continues, not swallow-hide; scope clean.",
+      "mechanical": false,
+      "ts": "2026-07-27T08:41:22.552740+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g1-integrate",
+      "why": "Rework APPROVE; re-running g1 tests via c1 command to confirm green in my hands.",
+      "mechanical": false,
+      "ts": "2026-07-27T08:41:28.542780+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g2-run",
+      "why": "Season compute complete + verified: 20 covered fresh rounds, 2 parked (no strictly-prior data), tracked DB pristine, wall 1.98h. Brazil E boundary-drift caveat noted for the report.",
+      "mechanical": false,
+      "ts": "2026-07-27T10:47:29.194349+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g3-implement",
+      "why": "G3 landed: run_season_panel_670.py runs all 4 instruments over 20 covered circuits; split = rotating-block circle-method K=10 deterministic seed-free balanced partitions averaged (Admiral-ruled shape); frozen rules imported byte-unchanged (verified: no random, no local r_floor/threshold redef); replication mostly unresolved (honest small-signal); reproduce byte-identical; 10+67 tests pass, pyright-0.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:02:15.909766+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g3-review",
+      "why": "APPROVE; Admiral-delegated new-method adjudication = legitimate read-adapter (not new method), independently reproduced. Small/unresolved replication is the honest result routed to G5/FOR-OWNER.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:12:58.953809+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g3-integrate",
+      "why": "APPROVE; re-running corpus-panel tests via c1 command.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:13:05.892586+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g4-implement",
+      "why": "G4 landed: strictly-pre 3-arm diagnostic composing landed pieces; both leakage guards structural + counterfactual-proven (as_of=R-1 derived internally; golf pool round_idx<R); composition=__field__ median row (asserted); Student-t preserved. Honest finding: composition-weighting helps (arm1|resid|0.854<arm2 1.143), whole driver term thin/near-null vs golf null (0.830) on 2023 slice (no-frame-kill, routes to structural); log-score confounded by landed #666 g_sigma_onesided~1e9 artifact -> report leads with sigma-robust |resid|. 5/5 diag + 108 fingerprint tests, pyright-0.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:42:22.411603+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g4-review",
+      "why": "APPROVE, rigorous independent verification: both leakage guards proven discriminating by counterfactual (leaking cutoff poisons mean 0.52->1.6e5); sigma-artifact real (g_sigma_onesided mean 1.15e9); leading with |resid| honest; composition=field row; T7-1; student-t; landed modules untouched.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:52:11.081295+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g4-integrate",
+      "why": "APPROVE; re-running diagnostic tests (incl. both leakage guards) via c1 command.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:52:16.722331+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g5-synthesis",
+      "why": "Season report docs/physics/season_670_report.md written: all 4 panel instruments over the corpus + strictly-pre 3-arm diagnostic (golf null benchmark) + per-round provenance/gating + 2 parked rounds + Brazil E-caveat + wall-time 1.98h + FOR-OWNER evidence block (3 decisions, evidence not decisions) + split-scheme doc + composition/sigma caveats + map-impact prose. c1/c2 grep invariants run on advance.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:55:37.480341+00:00"
+    }
+  ]
+}

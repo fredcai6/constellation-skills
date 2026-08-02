@@ -1,0 +1,799 @@
+{
+  "work_id": "issue-439-walkforward-backtest",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm frozen plan intent/scope against ORCHESTRATOR_CONTEXT, GLOSSARY, analysis_refresh.md, gold config, fantasy scoring. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "execution context loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context confirmed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 Season fantasy aggregation + baseline estimate: implement",
+      "imperative": "Dispatch implementer: build a season fantasy aggregator (src/fantasy_scoring/season.py) that, given per-race top-10 predicted orders + actual DB results, computes per-race fantasy_score_from_predictions and the season total (lower=better), with per-race breakdown + provenance. Add a script scripts/run_walkforward_baseline.py that computes the no-in-season-retrain BASELINE 2025 season fantasy score from the promoted gold's existing per-race predictions (params/gold/per_race_predictions/round*.json) vs DB actuals (session_classifications R). Unit tests at tests/unit/fantasy_scoring/test_season_aggregation.py. DB-only for actuals.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "DB-only for actual results",
+        "Reuse src/fantasy_scoring/scoring_rules.py; do not re-implement scoring",
+        "test-led; simplification_limits on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "gate": "g1",
+            "baseline_season_score": "707.0",
+            "tests": "14_passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1: review",
+      "imperative": "Dispatch reviewer: verify the season aggregator matches scoring_rules semantics, top-10 extraction is correct, actuals come from DB only, baseline number is reproducible, tests are real.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "implementer-result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "On APPROVE run verification; capture the baseline 2025 season fantasy score; advance. On BLOCK rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review-result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "season aggregation tests pass; baseline 2025 fantasy score produced",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/fantasy_scoring/test_season_aggregation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/fantasy_scoring/test_season_aggregation.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 Leakage-safe in-season as-of cutoff (training + compound prior): implement",
+      "imperative": "Dispatch implementer: add a leakage-safe 'train through eval-year round N' capability. (a) Gold-cycle data assembly: include eval_year events with round<=N in the TRAIN pool and restrict the eval/predict set to a target round range; thread an explicit as-of cutoff through session_classifications, recent-history form, and retro-truth label loading so NO round>N is visible to training. (b) Per-period compound-prior rebuild as-of N (only 2025 rounds<=N). Add config plumbing (a research/smoke-capable cutoff field; gold defaults unaffected). Unit tests at tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py proving: with cutoff N, zero training events/labels/form/compound-observations reference round>N, and the eval set is exactly the target range. Use synthetic fixtures, NO heavy training.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 closed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "As-of cutoff explicit; no silent latest-value fallback",
+        "DB-only",
+        "One canonical path; cutoff must not perturb gold defaults",
+        "test-led; simplification_limits on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "gate": "g2",
+            "new_tests": "21_passed",
+            "regression": "99_passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Dispatch reviewer (rigorous; leakage is the dominant failure mode): independently verify no round>N reaches training via ANY 2025 input path (classifications, form, retro labels, compound prior), eval range is exact, gold defaults unchanged, tests genuinely exercise the leakage guard.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "implementer-result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "On APPROVE run verification; advance. On BLOCK rework (leakage findings block).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review-result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "as-of cutoff leakage tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 Walk-forward orchestrator + leakage attestation: implement",
+      "imperative": "Dispatch implementer: build src/evo_predictor/walkforward/ orchestrator that defines the 4 periods (P0 reuse promoted gold; P1-3 cutoff-train via G2 then fusion+calibration+materialize), predicts each period's quarter, aggregates the season fantasy score via G1, and emits a leakage attestation (per scored race: max train round < race round; compound prior built without that race). Add scripts/run_walkforward_backtest.py (full run entrypoint, --utilization passthrough) and scripts/verify_walkforward_run.py (exit 0 iff 24 races covered, each period-attributed, leakage attestation all-pass). Unit tests at tests/unit/evo_predictor/walkforward/test_orchestrator.py with the heavy training calls MOCKED (verify period boundaries, cutoff wiring, compound-rebuild invocation, aggregation, attestation logic). NO heavy training in tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 + G2 closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1+G2 closed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Leakage attestation is a hard gate the orchestrator enforces",
+        "Period 0 reuses promoted gold artifacts; verify config match",
+        "repo-relative manifest paths (portability)",
+        "test-led; simplification_limits on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "gate": "g3",
+            "phase1": "wired",
+            "phase2": "orchestrator",
+            "tests": "79_walkforward_passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Dispatch reviewer: verify period definitions match the issue table, attestation logic is correct and enforced, P0 reuse is valid, verify_walkforward_run.py is a real gate, orchestrator tests mock training but exercise wiring.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "implementer-result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "On APPROVE run verification; advance. On BLOCK rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review-result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator wiring tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_orchestrator.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/test_orchestrator.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 Full-fidelity walk-forward run (heavy compute): execute",
+      "imperative": "COMMANDER-EXECUTED (not a subagent \u2014 this is experiment execution, multi-hour). Run scripts/run_walkforward_backtest.py at --utilization max, period by period (P0 reuse; P1,P2,P3 cutoff-train at gold fidelity + fusion + calibration + materialize). After EACH period, verify its leakage attestation before continuing. Capture logs. Produce reports/walkforward/walkforward_2025.summary.json with all 24 races predicted, period-attributed, plus the season fantasy score. Attach run log + artifact manifest as implementer-result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 closed (orchestrator verified)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 closed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run complete; implementer-result (run log + artifacts) attached",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Run from repo root",
+        "Halt if any period's leakage attestation fails",
+        "max utilization"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4: review",
+      "imperative": "Dispatch reviewer: independently verify the run's leakage attestation (every race: max train round < race round; compound prior built without that race), 24-race coverage, correct period attribution, and that the season fantasy score is computed via the G1 aggregator on real DB actuals.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run-complete implementer-result received for G4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4: integrate",
+      "imperative": "On APPROVE run the run-verification command; confirm season fantasy score is present; advance. On BLOCK halt and surface.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "walk-forward run verified: 24 races, period-attributed, leakage attestation all-pass",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/verify_walkforward_run.py"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "G5 Committed report + docs: implement",
+      "imperative": "Dispatch implementer: build the committed walk-forward report under reports/walkforward/ (walkforward_2025.md + .json): total-season fantasy score, per-race breakdown with predicted vs actual + which period produced each prediction, the no-in-season-retrain baseline (from G1) for comparison, and the leakage attestation table. Add a docs entry (methodology + how to re-run). Report builder unit-tested on a fixture at tests/unit/evo_predictor/walkforward/test_report.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G4 closed (run verified)",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Generated artifacts derived from the run; no hand-edited numbers",
+        "Keep docs current; commands valid",
+        "test-led; simplification_limits on touched paths"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5: review",
+      "imperative": "Dispatch reviewer: verify report numbers trace to the run artifacts (not hand-edited), per-race period attribution is correct, baseline vs walk-forward comparison is sound, docs commands are valid.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G5",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5: integrate",
+      "imperative": "On APPROVE run verification; confirm committed report present + valid; advance. On BLOCK rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G5",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "report builder tests pass; committed report present",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_report.py -q"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "Update docs/architecture/packets/fantasy_scoring.md to list season.py public API (SeasonAggregator, RaceResult, SeasonResult, extract_top10_picks)"
+    },
+    {
+      "id": "tc2",
+      "from": "g1-review",
+      "statement": "Round 9 (Spain) 2025 DB has 19 R drivers (one DNF/NC not stored) \u2014 data-completeness check"
+    },
+    {
+      "id": "tc3",
+      "from": "g3-review",
+      "statement": "orchestrator._find_promoted_file takes matches[0]; tighten to require exactly one file per round"
+    },
+    {
+      "id": "tc4",
+      "from": "g3-review",
+      "statement": "G4-watch: SubprocessPipeline gold_cycle_->fusion_ same-timestamp slug handoff unverified end-to-end"
+    }
+  ],
+  "blockers": []
+}

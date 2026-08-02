@@ -1,0 +1,147 @@
+{
+  "work_id": "epic-659-lessons-audit-closeout",
+  "tick": true,
+  "ops": [
+    {
+      "op": "retire",
+      "id": "run-crew-cli-launcher-misfit",
+      "reason": "Fixed upstream (constellation-commander's first-class --backend external path); reconfirmed clean across all 11 epic-659 waves with zero dispatch-mechanism friction. Confirms against a fixed-upstream constellation lesson are already auto-skipped by apply_lessons_delta.py's anti-churn contract, so the lesson was serving no further purpose sitting in Active. Retiring to reclaim the cap slot."
+    },
+    {
+      "op": "retire",
+      "id": "from-child-refuses-on-gated-checklist",
+      "reason": "100% correct navigation (7/7) across epic-659 \u2014 every commander closed the gated execute.json child with a plain attest, never --from-child. Graduating to COMMANDER_SPINE.template.json's execute-step imperative as a documented required behavior (surfaced for human acceptance + reproduction drill, not self-applied doctrine edit)."
+    },
+    {
+      "op": "retire",
+      "id": "self-authored-reasoning-gate-checks-need-review-scrutiny",
+      "reason": "5 independent confirmations across 2 epics (624-phase0 original; epic-659's 663/667/671/668) is graduation-strength. Graduating to constellation-commander references/commander-core.md 'Crew gate vs reasoning gate' section (its already-recorded target), surfaced for human acceptance + reproduction drill."
+    },
+    {
+      "op": "retire",
+      "id": "admiral-close-after-merge-verified",
+      "reason": "The prior audit (epic-601-closeout-audit) explicitly flagged this as a graduation candidate for the next audit. Epic-659's 12 merges reconfirm the verify-checks-then-merge-then-verify-HEAD-then-close sequence with zero violations (2 clean epics in a row). Graduating to constellation-admiral SKILL.md's Merge/Closeout section, surfaced for human acceptance + reproduction drill."
+    },
+    {
+      "op": "add",
+      "id": "cartographer-subagent-wrong-checkout-root",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "A Cartographer subagent dispatched at the reconcile step, given the worktree's absolute path in its dispatch prompt, wrote all its architecture-doc edits (docs/architecture/packets/*.md, index.md, overlays/*.yml, a new decisions/*.md file) to the MAIN CHECKOUT instead of the assigned worktree -- a git-invisible failure caught only because the dispatching commander independently ran git status in BOTH locations. Recovery: capture each file's diff/content before touching anything, revert the main checkout to clean, re-apply the identical changes to the worktree, THEN VERIFY THE REAPPLIED CONTENT IS ACTUALLY COMMITTED ON THE BRANCH (not just present on the worktree filesystem) -- a second, distinct failure mode chained onto the same incident: cmdr-663's own 'reapplied + verified' self-report was inaccurate because the reapply was never committed, and check_arch_map stays green with or without the map node so it can't catch the gap. Re-verify both ends plus the worktree's own architecture-map checker AND confirm the branch diff includes the map files before trusting the recovery.",
+      "grounding": "ADMIRAL_LOG.md 2026-07-25 lines 59/63/66 (cmdr-663 fence-timing -> wrong-checkout-root discovery -> uncommitted-reapply catch, one continuous incident chain); AGENT_FEEDBACK.md 2026-07-25 663-grip-g INCIDENT+RECOVERY entry (full diff/status evidence both locations).",
+      "bank_reason": "One validating same-epic instance (671, the next cartographer dispatch, carried the carry-forward mandate and had zero recurrence of either half of the chain) is encouraging but not yet proof against a Cartographer dispatched under different conditions (different skill version, different worktree layout) -- re-observe on the next epic that dispatches a Cartographer subagent before deciding whether the fix should be a stronger prompt pattern or a self-verify-write-location step built into the Cartographer skill's own doctrine.",
+      "target": "constellation-cartographer skill dispatch doctrine + commander cartographer-dispatch carry-forward note"
+    },
+    {
+      "op": "add",
+      "id": "consumed-frozen-module-run-guard-tests",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "When a gate's plan ADDS to a previously-ratified/frozen/consumed module, its acceptance criteria MUST explicitly include re-running that module's OWN pre-existing test file(s), not just the newly authored tests for the new content. Verifying only your own new tests can pass while silently breaking the guard tests of the module you are extending.",
+      "grounding": "ADMIRAL_LOG.md 2026-07-27 'MERGE -- #668 instrument panel' entry, 'REGRESSION CAUGHT + FIXED at the gate (cmdr-668 miss)': the PR broke 2 pre-existing #660 frozen-constant guard tests (test_exactly_seven_ratified_constants + the replication-deferred stub); cmdr-668 verified its own module + its own new tests but not the CONSUMED frozen_constants guard tests; the Admiral caught it and fixed it directly at the merge gate. The commander's own log named this a 'NEW LESSON candidate (for closeout audit)' but it was never actually staged as an add op in 668-instrument-panel/lessons-delta.json -- drafted fresh here so it is not lost.",
+      "bank_reason": "First occurrence of this exact phrasing (n=1) though the underlying 'verify the consumed contract wasn't silently broken' theme recurs epic-wide (byte-identical invariants, leakage guards, positive controls) -- re-observe on the next gate that extends a previously-ratified/frozen module before graduating this into a hard checklist item in gate-planning doctrine.",
+      "target": "constellation-commander references/commander-core.md gate-planning / acceptance-criteria section"
+    },
+    {
+      "op": "add",
+      "id": "mandatory-full-chain-smoke-before-unattended-run",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "For an unattended/AFK run that builds a multi-stage pipeline, gate the build on a MANDATORY end-to-end smoke on one real slice BEFORE the unattended run (not just unit tests) -- integration-only silent-correctness bugs (e.g. a provenance/branch inversion) pass every unit test and surface only when the whole chain runs against real data.",
+      "grounding": ".agent-work/staged-feedback/669-pilot/AGENT_FEEDBACK.md 2026-07-27 669-pilot: the cold-critic's mandatory 'first full-chain run must NOT be the unattended g3 run' (fix #1) caught a FastF1-fallthrough detector that false-matched a benign 'fastf1' mention and parked a genuinely-fresh E run as fell-back -- every one of the 29 unit tests passed; only the GB full-chain smoke exposed it.",
+      "bank_reason": "Re-observe across future pipeline-wiring runs whether a mandatory pre-unattended end-to-end smoke repeatedly catches integration-only silent bugs the unit suite misses -- if it recurs it earns a standing gate; if not, it was one-off.",
+      "target": null
+    },
+    {
+      "op": "add",
+      "id": "season-batch-runner-per-round-fault-isolation",
+      "scope": "project",
+      "task_class": "batch-compute",
+      "statement": "A real-data multi-round/multi-item batch runner over the epic-659 pipeline MUST isolate per-item failures (try/except-per-item -> PARK with a diagnosis + continue), never let one item's exception kill the whole batch. The pipeline is strictly-pre: E's car ceiling needs sessions with round_idx < R, so early rounds with no strictly-prior data (round 1, sometimes 2) legitimately produce no severity classes and crash inside run_circuit -- expect them to PARK, and smoke an EARLY/edge round (expected to park), not just a mid-season happy path, before launching a long detached batch. Synthetic-runner unit tests do NOT exercise this real-data early-round property.",
+      "grounding": ".agent-work/staged-feedback/670-season-run/AGENT_FEEDBACK.md 2026-07-27 670: first detached launch crashed on round 1 (no strictly-prior data); g1 reopened to add per-round fault isolation; rounds 1-2 then parked cleanly and the season completed over 20 covered rounds.",
+      "bank_reason": "Re-observe on the next real-data batch runner (backfill, multi-season, other pipelines) to confirm the per-item-isolation + strictly-pre-early-park pattern generalizes beyond the 2023 season run.",
+      "target": null
+    },
+    {
+      "op": "add",
+      "id": "verify-subagent-self-report-not-just-green-check",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "A subagent's (crew, cartographer, or Commander's) own claim of having done/verified/reapplied something is not reliable ground truth on its own, and a green mechanical check (e.g. check_arch_map) can be structurally blind to content drift by construction. When a cheap independent re-derivation is available -- re-run the check yourself on the pinned interpreter, grep/diff the actual artifact, reverse-scan real source against a claimed map -- do it before trusting the claim, especially for architecture-map/content-correctness claims.",
+      "grounding": "ADMIRAL_LOG.md line 63 (cmdr-663's cartographer self-report 'reapplied + verified' was inaccurate -- the reapply was never committed, caught only by an unrelated grep); 668-instrument-panel/lessons-delta.json op 6 (a dangling confirm against a non-existent lesson id, redirected here -- its actual content: every crew claim independently re-verified before integrating, catching a radon/interpreter-env split); 671-reconcile/lessons-delta.json mention op (an independent cartographer content-verify, a reverse-import-scan against real source, caught two real symbol-attribution errors a green check_arch_map could not see).",
+      "bank_reason": "3 independent within-epic sightings with a concrete catch each time is real signal, but this sits close to 3 existing narrower lessons (idle-artifact-completeness-distinguisher, harvest-collected-not-verified-merged, stale-map-reconcile-verify-against-final-commit) and to the user's own project memory cartographer-audit-gaps.md. Banking as its own candidate rather than forcing a merge call that belongs to the next audit or the human -- re-observe whether it keeps recurring as ITS OWN pattern (crew-claim verification generally) or should consolidate with the narrower siblings.",
+      "target": null
+    },
+    {
+      "op": "add",
+      "id": "constellation-slash-workid-parsing-gaps",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "Multiple constellation-commander scripts assume a work_id has no internal '/', breaking under this repo's own nested Commander-under-Admiral convention (epic-<N>/<issue>, e.g. epic-659/665). CONFIRMED TWICE, independently, in the SAME run: (1) run_crew.py --verify-result <session>: load_registry_for_resume parses work_id as session.split('/')[1] (one segment), dropping everything after the first '/'. (2) verify_agent_feedback.py --phase archive: _current_run_archive_dirs string-matches path.name == work_id or path.name.endswith(f'-{work_id}') -- both unsatisfiable when work_id contains '/'. Workarounds used: (1) call run_crew's registry functions directly, bypassing the CLI parser; (2) a FORCED self-waive on archive.c1 with --force + authority=commander-self, citing this exact defect.",
+      "grounding": ".agent-work/staged-feedback/epic-659/665/AGENT_FEEDBACK.md 2026-07-25 epic-659/665 entry: reproduced on all 4 crew-verification calls (root cause read directly from run_crew.py's load_registry_for_resume) and once at archive closeout (root cause read directly from verify_agent_feedback.py's _current_run_archive_dirs). ADMIRAL_LOG.md 2026-07-25 line 51 explicitly ties the archive.c1 forced-waive to being the '2nd instance this run, same root as run_crew.py --verify-result'.",
+      "bank_reason": "Two independent forced-waive/workaround events in one run, across two different scripts, sharing one root defect -- banked (and exported) so it stays visible to the next upstream constellation sweep rather than getting lost as a per-project one-off.",
+      "target": "constellation-commander scripts/run_crew.py load_registry_for_resume + scripts/verify_agent_feedback.py _current_run_archive_dirs"
+    },
+    {
+      "op": "export",
+      "id": "constellation-slash-workid-parsing-gaps",
+      "grounding": "Two independent forced-waive/workaround events in one epic (epic-659/665) sharing one root cause across run_crew.py and verify_agent_feedback.py -- queuing for the next constellation upstream sweep. RECOMMEND the Admiral additionally file a standalone code-fix issue for a shared work_id-safe parsing/matching helper both scripts import."
+    },
+    {
+      "op": "amend",
+      "id": "admiral-owns-long-batch-compute",
+      "statement": "Multi-hour batch compute must be Admiral-owned and OS-detached (e.g. PowerShell Start-Process -WindowStyle Hidden, which survives all three fleet-doctrine kill vectors). A commander's harness-tracked background workers die when the subagent idles -- guaranteed strand. Pattern: Admiral launches detached workers, records PIDs + state note, uses a durable watcher (Wait-Process) rather than a harness-tracked background; CLIs must be idempotent/resumable so partial runs continue. A commander may discover or diagnose batch scope, but must not be the one running multi-hour compute. When a Commander's OWN plan (not launch-order-mandated) folds a full-repo/full-suite regression check into a gate's closing postcondition, size it BEFORE freezing: grep the real import graph of changed files and scope to actual importers. Factor any standing thread-cap guard into runtime estimates. When launching a detached process with a multi-word argument, prefer the script's own in-code default/tuple over PowerShell's Start-Process -ArgumentList where possible. WHEN ARMING A STALL-WATCHDOG AGAINST A FILE'S MTIME, SNAPSHOT THAT MTIME AT ARM TIME -- do not key liveness off a pre-existing file's already-stale absolute age, or a healthy in-flight process will read as a false 'SILENT' alarm.",
+      "grounding": "ADMIRAL_LOG.md 2026-07-27 '#667 fixer-667 non-continuation FALSE ALARM' entry: a watchdog fired 'SILENT' but was a baseline bug (keyed on join.py's pre-existing 16:50 mtime, already >10min stale before fixer started); pinged for liveness, fixer was actually driving and landed the commit. #670 season compute itself corroborates the rest of the lesson cleanly (OS-detached Start-Process hidden, PID-tracked durable PowerShell monitor, per-round fault isolation making the run resumable).",
+      "task_class": "general-workflow"
+    },
+    {
+      "op": "amend",
+      "id": "delegated-commander-foreground-poll-over-watcher-yield",
+      "statement": "In a headless/delegated run, arming a fire-and-forget BACKGROUND watcher and ending the turn to 'wait' reads to the Admiral as IDLE and stalls the run between steps. For a medium wait (a crew rework, a re-review, a slow-but-finite check) prefer a BOUNDED FOREGROUND in-turn poll (a foreground bash until-loop with a deadline that returns the moment the signal fires) so the turn stays alive; reserve OS-level detach + a single completion-notify only for genuinely-long (>~10min) jobs, and even then verify-alive rather than trusting the notify. REFINEMENT (668): this is a foreground-poll-vs-background-yield distinction for a FINITE compute job, not a rule against ever yielding -- when the wait is on a HUMAN-GATED decision (a sign-off, a routed float) with nothing to poll, making the block visible (SendMessage + a state note) and yielding the turn as a governed reach-up is the correct shape, not a violation; the Admiral resumes with a query round-trip, context intact.",
+      "grounding": "668-instrument-panel/lessons-delta.json confirm op: 'All F12-independent work (4 instruments) was completed first... At the HARD GATE, with nothing to poll (the sign-off is a human-routed decision, not a finite compute job), I made the block visible... and yielded the turn as a governed reach-up... So: foreground-poll a finite compute job; yield-with-a-clear-message a human-gated sign-off -- the two are different shapes, not a contradiction.' Confirmed 6x this epic (662, 664, 666, 667, 669) with zero Admiral nudges at up to 12-crew scale.",
+      "task_class": "general-workflow"
+    },
+    {
+      "op": "amend",
+      "id": "admiral-message-queue-latency-coordination-hazard",
+      "statement": "A SendMessage to a delegated commander/implementer queues until that agent's own turn boundary -- it is not delivered instantly. This creates concrete Admiral-side hazards: (a) steering/adjudicating a commander's IMPLEMENTER directly (bypassing the commander layer) leaves the commander itself unaware; (b) a commander that appears to silently diverge from an explicit ruling may simply not have received it yet; (c) A FENCE ON A SHARED RESOURCE FOR A PARALLEL WAVE (e.g. 'only one commander may edit docs/architecture/packets/*.md this wave') sent as a follow-up message after dispatch queues behind each commander's already-in-flight action -- a cartographer step already running when the fence arrives will still touch the shared file before it's ever seen. Shared-resource fences for parallel waves MUST be baked into every launch order BEFORE dispatch, never sent as a mid-flight message.",
+      "grounding": "ADMIRAL_LOG.md 2026-07-25 lines 46 and 59 (epic-659 Wave 0): cmdr-665's reconcile edited the shared docs/architecture/packets/physics.md before the Admiral's one-writer fence could reach cmdr-661/cmdr-663 (message-queue latency); cmdr-663's cartographer independently hit the SAME fence-timing gap minutes later ('its cartographer was already running when my fence arrived... the fence should have been in the launch order pre-dispatch, not mid-run -- same lesson as the #665-block coordination gap', explicitly self-identified as the same mechanism in the log).",
+      "task_class": "general-workflow"
+    },
+    {
+      "op": "confirm",
+      "id": "crew-idle-strands-deliverable",
+      "grounding": "epic-659, 3 sightings: impl-660's idle-strand (ADMIRAL_LOG line 36, explicit 'Recurrence of active lesson crew-idle-strands-deliverable'); 662's g3 rework strand-on-result-write (662-segment-map/lessons-delta.json confirm op); 670's git-bash tasklist PID-liveness false-negative vs PowerShell Get-Process confirming a live detached process (670-season-run/lessons-delta.json confirm op) -- the exact 'Windows liveness-detection false positive' pattern the task brief named is this existing lesson's own PowerShell-Get-Process clause, reconfirmed, not a new slug."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "epic-659: reconfirmed in 9/11 staged deltas (epic659-661, epic-659/663, 662, 664, 666, 667, 668, 671, plus 665's own confirm) -- every mission-branch diff verified code+tests+docs only, zero .agent-work leaks; the worktree-lease-redirect sub-mechanism (durable_root() resolving to the worktree under a concurrent Admiral epic-lease) recurred verbatim in 671 (671-reconcile/lessons-delta.json confirm op)."
+    },
+    {
+      "op": "confirm",
+      "id": "loo-residual-diagnostic-over-self-weighted-predictor",
+      "grounding": "664-reference-laps/lessons-delta.json confirm op: the g4 GATING jackknife is out-of-sample delete-d/driver-block (27-45 laps dropped per replicate), NOT self-weighted; the cold plan critic forced the leveraged design before any code, reviewer confirmed non-self-weighted."
+    },
+    {
+      "op": "confirm",
+      "id": "scope-self-authored-regression-to-import-graph",
+      "grounding": "664-reference-laps/lessons-delta.json admiral-owns-long-batch-compute confirm op states the g4 real-data validation kept the regression 'scoped to the import graph rather than the full physics suite' -- direct corroboration of this sibling lesson, not previously cross-cited by 664's own delta."
+    },
+    {
+      "op": "confirm",
+      "id": "idle-artifact-completeness-distinguisher",
+      "grounding": "ADMIRAL_LOG.md 2026-07-25 lines 56-57 (cmdr-663 watchdog INCIDENT): files built >40min old, no commit/PR/verdict, no idle signal, PowerShell Get-Process confirmed no python process running -- ambiguous state resolved by checking artifact completeness (cartographer reconcile completed + execute.json touched 11:13 = actively finishing a long thorough run), exactly the lesson's prescribed diagnostic; resolved ALIVE-not-stalled, no recovery needed."
+    },
+    {
+      "op": "confirm",
+      "id": "harvest-collected-not-verified-merged",
+      "grounding": "epic-659: all 11 fenced-commander trios independently verified copied to .agent-work/staged-feedback/ (or the durable archive) BEFORE their worktree was swept, cited explicitly at every MERGE log entry (#674/#676/#677/#681/#683/#689/#697/#699/#702/#705/#709/#711) -- zero repeats of the epic-601 harvest-ordering gap across a full 12-issue/7-wave epic."
+    },
+    {
+      "op": "mention",
+      "id": "stale-map-reconcile-verify-against-final-commit",
+      "grounding": "671-reconcile/lessons-delta.json mention op: an independent cartographer content-verify (reverse-import-scan against actual source) caught two real symbol-attribution errors (run_panel misattributed as a component instrument; the D->E grip consumer misattributed) that a green check_arch_map could not see -- corroborates the general 'green mechanical check is blind to content drift' principle this lesson's own staleness case exemplifies."
+    }
+  ]
+}

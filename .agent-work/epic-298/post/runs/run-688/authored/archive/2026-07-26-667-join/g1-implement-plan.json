@@ -1,0 +1,269 @@
+{
+  "work_id": "667-join-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-scaffold-refusals",
+    "m2-join-sigma",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff complete",
+      "imperative": "Read inherited global-crew.md + global-everyone.md, project docs/agents/CREW_CONTEXT.md + engine-config.json, the g1-implement handoff, and the real seam signatures (store.py FingerprintCell, vocabulary.py ClassVocabulary, common/student_t.py predictive_t/PredictiveT/FormulaRule/DEFAULT_NU_LOSS/NU_FLOOR). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + seams + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-scaffold-refusals": {
+      "id": "m1-scaffold-refusals",
+      "title": "Module scaffold: WeekendUtilizationPrior + join_weekend_prior loud refusals + fully-thin path",
+      "imperative": "Create src/physics/fingerprint/join.py with the frozen WeekendUtilizationPrior dataclass and join_weekend_prior signature. Implement ALL loud-refusal input validation (vocabulary-version mismatch, channel mismatch, driver mismatch, class-order mismatch, missing composition key, corner_share<=0 -> each ValueError) and the zero-resolved fully-thin path (prior=None, mean=None, weight_on_thin=1.0, thin_classes=all class_ids). Resolved-path math left as an explicit NotImplementedError stub for m2. Write tests/unit/physics/fingerprint/test_join.py covering the refusals + zero-resolved-thin. TDD red first (module absent), then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: refusal + fully-thin tests written and observed failing (module/behavior absent) \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "refusal + fully-thin tests green",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_join.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-scaffold-refusals-1"
+        }
+      ],
+      "constraints": [
+        "PURE module: no store/DB/FastF1 import inside join.py (FingerprintCell/ClassVocabulary/student_t imports are pure value objects, allowed)",
+        "No new frozen literal (F12)",
+        "ValueError messages name field/expectation/actual"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-scaffold-refusals-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_join.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-join-sigma": {
+      "id": "m2-join-sigma",
+      "title": "Resolved join arithmetic + quadrature sigma propagation (T7 invariants)",
+      "imperative": "Implement the resolved path: normalized-weighted-average prior_mean (== mu_res; unresolved fall back to mu_res), quadrature combined_scale = sqrt(sum_res w_i^2 sigma_i^2 + (weight_on_thin*sigma_unres)^2) with sigma_unres = max(pstdev(resolved means) [range/2 if <2], max_resolved_sigma), weight-aware n_eff_res = 1/sum_res(w_i^2/support_i) then n_eff = n_eff_res*(1-weight_on_thin) floored, wrapped in predictive_t. Append T7-1..T7-5, sigma thin-widening (numeric strictly-wider), sigma monotonicity, thin surfacing, both-channels-symmetric tests. TDD red (NotImplementedError) first, then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 scaffold + refusals green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: T7 + sigma invariant tests written and observed failing (resolved path stubbed) \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "full test_join.py green (all T7 invariants + T7-5 + sigma widening/monotonicity/surfacing/channel symmetry)",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_join.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-join-sigma-1"
+        }
+      ],
+      "constraints": [
+        "sigma_unres MUST be able to EXCEED resolved sigma (widen, never cap)",
+        "n_eff folds in thin weight so the tail fattens",
+        "join = normalized weighted average, do NOT renormalize composition",
+        "Student-t output, no baked-in normality",
+        "docstring states the independent-cell Build-1 simplification"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-join-sigma-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_join.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Final verification: full pytest green + simplification_limits pass",
+      "imperative": "Run the full test file and simplification_limits on both new files from the worktree. Both must pass (exit 0). Paste outputs into the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 math green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_join.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_join.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits pass on join.py + test_join.py",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" src/utils/simplification_limits.py --paths src/physics/fingerprint/join.py tests/unit/physics/fingerprint/test_join.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-2"
+        }
+      ],
+      "constraints": [
+        "Do NOT commit/stage; do NOT touch data/*.db or docs/architecture/*"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" -m pytest tests/unit/physics/fingerprint/test_join.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/f1brainz-wt/epic659-667\" && \"C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe\" src/utils/simplification_limits.py --paths src/physics/fingerprint/join.py tests/unit/physics/fingerprint/test_join.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-667-g1-impl",
+    "status": "released",
+    "claimed_at": "2026-07-26T23:44:57.832239+00:00",
+    "last_heartbeat": "2026-07-26T23:50:52.671169+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-26T23:52:28.140219+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Seams verified against source: FingerprintCell fields (driver,era,vocabulary_version,class_id,channel,what_measure,mean,sigma,support_n,status,shared_floor_applied,format_version); ClassVocabulary(vocabulary_id,rules_era,k,class_ids,f12_verdict,f12_provenance); predictive_t(mu,sigma,n_eff,*,nu_loss,rule)->PredictiveT(nu,loc,scale); FormulaRule nu_prior=2.5>NU_FLOOR so any n_eff>0 valid. Handoff complete: task/intent/scope/exclusions/evidence/test-mode/stop all present. Note: simplification CLI uses --paths (handoff bare-positional form is wrong).",
+      "mechanical": false,
+      "ts": "2026-07-26T23:45:20.802682+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-scaffold-refusals",
+      "why": "join.py scaffold: WeekendUtilizationPrior frozen dataclass + join_weekend_prior with all 6 loud refusals (class-order, driver, channel, vocab-version, missing-comp-key, corner_share<=0) and the fully-thin path (resolved_weight<=0 -> prior/mean None, weight_on_thin=1.0, thin_classes=all). Resolved math stubbed to NotImplementedError for m2. 7/7 m1 tests green.",
+      "mechanical": false,
+      "ts": "2026-07-26T23:47:42.684814+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-join-sigma",
+      "why": "Resolved path: prior_mean=mu_res (normalized weighted avg over resolved, unresolved fall back so mean==mu_res); combined_scale quadrature sqrt(Sum_res w^2 sigma^2 + (weight_on_thin*sigma_unres)^2), sigma_unres=max(pstdev(resolved means) or range/2, max_resolved_sigma) so unknown class widens; n_eff=n_eff_res*(1-weight_on_thin) floored. 18/18 green incl T7-1..5 + thin-widening/monotonicity/surfacing/channel-symmetry.",
+      "mechanical": false,
+      "ts": "2026-07-26T23:50:34.383369+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "Final verification: full test_join.py 18/18 green (engine c1 command) and simplification_limits PASS on join.py + test_join.py (engine c2 command). Both run from the worktree with the pinned interpreter.",
+      "mechanical": false,
+      "ts": "2026-07-26T23:50:52.671146+00:00"
+    }
+  ]
+}

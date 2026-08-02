@@ -1,0 +1,468 @@
+{
+  "work_id": "g4-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-composition",
+    "m2-fingerprint-arm",
+    "m3-baseline-arm",
+    "m4-golf-null",
+    "m5-scoring-report",
+    "m6-realrun-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + confirm handoff complete",
+      "imperative": "Read inherited global-crew.md + global-everyone.md (done) and the g4 handoff in full (done). Confirm the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format. Source-verify the composition pieces: run_stage_g/run_stage_h/join_weekend_prior/fit_driver_fingerprints/derive_pilot_vocabulary/ReferenceUtilizationStore field row. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete; landed composition pieces source-verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-composition": {
+      "id": "m1-composition",
+      "title": "Composition loader = field-reference row (Admiral D1)",
+      "imperative": "In scripts/run_heldout_diagnostic_670.py add load_field_composition(db, year, circuit, session_type, map_version) returning ReferenceUtilizationStore.get(...).fingerprint (the __field__ field-median row's time_shares), and uniform_composition(vocabulary). Add TDD-red test test_composition_read_is_field_row in tests/unit/physics/fingerprint/test_heldout_diagnostic.py on a small synthetic slice with a __field__ field row + a differing constructor row, asserting the composition equals the field row and NOT any constructor row. Attest c1 (red observed), then implement to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; context loaded and handoff confirmed complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_composition_read_is_field_row written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_composition_read_is_field_row written; observed failing with AttributeError: no load_field_composition"
+        },
+        {
+          "id": "c2",
+          "statement": "composition read targets __field__ field row; test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k composition_read_is_field_row -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-composition-1"
+        }
+      ],
+      "constraints": [
+        "read-only slice",
+        "do not edit join/fit/store/frozen sets",
+        "offline",
+        "pinned 3.14 interpreter"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-composition-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k composition_read_is_field_row -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fingerprint-arm": {
+      "id": "m2-fingerprint-arm",
+      "title": "Arm 1 fingerprint x composition + leakage guard (fit at R-1)",
+      "imperative": "Add fit_cells_as_of(...) wrapping run_stage_g (fit_driver_fingerprints, as_of_round=R-1, allow_unverified=True) and arm_fingerprint(...) = join_weekend_prior(field_composition, cells@R-1). Assert in code that as_of_round passed == R-1. Add LEAKAGE-GUARD test test_fingerprint_fit_excludes_round_R: a synthetic observables DB where a round-R poison row (huge value) is present; fitting at as_of_round=R-1 yields byte-identical cells with vs without the poison row (proves no round>=R row enters the fit). Red then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 composition loader in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 composition loader complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_fingerprint_fit_excludes_round_R written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Guard verified DISCRIMINATING (not vacuous): with a leaking cutoff as_of=R the round-R poison changes fingerprint cells (identical=False -> equality assertion FAILS); at the correct as_of=R-1 the poison is a no-op (identical=True). Test-after slice; red demonstrated via the leaking-cutoff counterfactual."
+        },
+        {
+          "id": "c2",
+          "statement": "fingerprint arm fits at R-1; no round>=R row enters; leakage-guard test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k fingerprint_fit_excludes_round_R -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fingerprint-arm-1"
+        }
+      ],
+      "constraints": [
+        "as_of_round=R-1 (round_idx<=as_of_round INCLUSIVE excludes R)",
+        "same cells shared with arm 2",
+        "do not edit fit.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fingerprint-arm-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k fingerprint_fit_excludes_round_R -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-baseline-arm": {
+      "id": "m3-baseline-arm",
+      "title": "Arm 2 driver-overall-only baseline (T7-1 uniform composition)",
+      "imperative": "Add arm_baseline(...) = join_weekend_prior(uniform_composition, the SAME cells@R-1). Add test_baseline_t7_1_uniform_equals_unweighted_mean: synthetic resolved cells with distinct means; join under uniform composition -> prior.mean == unweighted mean of resolved cell means (the ONE documented baseline identity, #667 TC-1). Red then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 arm-1 + shared cells in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 arm-1 + shared cells complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_baseline_t7_1_uniform_equals_unweighted_mean written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: AttributeError no arm_baseline before impl"
+        },
+        {
+          "id": "c2",
+          "statement": "uniform-composition join reduces to the unweighted resolved-cell mean; identity test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k baseline_t7_1_uniform_equals_unweighted_mean -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-baseline-arm-1"
+        }
+      ],
+      "constraints": [
+        "ONE documented baseline only",
+        "same cells as arm 1",
+        "student-t sigma preserved"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-baseline-arm-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k baseline_t7_1_uniform_equals_unweighted_mean -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-golf-null": {
+      "id": "m4-golf-null",
+      "title": "Arm 3 golf null (field pool < R, NO driver term) + leakage guard + floor",
+      "imperative": "Add golf_null_field_pool(db, year, session_type, vocabulary, before_round=R, channel) computing per-class field mean + cross-observation dispersion over rounds < R ONLY (NO driver term), returning the rounds actually pooled; and compose_golf_null_prior(pool, composition, vocabulary) -> PredictiveT (student-t, honest field dispersion, NO baked normality). Assert pool excludes round>=R. Add test_golf_null_pool_excludes_round_R (round-R poison row is a no-op; rounds_used max < R) and test_golf_null_is_a_floor (on data where drivers differ from field, golf-null point error >= driver-arm point error / lower log-score). Red then green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 baseline arm in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 baseline arm complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: golf-null leakage + floor tests written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both golf tests green. Leakage guard DISCRIMINATING (counterfactual): at held_out=R=3 the round-3 poison is a no-op (per_class identical, rounds_used=(1,2)); at a LEAKING held_out=R+1=4 the poison enters (per_class identical=False, c0 mean 0.5->200000). Floor test genuine test-after: off-field driver err_golf>err_baseline."
+        },
+        {
+          "id": "c2",
+          "statement": "golf-null field pool excludes round>=R and is a floor; both tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k \"golf_null_pool_excludes_round_R or golf_null_is_a_floor\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-golf-null-1"
+        }
+      ],
+      "constraints": [
+        "golf-null pool over rounds < R (exclude R)",
+        "no driver term",
+        "honest student-t / field dispersion, no baked normality"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-golf-null-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -k \"golf_null_pool_excludes_round_R or golf_null_is_a_floor\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-scoring-report": {
+      "id": "m5-scoring-report",
+      "title": "Truth + scoring + report emission (md+json)",
+      "imperative": "Add actual_weekend_utilization(...) = composition-weighted actual (utilization->time_deficit_s, energy->deployment_share) at round R with the SAME field weights; log_score/resid/coverage via scipy student-t on each arm's PredictiveT; run_diagnostic looping covered held-out rounds (fit@R-1, 3 arms, truth, score), emitting heldout_diagnostic_670_report.{md,json} to .agent-work/670-season-run/artifacts/ with per-arm aggregates, per-round/per-channel breakdown, golf-null floor, PROMINENT composition caveat, thin-early-rounds note, one-documented-baseline statement. Confirm whole test file (all 5 guard/identity tests) green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 all three arms in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 all three arms complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "whole test_heldout_diagnostic.py green (all leakage guards + T7-1 identity + composition + floor)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-scoring-report-1"
+        }
+      ],
+      "constraints": [
+        "student-t sigma preserved on ALL arms",
+        "no new model",
+        "report to .agent-work local-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-scoring-report-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint/test_heldout_diagnostic.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-realrun-evidence": {
+      "id": "m6-realrun-evidence",
+      "title": "Real run over the actual slice + suite + pyright",
+      "imperative": "Run the diagnostic over the real consolidated slice; confirm heldout_diagnostic_670_report.{md,json} produced with per-arm aggregates + which rounds resolved vs thin. Confirm the full fingerprint unit suite passes. Confirm pyright-0 on the two new files (manual attest if pyright unavailable, note it).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 scoring+report in place, whole test file green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 scoring+report complete, whole test file green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "real diagnostic run produces both report artifacts",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe scripts/run_heldout_diagnostic_670.py && test -f .agent-work/670-season-run/artifacts/heldout_diagnostic_670_report.md && test -f .agent-work/670-season-run/artifacts/heldout_diagnostic_670_report.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-realrun-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full fingerprint unit suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-realrun-evidence-2"
+        },
+        {
+          "id": "c3",
+          "statement": "pyright-0 on new code (manual attest with evidence)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "pyright 0 errors, 0 warnings, 0 informations on scripts/run_heldout_diagnostic_670.py + tests/unit/physics/fingerprint/test_heldout_diagnostic.py"
+        }
+      ],
+      "constraints": [
+        "offline",
+        "read-only slice",
+        "report local-only under .agent-work"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-realrun-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe scripts/run_heldout_diagnostic_670.py && test -f .agent-work/670-season-run/artifacts/heldout_diagnostic_670_report.md && test -f .agent-work/670-season-run/artifacts/heldout_diagnostic_670_report.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-realrun-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1brainz-wt/epic659-670 && C:/Users/fredc/AppData/Local/Python/pythoncore-3.14-64/python.exe -m pytest tests/unit/physics/fingerprint -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g4-impl-670",
+    "status": "released",
+    "claimed_at": "2026-07-27T11:20:38.415459+00:00",
+    "last_heartbeat": "2026-07-27T11:39:18.765351+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-27T11:40:50.364277+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete on all 8 fields. Composition pieces verified: run_stage_h reads composition via ReferenceUtilizationStore.get(...).fingerprint = __field__ field-median row (NOT constructor); join_weekend_prior gives T7-1 uniform->unweighted-mean; fit.py filters round_idx<=as_of_round so as_of_round=R-1 excludes R; derive_pilot_vocabulary(field class_ids,2023)->k=4 UNVERIFIED (fit allow_unverified). Slice: rounds 3-22 covered, 20 drivers, channels utilization=time_deficit_s / energy=deployment_share.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:21:19.812216+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-composition",
+      "why": "load_field_composition returns product.fingerprint (rebuilt from __field__ row alone by the store); uniform_composition gives equal 1/k weights for the T7-1 baseline. Composition-source guard test green.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:23:53.651118+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fingerprint-arm",
+      "why": "fit_cells_as_of derives as_of=held_out_round-1 (caller passes R, cannot pass a leaking cutoff); run_stage_g uses fit_driver_fingerprints round_idx<=as_of. arm_fingerprint = join(field_comp, cells). Leakage-guard test green + counterfactual proves it bites.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:26:41.169822+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-baseline-arm",
+      "why": "arm_baseline = join_weekend_prior(uniform_composition, same cells). T7-1 identity green: uniform comp -> prior.mean == unweighted resolved-cell mean; Student-t preserved.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:27:36.930988+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-golf-null",
+      "why": "golf_null_field_pool filters round_idx<held_out_round (SQL) + raises if max(rounds_used)>=R; NO driver grouping. compose_golf_null_prior = join-identical weight arithmetic + independent-class quadrature + predictive_t (heavy tail via nu_loss, no baked normality). Both guard+floor tests green.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:31:21.335879+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-scoring-report",
+      "why": "Scoring (student-t logpdf/|resid|/coverage) + run_diagnostic + md/json report done; whole test file (5 guards/identity) green. Real run: unresolvable=[3], thin=[4,5], resolved=[6..22]. FINDING: arms1/2 predictive sigma dominated by landed-#666 fit's g_sigma_onesided grip term (p90~8e9 vs deficit~0.1s) -> vacuously wide intervals, log-score not equal-footing vs golf null; report leads with sigma-robust |resid|: arm1 0.854 < arm2 1.14 (composition-weighting helps point), golf 0.830 ~= arm1 (driver term doesn't beat field null on this bounded slice).",
+      "mechanical": false,
+      "ts": "2026-07-27T11:38:26.998182+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-realrun-evidence",
+      "why": "Real diagnostic run produces both report artifacts (md+json); full fingerprint suite 108 passed/13 skipped; pyright-0 on both new files. All close criteria met.",
+      "mechanical": false,
+      "ts": "2026-07-27T11:39:18.765320+00:00"
+    }
+  ]
+}

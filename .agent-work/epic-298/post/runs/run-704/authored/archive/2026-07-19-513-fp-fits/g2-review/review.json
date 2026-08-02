@@ -1,0 +1,175 @@
+{
+  "work_id": "513-fp-fits",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-rework-verify"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read global-crew.md, global-everyone.md, windows.md; CREW_CONTEXT.md, GLOSSARY.md; handoff-g2.md, handoff-g2-review.md, result-g2-implement.md; physics packet (mass_model.py + layer2 sections); full diff of mass_model.py, test_mass_model.py; full new files fp_lap_latent.py, test_fp_lap_latent.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All close criteria met and independently reproduced: fp_mass(season,*,fuel_kg,fuel_sigma_kg,team)->FpMass NamedTuple(mass_kg,sigma_kg) never scalar (verified by reading source, code always constructs+returns FpMass); invariant SEASON_BASE_KG<mass_kg<quali_mass+MAX_FUEL_KG holds (tested across all seasons); push<long_run ordering holds; run_purpose is emergent -- classify_run_purpose's signature takes only lap_time_s/session_best_s/pit flags/stint position, no session_type param, and extract_fp_lap_latent's call site does not pass session_type (grep-verified); compound read directly from row['compound'] (grep-verified, no inference logic); all 6 new constants (NOMINAL_FP_FUEL_KG, FP_FUEL_INTERCEPT_SIGMA_KG, PUSH_MARGIN_FRAC, START_FUEL_PUSH_KG, START_FUEL_LONGRUN_KG, FP_FUEL_RESERVE_KG) are named module-scope with calibration-placeholder docstrings. FpLapLatent field order matches handoff exactly. Reproduced: 151/151 tests pass (105 in test_mass_model.py + 46 in test_fp_lap_latent.py, exact split matches implementer's claim); git status --short data/ empty; simplification_limits PASS (2 files).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Exactly the allowed-scope files touched: src/physics/mass_model.py (modified, additive-only diff verified -- quali_mass/race_mass/race_mass_sigma bodies unchanged), tests/unit/physics/test_mass_model.py (extended), src/physics/layer2/fp_lap_latent.py (new), tests/unit/physics/test_fp_lap_latent.py (new). git status confirms no other src/tests files touched. Grep for fp_mass/fp_lap_latent usage across src/ shows zero references outside these two files -- session_estimator.py, estimate_store.py, and all views confirmed untouched and fp_mass is not wired into any fitter. No data/*.db read (test fixture uses tmp_path + sqlite3 synthetic schema).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 3 required evidence items independently reproduced (not just trusted): (1) pytest -- 151/151 green, exact same collection counts (105+46); (2) value table -- ran fp_mass/fuel_kg_est directly for the same 4 (purpose, lap_in_stint) pairs claimed and got byte-identical numbers (SEASON_BASE_KG[2023]=798.0, quali_mass=808.0, push@1=813.00, push@3=809.40, long_run@1=858.00, long_run@5=850.80, sigma=15.0 throughout); (3) simplification_limits --paths on both touched files -> PASS (2 files checked). git status --short data/ independently confirmed empty.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "One genuine, reproducible CREW_CONTEXT.md project-rule violation found (real, not the load-bearing check): fp_lap_latent.py line ~357 'tyre_life=int(row[tyre_life]) if pd.notna(row[tyre_life]) else 0' silently substitutes 0 for a missing/NULL tyre_life instead of propagating an explicit missing marker or a named policy. 0 is a semantically REAL value (a genuinely-fresh tyre, per session_race.py's own tyre_life docstring precedent showing real stints starting at non-zero values like 4) -- this is exactly the anti-pattern CREW_CONTEXT.md's Data Semantics section and its explicit Review Blocker list name verbatim: 'Missingness is imputed inline without a named/configured policy.' The path is also untested (the fixture DB never sets tyre_life NULL), so it is an unvalidated silent-zero-fill. Lower severity: track_status None->'' fallback (line ~364) is the same inline-imputation pattern but lower risk since empty string cannot be confused with a real status value. All other quality rules checked and satisfied: exception messages name field+expected+actual (KeyError names season+known seasons, ValueError names field+value); no hidden fallback for run_purpose/fuel/compound (fully documented+tested); DEFAULT_BURN_PER_LAP_KG reused not redefined; module-scope-only constants; no mutable module state; physics-region imports clean; season-DB read pattern genuinely mirrors session_race.py's _get_session_id/_ro_uri (verified side-by-side); quali_mass/race_mass/race_mass_sigma bodies byte-identical in diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes verified against diff and match precisely: struct:physics (mass_model.py additive-only) and struct:physics.layer2 (new fp_lap_latent.py) anchors are correct; purpose:physics_estimation capability claim accurate (FP mass now available as a distribution, not yet wired anywhere -- confirmed via grep, matches claim); constraint:physics_region_no_evo_import honored (verified); decision-candidates (6 named tunable constants) correctly surfaced as needing future calibration, not silently hidden. No structural/capability/constraint claim is overstated or understated. Durable context routed: implementer's out-of-scope triage candidate (session_race.py._is_clean dead-code NaN/None trap, mirrored by tyre_supplant.py) independently re-verified as accurate and re-flagged in this survey (tc1) for Cartographer/Triage. No reconciliation-blocking divergence from recorded architecture.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass run over the full diff (mass_model.py additions, new fp_lap_latent.py + both test files), record at .agent-work/513-fp-fits/g2-review/fowler_pass.json, verify_fowler_pass.py exit 0 (smells=12, flagged=[], overridden=[duplicated-code, speculative-generality]). duplicated-code: _get_session_id/_ro_uri duplicate session_race.py's helper, but grep-confirmed 4 OTHER existing physics modules (session_race.py, race_stint_batch.py, ideal_lap/residuals.py, fuel_features.py) already duplicate the same helper independently -- established repo convention, logged override with reason. speculative-generality: fp_mass's no-op team= param mirrors quali_mass/race_mass's identical already-load-bearing convention (handoff's own Map Anchors decision), not a new speculative hook -- logged override with reason. All 10 remaining baseline smells (long-method, large-class, feature-envy, data-clumps, primitive-obsession, long-parameter-list, shotgun-surgery, divergent-change, message-chains, comments-as-deodorant) rendered absent after inspection -- no findings.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r7-rework-verify": {
+      "id": "r7-rework-verify",
+      "title": "Rework verification: tyre_life blocker fix",
+      "imperative": "r4-quality recorded FAIL on the tyre_life silent-zero-fill defect (fp_lap_latent.py). Implementer (ShipI-513) reports a rework fix: NULL tyre_life now yields None (not 0), FpLapLatent.tyre_life is Optional[int], 4 new tests added. Independently reproduce the fix (read the diff/source, rerun the full test suite, confirm the new NULL-tyre_life test exists and exercises the real bug), then record pass/fail with a finding. Also record the disposition of the track_status ''-fallback finding (Ship I accepted it as-is with a triage candidate logged -- not a blocker).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Blocker RESOLVED, independently reproduced (not just trusted): src/physics/layer2/fp_lap_latent.py:361 now reads 'tyre_life=int(row[tyre_life]) if pd.notna(row[tyre_life]) else None' (was 'else 0'); FpLapLatent.tyre_life type annotation changed to Optional[int] (line 106); docstring updated to explain the explicit-unknown discipline (missingness carried as None, never guessed as 0). New TestExtractFpLapLatentMissingTyreLife class (3 tests: test_null_tyre_life_yields_none_not_zero, test_null_tyre_life_is_not_the_integer_zero, test_real_tyre_life_still_populated) exercises the previously-untested NULL path -- ran with -k tyre_life, all 4 matching tests pass (including the pre-existing test_tyre_life_matches_db). Full suite reproduced: 155/155 passed (105 test_mass_model.py + 50 test_fp_lap_latent.py, +4 vs prior 46 -- matches the 3 new class tests plus one incidental collection shift verified via --collect-only). git status --short data/ still empty. track_status ''-fallback (line 368, unchanged 'else \"\"') disposition: Ship I (gate owner authority) ACCEPTS as-is with a triage candidate logged, citing this reviewer's own original rationale (empty string is an unambiguous non-value, unlike tyre_life=0's real-physical-value collision) -- concur this is a reasonable, non-blocking disposition; not re-litigated as a blocker. All 4 owner-named BLOCK triggers remain clean (re-checked: no regression to fp_mass scalar-return, run_purpose emergence, data/*.db reads, or physics-region imports).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r4-quality: One genuine, reproducible CREW_CONTEXT.md project-rule violation found (real, not the load-bearing check): fp_lap_latent.py line ~357 'tyre_life=int(row[tyre_life]) if pd.notna(row[tyre_life]) else 0' silently substitutes 0 for a missing/NULL tyre_life instead of propagating an explicit missing marker or a named policy. 0 is a semantically REAL value (a genuinely-fresh tyre, per session_race.py's own tyre_life docstring precedent showing real stints starting at non-zero values like 4) -- this is exactly the anti-pattern CREW_CONTEXT.md's Data Semantics section and its explicit Review Blocker list name verbatim: 'Missingness is imputed inline without a named/configured policy.' The path is also untested (the fixture DB never sets tyre_life NULL), so it is an unvalidated silent-zero-fill. Lower severity: track_status None->'' fallback (line ~364) is the same inline-imputation pattern but lower risk since empty string cannot be confused with a real status value. All other quality rules checked and satisfied: exception messages name field+expected+actual (KeyError names season+known seasons, ValueError names field+value); no hidden fallback for run_purpose/fuel/compound (fully documented+tested); DEFAULT_BURN_PER_LAP_KG reused not redefined; module-scope-only constants; no mutable module state; physics-region imports clean; season-DB read pattern genuinely mirrors session_race.py's _get_session_id/_ro_uri (verified side-by-side); quali_mass/race_mass/race_mass_sigma bodies byte-identical in diff."
+    ],
+    "summary": "REWORK VERIFIED, verdict updated BLOCK -> APPROVE. Load-bearing contract (fp_mass always returns FpMass distribution, never scalar) and all 4 owner-named BLOCK triggers hold, independently reproduced. The one real blocker found in the initial pass (tyre_life silently zero-filled on missing data, violating CREW_CONTEXT.md's named missingness-policy rule) is fixed and independently re-verified: tyre_life is now Optional[int], None on NULL, with 3 new covering tests; suite 155/155 green (was 151), git status data/ clean, simplification_limits unaffected (files structurally unchanged beyond the fix). track_status ''-fallback remains a non-blocking, accepted-with-followup observation per gate-owner disposition.",
+    "override_reason": "r4-quality's original FAIL (tyre_life silently zero-filled, a genuine CREW_CONTEXT.md missingness-policy violation) is superseded by r7-rework-verify's independently-reproduced fix: tyre_life is now Optional[int]/None on missing data, never 0, with 3 new tests covering the previously-untested NULL path; full suite 155/155 green; git status data/ clean. The historical r4-quality fail is retained verbatim for audit, not edited -- r7 is the fresh verification of record. The remaining lower-severity track_status ''-fallback finding was never itself a blocker (see original r4-quality finding text) and is explicitly accepted-as-is by Ship I (gate owner) with a triage candidate logged. All 4 owner-named BLOCK triggers (scalar fp_mass, session-label leak into run_purpose, data/*.db read in tests, physics-region import violation) are clean, independently reproduced twice (initial review + this rework pass)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Verified independently (session_race.py:338-344): _is_clean checks 'row[pit_in_time] is None'/'row[pit_out_time] is None' directly -- the SAME pandas float64-column NaN-vs-None trap that fp_lap_latent.py's own TDD RED caught and fixed this gate (a NaN float never satisfies 'is None', so every lap could silently misclassify as pit-adjacent). _is_clean appears dead within session_race.py itself, but tyre_supplant.py explicitly claims to mirror it -- worth a dedicated triage issue/audit of whether tyre_supplant.py's mirror carries the same latent bug. Originally surfaced by the implementer's own out-of-scope observations; independently confirmed by this review."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "reviewer-513-g2-1784469901",
+    "status": "released",
+    "claimed_at": "2026-07-19T14:18:43.655289+00:00",
+    "last_heartbeat": "2026-07-19T14:20:13.501362+00:00",
+    "claimed_by": "reviewer-g2",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T14:21:08.764385+00:00"
+  }
+}

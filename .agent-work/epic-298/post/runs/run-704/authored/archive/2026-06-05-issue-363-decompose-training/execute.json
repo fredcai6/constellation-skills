@@ -1,0 +1,251 @@
+{
+  "work_id": "issue-363-decompose-training",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and docs/architecture/packets/latent_power.md. Confirm the frozen plan's intent and scope (PROBLEM_STATEMENT.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + latent_power packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ORCHESTRATOR_CONTEXT, GLOSSARY, latent_power packet all read in this context; PROBLEM_STATEMENT confirmed by human"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "decompose train_latent_power_module: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: behavior-preserving decomposition of train_latent_power_module (src/latent_power/training.py) into private same-module helpers (suggested seams: input validation, epoch train loop, per-epoch diagnostics row, validation/early-stop+best-checkpoint tracking, final diagnostics assembly) so CC<20 and <100 lines per function; plus unit tests for the extracted helpers in tests/unit/latent_power/test_training.py. Zero behavior change: RNG call order/seeding, early-stop semantics, diagnostics dict shape, JSONL telemetry, bit-reproducibility, public API all unchanged. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "src/latent_power must not import src/evo_predictor (constraint:latent_power_no_evo_import)",
+        "helpers module-private in training.py per existing convention; __all__ unchanged",
+        "no change to training behavior, RNG seeding, or model architecture (issue 363 non-goals)",
+        "no mutable module-level runtime state"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "review surfaced two newly-introduced nits to delete: unused 'field' import (src/latent_power/training.py:6) and tautological assertion (tests/unit/latent_power/test_training.py:664); reviewer prescribed exact fixes"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "files_changed": "src/latent_power/training.py, tests/unit/latent_power/test_training.py",
+            "limits": "PASS",
+            "tests": "217 passed in 4.74s",
+            "helpers": "_validate_training_inputs,_init_module_and_scheduler,_run_train_epoch,_write_epoch_diagnostics_row,_EarlyStopState,_eval_and_track_checkpoint,_build_epoch_report_row,_build_final_diagnostics",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "rework": "1",
+            "fixes": "removed unused field import (training.py:6); deleted tautological assert (test_training.py:664)",
+            "limits": "PASS",
+            "tests": "217 passed in 4.75s",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "decompose train_latent_power_module: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff (git diff main on branch constellation/issue-363-decompose-training), task statement, close criteria, allowed scope (src/latent_power/training.py + tests/unit/latent_power/test_training.py only), exclusions, constraints, and the evidence from IMPLEMENTER_RESULT. Reviewer must specifically verify behavior preservation: identical RNG consumption order, identical early-stop/best-checkpoint semantics, identical diagnostics shape. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and attached as e-g1-implement-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "findings": "all behavior-preservation checks PASS (RNG order, early-stop, diagnostics, edge paths); two nits prescribed for deletion",
+            "rework_delta": "the two prescribed deletions applied verbatim in rework 1 and verified by commander diff inspection (import line clean, getstate assert gone); no other delta since review",
+            "survey": ".agent-work/issue-363-decompose-training/REVIEW_SURVEY.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "decompose train_latent_power_module: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification commands (engine command checks below, from repo root), confirm postconditions pass, advance this gate. BLOCK: send the implementer back for rework or raise a blocker if unresolvable. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT attached as e-g1-review-1, verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification limits pass on touched paths",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/latent_power/training.py tests/unit/latent_power/test_training.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "latent_power region suite green incl. bit-reproducibility and new helper tests",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/latent_power/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "source": "e-g1-review-1 (g1-review)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/latent_power/training.py tests/unit/latent_power/test_training.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/latent_power/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-implement",
+      "statement": "_evaluate_module (~CC12/~85 lines) and _validate_training_inputs (~CC10/~40 lines) approach simplification limits; watch if training.py grows"
+    },
+    {
+      "id": "tc2",
+      "from": "g1-implement",
+      "statement": "unused batch_index loop variable in _evaluate_module (pre-existing); trivial cleanup"
+    }
+  ],
+  "blockers": []
+}

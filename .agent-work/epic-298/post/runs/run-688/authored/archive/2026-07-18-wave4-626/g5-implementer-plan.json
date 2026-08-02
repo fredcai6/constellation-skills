@@ -1,0 +1,201 @@
+{
+  "work_id": "g5-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-harness",
+    "m2-test",
+    "m3-docs"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited crew doctrine + the g5 handoff + g1 gate_spec/floor/holdout, g4 model, 624 baseline, PLAN_CRITIC_DISPOSITIONS. Verify handoff complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-harness": {
+      "id": "m1-harness",
+      "title": "Build gate_f6.py F6 held-out harness + emit JSON",
+      "imperative": "Build src/physics/weekend_state/gate_f6.py: IMPORT frozen g1 gate_spec (do not re-derive), fit WeekendStateModel on TRAIN only, evaluate held-out car-signal vs paired held-out floor via gate_spec.evaluate_gate [F1+F2], add tc1 per-axis coverage floor (>=5 covered car-seasons), leave-one-layer-out ablation [F4], emit HONEST verdict. Run it to write docs/physics/626-f6-holdout-gate.json. Test-after: single green postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "harness runs foreground, writes JSON with verdict + per-axis table + ablation",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m src.physics.weekend_state.gate_f6 && test -f docs/physics/626-f6-holdout-gate.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-harness-1"
+        }
+      ],
+      "constraints": [
+        "import frozen gate_spec not re-derive",
+        "no evo import",
+        "no data/*.db write",
+        "absolute DB path C:/Programs/f1Brainz/data"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-harness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m src.physics.weekend_state.gate_f6 && test -f docs/physics/626-f6-holdout-gate.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-test": {
+      "id": "m2-test",
+      "title": "test_gate_f6.py \u2014 runs end-to-end, emits verdict, does NOT require PASS",
+      "imperative": "Write tests/unit/physics/weekend_state/test_gate_f6.py asserting the harness runs end-to-end and emits a verdict (PASS or DID-NOT-BEAT-FLOOR) with per-axis table + ablation. MUST NOT require PASS. Green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "harness built",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "test passes; does not require PASS",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_gate_f6.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-test-1"
+        }
+      ],
+      "constraints": [
+        "test must not require a PASS verdict"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_gate_f6.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-docs": {
+      "id": "m3-docs",
+      "title": "Writeup docs/physics/626-phase2-weekend-state-model.md",
+      "imperative": "Author the writeup: four layers + per-layer sigma, why L2 floats, L3 cake-and-eat-it, F6 held-out result table + verdict + noise margin + coverage, per-layer ablation, Mexico-vs-Monaco density secondary, honest-null status. Narrate the JSON. Match 624/625 precedent.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "harness + JSON produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "writeup exists narrating verdict + ablation",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && test -f docs/physics/626-phase2-weekend-state-model.md && grep -qi verdict docs/physics/626-phase2-weekend-state-model.md && grep -qi ablation docs/physics/626-phase2-weekend-state-model.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-docs-1"
+        }
+      ],
+      "constraints": [
+        "docs under docs/physics not reports/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-docs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && test -f docs/physics/626-phase2-weekend-state-model.md && grep -qi verdict docs/physics/626-phase2-weekend-state-model.md && grep -qi ablation docs/physics/626-phase2-weekend-state-model.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g5-1784390675",
+    "status": "released",
+    "claimed_at": "2026-07-18T16:04:36.742453+00:00",
+    "last_heartbeat": "2026-07-18T16:14:03.658198+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T16:14:22.412211+00:00"
+  }
+}

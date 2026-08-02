@@ -1,0 +1,76 @@
+{
+  "work_id": "522-phase-align-utilization",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-write-diag-script", "m2-run-diag", "m3-write-diagnosis-md", "m4-write-result"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff",
+      "imperative": "Read handoff at .agent-work/522-phase-align-utilization/crew-handoffs/g1-implement-handoff.md. Verify: task (discriminate (a)/(b) misregistration vs under-called caps), intent (physics-bounded U), scope (new files only in .agent-work), exclusions (no src/ writes), test mode (evidence-only), stop conditions (store unreachable, corners fail to load). Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "handoff complete; all fields verified; no missing fields", "check": null, "satisfied": true}],
+      "constraints": [],
+      "status": "done",
+      "result": "Handoff is complete. Task: discriminate misregistration (a) vs under-called caps (b) using 2 RBR 2023-Q corners. Scope: .agent-work/ files only. Exclusions: no src/ writes. Test mode: evidence-only. Stop conditions: store unavailable or both corners fail.",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-write-diag-script": {
+      "id": "m1-write-diag-script",
+      "title": "Write reproducible diagnostic script diag_alignment.py",
+      "imperative": "Write .agent-work/522-phase-align-utilization/diag_alignment.py using the exact seams from the handoff: EstimateStore, _build_ceiling, _load_lap_and_ribbon, PhysicsSimulator.simulate_lap, resample_by_progress, np.interp true-distance. Compute v_ideal, v_real_progress, v_real_truedist. Identify 2 corners on Monaco/VER: fast_corner apex + braking knee. Produce PNG figure. Write per-corner table to DIAGNOSIS.md.",
+      "preconditions": [{"id": "p0", "statement": "context loaded and handoff complete", "check": null, "satisfied": true}],
+      "postconditions": [{"id": "c1", "statement": "diag_alignment.py exists at .agent-work/522-phase-align-utilization/ and is syntactically valid (py -m py_compile)", "check": {"kind": "command", "command": "py -m py_compile .agent-work/522-phase-align-utilization/diag_alignment.py"}, "satisfied": false}],
+      "constraints": ["no src/ edits", "py launcher", "store + cache READ-ONLY"],
+      "status": "pending",
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-run-diag": {
+      "id": "m2-run-diag",
+      "title": "Run diagnostic script and collect outputs",
+      "imperative": "Run: py .agent-work/522-phase-align-utilization/diag_alignment.py from repo root. Verify PNG(s) produced. Capture per-corner numbers (v_ideal_apex, v_real, curvature, progress-ratio, true-dist-ratio). If Monaco/VER fails, fall back to next RBR 2023-Q case in the store.",
+      "preconditions": [{"id": "p1", "statement": "diag_alignment.py syntax-valid", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "at least 1 PNG produced under .agent-work/522-phase-align-utilization/ and per-corner numbers in stdout", "check": {"kind": "command", "command": "ls .agent-work/522-phase-align-utilization/*.png"}, "satisfied": false}],
+      "constraints": ["read-only store and cache"],
+      "status": "pending",
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-write-diagnosis-md": {
+      "id": "m3-write-diagnosis-md",
+      "title": "Write DIAGNOSIS.md with verdict and evidence",
+      "imperative": "Write .agent-work/522-phase-align-utilization/DIAGNOSIS.md. Include: (a) or (b) verdict; per-corner table (v_ideal_apex m/s, v_real m/s, curvature 1/m, progress-ratio, true-dist-ratio); recommended comparison method; one-para rationale; any caveats.",
+      "preconditions": [{"id": "p2", "statement": "diagnostic run complete with per-corner numbers", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "DIAGNOSIS.md exists and contains a verdict (a) or (b) plus a table", "check": {"kind": "command", "command": "python -c \"import os; c=open('.agent-work/522-phase-align-utilization/DIAGNOSIS.md').read(); assert 'verdict' in c.lower() or 'a)' in c or 'b)' in c, 'no verdict'"}, "satisfied": false}],
+      "constraints": [],
+      "status": "pending",
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-write-result": {
+      "id": "m4-write-result",
+      "title": "Write IMPLEMENTER_RESULT to g1-implement-result.md",
+      "imperative": "Write .agent-work/522-phase-align-utilization/crew-handoffs/g1-implement-result.md using IMPLEMENTER_RESULT template. Include: verdict, per-corner table, files created, evidence, recommended method, assumptions, stop conditions, out-of-scope observations, workflow feedback.",
+      "preconditions": [{"id": "p3", "statement": "DIAGNOSIS.md written", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "g1-implement-result.md exists on disk", "check": {"kind": "command", "command": "ls .agent-work/522-phase-align-utilization/crew-handoffs/g1-implement-result.md"}, "satisfied": false}],
+      "constraints": [],
+      "status": "pending",
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

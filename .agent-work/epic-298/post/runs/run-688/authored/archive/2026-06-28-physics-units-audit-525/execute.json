@@ -1,0 +1,741 @@
+{
+  "work_id": "525",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "decide-fix",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/CREW_CONTEXT.md, the physics packet (docs/architecture/packets/physics.md), decision:ideal_lap_sim_two_sided_evaluator, and claim:lateral_car_prior_boundary_conversion. Confirm the frozen plan's intent (de-overload/disambiguate physics param unit conventions; audit-first; decide-fix checkpoint re-plans G2/G3) and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator+crew context, glossary, physics packet + ideal-lap decision + lateral claim loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 audit (evidence-only): producer->consumer unit-convention map + dispositions",
+      "imperative": "EVIDENCE-ONLY, NO CODE FIXES. Read source directly (the packet is a starting index, not ground truth). Produce two work-area artifacts: (1) .agent-work/525/AUDIT_MAP.md \u2014 the unit convention of every physics model parameter across all channels (lateral A0/A2/ceiling/g_track/k_tire; longitudinal/power theta_P/theta_D/theta_R/p_max/CdA; braking a_b/b_b; traction; coast; terrain theta/z/banking) at EACH producer and EACH consumer, citing file:symbol and the exact formula/unit each side assumes; (2) .agent-work/525/AUDIT_DISPOSITIONS.md \u2014 an inventory of every OVERLOADED/AMBIGUOUS term (the two lateral conventions, rho-in-aero A2.rho.v^2 vs A2.v^2, duplicated G_MS2, any others found), each with a proposed disposition (fix-local-in-this-run vs route-to-separate-issue), PLUS a recommendation on the canonical lateral convention (A unitless/g-coef everywhere vs B m/s^2-at-consumer) WITH an honest blast-radius assessment naming every file/test touched and whether the live sim_evaluator/fit_batch path is affected, PLUS the rho-in-aero disposition (is it a pure representation change or does it need a refit?). Fill templates/IMPLEMENTER_HANDOFF.template.md from this gate's plan + anchors. Dispatch a constellation-implementer subagent. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded (e0-context)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers; AUDIT_MAP.md + AUDIT_DISPOSITIONS.md produced",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "EVIDENCE-ONLY: no edits to src/ or tests/ in this gate",
+        "stay physics-region (constraint:physics_region_no_evo_import)",
+        "cite file:symbol from source for every convention claim"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics \u2014 physics_data_models.py, physics_simulator.py, sim_evaluator.py, lateral_envelope.py, longitudinal_fit.py, braking_fit.py, capability_envelope.py",
+          "struct:physics.layer2 \u2014 lateral_view.py, session_lateral.py, estimate_store.py, the views",
+          "struct:physics.utilization \u2014 car_prior.py (_assemble_lateral, _build_longitudinal)"
+        ],
+        "capability": [
+          "physics parameter measurement / capability API",
+          "ideal-lap simulation",
+          "driver utilization (C1)"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "physics change requires L1-L4 truth evidence; units/bounds explicit"
+        ],
+        "decision": [
+          "decision:ideal_lap_sim_two_sided_evaluator \u2014 records both car_prior boundary conversions",
+          "decision pressure: canonical lateral convention (A vs B) + rho disposition \u2014 surfaced as the decide-fix decision, NOT chosen in this gate"
+        ],
+        "evidence": [
+          "claim:lateral_car_prior_boundary_conversion \u2014 the surface to retire/generalize"
+        ],
+        "confidence_flags": [
+          "physics packet reconciled #522 (high confidence) but the audit treats source as ground truth; no scout gate needed"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result_file": ".agent-work/525/crew-handoffs/g1-implement-result.md",
+            "summary": "audit complete: AUDIT_MAP.md (6 channels + constants + matrix) + AUDIT_DISPOSITIONS.md (7 overloaded terms); recommends convention B; rho=pure-representation-no-refit; live sim path confirmed NOT through car_prior"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 audit: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Verify AUDIT_MAP.md is COMPLETE (every channel/param, both sides) and ACCURATE against source \u2014 spot-check at least the lateral two-producer seam, the longitudinal p_max/theta_P seam, and the G_MS2 duplication by reading the cited code. Verify AUDIT_DISPOSITIONS.md's blast-radius for the A/B recommendation is honest (independently confirm whether sim_evaluator/fit_batch consume the lateral consumer) and that the rho refit-vs-representation call is sound. Dispatch a constellation-reviewer subagent. Integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies map completeness/accuracy and disposition soundness against source"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/525/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 audit: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: confirm both audit artifacts exist (the c1 command check) and advance. BLOCK: return the implementer for rework. Log any out-of-scope finds as triage candidates. The audit map + dispositions feed the decide-fix checkpoint.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "audit artifacts (AUDIT_MAP.md + AUDIT_DISPOSITIONS.md) produced; no src/tests changed in this gate",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; sys.exit(0 if (pathlib.Path('.agent-work/525/AUDIT_MAP.md').exists() and pathlib.Path('.agent-work/525/AUDIT_DISPOSITIONS.md').exists()) else 1)\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/525/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; sys.exit(0 if (pathlib.Path('.agent-work/525/AUDIT_MAP.md').exists() and pathlib.Path('.agent-work/525/AUDIT_DISPOSITIONS.md').exists()) else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "decide-fix": {
+      "id": "decide-fix",
+      "title": "Decide-fix checkpoint: ratify conventions + re-plan G2/G3 from audit evidence",
+      "imperative": "Present the G1 audit map + dispositions to the human. Force the two governing decisions: (1) canonical lateral convention A vs B (with the audit's blast-radius in hand); (2) rho-in-aero disposition (fix-local vs route-out; stop if it needs a refit). Confirm which findings are in-scope-now vs routed to separate issues. RE-PLAN the provisional G2/G3 gate scope/anchors/test-commands from the ratified decisions (the diagnose-first-decide-fix pattern; this is the sanctioned execute.json edit point \u2014 hand-edit G2/G3 with the human's authority, then proceed). Record the user-decision.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 audit integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "conventions ratified, in-scope-vs-routed fixes decided, G2/G3 re-planned from evidence",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-decide-fix-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-decide-fix-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "B (m/s2 at consumer); rho keep-explicit-and-label (no removal/refit); in-scope OT-1/2/3/4/5(label)/7 + friction_coupling verify-then-remove + OT-6 comment-fix + output-level guard; routed-out OT-6 k_tire value->#511 comment",
+            "authority": "human",
+            "artifact": ".agent-work/525/DECIDE_FIX_DECISIONS.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 (scope FINALIZED at decide-fix): unify + label + guard",
+      "imperative": "REWORK (rework 1/3). BLOCK was: the unit-suffix renames were not delivered (comments-only). User EXPANDED scope to a FULL SEMANTIC RENAME per the binding spec .agent-work/525/NAMING_TABLE.md: kill the cryptic baked-in names (A0/A2/theta_*/a_b/b_b/a_t/b_t and single-letter fit locals); every name says what-it-is + unit-space. The already-landed G2 work STAYS (GRAVITY_MS2/MASS_KG dedup, density=1.225, friction_coupling removal, OT-6 comment-fix, headers, the output-level guard). ADD on top: (1) rename every physics parameter field to the NAMING_TABLE target across producers, BOTH stores dataclasses, consumers, fit-local variables, and ALL tests \u2014 consistent producer->store->consumer (no half-rename), behaviour-preserving; (2) rename the _sigma/_std companions in lockstep; (3) SQLite store migration: the session_estimates/fit_store column names auto-derive from the renamed dataclass fields, so ship an IDEMPOTENT ALTER TABLE RENAME COLUMN migration at scripts/migrate_physics_store_columns_525.py covering data/physics_estimates.db, data/physics_estimates_g3wired.db, data/physics_fits.db (every renamed column incl _sigma), safe to re-run, and verify pool_driver/car_prior read the renamed columns and C1 still loads; (4) keep convention B (consumer m/s2 MATH untouched \u2014 renames are behaviour-preserving, NOT formula changes); fix the guard docstring band text to match the actual asserts. NO fit/model change, NO rho removal, NO banking re-application (#527), NO k_tire value change (#511), NO units library, NO per-param band-test matrix. Close: full physics + known-answer + property suites GREEN; simplification_limits clean on touched paths; the migration runs idempotently on the 3 DBs and the C1 read still works; the guard still red-on-break. Fill the implementer handoff from NAMING_TABLE.md + AUDIT_MAP.md. Dispatch constellation-implementer (Opus \u2014 breadth). Integrate the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "decide-fix ratified; G2 scope re-planned from audit evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "no behavior regression: sim_evaluator, C1 path, published-F1 known-answer stay physical",
+        "representation/alignment only \u2014 NO re-fitting (route a refit to a separate issue)",
+        "no units library, no per-param band-test matrix",
+        "stay physics-region"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics \u2014 physics_data_models.py, lateral_envelope.py, longitudinal_fit.py, braking_fit.py (G_MS2)",
+          "struct:physics.layer2 \u2014 lateral_view.py, session_lateral.py, estimate_store.py",
+          "struct:physics.utilization \u2014 car_prior.py",
+          "tests/known_answer/test_published_f1_data.py \u2014 guard surface"
+        ],
+        "capability": [
+          "physics parameter measurement / capability API",
+          "ideal-lap simulation"
+        ],
+        "constraint": [
+          "no-regression on sim_evaluator/C1/known-answer",
+          "constraint:physics_region_no_evo_import",
+          "L1-L4 truth evidence for the units change"
+        ],
+        "decision": [
+          "decision:ideal_lap_sim_two_sided_evaluator \u2014 review trigger fires (lateral conversion retired/generalized)",
+          "claim:lateral_car_prior_boundary_conversion \u2014 retired or generalized"
+        ],
+        "evidence": [
+          "the new output-level known-answer guard passes clean and fails on a synthetic units mismatch",
+          "physics region suite + property tests green"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "g2-review BLOCK (check 2): unit-suffix renames not delivered; user expanded scope to a full semantic rename (NAMING_TABLE.md) + store-column migration; rework"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result_file": ".agent-work/525/crew-handoffs/g2-implement-result.md",
+            "summary": "9 items done; convention B (consumer untouched); friction_coupling removed (verified never invoked); GRAVITY_MS2/MASS_KG/density deduped; lateral+longitudinal labelled; OT-6 comment-fixed; guard added (red-on-break shown); suite 639 passed/6 skipped"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "result_file": ".agent-work/525/crew-handoffs/g2-implement-result.md",
+            "summary": "REWORK attempt-2: full semantic rename landed (store dataclasses + 18 src files + tests); suite 639 passed; crew idled + result-file STALE; commander ran the store migration (61 cols, idempotent) + verified C1 read+pool \u2014 see g2-commander-verification.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Fill the reviewer handoff. Verify the unification matches the ratified convention, the car_prior patch is correctly retired/generalized, every renamed field is consistently updated producer\u2192consumer (no half-renamed seam), the guard genuinely fails on a units mismatch (ask the implementer to show it red on a deliberate break, or verify the band logic), and NO refit was smuggled in. Confirm no-regression evidence. Dispatch constellation-reviewer. Integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "BLOCK verdict; reworking g2-implement with expanded scope (full semantic rename + store migration) \u2014 reopen review so it re-evaluates the rework rather than holding the stale BLOCK"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "result_file": ".agent-work/525/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/525/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command, confirm postconditions, advance. BLOCK: rework or blocker. Log out-of-scope finds (incl. any routed-out refit) as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "params unified/labelled, guard green, no regression; physics region + known-answer + property suites pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/525/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/ tests/known_answer/test_published_f1_data.py tests/property/test_physics_properties.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 (PROVISIONAL \u2014 re-planned at decide-fix): durable unit-map doc + agent-context wiring",
+      "imperative": "SCOPE FINALIZED AT decide-fix. Promote the G1 audit map into a durable architecture reference doc at docs/architecture/reference/physics-unit-conventions.md (short table: param -> unit -> producer -> consumer -> canonical form). Add ONE DIRECT reference to it from the top-level docs/AGENT_GUIDE.md (the guide read before any non-trivial work), with a standing instruction that any work touching a physics model parameter must review and update the map in the same gate. Docs-only (no src changes expected). Fill the implementer handoff. Dispatch constellation-implementer. Integrate the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 unification integrated (the canonical conventions are now settled in code)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "docs must reflect the conventions as actually unified in G2 (no drift)",
+        "Last verified date where docs/DOCUMENTATION.md requires it"
+      ],
+      "anchors": {
+        "structural": [
+          "docs/architecture/reference/physics-unit-conventions.md (new)",
+          "docs/AGENT_GUIDE.md (single top-level reference)"
+        ],
+        "capability": [
+          "physics parameter measurement / capability API (documented surface)"
+        ],
+        "constraint": [
+          "docs describe current truth; one job per doc"
+        ],
+        "decision": [
+          "decision:ideal_lap_sim_two_sided_evaluator \u2014 map references the boundary conventions"
+        ],
+        "evidence": [
+          "the unit-map doc exists and is cross-referenced from both agent-context docs"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result_file": ".agent-work/525/crew-handoffs/g3-implement-result.md",
+            "summary": "docs/architecture/reference/physics-unit-conventions.md created (table + _g/_ms2 rationale + fit-vs-apply split w/ #527/#511 cross-refs + conversion boundary); AGENT_GUIDE reference + review-update mandate added; names verified vs code; integrate check passes"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Fill the reviewer handoff. Verify the unit-map doc matches the conventions as actually unified in G2 (read the code, not just the prior doc), docs/AGENT_GUIDE.md carries a direct reference + the review-update mandate, references resolve, and the docs-review blockers (correct repo/paths/commands, current workflow) pass. Dispatch constellation-reviewer. Integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/525/crew-handoffs/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "Check verdict. APPROVE: run the verification command (durable doc exists + referenced from docs/AGENT_GUIDE.md), confirm postconditions, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unit-map doc exists and is directly referenced from docs/AGENT_GUIDE.md",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; ref='physics-unit-conventions'; doc=pathlib.Path('docs/architecture/reference/physics-unit-conventions.md'); g=pathlib.Path('docs/AGENT_GUIDE.md').read_text(encoding='utf-8'); sys.exit(0 if (doc.exists() and ref in g) else 1)\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_file": ".agent-work/525/crew-handoffs/g3-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; ref='physics-unit-conventions'; doc=pathlib.Path('docs/architecture/reference/physics-unit-conventions.md'); g=pathlib.Path('docs/AGENT_GUIDE.md').read_text(encoding='utf-8'); sys.exit(0 if (doc.exists() and ref in g) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "OT-6: k_tire default mismatch (0.01 Layer-1 grip_decay_prior_k vs 0.0 from car_prior) \u2014 modelling question, not a units overload; audit recommends route-out"
+    },
+    {
+      "id": "tc2",
+      "from": "g1-integrate",
+      "statement": "OT-7: two fallback air densities (session_fit.DEFAULT_RHO=1.20 vs physics_config.reference_density_kg_m3=1.225) \u2014 default-value inconsistency, not a unit overload; audit recommends route-out"
+    },
+    {
+      "id": "tc3",
+      "from": "g1-integrate",
+      "statement": "friction_coupling.py is a superseded-but-live dead path (module docstring says superseded by CapabilityEnvelope) \u2014 reviewer find; cleanup candidate, non-units"
+    },
+    {
+      "id": "tc4",
+      "from": "g2-integrate",
+      "statement": "Residual old-vocabulary names not covered by the rename: PhysicsEstimatorConfig.default_A0/default_A2 (config fallback fields) + the car_prior as_of_means diagnostic dict keys ({'a_b','A0','CdA'}). Internally consistent (not broken seams), reviewer-approved as out-of-scope, but they still carry the cryptic vocabulary the rename targeted \u2014 fold into a quick follow-up for full consistency."
+    },
+    {
+      "id": "tc5",
+      "from": "g2-integrate",
+      "statement": "tc1: two length-only simplification_limits function violations (19->21) introduced by the rename (longer names on already-oversized functions estimate_store.record_from_estimate / car_prior); zero new complexity. Route to a complexity-reduction follow-up."
+    },
+    {
+      "id": "tc6",
+      "from": "g3-integrate",
+      "statement": "docs/DOCUMENTATION.md does not list the new docs/architecture/reference/physics-unit-conventions.md \u2014 add a row (Cartographer at reconcile, or a small follow-on)."
+    }
+  ],
+  "blockers": []
+}

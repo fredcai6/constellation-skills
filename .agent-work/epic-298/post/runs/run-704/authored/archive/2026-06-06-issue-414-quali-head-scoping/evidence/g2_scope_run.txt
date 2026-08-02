@@ -1,0 +1,71 @@
+
+==================================================================================
+#414 G2 — race_weekend quali-head pace-anchor scope measurement
+==================================================================================
+Ceiling = best_across_fp (min-sectors).  NORMAL weekends only.
+Shared non-tie pairs per event; identical pair set to §7.6.2 diagnostic.
+ALPHA_SWEEP = (0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0)
+
+
+==================================================================================
+HEADLINE — LOSO 2018-2024
+==================================================================================
+  Baseline (α=0):  overall=0.6153  EASY=0.6926  pairs=23862
+  Ceiling (baf):   overall=0.8061  EASY=0.9365
+
+  cand  alpha    OVERALL  rec-frac   EASY(≥9)  easy-frac  n_pairs
+  ---------------------------------------------------------------
+    C1    0.0     0.6153    +0.000     0.6926     +0.000    23862
+    C1    0.1     0.6660    +0.266     0.7706     +0.320    23862
+    C1    0.2     0.6947    +0.416     0.8062     +0.466    23862
+    C1    0.3     0.7123    +0.508     0.8243     +0.540    23862
+    C1    0.5     0.7452    +0.681     0.8691     +0.724    23862
+    C1    0.7     0.7804    +0.866     0.9125     +0.902    23862
+    C1    1.0     0.8061    +1.000     0.9365     +1.000    23862 [= data ceiling, definitional, NOT a model win]
+
+    C2    0.0     0.6153    +0.000     0.6926     +0.000    23862
+    C2    0.1     0.6257    +0.054     0.7140     +0.087    23862
+    C2    0.2     0.6494    +0.179     0.7509     +0.239    23862
+    C2    0.3     0.6793    +0.335     0.7935     +0.414    23862
+    C2    0.5     0.7399    +0.653     0.8737     +0.743    23862
+    C2    0.7     0.7890    +0.910     0.9210     +0.937    23862
+    C2    1.0     0.8061    +1.000     0.9365     +1.000    23862
+
+  C3 (no-op monotone):  acc=0.6153  delta_from_baseline=+0.00e+00  [must be ~0 to numerical precision]
+
+==================================================================================
+OOS CONFIRMATION — 2025
+==================================================================================
+  Baseline (α=0):  overall=0.5674  EASY=0.6060  pairs=3352
+  Ceiling (baf):   overall=0.7643  EASY=0.9055
+
+  cand  alpha    OVERALL  rec-frac   EASY(≥9)  easy-frac  n_pairs
+  ---------------------------------------------------------------
+    C1    0.0     0.5674    +0.000     0.6060     +0.000     3352
+    C1    0.1     0.6035    +0.183     0.6809     +0.250     3352
+    C1    0.2     0.6337    +0.336     0.7285     +0.409     3352
+    C1    0.3     0.6641    +0.491     0.7804     +0.582     3352
+    C1    0.5     0.7097    +0.723     0.8451     +0.798     3352
+    C1    0.7     0.7485    +0.920     0.8868     +0.938     3352
+    C1    1.0     0.7643    +1.000     0.9055     +1.000     3352 [= data ceiling, definitional, NOT a model win]
+
+    C2    0.0     0.5674    +0.000     0.6060     +0.000     3352
+    C2    0.1     0.5811    +0.070     0.6340     +0.094     3352
+    C2    0.2     0.6074    +0.203     0.6851     +0.264     3352
+    C2    0.3     0.6342    +0.339     0.7311     +0.418     3352
+    C2    0.5     0.6999    +0.673     0.8323     +0.756     3352
+    C2    0.7     0.7416    +0.885     0.8843     +0.929     3352
+    C2    1.0     0.7643    +1.000     0.9055     +1.000     3352
+
+  C3 (no-op monotone):  acc=0.5674  delta_from_baseline=+0.00e+00  [must be ~0 to numerical precision]
+
+==================================================================================
+NOTES
+==================================================================================
+  α=0: sign-acc equals baseline model (order-preserving z-rescale).
+  α=1 (C1): sign-acc equals best_across_fp ceiling on shared pairs
+             (DEFINITIONAL — not a model improvement).
+  C3: strictly-monotone transform (s = 3m+7) cannot change sign-acc.
+  Recovered fraction = (acc(α) − baseline) / (ceiling − baseline).
+
+[wrote] C:\Programs\f1Brainz\.claude\worktrees\agent-a82dd9d22cd9863fc\.agent-work\issue-414-quali-head-scoping\evidence\scope_anchor_numbers.json

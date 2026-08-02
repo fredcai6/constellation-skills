@@ -1,0 +1,212 @@
+{
+  "work_id": "issue-495-g1-diagnose",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-repro",
+    "m2-nonetype",
+    "m3-interleaved",
+    "m4-status-enum",
+    "m5-report"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited doctrine (global-crew, global-everyone), project CREW_CONTEXT/GLOSSARY, the handoff, problem_statement decisions 1-3. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Verify the key seams against source (session_fit, fit_store, calibration, loaders, fit_batch). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + glossary + handoff loaded; handoff complete; key seams verified against source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew/global-everyone, CREW_CONTEXT, GLOSSARY, handoff, problem_statement decisions 1-3. Handoff complete (all fields present). Seams verified vs source: load_quali_session/fit_driver/fit_session_full/record_from_params in session_fit.py; FitRecord in fit_store.py (line34 comment stale); interleaved@calibration.py:118 raises@133; driver_streams@loaders.py:362; run_batch@fit_batch.py is the calendar looper (handoff mis-named fit_session_full as the batch looper)."
+        }
+      ],
+      "constraints": [
+        "evidence-only; no src/ edits remain after finish"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-repro": {
+      "id": "m1-repro",
+      "title": "Re-run all 19 cases on current code; classify each",
+      "imperative": "Run load_quali_session + fit_driver per case (the natural per-case unit; fit_session_full is NOT the batch looper -- record that misfit). Capture the current FitRecord.fit_status + error for each of the 19. Classify each: already-fixed-ok / already-clean-typed-skip / still-raises-exception / genuinely-unfittable. Produce a per-case transcript table.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete; context+handoff loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "per-case current outcome captured for all 19 (status+error), classified; probe script + raw output under .agent-work/",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "per-case outcomes captured for all 19; classified; probe_repro.py + repro_output.log under .agent-work/"
+        }
+      ],
+      "constraints": [
+        "py launcher; physics_region_no_evo_import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-nonetype": {
+      "id": "m2-nonetype",
+      "title": "Trace NoneType cases to exact subscripted-None line",
+      "imperative": "For each NoneType case still failing, call the inner chain directly (bypass the broad except locally, reverting after) to capture the RAW traceback. Identify the exact file:line that subscripts a None and why that value is None (the upstream producer). A real traceback is required.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 case outcomes known",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 outcomes known"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RAW traceback captured for each still-failing NoneType case; exact subscripted-None file:line + why-None root cause established",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "NoneType root cause established with real tracebacks (nonetype_output.log). All 3 cases (Bahrain ALO/HAM, Canada HUL): full stint window has ample samples (n_pos~3800-4000, n_spd~1300-1400) so NOT emptiness; fit_stint_hp returns None because _grid_search finds no valid HP (held-out chi2 non-finite -> _eval_hp None for all -> best is None -> return None at fit_stint_hp). Pre-548 subscripted None at calibration.py:861 (commit 52fe677b^)  -> 'NoneType' object is not subscriptable. Now ok on main: #548 windows= restricts calibration to flying-lap union -> well-conditioned (ell 1.92/3.20/3.60, chi2~0.8-1.3); #543 guard raises typed no_accel_samples at same site if None. No src/ edits used (replayed via public seams)."
+        }
+      ],
+      "constraints": [
+        "temporary instrumentation only; revert all src/ edits before finishing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-interleaved": {
+      "id": "m3-interleaved",
+      "title": "Interleaved n=0: per-case stream-overlap + recover-vs-skip",
+      "imperative": "For each interleaved n=0 case still failing, establish from the actual stream data whether pos and speed streams truly overlap in the chosen stint window. Quantify: count of pos samples and speed samples inside [st0,st1], the time spans, which stream is empty and why. Determine recover (widen/re-pick window) vs skip-clean (genuinely no overlap). Trace the exact interleaved call site that raises.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 case outcomes known",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 outcomes known"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "per-case overlap numbers + recover-vs-skip determination + exact raising interleaved call-site for each still-failing interleaved case",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Overlap quantified (overlap_output.log): 14/15 interleaved cases have massive pos/speed overlap (272-1432s, n_pos 3600-5700, n_spd 791-2018) -> RECOVER, already ok on main via #548 windows=. OLD n=0 mechanism confirmed (Japan PIA): stint span 1173s >> 300s slice_dur -> OLD _select_slice trimmed to middle 300s where n_spd=0 (pit gap, speed only logs Vkmh>0) -> pre-548 interleaved(0) raised. 1/15 Saudi Arabia DEV: speed stream EMPTY session-wide (n_spd=0) -> genuinely unfittable, SKIP-CLEAN. Saudi DEV now raises NEW error at calibration.py:879 tc.min() on empty (raw traceback in saudi_dev_output.log) -- #548 gap: windows= branch computes tc.min/max BEFORE fit_stint_hp len-guard."
+        }
+      ],
+      "constraints": [
+        "py launcher"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-status-enum": {
+      "id": "m4-status-enum",
+      "title": "Enumerate FitRecord.fit_status set from source",
+      "imperative": "Grep/read every fit_status string the code can emit today across session_fit.py (and any other emitter). Confirm/deny that fit_store.py:34 comment is stale. Produce the from-source valid set.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "seams read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "seams read"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "from-source fit_status set enumerated; fit_store.py:34 staleness confirmed/denied with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "FitRecord.fit_status emitters all in session_fit.py: ok(79), no_laps(241,285), no_accel_samples(312), error(314,317). _err(status) accepts any string. Valid set today = {ok, no_laps, no_accel_samples, error}. fit_store.py:34 comment 'ok|error|no_laps' is STALE (missing no_accel_samples, added by #548/#543). Other fit_status hits (estimate_store, gold_cycle, fusion_training) are different stores, out of scope."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-report": {
+      "id": "m5-report",
+      "title": "Write diagnosis + implementer-result; revert any src/ edits",
+      "imperative": "Fold all evidence into g1_diagnosis.md (per-case table, NoneType tracebacks+lines+why, interleaved overlap numbers+recover/skip, from-source fit_status set, current failure counts, fix loci file:line). Write g1_implementer_result.md per Return Format incl. Workflow Feedback. Confirm git status shows NO modified src/ files. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-m4 evidence complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-m4 evidence complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both deliverable files exist with real reproduced evidence; git status shows no modified src/ files",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1_diagnosis.md (16KB) + g1_implementer_result.md (12KB) both exist with real reproduced evidence (4 probe logs). git status --short src/ empty = no modified src files."
+        }
+      ],
+      "constraints": [
+        "write only to .agent-work/issue-495-fit-robustness/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

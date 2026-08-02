@@ -1,0 +1,223 @@
+{
+  "work_id": "513-tc1-track-status-optional",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), and the handoff .agent-work/513-fp-followup/handoff-tc1.md in full. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, windows.md, CREW_CONTEXT.md, GLOSSARY.md, and handoff-tc1.md in full. Handoff confirmed complete: task, intent, allowed scope, close criteria, constraints, required evidence, verification commands, authority, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "RED-first: extend NULL-fixture test for track_status, then make FpLapLatent.track_status Optional[str]=None on NULL",
+      "imperative": "In tests/unit/physics/test_fp_lap_latent.py, extend the existing NULL-fixture (_build_fixture_db_null_tyre_life / fixture_db_null_tyre_life, currently used to test tyre_life=None) so its lap 2 row also carries a NULL track_status, and add a test asserting extract_fp_lap_latent(...) yields track_status is None (not '') for that row. Run it and observe it FAIL against the current code (fp_lap_latent.py line ~368 uses `else \"\"`). Then fix src/physics/layer2/fp_lap_latent.py: change FpLapLatent.track_status type to Optional[str], update its docstring to note None on NULL (mirroring the tyre_life convention), and change the extraction line to `row['track_status'] if row['track_status'] is not None else None` (or equivalent pd.notna-based None-preserving form) instead of the '' sentinel. Do not touch any downstream numeric/string use of track_status elsewhere (there is none in this module beyond straight carry-through). Re-run the new test and observe it PASS.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context loaded (m0-context complete); handoff confirmed complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: NULL-track_status assertion added to the existing NULL-fixture test and observed failing against the unfixed '' sentinel -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "New test test_null_track_status_yields_none_not_empty_string added, fixture row 2 track_status set to NULL. Observed RED: AssertionError: assert '' is None (track_status='' from the else \"\" sentinel at fp_lap_latent.py:368). 51 passed, 1 failed pre-fix."
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: track_status Optional[str]=None on NULL; full fp_lap_latent test file passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "src/physics/layer2/fp_lap_latent.py + tests/unit/physics/test_fp_lap_latent.py only",
+        "no data/*.db reads/writes in the test -- tmp_path sqlite fixture only",
+        "do NOT change run_purpose/fuel/mass semantics or any other field",
+        "test file stays < 1000 lines"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Evidence sweep: full test file green, simplification_limits baseline, clean data/ tree",
+      "imperative": "Run the full tests/unit/physics/test_fp_lap_latent.py suite and confirm all tests green (existing tests unaffected). Run py -m src.utils.simplification_limits --baseline --paths src/physics/layer2/fp_lap_latent.py and confirm PASS. Confirm git status --short data/ is clean. Attach all three outputs as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 TDD red->green landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 TDD red->green landed and complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full tests/unit/physics/test_fp_lap_latent.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits baseline check passes on the touched module",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && py -m src.utils.simplification_limits --baseline --paths src/physics/layer2/fp_lap_latent.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-2"
+        },
+        {
+          "id": "c3",
+          "statement": "git status --short data/ is clean",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && test -z \"$(git status --short data/)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-3"
+        }
+      ],
+      "constraints": [
+        "no data/*.db writes/reads"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/test_fp_lap_latent.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && py -m src.utils.simplification_limits --baseline --paths src/physics/layer2/fp_lap_latent.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && test -z \"$(git status --short data/)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipi-513-tc1",
+    "status": "released",
+    "claimed_at": "2026-07-19T18:23:20.868805+00:00",
+    "last_heartbeat": "2026-07-19T18:25:44.880728+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T18:26:16.204732+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff verified complete via direct read: track_status else \"\" sentinel at fp_lap_latent.py:368 confirmed via source read; tyre_life=Optional[int] convention at line 106/361 confirmed as the mirror target; existing NULL-fixture test class TestExtractFpLapLatentMissingTyreLife confirmed as the extension point. Scope, exclusions, evidence, test-mode, stop-conditions all present in handoff-tc1.md.",
+      "mechanical": false,
+      "ts": "2026-07-19T18:23:30.812217+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "RED confirmed (assert '' is None failure against the else \"\" sentinel); fixed fp_lap_latent.py: track_status typed Optional[str], docstring updated to note None-on-NULL mirroring tyre_life, extraction changed to pd.notna(row['track_status']) else None matching the tyre_life pattern exactly. Full suite now 52/52 green.",
+      "mechanical": false,
+      "ts": "2026-07-19T18:25:17.807293+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "Full tests/unit/physics/test_fp_lap_latent.py suite green (52/52). py -m src.utils.simplification_limits --baseline --paths src/physics/layer2/fp_lap_latent.py PASS (1 file). git status --short data/ empty -- no data/*.db reads/writes occurred (tmp_path sqlite fixture only).",
+      "mechanical": false,
+      "ts": "2026-07-19T18:25:44.880667+00:00"
+    }
+  ]
+}

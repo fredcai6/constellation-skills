@@ -1,0 +1,37 @@
+diff --git a/.agent-work/AGENT_FEEDBACK.md b/.agent-work/AGENT_FEEDBACK.md
+index d7bf3b4..f640933 100644
+--- a/.agent-work/AGENT_FEEDBACK.md
++++ b/.agent-work/AGENT_FEEDBACK.md
+@@ -10,6 +10,32 @@ Newest entries on top.
+ 
+ ---
+ 
++## 2026-06-11 — 394
++
++**Run shape:** commander · reading-and-reasoning mission (design note only) · no subagent crews dispatched · single execute gate G1 (pure reasoning + writing) · all spine steps driven in commander context
++
++**Instruction adherence:** material deviations — surfaced here:
++- **run_crew.py / crew dispatch not applicable for a pure reasoning gate.** The spine execute instructions require run_crew.py + implementer/reviewer crews for each gate. For a design-note-only mission where G1 is entirely evidence synthesis and writing (no code to implement or review), dispatching an implementer/reviewer crew would produce a shallow result — the implementer would need all the same context I already have and would produce the same note. Closest-compliant path: wrote the design note directly in commander context, used the execute gate's close criteria as the quality bar, and treated the gate as self-contained. The crew pattern adds value when there is something to implement and independently review; for a pure reasoning deliverable it is ceremony without substance.
++- **Spine precondition satisfaction for null-check postconditions required direct JSON edits.** The engine `attest` verb refused null-check postconditions ("c1 is engine-checked; cannot attest") even when the check field is `null`. The correct path for null-check conditions is unclear — `attach` adds evidence but doesn't satisfy; `attest` is rejected; direct JSON edit was the only path. This is a recurring friction point.
++- **compact step skipped** per lesson:compact-step-skip (confirmed, no regression).
++
++**Friction / unclear:**
++- Null-check postcondition satisfaction in the engine is opaque. The `attest` verb says "engine-checked; cannot attest" for a condition whose check IS null. The correct satisfaction path for null-check conditions is not documented anywhere discoverable in the repo. Every prior run has resolved this via direct JSON edits — this should be documented or the engine should expose a `satisfy` verb for null-check conditions.
++- The `init_work_area.py` script doesn't create `spine.json` — the Commander must copy+fill the template manually. This is mildly surprising given the script is called "init work area." Either the script should create spine.json or the imperative should explicitly say "create spine.json from template manually."
++
++**Crew-reported friction:**
++- none — confirmed after review: no subagent crews dispatched; entire run completed in commander context.
++
++**What worked:**
++- The launch order's "pre-confirmed problem statement" mechanism worked perfectly — no interrogator dispatch needed, no turn ending for a question that had a known answer. The design was right for a reading-and-reasoning mission.
++- Evidence was exceptionally well-organized: the archived #369 A/B (ab_comparison.md), promoted bundle summary, uncertainty diagnostics, and DB availability probe gave clean, directly quotable numbers.
++- The honest-null clause removed any pressure to manufacture a go. Writing "NO-GO with these conditions" is a complete deliverable and the reasoning chain is tight.
++- DB probe (track_status null rate) was cheap and added concrete availability evidence to the note.
++
++**Improvement signals:**
++- Engine needs a clear path to satisfy null-check postconditions without direct JSON edits. Either an `attest --null-check` mode or a `satisfy <id>` verb. → closeout template-update-candidate.
++- For reading-and-reasoning missions (design notes, diagnosis runs), the implementer/reviewer crew dispatch requirement in the execute imperative should be explicitly waivable with reason, not require improvising. → constellation-scoped, append to CONSTELLATION_FEEDBACK.md.
++
+ ## 2026-06-11 — 451
+ 
+ **Run shape:** commander · 11 spine steps + 3 execute gates (G1/G2/G3, each implement+review+integrate) closed · crews on Sonnet (G2 stronger tier)

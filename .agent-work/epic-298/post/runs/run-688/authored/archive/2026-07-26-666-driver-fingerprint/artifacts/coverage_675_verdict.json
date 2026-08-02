@@ -1,0 +1,114 @@
+{
+  "slice_db": "C:\\Programs\\f1brainz-wt\\epic659-666\\.agent-work\\666-driver-fingerprint\\artifacts\\fp_slice_2023Q.db",
+  "n_real_rows": 64,
+  "cell_support_real": {
+    "LEC|severity:2023:v1:c0": 1361.409910305739,
+    "LEC|severity:2023:v1:c1": 5.110791176739491,
+    "LEC|severity:2023:v1:c2": 765.015080359487,
+    "LEC|severity:2023:v1:c3": 90.46421815803444,
+    "PER|severity:2023:v1:c0": 1361.409910305739,
+    "PER|severity:2023:v1:c1": 5.110791176739491,
+    "PER|severity:2023:v1:c2": 765.015080359487,
+    "PER|severity:2023:v1:c3": 90.46421815803444,
+    "SAI|severity:2023:v1:c0": 1361.409910305739,
+    "SAI|severity:2023:v1:c1": 5.110791176739491,
+    "SAI|severity:2023:v1:c2": 765.015080359487,
+    "SAI|severity:2023:v1:c3": 90.46421815803444,
+    "VER|severity:2023:v1:c0": 1361.409910305739,
+    "VER|severity:2023:v1:c1": 5.110791176739491,
+    "VER|severity:2023:v1:c2": 765.015080359487,
+    "VER|severity:2023:v1:c3": 90.46421815803444
+  },
+  "cell_counts_resolved": {
+    "LEC|severity:2023:v1:c0": 1361,
+    "LEC|severity:2023:v1:c1": 5,
+    "LEC|severity:2023:v1:c2": 765,
+    "LEC|severity:2023:v1:c3": 90,
+    "PER|severity:2023:v1:c0": 1361,
+    "PER|severity:2023:v1:c1": 5,
+    "PER|severity:2023:v1:c2": 765,
+    "PER|severity:2023:v1:c3": 90,
+    "SAI|severity:2023:v1:c0": 1361,
+    "SAI|severity:2023:v1:c1": 5,
+    "SAI|severity:2023:v1:c2": 765,
+    "SAI|severity:2023:v1:c3": 90,
+    "VER|severity:2023:v1:c0": 1361,
+    "VER|severity:2023:v1:c1": 5,
+    "VER|severity:2023:v1:c2": 765,
+    "VER|severity:2023:v1:c3": 90
+  },
+  "unresolved_support_floor": 1.0,
+  "nominal_coverage_level": 0.8,
+  "under_coverage_bound": 0.6,
+  "energy_scale": 0.05213894505736354,
+  "n_reps": 200,
+  "channels": {
+    "time": {
+      "injected_sigmas": {
+        "driver_sigma": 0.15,
+        "class_sigma": 0.3,
+        "obs_sigma": 1.0
+      },
+      "driver": {
+        "empirical_coverage": 0.34875,
+        "ci_lo": 0.3157099365244287,
+        "ci_hi": 0.38290964088718815,
+        "hits": 279,
+        "n": 800,
+        "n_reps": 200
+      },
+      "class": {
+        "empirical_coverage": 0.28125,
+        "ci_lo": 0.2503234007334612,
+        "ci_hi": 0.31379814449287774,
+        "hits": 225,
+        "n": 800,
+        "n_reps": 200
+      },
+      "class_vs_driver_gap": -0.0675,
+      "generalizes": true,
+      "shared_floor_recommendation": {
+        "recommended": true,
+        "shared_floor": 0.3,
+        "derivation": "shared_floor = class_sigma (this channel's injected between-class effect sigma) -- the naive within-group SEM `fit_two_way`'s companion sigma is built from carries no term for the class-to-class systematic component; floor to that scale in quadrature (per pooling.py's shared_floor semantics) rather than leaving the naive SEM to understate it."
+      }
+    },
+    "energy": {
+      "injected_sigmas": {
+        "driver_sigma": 0.00782084175860453,
+        "class_sigma": 0.01564168351720906,
+        "obs_sigma": 0.05213894505736354
+      },
+      "driver": {
+        "empirical_coverage": 0.30875,
+        "ci_lo": 0.276866737276098,
+        "ci_hi": 0.3420499964963382,
+        "hits": 247,
+        "n": 800,
+        "n_reps": 200
+      },
+      "class": {
+        "empirical_coverage": 0.335,
+        "ci_lo": 0.3023276105901509,
+        "ci_hi": 0.36889403037305835,
+        "hits": 268,
+        "n": 800,
+        "n_reps": 200
+      },
+      "class_vs_driver_gap": 0.026249999999999996,
+      "generalizes": true,
+      "shared_floor_recommendation": {
+        "recommended": true,
+        "shared_floor": 0.01564168351720906,
+        "derivation": "shared_floor = class_sigma (this channel's injected between-class effect sigma) -- the naive within-group SEM `fit_two_way`'s companion sigma is built from carries no term for the class-to-class systematic component; floor to that scale in quadrature (per pooling.py's shared_floor semantics) rather than leaving the naive SEM to understate it."
+      }
+    }
+  },
+  "secondary_loo_real_time_channel": {
+    "empirical_coverage": 0.875,
+    "hits": 56,
+    "n": 64,
+    "level": 0.8
+  },
+  "interpretation": "PRIMARY (synthetic-recovery, real support counts): time: driver coverage=0.349 [0.316,0.383], class coverage=0.281 [0.250,0.314] -> GENERALIZES (class under-covers); energy: driver coverage=0.309 [0.277,0.342], class coverage=0.335 [0.302,0.369] -> GENERALIZES (class under-covers). SECONDARY (descriptive, real-data LOO observation coverage, time channel only): coverage=0.875 (56/64) -- measures observation-level predictive coverage on real data, NOT the epistemic class-effect interval coverage the PRIMARY verdict targets; not used for the generalizes flag or the shared_floor recommendation."
+}

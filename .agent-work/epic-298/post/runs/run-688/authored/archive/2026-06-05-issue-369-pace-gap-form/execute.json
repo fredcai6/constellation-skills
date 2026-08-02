@@ -1,0 +1,731 @@
+{
+  "work_id": "issue-369-pace-gap-form",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/architecture/packets/evo_predictor.md, docs/architecture/packets/data.md, and .agent-work/issue-369-pace-gap-form/PROBLEM_STATEMENT.md. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + relevant packets loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "orchestrator context, glossary, evo+data packets, problem statement read post-compact; frozen plan intent confirmed; packet residual_history naming drift noted for reconcile"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 pace-gap history provider: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for G1: (a) new DatabaseManager batch query returning best valid non-pit Q lap seconds per driver for given (year, rounds) \u2014 filters mirror practice convention: valid_lap=1, pit_in_time/pit_out_time NULL, lap_time NOT NULL; (b) new evo-side provider src/evo_predictor/quali_pace_gap_history.py: pure per-round gap computation gap=(t-field_median)/field_median over drivers' best laps, plus build_quali_pace_gap_history(db, year, round_num) -> dict[driver_id, list[float|nan]] aligned to rounds 1..round_num-1 (same alignment as quali_history_full; nan = missing); (c) unit tests tests/unit/data/test_quali_best_laps_query.py (fixture DB) and tests/unit/evo_predictor/test_quali_pace_gap_history.py. No adapter or DriverFeatures changes in this gate. Simplification limits on touched paths. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "DB is the only data source; no FastF1 calls",
+        "missingness explicit (nan), never imputed",
+        "prior rounds only (as-of; no current-round leakage)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "get_quali_best_valid_laps_batch added to _metadata.py; new src/evo_predictor/quali_pace_gap_history.py (compute_pace_gaps + build_quali_pace_gap_history); 14+21 new tests TDD; 35 passed; tests/unit/data 77 passed; limits PASS (4 files)",
+            "files": "src/data/database/_metadata.py,src/evo_predictor/quali_pace_gap_history.py,tests/unit/data/test_quali_best_laps_query.py,tests/unit/evo_predictor/test_quali_pace_gap_history.py"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 pace-gap history provider: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the G1 plan and IMPLEMENTER_RESULT. Review focus: query correctness (filters, batching, per-year DB), gap math (median over drivers' best laps, gap sign), alignment contract with quali_history_full, missingness honesty, test quality, simplification limits. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT e-g1-implement-1 received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE: filters/MIN/pattern conformance exact; gap math + alignment contract verified; scope clean; evidence re-run independently (35 passed, 77 passed, limits PASS, pyright 0 errors)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1 pace-gap history provider: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions, commit the gate's work on the run branch, advance. BLOCK: return implementer for rework or raise blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "provider + query tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/data/test_quali_best_laps_query.py tests/unit/evo_predictor/test_quali_pace_gap_history.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g1-review e-g1-review-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/data/test_quali_best_laps_query.py tests/unit/evo_predictor/test_quali_pace_gap_history.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 adapter encoding: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for G2: (a) DriverFeatures gains quali_pace_gap_history_full: list | None = None (models package); (b) RecentHistoryFeatureConfig gains form_encoding: str = 'position_quality', validated in {'position_quality','quali_pace_gap'}; (c) quali_recent_history_adapter.py: when form_encoding='quali_pace_gap' the per-event series is the pace-gap history (lower=better) \u2014 window aggregates use neutral (0.0,0.0,0.0) and forgiveness drops HIGHEST gaps; h2h edge/gap features run over the same gap series reusing position polarity verbatim (no dnf clamp for gaps); missing events excluded via existing availability machinery; feature names become quali_pace_gap_* and feature_schema_version becomes driver_quali_power_from_recent_history.v2; raise ValueError naming the field if quali_pace_gap_history_full is not populated; (d) constructor_quali_recent_history_adapter.py mirrors via existing pooling (pool rule mirrors current position pooling, oriented for lower=better; schema constructor_quali_power_from_recent_history.v2); (e) diagnostics record form_encoding; (f) unit tests in test_quali_recent_history_adapter.py + test_constructor_quali_recent_history_adapter.py: v2 names/schema, neutral, forgiveness orientation, missing exclusion, loud failure on absent field, and EXPLICIT default-off identity (v1 names + identical vectors on same inputs). No builder/CLI/config plumbing in this gate. Simplification limits on touched paths. Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 provider integrated (gap history format frozen)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1 integrated: provider committed 4b71cd2, gap history format frozen"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "default off = bit-identical v1 features",
+        "no silent fallback: absent field under pace_gap fails loudly",
+        "no changes to race/race-start adapters or latent_power"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "form_encoding flag in RecentHistoryFeatureConfig (validated); DriverFeatures.quali_pace_gap_history_full; v2 pace-gap path in driver+constructor quali adapters (raw gaps, neutral 0s, forgive-highest, h2h raw diff no clamp, ValueError on absent field, form_encoding in diagnostics); min(gap) constructor pooling mirroring min(position); 17 new tests TDD; 35 targeted + 1237 region green; limits PASS on 5 files, 2 pre-existing violations in untouched race fn (verified baseline-identical, flagged tc2)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 adapter encoding: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the G2 plan and IMPLEMENTER_RESULT. Review focus: default-off bit-identity (the protected intent), orientation correctness (forgiveness/h2h/neutral under lower=better), schema v2 naming consistency, loud-failure path, constructor pooling mirror, test quality. Dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT e-g2-implement-1 received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE: v1 bit-identity verified line-by-line (helpers byte-identical, zero test assertions modified); v2 orientation exact per frozen table; schema/naming consistent; loud failures verified; min(gap) pooling mirrors min(position); evidence re-run independently (35 + 1237 passed). Non-blocking find (dead helper _history_vector_pace_gap_from_driver) fixed by rework: removed, grep-proven, 35 passed + limits PASS re-verified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 adapter encoding: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification, confirm postconditions, commit, advance. BLOCK: rework or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict APPROVE, rework integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "adapter tests (both encodings) pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_quali_recent_history_adapter.py tests/unit/evo_predictor/test_constructor_quali_recent_history_adapter.py tests/unit/evo_predictor/test_recent_history_adapter.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g2-review e-g2-review-1 incl. dead-helper rework"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_quali_recent_history_adapter.py tests/unit/evo_predictor/test_constructor_quali_recent_history_adapter.py tests/unit/evo_predictor/test_recent_history_adapter.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 end-to-end plumbing: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for G3, mirroring the established pace_normalization plumbing pattern: (a) module_adapters/_common.py _build_recent_history_race_features accepts recent_history_form_encoding (default 'position_quality') and populates quali_pace_gap_history_full via the G1 provider when 'quali_pace_gap' and task='quali'; (b) the two quali RH training closures in _training_builders.py construct the v2 RecentHistoryFeatureConfig and pass encoding into the minimal builder \u2014 thread the parameter through the generic training-closure call contract in module_training_orchestration.py (build_labeled_batches_for_module / prepare_module_training_data kwarg, default keeps all other modules untouched); (c) data_adapter build_race_features / build_all_race_features / build_multi_season_race_features accept the kwarg and populate the field when on (runtime path); (d) run.py: --recent-history-form-encoding on train-latent-power-module and backtest-latent-power-module; (e) gold config: knob in configs/evo/gold_defaults.toml mirroring config.data section style, validated in gold_cycle/config.py, passed via runner_support._module_train_args; (f) runtime consistency: the two quali RH runtime closures select encoding so a v2-schema bundle is served pace-gap features and a v1 bundle position-quality features, mismatch fails loudly naming module + expected/actual schema (mechanism: bundle-recorded feature_schema_version or manifest module config \u2014 pick the seam that exists, document choice); (g) update docs/evo/modules/recent_history_driver.md and recent_history_constructor.md for the encoding option; (h) unit tests: config validation, CLI arg flow, builder populates/omits field per flag, runtime mismatch failure. Simplification limits on touched paths. Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 adapter encoding integrated (config field + v2 schema frozen)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G2 integrated: commit 0148958, config field + v2 schema frozen"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "default off: zero extra DB work, all 12 modules' behavior unchanged",
+        "no silent fallback between encodings at runtime",
+        "docs updated in same gate (Documentation Authority)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "form_encoding wired e2e: _common builder (helper-extracted, limits at baseline), all 12 training closures accept kwarg (2 quali RH use it), orchestration threading, data_adapter builders + _inject helper, run.py CLI flag on train+backtest, gold config knob validated + _module_train_args, runtime seam: manifest feature_schema_version merged into config_overrides, closures derive encoding from .v2 suffix + lazy inject, run_module_field loud mismatch check (old bundles skip), docs updated; region 1258 green; rework restored limits to baseline (only irreducible +3 lines kwarg threading remains)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3 end-to-end plumbing: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the G3 plan and IMPLEMENTER_RESULT. Review focus: default-path inertness (no extra DB reads, no behavior change for any module when off), training/runtime encoding consistency mechanism and its failure mode, closure-contract change not perturbing other modules, gold config validation, docs accuracy. Dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT e-g3-implement-1 received incl. limits rework, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "First pass: all checks passed except BLOCK on 3 new pyright errors (_build.py None-append, _runtime_builders object|None x2). Rework fixed via return-type narrowing + isinstance narrowing (non-str manifest value explicitly = absent = default encoding). Re-review APPROVE: pyright 0 errors on 9 files, region 1258 passed, no new findings. Inertness + consistency seam traced clean: no silent fallback; old bundles skip check; v2 bundles carry feature_schema_version via write_latent_power_module_bundle"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3 end-to-end plumbing: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification (full evo unit region), confirm postconditions, commit, advance. BLOCK: rework or blocker. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: BLOCK reworked, re-review APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full evo unit region green (default-off identity across the subsystem)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g3-review e-g3-review-1 (re-review APPROVE after pyright rework)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 A/B evidence: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for G4 (evaluation run, minimal code): train driver_quali_power_from_recent_history and constructor_quali_power_from_recent_history with --recent-history-form-encoding quali_pace_gap using the canonical gold split (train 2018-2024, eval 2025) and gold-default training params/seed; backtest both trained bundles on 2025; control arm = the promoted gold report's per-module eval metrics for the same two modules (reports/evo, slug gold_cycle_260530_152746_2018thru2024) \u2014 verify config comparability (same split/epochs/seed) and note any mismatch; produce .agent-work/issue-369-pace-gap-form/evidence/ab_comparison.md with a table per module x arm: corr_sigma_pi_trace_vs_rank_mae, corr_sigma_pi_trace_vs_nll (variance claim under test), rank_mae_vs_actual, pairwise_sign_accuracy, pairwise_nll_skill (no-regression checks, expected ~flat) plus missingness/availability diagnostics (pace-gap availability vs position availability) and a verdict paragraph. Training artifacts stay under outputs/evo_runs/ (not committed). Dispatch constellation-implementer subagent; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G3 plumbing integrated (flag reachable end to end)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G3 integrated: commit 404ac6a, flag reachable end to end"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "no gold-cycle promotion, no manifest/params/gold changes",
+        "comparison is evidence, not a default flip",
+        "generated artifacts stay out of git per artifact policy"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "4 bundles trained+backtested (2 modules x fresh-v1/treatment-v2, seed 0, canonical split) + promoted control extracted; ab_comparison.md (21KB, 5 sections) with full provenance; v2 bundles record .v2 schema (G3 seam exercised); ordering ~flat (rank_mae driver 3.571->3.488, constructor 1.658->1.683; sign_acc flat); variance channel MIXED (driver corr_sigma_vs_rank_mae 0.534->0.420 worse, constructor 0.427->0.494 better); FINDING: pairwise_nll_skill regressed (driver 0.453->0.343, constructor 0.519->0.390); promoted-vs-fresh deviations explained (event-set size, post-hoc calibration absent in standalone backtest)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4 A/B evidence: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the G4 plan and IMPLEMENTER_RESULT. Review focus: arm comparability (split/seed/params honesty), metric provenance (numbers traceable to run outputs / promoted report), no overselling (issue predicts ~flat ordering; variance channel is the claim), comparison table completeness. Dispatch constellation-reviewer subagent; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT e-g4-implement-1 received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "APPROVE: 8 provenance spot-checks exact vs source files; compute_metrics.py imports gold-path _corr/_mean (no reimplementation); NLL sign bridge verified correct via nll_eval skill=chance-raw; arms comparable (only encoding differs, assumptions stated+confirmed); verdict honest: variance MIXED, nll_skill regression prominent, n=24 caveat, no flip recommended; git clean apart from work area"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4 A/B evidence: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification, confirm postconditions, commit evidence doc, advance. BLOCK: rework or blocker. Surface the A/B verdict to the human at the review step; if the variance channel improved, flag a triage candidate for the default-flip decision.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "A/B comparison evidence exists and is substantive",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib,sys; p=pathlib.Path('.agent-work/issue-369-pace-gap-form/evidence/ab_comparison.md'); sys.exit(0 if p.exists() and p.stat().st_size>500 else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "carried from g4-review e-g4-review-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib,sys; p=pathlib.Path('.agent-work/issue-369-pace-gap-form/evidence/ab_comparison.md'); sys.exit(0 if p.exists() and p.stat().st_size>500 else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-implement",
+      "statement": "Split src/data/database/_metadata.py: G1 pushed it to exactly 999 lines (MAX_FILE_LINES strict ceiling); any future addition to this mixin breaches simplification limits immediately. Needs a file-split issue per the grandfathered-paths policy."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-implement",
+      "statement": "Decompose build_driver_recent_history_pair_batch in src/evo_predictor/recent_history_adapter.py: pre-existing strict-limits violations (cc=30 vs <20, function_lines=143 vs <100), confirmed baseline-identical via stash round-trip during G2. Same decomposition pattern as issue 363 applies; the G2 quali-adapter refactor (_resolve_encoding_fns/_build_pairs helpers) is a ready template."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-implement",
+      "statement": "Decompose evo plumbing monster functions carrying pre-existing strict-limits debt: data_adapter/_build.py build_race_features (cc=29, 231 lines) + build_all_race_features (cc=27, 215 lines); module_training_orchestration.py build_labeled_batches_for_module (cc=36, 163 lines) + build_evidence_mode_eval_batches (106 lines) + build_recent_history_holdout_eval_batches (148 lines); sampled_runtime.py predict_from_features (153 lines); module_adapters/_common.py _build_recent_history_race_features (cc=22). All pre-existing before issue-369 G3 (baseline-verified via clean worktree at HEAD); every kwarg threaded through them adds debt."
+    },
+    {
+      "id": "tc4",
+      "from": "g4-integrate",
+      "statement": "Pace-gap encoding follow-up decision: A/B came back mixed (constructor sigma-vs-rank-MAE corr improved 0.427->0.494, driver worsened 0.534->0.420) with a pairwise_nll_skill regression in both modules (driver 0.453->0.343, constructor 0.519->0.390 \u2014 fusion weights consume exp(-skill)). Default stays position_quality. Candidate follow-ups if pursued: longer-epoch convergence check for the v2 feature space, fusion-weight impact quantification, larger-n eval before any default-flip consideration. The issue's untested variance claim is now tested: not confirmed at n=24."
+    }
+  ],
+  "blockers": []
+}

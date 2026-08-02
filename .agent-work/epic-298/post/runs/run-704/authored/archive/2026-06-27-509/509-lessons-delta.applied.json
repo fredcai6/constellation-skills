@@ -1,0 +1,77 @@
+{
+  "work_id": "509-phase-f-slice",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": "ADMIRAL_LOG.md 2026-06-27: all 3 Sonnet commanders used py throughout; Admiral independent re-run used py -m pytest; cmdr-461 and cmdr-476 delta.json confirm ops"
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": "cmdr-461 lessons-delta.json: review-result attached (not attested) to both g2-review and g2-integrate so APPROVE-match check passed; cmdr-476 lessons-delta.json: same pattern both gates"
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": "cmdr-461 lessons-delta.json: G2 implementer and reviewer dispatched via Agent tool, recorded via run_crew.py --dispatch external + --verify-result, recover_crews before each; no claude CLI binary"
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": "cmdr-461 spine.json compact:skipped (reason: lesson:compact-step-skip, harness auto-compaction); cmdr-504 spine.json compact:skipped same reason"
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "cmdr-504 delta.json: AGENT_FEEDBACK.md and LESSONS.md modified on disk not staged/committed; ADMIRAL_LOG.md 2026-06-27 NOTE: PRs #531/#530/#528 all verified clean of shared playbook files"
+    },
+    {
+      "op": "confirm",
+      "id": "admiral-close-after-merge-verified",
+      "grounding": "ADMIRAL_LOG.md MERGE 2026-06-27: squash-merged sequentially, each gated on exit 0 + verified MERGED state (not chained); Issues #504/#461/#476 auto-closed on merge, then verified CLOSED — exact lesson sequence (overrides cmdr-504 erroneous retire proposal)"
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": "cmdr-461/504/476 spine.json execute p2 satisfied (e-execute exit 0) — all three commanders satisfied the state-note precondition before entering execute"
+    },
+    {
+      "op": "mention",
+      "id": "engine-artifact-attest",
+      "grounding": "cmdr-461: non-artifact spine postconditions refused as 'preconditions not found' need attest --which postconditions (routed to constellation export)"
+    },
+    {
+      "op": "mention",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "cmdr-461 and cmdr-504 both ran apply_lessons_delta.py in worktrees (uncommitted local LESSONS.md) — commander should propose delta.json only (routed to constellation export)"
+    },
+    {
+      "op": "retire",
+      "id": "watcher-sleep-death",
+      "reason": "Never confirmed in 7 runs (confirmed: 0). Pattern superseded by lesson:state-note-before-detach (confirmed). No watcher incidents this run. Dormancy threshold reached."
+    },
+    {
+      "op": "retire",
+      "id": "fastf1-posdata-decimetres",
+      "reason": "Convention now in code: src/preprocessing/trajectory/loaders.py module docstring + docs/architecture/packets/preprocessing.md (commit 35d41472, PR #530, merged). Playbook reminder redundant when binding unit is at the seam."
+    },
+    {
+      "op": "add",
+      "id": "idle-artifact-completeness-distinguisher",
+      "scope": "admiral",
+      "task_class": "general-workflow",
+      "statement": "A commander idle_notification does not distinguish done from stalled. Gate classification on artifact completeness: commit on branch AND open PR both present -> done; otherwise -> stalled (regardless of idle reason). Recovery for a stall = SendMessage return-and-continue with the same agent; do NOT kill and relaunch (idle/available means context is intact; two-agents-in-worktree risk otherwise).",
+      "grounding": "ADMIRAL_LOG.md 2026-06-27: INCIDENT (idle, not stalled) x2 (cmdr-461 PR #530; cmdr-476 PR #528 both verified DONE) vs INCIDENT (stall, not done) (cmdr-504 uncommitted/no PR, recovered via SendMessage)"
+    },
+    {
+      "op": "add",
+      "id": "float-before-crossing-named-fence",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "When the only path to completing an issue requires editing a file outside the named fence, float to the Admiral BEFORE making the edit — even if the change is mechanical and collision risk looks low. Benign is not a valid reason to skip the float; fence-crossing is always an adjudication boundary.",
+      "grounding": "ADMIRAL_LOG.md 2026-06-27 RULING (#476 fence-stretch): cmdr-476 edited docs/UNITS.md + docs/physics/measurement_model.md (#525 lane, outside scripts/-only fence) without floating; accepted but required Admiral adjudication + merge-ordering mitigation"
+    }
+  ]
+}

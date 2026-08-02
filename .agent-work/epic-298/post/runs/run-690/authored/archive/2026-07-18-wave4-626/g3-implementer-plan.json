@@ -1,0 +1,278 @@
+{
+  "work_id": "g3-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-frame-fit",
+    "m2-apply-fallback",
+    "m3-loo",
+    "m4-orthogonality-verdict"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the handoff, and the g1 files (frame/floor/holdout) + g2 (layer1_physics). Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff + g1/g2 files loaded; handoff complete; data facts verified (grip_bin_obs Q is 2023-ONLY, 9 weekends)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-frame-fit": {
+      "id": "m1-frame-fit",
+      "title": "Grip-evolution frame + smooth within-session track latent with sigma",
+      "imperative": "Build layer2_evolution.py slice 1: load_grip_evolution_frame() (join grip_bin_obs Q with damage_lap_integrals.cumulative_track_laps, read-only, absolute main-checkout path) and fit_track_evolution() (per-weekend smooth field-level grip latent vs cumulative_track_laps, controlling tyre_life + bin FE, honest sigma, coverage=2023-only). TDD: write test asserting the fit yields a positive within-session rubbering signal and a 2023-only coverage set, observe RED, then GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new test written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "frame+fit slice green: smooth latent fits, positive signal, 2023-only coverage",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q -k 'frame or fit or coverage' 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-frame-fit-1"
+        }
+      ],
+      "constraints": [
+        "no evo import",
+        "absolute DB path C:/Programs/f1Brainz/data/damage_integrals.db",
+        "read-only DB"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-frame-fit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q -k 'frame or fit or coverage' 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-apply-fallback": {
+      "id": "m2-apply-fallback",
+      "title": "apply path + wide-sigma near-zero fallback outside coverage",
+      "imperative": "Slice 2: apply_track_evolution(ctl, year, gp, fit) returns (delta_grip, sigma) from the smooth latent inside 2023 coverage, and a WIDE-sigma near-zero prior (mean 0, wide sigma) outside coverage -- no fabricated values. TDD: test asserts fallback mean==0 and sigma is wide; observe RED then GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: fallback test written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "apply+fallback green: wide-sigma near-zero prior outside 2023",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q -k 'apply or fallback' 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-apply-fallback-1"
+        }
+      ],
+      "constraints": [
+        "do NOT fabricate values outside 2023 coverage -- wide-sigma prior only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-apply-fallback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q -k 'apply or fallback' 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-loo": {
+      "id": "m3-loo",
+      "title": "LOO out-of-sample identifiability harness (not self-inclusive)",
+      "imperative": "Slice 3: loo_earns_keep() = leave-one-WEEKEND-out train/test of the ctl slope, held-out grip RMSE with vs without L2. MANDATORY: train and test weekends disjoint (never self-inclusive). TDD: test asserts LOO train/test are disjoint AND reduction is computed; RED then GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: LOO-disjointness test written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "LOO green: out-of-sample harness, train/test disjoint, held-out numbers produced",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q -k 'loo' 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-loo-1"
+        }
+      ],
+      "constraints": [
+        "LOO/out-of-sample discipline MANDATORY (lesson:loo-residual-diagnostic); never self-weighted"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-loo-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q -k 'loo' 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-orthogonality-verdict": {
+      "id": "m4-orthogonality-verdict",
+      "title": "Orthogonality-vs-season check + honest earns-keep/float verdict",
+      "imperative": "Slice 4: orthogonality_vs_season() (corr of within-session latent vs season-time; must be ~0) and an EARNS_KEEP_VERDICT constant/docstring stating honestly: signal identifiable within grip data + orthogonal to season, but FLOAT on g1 car-signal split (2023-only coverage + no per-car session-time bridge). TDD: test asserts orthogonality ~0 and the coverage caveat/verdict is present; then run the FULL test file green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: orthogonality+verdict test written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "full test file green (frame+fit+apply+fallback+loo+orthogonality+verdict)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q 2>&1 | tail -6"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-orthogonality-verdict-1"
+        }
+      ],
+      "constraints": [
+        "honest null/float is a complete outcome; do NOT fake an in-sample win; do NOT fill L2 with a season-time latent"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-orthogonality-verdict-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer2_evolution.py -q 2>&1 | tail -6",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3-1784386753",
+    "status": "released",
+    "claimed_at": "2026-07-18T14:59:54.248460+00:00",
+    "last_heartbeat": "2026-07-18T15:07:38.315756+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T15:09:07.099244+00:00"
+  }
+}

@@ -1,0 +1,287 @@
+{
+  "work_id": "575-fuel-burn-calibration-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-module-core",
+    "m2-unit-tests",
+    "m3-validation-script",
+    "m4-run-evidence",
+    "m5-simplification-limits"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), project deltas (CREW_CONTEXT.md, GLOSSARY.md), and the g1 handoff in full. Verify handoff completeness (task, intent, scope, exclusions, evidence, test mode, stop conditions). Verify the cited seam (TelemetryStore.read_session + build_db_session) against source before reuse.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; telemetry seam verified against source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-module-core": {
+      "id": "m1-module-core",
+      "title": "Build src/physics/burn_rate_calibration.py",
+      "imperative": "Create the new module: cited per-season FIA fuel-regulation table (flow-rate cap kg/h + max race-start fuel kg, 2019-2026, matching SEASON_BASE_KG's earliest year), a pure per-lap burn formula function, a per-season/per-circuit aggregator using the TelemetryStore/build_db_session seam (no cross-season pooling), and a lap-time-slope cross-check function. Zero fitted parameters; regulatory constants cited inline. Do not touch mass_model.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "module imports cleanly and exposes the regulation table + pure burn function + aggregator + cross-check function",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import src.physics.burn_rate_calibration as m; assert hasattr(m,'FUEL_REGULATIONS'); assert hasattr(m,'per_lap_burn_kg'); assert hasattr(m,'season_burn_rate_estimate'); assert hasattr(m,'lap_time_slope_cross_check'); print('OK')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-module-core-1"
+        }
+      ],
+      "constraints": [
+        "mass_model.py byte-for-byte unchanged",
+        "zero fitted/regressed parameters in the primary estimator",
+        "no cross-season/cross-circuit pooling inside the aggregator"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-module-core-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import src.physics.burn_rate_calibration as m; assert hasattr(m,'FUEL_REGULATIONS'); assert hasattr(m,'per_lap_burn_kg'); assert hasattr(m,'season_burn_rate_estimate'); assert hasattr(m,'lap_time_slope_cross_check'); print('OK')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-unit-tests": {
+      "id": "m2-unit-tests",
+      "title": "Unit tests for burn_rate_calibration",
+      "imperative": "Write tests/unit/physics/test_burn_rate_calibration.py: hand-computed pure-formula values, regulation table correctness (>=2023, 2026), and aggregator/cross-check against a small synthetic telemetry-store-shaped fixture (no live DB dependency), following the fixture convention in tests/unit/physics/layer2/test_session_race.py and test_mass_model.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "module core exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_burn_rate_calibration.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-unit-tests-1"
+        }
+      ],
+      "constraints": [
+        "hand-computed expected values for the pure formula",
+        "no live DB required for the test suite"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-unit-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_burn_rate_calibration.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-validation-script": {
+      "id": "m3-validation-script",
+      "title": "Build scripts/validate_burn_rate_hypothesis.py",
+      "imperative": "Create the runnable script covering seasons 2019-2026 and circuits Bahrain/Spain(-Barcelona-Catalunya 2026)/Silverstone(stored as 'Great Britain')/Monaco: prints throttle-integral kg/lap table, lap-time-slope cross-check table (observed vs model-predicted slope, %error), explicit Monaco-gap callout, SC/VSC-vs-green burn ratio vs SC_BURN_FRACTION (informational), and skips missing/insufficient season+circuit combos with a printed reason instead of crashing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "unit tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "script runs to completion over the full season/circuit grid without crashing",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/validate_burn_rate_hypothesis.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-validation-script-1"
+        }
+      ],
+      "constraints": [
+        "DB/telemetry-store-only access",
+        "no cross-season pooling",
+        "skip-with-reason on insufficient data, never crash or fake a number"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-validation-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/validate_burn_rate_hypothesis.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-run-evidence": {
+      "id": "m4-run-evidence",
+      "title": "Capture full validation run evidence",
+      "imperative": "Run the validation script and the unit test suite; capture full text output for the IMPLEMENTER_RESULT (per-season/circuit throttle-integral table, lap-time-slope cross-check, Monaco pattern callout, SC/VSC ratio). Report honestly whether the hypothesis holds, including any large unexplained divergence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script runs cleanly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evidence captured verbatim for the result file",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not tune the method until it agrees",
+        "report divergence plainly if observed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-simplification-limits": {
+      "id": "m5-simplification-limits",
+      "title": "Simplification limits clean on touched files",
+      "imperative": "Run py -m src.utils.simplification_limits against the three touched paths and resolve any violations without expanding scope.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all files finalized",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification_limits clean on touched paths",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/physics/burn_rate_calibration.py scripts/validate_burn_rate_hypothesis.py tests/unit/physics/test_burn_rate_calibration.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-simplification-limits-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-simplification-limits-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits src/physics/burn_rate_calibration.py scripts/validate_burn_rate_hypothesis.py tests/unit/physics/test_burn_rate_calibration.py",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-simplification-limits-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/physics/burn_rate_calibration.py scripts/validate_burn_rate_hypothesis.py tests/unit/physics/test_burn_rate_calibration.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

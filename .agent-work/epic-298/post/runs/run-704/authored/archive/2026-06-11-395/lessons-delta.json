@@ -1,0 +1,24 @@
+{
+  "work_id": "395",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "worktree-untracked-data",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-395: main f1_data.db has 0 rows; all data in per-year DBs; absolute paths essential"
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-395: compact step skipped with reason; harness auto-compaction covered it"
+    },
+    {
+      "op": "add",
+      "id": "per-year-db-not-main",
+      "scope": "project",
+      "task_class": "general-workflow",
+      "statement": "The main f1_data.db has 0 rows; all collected race data lives in per-year DBs (f1_data_2022.db ... f1_data_2025.db). Always probe per-year DBs for actual data; use absolute paths.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-11 issue-395: DB probe showed f1_data.db sessions=0, lap_times=0; all data confirmed in per-year files"
+    }
+  ]
+}

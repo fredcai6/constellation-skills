@@ -1,0 +1,11 @@
+{
+  "work_id": "cmdr-603",
+  "tick": false,
+  "ops": [
+    {
+      "op": "export",
+      "id": "compact-step-skip",
+      "grounding": "CONSTELLATION_FEEDBACK.md 2026-07-12 cmdr-603 (603-data-catchup) entry appended; apply_lessons_delta --ripe flagged compact-step-skip as the sole ripe-unpaid constellation lesson this run."
+    }
+  ]
+}

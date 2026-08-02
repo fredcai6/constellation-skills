@@ -1,0 +1,40 @@
+{
+  "canonical_gp": "Japan",
+  "g0_expected_sign": "positive (higher grip -> larger positive delta -> moved toward front under injection)",
+  "g0_n": 20,
+  "g0_per_driver_delta": {
+    "ALB": 0.0,
+    "ALO": 0.0,
+    "ANT": 0.0,
+    "BEA": 0.0,
+    "BOR": 0.0,
+    "DOO": 0.0,
+    "GAS": 0.0,
+    "HAD": 0.0,
+    "HAM": 0.0,
+    "HUL": 0.0,
+    "LAW": 0.0,
+    "LEC": 0.0,
+    "NOR": 0.0,
+    "OCO": 0.0,
+    "PIA": 0.0,
+    "RUS": 0.0,
+    "SAI": 0.0,
+    "STR": 0.0,
+    "TSU": 0.0,
+    "VER": 0.0
+  },
+  "g0_spearman_grip_vs_position_delta": NaN,
+  "g1_baseline_brier": 0.13028701052631578,
+  "g1_delta_injected_minus_baseline": 0.0,
+  "g1_injected_brier": 0.13028701052631578,
+  "round_num": 3,
+  "seed": 42,
+  "sigma_formula": {
+    "floor_variance": "lateral_mech_grip_g_sigma**2 + lateral_aero_grip_g_sigma**2",
+    "inflation_factor_variance": 16.0,
+    "neutral_sigma_reference": 10.0
+  },
+  "unresolved_teams": [],
+  "year": 2025
+}

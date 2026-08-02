@@ -1,0 +1,59 @@
+{
+  "work_id": "522-phase-align-utilization",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "diagnose-first-decide-fix",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "When an issue inherits a prior run's diagnosis or the fix locus is uncertain, make gate-1 an EVIDENCE-ONLY diagnosis with a decide-fix human checkpoint BEFORE any code, and re-plan the frozen gates at the checkpoint from the evidence. A confidently-stated inherited premise can be wrong: don't author the fix gates assuming it.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522 (What worked): G1 evidence-only diagnosis REJECTED the inherited #518 'phase misalignment' hypothesis and found a different bug class (lateral units); the decide-fix checkpoint pivoted the fix; coding the planned phase-alignment would have shipped the wrong fix against a still-broken denominator."
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: py used throughout; engine integrate command-checks authored as `py -m pytest ... -q` ran clean (engine imperatives still hard-code python - standing contradiction navigated)."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: all 7 crews (g1/g2/g3 impl+review + cartographer) dispatched via the Agent tool, recorded in crew-runs.json via run_crew.py --dispatch external + --verify-result, recover_crews before each (no claude CLI launcher in this harness)."
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: spine compact step skipped with reason; harness auto-compaction + the user ran /compact this session."
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: review-result attached (not attested) to BOTH gN-review and gN-integrate across g1/g2/g3 so the APPROVE-match check passed at integrate; user-decision attached at understand/plan/decide-fix/triage/review."
+    },
+    {
+      "op": "confirm",
+      "id": "spine-lease-stale-long-crew",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: kept the spine lease fresh by heartbeating proactively before each engine batch across multi-hour multi-turn user-decision waits; the stale-lease risk was real (turns hours apart) but pre-empted, so no --force needed this run."
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: STATE_NOTE.md rewritten before each of the crew dispatches (step/slug/next-command/pid/expected-artifact)."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: AGENT_FEEDBACK + lessons-delta + CONSTELLATION_FEEDBACK written on disk but excluded from the mission branch; archive c4 deny-globs enforce it; applied to main after merge."
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: handoffs cited the exact car_prior._assemble_lateral / _build_longitudinal (G5) conversion seam, the lateral_view g-unit producer docstring, build_car_ceiling's air_density, and load_quali_session's 4-arg sig; conversely the g2-v1 handoff's MISSING two-producer fact cost a re-baseline of 9 test files (extension: cite the consumer topology, not just the seam)."
+    },
+    {
+      "op": "confirm",
+      "id": "commander-no-touch-crew-managed-resource",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-27 522: the commander-caught default-fallback defect was returned to the SAME crew via SendMessage rather than editing car_prior.py myself while the crew owned it — serialized ownership honored (contrast the #518 violation that grounded this lesson)."
+    }
+  ]
+}

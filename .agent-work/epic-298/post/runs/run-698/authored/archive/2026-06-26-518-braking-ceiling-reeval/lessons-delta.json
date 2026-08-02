@@ -1,0 +1,72 @@
+{
+  "work_id": "518-braking-ceiling-reeval",
+  "tick": true,
+  "ops": [
+    {
+      "op": "retire",
+      "id": "shell-cwd-reset",
+      "reason": "Stale: 9 runs-since-confirmed (about to auto-demote), only 1 confirm. Content is fully captured in the memory file [[subagent-shell-cwd-leak]]; this run used cd-prefixed Bash / Set-Location-to-root without incident. Retired to free a cap slot for crew-idle-strands-deliverable (the dominant recurring friction)."
+    },
+    {
+      "op": "retire",
+      "id": "feedback-step-session-limit-stranding",
+      "reason": "Never confirmed (0 confirms in 6 runs-since-added); the crash-resume recovery it describes is now covered by state-note-before-detach + spine-lease-stale-long-crew (both confirmed again this run). Retired to free a cap slot for commander-no-touch-crew-managed-resource."
+    },
+    {
+      "op": "add",
+      "id": "crew-idle-strands-deliverable",
+      "scope": "constellation",
+      "task_class": "general-workflow",
+      "statement": "Crews that launch their OWN long sub-task in the background (a sweep, a store repop, a verification suite) tend to go idle with the result file UNWRITTEN, stranding the gate deliverable until the commander nudges them via SendMessage. Handoffs must mandate: stay active / poll the sub-task to completion; the result file is the deliverable and you are not done until it exists. The commander should treat an idle_notification with no result file as a strand and nudge immediately.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518 (Friction, DOMINANT): g1 (HP sweep), g2 (6-circuit sweep), g3 (store repop), g5 (post-fix) each went idle with the result unwritten and each needed a SendMessage nudge; recurrence of the #496 'crew-backgrounds-own-verification-strands-deliverables' candidate."
+    },
+    {
+      "op": "add",
+      "id": "commander-no-touch-crew-managed-resource",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "Never give a crew conflicting scope directives across messages, and never have the commander directly mutate a resource (a store/DB/file) that a crew is actively managing. Serialize ownership: either the crew owns it or the commander does, not both. Contradictory directives + a commander-launched process racing a crew's process corrupt the shared state and waste a recovery cycle.",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518 (Friction, MY fault): gave g3-impl-518 msg1 'full 5-constructor scope' then msg2 'finish RBR + pause', then launched the store repop myself while the crew held the pause -> the crew killed+reverted my 'rogue' process; we fought over the same SQLite store. Also: a foreground heavy test suite preempted/killed my own harness-tracked background repop."
+    },
+    {
+      "op": "confirm",
+      "id": "spine-lease-stale-long-crew",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: the spine lease went stale ~6x across long crew runs + multi-turn user-decision waits (incl. a multi-hour investigation gap); re-claimed --force --reason each time."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: all crews (G1-G6 impl+review + cartographer) dispatched via the Agent tool, recorded in crew-runs.json via run_crew.py --dispatch external + --verify-result, recover_crews before each (no claude CLI launcher in this harness)."
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: review-result artifact attached (not attested) to BOTH gN-review and gN-integrate across all 6 gates so the APPROVE-match check passed at integrate; user-decision attached at understand/plan/g2-integrate/triage/review."
+    },
+    {
+      "op": "confirm",
+      "id": "compact-step-skip",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: spine compact step skipped with reason; harness auto-compaction + the user ran /compact this session."
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: py used throughout; engine integrate command-checks authored as `py -m pytest ... -q` ran clean (engine imperatives still hard-code python - standing contradiction navigated)."
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518 (crew feedback): g1 lost ~2h to the run_case-per-driver seam (165min vs 5min) the handoff didn't flag for GP-first loading; the DB table is session_estimates not physics_estimates; g3 rediscovered the FULL-causal-history store-scope requirement; g2 had no ceiling-metric v_ref named."
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: STATE_NOTE.md rewritten before each crew dispatch and before each background repop detach (step/slug/next-command/pid/expected-artifact); trivialized the lease-stale and preemption recoveries."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-06-25/26 518: AGENT_FEEDBACK + lessons-delta + CONSTELLATION_FEEDBACK written on disk but excluded from the mission branch; archive c4 deny-globs enforce it; applied to main after merge."
+    }
+  ]
+}

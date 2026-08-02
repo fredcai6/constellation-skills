@@ -1,0 +1,473 @@
+{
+  "work_id": "issue-314-fusion-correlation",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "compact",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-314-fusion-correlation. Start work branch.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "init_work_area.py ran successfully"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py init_work_area.py issue-314-fusion-correlation",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, engine-config.json read"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-ctx-1",
+          "type": "artifact",
+          "payload": {
+            "evidence_type": "context-read",
+            "note": "Read ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, engine-config.json"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "Load constellation-interrogator and drive interrogation.json; confirm problem statement with human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context step complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "verdict": "confirmed",
+            "note": "Scope: diagnostic-only pairwise rank-error correlation matrix per task. No fusion change. Triage candidate for correction if |r|>0.6."
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Frame the bounded problem against the architecture packets. Author the gate plan into execute.json with close criteria and required evidence. Get human approval.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "understand complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "execute.json authored, one bounded issue",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json written: G1-G4"
+        },
+        {
+          "id": "c2",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "verdict": "approved",
+            "note": "User: dispatch implementer then reviewer after each gate. 4 gates G1-G4. G1 TDD combined. Crew as subagents."
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "compact": {
+      "id": "compact",
+      "title": "Compact context and reload skills",
+      "imperative": "Run /compact. Then reload commander and pilot skills.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context compacted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context compacted at session start"
+        },
+        {
+          "id": "c2",
+          "statement": "commander and pilot skills loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "commander and pilot skills loaded"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-compact-1",
+          "type": "artifact",
+          "payload": {
+            "note": "Session started post-compact; pilot skill loaded; proceeding to execute"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Using the pilot skill, drive execute.json gate by gate in this conversation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "commander and pilot skills loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "compact complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G1-G4 all complete with implementer+reviewer evidence"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "artifact",
+          "payload": {
+            "note": "G1: 43 tests, 1089 suite; G2: runner wired; G3: schema 11 fields; G4: 1107 suite, 17 new tests"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand implemented changes to a subagent invoking constellation-cartographer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "cartographer updated index.md and evo_predictor.md: fusion_diagnostics added to gold_cycle component"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-reconcile-1",
+          "type": "artifact",
+          "payload": {
+            "evidence_type": "cartographer-report",
+            "note": "struct:evo.gold_cycle purpose updated to include fusion_diagnostics; evo_predictor.md file list extended. No boundary/relationship changes."
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load constellation-triage in this context. Drive triage on execute.json triage_candidates. User approves issues before filing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "#316 and #317 filed; tc2 resolved"
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "verdict": "approved",
+            "note": "User: go ahead and make issues for tc1 and tc-runner-complexity"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates, changes, reconciliation, triage. Get user acceptance before archiving.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "verdict": "accepted",
+            "note": "User: archive & push"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work. Push branch. Move .agent-work/issue-314-fusion-correlation/ to .agent-work/archive/2026-05-30-issue-314-fusion-correlation/.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "moved to archive/2026-05-30-issue-314-fusion-correlation"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "committed and pushed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "artifact",
+          "payload": {
+            "note": "Committed and pushed; work area archived"
+          },
+          "produced_by": "engine",
+          "ts": "2026-05-30"
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

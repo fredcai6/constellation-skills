@@ -1,0 +1,69 @@
+{
+  "work_id": "sigma-calibration-followups",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["i0-context", "q-scope", "q-branch", "q-retrain", "q-schema", "q-depth", "q-success"],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context", "title": "Load baseline context",
+      "imperative": "Load issues #303-306, the #142 archive (resolved understanding, ADR 0008), and the latent_power loss/config/training + gold_cycle report code. Record pass when loaded.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "q-scope": {
+      "id": "q-scope", "title": "Bundling 4 issues into one bounded run",
+      "imperative": "Is it coherent to knock out #303-306 in one Commander run?",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass",
+      "finding": "YES, bounded. #303 (target_mode removal) + #305 (term-B nu knob) are concrete code. #304 phase-1 (|r/sigma| instrumentation) is an extend+surface job (p95/p99 last-batch telemetry already exists in training.py). #304 phase 2-3 (nu sweep) + #306 (race-start corr flip) are research that terminate in a written verdict, not guaranteed code fixes. Shared foundation: instrumentation (G2) feeds both research gates; single gold-report schema bump covers #303 + #304.",
+      "evidence": [], "rework_count": 0
+    },
+    "q-branch": {
+      "id": "q-branch", "title": "Branch base",
+      "imperative": "Fresh branch off origin/main or continue on merged #142 branch?",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass",
+      "finding": "DECIDED: fresh branch off origin/main. Created codex/sigma-calibration-followups from origin/main (8b4a8dc, includes #307/#142 merge).",
+      "evidence": [], "rework_count": 0
+    },
+    "q-retrain": {
+      "id": "q-retrain", "title": "Gold retrain appetite",
+      "imperative": "Conditional, none, or always retrain at the end (~56 min/cycle)?",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass",
+      "finding": "DECIDED: ALWAYS retrain at the end to refresh the baseline, regardless of whether G4 recommends a default change. G5 runs one full gold cycle with the chosen settings (changed defaults if G4 recommends them, else unchanged), Brier-primary vs current promoted baseline, promote artifacts.",
+      "evidence": [], "rework_count": 0
+    },
+    "q-schema": {
+      "id": "q-schema", "title": "Gold report schema versioning",
+      "imperative": "Single or double schema bump for target_mode removal + |r/sigma| fields?",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass",
+      "finding": "DECIDED: single bump REPORT_SCHEMA_VERSION 4->5 covering BOTH target_mode removal (#303) and the new |r/sigma| percentile report fields (#304). G1 owns the v5 schema contract (removes target_mode + declares |r/sigma| fields); G2 populates the |r/sigma| fields. Producers + committed consumers + gold_report_schema.py doc move together (ORCHESTRATOR_CONTEXT report-schema rule).",
+      "evidence": [], "rework_count": 0
+    },
+    "q-depth": {
+      "id": "q-depth", "title": "Research depth / bounding",
+      "imperative": "Verdict-only or chase tuning to a tuned default?",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass",
+      "finding": "DECIDED: bounded. G4 terminates #304 nu tuning and #306 race-start each in a written verdict + recommendation. Deep per-(phase,scope) nu tuning, if indicated, is spun into a fresh follow-up rather than chased in this run. G4 may recommend a single bounded default change (e.g. term-B nu) that G5 then bakes into the retrain.",
+      "evidence": [], "rework_count": 0
+    },
+    "q-success": {
+      "id": "q-success", "title": "Success criterion",
+      "imperative": "What defines done for this run?",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "pass",
+      "finding": "Done = (a) target_mode concept fully removed, schema v5, suites green (#303); (b) |r/sigma| percentile instrumentation surfaced in module diagnostics + gold report with baseline capture (#304 p1); (c) optional term-B nu knob landed, backward-compatible, tested (#305); (d) written verdicts for nu sensitivity (#304) and race-start corr flip (#306) with recommendations; (e) one full gold retrain with chosen settings, Brier-primary no-regression vs promoted baseline, artifacts promoted; (f) ADR 0008 + packets reconciled; (g) issues #303-306 closed with evidence.",
+      "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved",
+    "findings": [],
+    "summary": "Bundle follow-ups #303-306 into one bounded Commander run on fresh branch codex/sigma-calibration-followups (off origin/main). Gates: G1 target_mode removal + schema v5 (#303); G2 |r/sigma| percentile instrumentation surfaced into diagnostics + gold report v5 fields + baseline capture (#304 phase 1); G3 optional term-B nu knob student_t_nu_sigma, backward-compatible, wired latent_power+CLI+gold (#305); G4 bounded research -> written verdicts: nu sensitivity sweep on >=2 module families (#304 p2-3) + race-start corr-flip root cause via per-pair sigma export / robust stats / lambda sweep (#306); G5 ALWAYS one full gold retrain with chosen settings, Brier-primary vs promoted baseline, promote, ADR 0008 + packet reconcile, close #303-306. Protected intent: Student-t heavy-tail robustness (nu>2), mu objective unchanged (term B detaches mu), latent_power must not import evo (ADR 0001), one canonical path, Brier primary for gold comparison, deep per-(phase,scope) nu tuning deferred to a fresh follow-up."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

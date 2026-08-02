@@ -1,0 +1,31 @@
+{
+  "config": {
+    "rework_cap": 3,
+    "replan": "abort-and-reissue",
+    "human_checkpoints": [
+      "understand.done",
+      "plan.approved",
+      "run.accept"
+    ],
+    "rules_root": [
+      "Read docs/AGENT_GUIDE.md before non-trivial work.",
+      "Follow docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/CREW_CONTEXT.md.",
+      "Use py for Python commands in this repository.",
+      "The SQLite database is the canonical data source for analysis; no direct FastF1 access from analysis, model, adapter, scorer, or predictor code.",
+      "Prefer one clear execution path over compatibility shims or dual-format boundary acceptance.",
+      "Validate public and meaningful internal inputs with failure messages naming field, expectation, and actual value.",
+      "Use test-led changes where a test surface exists; run focused region tests before and after touching source.",
+      "Time-dependent prediction inputs require explicit as-of cutoffs; no silent latest-value fallback.",
+      "Represent missingness intentionally with named/configured policy; do not guess, zero, or inline-impute silently.",
+      "Evo/probability changes require calibrated baseline evidence when behavior quality changes; Brier is primary for gold comparison.",
+      "Physics model changes require highest-applicable L1-L4 truth evidence with units, bounds, and invariants explicit.",
+      "Committed report schema changes update producers, committed consumers, and docs/report_schemas documentation together.",
+      "Generated artifacts are derived; edit sources/configuration or regenerate rather than manually editing run outputs.",
+      "Mutable module-level runtime state, impure caches, and module-level DatabaseManager singletons are review blockers in src/.",
+      "Commit non-context .agent-work/templates workflow templates; docs/agents is the durable context source.",
+      "Commit Commander work logs only after the work package is finished and archived under .agent-work/archive.",
+      "Keep documentation current when contracts, ownership, data flow, commands, or failure meaning change.",
+      "Track any project-tenet compromise with reason, exit condition, and owner."
+    ]
+  }
+}

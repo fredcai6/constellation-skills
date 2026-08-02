@@ -1,0 +1,20 @@
+{
+  "work_id": "624-phase0-g1-review",
+  "diff_ref": "C:/Programs/f1-624/scripts/g1_correlation_screen.py (new file, 408 lines)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "run_analysis() (~30 lines) and broadcast_physics() (~30 lines) are the longest functions; each does one coherent step (load, join, print) with no nested branching depth. Not long-method by Fowler's threshold.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "Module defines zero classes; purely functional script.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "fmt_stats() and axis_stats() are reused identically for both primary and secondary axes (no copy-pasted stats block); the one repeated literal (axis_cols list) appears once, not duplicated.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "Functions operate on data passed as explicit arguments (DataFrames, dicts); none reach into another module's internals.", "override": null},
+    {"smell": "data-clumps", "verdict": "flagged", "finding": "The (year, round_num, driver_id) / (year, round_num, constructor) key tuples recur across load_season_pace_gaps, load_season_teams, build_quali_error_table, and broadcast_physics as implicit DataFrame join-key conventions rather than a named type. Low severity, non-blocking observation: for a ~400-line one-off Phase-0 diagnostic script (not src/ production code) this is idiomatic pandas and does not warrant a parameter-object/dataclass introduction; raised only as an out-of-scope note for anyone hardening this into reusable src/ code later.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Axis names are centralized as module-level constants (PRIMARY_AXIS, RAW_AXES, SECONDARY_COMPOSITE) rather than repeated string literals scattered through logic — this is the opposite of primitive obsession.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No function exceeds 3 parameters (axis_stats(df, axis, target='quali_error') is the longest).", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "Single self-contained file; no change here requires touching multiple other files (confirmed by git status/diff — only this one new file plus a local-only findings doc).", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "Single-purpose script (one probe, one report); no evidence of unrelated responsibilities bundled together.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No deep chained attribute/method access observed; DataFrame operations are one or two calls deep (e.g. df.loc[...].unique()).", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No unused hooks, abstract base classes, or generalized parameters added for hypothetical future use; --check is the only CLI branch and it is exercised by the review itself.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The extensive module docstring documents WHY (pre-registration discipline, worktree .pth trap rationale, broadcast simplification), not a workaround for unclear naming/structure; function/variable names (compute_pace_gaps, recent_history_baseline, quali_error) are self-explanatory without needing the comments to compensate.", "override": null}
+  ],
+  "rail_exception": null
+}

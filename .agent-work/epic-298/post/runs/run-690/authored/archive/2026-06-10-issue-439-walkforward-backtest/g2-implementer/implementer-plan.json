@@ -1,0 +1,281 @@
+{
+  "work_id": "issue-439-g2",
+  "type": "gated",
+  "config_ref": "C:/Programs/f1Brainz/docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-evalsplit",
+    "m2-asof-prior",
+    "m3-config",
+    "m4-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and map seams",
+      "imperative": "Read CREW_CONTEXT, ORCHESTRATOR_CONTEXT, GLOSSARY, the g2 handoff, and map the four seams (module_training_orchestration, runtime_normalization, run_season_alignment/extract_race_observations, gold_cycle/config). Confirm handoff completeness and that recent-history form/labels are strictly backward-looking. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + handoff loaded; handoff complete; seams mapped; form/label path confirmed backward-looking (prior_rounds=range(1,round_num))",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CREW/ORCH/GLOSSARY/handoff read; 4 seams mapped at file:line; form+labels confirmed backward-looking (prior_rounds=range(1,round_num))"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-evalsplit": {
+      "id": "m1-evalsplit",
+      "title": "Eval-year split primitive (train-through-round-N + eval round range)",
+      "imperative": "TDD. Write tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py FIRST (red). Add a per-year round-window filter to build_labeled_batches_for_module (sibling to gp_name_filter) and explicit eval_year_train_through_round + eval_round_range params to prepare_module_training_data, threaded so TRAIN = train_years(all rounds) + eval_year rounds<=N and EVAL = eval_year rounds in target range. Gold defaults (params None) byte-for-byte unchanged. Make red test green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "leakage-invariant test green: every train event (year<eval_year) or (year==eval_year and round<=N); every eval event year==eval_year and round in target_range; no train event year==eval_year and round>N; form/label backward-looking asserted",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-evalsplit-1"
+        }
+      ],
+      "constraints": [
+        "one canonical opt-in path; no parallel assembly fork",
+        "gold defaults unchanged when params None",
+        "validate new public params naming field/expectation/actual",
+        "DB-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-evalsplit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-asof-prior": {
+      "id": "m2-asof-prior",
+      "title": "As-of-N compound prior build path (DB-only) + named load",
+      "imperative": "TDD. Add a through_round cap to run_season_alignment.run_year (drives extract_race_observations with rounds 1..N instead of --all) so the built prior's selected_source_races are all round<=N; rounds>N physically absent from inputs. Keep the as-of load explicit/named (the existing allow_same_season_research path, used ONLY when genuinely as-of-N). Do NOT loosen the gold-mode same-season guard. Add tests asserting no round>N contributes and DB-only (skip_collection path).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "as-of-N prior build/test green: a through_round=N build yields selected_source_races all round<=N; no round>N contributes; gold same-season guard untouched",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-asof-prior-1"
+        }
+      ],
+      "constraints": [
+        "DB-only; no FastF1 re-pull",
+        "do not loosen gold-mode same-season guard",
+        "explicit named as-of semantics"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-asof-prior-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-config": {
+      "id": "m3-config",
+      "title": "Config plumbing for cutoff (gold default unchanged)",
+      "imperative": "Expose the in-season cutoff in gold_cycle/config.py following existing validation patterns (optional field; gold default = no cutoff = None). Add validation naming field/expectation/actual. Add a test that gold default profile is unchanged (no cutoff) and that a research/smoke profile can set it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "config test green: cutoff field optional, gold default None/unchanged, research can set; existing gold_cycle_config tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-config-1"
+        }
+      ],
+      "constraints": [
+        "gold default profile unchanged",
+        "follow existing config validation patterns",
+        "tunables named not inline"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-config-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_cycle_config.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "Full verification + regression + simplification_limits",
+      "imperative": "Run all required evidence commands and capture real output: the new test, the two regression suites (test_multi_season, test_gold_cycle_config), and simplification_limits on touched paths.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new walkforward test green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "regression suites green (no gold-default regression)",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_data_adapter/test_multi_season.py tests/unit/evo_predictor/test_gold_cycle_config.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-2"
+        },
+        {
+          "id": "c3",
+          "statement": "simplification_limits passes on touched src/ and tests/ paths",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/evo_predictor/module_training_orchestration.py src/evo_predictor/gold_cycle/config.py scripts/run_season_alignment.py tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-3"
+        }
+      ],
+      "constraints": [
+        "run from repo root",
+        "py not python"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_data_adapter/test_multi_season.py tests/unit/evo_predictor/test_gold_cycle_config.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/evo_predictor/module_training_orchestration.py src/evo_predictor/gold_cycle/config.py scripts/run_season_alignment.py tests/unit/evo_predictor/walkforward/test_as_of_cutoff.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

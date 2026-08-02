@@ -1,0 +1,31 @@
+{
+  "work_id": "wave4-626",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-18 wave4-626: py used run-wide; all engine command-check postconditions (py -m pytest ...) and every analysis ran via py"
+    },
+    {
+      "op": "confirm",
+      "id": "loo-residual-diagnostic-over-self-weighted-predictor",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-18 wave4-626: g3 Layer-2 identifiability + g5 F6 gate used disjoint LOO / out-of-sample prediction; the F1 signal-preservation guard IS this discipline and provably rejected the over-shrinker (-L3 dropped beats 9->2)"
+    },
+    {
+      "op": "confirm",
+      "id": "worktree-untracked-data",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-18 wave4-626: all DB reads (physics_estimates.db, damage_integrals.db, telemetry_store) used absolute main-checkout paths C:/Programs/f1Brainz/data/*; worktree lacked the untracked DBs"
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-18 wave4-626: g4 handoff cited pooling.py exact signatures (pool_random_effects, fit_drift/DriftFit.predict) -> clean reuse-by-import with an identity-assertion test, no reinvention"
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/AGENT_FEEDBACK.md 2026-07-18 wave4-626: review-result/user-decision/implementer-result artifact checks satisfied via attach (not attest) on gN-review and gN-integrate across g1-g5"
+    }
+  ]
+}

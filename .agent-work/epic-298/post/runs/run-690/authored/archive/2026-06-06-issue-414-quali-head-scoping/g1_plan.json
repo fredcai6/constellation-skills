@@ -1,0 +1,240 @@
+{
+  "work_id": "issue-414-g1",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3
+  },
+  "items": [
+    "m0-context",
+    "m1-env-var-edit",
+    "m2-regen-rw",
+    "m3-regen-rh",
+    "m4-run-diagnostic",
+    "m5-verify-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff",
+      "imperative": "Verify handoff is complete: task=regen 16 record pairs + diagnostic repro, intent=inference-only baseline measurement, scope=diagnose_quali_same_pairs.py RECORDS_DIR env-var + .agent-work records/evidence, exclusions=no retrain/src changes/param edits, evidence=g1_baseline_repro.txt + numbers in tolerance, stop conditions=pass >10min or out-of-tolerance repro. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete: task, intent, scope, exclusions, evidence, stop conditions all present",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete: all required sections present"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-env-var-edit": {
+      "id": "m1-env-var-edit",
+      "title": "Add RECORDS_DIR env-var override to diagnose_quali_same_pairs.py",
+      "imperative": "Replace the RECORDS_DIR assignment on line 57 with an os.environ.get override (add import os if missing). Default must remain the issue-381-same-pairs path. EVIDENCE_DIR optionally overridable too. No other behavior change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "handoff complete (m0-context complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scripts/diagnose_quali_same_pairs.py imports os and RECORDS_DIR uses os.environ.get; default unchanged",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import ast, pathlib; src=pathlib.Path('scripts/diagnose_quali_same_pairs.py').read_text(); assert 'import os' in src and 'QUALI_SAME_PAIRS_RECORDS_DIR' in src, 'env-var override missing'\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-env-var-edit-1"
+        }
+      ],
+      "constraints": [
+        "Minimal edit: only RECORDS_DIR (and optionally EVIDENCE_DIR) assignment lines",
+        "Default path must stay issue-381-same-pairs/records",
+        "No other behavior, math, or output changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-env-var-edit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import ast, pathlib; src=pathlib.Path('scripts/diagnose_quali_same_pairs.py').read_text(); assert 'import os' in src and 'QUALI_SAME_PAIRS_RECORDS_DIR' in src, 'env-var override missing'\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-regen-rw": {
+      "id": "m2-regen-rw",
+      "title": "Regenerate race_weekend records for all years 2018-2025",
+      "imperative": "Run backtest-latent-power-module for driver_quali_power_from_race_weekend, years 2018-2025, emitting records to .agent-work/issue-414-quali-head-scoping/records/rw_YEAR.json. Each pass ~70s; abort if >10min.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-env-var-edit complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-env-var-edit complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "All 8 rw_YEAR.record.json files present under records/",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from pathlib import Path; r=Path('.agent-work/issue-414-quali-head-scoping/records'); missing=[y for y in range(2018,2026) if not (r/f'rw_{y}.record.json').exists()]; assert not missing, f'Missing rw records: {missing}'\""
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "INFERENCE ONLY \u2014 no retrain",
+        "Use absolute db-path per year",
+        "PYTHONIOENCODING=utf-8",
+        "Abort if any single pass >10min"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-regen-rh": {
+      "id": "m3-regen-rh",
+      "title": "Regenerate recent_history records for all years 2018-2025",
+      "imperative": "Run backtest-latent-power-module for driver_quali_power_from_recent_history, years 2018-2025, emitting records to .agent-work/issue-414-quali-head-scoping/records/rh_YEAR.json. No --compound-prior-root. Each pass ~70s; abort if >10min.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-regen-rw complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "All 8 rh_YEAR.record.json files present under records/",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from pathlib import Path; r=Path('.agent-work/issue-414-quali-head-scoping/records'); missing=[y for y in range(2018,2026) if not (r/f'rh_{y}.record.json').exists()]; assert not missing, f'Missing rh records: {missing}'\""
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "INFERENCE ONLY \u2014 no retrain",
+        "No --compound-prior-root flag",
+        "PYTHONIOENCODING=utf-8",
+        "Abort if any single pass >10min"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-run-diagnostic": {
+      "id": "m4-run-diagnostic",
+      "title": "Run diagnostic against 414 records and capture stdout",
+      "imperative": "Set QUALI_SAME_PAIRS_RECORDS_DIR to the 414 records path. Run diagnose_quali_same_pairs.py. Capture full stdout to .agent-work/issue-414-quali-head-scoping/evidence/g1_baseline_repro.txt.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-regen-rh complete (all 16 record pairs present)",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Evidence file g1_baseline_repro.txt exists and is non-empty",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"from pathlib import Path; f=Path('.agent-work/issue-414-quali-head-scoping/evidence/g1_baseline_repro.txt'); assert f.exists() and f.stat().st_size > 0, 'evidence file missing or empty'\""
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "PYTHONIOENCODING=utf-8",
+        "Set QUALI_SAME_PAIRS_RECORDS_DIR env var"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-verify-evidence": {
+      "id": "m5-verify-evidence",
+      "title": "Verify reproduced numbers within tolerance and confirm git status",
+      "imperative": "Parse the captured output for headline rw/rh/ceiling numbers and EASY-band figures. Confirm they land within specified tolerances. Run git status --short. Confirm no params/ or src/ behavior file changed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4-run-diagnostic complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Numbers within tolerance; git status shows only diagnostic script edit; no params/src changes",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "STOP and report if numbers out of tolerance",
+        "Do not fix diagnostic to force a match"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

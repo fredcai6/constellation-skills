@@ -1,0 +1,280 @@
+{
+  "work_id": "496-physics-aware-estimator",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-tv",
+    "m2-filter",
+    "m3-synthesis",
+    "m4-scoreboard",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + validate synthesis hypothesis",
+      "imperative": "Read CREW_CONTEXT, GLOSSARY, handoff, all 4 spikes (m3/m7/m4/m8), scoreboard seam, braking_view, G2 portfolio result. Probe the synthesis hypothesis on the live scoreboard. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded; handoff complete; synthesis hypothesis probed (Bahrain reaches <=2-3 gap with tight braking soft-obs, Monaco ring_ok, Belgium not regressed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-tv": {
+      "id": "m1-tv",
+      "title": "TV-denoise kernel (edge-preserving IRLS) + L2 edge-preservation tests (TDD)",
+      "imperative": "Productionize the edge-preserving TV/IRLS denoise as a pure function in decoupled_longitudinal.py. TDD: write edge-preservation + noise-removal tests first (red), then implement (green).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tv_denoise preserves a known step edge and removes noise; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q -k tv"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-tv-1"
+        }
+      ],
+      "constraints": [
+        "pure function; constraint:physics_region_no_evo_import"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-tv-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q -k tv",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-filter": {
+      "id": "m2-filter",
+      "title": "1D Kalman-RTS filter returning a_long AND sigma_a (honest covariance) + L2 positivity tests",
+      "imperative": "Productionize the 1D Kalman-RTS smoother on [v,a] returning a_long and per-sample sigma_a from smoothed P[1,1]. TDD: covariance-positivity + degenerate-reduction tests first.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tv kernel green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "filter returns finite a_long and sigma_a>0 everywhere; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q -k filter"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-filter-1"
+        }
+      ],
+      "constraints": [
+        "honest covariance first-class; units signed m/s^2 decel negative"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-filter-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q -k filter",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-synthesis": {
+      "id": "m3-synthesis",
+      "title": "Synthesis estimator + VariantFn + L1 synthetic-step recovery + L3 limit tests",
+      "imperative": "Compose TV-denoise + 1D filter into the decoupled longitudinal estimator and a VariantFn (variant_synthesis) consuming CaseInputs. Add L1 synthetic sharp-decel recovery and L3 limit (sig->0 tracks raw; sig->inf reduces to speed-only) tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "filter green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "estimate_longitudinal + variant_synthesis present; L1 synthetic recovery within tol; L3 limits hold; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-synthesis-1"
+        }
+      ],
+      "constraints": [
+        "single canonical path; decision:two_cycle_external_anchor_design (TV of raw only)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-synthesis-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-scoreboard": {
+      "id": "m4-scoreboard",
+      "title": "L4 scoreboard proof: synthesis passes Bahrain + Monaco + Belgium together",
+      "imperative": "Add a scoreboard-proof driver under scripts/ that runs run_scoreboard on the 3 cases for synthesis+gaussian+kind3, emits the proof table + dashboard plot to reports/physics/. Confirm both acceptance circuits pass without regressing Belgium.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "synthesis green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scoreboard proof table emitted: Bahrain gap<=~3, Monaco ring_ok, Belgium not worse than kind3 by >0.5",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/prove_synthesis_496.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-scoreboard-1"
+        }
+      ],
+      "constraints": [
+        "measured-not-wired; no production braking_view/ceiling/evo wiring"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-scoreboard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/prove_synthesis_496.py",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Region tests + simplification limits + retire-assessment",
+      "imperative": "Run full layer2 suite (no regressions) and simplification_limits on new files (clean). Write the clean_longitudinal_from_raw retire-assessment. Write IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "scoreboard proof passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "layer2 suite green; simplification_limits clean on new files",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2 -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2 -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

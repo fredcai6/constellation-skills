@@ -1,0 +1,198 @@
+{
+  "work_id": "issue-371-g4-rework-r1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-move-escaped-file",
+    "m2-edit-disclosure"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff",
+      "imperative": "Read evidence dir, g4-smoke-run.md, and params/gold/uncertainty_calibration/ listing. Confirm: (a) escaped file 260605_234006 exists and matches slug; (b) May-20 file 260520_214442 is present and distinct; (c) no src/configs/docs changes are in scope. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Context loaded; escaped file confirmed; May-20 file identified and will not be touched; scope exclusions noted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Escaped file 260605_234006 confirmed present; May-20 file 260520_214442 confirmed distinct and untouched; g4-smoke-run.md read; scope exclusions noted: no src/configs/docs"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-move-escaped-file": {
+      "id": "m1-move-escaped-file",
+      "title": "Move escaped 260605_234006 file to escaped_artifacts/",
+      "imperative": "Create .agent-work/issue-371-module-record/evidence/escaped_artifacts/ and move unc_cal_260605_234006_2022thru2023_smoke1.json from params/gold/uncertainty_calibration/ to it. Verify: (a) the moved file exists at destination; (b) params/gold/uncertainty_calibration/ no longer has the 260605 file; (c) the May-20 file is still at params/gold/uncertainty_calibration/unc_cal_260520_214442_2023thru2023_smoke1.json.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; context loaded and handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "escaped_artifacts/ dir exists and contains unc_cal_260605_234006_2022thru2023_smoke1.json",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import os; p='C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/.agent-work/issue-371-module-record/evidence/escaped_artifacts/unc_cal_260605_234006_2022thru2023_smoke1.json'; assert os.path.isfile(p), f'missing: {p}'; print('exists:', p)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-move-escaped-file-1"
+        },
+        {
+          "id": "c2",
+          "statement": "params/gold/uncertainty_calibration no longer has the 260605 file",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import os; p='C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/params/gold/uncertainty_calibration/unc_cal_260605_234006_2022thru2023_smoke1.json'; assert not os.path.isfile(p), f'file still exists at original location: {p}'; print('correctly absent from source')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-move-escaped-file-2"
+        },
+        {
+          "id": "c3",
+          "statement": "May-20 pre-existing file still present untouched",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import os; p='C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/params/gold/uncertainty_calibration/unc_cal_260520_214442_2023thru2023_smoke1.json'; assert os.path.isfile(p), f'May-20 file missing - was accidentally deleted: {p}'; print('May-20 file intact:', p)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-move-escaped-file-3"
+        }
+      ],
+      "constraints": [
+        "Do NOT touch src/, configs/, or docs/",
+        "Do NOT delete the May-20 file (unc_cal_260520_214442)",
+        "Only move the 260605_234006 slug file"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-move-escaped-file-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import os; p='C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/.agent-work/issue-371-module-record/evidence/escaped_artifacts/unc_cal_260605_234006_2022thru2023_smoke1.json'; assert os.path.isfile(p), f'missing: {p}'; print('exists:', p)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-move-escaped-file-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import os; p='C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/params/gold/uncertainty_calibration/unc_cal_260605_234006_2022thru2023_smoke1.json'; assert not os.path.isfile(p), f'file still exists at original location: {p}'; print('correctly absent from source')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-move-escaped-file-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import os; p='C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/params/gold/uncertainty_calibration/unc_cal_260520_214442_2023thru2023_smoke1.json'; assert os.path.isfile(p), f'May-20 file missing - was accidentally deleted: {p}'; print('May-20 file intact:', p)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-edit-disclosure": {
+      "id": "m2-edit-disclosure",
+      "title": "Edit g4-smoke-run.md: add Pollution disclosure section",
+      "imperative": "Edit .agent-work/issue-371-module-record/evidence/g4-smoke-run.md. Add a clearly-titled 'Pollution disclosure' section stating: the run wrote one file outside the evidence dir via the hardcoded promotion path in gold_cycle/runner.py:341-343 (pre-existing defect, triaged as follow-up candidate tc4); the file was relocated to evidence/escaped_artifacts/ on 2026-06-05; outputs/evo_runs and reports/evo verified clean for the run window. Correct any prose that overclaims 'nothing written outside the evidence dir'.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "escaped file has been moved (m1 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete; escaped file moved to escaped_artifacts/"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g4-smoke-run.md contains a 'Pollution disclosure' section",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"content=open('C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/.agent-work/issue-371-module-record/evidence/g4-smoke-run.md', encoding='utf-8').read(); assert 'Pollution disclosure' in content, 'disclosure section missing'; print('disclosure section present')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-edit-disclosure-1"
+        },
+        {
+          "id": "c2",
+          "statement": "disclosure mentions the hardcoded path and tc4 triage candidate",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"content=open('C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/.agent-work/issue-371-module-record/evidence/g4-smoke-run.md', encoding='utf-8').read(); assert 'tc4' in content, 'tc4 triage reference missing'; assert 'runner.py' in content, 'runner.py path reference missing'; print('tc4 and runner.py both present')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-edit-disclosure-2"
+        }
+      ],
+      "constraints": [
+        "No src/, configs/, docs/ changes",
+        "Evidence artifacts only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-edit-disclosure-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"content=open('C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/.agent-work/issue-371-module-record/evidence/g4-smoke-run.md', encoding='utf-8').read(); assert 'Pollution disclosure' in content, 'disclosure section missing'; print('disclosure section present')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-edit-disclosure-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"content=open('C:/Programs/f1Brainz/.claude/worktrees/issue-371-module-record/.agent-work/issue-371-module-record/evidence/g4-smoke-run.md', encoding='utf-8').read(); assert 'tc4' in content, 'tc4 triage reference missing'; assert 'runner.py' in content, 'runner.py path reference missing'; print('tc4 and runner.py both present')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

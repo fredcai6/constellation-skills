@@ -1,0 +1,31 @@
+{
+  "work_id": "671-reconcile",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": ".agent-work/staged-feedback/671-reconcile/AGENT_FEEDBACK.md 2026-07-27 671-reconcile: every user-decision checkpoint (understand/plan/triage/review) satisfied via attach (not attest); attest used only for check:null conditions; command checks satisfied by advance re-running them."
+    },
+    {
+      "op": "confirm",
+      "id": "from-child-refuses-on-gated-checklist",
+      "grounding": ".agent-work/staged-feedback/671-reconcile/AGENT_FEEDBACK.md 2026-07-27 671-reconcile: the spine execute step's gated child execute.json was closed by attest execute --cond c1 directly, NOT --from-child (survey-only)."
+    },
+    {
+      "op": "confirm",
+      "id": "self-authored-reasoning-gate-checks-need-review-scrutiny",
+      "grounding": ".agent-work/staged-feedback/671-reconcile/AGENT_FEEDBACK.md 2026-07-27 671-reconcile: cold plan critic found g2-c2 grep invariant was a false-green (3 of 10 tokens pre-existed in index.md so the AND-chain could pass with zero new content) and g1 deletion-guard used git diff (blind to staged git-add-A); both self-authored reasoning-gate checks were fixed before execution (zero-today tokens verified by count; git status --porcelain). Reusable mechanism: a presence-grep doc-fold invariant must key on tokens with zero pre-edit occurrences, verified by count."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": ".agent-work/staged-feedback/671-reconcile/AGENT_FEEDBACK.md 2026-07-27 671-reconcile: durable_root() resolved to the worktree (concurrent Admiral epic lease in main), so the feedback trio was staged under .agent-work/staged-feedback/671-reconcile/ + FENCE.md and no shared AGENT_FEEDBACK.md/LESSONS.md/CONSTELLATION_FEEDBACK.md was committed on the mission branch; final committed diff = docs/architecture/** only."
+    },
+    {
+      "op": "mention",
+      "id": "stale-map-reconcile-verify-against-final-commit",
+      "grounding": ".agent-work/staged-feedback/671-reconcile/AGENT_FEEDBACK.md 2026-07-27 671-reconcile: an independent cartographer content-verify (reverse-import-scan against the actual source) caught two real symbol-attribution errors that check_arch_map green could not see (run_panel = script not component instrument; D->E grip consumer = class_utilization_observable not reference_utilization_store) — corroborates that a green mechanical check is blind to content drift and an independent code-vs-map read is load-bearing at reconcile."
+    }
+  ]
+}

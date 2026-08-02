@@ -1,0 +1,20 @@
+{
+  "work_id": "g2-review-626",
+  "diff_ref": "untracked: src/physics/weekend_state/layer1_physics.py, tests/unit/physics/weekend_state/test_layer1_physics.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "apply_layer1() is ~55 lines of function body (lines 228-295) doing a per-axis loop that computes density_component, mass_component, explained, residual, and a 4-term quadrature sigma. It is a single cohesive responsibility (not a grab-bag), well-commented and vectorized, but could be split into small helpers (e.g. _density_component(), _mass_component(), _combine_sigma()) for readability. Non-blocking observation, not a defect.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No classes beyond the 6-field frozen DensityFit dataclass, a plain value object.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "No meaningful duplication; shared logic (_season_key_series) is factored out once; test axis-parametrization (TestHonestNoOp, TestMexicoMonacoResidualConsistency) uses pytest.mark.parametrize instead of copy-pasted test bodies.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "Each function operates on its own passed-in df/params; no reaching into another module's internals.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "DensityFit groups (axis, beta, se, n, n_car_seasons, applied) as a deliberate named value object, the opposite of an unencapsulated data clump.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "Axis identity is a bare string throughout (DENSITY_SENSITIVE_AXES/MASS_SENSITIVE_AXES as frozensets of str, axis: str params) rather than an enum/domain type.", "override": {"repo_standard": "src/physics/weekend_state/frame.py's AXES list (g1, already-reviewed/merged) establishes axis identity as a plain list[str] constant -- the store's own column names.", "reason": "layer1_physics.py consumes frame.AXES directly and must key into the same DataFrame columns it defines; introducing a parallel enum/domain type here would fragment the axis-identity convention across g1/g2 for no behavioral gain, since the underlying data (SQL column names) is already string-typed at its source."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "Max 4 params per function (fit_density_betas, apply_layer1, mexico_monaco_residual_consistency), all with sensible defaults.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "Adding a new axis category touches at most the two frozensets in this one file; no cross-file ripple.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "Single responsibility (the explained-physics/density-mass layer); no unrelated concerns bundled in.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "pandas .groupby().transform() chains are idiomatic vectorized pandas, not deep object-navigation chains in the Fowler OO sense.", "override": null},
+    {"smell": "speculative-generality", "verdict": "flagged", "finding": "DEFAULT_WEEKEND_KEY = (\"year\", \"round_idx\") is defined at module level (line 138) but never referenced anywhere in the module or its test -- unused generality left in for a hypothetical future caller. Non-blocking; worth deleting or wiring up in g3/g4 if genuinely needed there.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The module's extensive docstrings explain WHY (physical justification: why not naive divide-by-rho, F=ma mass-elasticity reasoning, the Mexico/Monaco setup-confound caveat) rather than papering over unclear code; this matches CREW_CONTEXT's 'units, bounds, and invariants must be explicit' physics rule.", "override": null}
+  ],
+  "rail_exception": null
+}

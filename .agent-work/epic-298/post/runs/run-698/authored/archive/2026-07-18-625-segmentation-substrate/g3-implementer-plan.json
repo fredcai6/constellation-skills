@@ -1,0 +1,235 @@
+{
+  "work_id": "625-segmentation-substrate-g3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-mixture-stability-module",
+    "m2-real-data-script",
+    "m3-full-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's global-crew.md and global-everyone.md, the g3-implement-handoff.md, CONVERGED_PLAN.md's Gate 3 section + cold-critic disposition #3, and the current source of src/physics/layer2/corner_descriptors.py (Gate 1) and src/physics/layer2/property_mixture.py (Gate 2, MixtureFit/fit_property_mixture/posterior_membership signatures). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions) and that Gate 2's actual fit_property_mixture/MixtureFit signature matches what the handoff describes (Stop Condition check). Verify the real DB is reachable read-only at C:/Programs/f1Brainz/data/damage_integrals.db and has a grip_bin_obs table (Stop Condition check). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + CONVERGED_PLAN Gate 3 loaded; handoff complete; Gate 2 signatures confirmed matching; real DB reachable read-only with grip_bin_obs table",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff verified complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). Gate 2 signatures confirmed matching handoff exactly (fit_property_mixture, MixtureFit.scaler/k/gmm/bic_scores, posterior_membership) via direct read of src/physics/layer2/property_mixture.py. Real DB confirmed reachable read-only at C:/Programs/f1Brainz/data/damage_integrals.db (sqlite3 URI mode=ro connect succeeded, write attempt correctly rejected 'attempt to write a readonly database'); grip_bin_obs table present, 612615 rows across 22 gp_name circuits. CONVERGED_PLAN.md Gate 3 section + cold-critic disposition #3 (5 seeded splits, not 1) read; note CONVERGED_PLAN's terse component_agreement_stat description says 'standardized component means' while the handoff explicitly grants latitude to choose resolution (a) shared-standardization or (b) raw-unit inverse-transform for the cross-fit-standardization problem -- proceeding with the handoff's more detailed and more authoritative-for-this-gate guidance, resolution (b) raw units, documented in the module."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-mixture-stability-module": {
+      "id": "m1-mixture-stability-module",
+      "title": "New src/physics/layer2/mixture_stability.py: hungarian_match, component_agreement_stat, SplitResult/StabilityResult, check_holdout_stability + discriminating unit tests",
+      "imperative": "Create src/physics/layer2/mixture_stability.py implementing: module-level constants RADIUS_SCALE_M=50.0, LATERAL_G_SCALE=0.5 (fixed physical normalization scales, chosen from domain magnitude, documented) and F12_AGREEMENT_THRESHOLD=1.0 (a mean matched-pair combined-normalized distance of 'one combined scale unit'; documented BEFORE the real-data run, per F12 falsifiable-gate mandate -- module docstring states the rationale plainly and states it is fixed before seeing real results); hungarian_match(means_a, means_b) -> np.ndarray shape (k,) via scipy.optimize.linear_sum_assignment on the pairwise Euclidean distance matrix (assumes same k, assumes inputs already in the SAME comparison space -- this module's convention is the fixed-scale-normalized raw-unit space, documented); component_agreement_stat(fit_a: MixtureFit, fit_b: MixtureFit) -> float implementing resolution (b) from the handoff (inverse-transform each fit's own standardized gmm.means_ back to RAW units via that fit's own scaler, then combine radius/lateral_g into one normalized distance via RADIUS_SCALE_M/LATERAL_G_SCALE, Hungarian-match, return mean matched distance); if fit_a.k != fit_b.k return float('inf') (documented: k-mismatch is itself instability evidence, not an error); SplitResult and StabilityResult dataclasses exactly as the handoff specifies (SplitResult: per-split record incl. statistic value, fit_a.k, fit_b.k, pass/fail, plus enough circuit/row-count fields for the script's JSON evidence needs; StabilityResult: splits, mean_statistic, min_statistic, max_statistic, n_pass, n_splits, headline_verdict); check_holdout_stability(descriptors_by_circuit: dict[str, np.ndarray], n_splits: int = 5, base_seed: int = 42) -> StabilityResult implementing the exact per-split algorithm the handoff describes (seed base_seed+i, deterministic shuffle+50/50 split of circuit NAMES via np.random.default_rng(seed), pool rows per half, fit_property_mixture independently on each half, compute component_agreement_stat, record SplitResult) with headline_verdict = 'PASS' iff n_pass == n_splits else 'FAIL' (documented as a deliberately strict all-splits-must-pass rule, not majority-vote, given this is the mandatory F12 gate). Write tests/unit/physics/layer2/test_mixture_stability.py: TDD red first (write tests before implementation, observe failing via manual run, attest c1 as red evidence) covering hungarian_match/component_agreement_stat basics AND the MANDATORY discriminating test using check_holdout_stability itself: (1) same-generator scenario -- multiple synthetic circuit names all drawing from the SAME shared fixed Gaussian blobs (different random draws/circuit groupings per handoff wording) -> assert headline_verdict == 'PASS'; (2) shifted-generator scenario -- circuits deliberately constructed so any 50/50 name split separates two far-apart generators (e.g. exactly 2 circuit names each drawn from a distinct, far-shifted blob set, guaranteeing separation regardless of shuffle order) with blob-mean shift clearly larger than F12_AGREEMENT_THRESHOLD -> assert headline_verdict == 'FAIL'. Also cover the k-mismatch-is-inf-not-error behavior directly via component_agreement_stat on two MixtureFits with different k. Do not modify property_mixture.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_mixture_stability.py written, observed failing (module does not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_mixture_stability.py written (14 test cases across TestHungarianMatch, TestComponentAgreementStat incl. k-mismatch-is-inf, TestCheckHoldoutStabilityDiscriminating with same-generator PASS + shifted-generator FAIL + split-pooling checks). Observed RED: pytest collection ERROR, ModuleNotFoundError: No module named 'src.physics.layer2.mixture_stability' (module does not exist yet)."
+        },
+        {
+          "id": "c2",
+          "statement": "mixture_stability.py implemented; all test_mixture_stability.py cases pass, including both discriminating-test scenarios (same-generator PASS, shifted-generator FAIL) explicitly named/visible in output",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_mixture_stability.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-mixture-stability-module-1"
+        }
+      ],
+      "constraints": [
+        "F12_AGREEMENT_THRESHOLD and its normalization scales chosen and documented BEFORE any real-data run",
+        "k-mismatch between fit_a/fit_b treated as float('inf') / automatic FAIL for that split, never an exception",
+        "component_agreement_stat resolves the cross-fit-standardization problem via inverse-transform through each fit's own scaler (resolution b), documented in the docstring",
+        "check_holdout_stability splits circuit NAMES (not rows), deterministic per base_seed+i",
+        "does not modify property_mixture.py's selection logic",
+        "no evo_predictor/latent_power/compound_prior imports",
+        "no DB I/O in mixture_stability.py itself -- pure functions over descriptors/dicts, unit-testable with synthetic fixtures"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-mixture-stability-module-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_mixture_stability.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-real-data-script": {
+      "id": "m2-real-data-script",
+      "title": "New scripts/f12_held_out_stability.py; run for real against damage_integrals.db; write JSON evidence artifact",
+      "imperative": "Create scripts/f12_held_out_stability.py: CLI with --db flag (default C:/Programs/f1Brainz/data/damage_integrals.db), connects READ-ONLY (sqlite3 URI mode=ro) to the given absolute path (do not write to this DB), loads the full grip_bin_obs table via SELECT gp_name, mu_lat_p90, v_mean FROM grip_bin_obs, groups by gp_name, applies Gate 1's corner_descriptors.descriptors_from_frame per circuit group to build descriptors_by_circuit, runs mixture_stability.check_holdout_stability(descriptors_by_circuit, n_splits=5, base_seed=42), and writes the FULL result (every split's statistic/k_a/k_b/pass, headline verdict, F12_AGREEMENT_THRESHOLD's value, the circuit list and how many circuits/rows went into each half of each split, a timestamp) to .agent-work/625-segmentation-substrate/artifacts/f12_holdout_stability.json (create the artifacts/ dir if missing). Print a one-line human-readable summary to stdout (headline verdict, mean/min/max statistic, n circuits, n rows). Stop-and-report (do not silently fall back) if the DB path is unreachable. RUN THE SCRIPT FOR REAL against the real DB via the handoff's Verification Command, capture the full stdout transcript and the resulting JSON file content verbatim, and report the actual verdict (PASS or FAIL) honestly -- do not adjust anything to force a particular outcome.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: mixture_stability.py implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "f12_held_out_stability.py runs successfully against the real DB (absolute path), produces f12_holdout_stability.json with the full per-split/aggregate result, and stdout summary; verdict recorded honestly (PASS or FAIL, either is an accepted outcome)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py scripts/f12_held_out_stability.py --db C:/Programs/f1Brainz/data/damage_integrals.db"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-real-data-script-1"
+        }
+      ],
+      "constraints": [
+        "reads data/damage_integrals.db via the absolute path, read-only, never a live FastF1 call",
+        "verdict reported exactly as computed -- no post-hoc threshold/split adjustment",
+        "JSON artifact path is git-tracked in this repo per the handoff's Deliverable Path Check -- do not gitignore it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-real-data-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py scripts/f12_held_out_stability.py --db C:/Programs/f1Brainz/data/damage_integrals.db",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-evidence": {
+      "id": "m3-full-evidence",
+      "title": "Full required-evidence run + write IMPLEMENTER_RESULT",
+      "imperative": "Run both handoff Verification Commands together (pytest -v, then the real-data script), state plainly how many circuits were in grip_bin_obs, how many rows survived descriptors_from_frame's NaN/non-positive guard, and the final headline verdict. Write IMPLEMENTER_RESULT to .agent-work/625-segmentation-substrate/crew-handoffs/g3-implement-result.md using the template, including the FULL real-data verdict and JSON content pasted verbatim. Attach it as evidence via attach --type implementer-result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: real-data script run and verdict captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "combined required-evidence run reproducible",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_mixture_stability.py -v && py scripts/f12_held_out_stability.py --db C:/Programs/f1Brainz/data/damage_integrals.db"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-evidence-2"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written and attached",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-evidence-1"
+        }
+      ],
+      "constraints": [
+        "no commits unless asked",
+        "evidence pasted verbatim, not paraphrased",
+        "verdict reported honestly, not adjusted"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-evidence-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/625-segmentation-substrate/crew-handoffs/g3-implement-result.md",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-full-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-625 && py -m pytest tests/unit/physics/layer2/test_mixture_stability.py -v && py scripts/f12_held_out_stability.py --db C:/Programs/f1Brainz/data/damage_integrals.db",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "ShipC-625-g3-impl-1",
+    "status": "released",
+    "claimed_at": "2026-07-18T05:11:34.102684+00:00",
+    "last_heartbeat": "2026-07-18T06:07:21.135900+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T06:07:41.855217+00:00"
+  }
+}

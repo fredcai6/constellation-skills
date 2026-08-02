@@ -1,0 +1,76 @@
+{
+  "primary": {
+    "channel": "PRIMARY_GRIP",
+    "overall_spearman_bootstrap": {
+      "mean_delta": -0.0037337662337662263,
+      "ci_low": -0.05373376623376622,
+      "ci_high": 0.04242424242424243,
+      "favors_learned": false
+    },
+    "overall_rmse_bootstrap": {
+      "mean_delta": 0.0016393670392945215,
+      "ci_low": -0.0006382685370783253,
+      "ci_high": 0.0039034564593513122,
+      "favors_learned": false
+    },
+    "divergent": {
+      "n_divergent": 152,
+      "n_total": 456,
+      "inconclusive": false,
+      "spearman_bootstrap": {
+        "mean_delta": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0,
+        "favors_learned": false
+      },
+      "rmse_bootstrap": {
+        "mean_delta": -1.5824305739628062e-05,
+        "ci_low": -4.156068433216749e-05,
+        "ci_high": 4.768932682175462e-06,
+        "favors_learned": false
+      },
+      "verdict": "HONEST_NULL"
+    },
+    "verdict": "HONEST_NULL"
+  },
+  "secondary": {
+    "status": "CONFOUNDED_NOT_EVIDENTIAL",
+    "bin_bootstraps": [],
+    "verdict": "CONFOUNDED_NOT_EVIDENTIAL"
+  },
+  "emergence": {
+    "passes": true,
+    "push_weight": 0.9975273768433653,
+    "longrun_weight": 0.6399160967377341,
+    "track_evo_only_range": 0.05802257755498008,
+    "other_features_range": 0.6199867080452199
+  },
+  "sandbag": {
+    "weekend_id": "Canada",
+    "car_id": "Ferrari",
+    "pace_jump": 0.14725090717671918,
+    "mean_learned_weight": 0.9526488571551157,
+    "mean_clock_weight": 0.5402706606787283,
+    "passes": false
+  },
+  "wall_seconds": 48411.423899412155,
+  "n_weekends": 16,
+  "weekends": [
+    "Abu Dhabi",
+    "Australia",
+    "Bahrain",
+    "Canada",
+    "Great Britain",
+    "Hungary",
+    "Italy",
+    "Japan",
+    "Las Vegas",
+    "Mexico",
+    "Miami",
+    "Monaco",
+    "Netherlands",
+    "Saudi Arabia",
+    "Singapore",
+    "Spain"
+  ]
+}

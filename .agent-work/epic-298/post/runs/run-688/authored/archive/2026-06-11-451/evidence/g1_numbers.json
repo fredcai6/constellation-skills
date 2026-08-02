@@ -1,0 +1,40 @@
+{
+  "baseline": {
+    "rw": 0.6711,
+    "rh": 0.7786,
+    "ceiling": 0.8061,
+    "pairs": 23862,
+    "status": "flagged",
+    "notes": {
+      "rw_deviation": "rw=0.6711 deviates from §7.6.2 anchor 0.6149 by +0.0562 (>0.03 threshold). The committed bundle gold_cycle_260608_043414 was trained with the #420 anchor active; the rw head pi differs from the original. Reproduced rw=0.6711 adopted as working baseline per handoff authority.",
+      "rh_reproduced": "rh=0.7786 is within ±0.01 of §7.6.2 anchor 0.7803 — reproduced.",
+      "ceiling_reproduced": "ceiling=0.8061 reproduced exactly.",
+      "pairs_reproduced": "pairs=23862 reproduced exactly.",
+      "regime": "headline_2018_2024 (LOSO)",
+      "oos_2025": {
+        "rw": 0.7127,
+        "rh": 0.7581,
+        "ceiling": 0.7643,
+        "pairs": 3352
+      }
+    }
+  },
+  "linear_probe": {
+    "acc": 0.6513,
+    "total_pairs": 23862,
+    "method": "LOSO (leave-one-year-out) logistic regression on head's own feature differences (23-dim features from rw npz record), scored on harness-shared non-tie pairs",
+    "leakage_control": "train_years != test_year; feature standardization on train years only; no scored pair appears in the fit",
+    "interpretation": "Linear readout of the rw head's OWN features lands at 0.6513 — near the head acc (0.6711) and well below ceiling (0.8061, gap=-0.1548). The pace ordering signal exploited by the ceiling is NOT linearly present in the feature vector. This is a representation-lossy finding: the head's features do not encode the pace ordering in a linearly-decodable form.",
+    "per_year": [
+      {"year": 2018, "n_test": 3774, "sign_acc": 0.5633},
+      {"year": 2019, "n_test": 3895, "sign_acc": 0.6064},
+      {"year": 2020, "n_test": 2975, "sign_acc": 0.6635},
+      {"year": 2021, "n_test": 3556, "sign_acc": 0.6819},
+      {"year": 2022, "n_test": 3544, "sign_acc": 0.7085},
+      {"year": 2023, "n_test": 2926, "sign_acc": 0.6343},
+      {"year": 2024, "n_test": 3192, "sign_acc": 0.7165}
+    ],
+    "head_rw_acc_for_calibration": 0.6711,
+    "ceiling_for_calibration": 0.8061
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "modules": {
+    "constructor_quali_power_from_race_weekend": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\constructor_quali_power_from_race_weekend\\latent_power_manifest.json",
+      "module_name": "constructor_quali_power_from_race_weekend"
+    },
+    "constructor_quali_power_from_recent_history": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\constructor_quali_power_from_recent_history\\latent_power_manifest.json",
+      "module_name": "constructor_quali_power_from_recent_history"
+    },
+    "constructor_race_power_from_race_weekend": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\constructor_race_power_from_race_weekend\\latent_power_manifest.json",
+      "module_name": "constructor_race_power_from_race_weekend"
+    },
+    "constructor_race_power_from_recent_history": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\constructor_race_power_from_recent_history\\latent_power_manifest.json",
+      "module_name": "constructor_race_power_from_recent_history"
+    },
+    "constructor_race_start_power_from_race_weekend": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\constructor_race_start_power_from_race_weekend\\latent_power_manifest.json",
+      "module_name": "constructor_race_start_power_from_race_weekend"
+    },
+    "constructor_race_start_power_from_recent_history": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\constructor_race_start_power_from_recent_history\\latent_power_manifest.json",
+      "module_name": "constructor_race_start_power_from_recent_history"
+    },
+    "driver_quali_power_from_race_weekend": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\driver_quali_power_from_race_weekend\\latent_power_manifest.json",
+      "module_name": "driver_quali_power_from_race_weekend"
+    },
+    "driver_quali_power_from_recent_history": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\driver_quali_power_from_recent_history\\latent_power_manifest.json",
+      "module_name": "driver_quali_power_from_recent_history"
+    },
+    "driver_race_power_from_race_weekend": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\driver_race_power_from_race_weekend\\latent_power_manifest.json",
+      "module_name": "driver_race_power_from_race_weekend"
+    },
+    "driver_race_power_from_recent_history": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\driver_race_power_from_recent_history\\latent_power_manifest.json",
+      "module_name": "driver_race_power_from_recent_history"
+    },
+    "driver_race_start_power_from_race_weekend": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\driver_race_start_power_from_race_weekend\\latent_power_manifest.json",
+      "module_name": "driver_race_start_power_from_race_weekend"
+    },
+    "driver_race_start_power_from_recent_history": {
+      "manifest_path": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules\\driver_race_start_power_from_recent_history\\latent_power_manifest.json",
+      "module_name": "driver_race_start_power_from_recent_history"
+    }
+  },
+  "pipeline_kind": "sampled_evo_runtime",
+  "provenance": {
+    "built_by": ".agent-work/440-gold-refresh/evidence/build_loso_manifest.py",
+    "fusion_caveat": "gold static fusion was trained on LOSO OOF spanning all train years and structurally saw this heldout year's OOF metrics; follow-up: strict per-season-holdout fusion.",
+    "fusion_eval_year": 2025,
+    "fusion_source": "C:\\Programs\\f1Brainz\\params\\gold\\fusion\\fusion_260612_131957_2018thru2024.json",
+    "fusion_train_years": [
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "heldout_year": 2023,
+    "module_source": "C:\\Programs\\f1Brainz\\outputs\\evo_runs\\gold_module_training_cycle\\loso_folds\\heldout_2023\\modules",
+    "module_training_excludes_year": 2023
+  },
+  "runtime": {
+    "output_kind": "final_order_sample_set",
+    "qs_compound_beta_regime": "race",
+    "race_start_target_lap": 3
+  },
+  "sampling": {
+    "n_samples": 1000,
+    "seed": 0
+  },
+  "schema_version": 4,
+  "stages": {
+    "quali": {
+      "fusion": {
+        "covariance_jitter": 1e-06,
+        "fusion_order": [
+          "constructor_quali_power_from_recent_history",
+          "driver_quali_power_from_recent_history",
+          "constructor_quali_power_from_race_weekend",
+          "driver_quali_power_from_race_weekend"
+        ],
+        "prior_sigma": 10.0,
+        "steps": [
+          {
+            "covariance_scale": 7.872836454528189,
+            "covariance_tension_inflation": 0.18831979881593794,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "constructor_quali_power_from_recent_history"
+          },
+          {
+            "covariance_scale": 6.487325216741161,
+            "covariance_tension_inflation": 0.18831979881593794,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "driver_quali_power_from_recent_history"
+          },
+          {
+            "covariance_scale": 0.18878598804632898,
+            "covariance_tension_inflation": 0.07686217276001187,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "constructor_quali_power_from_race_weekend"
+          },
+          {
+            "covariance_scale": 1.1820729904868443,
+            "covariance_tension_inflation": 0.07686217276001187,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "driver_quali_power_from_race_weekend"
+          }
+        ]
+      },
+      "modules": [
+        "constructor_quali_power_from_recent_history",
+        "constructor_quali_power_from_race_weekend",
+        "driver_quali_power_from_recent_history",
+        "driver_quali_power_from_race_weekend"
+      ],
+      "quali_pace_anchor": {
+        "alpha": 0.5,
+        "enabled": true
+      }
+    },
+    "race": {
+      "fusion": {
+        "covariance_jitter": 1e-06,
+        "fusion_order": [
+          "constructor_race_power_from_recent_history",
+          "driver_race_power_from_recent_history",
+          "constructor_race_power_from_race_weekend",
+          "driver_race_power_from_race_weekend"
+        ],
+        "prior_sigma": 10.0,
+        "steps": [
+          {
+            "covariance_scale": 1.7885023433786467,
+            "covariance_tension_inflation": 0.030564183215047974,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "constructor_race_power_from_recent_history"
+          },
+          {
+            "covariance_scale": 7.039148552190217,
+            "covariance_tension_inflation": 0.030564183215047974,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "driver_race_power_from_recent_history"
+          },
+          {
+            "covariance_scale": 0.4325582148666741,
+            "covariance_tension_inflation": 0.04359080378685997,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "constructor_race_power_from_race_weekend"
+          },
+          {
+            "covariance_scale": 5.3553648216735885,
+            "covariance_tension_inflation": 0.04359080378685997,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "driver_race_power_from_race_weekend"
+          }
+        ]
+      },
+      "modules": [
+        "constructor_race_power_from_recent_history",
+        "constructor_race_power_from_race_weekend",
+        "driver_race_power_from_recent_history",
+        "driver_race_power_from_race_weekend"
+      ]
+    },
+    "race_start": {
+      "fusion": {
+        "covariance_jitter": 1e-06,
+        "fusion_order": [
+          "constructor_race_start_power_from_recent_history",
+          "driver_race_start_power_from_recent_history",
+          "constructor_race_start_power_from_race_weekend",
+          "driver_race_start_power_from_race_weekend"
+        ],
+        "prior_sigma": 10.0,
+        "steps": [
+          {
+            "covariance_scale": 0.6869104537841908,
+            "covariance_tension_inflation": 0.0024756936567238846,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "constructor_race_start_power_from_recent_history"
+          },
+          {
+            "covariance_scale": 6.61970027354356,
+            "covariance_tension_inflation": 0.0024756936567238846,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "driver_race_start_power_from_recent_history"
+          },
+          {
+            "covariance_scale": 2.1190917877050994,
+            "covariance_tension_inflation": 0.009295455629986325,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "constructor_race_start_power_from_race_weekend"
+          },
+          {
+            "covariance_scale": 6.815998701434922,
+            "covariance_tension_inflation": 0.009295455629986325,
+            "enabled": true,
+            "mean_scale": 1.0,
+            "module_name": "driver_race_start_power_from_race_weekend"
+          }
+        ]
+      },
+      "modules": [
+        "constructor_race_start_power_from_recent_history",
+        "constructor_race_start_power_from_race_weekend",
+        "driver_race_start_power_from_recent_history",
+        "driver_race_start_power_from_race_weekend"
+      ]
+    }
+  }
+}

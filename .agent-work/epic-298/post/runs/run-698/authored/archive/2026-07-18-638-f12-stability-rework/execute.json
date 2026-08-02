@@ -1,0 +1,427 @@
+{
+  "work_id": "638-f12-stability-rework",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-diagnose",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-rerun-docs"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against the mission frame (.agent-work/638-f12-stability-rework/MISSION_FRAME.md) and PROBLEM_STATEMENT.md, the inherited global doctrine, and docs/agents/ORCHESTRATOR_CONTEXT.md (Physics subsystem rigor). Baseline context already loaded at spine context step. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed against frame + orchestrator context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-diagnose": {
+      "id": "g1-diagnose",
+      "title": "G1 Root-cause the k-instability (evidence-only diagnosis + decide-fix)",
+      "imperative": "REASONING GATE (crew-waiver: deliverable is a diagnosis + a fix decision I hold full context for; no production-module code changes here; verified by me reproducing the key numbers). Write a diagnostic script under .agent-work/638-f12-stability-rework/ that reads C:/Programs/f1Brainz/data/damage_integrals.db grip_bin_obs READ-ONLY and characterizes WHY k is unstable across circuit-composition splits: (a) is BIC monotone-decreasing in k at ~300k rows (under-regularized, chases fine structure)?; (b) is the support floor jumping k around?; (c) are the component LOCATIONS (universal corner-type centroids) actually stable even when k differs?; (d) empirically test the candidate fixes in launch-order preference order (sample-size-robust / subsampled or effective-N selection; held-out/CV selection; narrower/regularized k_range) and, only if those fail, circuit-conditional/hierarchical \u2014 measure per-split matched-k AND sub-threshold component_agreement_stat across the 5 F12 splits for each candidate. Pick the SIMPLEST fix that earns matched-k + locations < F12_AGREEMENT_THRESHOLD on all 5 splits with k STILL support-driven (not a hardcoded constant), ideally leaving mixture_stability.py's gate frozen. Record the diagnosis + chosen fix + evidence to .agent-work/638-f12-stability-rework/DIAGNOSIS.md. Decide-fix: reconcile the choice against the launch order's preference order and cite it (attach c2 user-decision); FLOAT to the Admiral (write in verdict + STOP) ONLY if the instability proves fundamental (no fix earns a genuine pass) OR the only pass requires weakening the F12 gate below falsifiable. git checkout -- data/ after any DB-touching run. Attest c1, attach c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "diagnosis produced with real-data evidence: root cause characterized (BIC/support-floor/location behavior) AND candidate fixes measured on the 5 F12 splits (matched-k + agreement stat per candidate); recorded to DIAGNOSIS.md",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "fix selected on a PRINCIPLED root-cause mechanism (not knob-tuned to the 5 F12 seeds); simplest earning matched-k + sub-threshold locations, k still support-driven; resulting component centroids reported in raw radius_m/lateral_g and physically adequate (NOT model-collapsed to a minimal-agreement hack); reconciled against the launch-order preference order, or floated to Admiral if fundamental/gate-weakening",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-diagnose-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "READ-ONLY DB; git checkout -- data/ after runs",
+        "k stays support-driven (property_mixture pre-ruling #1)"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/property_mixture.py::fit_property_mixture (selection locus)",
+          "src/physics/layer2/mixture_stability.py::check_holdout_stability (5 splits)"
+        ],
+        "capability": [
+          "property-mixture-fit",
+          "f12-holdout-stability"
+        ],
+        "constraint": [
+          "support-driven k (property_mixture pre-ruling #1)",
+          "F12 stays falsifiable"
+        ],
+        "decision": [
+          "decision:regime_readiness_rubric (#512) \u2014 circuit-dominated structure grounds circuit-conditional hypothesis; but descriptor is geometric so locations should be universal, weights vary"
+        ],
+        "evidence": [
+          "overturn claim: k stable across circuit-composition splits (currently FAIL 0/5)"
+        ],
+        "confidence_flags": [
+          "no layer2 packet map \u2014 diagnosis IS the verification step"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-diagnose-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-Ruling#3 + Pre-Ruling#1 + Inherited Latitude",
+            "decision": "Fix = fit in (log10 radius, lateral_g) space (resolves fundamental location instability, RC1) + k_range ceiling 4 (domain corner-severity ladder) + absolute-count support floor (replaces composition-brittle 5% relative floor, RC2) + gate compares in log-radius units (LOG_RADIUS_SCALE=0.30, k-mismatch/threshold/discriminating-test preserved). Location-verified 5/5 (fixed k=4 log space, full data). Constants frozen pre-run; G3 confirms base-seed 42 + 137. Within latitude, not gate-weakening -> proceed, surface design choices in verdict."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 Implement the G1-selected fix + tests",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from DIAGNOSIS.md's chosen fix. Implement it in src/physics/layer2/property_mixture.py (and mixture_stability.py ONLY if the fix genuinely requires it \u2014 prefer leaving the gate frozen). Any new selection constant is FROZEN in-module with a domain-reasoned comment (chosen before the real-data run, not tuned to it). Keep k support-driven. Update/extend tests: tests/unit/physics/layer2/test_property_mixture.py and test_mixture_stability.py \u2014 the discriminating synthetic test (stable\u2192PASS, shifted\u2192FAIL) MUST still pass unchanged in intent; add coverage for the new selection behavior; add a synthetic test showing large-N no longer over-selects k; and add a MECHANICAL support-driven-k test proving k RESPONDS UPWARD to a genuine well-supported added cluster (and down with fewer) so a k-pinned-in-all-but-name fix fails CI (critic finding #4). MAY edit scripts/f12_held_out_stability.py / scripts/build_regime_rollup.py ONLY if the fix needs a default-valued param plumbed through (callers unaffected). Run py -m src.utils.simplification_limits on touched paths. Do NOT run the ~6-min real-data F12 here (commander owns that foreground in G3) \u2014 prove correctness via fast synthetic/unit tests. Dispatch constellation-implementer; integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 diagnosis complete and fix selected",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "no production defaults/circuits.yaml/gold changes",
+        "frozen F12 constants; discriminating test preserved",
+        "k support-driven not hardcoded"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/property_mixture.py::fit_property_mixture",
+          "tests/unit/physics/layer2/test_property_mixture.py",
+          "tests/unit/physics/layer2/test_mixture_stability.py"
+        ],
+        "capability": [
+          "property-mixture-fit",
+          "f12-holdout-stability"
+        ],
+        "constraint": [
+          "support-driven k",
+          "F12 falsifiable / discriminating test preserved",
+          "no evo import"
+        ],
+        "decision": [
+          "decision pressure resolved in G1 \u2192 concrete fix"
+        ],
+        "evidence": [
+          "region unit suite green; discriminating synthetic test PASS/FAIL intact"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "session": "constellation/638-f12-stability-rework/g2/implement/attempt-1",
+            "result_path": ".agent-work/638-f12-stability-rework/crew-handoffs/g2-implement-result.md",
+            "summary": "log-space fit + OR support criterion + k_range(2,4) + LOG_RADIUS_SCALE gate; 5 files; changed-file suite 23 passed (commander re-ran), simplification_limits PASS, discriminating test intact"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2 Review the fix",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the diff + IMPLEMENTER_RESULT. Reviewer verifies: fix matches DIAGNOSIS.md; k stays support-driven (no hardcoded constant masquerading as support-driven); the discriminating synthetic test is preserved and still able to FAIL; any new constant is frozen with domain rationale; no evo import; no production-default/circuits.yaml/gold change; region unit suite green. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "session": "constellation/638-f12-stability-rework/g2/review/attempt-1",
+            "note": "APPROVE; reviewer independently proved discriminating test can FAIL (perturbed component_agreement_stat) + restored; k support-driven test verified; gate not weakened; 5 files clean"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2 Integrate the fix",
+      "imperative": "Check REVIEW_RESULT. APPROVE: re-run the region unit suite yourself, confirm postconditions, advance. BLOCK: return implementer for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "property_mixture + mixture_stability unit suites green (discriminating test intact)",
+          "check": {
+            "kind": "command",
+            "command": "PYTHONIOENCODING=utf-8 py -m pytest tests/unit/physics/layer2/test_property_mixture.py tests/unit/physics/layer2/test_mixture_stability.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "PYTHONIOENCODING=utf-8 py -m pytest tests/unit/physics/layer2/test_property_mixture.py tests/unit/physics/layer2/test_mixture_stability.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-rerun-docs": {
+      "id": "g3-rerun-docs",
+      "title": "G3 Real-data F12 re-run + rollup + docs (commander foreground)",
+      "imperative": "REASONING GATE (crew-waiver: real-data payoff runs the launch order mandates I run FOREGROUND in my own context \u2014 must not be backgrounded/reaped; deliverable is evidence capture + docs). FIRST assert the .pth worktree trap is clear: py -c \"import src.physics.layer2.property_mixture as m; print(m.__file__)\" must print a path under C:/Programs/f1-638 (critic finding #2). Run scripts/f12_held_out_stability.py against C:/Programs/f1Brainz/data/damage_integrals.db FOREGROUND (Bash timeout 600000 ms). Then run a SECOND confirmation on the PRE-FROZEN independent seed batch --base-seed 137 --n-splits 5 (declared in CRITIC_DISPOSITION.md before any post-fix run; anti-seed-overfit, critic finding #1). Genuine PASS requires n_pass=5/5, matched k, sub-threshold locations on BOTH batches. Copy the canonical (base-42) fresh artifact to docs/physics/625-f12-holdout-stability.json (replacing the FAIL evidence) and the base-137 artifact to docs/physics/638-f12-holdout-stability-seed137.json. Then run scripts/build_regime_rollup.py FOREGROUND and refresh docs/physics/625-regime-time-share.csv + .meta.json; confirm the meta's f12_headline_verdict now reads PASS and report the Monza<Monaco corner-share sanity read. Update docs/physics/625-phase1-segmentation-substrate.md's F12 section and add docs/physics/638-f12-stability-rework.md writeup (root cause, fix, frozen constants, both per-split tables, rollup update). Then in the MAIN repo: git -C C:/Programs/f1Brainz checkout -- data/ if the DB dir shows changes; confirm no data/*.db staged in EITHER repo. If honestly STILL-FALSIFIED after the fix: do NOT fudge \u2014 block this gate and FLOAT to the Admiral (write the still-falsified diagnosis into the verdict). Attest c3.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix integrated (G2 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "real-data F12 genuine PASS on BOTH pre-frozen seed batches (base 42 + base 137), n_pass=5/5 each",
+          "check": {
+            "kind": "command",
+            "command": "grep -q '\"headline_verdict\": \"PASS\"' docs/physics/625-f12-holdout-stability.json && grep -q '\"n_pass\": 5' docs/physics/625-f12-holdout-stability.json && grep -q '\"headline_verdict\": \"PASS\"' docs/physics/638-f12-holdout-stability-seed137.json && grep -q '\"n_pass\": 5' docs/physics/638-f12-holdout-stability-seed137.json"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-rerun-docs-1"
+        },
+        {
+          "id": "c2",
+          "statement": "rollup re-run; docs/physics/625-regime-time-share.meta.json f12_headline_verdict == PASS; 625 writeup + 638 writeup updated",
+          "check": {
+            "kind": "command",
+            "command": "grep -q '\"f12_headline_verdict\": \"PASS\"' docs/physics/625-regime-time-share.meta.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-rerun-docs-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no data/*.db staged in either repo (cross-repo cleanup done)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "READ-ONLY DB; git checkout -- data/ after runs; never commit data/*.db",
+        "foreground runs \u2014 no backgrounding/reaping",
+        "frozen constants \u2014 no post-hoc threshold adjustment"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/f12_held_out_stability.py",
+          "scripts/build_regime_rollup.py",
+          "docs/physics/625-*",
+          "docs/physics/638-f12-stability-rework.md"
+        ],
+        "capability": [
+          "f12-holdout-stability",
+          "regime-rollup"
+        ],
+        "constraint": [
+          "frozen constants",
+          "no data/*.db commit"
+        ],
+        "decision": [],
+        "evidence": [
+          "real-data F12 PASS is the payoff claim; rollup metadata reflects it"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-rerun-docs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q '\"headline_verdict\": \"PASS\"' docs/physics/625-f12-holdout-stability.json && grep -q '\"n_pass\": 5' docs/physics/625-f12-holdout-stability.json && grep -q '\"headline_verdict\": \"PASS\"' docs/physics/638-f12-holdout-stability-seed137.json && grep -q '\"n_pass\": 5' docs/physics/638-f12-holdout-stability-seed137.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-rerun-docs-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q '\"f12_headline_verdict\": \"PASS\"' docs/physics/625-regime-time-share.meta.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-implement",
+      "statement": "docs/architecture/packets/physics.md:979 documents RADIUS_SCALE_M=50 (now renamed LOG_RADIUS_SCALE=0.30 in mixture_stability.py #638) \u2014 stale, needs Cartographer reconcile"
+    }
+  ],
+  "blockers": []
+}

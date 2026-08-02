@@ -1,0 +1,100 @@
+{
+  "work_id": "518-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["m0-context", "m1-variant-factory", "m2-calibration-module", "m3-calibration-script", "m4-unit-tests", "m5-run-sweep", "m6-persist-hps", "m7-reports", "m8-verify"],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context and verify handoff",
+      "imperative": "Read handoff, templates, existing seams. Verify all required fields present.",
+      "preconditions": [],
+      "postconditions": [{"id": "c0", "statement": "handoff verified complete with all required fields", "check": null, "satisfied": true}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "done", "status_detail": {}, "result": "handoff complete", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m1-variant-factory": {
+      "id": "m1-variant-factory",
+      "title": "Add make_synthesis_variant factory to decoupled_longitudinal.py",
+      "imperative": "Add a make_synthesis_variant(**hp) -> VariantFn factory that parametrizes all 6 HPs and returns a VariantFn compatible with the scoreboard seam. Promote the _DEFAULT_* constants to be the single source of truth. No behavior change to existing variant_synthesis.",
+      "preconditions": [{"id": "p1", "statement": "context loaded", "check": null, "satisfied": true}],
+      "postconditions": [{"id": "c1", "statement": "make_synthesis_variant is importable and returns callable VariantFn; existing tests still pass", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q"}, "satisfied": false}],
+      "constraints": ["no imports from evo_predictor/latent_power/compound_prior", "decision:two_cycle_external_anchor_design honored"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m2-calibration-module": {
+      "id": "m2-calibration-module",
+      "title": "Build src/physics/layer2/decoupled_calibration.py",
+      "imperative": "Create a calibration-harness module with pure functions: build_hp_grid(), aggregate_scores(case_results, variant_name) -> SeasonAgg, select_best_hp(grid_results) -> HPSet. Also add enumerate_season_cases(year, constructors_drivers) -> list[(year,gp,driver)]. All pure functions must be testable without FastF1.",
+      "preconditions": [{"id": "p1", "statement": "make_synthesis_variant factory done", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "decoupled_calibration.py importable; pure functions work on synthetic inputs", "check": {"kind": "command", "command": "py -c \"from src.physics.layer2.decoupled_calibration import build_hp_grid, aggregate_scores, select_best_hp; print('ok')\""}, "satisfied": false}],
+      "constraints": ["no imports from evo_predictor/latent_power/compound_prior", "no DB access (this gate is telemetry-driven)"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m3-calibration-script": {
+      "id": "m3-calibration-script",
+      "title": "Build scripts/calibrate_decoupled_hp_2023Q.py",
+      "imperative": "Create the full-season runner script. Uses enumerate_season_cases(2023, constructors_drivers) + run_scoreboard from scoreboard.py with make_synthesis_variant per HP point + BUILTIN_VARIANTS as baselines. Aggregates scores, selects best HP, writes JSON report. Runs offline from data/telemetry cache.",
+      "preconditions": [{"id": "p1", "statement": "calibration module done", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "script is importable and --help works", "check": {"kind": "command", "command": "py scripts/calibrate_decoupled_hp_2023Q.py --help"}, "satisfied": false}],
+      "constraints": ["offline only; no live FastF1 calls", "read-only DB"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m4-unit-tests": {
+      "id": "m4-unit-tests",
+      "title": "Add unit tests for calibration harness pure functions",
+      "imperative": "Add tests/unit/physics/layer2/test_decoupled_calibration.py covering build_hp_grid, aggregate_scores, select_best_hp with synthetic inputs. No FastF1 in tests.",
+      "preconditions": [{"id": "p1", "statement": "calibration module done", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "new tests pass; full layer2 suite green", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/ -q"}, "satisfied": false}],
+      "constraints": ["no FastF1 in unit tests"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m5-run-sweep": {
+      "id": "m5-run-sweep",
+      "title": "Run calibration sweep over 2023-Q season from offline cache",
+      "imperative": "Run scripts/calibrate_decoupled_hp_2023Q.py --dry-run first to confirm session enumeration. Then run the full sweep. If offline cache is missing for any session, skip + log (not a stop condition unless >50% fail). Report how many sessions loaded vs total.",
+      "preconditions": [{"id": "p1", "statement": "script built and unit tests pass", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "sweep completed; season pass-rate computed for decoupled vs defaults; at least 10 sessions scored", "check": null, "satisfied": false}],
+      "constraints": ["offline only", "stop if calibration cannot run from offline cache (>50% fail)"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m6-persist-hps": {
+      "id": "m6-persist-hps",
+      "title": "Persist calibrated HP set in named constants",
+      "imperative": "Promote the calibrated HP values into named constants in decoupled_longitudinal.py (or a small decoupled_hp.py config module). Update the _DEFAULT_* constants to the calibrated values and document the calibration basis in the module docstring. No inline hidden tuning.",
+      "preconditions": [{"id": "p1", "statement": "sweep completed with enough coverage", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "calibrated constants named and documented; existing tests still pass", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/test_decoupled_longitudinal.py -q"}, "satisfied": false}],
+      "constraints": ["no hidden inline tuning", "document basis"],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m7-reports": {
+      "id": "m7-reports",
+      "title": "Write calibration reports to reports/physics/",
+      "imperative": "Write reports/physics/decoupled_hp_calibration_2023Q.json and .md with: per-session knee_gap_vs_raw and ringing_ok, season aggregate pass-rates, chosen-HP vs VER/3-circuit-default comparison, honest statement on global vs per-class generalization.",
+      "preconditions": [{"id": "p1", "statement": "sweep completed and HPs persisted", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "both report files exist with key numbers", "check": {"kind": "command", "command": "py -c \"import os; assert os.path.exists('reports/physics/decoupled_hp_calibration_2023Q.json'); assert os.path.exists('reports/physics/decoupled_hp_calibration_2023Q.md'); print('ok')\""}, "satisfied": false}],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "m8-verify": {
+      "id": "m8-verify",
+      "title": "Final verification: tests + simplification_limits",
+      "imperative": "Run py -m pytest tests/unit/physics/layer2/ -q and py -m src.utils.simplification_limits on touched paths. Record exact output.",
+      "preconditions": [{"id": "p1", "statement": "reports written", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "all unit tests green; simplification_limits clean on touched paths", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/layer2/ -q && py -m src.utils.simplification_limits src/physics/layer2/decoupled_longitudinal.py src/physics/layer2/decoupled_calibration.py"}, "satisfied": false}],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

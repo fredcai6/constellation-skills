@@ -1,0 +1,60 @@
+# issue-335 Arm A smoke config: anchor ON, position_quality encoding. Fast wiring proof only.
+# NOT a gold run. Do NOT use for production predictions or gold artifacts.
+
+schema_version = 1
+profile_name = "smoke"
+
+# "smoke" allows CLI overrides and records them in the run report.
+mode = "smoke"
+
+[data]
+# Use a single small train year + eval year so the test suite stays fast.
+train_years = [2023]
+eval_year = 2024
+
+db_root = "data"
+compound_prior_root = "params/gold/compound_prior"
+race_start_target_lap = 3
+retro_root = "params/retro_truth"
+
+# Arm A: position_quality (v1 schema) encoding — same as gold_defaults.toml.
+recent_history_form_encoding = "position_quality"
+
+qs_compound_beta_regime = "race"
+
+[training]
+# 2 epochs is enough to confirm the training loop runs without crashing.
+epochs = 2
+
+seed = 0
+learning_rate = 0.0001
+hidden_dim = 32
+dropout = 0.2
+optimizer = "adam"
+weight_decay = 0.0
+early_stop_patience = 2
+restore_best_checkpoint = true
+min_delta = 0.0
+
+# Session-dropout augmentation (K=1 for smoke; fast but exercises the code path).
+session_dropout_k = 1
+session_dropout_session_prob = 0.7
+
+[uncertainty]
+enable_sigma_calibration = true
+lambda_sigma_nll = 0.0
+
+[runtime]
+n_samples = 10
+materialize_race_start_order_from_lap_times = true
+emit_fusion_train_rows = "none"
+allow_same_season_compound_prior = false
+emit_module_record = false
+
+# Quali-head pace anchor: ON for wiring proof (anchor active in smoke).
+quali_pace_anchor_enabled = true
+quali_pace_anchor_alpha = 0.5
+
+[outputs]
+output_dir = "outputs/evo_runs/smoke_armA_335"
+report_dir = "reports/evo"

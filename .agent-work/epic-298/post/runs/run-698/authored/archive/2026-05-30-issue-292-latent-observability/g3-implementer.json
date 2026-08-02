@@ -1,0 +1,179 @@
+{
+  "work_id": "issue-292-latent-observability/g3-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-baseline",
+    "m2-docs",
+    "m3-final"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read g3 handoff, execute.json g3 imperative, validation_reports.md baseline, run_pipeline_validation.py gate checks, and g1/g2 evidence. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g3 scope, observability surfaces, and validation sections loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded execute g3 imperative, validation script gates, g1/g2 artifacts, existing report schema docs."
+        }
+      ],
+      "constraints": [
+        "Docs-only gate preferred.",
+        "Docs must describe current stateless pipeline truth.",
+        "Command-heavy docs need Last verified updated."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-baseline": {
+      "id": "m1-baseline",
+      "title": "Run focused baseline tests",
+      "imperative": "Run g3 close command before doc edits to confirm baseline green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "focused tests pass before documentation changes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-baseline-1"
+        }
+      ],
+      "constraints": [
+        "Do not modify docs before baseline evidence step completes."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0,
+            "passed": 81
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-docs": {
+      "id": "m2-docs",
+      "title": "Document issue-292 gate ownership",
+      "imperative": "Update report/validation documentation so each issue-292 gate maps to owning artifact and compact validation section: temporal split, invalid/DQ/non-classified handling, baseline comparisons, sigma/error diagnostics, failure-mode flags, field sanity, sampled-runtime parity.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline focused tests complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-baseline complete; 81 passed pre-change"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "validation docs map issue-292 gates to artifact owners and validation sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Updated validation_reports.md gate ownership table; cross-links in gold/static/sampled/artifact_policy/README docs."
+        }
+      ],
+      "constraints": [
+        "No recursive-design language.",
+        "Use py in command examples.",
+        "Do not add tests unless validating new doc contracts."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-final": {
+      "id": "m3-final",
+      "title": "Final focused verification",
+      "imperative": "Re-run g3 close command after doc edits; confirm docs-only diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "documentation updates complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-docs complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "focused tests pass after documentation updates",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-final-1"
+        }
+      ],
+      "constraints": [
+        "Do not commit.",
+        "Do not close issue."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-final-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/evo_predictor/test_gold_module_cycle.py tests/unit/evo_predictor/test_pipeline_validation.py tests/unit/evo_predictor/test_module_uncertainty_diagnostics.py -v",
+            "exit": 0,
+            "passed": 81
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

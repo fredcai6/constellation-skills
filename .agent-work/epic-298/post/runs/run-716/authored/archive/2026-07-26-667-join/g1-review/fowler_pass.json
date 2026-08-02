@@ -1,0 +1,20 @@
+{
+  "work_id": "667-join",
+  "diff_ref": "NEW src/physics/fingerprint/join.py + NEW tests/unit/physics/fingerprint/test_join.py (untracked)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md (deep-module vocabulary: pure function = explicit injected deps)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "WeekendUtilizationPrior is a frozen dataclass (pure data/provenance holder, no behavior) — not a large behavioral class.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "The math.fsum(...weights, resolved_mask...) comprehension recurs a few times but is idiomatic and not worth a shared helper.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "Reads cell.mean/sigma/support_n as the join's necessary data access from a pure value object; not envy.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "(mean, sigma, support_n) already travel bundled inside FingerprintCell.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "composition as Mapping[str,float] and str driver/channel match the repo's canonical FingerprintCell identity representation.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "overridden", "finding": "", "override": {"repo_standard": "global-crew.md 'explicit contracts at meaningful boundaries' + global-everyone.md deep-module doctrine (a pure function's interface is its explicit injected deps, no hidden state) + module contract 'PURE module'", "reason": "join_weekend_prior has 7 params (3 essential data: composition/cells/vocabulary; 4 keyword-only config with defaults: as_of_round/nu_loss/rule/map_version). The tail-rule + nu_loss params ARE the predictive_t seam; bundling them into a parameter object would hide that seam and the pure-function's explicit-dependency contract. The standard (explicit boundary contract for a pure function) subordinates the smell."}},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "Single responsibility: compose composition x cells into one prior.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "rule/nu_loss are the live predictive_t seam; map_version is provenance carried into the output. No unused hooks; the linear join IS the prior (sequence/interaction forms are #670, correctly deferred).", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "Docstrings/comments are explanatory and honest (e.g. the Build-1 independent-cell caveat), not masking bad code.", "override": null}
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,291 @@
+{
+  "work_id": "cmdr-504",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and packets/preprocessing.md. Confirm the frozen plan intent: split smoother.py into cohesive sub-modules with ZERO behavior change. No public API change. No src/physics touch. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + preprocessing packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All context loaded from prior context steps: ORCHESTRATOR_CONTEXT, preprocessing packet, smoother.py structure (4 violations: __init__ CC=21, fit CC=26, file_lines=1253, fit function_lines=134). Plan: extract AccelObs, roughness, gap, NSStintSmoother to 4 private helper modules; add _validate_smoother_params + _fit_frozen_frame + _fit_standard internally. Circular import handled by late NSStintSmoother import at end of smoother.py."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Split smoother.py: create helper modules and refactor",
+      "imperative": "Implement the smoother.py split. Create 4 new private helper modules and refactor smoother.py to import from them and add internal helpers to fix function-level metrics. Dispatch constellation-implementer with the g1 handoff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete; context fully loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Public API frozen: StintSmoother, NSStintSmoother, AccelObs, build_roughness, driver_series, banded_gap all remain importable from src.preprocessing.trajectory.smoother",
+        "Do NOT touch src/physics/*",
+        "Zero behavior change \u2014 byte-identical Gaussian path and nu/nu_proc/kind=3 semantics preserved",
+        "No compatibility shims or dual paths: one canonical implementation"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:preprocessing \u2014 src/preprocessing/trajectory/ is the only subpackage",
+          "smoother.py \u2014 StintSmoother (Kalman-RTS), NSStintSmoother (non-stationary), AccelObs (kind=3), roughness utils, banded_gap"
+        ],
+        "capability": [
+          "Windowless full-stint trajectory estimation \u2014 unchanged after split",
+          "E4-nesting validation (byte-identical Gaussian path) \u2014 must still pass"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "Public API: names exported from smoother.py module and trajectory/__init__.py must not change",
+          "No src/physics touch (parallel branch feat/physics-units-audit-525)"
+        ],
+        "decision": [
+          "Circular import handling: import NSStintSmoother at END of smoother.py (after StintSmoother defined) to avoid ImportError \u2014 Python partial module provides StintSmoother by the time _ns_smoother.py needs it"
+        ],
+        "evidence": [
+          "Current violations: __init__ cyclomatic=21, fit cyclomatic=26, file_lines=1253, fit function_lines=134",
+          "Targets: all metrics <=19 (CC), <=99 (fn lines), <=999 (file lines)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "result": "completed",
+            "artifact": ".agent-work/cmdr-504/g1-implementer-result.md",
+            "status": "no_blockers"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Split smoother.py: review",
+      "imperative": "Review the split. Verify: (1) public API unchanged, (2) byte-identical guarantee not broken, (3) no src/physics touch, (4) no dual paths / shims. Dispatch constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-implement complete; implementer result artifact present"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/cmdr-504/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Split smoother.py: integrate and verify",
+      "imperative": "Check REVIEW_RESULT. On APPROVE: run both acceptance commands and confirm all postconditions pass. On BLOCK: return implementer for rework.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-review APPROVE received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "simplification_limits PASSES on src/preprocessing/trajectory/smoother.py",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/smoother.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "region tests GREEN: tests/unit/preprocessing/trajectory/ all pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/trajectory/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c4",
+          "statement": "simplification_limits PASSES on ALL new helper modules",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/_accel_obs.py src/preprocessing/trajectory/_roughness.py src/preprocessing/trajectory/_gap_metric.py src/preprocessing/trajectory/_ns_smoother.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/cmdr-504/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/smoother.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/preprocessing/trajectory/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/_accel_obs.py src/preprocessing/trajectory/_roughness.py src/preprocessing/trajectory/_gap_metric.py src/preprocessing/trajectory/_ns_smoother.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -1,0 +1,191 @@
+{
+  "work_id": "issue-375-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-build-script",
+    "m2-run-script",
+    "m3-verdict"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read fusion_rework_findings.md (#374 gate section), metalearner.py, scorecard.py, investigation-findings-distilled.md. Verify handoff is complete.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all background read; handoff complete (task, scope, exclusions, evidence, stop conditions)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All background read: fusion_rework_findings.md (#374 section), metalearner.py (LOSO+bootstrap+MLP machinery), scorecard.py (_preprocess_events pattern), investigation-findings-distilled.md. Handoff is complete: task=G1 ordering reconcile, scope={race_start,race} only, no production net code, deliverables=script+evidence+verdict section."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-build-script": {
+      "id": "m1-build-script",
+      "title": "Build g1_ordering_reconcile.py",
+      "imperative": "Create scripts/fusion_replay/g1_ordering_reconcile.py: (1) build_g1_dataset() extending build_pairwise_dataset with persistence logits from DB; (2) per-event ordering metrics for 3 comparators (persistence/Model1/Model2b); (3) event-cluster bootstrap CIs for key deltas; (4) seed stability over seeds 0,1,2; (5) CLI writing JSON + human-readable table. No production net code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "g1_ordering_reconcile.py exists and is importable (py -c 'import scripts.fusion_replay.g1_ordering_reconcile')",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import scripts.fusion_replay.g1_ordering_reconcile; print('OK')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-build-script-1"
+        }
+      ],
+      "constraints": [
+        "STOP-GATE: no production net code",
+        "Reuse metalearner _loso_cv_linear/_loso_cv_mlp/_bootstrap_gap_ci/_secondary_metrics",
+        "Missingness: drop pairs where either driver absent from prior-stage order (document, count drops)",
+        "Persistence logit = prior_pos_j - prior_pos_i; no pairwise-LL native to persistence",
+        "Sign accuracy floor 0.5 (random baseline)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-build-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import scripts.fusion_replay.g1_ordering_reconcile; print('OK')\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-run-script": {
+      "id": "m2-run-script",
+      "title": "Run g1_ordering_reconcile.py and capture output",
+      "imperative": "Run against records dir with --tasks race_start race --seed 0 --bootstrap 1000. Write JSON + TXT to .agent-work/issue-375-race-day-conditioned-net/evidence/. Verify both files exist with non-zero content.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "script built and importable",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete; script importable"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evidence/g1_ordering_reconcile.json and evidence/g1_ordering_reconcile.txt exist",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import pathlib; f=pathlib.Path('.agent-work/issue-375-race-day-conditioned-net/evidence/g1_ordering_reconcile.json'); assert f.exists() and f.stat().st_size > 100, f'{f} missing or empty'\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-run-script-1"
+        }
+      ],
+      "constraints": [
+        "PYTHONIOENCODING=utf-8",
+        "Records at .agent-work/issue-375-race-day-conditioned-net/records/",
+        "DB absolute path C:/Programs/f1Brainz/data/f1_data_{year}.db"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-run-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import pathlib; f=pathlib.Path('.agent-work/issue-375-race-day-conditioned-net/evidence/g1_ordering_reconcile.json'); assert f.exists() and f.stat().st_size > 100, f'{f} missing or empty'\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verdict": {
+      "id": "m3-verdict",
+      "title": "Write G1 verdict section to fusion_rework_findings.md",
+      "imperative": "Add a new section at end of docs/evo/fusion_rework_findings.md titled '# Issue #375 - G1 STOP-GATE verdict: ordering reconciliation (race_start and race)'. Include: ordering metric table for {persistence, Model1, Model2b} x {sign-acc, rank-MAE, spearman}; pairwise-LL continuity; bootstrap CIs for key deltas; seed stability; verdict on scope (full {race_start,race} / race-only / ambiguous).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "output files with numbers exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete; evidence files g1_ordering_reconcile.json and .txt both written successfully"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fusion_rework_findings.md contains '# Issue #375'",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys; txt=open('docs/evo/fusion_rework_findings.md',encoding='utf-8').read(); sys.exit(0 if '# Issue #375' in txt else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verdict-1"
+        }
+      ],
+      "constraints": [
+        "Evidence-only: no code changes",
+        "Verdict follows mechanically from numbers"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verdict-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys; txt=open('docs/evo/fusion_rework_findings.md',encoding='utf-8').read(); sys.exit(0 if '# Issue #375' in txt else 1)\"",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

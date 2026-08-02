@@ -1,0 +1,49 @@
+diff --git a/.agent-work/AGENT_FEEDBACK.md b/.agent-work/AGENT_FEEDBACK.md
+index 6c4ac93d..b2f84652 100644
+--- a/.agent-work/AGENT_FEEDBACK.md
++++ b/.agent-work/AGENT_FEEDBACK.md
+@@ -10,6 +10,44 @@ Newest entries on top.
+ 
+ ---
+ 
++## 546-throttle-coast | 2026-06-28 | cmdr-T (Constellation Commander, delegated from Admiral)
++
++**Work:** Issue #546 — re-evaluate decoupled longitudinal estimator on throttle/coast views. Two sub-investigations: (G1) introduce `sig_a_soft_throttle` HP, run Config-C parity sweep over HP ∈ {1.0,2.0,3.0,5.0,30.0}; (G2) diagnose coast boundary-lag. Both HONEST-NULL. PR #552 opened (not merged). Decision anchor updated, map reconcile note added. 662 physics unit tests pass.
++
++**Instruction adherence:** High. File fence respected. Shared files not committed on mission branch. No `apply_lessons_delta.py` run. All 3 gates through full crew implement/review/integrate cycle.
++
++**What worked:**
++- **Diagnose-first on coast lag.** Implementer counted recoverable boundary samples (3-11/circuit, 0.1-1.0%) BEFORE fully committing to the clamp fix, revealing the root cause was structural. Prevented shipping a distorting fix as a positive result.
++- **Config-C parity sweep cleanly isolated a_long vs v-source.** Extending over 5 HP values confirmed the honest-null is structural, not tunable. The sweep table is clean evidence for future agents.
++- **G1 reviewer caught PowerDragView HP=3.0 missing row** via table cross-check — fixed before run closed.
++- **Context compaction recovery clean.** State note + execute.json were sufficient; no work lost.
++
++**Friction / unclear:**
++- **G2 option-2 (post-clamp) had an undocumented side-effect.** `np.minimum(filter, raw)` distorts ALL samples where raw < filter, not just boundary ones. The handoff described it as "recovers boundary samples" without flagging the all-sample distortion. Root cause of misleading CdA shifts (2.4-4.5σ) despite only 3-11 extra samples. Template fix needed.
++- **Boundary-lag hypothesis plausible but magnitude not sanity-checked early.** A quick count of recoverable samples before implementing would have revealed < 1% of loss is boundary lag. Add "sanity check: count recoverable samples first" to boundary-lag handoffs.
++- **`decoupled_braking_input.py` appeared in BOTH Allowed Scope and Specific Exclusions** in the G1 handoff. Implementer flagged the contradiction. Catch at plan time: exclusions and scope lists must be non-overlapping.
++- **FINDINGS_PATH writes outside the worktree** (to admiral worktree). Works, but G2 handoff didn't state this explicitly. G2 implementer inferred from context. State cross-worktree writes explicitly in handoffs.
++
++**Crew-reported friction:**
++- G1 impl: Scope list vs exclusion list contradiction on `decoupled_braking_input.py`; fixed for G2.
++- G2 impl: Option 2 has hidden all-sample distortion — core lesson candidate.
++- G1+G2 reviewers: clean APPROVE.
++
++**Improvement signals:**
++- **Clamp handoffs must warn about all-sample distortion.** `np.minimum/np.maximum` raw-ceiling clamps affect all samples, not just boundaries. Add to IMPLEMENTER_HANDOFF template under "Fix candidates."
++- **Short-segment + loose coupling = non-convergence.** Coast redesign requires tighter coupling (~2-5 m/s²) or min segment length ≥ 30. Filed as triage candidate (not GH issue; low priority).
++- **Boundary-lag diagnoses need a pre-fix magnitude sanity check.** Count recoverable samples before implementing. Add as a required sub-step in boundary-lag handoffs.
++
++**Template update candidates:**
++
++| Template | Field | Change needed |
++|----------|-------|---------------|
++| IMPLEMENTER_HANDOFF | Fix candidates | Add: "Raw-ceiling clamps (np.minimum/np.maximum) modify ALL samples where raw < filter, not just boundary ones — quantify full-sample effect before accepting the fix" |
++| IMPLEMENTER_HANDOFF | Specific Exclusions | Validate non-overlap with Allowed Scope at plan time |
++| IMPLEMENTER_HANDOFF | Constraints | State explicitly when new diagnostic scripts in scripts/ are allowed |
++
++---
++
+ ## 509-w3 | 2026-06-28 | Admiral (Phase-F runway-clearing: #523 + #495 cluster + #545, alongside user's #541)
+ 
+ **Work:** Three-commander wave clearing the C-phase runway. Wave 1 (parallel, disjoint fences): cmdr-V #523 (decoupled→throttle/coast, HONEST-NULL, PR #547) ∥ cmdr-R #495 cluster #542/#543/#544/#538 (calibration hardening, PR #548). Wave 2 (sequential): cmdr-C #545 (pyright baseline-diff CI gate, PR #550). 3 PRs merged, 5 issues closed, follow-ons #546/#549 filed. All Sonnet commanders, full constellation-commander depth.

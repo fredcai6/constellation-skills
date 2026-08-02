@@ -1,0 +1,160 @@
+{
+  "work_id": "663-grip-g-g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew/global-everyone doctrine, CREW_CONTEXT.md + GLOSSARY.md, handoff, both new source files, tyre_supplant.py, session_race.py, student_t.py, and the test file. Baseline in hand.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All task requirements met and independently verified. (a) session_cumulative_track_laps_by_lap == compute_cumulative_track_laps: regression test calls the real source on 3 real 2023 R sessions and asserts exact equality; re-ran full file 12/12 pass. Source uses COUNT(*) WHERE lap_number<X; helper is an exclusive prefix-sum over GROUP BY lap_number IS NOT NULL -- equivalent. (b) _read_clean_session_laps is a byte-for-byte mirror of tyre_supplant._read_clean_race_laps (same columns + clean-lap filter) with only session_type/gp_name parameterized; race_degradation_slopes imported + called unchanged, OLS body never reimplemented. (c) predictive_t genuinely used (PredictiveT wraps scipy.stats.t(df=nu), samples via rng.standard_t -- real Student-t, not Gaussian). (d) thin fallback sets fit_status=thin_fallback, sigma inflated by THIN_SESSION_SIGMA_INFLATION=3.0, never returns None from fit_grip_baseline_from_laps (record always exists incl. degenerate all-thin field-prior path). (e) rain re-estimation: independently reproduced ratio EXACTLY 4.000000, offset/asymptote unchanged; RAIN_SIGMA_INFLATION=4.0 distinct from THIN=3.0.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope clean. git status --porcelain shows ONLY untracked (??) files: grip_baseline.py + test_grip_baseline.py (this gate's two allowed new files), plus g1's grip_store.py/test + .agent-work/. CRITICAL CHECK: tyre_supplant.py has NO status marker at all (not even M) -- untouched, confirming the implementer's local-reader choice. Specific exclusions respected: grip_store.py NOT modified (grip_baseline only imports GripEstimateRecord + error_record from it); no run_grip_batch / GripStore write-orchestration (g3's job) present -- grip_baseline is pure fit logic + a read-only DB wrapper.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence present and independently reproduced (not trusted from paste). Re-ran full test file: 12 passed in 0.42s. Rain sigma proof re-run independently: dry=0.029608 rain=0.118433 ratio=4.000000 exact, offset+asymptote unchanged -- matches implementer's pasted 4.000x. Cumulative regression is genuine (calls real compute_cumulative_track_laps against real 2023 DB, not a synthetic tautology). Thin-fallback tests cover both neighbour-extrapolation and degenerate all-thin field-prior; both assert a non-NULL offset+sigma (never dropped). Both out-of-scope findings re-verified on real 2023 data: (1) race_degradation_slopes source returns only compound/deg_slope_raw/n_laps -- no fuel term to subtract -> honest scoped limitation, not a hidden bug; (2) sessions.rainfall stored as bytes blob (schema says REAL): Bahrain=0/Australia=0 -> dry, Netherlands=48/Monaco=26 -> wet flag True. Decode is genuinely correct on real known-wet sessions. Both are legitimate triage candidates.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four handoff constraints honored. [Student-t no-baked-normality] every stored sigma flows through _pt_scale -> predictive_t (verified genuine Student-t seam); no scipy.stats.norm anywhere. [Reuse not reimplement] compute_cumulative_track_laps convention replicated + proven equal by real-data regression; race_degradation_slopes imported + called unchanged (no OLS reimplementation); clean-lap reader mirrors the tyre_supplant filter exactly. [Frozen thin+rain rules] MIN_STINTS_FOR_FIT=2, MIN_STINT_LAPS=4 (imported from tyre_supplant), wide-sigma fallback and rain re-estimation implemented as specified, not redesigned. [DB-only] all reads open file:...?mode=ro read-only, no FastF1/Jolpica imports. simplification_limits re-run independently: PASS (2 files). Fail-visibly honored: error_record on exception, no silent record drop. Minor non-blocking observation: the (year,gp_name,session_type,session_id) tuple recurs across signatures (data-clump), acceptable given g1's frozen GripEstimateRecord shape -- carried to Fowler pass.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes match the diff and evidence exactly: struct:physics.layer2 new module grip_baseline.py (sibling to grip_store/tyre_supplant); capability = module-G per-session grip-baseline fit; honors assumption:student-t-residuals (predictive_t verified); implements decision:thin-session-explicit + decision:session-scope-uniform as frozen (not authored); produces claim:cumulative-track-laps-reuse (real-data regression) + claim:tyre-supplant-correction-reused (imported/called unchanged). No architecture divergence needing Commander reconciliation. No decision requiring authority the implementer lacked. Two durable out-of-scope items routed to Triage (flagged above), not dropped.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass. Render a verdict on each Fowler baseline smell: flagged / overridden / absent. Record the pass to FOWLER_PASS record, run verify_fowler_pass.py, then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass complete over all 12 baseline smells; verify_fowler_pass.py exit 0. FLAGGED (both non-blocking observations, not blockers): data-clumps (session-identity tuple recurs; SessionKey would consolidate but g1's frozen record makes it low-priority) and long-parameter-list (_thin_fallback_record ~11 kw-only args; same root, keyword-only form mitigates). OVERRIDDEN with logged standard+reason: duplicated-code (local clean-lap reader mirrors tyre_supplant's SQL because modifying tyre_supplant.py is a scope violation; the actual regression logic race_degradation_slopes is imported/called unchanged, only a narrow read query is mirrored) and primitive-obsession (bare-string session_type/compound is the layer2-wide convention). Other 8 absent. Record at .agent-work/663-grip-g/g2-review/fowler_pass.json.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. g2 grip_baseline.py fit logic independently verified end-to-end: reuse-not-reimplement holds (compute_cumulative_track_laps convention proven equal on real 2023 data; race_degradation_slopes + tyre_supplant clean-lap filter reused unchanged); predictive_t is a genuine Student-t seam; thin + rain wide-sigma fallbacks implemented as frozen with no dropped record; rain sigma ratio reproduced EXACTLY 4.000000; tyre_supplant.py untouched (critical scope check); grip_store.py untouched; no g3 batch code. 12/12 tests + simplification PASS reproduced. No stop condition fired. Two out-of-scope findings (fuel confound, rainfall blob/schema mismatch) confirmed genuine, honestly-scoped, and routed to Triage. Fowler: 2 non-blocking observations, 2 logged overrides, 8 absent."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Fuel confound in grip curve: race_degradation_slopes fits a global fuel term but returns only per-compound wear slopes, so g2's wear-corrected pace still carries fuel burn-off (absorbed by curve+offset; surfaced by curve_offset_correlation). CONFIRMED genuine, honestly-scoped limitation (de-fuel would require reimplementing the forbidden OLS body), not a hidden defect. Future: expose fuel coeff as an additive return field."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "sessions.rainfall schema/storage mismatch: schema.sql declares REAL but the collector writes an 8-byte little-endian int64 blob (wet-sample count). CONFIRMED on real 2023 data (Netherlands=48, Monaco=26 wet; Bahrain/Australia=0 dry) -- decode is correct. Consider session_surface_features.session_rain_flag (INTEGER, already populated) as the canonical repo-wide rain source, or fix the schema type."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-663-g2review",
+    "status": "released",
+    "claimed_at": "2026-07-25T16:41:01.854940+00:00",
+    "last_heartbeat": "2026-07-25T16:46:01.380300+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T16:46:56.551655+00:00"
+  }
+}

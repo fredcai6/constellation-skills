@@ -1,0 +1,55 @@
+{
+  "work_id": "668-instrument-panel",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": "668-instrument-panel: attach (not attest) used for EVERY artifact-checked postcondition -- user-decision at understand/plan/g1-diagnose/g5-f12-signoff/triage/review, implementer-result/review-result at all 5 gates' gN-implement/gN-review/gN-integrate (attached to both gN-review and gN-integrate so the APPROVE-match check passed at integrate). attest --which preconditions/postconditions used only for check:null conditions; attest correctly refused on command-checked conditions (init.c1, execute.p2 -> advance run instead)."
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": "668-instrument-panel: all 10 crew dispatches (5 implement + 5 review, incl. one g7 rework pair via --abandon <session> --relaunch) used run_crew.py --backend external registering each attempt in crew-runs.json + --verify-result confirming freshness, recover_crews.py before each -- the first-class external backend worked cleanly with zero dispatch-mechanism friction, corroborating the fixed-upstream resolution."
+    },
+    {
+      "op": "confirm",
+      "id": "shared-files-not-on-mission-branch",
+      "grounding": "668-instrument-panel: the feedback trio (AGENT_FEEDBACK.md + lessons-delta.json + CONSTELLATION_FEEDBACK.md) + FENCE.md staged under .agent-work/staged-feedback/668-instrument-panel/ per the launch order fence, never written to the shared durable logs or committed on the branch; notes-668.md + 668-cartography/ staged (not committed) for the epic closeout cartographer; data/f1_data_2023.db WAL-touches restored via git checkout -- at every boundary. Final branch diff = src + tests + frozen_constants + report only."
+    },
+    {
+      "op": "confirm",
+      "id": "from-child-refuses-on-gated-checklist",
+      "grounding": "668-instrument-panel: at the spine execute step (child_checklist = execute.json, type gated), did NOT use advance --from-child; drove execute.json to DONE (no open items) then attested execute.c1 directly and advanced. The lesson's guidance held -- no --from-child attempt, no refusal encountered."
+    },
+    {
+      "op": "confirm",
+      "id": "self-authored-reasoning-gate-checks-need-review-scrutiny",
+      "grounding": "668-instrument-panel g1-diagnose (a reasoning gate, no crew): self-reviewed the F12-firewall check (c1 'no outcome computed') by confirming the probe read ONLY support/structure columns (n_points, driver, class, circuit) and never the outcome columns (time_deficit_s, deployment_share) -- the exact self-scrutiny this lesson asks a reasoning gate to apply to its own attested checks."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-claimed-side-effects",
+      "grounding": "668-instrument-panel: every crew claim independently re-verified before integrating -- re-ran simplification_limits on the PINNED interpreter (PASS), confirmed the signed REPLICATION_* values byte-exact in frozen_constants.py, ground-truthed data/f1_data_2023.db clean after each real-data crew, re-ran the 4-circuit support probe myself to clear the Admiral's gating condition (MIN_SUPPORT_N=15 holds). Caught the radon-env split (py vs pinned) that would have false-failed a re-check."
+    },
+    {
+      "op": "confirm",
+      "id": "delegated-commander-foreground-poll-over-watcher-yield",
+      "grounding": "668-instrument-panel g5-f12-signoff: refines the lesson's boundary. All F12-independent work (4 instruments) was completed first (built in parallel while the F12 proposal was out for owner signature, exactly as the launch order mandated -- never idle). At the HARD GATE, with nothing to poll (the sign-off is a human-routed decision, not a finite compute job), I made the block visible (SendMessage + STATE_NOTE) and yielded the turn as a governed reach-up; the Admiral resumed me with the signature (a query round-trip, context intact). So: foreground-poll a finite compute job; yield-with-a-clear-message a human-gated sign-off -- the two are different shapes, not a contradiction."
+    },
+    {
+      "op": "mention",
+      "id": "crew-idle-strands-deliverable",
+      "grounding": "668-instrument-panel: did NOT recur across 10 crew dispatches. Dispatching each implementer/reviewer as a SYNCHRONOUS foreground Agent-tool subagent (run_crew --backend external, not a detached background job) with an explicit 'WRITE the result file before ending your turn; run pytest to completion in-context, do not background and idle' instruction avoided the strand every time -- each crew wrote its result file and sent a pointer unprompted."
+    },
+    {
+      "op": "add",
+      "id": "load-bearing-correction-needs-negative-control-falsifier",
+      "scope": "commander",
+      "task_class": "general-workflow",
+      "statement": "When a gate's deliverable is a load-bearing STATISTICAL CORRECTION (a de-biasing / residualization / normalization whose whole point is to remove a confound), an output-only synthetic recovery test ('inject the signal, confirm it recovers') CANNOT distinguish a correct correction from a broken one that recovers the confound instead. The synthetic falsifier MUST include a NEGATIVE CONTROL: (a) a generator that carries BOTH the confound AND the genuine signal as separate terms, (b) a null arm injecting ONLY the confound (zero genuine signal) that the correct correction must report ~0, and (c) an explicit broken-variant helper (e.g. the weaker correction) asserted to FAIL that null arm. Without the negative control the test is structurally blind to the exact failure the correction exists to prevent.",
+      "grounding": "668-instrument-panel g3-replication: the golf-correction's first spec (per-driver demean) was output-plausible but wrong -- it left the shared class main effect, which replicates trivially (a healthy-looking replication with zero driver-utilization content). The cold plan critic caught it pre-code; the fix (double-centering) was validated by a 3-arm generator carrying a real driver x class interaction term PLUS a negative-control test asserting per-driver-demean-only FAILS the pure-shared-class arm (measured r_double=0.0006 vs r_demean=0.685). The g3 reviewer re-derived the discriminating condition from scratch (within-class the two corrections are identical to 1.1e-16, so the interaction r must span classes). An 'inject class-shape, confirm recovery' test alone would have passed BOTH the correct and the broken correction.",
+      "bank_reason": "One occurrence so far (this golf-correction instrument). Re-observe on the next load-bearing de-biasing/residualization gate whether an output-only recovery test again masks a broken correction and whether the negative-control-plus-interaction-generator recipe generalizes, before graduating it into commander-core.md's crew-gate / falsifier-design guidance."
+    }
+  ]
+}

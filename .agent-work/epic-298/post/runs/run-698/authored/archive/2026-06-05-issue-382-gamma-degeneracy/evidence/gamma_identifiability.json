@@ -1,0 +1,109 @@
+{
+  "deliverable": "2 - measured gamma identifiability verdict",
+  "issue": 382,
+  "method_note": "Same within-(driver,race) demeaned pooled fixed-effects design as the beta script. Collinearity = corr/VIF of each gamma regressor (tyre_life x compound) vs the absorbed phi (lap_number). SE from sigma^2 (X'X)^-1. Profile likelihood: chi2(1)=3.84 threshold on 2(RSS-RSS_min)/sigma2.",
+  "metrics": {
+    "adjacency": [
+      {
+        "delta_gamma": -0.00018193201275691439,
+        "distinguishable_2se": true,
+        "gamma_up": false,
+        "pair": "C1->C2",
+        "separation_se": -7.593709367087417
+      },
+      {
+        "delta_gamma": 7.566726439046744e-05,
+        "distinguishable_2se": true,
+        "gamma_up": true,
+        "pair": "C2->C3",
+        "separation_se": 4.115260936509008
+      },
+      {
+        "delta_gamma": 7.694805350625983e-05,
+        "distinguishable_2se": true,
+        "gamma_up": true,
+        "pair": "C3->C4",
+        "separation_se": 2.575065109819746
+      },
+      {
+        "delta_gamma": 2.6491372345777598e-05,
+        "distinguishable_2se": false,
+        "gamma_up": true,
+        "pair": "C4->C5",
+        "separation_se": 0.2637028661611452
+      }
+    ],
+    "condition_number": 150821.71177933205,
+    "gamma_monotone_up": false,
+    "max_vif": 2.534657089102986,
+    "n_adjacent_distinguishable_2se": 3,
+    "n_adjacent_pairs": 4,
+    "n_resolved_pairs_gamma_down": 1,
+    "n_resolved_pairs_gamma_up": 2,
+    "per_compound": {
+      "C1": {
+        "corr_gamma_regressor_vs_phi": 0.3290623039230955,
+        "data_information_diag": 400001.837658259,
+        "gamma": 0.000661347158637039,
+        "se": 2.1069272840864276e-05,
+        "vif": 2.297388639141882
+      },
+      "C2": {
+        "corr_gamma_regressor_vs_phi": 0.3181112153279561,
+        "data_information_diag": 1405187.3604313368,
+        "gamma": 0.0004794151458801246,
+        "se": 1.140542172586033e-05,
+        "vif": 2.3649955049163633
+      },
+      "C3": {
+        "corr_gamma_regressor_vs_phi": 0.12692150285903925,
+        "data_information_diag": 907855.151315307,
+        "gamma": 0.0005550824102705921,
+        "se": 1.4422128160355767e-05,
+        "vif": 2.44314167254542
+      },
+      "C4": {
+        "corr_gamma_regressor_vs_phi": -0.061889161807708,
+        "data_information_diag": 261006.04160438688,
+        "gamma": 0.0006320304637768519,
+        "se": 2.6171266039573605e-05,
+        "vif": 2.312988177367013
+      },
+      "C5": {
+        "corr_gamma_regressor_vs_phi": 0.09140635249583572,
+        "data_information_diag": 20825.218742055178,
+        "gamma": 0.0006585218361226295,
+        "se": 9.699026059214785e-05,
+        "vif": 2.534657089102986
+      }
+    },
+    "profile_likelihood_worst": {
+      "ci_includes_zero": false,
+      "compound": "C5",
+      "mle": 0.0006585218361226295,
+      "param_index": 9,
+      "profile_ci95": [
+        0.00047424034099754857,
+        0.0008428033312477105
+      ],
+      "profile_halfwidth": 0.00018428149512508097,
+      "se": 9.699026059214785e-05
+    }
+  },
+  "pooled_design": {
+    "n_demeaned_laps": 19457,
+    "n_params": 10,
+    "present_compounds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "seam_flag_380": "No #380 seam touched. gamma identifiability is a measurement; it implies no artifact-schema or CompoundNormalizer change. It does inform the Piece-3 gate (gamma-dependent vector latent), not #380's beta injection.",
+  "verdict": "gamma IDENTIFICATION-LIMITED (not refuted), MEASURED: max VIF(gamma regressor vs phi+others) = 2.5 (moderate collinearity with the fuel/evolution term); only 3/4 adjacent gamma pairs are distinguishable at >2 SE; gamma monotone-up = False; the worst-identified gamma (C5) has a 95% profile CI half-width of 1.84e-04 vs MLE 6.59e-04 (CI includes zero = False). The degradation axis cannot be ordered monotonically from race laps at the available pooling -- consistent with the gate's qualitative 'non-monotone, spec-sensitive', now quantified.",
+  "years": [
+    2024
+  ]
+}

@@ -1,0 +1,381 @@
+{
+  "work_id": "513-fp-fits-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-schema-field",
+    "m2-session-helper",
+    "m3-record-and-populate",
+    "m4-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus .agent-work/513-fp-fits/handoff-g3.md and GATE_PROTOCOL.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Confirm src/physics/layer2/estimate_store.py (EstimateRecord/_migrate_missing_columns/record_from_estimate), src/physics/layer2/session_race.py (compute_cumulative_track_laps), and both existing test files (tests/unit/physics/layer2/test_estimate_store.py, tests/unit/physics/layer2/test_session_race.py) read cleanly and confirm the mass_kg_assumed self-heal precedent (test_store_self_heals_legacy_db_on_open) to mirror. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + both target modules + precedent self-heal test loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-schema-field": {
+      "id": "m1-schema-field",
+      "title": "EstimateRecord.cumulative_track_laps + additive self-heal",
+      "imperative": "Add `cumulative_track_laps: Optional[int] = None` to EstimateRecord in estimate_store.py, placed immediately after mass_kg_assumed, with a docstring comment noting it is the #513 W3 track-evolution axis populated via session_race.session_cumulative_track_laps (None until explicitly populated -- never auto-computed inside record_from_estimate unless passed). Write a FAILING test first in tests/unit/physics/layer2/test_estimate_store.py mirroring test_store_self_heals_legacy_db_on_open: open a legacy store copy (via the existing _make_legacy_table helper, which lacks the new column) through EstimateStore, confirm the ALTER ADD COLUMN self-heal adds cumulative_track_laps and the legacy row reads back None/NULL. Attest c1 (red observed: AttributeError/column-missing before the field exists) BEFORE implementing, then implement and get c2 green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new self-heal test written and observed failing (field/column absent) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "field added next to mass_kg_assumed; self-heal test green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q -k cumulative_track_laps"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-schema-field-2"
+        }
+      ],
+      "constraints": [
+        "physics-region: no evo/latent_power/compound_prior/fastf1 imports",
+        "self-heal must be ADDITIVE ALTER ADD COLUMN, mirroring mass_kg_assumed's precedent exactly",
+        "do not touch session_estimator.py or the views"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-schema-field-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q -k cumulative_track_laps",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-schema-field-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q -k cumulative_track_laps",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-session-helper": {
+      "id": "m2-session-helper",
+      "title": "session_cumulative_track_laps in session_race.py",
+      "imperative": "Add `session_cumulative_track_laps(year, gp, session_type, constructor, db_path, *, session_id=None) -> Optional[int]` to session_race.py: resolve the constructor's driver_ids for that weekend via session_classifications.team (read-only sqlite, _ro_uri pattern), find the fastest clean (valid_lap=1) lap among those drivers' lap_times rows in the session, take its lap_number as the anchor, and return compute_cumulative_track_laps(session_id, anchor_lap_number, db_path) UNCHANGED (do not modify that function). Return None on any absence (session/constructor/clean-lap not found), never raise. Docstring must state the approximation explicitly: a single scalar per (session, constructor) anchored at one representative lap, while the estimator itself pools observations across many laps at varying track states. Write FAILING tests first in tests/unit/physics/layer2/test_session_race.py (extend the _make_db fixture with a session_classifications table + an insert helper): (a) two-driver constructor, fastest clean lap correctly anchors the count: (b) constructor absent from classifications -> None; (c) no clean lap for the constructor's drivers -> None; (d) session not found -> None. Attest c1 (red) before implementing, then get c2 green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-schema-field complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new session_cumulative_track_laps tests written and observed failing (ImportError/AttributeError) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "session_cumulative_track_laps implemented reusing compute_cumulative_track_laps unchanged; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_race.py -q -k cumulative_track_laps"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-session-helper-2"
+        }
+      ],
+      "constraints": [
+        "physics-region: no evo/latent_power/compound_prior/fastf1 imports",
+        "do NOT change compute_cumulative_track_laps",
+        "read-only DB access for the count (reuse _ro_uri pattern)",
+        "'lap_number < anchor' convention preserved"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-session-helper-1",
+          "type": "note",
+          "payload": {
+            "detail": "c2's literal check command -k cumulative_track_laps under-selects (matches only the 2 pre-existing snake_case compute_cumulative_track_laps tests, not the new CamelCase TestSessionCumulativeTrackLaps class -- a plan-authoring imprecision, flagged in workflow feedback). Independently verified broader coverage: PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_race.py -q -k SessionCumulativeTrackLaps -> 5 passed (all new session_cumulative_track_laps tests green). Full-file + cross-module confirmation happens at m4-evidence regardless."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-session-helper-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_session_race.py -q -k cumulative_track_laps",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-record-and-populate": {
+      "id": "m3-record-and-populate",
+      "title": "record_from_estimate optional param + demo-scoped populate helper",
+      "imperative": "Add an optional `cumulative_track_laps: Optional[int] = None` kwarg to record_from_estimate in estimate_store.py that flows straight into the returned EstimateRecord (default None keeps every default-arg caller byte-identical -- estimate_batch.py's call site must NOT need changes and must still pass with its own tests unmodified). Add `populate_cumulative_track_laps_for_demo(store_path, db_path, weekends)` to estimate_store.py: for each named (year, gp_name, session_type) weekend, compute session_race.session_cumulative_track_laps (local import to keep estimate_store's top-level import light) for every constructor row ALREADY present in session_estimates for that weekend and UPDATE it in place; never inserts new rows, never touches rows outside the named weekends (NULL elsewhere stays untouched). Write FAILING tests first: (a) record_from_estimate default omits the kwarg -> cumulative_track_laps stays None (backward compat); (b) record_from_estimate(..., cumulative_track_laps=42) stores and round-trips 42 through the store; (c) populate_cumulative_track_laps_for_demo on a store with rows for a named weekend and an UN-named weekend updates only the named weekend's rows, leaving the other NULL. Attest c1 (red) before implementing, then get c2 green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-session-helper complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new record_from_estimate kwarg + demo-populate tests written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "optional kwarg + demo populate helper implemented; tests pass; existing estimate_store tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-record-and-populate-1"
+        }
+      ],
+      "constraints": [
+        "default-arg callers of record_from_estimate must be byte-identical (backward compatible)",
+        "demo-scoped populate only -- NO real backfill/estimate_batch run over real data (#646 separate)",
+        "never read/modify/commit data/*.db -- tests use tmp_path/in-memory sqlite copies only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-record-and-populate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Full-suite evidence + DB hygiene + write IMPLEMENTER_RESULT",
+      "imperative": "Run the full estimate_store + session_race unit test files (and estimate_batch's existing tests, to prove the default-arg call site is untouched) plus the required verification command from the handoff. Confirm `git status --short data/` is clean (no data/*.db touched). Write IMPLEMENTER_RESULT to BOTH .agent-work/513-fp-fits/result-g3-implement.md and via SendMessage to ShipI-513, per the handoff's Return Format.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-record-and-populate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "estimate_store + session_race test files green together",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py tests/unit/physics/layer2/test_session_race.py tests/unit/physics/layer2/test_estimate_batch.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-3"
+        },
+        {
+          "id": "c2",
+          "statement": "data/ untouched by this gate's work",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-513 && test -z \"$(git status --short data/)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-4"
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT written to result-g3-implement.md and sent to ShipI-513",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py tests/unit/physics/layer2/test_session_race.py tests/unit/physics/layer2/test_estimate_batch.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && test -z \"$(git status --short data/)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-evidence-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && PYTHONPATH=/c/Programs/f1-513 py -m pytest tests/unit/physics/layer2/test_estimate_store.py tests/unit/physics/layer2/test_session_race.py tests/unit/physics/layer2/test_estimate_batch.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-evidence-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-513 && test -z \"$(git status --short data/)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "shipI-513-g3-1784471194",
+    "status": "released",
+    "claimed_at": "2026-07-19T14:26:45.055057+00:00",
+    "last_heartbeat": "2026-07-19T14:38:13.237453+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-19T14:38:19.973478+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff-g3 complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). Confirmed EstimateRecord/_migrate_missing_columns/record_from_estimate in estimate_store.py, compute_cumulative_track_laps in session_race.py, no existing session_cumulative_track_laps/populate_cumulative_track_laps_for_demo (grep confirmed). session_classifications table (year,gp_name,session_type,driver_id,team) is the constructor->driver resolution seam since lap_times has no team column. mass_kg_assumed self-heal precedent (test_store_self_heals_legacy_db_on_open + _make_legacy_table) will be mirrored for the new column.",
+      "mechanical": false,
+      "ts": "2026-07-19T14:27:07.814367+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-schema-field",
+      "why": "Added cumulative_track_laps: Optional[int]=None to EstimateRecord next to mass_kg_assumed, additive-only (self._cols auto-picks it up, _migrate_missing_columns ALTER-adds it on legacy DBs -- same mechanism as mass_kg_assumed). Self-heal test decoupled from record_from_estimate's not-yet-built kwarg by using dataclasses.replace, so m1 doesn't reach ahead into m3's scope. 2/2 new tests green, no existing test touched.",
+      "mechanical": false,
+      "ts": "2026-07-19T14:29:16.689951+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-session-helper",
+      "why": "session_cumulative_track_laps implemented: _constructor_drivers (session_classifications.team -> driver_ids, best-effort empty-on-absence) + _fastest_clean_lap_number (MIN lap_time WHERE valid_lap=1 among those drivers) find the anchor lap, then compute_cumulative_track_laps (untouched) is called with it. Docstring states the pooling approximation explicitly. All 5 new tests green (verified via -k SessionCumulativeTrackLaps, see attached note e-m2-session-helper-1); c2's literal -k filter under-selects due to CamelCase vs snake_case naming but still truthfully passes (2/2) and m4-evidence re-verifies the full file.",
+      "mechanical": false,
+      "ts": "2026-07-19T14:32:32.130729+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-record-and-populate",
+      "why": "record_from_estimate gained cumulative_track_laps: Optional[int]=None kwarg, stored as-is (default None -> byte-identical for every existing caller incl. estimate_batch.py, which passes no such kwarg). populate_cumulative_track_laps_for_demo added: raw UPDATE against session_estimates for named (year,gp_name,session_type) weekends only, local-imports session_race to keep estimate_store's import graph light, never inserts rows, counts updated vs no_lap. Full test_estimate_store.py: 53/53 green (was 48 baseline + 5 new).",
+      "mechanical": false,
+      "ts": "2026-07-19T14:35:29.949478+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence",
+      "why": "Full combined run (test_estimate_store.py + test_session_race.py + test_estimate_batch.py): 131/131 green. git status --short data/ empty. IMPLEMENTER_RESULT written to result-g3-implement.md and sent to ShipI-513 via SendMessage (msg_id c3d51acc-599e-49b6-9b39-84893cc2b166).",
+      "mechanical": false,
+      "ts": "2026-07-19T14:38:13.237398+00:00"
+    }
+  ]
+}

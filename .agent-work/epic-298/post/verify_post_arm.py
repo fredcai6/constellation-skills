@@ -27,6 +27,93 @@ def _fail(msg: str) -> None:
     print(f"FAIL: {msg}")
 
 
+# Read-only git subcommands that the reused verifier's `\bgit\s+merge\b` pattern catches by
+# accident: `merge-base` is `merge` followed by a word boundary. Listed explicitly rather
+# than loosened into a regex, so adding one is a visible decision.
+READ_ONLY_GIT = ("git merge-base",)
+
+
+def adjudicate_forbidden(run_dir: Path, treat: dict) -> dict:
+    """Classify `verify_treatment.py`'s forbidden-operation hits WITHOUT touching it.
+
+    The reused verifier searches its FORBIDDEN patterns against `json.dumps(input)` — the
+    WHOLE tool input, including the `content` of a `Write`. That produces two false-positive
+    classes, both observed in this arm and neither present in PRE-B:
+
+      1. `git merge-base --is-ancestor ...` matches `\\bgit\\s+merge\\b`. Read-only.
+      2. A `Write` whose FILE CONTENT mentions `git commit` (e.g. a gate plan) is recorded as
+         a forbidden operation. A `Write` cannot execute git.
+
+    The verifier is NOT modified: it is a reused scorer and the PRE-B/POST pairing depends on
+    both arms being scored by identical code. So the hits are adjudicated HERE, additively,
+    by the same code over both arms — and a hit that is neither class stays REAL and fails
+    the gate. The point is to avoid a false stop condition, never to explain one away.
+    """
+    real, benign = [], []
+    for hit in treat.get("forbidden_operations") or []:
+        blob = hit.get("target") or ""
+        tool = hit.get("tool")
+        if tool not in ("Bash", "PowerShell"):
+            # Not an executor: whatever matched is text, not an action.
+            benign.append({**hit, "why": f"{tool} cannot execute a command; the pattern "
+                                         "matched file content, not an executed operation"})
+            continue
+        stripped = blob
+        for phrase in READ_ONLY_GIT:
+            stripped = stripped.replace(phrase, "")
+        # Re-test the ORIGINAL patterns against the text with read-only forms removed.
+        import re as _re
+        pats = (r"\bgit\s+push\b", r"\bgh\s+pr\s+create\b",
+                r"\bgh\s+issue\s+(comment|create|edit|close)\b",
+                r"\bgit\s+commit\b", r"\bgit\s+merge\b")
+        if any(_re.search(p, stripped) for p in pats):
+            real.append(hit)
+        else:
+            benign.append({**hit, "why": "only read-only git subcommands matched "
+                                         f"({', '.join(READ_ONLY_GIT)})"})
+    return {"real": real, "benign": benign}
+
+
+def transcript_integrity(run_dir: Path) -> dict:
+    """One subject produces exactly ONE system/init, ONE result, ONE session_id.
+
+    EARNED (#396). The first POST attempt was launched twice and two drivers wrote the same
+    run directories. The doubled transcripts reported `exit_code: 0` with plausible elapsed
+    times, and `verify_treatment.py`'s truncation check passed — two interleaved writers
+    still leave a newline-terminated file. Nothing the arm was already checking could see it.
+    Counting these three quantities is what exposed it, so it is a check now and not a story.
+    """
+    stream = run_dir / "stream.ndjson"
+    if not stream.is_file():
+        return {"ok": False, "reason": "no transcript"}
+    init = results = malformed = 0
+    sessions: set[str] = set()
+    raw = stream.read_text(encoding="utf-8", errors="replace")
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            ev = json.loads(line)
+        except ValueError:
+            malformed += 1
+            continue
+        if ev.get("type") == "system" and ev.get("subtype") == "init":
+            init += 1
+        if ev.get("type") == "result":
+            results += 1
+        if ev.get("session_id"):
+            sessions.add(ev["session_id"])
+    return {
+        "ok": init == 1 and results == 1 and len(sessions) == 1 and malformed == 0,
+        "system_init_events": init,
+        "result_events": results,
+        "distinct_session_ids": len(sessions),
+        "malformed_json_lines": malformed,
+        "newline_terminated": raw.endswith("\n"),
+    }
+
+
 def _load(path: Path):
     if not path.is_file():
         return None
@@ -96,8 +183,27 @@ def check_captures() -> int:
             _fail(f"{d.name}: transcript truncated"); ok = False
         if not treat.get("final_answer_chars"):
             _fail(f"{d.name}: empty final answer — the subject never returned a plan"); ok = False
+        ti = transcript_integrity(d)
+        print(f"    transcript: init={ti.get('system_init_events')} "
+              f"results={ti.get('result_events')} "
+              f"sessions={ti.get('distinct_session_ids')} "
+              f"malformed={ti.get('malformed_json_lines')} ok={ti['ok']}")
+        if not ti["ok"]:
+            _fail(f"{d.name}: transcript integrity FAILED ({ti}) — more than one writer, or "
+                  "a partial write. A capture two processes wrote is not a capture (#396)")
+            ok = False
+
+        adj = adjudicate_forbidden(d, treat)
         if treat.get("forbidden_operations"):
-            _fail(f"{d.name}: forbidden operations present"); ok = False
+            print(f"    forbidden hits: {len(treat['forbidden_operations'])} raw -> "
+                  f"{len(adj['real'])} REAL, {len(adj['benign'])} verifier false positives")
+            for b in adj["benign"]:
+                print(f"      benign idx={b['index']} {b['tool']}: {b['why']}")
+        if adj["real"]:
+            for r in adj["real"]:
+                _fail(f"{d.name}: REAL forbidden operation at index {r['index']} "
+                      f"({r['tool']}): {r['target'][:160]}")
+            ok = False
         if not (treat.get("write_audit") or {}).get("clean"):
             _fail(f"{d.name}: write audit not clean — see treatment.json write_audit"); ok = False
 
@@ -114,10 +220,20 @@ def check_captures() -> int:
         else:
             a = post_brief.read_bytes()
             b = preb_brief.read_bytes()
-            print(f"    brief bytes: POST={len(a)} PRE-B={len(b)} identical={a == b}")
-            if a != b:
-                _fail(f"{d.name}: brief differs from PRE-B's byte-for-byte — that is a "
-                      "SECOND VARIABLE and it looks exactly like a treatment effect")
+            # LINE ENDINGS ARE NORMALIZED, and the reason is recorded because it looks like
+            # a loosened check and is not. PRE-B's brief.md is COMMITTED, so the working-tree
+            # copy is whatever git checked out — CRLF under this repo's settings. POST's is
+            # written fresh by `capture_preb.py` with newline="\n". Comparing raw bytes
+            # therefore reports a difference of exactly the line count (21-29 CR bytes here)
+            # on every run, while the CONTENT is identical. The CR counts are printed rather
+            # than hidden, so a real content change cannot hide behind this normalization.
+            na, nb = a.replace(b"\r\n", b"\n"), b.replace(b"\r\n", b"\n")
+            print(f"    brief: POST={len(a)}B (CR={a.count(bytes([13]))}) "
+                  f"PRE-B={len(b)}B (CR={b.count(bytes([13]))}) "
+                  f"content-identical={na == nb}")
+            if na != nb:
+                _fail(f"{d.name}: brief CONTENT differs from PRE-B's — that is a SECOND "
+                      "VARIABLE and it looks exactly like a treatment effect")
                 ok = False
 
         # Per-run corpus witness: the treatment lives on a mutable global.

@@ -1,0 +1,188 @@
+{
+  "work_id": "cmdr-603",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-collect",
+    "g2-verify-report"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md. No Cartographer packet applies (see MISSION_FRAME.md \u2014 pure data-collection run, no structural map relevance). Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed (already done at the spine context/understand steps; re-confirmed here)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine already loaded this session (global-everyone.md, global-orchestrator.md, ORCHESTRATOR_CONTEXT.md, GLOSSARY.md); no packet applies per MISSION_FRAME.md. Plan intent/scope reconfirmed: collect R8+R9 into f1_data_2026.db, verify, report."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-collect": {
+      "id": "g1-collect",
+      "title": "Dry-run + OS-detached collection launch (Austria R8 + Great Britain R9)",
+      "imperative": "REASONING GATE \u2014 no crew dispatch. Waiver reason: this gate's deliverable is an operational side effect (running the already-shipped, unmodified collector against the canonical DB), not a reviewable code diff; the Commander runs it directly in this context per commander-core.md 'Crew gate vs reasoning gate'. Steps: (1) run `py scripts/collect_evo_data.py --seasons 2026 --dry-run` to confirm the exact FastF1 GP-name strings for Austria and Great Britain and the GB session set (expect FP1, Sprint Qualifying, Sprint, Qualifying, Race per the launch order's stated likely set \u2014 verify, don't assume); (2) rewrite .agent-work/cmdr-603/STATE_NOTE.md (step, slug, next command, PID placeholder, expected artifact) from the STATE_NOTE template BEFORE launching; (3) launch collection OS-detached via PowerShell Start-Process -WindowStyle Hidden -FilePath py -ArgumentList (collect_evo_data.py --seasons 2026 --gp <Austria-name> --gp <GB-name> --sessions <verified list incl. sprint types> --report-json .agent-work/cmdr-603/collect-report.json), WITHOUT --include-telemetry and WITHOUT --rounds; (4) immediately rewrite STATE_NOTE.md again with the real PID; (5) poll the report-json / DB in a loop inside this turn (never end the turn to 'wait') until the collector process exits or the report shows completion, honoring the 55s inter-session delay and 20-min rate-limit wait as expected latency, not a stall.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dry-run run and exact GP-name strings + GB session set confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Dry-run superseded (script requires --worklist for --dry-run now); session sets confirmed instead via get_weekend_sessions(2026,'Austria')=[FP1,FP2,FP3,Q,R], get_weekend_sessions(2026,'Great Britain')=[FP1,SQ,S,Q,R] (matches launch-order's likely-set guess exactly)."
+        },
+        {
+          "id": "c2",
+          "statement": "STATE_NOTE.md written before the detached launch with a real PID",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_state_note.py cmdr-603"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-collect-1"
+        },
+        {
+          "id": "c3",
+          "statement": "detached collection process ran to completion (exit or report-json shows terminal state), polled in-turn",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both detached collections ran to completion, polled in-turn (blocking bash loops, 15s interval): Austria PID 1304 done 18:19:02Z (5/5 success), Great Britain PID 63740 done 18:24:40Z (5/5 success). Reports at .agent-work/cmdr-603/collect-report-austria.json and collect-report-gb.json, overall_status=pass both, 0 failures."
+        }
+      ],
+      "constraints": [
+        "main checkout only, no worktree",
+        "no --include-telemetry",
+        "no data/ commit",
+        "no --rounds (use --gp)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-collect-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_state_note.py cmdr-603",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-verify-report": {
+      "id": "g2-verify-report",
+      "title": "Verify collected data + write report",
+      "imperative": "REASONING GATE \u2014 no crew dispatch (same waiver as g1: verification queries + a report document, not a reviewable code diff). Steps: (1) for every session type collected for R8 and R9, call has_session_classification(2026, 8|9, <type>) and get_session_classification / get_session_driver_info via a small py -c script against src/data/database.py's DatabaseManager, confirm FP positions are populated (not null, derived from best lap) and confirm round mapping (Austria=8, GB=9, not shifted by the Bahrain/Saudi 2026 drop); (2) spot-check R8 and R9 race (and sprint, if collected) winner/podium against known 2026 results; (3) note whether the Parquet mirror needs action (classifications/laps-only vs telemetry-only mirror) rather than guessing; (4) write .agent-work/cmdr-603/cmdr-603-report.md per the launch order's Return Shape (verdict, per-session-type table, round-mapping confirmation, spot-check results, detached PID + report-json path, Parquet-mirror note, worktree-isolation exemption note, triage candidates, workflow feedback, lessons-delta proposal).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-collect complete (collection ran to completion or honestly-reported partial)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-collect complete: both rounds collected, 10/10 sessions success"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "has_session_classification confirmed true for every collected session type, both rounds; round mapping confirmed correct",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "has_session_classification=True for all 5 R8 session types (FP1/FP2/FP3/Q/R) and all 5 R9 session types (FP1/SQ/S/Q/R); DISTINCT round_num/gp_name = (8,'Austria'),(9,'Great Britain') -- round mapping correct, no Bahrain/Saudi-drop reindex shift. FP1 R8 positions: 22 drivers, 0 nulls (position correctly derived from best-lap-time)."
+        },
+        {
+          "id": "c2",
+          "statement": "spot-check vs published R8/R9 results recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Podiums pulled for R8 race, R9 sprint, R9 race. Driver-team pairings internally consistent + match the known 2025/2026 grid moves (Hamilton->Ferrari, Antonelli->Mercedes) -- HONEST NULL on race-by-race result corroboration: these events (2026-06-28, 2026-07-05) postdate the assistant's Jan-2026 knowledge cutoff, so 'who actually won' cannot be independently cross-checked against outside knowledge; recorded as a scoped limitation in the report, not fabricated confirmation."
+        },
+        {
+          "id": "c3",
+          "statement": "report written to .agent-work/cmdr-603/cmdr-603-report.md matching the launch order Return Shape",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/cmdr-603/cmdr-603-report.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-verify-report-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-verify-report-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/cmdr-603/cmdr-603-report.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-verify-report",
+      "statement": "collect_evo_data.py --dry-run now requires --worklist (raises ValueError standalone); the launch-order template's bare --dry-run example is stale as of this run."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-collect",
+      "statement": "collect_evo_data.py --gp is single-value only (argparse type=str); a launch order asking to restrict two GPs in one call (--gp A --gp B) silently takes only the last value. Worth a --help/doc note so future launch orders assume two sequential invocations, not one multi-gp call."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "commander-cmdr-603-exec",
+    "status": "released",
+    "claimed_at": "2026-07-12T18:12:26.242728+00:00",
+    "last_heartbeat": "2026-07-12T18:27:05.027088+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-12T18:27:08.671229+00:00"
+  }
+}

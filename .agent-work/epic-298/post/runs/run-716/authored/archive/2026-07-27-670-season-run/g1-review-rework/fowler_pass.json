@@ -1,0 +1,20 @@
+{
+  "work_id": "670-season-run-g1-review-rework",
+  "diff_ref": "scripts/run_season_670.py::run_season try/except-park-and-continue rework (lines ~206-236) + 2 new tests in tests/unit/physics/pilot/test_season_runner.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, g1-implementer-rework-handoff.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "run_season's loop body now handles empty-grid park, run_circuit_fn invocation, vocabulary-check, success-recording, AND run-failure park in one ~46-line for-body (function itself ~90 lines incl. docstring/return). Not yet egregious and every branch is covered by tests, but a future 'extract _run_one_round(circuit, round_idx, ...) -> dict' would shrink the loop to slate-iteration only. Non-blocking, future cleanup.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The two park-dict literals (empty-grid park at lines 194-202, run-failure park at lines 230-234) share the {round_idx, status:'parked', reason} shape without a shared constructor. Minor -- a `_park(round_idx, reason)` helper would remove the duplication, but the two reason-string computations are different enough (static vs f-string over the caught exception) that inlining is still readable. Non-blocking.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "Pre-existing (circuit/round_idx/year/session_type traveling together across read_round_grid/check_round_vocabulary/run_season/main) and already flagged non-blocking in the original g1-review Fowler pass (.agent-work/670-season-run/g1-review/fowler_pass.json). This rework's diff adds no new parameter and does not worsen the clump -- absent for THIS diff.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "run_season's signature is unchanged by this rework (still the same params as before the rework); already flagged non-blocking in the original g1-review Fowler pass. Not re-flagged here since this diff added zero parameters.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "run_circuit_fn/grid_reader injection points predate this rework and were already reviewed+overridden in the original g1-review Fowler pass (handoff-mandated synthetic-test seam, exercised by all tests). This rework adds no new injection point or generality.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The `# noqa: BLE001 -- ANY round-stage failure PARKS, never kills the season` comment explains WHY the broad except is deliberate (matches the pre-existing style of the same pattern on check_round_vocabulary's own except at line 148) -- it documents a real design decision, not cover for bad code.", "override": null}
+  ],
+  "rail_exception": null
+}

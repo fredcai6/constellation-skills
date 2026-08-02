@@ -1,0 +1,41 @@
+{
+  "work_id": "epic-601-audit-graduate",
+  "tick": false,
+  "ops": [
+    {
+      "op": "retire",
+      "id": "py-launcher",
+      "reason": "Graduated: already stated verbatim as durable project doctrine in CLAUDE.md ('Python is invoked as `py`, not `python`') and docs/agents/engine-config.json rules_root ('Use py for Python commands in this repository'), both read at the commander/crew context step; also restated in docs/agents/CREW_CONTEXT.md ('Use `py`, not `python`.'). 19 mentions / 18 confirms, zero disconfirms, over 6+ weeks -- verified 2026-07-24 (epic-601 lessons audit) by direct read of all three destination files; no further re-observation needed."
+    },
+    {
+      "op": "retire",
+      "id": "worktree-untracked-data",
+      "reason": "Graduated: already stated verbatim as durable project doctrine in docs/agents/CREW_CONTEXT.md ('Untracked data needs absolute main-checkout paths. SQLite season DBs, the FastF1 cache, model artifacts, and the playbook/feedback files are untracked and absent from a worktree...'), read at the crew context step. 10 confirms, zero disconfirms -- verified 2026-07-24 (epic-601 lessons audit) by direct file read."
+    },
+    {
+      "op": "retire",
+      "id": "handoff-cite-exact-seam-signature",
+      "reason": "Graduated: already stated verbatim as durable project doctrine in docs/agents/CREW_CONTEXT.md ('Verify a cited seam against source before you reuse it...') and docs/agents/ORCHESTRATOR_CONTEXT.md ('Handoffs cite exact seams and their consumer topology...'). 9 confirms, zero disconfirms, over 4+ weeks -- verified 2026-07-24 (epic-601 lessons audit) by direct file read. The self-authored-reasoning-gate extension this epic surfaced (624-phase0) is banked separately as lesson:self-authored-reasoning-gate-checks-need-review-scrutiny since that specific nuance is not yet in either doc."
+    },
+    {
+      "op": "retire",
+      "id": "diagnose-first-decide-fix",
+      "reason": "Graduated: already stated verbatim as durable project doctrine in docs/agents/ORCHESTRATOR_CONTEXT.md ('Diagnose before fixing when the premise is uncertain: when an issue inherits a prior run's diagnosis or the fix locus is unclear, plan the first gate as an evidence-only diagnosis with a human decide-fix checkpoint before any code...'). Re-validated again this epic (638-f12-stability-rework's G1 evidence-only diagnosis overturned the launch order's stated leading hypothesis, per its staged AGENT_FEEDBACK.md 2026-07-18 'What worked' entry -- confirm op for this recurrence harvested separately from the 638-f12-stability-rework staged delta). Verified 2026-07-24 (epic-601 lessons audit) by direct file read."
+    },
+    {
+      "op": "retire",
+      "id": "state-note-before-detach",
+      "reason": "Graduated: already stated verbatim as inherited platform doctrine in the bundled skill reference references/global-everyone.md ('Write the crash-resume state note (step / slug / next-cmd / PID / expected-artifact) BEFORE detaching...'), read by every agent at the context step. 12 confirms, zero disconfirms, over 6+ weeks -- verified 2026-07-24 (epic-601 lessons audit) by direct file read."
+    },
+    {
+      "op": "retire",
+      "id": "verify-claimed-side-effects",
+      "reason": "Graduated: already stated verbatim as inherited platform doctrine in the bundled skill reference references/global-everyone.md ('Verify claimed side-effects against the world. Never accept a claimed side-effect on the strength of the claim...'), read by every agent at the context step. Re-validated again this epic (625-segmentation-substrate's byte-identical F12 reproduction, 638-f12's post-git-checkout tree ground-truthing, 627-unified-basis's independent crew-claim re-runs) -- confirm ops for these recurrences harvested separately from the respective staged deltas. Verified 2026-07-24 (epic-601 lessons audit) by direct file read."
+    },
+    {
+      "op": "retire",
+      "id": "spine-lease-stale-long-crew",
+      "reason": "Graduated: the staleness mechanism and same-id/--force re-claim recipe are already documented in the bundled skill reference constellation-workbench references/checklist-engine.md 'Session lease' section, read by every agent at the context step. 10 confirms, zero disconfirms, over 3+ weeks; not re-encountered even once across this epic's 6 sub-runs (no epic-601 sub-run reported hitting a stale-lease refusal) -- consistent with the mechanism being fully internalized via the doc rather than needing further bank re-observation. Verified 2026-07-24 (epic-601 lessons audit) by direct file read."
+    }
+  ]
+}

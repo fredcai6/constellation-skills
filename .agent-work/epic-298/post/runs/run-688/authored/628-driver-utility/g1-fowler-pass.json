@@ -1,0 +1,80 @@
+{
+  "work_id": "628-driver-utility",
+  "diff_ref": "3 new files: src/physics/utilization/driver_utility_observable.py, scripts/build_driver_utility_observables.py, tests/unit/physics/test_driver_utility_observable.py (untracked/new, gate g1-review)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, src/utils/simplification_limits.py (mechanical length/complexity gate)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "driver_utility_observable.py's _validate_inputs (lines 112-137) is a near-verbatim copy of regime_utilization.py's _validate_inputs (lines 193-220): same 4 checks (min-length, curvature/v_real/v_ideal length match, v_ideal finiteness) with nearly identical error message text, duplicated across the two sibling modules rather than factored into a shared helper (e.g. alongside the already-shared _build_regime_masks import). Not blocking -- does not affect correctness or the F4 no-ratio contract -- but a real ~25-line duplication worth extracting on a future touch of either module.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "In scripts/build_driver_utility_observables.py, the identifier tuple (year, session_type, gp_name, round_idx[, constructor, driver]) recurs as separate keyword params across ~9 of the CLI's ~15 functions (_axis_row_exists, _error_row_exists, _driver_round_complete, _insert_error_row, _insert_axis_rows, _resolve_pending_drivers, _load_round_track, _process_constructor, _process_driver). A small context object (e.g. a RoundKey/DriverTask dataclass) would collapse this repeated clump, and would pay off further once G2/G3 extend the same schema. (Separately, the per-axis field group in RegimeDeficits -- g_*/n_points_*/sigma_lapsampling_*/mask_* x4 -- mirrors the sibling RegimeUtilization dataclass's established shape for the same 4-regime domain; that instance is NOT flagged -- see 'matches surrounding conventions', global-crew.md -- only the CLI's repeated identifier-tuple params are the flagged instance.) Not blocking -- purely a maintainability observation for a future gate.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "_process_constructor and _process_driver each take con + 9-10 keyword-only params (11 total each) -- same root cause as the data-clumps finding above (the recurring year/session_type/gp_name/round_idx/constructor/driver identifier tuple). All params are keyword-only (named at call sites, not positional), which keeps call-site readability intact despite the count, so this is a minor, non-blocking observation rather than a real readability problem today.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

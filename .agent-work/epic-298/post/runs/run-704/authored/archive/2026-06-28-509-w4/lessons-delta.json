@@ -1,0 +1,82 @@
+{
+  "work_id": "509-w4",
+  "tick": true,
+  "ops": [
+    {
+      "op": "amend",
+      "id": "shared-files-not-on-mission-branch",
+      "statement": "Never commit .agent-work/LESSONS.md, .agent-work/AGENT_FEEDBACK.md, or .agent-work/CONSTELLATION_FEEDBACK.md on a mission branch — nor the commander's own .agent-work/<id>/ work area (spine, crew-handoffs, lessons-delta). Return lessons-delta.json and feedback entries in the closeout report; the Admiral applies them centrally. Merging a mission branch that writes these clobbers canonical state from siblings.",
+      "grounding": "ADMIRAL_LOG MERGE #554 (509-w4): cmdr-P committed .agent-work/549/ (18 files: spine/crew-handoffs/lessons-delta) to the mission branch; Admiral captured + stripped (git rm -rf, needed -f: spine.json had live mods) pre-merge so only the 12 src files landed"
+    },
+    {
+      "op": "confirm",
+      "id": "py-launcher",
+      "grounding": "cmdr-T + cmdr-P 2026-06-28 509-w4: both used py throughout; both launch orders specify py -m pytest"
+    },
+    {
+      "op": "confirm",
+      "id": "engine-artifact-attest",
+      "grounding": "cmdr-P AGENT_FEEDBACK 2026-06-28 509-w4: g1-integrate c2 required review-result attached to gN-integrate not just gN-review; improvised again (recurrence, constellation debt)"
+    },
+    {
+      "op": "confirm",
+      "id": "run-crew-cli-launcher-misfit",
+      "grounding": "cmdr-T + cmdr-P 2026-06-28 509-w4: both dispatched crews via Agent tool; no claude CLI binary (recurrence, constellation debt)"
+    },
+    {
+      "op": "confirm",
+      "id": "state-note-before-detach",
+      "grounding": "cmdr-T AGENT_FEEDBACK 2026-06-28 509-w4: context-compaction recovery clean; state note + execute.json sufficient; no work lost"
+    },
+    {
+      "op": "confirm",
+      "id": "handoff-cite-exact-seam-signature",
+      "grounding": "cmdr-T + cmdr-P launch orders 2026-06-28 509-w4: exact seam facts with file:line + verified symbols; both confirmed high adherence"
+    },
+    {
+      "op": "confirm",
+      "id": "crew-idle-strands-deliverable",
+      "grounding": "cmdr-P AGENT_FEEDBACK 2026-06-28 509-w4: a G1 implementer made the code changes but did not write the result file; commander ground-truthed + wrote it (recurrence)"
+    },
+    {
+      "op": "confirm",
+      "id": "diagnose-first-decide-fix",
+      "grounding": "cmdr-T AGENT_FEEDBACK 2026-06-28 509-w4: counted recoverable boundary samples (3-11/circuit, 0.1-1.0%) BEFORE committing to the clamp fix, revealing the structural root cause; prevented shipping a distorting fix"
+    },
+    {
+      "op": "confirm",
+      "id": "idle-artifact-completeness-distinguisher",
+      "grounding": "ADMIRAL_LOG MERGE #552 2026-06-28 509-w4: cmdr-T idled no-verdict but artifact-complete (5 commits + PR #552); accepted via the artifact-completeness gate"
+    },
+    {
+      "op": "confirm",
+      "id": "verify-claimed-side-effects",
+      "grounding": "ADMIRAL_LOG MERGE #552+#554 2026-06-28 509-w4: braking verified (48 targeted tests + assert_array_equal) + 786-test independent re-run; cmdr-P committed-work-area + 2-deferred claims artifact-checked"
+    },
+    {
+      "op": "confirm",
+      "id": "disjoint-physics-channel-fencing",
+      "grounding": "ADMIRAL_LOG MERGE #554 2026-06-28 509-w4: cmdr-T fence untouched by cmdr-P; merge order irrelevant; zero cross-lane collisions"
+    },
+    {
+      "op": "confirm",
+      "id": "admiral-close-after-merge-verified",
+      "grounding": "ADMIRAL_LOG MERGE #552+#554 2026-06-28 509-w4: both merges verify-checks -> merge -> verify-main-HEAD -> verify-close"
+    },
+    {
+      "op": "confirm",
+      "id": "float-before-crossing-named-fence",
+      "grounding": "ADMIRAL_LOG MERGE #552 2026-06-28 509-w4: cmdr-T's index.md + 2 coast-diag-script fence stretches checked against this lesson and accepted as benign reconcile (adjudication gate applied)"
+    },
+    {
+      "op": "confirm",
+      "id": "ci-gate-selftest-in-ci-environment",
+      "grounding": "cmdr-P AGENT_FEEDBACK 2026-06-28 509-w4: local-vs-CI pyright count differs; verified the runtime baseline-diff gate handles it in-job (cross-env mismatch resolved by construction)"
+    },
+    {
+      "op": "confirm",
+      "id": "frontier-characterize-v-source",
+      "grounding": "cmdr-T 2026-06-28 509-w4: lesson injected into the launch order; Config-C v-source parity held throughout the re-characterization, no confound"
+    }
+  ]
+}

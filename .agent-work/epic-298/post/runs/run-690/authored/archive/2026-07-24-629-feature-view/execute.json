@@ -1,0 +1,1146 @@
+{
+  "work_id": "629-feature-view",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read references/global-orchestrator.md + references/global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and MISSION_FRAME.md. Confirm this frozen plan's intent and scope (new component src/physics/feature_view/, 5 gates: G1 store+schema+gate-tests, G2 weekend-state composer, G3 car-basis-posterior composer, G4 lap-evidence composer, G5 as-of view+read API). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded; plan intent/scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "G1 store foundation + the two load-bearing gate tests: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md for G1: build src/physics/feature_view/ (new component) \u2014 records.py (4 frozen dataclasses: WeekendStateRecord, CarBasisPosteriorRecord, LapEvidenceRecord, FeatureViewRow, each MODEL_VERSION-keyed), store.py (FeatureViewStore, SQLite-backed at data/feature_view.db by default via a db_path constructor arg mirroring estimate_store.EstimateStore's shape \u2014 _connect/_init_schema/_migrate_missing_columns pattern reused \u2014 but APPEND-ONLY by design: every insert method uses plain INSERT (never INSERT OR REPLACE) so a duplicate natural-key+MODEL_VERSION write raises sqlite3.IntegrityError; this is a deliberate divergence from EstimateStore's idempotent-replace semantics, call it out explicitly in the module docstring). Reuse estimate_store_fields.effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC/normalize_axis_status by import for axis-status handling (no reimplementation). Write the two frozen gate tests using SYNTHETIC fixture rows (no real Phase 2-4 data needed yet): tests/unit/physics/feature_view/test_append_only_contract.py (write a FeatureViewRow at MODEL_VERSION=1, bump to MODEL_VERSION=2 for the same natural key, assert the v1 row is byte-identical after the v2 write, AND assert a same-key-same-version rewrite attempt raises IntegrityError) and tests/unit/physics/feature_view/test_as_of_leakage.py -- COLD-CRITIC-STRENGTHENED per plan review (bound-param inspection alone is NOT sufficient: a builder doing `SELECT * ... WHERE constructor=?` with no session restriction, then post-filtering the DataFrame in Python, would echo no later-session sentinel in its bound params yet still be exactly the superset-scan-then-filter the launch order bans). Seed weekend_state_records/car_basis_posteriors rows for FP1/FP2/FP3/Q with distinct sentinel values across TWO (year,gp_name,constructor) tuples (cross-entity isolation, not just cross-session). The as-of read path must be provable BY CONSTRUCTION: (a) the SQL query for a given as_of_session is a direct key lookup on a stored as_of_session column -- never a superset scan -- and (b) EVERY captured SQL statement (via sqlite3.Connection.set_trace_callback) that reads the underlying record tables is asserted, by parsing/matching its WHERE-clause TEXT (not just its bound params), to include an explicit session-type/session_ordinal restriction -- a bare `WHERE constructor=?`/`WHERE year=? AND gp_name=?` with no session predicate must FAIL this assertion even if no sentinel leaks into the final answer by coincidence. Add a deliberate NEGATIVE CONTROL: a second, intentionally-broken builder variant (or a monkeypatched query) that DOES fetch all sessions and filter in Python, and assert the WHERE-clause-structure check correctly FAILS it -- proving the test can actually catch the bypass it claims to catch, not just the fixture's happy path. Define SESSION_ORDER=(\"FP1\",\"FP2\",\"FP3\",\"Q\") and a session_ordinal() helper in records.py or a shared constants module. Both tests must be GREEN at G1 close (this gate proves the store mechanics, not yet real Phase 2-4 wiring -- that is G2-G5). Constraint: no import of src.evo_predictor anywhere in the new package (constraint:physics_region_no_evo_import). Run py -m src.utils.simplification_limits on touched paths.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "DB-only doctrine",
+        "append-only (plain INSERT, no REPLACE)"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.feature_view (new component, src/physics/feature_view/)"
+        ],
+        "capability": [
+          "new: Phase-5 feature-view store"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision pressure: new sibling component vs layer2 module-leaf -- RESOLVED new component (see MISSION_FRAME.md), record as decision candidate at reconcile"
+        ],
+        "evidence": [
+          "claim: append-only contract-freeze",
+          "claim: as-of leakage by construction"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/629-feature-view/g1-implementer-result.md",
+            "summary": "27/27 tests passing (test_append_only_contract.py, test_as_of_leakage.py, test_records.py, test_store.py); verified independently by commander re-run; real sqlite3.IntegrityError on duplicate-key insert; leakage test's WHERE-clause-structure checker proven to fail against a negative-control broken query; no evo_predictor import; git check-ignore exit=1 for new files (committable)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "G1 store foundation + gate tests: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md from the G1 plan + IMPLEMENTER_RESULT. Verify BOTH gate tests are genuinely by-construction (re-derive: could the leakage test pass merely because the fixture happened not to expose a bypass? try to construct a case where the builder WOULD leak and confirm the test would catch it). Verify append-only via plain INSERT (not INSERT OR REPLACE) and via a real sqlite3.IntegrityError on duplicate-key rewrite, not just docstring claims. Dispatch constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/629-feature-view/g1-reviewer-result.md",
+            "summary": "Independent adversarial review; both protected-gate claims bypass-tested (append-only + as-of leakage), no bypass slipped through. One non-blocking triage candidate for G2+: assert bound param VALUES of the IN(...) clause, not just its shape."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "G1: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run the verification command, confirm postconditions pass, advance. BLOCK: rework or blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "store + records + both gate tests green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/feature_view/test_append_only_contract.py tests/unit/physics/feature_view/test_as_of_leakage.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view/test_append_only_contract.py tests/unit/physics/feature_view/test_as_of_leakage.py -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view/test_append_only_contract.py tests/unit/physics/feature_view/test_as_of_leakage.py -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view/test_append_only_contract.py tests/unit/physics/feature_view/test_as_of_leakage.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "G2 weekend-state record composer: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md for G2: build src/physics/feature_view/build_weekend_state.py -- composes a WeekendStateRecord (per event,session,car) from src.physics.weekend_state.model.WeekendStateModel's fit()/transform() output (field-car state, evolution curve, environment terms, each with its own sigma -- reuse WeekendStateModel.layer_sigma_cols()/model_cols() for the exact column names, do not re-derive column names by convention). KEY_COLUMNS = year/gp_name/constructor/round_idx (frame.py's convention, cite exactly). Every axis/term carries resolved/unresolved status per the explicit-unknown contract (reuse effective_axis_sigma/UNRESOLVED_AXIS_SIGMA_FRAC/normalize_axis_status from estimate_store_fields.py, imported not reinvented). Write via FeatureViewStore's append-only insert (G1). Unit tests with a small synthetic frame (do not require a live physics_estimates.db read -- inject a pre-fit WeekendStateModel or a small in-memory frame per WeekendStateModel's own test conventions in tests/unit/physics/weekend_state/test_model.py). Constraint: no src.evo_predictor import.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 store + schema complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.weekend_state (read-only consumer)",
+          "struct:physics.feature_view"
+        ],
+        "capability": [
+          "WeekendStateModel.fit/transform/car_signal"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [],
+        "evidence": [
+          "claim: explicit-unknown contract applied per axis"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/629-feature-view/g2-implementer-result.md",
+            "summary": "build_weekend_state.py built; 33/33 tests passing (27 G1 + 6 new); real per-row/per-axis resolved-unresolved rule using effective_axis_sigma; no evo_predictor import; round_idx schema-fit documented; independently re-verified by commander (pytest re-run, source read)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "G2: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md; verify column-name citations against WeekendStateModel source (not from-memory), verify explicit-unknown status is genuinely per-axis not a blanket default. Dispatch constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/629-feature-view/g2-reviewer-result.md",
+            "summary": "Independent adversarial review; per-row/per-axis resolved-unresolved rule confirmed with 3 distinct outcomes on one row; round_idx omission cross-checked against real F1_CALENDARS (no repeated gp_name in any year 2018-2026); Fowler pass clean. 2 non-blocking observations."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "G2: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "weekend-state composer green, G1 gate tests still green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/feature_view -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "G3 car-basis posterior composer: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md for G3: build src/physics/feature_view/build_car_basis.py -- composes a CarBasisPosteriorRecord (per constructor, session) from src.physics.layer2.estimate_store.EstimateStore rows (the 11-axis basis + per-axis sigma + cross_view_covariance sparse blob + per-axis {axis}_status columns -- reuse effective_axis_sigma/normalize_axis_status, do not reimplement) and src.physics.layer2.cross_view.fuse_dual_cda where applicable. Session-chained: order a constructor's weekend rows by SESSION_ORDER=(FP1,FP2,FP3,Q) (defined in G1's records.py/constants), each row carrying chain_position, prior_session (Optional[str], None for FP1). BOTH the inter-session process-noise link AND the parc-ferme reaction step are EXPLICIT RESERVED SLOTS (process_noise_link: Optional[dict]=None, parc_ferme_step: Optional[dict]=None, both with a status field fixed to \"unresolved\" and a docstring citing: no process-noise-link fit exists anywhere in the codebase (verified: pooling.fit_drift is a season-clock trend, not an intra-weekend link) and the parc-ferme distribution fit is bounded-deferred per #513 -- carry the framing, do not fit either here (per MISSION_FRAME.md Decision Pressure 2 and the launch order's explicit-unknown/honest-null directive). Do NOT fabricate a value for either reserved slot. Write via FeatureViewStore's append-only insert. Constraint: no src.evo_predictor import.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 store + schema complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 (read-only consumer: estimate_store, cross_view)",
+          "struct:physics.feature_view"
+        ],
+        "capability": [
+          "EstimateStore.load",
+          "cross_view.fuse_dual_cda",
+          "effective_axis_sigma"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision pressure 2 (session-chain framing): resolved as reserved slots, see MISSION_FRAME.md"
+        ],
+        "evidence": [
+          "claim: full covariance persisted (cross_view_covariance passthrough)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/629-feature-view/g3-implementer-result.md",
+            "summary": "build_car_basis.py built; 48/48 tests passing; 9-to-11 axis-status mapping verified correct in source; cross_view_covariance passthrough verified (fuse_dual_cda never imported); nearest-present prior_session documented+tested; reserved fields stay None."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "G3: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md; verify the two reserved slots are genuinely never fabricated (no code path assigns them a computed value), verify cross_view_covariance passthrough is faithful to estimate_store's schema. Dispatch constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/629-feature-view/g3-reviewer-result.md",
+            "summary": "Independent adversarial review; mapping/passthrough/reserved-field/missing-session-edge-case all live-verified. 1 non-blocking duplicated-code triage candidate."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "G3: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "car-basis composer green, prior gates still green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/feature_view -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "G4 lap evidence record composer: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md for G4: build src/physics/feature_view/build_lap_evidence.py -- composes a LapEvidenceRecord (per driver, lap) from src.physics.layer2.fp_lap_latent.FpLapLatent (mass_kg/mass_sigma_kg/fuel_kg_est/fuel_sigma_kg/run_purpose/compound -- the mass/mode posteriors) and src.physics.layer2.fp_representativeness.observation_weight/observation_features (the representativeness weight w in [0,1]; cite observation_features(latent, quali_fuel_kg=..., track_evolution=..., session_max_track_evolution=...) and observation_weight(features, params=DEFAULT_WEIGHT_PARAMS) exactly from source). unit_class_residuals is an EXPLICIT RESERVED SLOT (Optional[dict]=None, status field fixed to \"unresolved\") because the real per-lap telemetry extractor that would produce a genuine grip/power-class residual against the fitted car-basis (fp_gate_real_extractor.RealGateExtractor) is itself flagged G7-deferred / compute-deferred per the base commit -- do NOT fabricate a value (per MISSION_FRAME.md Decision Pressure 3). Write via FeatureViewStore's append-only insert. Constraint: no src.evo_predictor import.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 store + schema complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 (read-only consumer: fp_lap_latent, fp_representativeness)",
+          "struct:physics.feature_view"
+        ],
+        "capability": [
+          "fp_representativeness.observation_weight",
+          "fp_lap_latent.FpLapLatent"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision pressure 3 (unit-class residuals): resolved as reserved slot, see MISSION_FRAME.md"
+        ],
+        "evidence": [
+          "claim: representativeness weight is emergent, never session-label-derived"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/629-feature-view/g4-implementer-result.md",
+            "summary": "build_lap_evidence.py built; 57/57 tests passing; representativeness weight verified byte-equal to direct observation_weight call; track_evolution DB-read boundary respected (optional pre-computed mapping only); unit_class_residuals stays reserved; no evo_predictor/extract_fp_lap_latent import."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "G4: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md; verify unit_class_residuals is genuinely never fabricated; verify representativeness/mass fields are cited from real FpLapLatent/ObservationFeatures signatures, not from-memory convenience signatures. Dispatch constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/629-feature-view/g4-reviewer-result.md",
+            "summary": "Independent adversarial review; weight-equality, DB-read boundary, missing-key edge case, and reserved-field guarantee all live-verified."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "G4: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lap-evidence composer green, prior gates still green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/feature_view -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "G5 as-of feature view + the sole evo-facing read API: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md for G5: build src/physics/feature_view/build_feature_view.py (composes a FeatureViewRow per event,car from G2's weekend-state + G3's car-basis-posterior rows already in the store: weekend-relative basis + circuit-conditional composite + sigma, as-of stamped -- the builder reads underlying tables with a WHERE session_ordinal<=cutoff_ordinal clause, never a superset scan, per the G1 leakage-test design) and src/physics/feature_view/read.py (read_feature_view(store, year, gp_name, constructor, as_of_session, model_version) -- THE ONLY function evo may ever call into this package; direct key lookup by (year,gp_name,constructor,model_version,as_of_session), no other read path). Add an import-boundary test asserting no src.evo_predictor import anywhere in src/physics/feature_view/ (grep-based, mirrors how constraint:physics_region_no_evo_import is verified elsewhere) and a DB-only test asserting read.py is the sole public read surface (e.g. __all__ in read.py exports only read_feature_view, or an equivalent explicit-surface test). Add an end-to-end integration test that runs G1's append-only + as-of-leakage PROPERTIES again against REAL composed rows (built via G2+G3, not just G1's synthetic fixtures) to prove the composers didn't quietly break either contract. Constructor-grain is a NAMED round-1 approximation (per-entry/two-car divergence banked, not solved) -- state this in the module docstring, do not silently assume it away. 2026 rows: gate on nothing here (out of scope; note in docstring that Phase-3 aero mini-gate governs 2026 row admission, per DESIGN_SPEC).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2, G3, G4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "DB-only doctrine: read.py is the sole evo-facing surface"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.feature_view"
+        ],
+        "capability": [
+          "the as-of-stamped feature view: THE evo-facing surface"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision candidate: struct:physics.feature_view as a new sibling component (mirrors weekend_state precedent) -- record at reconcile"
+        ],
+        "evidence": [
+          "claim: append-only contract-freeze (re-verified on real data)",
+          "claim: as-of leakage by construction (re-verified on real data)",
+          "claim: DB-only / sole read surface"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/629-feature-view/g5-implementer-result.md",
+            "summary": "Base G5 (build_feature_view.py, read.py, import-boundary + e2e tests) built; 76/76 green. Original implementer stalled on its own backgrounded m6 regression step (~80min, per Admiral report) -- abandoned that crew attempt, commander independently re-verified the base work directly (pytest re-run, source read). Addendum (fresh crew, attempt-2): transition-sigma widening (FeatureViewRow.transition_axis_status, effective_axis_sigma-based flat widening, Q-terminal exempt) + forward-looking evo-side import-boundary test (118 evo_predictor files scanned, sanctions only read_feature_view import) -- 84/84 green. Addendum crew flagged read.py silently dropping transition_axis_status on reconstruction (a real bug caused by the handoff's own read.py exclusion); commander fixed directly (1-line addition + a new regression test proving the round-trip) -- 85/85 green."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "G5: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md; independently attempt to construct a leakage or mutate-a-prior-row scenario against the FULL composed pipeline (not just G1's synthetic fixtures) and confirm the tests would catch it; verify read.py truly has no second read path; verify constructor-grain approximation is documented not silently assumed. Dispatch constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/629-feature-view/g5-reviewer-result.md",
+            "summary": "Independent adversarial review; precedence rule, sigma-widening flat-not-scaled property, read.py round-trip fix, and forward import-boundary test's bite all live-verified. 2 non-blocking findings (over-strict import-scan pattern; the phantom g5-implementer-result.md, now fixed by commander)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "G5: integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification, confirm postconditions, advance. BLOCK: rework or blocker. This closes execute -- confirm the full feature_view suite plus a targeted physics-region regression slice is green and simplification_limits passes on all touched paths (cold-critic finding: prior gates' postconditions only ran the feature_view suite -- this gate's command widens to also run simplification_limits and a layer2/weekend_state regression slice, machine-checked not just prose-mandated).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full feature_view suite green (gate tests + all 3 composers + read API + e2e); simplification_limits clean on touched paths; layer2/weekend_state regression slice green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/feature_view tests/unit/physics/layer2 tests/unit/physics/weekend_state -q && py -m src.utils.simplification_limits src/physics/feature_view"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1",
+          "attested": {
+            "evidence": "e-g5-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/feature_view tests/unit/physics/layer2 tests/unit/physics/weekend_state -q && py -m src.utils.simplification_limits src/physics/feature_view",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "load_as_of's as-of leakage test suite is sound end-to-end (row-content assertions catch what the SQL-shape regex alone would miss), but the SQL-shape checker (_SESSION_SCOPE_RE) only verifies an IN(...) clause is present, not that its bound VALUES equal the correct as-of subset. Add a follow-up assertion (in G2+, when load_as_of gets a real consumer) on the captured trace-callback statement's literal bound values, not just its shape. Non-blocking, flagged by G1 reviewer."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-review",
+      "statement": "build_weekend_state.py: (1) missing input columns raise a bare KeyError instead of a named-field ValueError (project convention names field+expectation+actual); (2) _none_if_nan's except TypeError branch is dead code for the model's current plain float64/np.nan output but would mis-handle a future pandas pd.NA input. Both non-blocking, worth a small cleanup pass. Flagged by G2 reviewer."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-review",
+      "statement": "_none_if_nan is duplicated verbatim between build_weekend_state.py (G2) and build_car_basis.py (G3). Non-blocking; candidate for a small shared-helper extraction (e.g. into records.py or a small utils module) once G4/G5 confirm the same pattern is needed a third time. Flagged by G3 reviewer's Fowler pass."
+    },
+    {
+      "id": "tc4",
+      "from": "g5-review",
+      "statement": "test_evo_import_boundary.py's sanctioned-import-form regex is over-strict: it false-positives on its own docstring/usage-example lines describing the qualified-attribute form (e.g. 'import src.physics.feature_view.read as X; X.read_feature_view'). Non-blocking (the test still correctly passes today and correctly catches real violations per the reviewer's 6 constructed cases), but worth a small regex tightening pass. Flagged by G5 reviewer."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-629",
+    "status": "active",
+    "claimed_at": "2026-07-24T15:18:51.730411+00:00",
+    "last_heartbeat": "2026-07-24T19:07:44.204426+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Context reloaded; plan intent/scope confirmed (5-gate plumbing/contract plan, new component src/physics/feature_view/).",
+      "mechanical": false,
+      "ts": "2026-07-24T15:18:52.023469+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer built src/physics/feature_view/ (records.py, store.py) + tests/unit/physics/feature_view/ (4 test files, 27 tests). Independently re-ran pytest (27 passed), verified no evo_predictor import, verified git check-ignore exit=1, and read store.py/records.py source directly: append-only enforced via UNIQUE(natural_key+model_version) + plain INSERT (real IntegrityError, not INSERT OR REPLACE); as-of leakage prevented by construction (load_as_of builds session_type IN (...) from SESSION_ORDER, required as_of_session param, no default); reserved slots (process_noise_link/parc_ferme_step/unit_class_residuals) enforced via __post_init__ ValueError guards exceeding the handoff's ask.",
+      "mechanical": false,
+      "ts": "2026-07-24T15:38:25.670630+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer APPROVE. Independently adversarially bypass-tested both protected gate tests (append-only via INSERT OR REPLACE + weakened UNIQUE key; as-of leakage via named negative control + a subtler hardcoded-IN-list attack) -- confirmed no bypass slips through the shipped suite (defense-in-depth: row-content assertions catch what the SQL-shape regex alone would miss). Flagged one non-blocking triage candidate for G2+ (assert IN-clause bound values, not just shape).",
+      "mechanical": false,
+      "ts": "2026-07-24T15:52:07.467299+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Fixed PATH shadowing for this shell (this session's ~/.local/bin/py wrapper resolves to a pytest-less codex-runtime python, shadowing the real Windows py launcher at AppData/Local/Microsoft/WindowsApps/py.exe which correctly resolves the project's pythoncore-3.14-64 interpreter with pytest installed). With WindowsApps prepended to PATH, the engine's own c1 command check now runs the real interpreter. Reviewer verdict APPROVE (e-g1-review-1).",
+      "mechanical": false,
+      "ts": "2026-07-24T15:53:50.255519+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "Independently re-ran pytest (33 passed), read build_weekend_state.py source directly, confirmed resolved/unresolved rule is real per-row/per-axis (not blanket), confirmed effective_axis_sigma reused not reimplemented, confirmed no evo_predictor import.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:03:16.566076+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Reviewer APPROVE, independently confirmed real per-row/per-axis rule and round_idx reasoning against actual calendar data.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:12:46.894780+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Reviewer APPROVE (e-g2-review-1). Independently re-ran full feature_view suite: 33/33 passed.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:13:13.746206+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "Independently re-ran pytest (48 passed), read build_car_basis.py source directly, confirmed the _STATUS_TO_AXES mapping table matches the handoff exactly, confirmed no fuse_dual_cda/evo_predictor import.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:24:55.004515+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "Reviewer APPROVE. Verified axis-status mapping, cross_view_covariance passthrough (real SQLite round-trip), reserved-field ValueError guard, and the missing-FP1/FP2 prior_session edge case, all live-probed not just read.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:32:42.358187+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Reviewer APPROVE (e-g3-review-1). Independently re-ran suite: 48/48 passed.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:32:59.360676+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-implement",
+      "why": "Independently re-ran pytest (57 passed), confirmed no evo_predictor/extract_fp_lap_latent import in build_lap_evidence.py.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:41:29.379767+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4-review",
+      "why": "Reviewer APPROVE, independently verified all close criteria with own constructed fixtures.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:49:46.734580+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4-integrate",
+      "why": "Reviewer APPROVE (e-g4-review-1). Independently re-ran suite: 57/57 passed.",
+      "mechanical": false,
+      "ts": "2026-07-24T16:50:03.161800+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g5-implement",
+      "why": "Base G5 + addendum + a small commander-applied fix (read.py's FeatureViewRow reconstruction was dropping transition_axis_status -- fixed + regression-tested) all independently verified: 85/85 feature_view tests green, no evo_predictor import, git check-ignore clean. The layer2/weekend_state regression slice is running in the background (large 959-test physics suite) and will gate g5-integrate before final close.",
+      "mechanical": false,
+      "ts": "2026-07-24T18:41:39.210128+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g5-review",
+      "why": "Reviewer APPROVE. Independently reproduced all close criteria with fresh scratch cases; found and I fixed a real evidence-pointer gap (g5-implementer-result.md never written by the abandoned crew) by authoring the reconstruction file.",
+      "mechanical": false,
+      "ts": "2026-07-24T18:55:06.937029+00:00"
+    }
+  ]
+}

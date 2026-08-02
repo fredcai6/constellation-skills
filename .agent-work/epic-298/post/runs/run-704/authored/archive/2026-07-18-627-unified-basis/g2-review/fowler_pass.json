@@ -1,0 +1,35 @@
+{
+  "work_id": "627-unified-basis-g2",
+  "diff_ref": "uncommitted working tree in C:/Programs/f1-627 -- git diff -- src/physics/layer2/estimate_store.py tests/unit/physics/layer2/test_estimate_store.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, the g2 handoff (schema-only stop conditions), estimate_store.py's own module/field docstrings (in-file convention)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "overridden", "finding": "", "override": {
+      "repo_standard": "estimate_store.py module docstring: 'One row per (year, gp_name, session_type, constructor): ... flattened to scalars + per-parameter sigma + JSON covariances + provenance'; global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions'.",
+      "reason": "EstimateRecord is a deliberate flat 1:1 mirror of the session_estimates SQL row (already ~60 fields before this diff, growing by 10 more Optional fields grouped and commented exactly like the existing field groups). It is a pure data container with no behavior to decompose -- the file's own documented design is 'one field = one column', so extending it in place, rather than carving out a sub-object, matches the established convention rather than deviating from it."
+    }},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "", "override": {
+      "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions'.",
+      "reason": "error_record(...) spells out every one of its ~50 EstimateRecord kwargs individually (no loops/comprehensions anywhere in that call), and the new 9 `{axis}_status=\"unresolved\"` kwargs follow that exact pre-existing style. Introducing a `**{f'{a}_status': 'unresolved' for a in AXIS_STATUS_NAMES}` spread here -- while every other field in the same call stays fully explicit -- would be a new, inconsistent pattern introduced only for this addition, which the surrounding-convention rule discourages more than the minor repetition itself."
+    }},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "overridden", "finding": "", "override": {
+      "repo_standard": "estimate_store.py's own existing schema convention: every other per-axis measured value (drag_area_closed_m2, brake_decel_ms2, traction_accel_ms2, lateral_mech_grip_g, ...) already lives as an individual flat SQL column, not a blob, specifically so it stays independently queryable/filterable.",
+      "reason": "The 9 {axis}_status fields could be bundled into one JSON dict (mirroring cross_view_covariance's sparse-dict treatment) instead of 9 separate top-level columns. But status is exactly the kind of per-axis value the file's existing convention keeps flat (so a consumer can `WHERE cda_status='resolved'`), unlike cross_view_covariance which is always read as a whole cross-term blob and never filtered by SQL. Flat columns for status is consistent with, not a new clump on top of, the established pattern."
+    }},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {
+      "repo_standard": "estimate_store.py already types `fit_status: str  # \"ok\" | \"error\"` and `support_trust: Optional[str]` (values in `_TRUST_RANK`: \"high\"/\"medium\"/\"low\"/\"unsupported\") as plain strings with a comment documenting the allowed values, not an Enum/Literal.",
+      "reason": "The new `{axis}_status: Optional[str] = \"unresolved\"` (allowed values \"resolved\"|\"unresolved\", documented in the adjacent comment) follows the file's own pre-existing convention for exactly this shape of constrained-string field. Introducing an Enum/Literal here while `fit_status`/`support_trust` stay plain strings would be an unrequested, inconsistent local change outside this gate's schema-only scope."
+    }},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "overridden", "finding": "", "override": {
+      "repo_standard": "The g2 handoff's own Task Statement and Stop Conditions: 'Add SCHEMA + defaults + migration + round-trip ... WITHOUT populating values or resolving statuses (G3/G4 do that)'; 'BLOCK if ... a value is populated / a status is resolved here'.",
+      "reason": "cross_view_covariance / AXIS_STATUS_NAMES / UNRESOLVED_AXIS_SIGMA_FRAC are inert schema reserved ahead of concrete, already-planned consumers (G3 populates the covariance, G4 resolves statuses) inside the SAME multi-gate epic (#627), not a speculative 'might need this someday' abstraction with no near-term caller. The handoff explicitly mandates building only the inert shape at this gate -- this is authorized staged delivery, not unrequested generality."
+    }},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

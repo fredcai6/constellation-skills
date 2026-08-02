@@ -1,0 +1,269 @@
+{
+  "frame": "expected_gap_ij = s*(pi_i - pi_j); observed_advantage = -(gap_i - gap_j); gap-MAE = mean|pred_adv - obs_adv| over undirected non-tie pairs",
+  "midfield_band": [
+    6,
+    15
+  ],
+  "train_years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "oos_years": [
+    2025
+  ],
+  "n_events_by_year": {
+    "2018": 0,
+    "2019": 0,
+    "2020": 0,
+    "2021": 22,
+    "2022": 22,
+    "2023": 22,
+    "2024": 24,
+    "2025": 24
+  },
+  "scale_sources": {
+    "event": "committed per-event quali s_e (label-side ceiling; reference only)",
+    "cf1": "carry-forward last-known prior quali event s_e (as-of safe)",
+    "cf2": "same-circuit prior-year quali s_e (as-of safe)",
+    "global_const": "median of train-pool 2018-2024 quali s_e (status-quo-ante baseline)"
+  },
+  "oos_2025": {
+    "global_constant_value": 0.036708300933757335,
+    "n_events": 24,
+    "overall": {
+      "event": {
+        "gap_mae": 0.002200536594908973,
+        "n_pairs": 4465,
+        "events_used": 24,
+        "sign_accuracy": 0.9706343869087648,
+        "sign_pairs": 4461,
+        "calibration": {
+          "slope": 1.0220567098609588,
+          "intercept": 7.775903328252576e-06,
+          "r2": 0.9346390880939017
+        }
+      },
+      "cf1": {
+        "gap_mae": 0.005039451069575749,
+        "n_pairs": 4465,
+        "events_used": 24,
+        "sign_accuracy": 0.9706343869087648,
+        "sign_pairs": 4461,
+        "calibration": {
+          "slope": 0.6856385953769434,
+          "intercept": -0.0011285510771433984,
+          "r2": 0.42883084606145416
+        }
+      },
+      "cf2": {
+        "gap_mae": 0.005466339750402586,
+        "n_pairs": 4465,
+        "events_used": 24,
+        "sign_accuracy": 0.9706343869087648,
+        "sign_pairs": 4461,
+        "calibration": {
+          "slope": 0.583535930917202,
+          "intercept": -0.0012558365564747215,
+          "r2": 0.44594731085809936
+        }
+      },
+      "global_const": {
+        "gap_mae": 0.00456281261525535,
+        "n_pairs": 4465,
+        "events_used": 24,
+        "sign_accuracy": 0.9706343869087648,
+        "sign_pairs": 4461,
+        "calibration": {
+          "slope": 0.8293970622855584,
+          "intercept": -0.0002381894958610928,
+          "r2": 0.6648597786031784
+        }
+      }
+    },
+    "midfield": {
+      "event": {
+        "gap_mae": 0.0019485993241477393,
+        "n_pairs": 1080,
+        "events_used": 24,
+        "sign_accuracy": 0.9387755102040817,
+        "sign_pairs": 1078,
+        "calibration": {
+          "slope": 0.9991457490142371,
+          "intercept": 7.842745868810528e-05,
+          "r2": 0.8415729738241314
+        }
+      },
+      "cf1": {
+        "gap_mae": 0.0032578002053615194,
+        "n_pairs": 1080,
+        "events_used": 24,
+        "sign_accuracy": 0.9387755102040817,
+        "sign_pairs": 1078,
+        "calibration": {
+          "slope": 0.6228688293946355,
+          "intercept": 4.132620049883712e-05,
+          "r2": 0.32703624214015903
+        }
+      },
+      "cf2": {
+        "gap_mae": 0.0038252093931250334,
+        "n_pairs": 1080,
+        "events_used": 24,
+        "sign_accuracy": 0.9387755102040817,
+        "sign_pairs": 1078,
+        "calibration": {
+          "slope": 0.4970765823376869,
+          "intercept": -0.00013639736826396415,
+          "r2": 0.3254844873974834
+        }
+      },
+      "global_const": {
+        "gap_mae": 0.0032551798228114583,
+        "n_pairs": 1080,
+        "events_used": 24,
+        "sign_accuracy": 0.9387755102040817,
+        "sign_pairs": 1078,
+        "calibration": {
+          "slope": 0.7607935370921697,
+          "intercept": 8.138622937878671e-05,
+          "r2": 0.5383326206786455
+        }
+      }
+    }
+  },
+  "train_2018_2024": {
+    "global_constant_value": 0.036708300933757335,
+    "n_events": 90,
+    "overall": {
+      "event": {
+        "gap_mae": 0.004765038210645504,
+        "n_pairs": 16618,
+        "events_used": 90,
+        "sign_accuracy": 0.9693650315979536,
+        "sign_pairs": 16615,
+        "calibration": {
+          "slope": 1.0910104977900588,
+          "intercept": -0.00022437926687667262,
+          "r2": 0.8271748903975185
+        }
+      },
+      "cf1": {
+        "gap_mae": 0.009163480273383404,
+        "n_pairs": 16428,
+        "events_used": 89,
+        "sign_accuracy": 0.9691324200913242,
+        "sign_pairs": 16425,
+        "calibration": {
+          "slope": 0.7490129865150602,
+          "intercept": -0.0003168153082823672,
+          "r2": 0.3948913628110485
+        }
+      },
+      "cf2": {
+        "gap_mae": 0.010914053671952398,
+        "n_pairs": 11088,
+        "events_used": 60,
+        "sign_accuracy": 0.9668079733020655,
+        "sign_pairs": 11087,
+        "calibration": {
+          "slope": 0.6437140126819714,
+          "intercept": -0.000829932351519584,
+          "r2": 0.26606600676001035
+        }
+      },
+      "global_const": {
+        "gap_mae": 0.007398529407374044,
+        "n_pairs": 16618,
+        "events_used": 90,
+        "sign_accuracy": 0.9693650315979536,
+        "sign_pairs": 16615,
+        "calibration": {
+          "slope": 1.3802360147799388,
+          "intercept": -0.0002363632799754153,
+          "r2": 0.5039267520279533
+        }
+      }
+    },
+    "midfield": {
+      "event": {
+        "gap_mae": 0.0035415970149835115,
+        "n_pairs": 4006,
+        "events_used": 90,
+        "sign_accuracy": 0.9243256743256744,
+        "sign_pairs": 4004,
+        "calibration": {
+          "slope": 1.2013193982501822,
+          "intercept": -0.00038723974173705285,
+          "r2": 0.7635917666921075
+        }
+      },
+      "cf1": {
+        "gap_mae": 0.005702695569492606,
+        "n_pairs": 3961,
+        "events_used": 89,
+        "sign_accuracy": 0.9239706996716343,
+        "sign_pairs": 3959,
+        "calibration": {
+          "slope": 0.7576421906708193,
+          "intercept": -0.00026667583091181946,
+          "r2": 0.3044210591905895
+        }
+      },
+      "cf2": {
+        "gap_mae": 0.006917735573563506,
+        "n_pairs": 2656,
+        "events_used": 60,
+        "sign_accuracy": 0.9171686746987951,
+        "sign_pairs": 2656,
+        "calibration": {
+          "slope": 0.5828461873778968,
+          "intercept": -0.0003870989170050581,
+          "r2": 0.15520490901357592
+        }
+      },
+      "global_const": {
+        "gap_mae": 0.004724548264487696,
+        "n_pairs": 4006,
+        "events_used": 90,
+        "sign_accuracy": 0.9243256743256744,
+        "sign_pairs": 4004,
+        "calibration": {
+          "slope": 1.2410760457412977,
+          "intercept": -0.0003517444853093296,
+          "r2": 0.31382874436279173
+        }
+      }
+    }
+  },
+  "headline_oos_midfield_gap_mae": {
+    "event": 0.0019485993241477393,
+    "cf1": 0.0032578002053615194,
+    "cf2": 0.0038252093931250334,
+    "global_const": 0.0032551798228114583
+  },
+  "baseline_oos_midfield_gap_mae": 0.0032551798228114583,
+  "cf1_beats_global_constant": false,
+  "cf2_beats_global_constant": false,
+  "recommended_shat_source": "global_const",
+  "flat_ordering_confirmation_oos_midfield": {
+    "sign_accuracy_by_source": {
+      "event": 0.9387755102040817,
+      "cf1": 0.9387755102040817,
+      "cf2": 0.9387755102040817,
+      "global_const": 0.9387755102040817
+    },
+    "max_pairwise_spread": 0.0,
+    "is_flat": true
+  },
+  "honest_null": true,
+  "notes": {
+    "as_of": "cf1 uses only events strictly before; cf2 uses only the prior season; event is the label and is NOT a predictive source (excluded from winner).",
+    "sign_convention": "spread_target: s_e ~= median(observed_advantage/(pi_i-pi_j)); so s*(pi_i-pi_j) predicts observed_advantage=-(gap_i-gap_j).",
+    "midfield": "both drivers' Q positions in [6,15], matching diagnose_quali_same_pairs."
+  }
+}

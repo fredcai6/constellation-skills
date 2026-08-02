@@ -1,0 +1,177 @@
+{
+  "work_id": "663-grip-g-g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-weekend-neighbor"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew/global-everyone doctrine, both handoffs (g3-implement + g3-review), IMPLEMENTER_RESULT, grip_batch.py, and execute.json g4/g5 imperatives. No docs/agents/CREW_CONTEXT.md or GLOSSARY.md present in worktree (degrades to global-only per doctrine).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "run_grip_batch mirrors run_estimate_batch's injectable-Callable seam (fit_fn/calendar_fn/record_fn/log defaults); per-unit failure isolation works and is independently reproduced (22/22 tests, isolation 2/2); get_grip_at evaluates the curve, raises GripRecordNotFoundError (not bare KeyError) on missing OR unusable records, and never silently implies sigma=0 (thin_fallback returns offset_sigma; ok-fit returns delta-method sigma). All Close Criteria met.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Only allowed files touched: grip_batch.py (new), test_grip_batch.py (new), grip_store.py (additive get_grip_at + GripRecordNotFoundError + import math). Verified grip_store.py's GripStore/GripEstimateRecord/error_record are unchanged from g1 (additive-only claim holds by inspection). Specific exclusions respected: grip_baseline.py (g2) and estimate_batch.py NOT modified (git status shows neither as changed; only the 3 layer2 files + tests untracked). No g4/g5 harness work done.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced: pytest test_grip_batch.py+test_grip_store.py = 22 passed; isolation subset (-k isolat) = 2 passed; simplification_limits PASS (3 files). Isolation test assertions genuinely verify continuation: flaky_fit_fn raises for Monaco/Q only, asserts fitted==1 (Bahrain), errors==1, error row has fit_status=error + exact message + session_id==-1 sentinel; bracketing variant asserts two failing GPs isolated around a good one. get_grip_at tests assert curve eval, sigma>0 and sigma!=raw offset sigma, thin-fallback returns offset_sigma, named-exception (not KeyError) on missing AND on unusable error record.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints honored: injectable-fn pattern (all collaborators are Callable defaults), per-unit isolation (outer try/except -> record_fn error record -> continue), honest sigma propagation (delta-method with offset<->asymptote cross-term via stored curve_offset_correlation; rate cross-terms dropped, documented). Sigma-clamp max(variance,0) is mathematically defensive-only: for |corr|<=1, offset_sigma^2 + d_asy^2 asy_sigma^2 + 2 corr offset_sigma d_asy asy_sigma >= (offset_sigma - d_asy asy_sigma)^2 >= 0, so it never actually yields sigma=0 for a well-formed record. record_fn re-mapping (error-record-on-outer-raise vs estimate_batch's estimate->transform split) is a documented, in-scope Authority decision, honestly flagged. Matches surrounding conventions (error_record is also a module-level fn in grip_store).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence needing Commander reconcile beyond what g1/g2 already surfaced. Map Impact notes in IMPLEMENTER_RESULT match the diff (new struct:physics.layer2 sibling module + additive consumer query surface). Three triage candidates honestly routed (weekend_neighbors batch wiring; get_grip_at load-all-then-pandas-filter perf; session_id=-1 sentinel documentation reach) - all genuine, all out-of-scope for g3, none block. See r6a for the weekend-neighbor GATING determination.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell: flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards. Record the pass to FOWLER_PASS record, run scripts/verify_fowler_pass.py <record>, then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass complete, verify_fowler_pass.py exit 0 (smells=12, flagged=[], overridden=[data-clumps, long-parameter-list]). All 12 baseline smells rendered a verdict. 10 absent, 2 overridden with logged repo-standard reasons: data-clumps (PK triple -- estimate_store/estimate_batch/g2 sibling convention + frozen g1 shape), long-parameter-list (9 params -- the mandated injectable-seam pattern from estimate_batch.py). No smell rises to a blocker; the diff is clean, minimal, and convention-matched. Record at .agent-work/663-grip-g/g3-review/fowler_pass.json.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r7-weekend-neighbor": {
+      "id": "r7-weekend-neighbor",
+      "title": "THE ONE THING: weekend-neighbor gap vs g4/g5 GATING gates",
+      "imperative": "Determine (a) genuine gap that BLOCKS vs (b) real-but-out-of-scope, given g4/g5 imperatives. Record determination with reasoning.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DETERMINATION: (b) real-but-out-of-scope-for-g3; does NOT bite g4/g5 and does NOT block. Decisive evidence from grip_baseline.py: run_grip_batch calls fit_session_grip_baseline (DB wrapper, whole-session, NO driver-subset param). g4-implement's imperative requires fitting G using ONLY fit-set drivers' laps + held-out scoring on the rest -- that driver split is IMPOSSIBLE through run_grip_batch, so g4 must call the lap-frame seam fit_grip_baseline_from_laps(...laps=...) directly, where weekend_neighbors is a first-class exposed parameter (grip_baseline.py:450). g5-implement's imperative says fit pipeline 'from g2, imported directly -- not a reimplementation' on synthetic injected data; it never routes through run_grip_batch either. Neither GATING harness touches the batch orchestrator, so the batch driver's un-wired weekend_neighbors cannot spuriously degrade their results. Further: g4 fits full-field race sessions on a 3-5 circuit slice (~10 drivers per 50/50 split) and g5 injects realistic fittable field-pooled data, so the thin-session fallback (and thus its neighbor-lookup path) is unlikely to even trigger in their primary evaluation; and if a harness genuinely wanted neighbor extrapolation it can pass weekend_neighbors at the seam it already uses. The implementer flagged this clearly and honestly as triage candidate #1 with correct scoping ('needs an ordered two-pass batch... real design work, not a drop-in'). It IS a real limitation for a future production store-population run via run_grip_batch, correctly deferred to triage, not silently dropped.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g3 batch driver + get_grip_at APPROVED. All Close Criteria met and independently reproduced (22/22 tests, isolation 2/2, simplification PASS). Weekend-neighbor gap determined (b) out-of-scope-for-g3: does NOT bite the g4/g5 GATING gates (neither routes through run_grip_batch; g4 needs a driver-subset fit via the lap-frame seam where weekend_neighbors is exposed, g5 imports g2's fit directly on synthetic data) -- honestly routed as triage, not a blocker. Fowler pass clean (2 convention-sanctioned overrides). No blockers."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r7-weekend-neighbor",
+      "statement": "run_grip_batch does not wire weekend-sibling-session fits together, so a real production store-population run degrades every thin-session fallback to the degenerate no-neighbor path even when a normal same-weekend fit exists. Needs an ordered two-pass batch (fit normal sessions first per GP, then re-pass thin ones with now-available neighbors). Out-of-scope for g3; does NOT affect g4/g5 GATING gates (neither uses run_grip_batch)."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "get_grip_at does store.load(year,session_type) then filters gp_name in pandas rather than an indexed single-row query -- fine at current volumes, revisit if a hot-path consumer calls it in a tight loop."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g3rev-cmdr663",
+    "status": "released",
+    "claimed_at": "2026-07-25T16:58:17.488549+00:00",
+    "last_heartbeat": "2026-07-25T17:02:51.064826+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T17:03:48.860813+00:00"
+  }
+}

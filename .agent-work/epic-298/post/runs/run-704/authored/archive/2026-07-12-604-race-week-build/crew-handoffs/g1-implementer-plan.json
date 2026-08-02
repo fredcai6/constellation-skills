@@ -1,0 +1,334 @@
+{
+  "work_id": "604-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-checkpoint-io",
+    "m2-stage-functions",
+    "m3-tests",
+    "m4-simplification",
+    "m4-simplification-fixed",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the g1-implementer-handoff.md and docs/design/race_week_seam.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); re-verify every cited seam signature against actual source. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; cited seams re-verified against source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md read. Handoff verified complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). Re-verified seams against source: get_practice_session_types at src/utils/constants.py:312 (matches); has_session_classification at src/data/database/_metadata_session.py:506 (matches, signature year/round_num/session_type->bool); round_num pattern at src/data/collector.py:232 calendar.index(gp_name)+1 (matches); cmd_sampled_predict at src/evo_predictor/run.py:544 (matches); _compound_normalizer_for_sampled_predict XOR check at run.py:522-541 (matches, raises ValueError on both-or-neither); sampled-predict parser fields at run.py:792-814 confirm SimpleNamespace fields (sampled_runtime_manifest,year,race,compound_prior_root,compound_prior_artifact,db_path,output); generate_report at src/fantasy_scoring/artifacts.py:200-228 confirmed to call write_beam_search_report internally (line 227) writing both .json/.md - do not call it a second time; FantasyBeamSearchResult dataclass at beam_search.py:52-63 confirmed fields best_mean/best_risk/best_balanced only, NO best_max - design doc docs/design/race_week_seam.md line 26/218 mentions a 4th 'max' lane but the handoff overrides this with the verified 3-lane restriction, which is authoritative. All seams check out; no stop condition triggered."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-checkpoint-io": {
+      "id": "m1-checkpoint-io",
+      "title": "Implement checkpoint I/O + resumption primitive",
+      "imperative": "In the worktree C:/Programs/f1Brainz/.claude/worktrees/604-build, create scripts/race_week_stages.py with checkpoint read/write helpers, compute_stage_inputs_hash(upstream_checkpoint: dict) -> str (sha256 hex over canonical sorted-key JSON), and should_skip_stage(existing_checkpoint: dict|None, upstream_checkpoint: dict) -> bool. Test-after mode: no RED step. Postcondition is a compile/import sanity check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff and seams verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "module compiles cleanly (py_compile) with checkpoint I/O + hash + should_skip_stage defined",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import ast,sys; t=ast.parse(open('scripts/race_week_stages.py',encoding='utf-8').read()); names={n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)}; need={'compute_stage_inputs_hash','should_skip_stage','read_checkpoint','write_checkpoint'}; missing=need-names; sys.exit(1) if missing else print('ok', sorted(names))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-checkpoint-io-1"
+        }
+      ],
+      "constraints": [
+        "no src/ changes",
+        "no write_beam_search_report double-call",
+        "db_path never defaulted by stage functions"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-checkpoint-io-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import ast,sys; t=ast.parse(open('scripts/race_week_stages.py',encoding='utf-8').read()); names={n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)}; need={'compute_stage_inputs_hash','should_skip_stage','read_checkpoint','write_checkpoint'}; missing=need-names; sys.exit(1) if missing else print('ok', sorted(names))\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-stage-functions": {
+      "id": "m2-stage-functions",
+      "title": "Implement the four pure stage functions",
+      "imperative": "Add discover_sessions_stage(year, gp_name, db) -> dict, predict_stage(...) building a types.SimpleNamespace matching cmd_sampled_predict's arg contract and calling it in-process, optimize_stage(...) calling generate_report (no second write_beam_search_report call) and injecting lane_used (lane restricted to mean/risk/balanced, ValueError on unknown lane), and explain_stage(...) that copies the 03 stem's .md twin to 04_explainer.md and never raises (writes 04_explainer.STUB.md with a reason on any failure). Postcondition is the same compile/import sanity check extended to all four names.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "checkpoint I/O helpers implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "checkpoint I/O helpers implemented and verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "module compiles cleanly with all four stage functions defined",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import ast,sys; t=ast.parse(open('scripts/race_week_stages.py',encoding='utf-8').read()); names={n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)}; need={'discover_sessions_stage','predict_stage','optimize_stage','explain_stage'}; missing=need-names; sys.exit(1) if missing else print('ok', sorted(names))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-stage-functions-1"
+        }
+      ],
+      "constraints": [
+        "no src/ changes",
+        "no scripts/race_week.py (G2 scope)",
+        "unknown lane raises ValueError at optimize_stage boundary",
+        "explain_stage never raises"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-stage-functions-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import ast,sys; t=ast.parse(open('scripts/race_week_stages.py',encoding='utf-8').read()); names={n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)}; need={'discover_sessions_stage','predict_stage','optimize_stage','explain_stage'}; missing=need-names; sys.exit(1) if missing else print('ok', sorted(names))\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tests": {
+      "id": "m3-tests",
+      "title": "Unit-test all four stage functions as pure functions over fixture dicts",
+      "imperative": "Write tests/unit/scripts/test_race_week_stages.py covering all four stage functions plus the checkpoint helpers, mocking DatabaseManager/cmd_sampled_predict/generate_report (no real DB/FastF1/model inference). Include a case proving optimize_stage raises ValueError on an unknown lane, and a case proving explain_stage never raises and writes the STUB on failure. Run the full suite to green. Test-after mode: collapse to single green postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all four stage functions implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all four stage functions implemented and compile-verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "tests/unit/scripts/test_race_week_stages.py passes in full",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_stages.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tests-1"
+        }
+      ],
+      "constraints": [
+        "no real DB/FastF1/model inference in these tests",
+        "mock DatabaseManager/cmd_sampled_predict/generate_report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_stages.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-simplification": {
+      "id": "m4-simplification",
+      "title": "Run simplification-limits check on the touched file",
+      "imperative": "Run py -m src.utils.simplification_limits scripts/race_week_stages.py from the worktree and capture the output. If over threshold, split per the module's own guidance and re-run to a documented pass or split plan.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "31/31 tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "simplification_limits run captured (pass or documented split plan)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m src.utils.simplification_limits scripts/race_week_stages.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "skipped",
+      "status_detail": {
+        "reason": "postcondition check.command was authored with the handoff's literal Verification Command (py -m src.utils.simplification_limits scripts/race_week_stages.py) which does not match the actual CLI (main() only accepts --paths/--baseline/--json/--file-lines-only, no positional path arg) -- confirmed by running it directly (argparse error, exit 2). Replaced by m4-simplification-fixed with the correct --paths invocation; underlying check (does the file pass simplification limits) was already independently verified PASS."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Write IMPLEMENTER_RESULT with full evidence",
+      "imperative": "Write C:/Programs/f1Brainz/.agent-work/604-race-week-build/crew-handoffs/g1-implementer-result.md using the Return Format section of the handoff: completed slice, files changed, test mode satisfied, full pytest output pasted (not summarized), simplification_limits output, the required short note (no write_beam_search_report double-call; explain_stage never raises; unknown lane raises ValueError, with a quick check pasted), assumptions, stop conditions hit (or none), out-of-scope observations, workflow feedback, Map Impact. Send a short completion note to cmdr-604b via SendMessage.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "simplification_limits captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "simplification_limits PASS captured via corrected invocation"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT written to g1-implementer-result.md with full pytest output pasted and completion note sent to cmdr-604b",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT written to .agent-work/604-race-week-build/crew-handoffs/g1-implementer-result.md with full pytest output pasted, simplification_limits output, required note evidence, Map Impact, and Workflow Feedback. Completion note sent to cmdr-604b via SendMessage (msg_id 52261e1f-12dc-40b2-9c47-f4f3bda36aff)."
+        }
+      ],
+      "constraints": [
+        "result file is the deliverable; do not end turn before this exists with real content"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-simplification-fixed": {
+      "id": "m4-simplification-fixed",
+      "title": "Run simplification-limits check on the touched file (corrected invocation)",
+      "imperative": "Run py -m src.utils.simplification_limits --paths scripts/race_week_stages.py from the worktree (the handoff's literal Verification Command omits the required --paths flag; the module's CLI has no positional path argument) and capture the output. If over threshold, split per the module's own guidance and re-run to a documented pass or split plan.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "31/31 tests green (m3-tests complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "simplification_limits run captured (pass or documented split plan)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m src.utils.simplification_limits --paths scripts/race_week_stages.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-simplification-fixed-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-simplification-fixed-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m src.utils.simplification_limits --paths scripts/race_week_stages.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "604-g1-impl-session",
+    "status": "released",
+    "claimed_at": "2026-07-12T20:48:12.421643+00:00",
+    "last_heartbeat": "2026-07-12T20:56:16.770381+00:00",
+    "claimed_by": "cmdr-604b-implementer",
+    "worktree": "C:/Programs/f1Brainz/.claude/worktrees/604-build",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-12T20:56:23.862689+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-07-12T20:53:45.881160+00:00",
+      "reason": "handoff's Verification Command for simplification_limits is missing the required --paths flag (module CLI has no positional path arg, confirmed exit-2 argparse error on the literal handoff command); mechanical self-correction of an authoring bug, underlying work already independently verified",
+      "authority": "implementer-self-correction (mechanical CLI-syntax fix, no design/scope change)",
+      "ops": [
+        "added m4-simplification-fixed"
+      ]
+    }
+  ]
+}

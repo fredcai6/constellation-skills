@@ -1,0 +1,5332 @@
+{
+  "bounded_scope_note": "Season-scale run: this report covers the FULL 2023-Q corpus of covered circuits present in the G2-consolidated slice (parked/error-only rounds excluded). Epic #659 gate g3 / issue #670.",
+  "epic": 659,
+  "frozen_constants_used": {
+    "REPLICATION_CHANNEL_TIE_MARGIN": 0.1,
+    "REPLICATION_MIN_SUPPORT_N": 15.0,
+    "REPLICATION_R_FLOOR_CAP": 0.7,
+    "REPLICATION_R_FLOOR_SUPPORT_REF": 100.0,
+    "REPLICATION_THRESHOLD": 0.5,
+    "SECTOR_CALIB_COVERAGE_NOMINAL": 0.9,
+    "SECTOR_CALIB_COVERAGE_OBSERVED_MIN": 0.85,
+    "SECTOR_CALIB_GROSS_MISCALIB_BOUND": 0.5
+  },
+  "instrument1": {
+    "energy": {
+      "car_reference_share": 0.8197436854328786,
+      "driver_utilization_is_floor": true,
+      "driver_utilization_share": 0.0,
+      "n": 1524,
+      "residual_share": 0.18025631444911003
+    },
+    "utilization": {
+      "car_reference_share": 0.6926484282494461,
+      "driver_utilization_is_floor": true,
+      "driver_utilization_share": 0.0,
+      "n": 1524,
+      "residual_share": 0.3073515717503507
+    }
+  },
+  "instrument4": {
+    "composability_limitation": "The on-disk driver_class_observables/reference_laps grain is by corner-severity CLASS (straight/braking_zone/severity:c0-c3) -- a TIME-SHARE partition of the WHOLE lap, not a geographic segment tiling assigned to an FIA sector. A severity class spans corners across MULTIPLE FIA sectors, and no class->sector mapping exists in this DB-only slice (building one needs telemetry-derived segment tiling via derive_sector_lines/nest_sectors, which requires FastF1/telemetry access -- explicitly out of scope here, no FastF1 online). Therefore a genuine PER-SECTOR composed prediction CANNOT be constructed from this slice's granularity. This gap is routed to #670. What IS computable instead: a WHOLE-LAP (single pseudo-sector spanning all 6 classes) composed prediction, reported below -- clearly NOT a per-FIA-sector result.",
+    "construction_check": {
+      "composed_mu": {
+        "1": 9.945987222532626,
+        "2": 11.291381690751368,
+        "3": 9.690929473800983
+      },
+      "expected_mu": {
+        "1": 9.945987222532626,
+        "2": 11.291381690751368,
+        "3": 9.690929473800983
+      },
+      "pass": true,
+      "sector_labels": [
+        1,
+        1,
+        2,
+        2,
+        3,
+        3
+      ]
+    },
+    "whole_lap_calibration": {
+      "comparisons": [
+        {
+          "composed_mu": 83.9341506675787,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.7453511858372522,
+          "driver": "ALB",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.298,
+          "pit": 0.5373548534852369,
+          "residual": 0.3638493324212959,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.37656284034263,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.752277909723061,
+          "driver": "ALB",
+          "gp_name": "Australia",
+          "official_lap_time": 77.609,
+          "pit": 0.5894835148517201,
+          "residual": 0.23243715965736556,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.94310883986658,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.735639431383022,
+          "driver": "ALB",
+          "gp_name": "Austria",
+          "official_lap_time": 65.34,
+          "pit": 0.6610300461884292,
+          "residual": 0.3968911601334213,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 101.26630013953354,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.7539512275161754,
+          "driver": "ALB",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.818,
+          "pit": 0.5106475610526501,
+          "residual": 0.5516998604664565,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 119.58713256016455,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5187282026593126,
+          "driver": "ALB",
+          "gp_name": "Belgium",
+          "official_lap_time": 120.314,
+          "pit": 0.5846017587167172,
+          "residual": 0.7268674398354449,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.28987797347297,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.7512201487603686,
+          "driver": "ALB",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.621,
+          "pit": 0.6485870976062948,
+          "residual": 0.3311220265270265,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.0494908934216,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.7631343690788129,
+          "driver": "ALB",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.53,
+          "pit": 0.7009423785809112,
+          "residual": 0.4805091065783955,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.4043878524736,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.7633108175450475,
+          "driver": "ALB",
+          "gp_name": "Hungary",
+          "official_lap_time": 78.917,
+          "pit": 0.6926780450074679,
+          "residual": 0.5126121475263972,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.4710714643477,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.752864462578102,
+          "driver": "ALB",
+          "gp_name": "Italy",
+          "official_lap_time": 80.76,
+          "pit": 0.5965696969536549,
+          "residual": 0.28892853565230325,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.1032687607747,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.7603803308382556,
+          "driver": "ALB",
+          "gp_name": "Japan",
+          "official_lap_time": 90.537,
+          "pit": 0.5356889008162187,
+          "residual": 0.43373123922530965,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.64825969035259,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.7545964166487725,
+          "driver": "ALB",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.323,
+          "pit": 0.7561796274627203,
+          "residual": 0.6747403096474045,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.04116064492713,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.7410142764312203,
+          "driver": "ALB",
+          "gp_name": "Mexico",
+          "official_lap_time": 78.302,
+          "pit": 0.5894691388778797,
+          "residual": 0.2608393550728749,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.18988903354624,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.7454241347561811,
+          "driver": "ALB",
+          "gp_name": "Miami",
+          "official_lap_time": 87.795,
+          "pit": 0.7359736958227694,
+          "residual": 0.6051109664537648,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.09100238476569,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.7647781910194357,
+          "driver": "ALB",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.527,
+          "pit": 0.5774089832317506,
+          "residual": 0.4359976152343137,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 85.32247728478875,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.7574037489871346,
+          "driver": "ALB",
+          "gp_name": "Qatar",
+          "official_lap_time": 85.707,
+          "pit": 0.5450267759294425,
+          "residual": 0.38452271521124715,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.76076833088628,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.7555733970981738,
+          "driver": "ALB",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.668,
+          "pit": 0.7472017164620162,
+          "residual": 0.9072316691137274,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 73.51318552612736,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.7553769010214023,
+          "driver": "ALB",
+          "gp_name": "Spain",
+          "official_lap_time": 74.063,
+          "pit": 0.6104529820475276,
+          "residual": 0.5498144738726438,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 95.41232443310331,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.7599056262595583,
+          "driver": "ALB",
+          "gp_name": "United States",
+          "official_lap_time": 96.315,
+          "pit": 0.7608867026700172,
+          "residual": 0.9026755668966899,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.6416385393398,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.7359050096933322,
+          "driver": "ALO",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.084,
+          "pit": 0.5459398362014591,
+          "residual": 0.44236146066020865,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.8363774573543,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.7400762316761961,
+          "driver": "ALO",
+          "gp_name": "Australia",
+          "official_lap_time": 77.139,
+          "pit": 0.6173743959695053,
+          "residual": 0.3026225426456932,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.72294544845145,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.7279490473483446,
+          "driver": "ALO",
+          "gp_name": "Austria",
+          "official_lap_time": 64.911,
+          "pit": 0.5795246397497165,
+          "residual": 0.18805455154854656,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.5918295358467,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.717104660711329,
+          "driver": "ALO",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.253,
+          "pit": 0.5134143572240628,
+          "residual": 0.6611704641533009,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.99069348738885,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.725374571765691,
+          "driver": "ALO",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.843,
+          "pit": 0.5712102952470981,
+          "residual": 0.8523065126111504,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.92149300978716,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.740733969969996,
+          "driver": "ALO",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.237,
+          "pit": 0.6439011639690438,
+          "residual": 0.3155069902128389,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.54333925055198,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.7107280005625726,
+          "driver": "ALO",
+          "gp_name": "Canada",
+          "official_lap_time": 79.776,
+          "pit": 0.5834068163264008,
+          "residual": 0.23266074944801574,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.12366820377622,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.7423312332726348,
+          "driver": "ALO",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.659,
+          "pit": 0.7258249028613997,
+          "residual": 0.5353317962237867,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.59924033767025,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.745645045864201,
+          "driver": "ALO",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.035,
+          "pit": 0.6700135720094784,
+          "residual": 0.43575966232974395,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.23450359845404,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.7415440255622394,
+          "driver": "ALO",
+          "gp_name": "Italy",
+          "official_lap_time": 81.417,
+          "pit": 0.5624695447073851,
+          "residual": 0.18249640154596136,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.88120572422619,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.7416640514513166,
+          "driver": "ALO",
+          "gp_name": "Japan",
+          "official_lap_time": 90.465,
+          "pit": 0.5491485588225972,
+          "residual": 0.5837942757738119,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.71724913385175,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.7418316271068095,
+          "driver": "ALO",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.555,
+          "pit": 0.8052790496989416,
+          "residual": 0.8377508661482551,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.3304895614452,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6947850943940227,
+          "driver": "ALO",
+          "gp_name": "Mexico",
+          "official_lap_time": 78.738,
+          "pit": 0.6458445911249191,
+          "residual": 0.4075104385547945,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.48857784741885,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.7279389369402653,
+          "driver": "ALO",
+          "gp_name": "Miami",
+          "official_lap_time": 87.097,
+          "pit": 0.7417151275942409,
+          "residual": 0.6084221525811415,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.09366677729675,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.7445974154677549,
+          "driver": "ALO",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.449,
+          "pit": 0.7262878345888044,
+          "residual": 1.3553332227032513,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.01889910779697,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.7120149000366351,
+          "driver": "ALO",
+          "gp_name": "Netherlands",
+          "official_lap_time": 71.506,
+          "pit": 0.5657176322843305,
+          "residual": 0.4871008922030313,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.2246247785415,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.7338068586236923,
+          "driver": "ALO",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.369,
+          "pit": 0.5175028891707619,
+          "residual": 0.14437522145850323,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.02064519770435,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.7418085201798074,
+          "driver": "ALO",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.615,
+          "pit": 0.6750893177006227,
+          "residual": 0.5943548022956406,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.70670075475608,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.7385332910681072,
+          "driver": "ALO",
+          "gp_name": "Spain",
+          "official_lap_time": 73.098,
+          "pit": 0.5812071530286469,
+          "residual": 0.39129924524391413,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 98.50153601065661,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6141205958058147,
+          "driver": "ALO",
+          "gp_name": "United States",
+          "official_lap_time": 96.268,
+          "pit": 0.042045360762922646,
+          "residual": -2.233536010656607,
+          "within_interval": false
+        },
+        {
+          "composed_mu": 84.31203735529985,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6971494551703101,
+          "driver": "BOT",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.788,
+          "pit": 0.5521208389717486,
+          "residual": 0.4759626447001466,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.33005341278556,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.7178657569554111,
+          "driver": "BOT",
+          "gp_name": "Australia",
+          "official_lap_time": 78.714,
+          "pit": 0.6513152712610213,
+          "residual": 0.38394658721443875,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 65.1187859427186,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6931822474916544,
+          "driver": "BOT",
+          "gp_name": "Austria",
+          "official_lap_time": 65.513,
+          "pit": 0.6690060248192169,
+          "residual": 0.3942140572814026,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 101.53093894035331,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.6962815074019829,
+          "driver": "BOT",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 102.259,
+          "pit": 0.515211850861758,
+          "residual": 0.7280610596466914,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 113.90467694864583,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6258002773090953,
+          "driver": "BOT",
+          "gp_name": "Belgium",
+          "official_lap_time": 114.694,
+          "pit": 0.5763367191500974,
+          "residual": 0.7893230513541738,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.6122116161859,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.7199339427452499,
+          "driver": "BOT",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.955,
+          "pit": 0.659622798326966,
+          "residual": 0.3427883838140957,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.5631495211758,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.6654510392119211,
+          "driver": "BOT",
+          "gp_name": "Canada",
+          "official_lap_time": 81.821,
+          "pit": 0.598296834022668,
+          "residual": 0.25785047882419576,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.2890083374312,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.7140160191054679,
+          "driver": "BOT",
+          "gp_name": "Great Britain",
+          "official_lap_time": 89.798,
+          "pit": 0.7236299891579117,
+          "residual": 0.5089916625688033,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.4613370599027,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.7229531873785682,
+          "driver": "BOT",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.034,
+          "pit": 0.7223761030291059,
+          "residual": 0.5726629400973025,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.6839518891482,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.7181974433343213,
+          "driver": "BOT",
+          "gp_name": "Italy",
+          "official_lap_time": 81.94,
+          "pit": 0.5898919206376965,
+          "residual": 0.25604811085179335,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.33032640686321,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.7072875056538251,
+          "driver": "BOT",
+          "gp_name": "Japan",
+          "official_lap_time": 91.049,
+          "pit": 0.5632640943794525,
+          "residual": 0.7186735931367991,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.56602136076235,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6950287124885125,
+          "driver": "BOT",
+          "gp_name": "Mexico",
+          "official_lap_time": 78.016,
+          "pit": 0.6598143391738612,
+          "residual": 0.44997863923765635,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.06552309963541,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.7239296759971623,
+          "driver": "BOT",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.625,
+          "pit": 0.604034319587784,
+          "residual": 0.5594769003645865,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.42903202894979,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.7238330340939418,
+          "driver": "BOT",
+          "gp_name": "Netherlands",
+          "official_lap_time": 82.26,
+          "pit": 0.6087868844239401,
+          "residual": 0.8309679710502138,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.77791402586385,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.7056656296830828,
+          "driver": "BOT",
+          "gp_name": "Qatar",
+          "official_lap_time": 85.058,
+          "pit": 0.5352511140223085,
+          "residual": 0.2800859741361563,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.08010040573936,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.7252605790421005,
+          "driver": "BOT",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.809,
+          "pit": 0.7135179282407413,
+          "residual": 0.7288995942606391,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 73.43103612850042,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.7112832339000894,
+          "driver": "BOT",
+          "gp_name": "Spain",
+          "official_lap_time": 73.977,
+          "pit": 0.6162050732779922,
+          "residual": 0.5459638714995805,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 95.00015255567027,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.7192133569395691,
+          "driver": "BOT",
+          "gp_name": "United States",
+          "official_lap_time": 95.858,
+          "pit": 0.7617165031106292,
+          "residual": 0.8578474443297353,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.12582564195613,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 1.211414533532038,
+          "driver": "DEV",
+          "gp_name": "Australia",
+          "official_lap_time": 78.335,
+          "pit": 0.5504216755305817,
+          "residual": 0.20917435804386741,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 65.51523303414238,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 1.1415342568949478,
+          "driver": "DEV",
+          "gp_name": "Austria",
+          "official_lap_time": 65.974,
+          "pit": 0.6220887692675052,
+          "residual": 0.45876696585762033,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.66596288991649,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.7184243235600754,
+          "driver": "DEV",
+          "gp_name": "Canada",
+          "official_lap_time": 83.137,
+          "pit": 0.661789656080601,
+          "residual": 0.4710371100835147,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.0061618905208,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 1.2322619508437145,
+          "driver": "DEV",
+          "gp_name": "Great Britain",
+          "official_lap_time": 90.513,
+          "pit": 0.6361197003923189,
+          "residual": 0.5068381094792045,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.8353602970059,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 1.2039214277791257,
+          "driver": "DEV",
+          "gp_name": "Miami",
+          "official_lap_time": 88.325,
+          "pit": 0.626534022286117,
+          "residual": 0.4896397029940971,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.72598538095887,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 1.238695476158433,
+          "driver": "DEV",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.428,
+          "pit": 0.5769621864159301,
+          "residual": 0.7020146190411225,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 73.07567622163336,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 1.1480819474028723,
+          "driver": "DEV",
+          "gp_name": "Spain",
+          "official_lap_time": 73.581,
+          "pit": 0.567699101667575,
+          "residual": 0.5053237783666447,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.59869798587633,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6186803964429671,
+          "driver": "GAS",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.078,
+          "pit": 0.5590619690780105,
+          "residual": 0.47930201412367524,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.28976882694825,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6308667584651622,
+          "driver": "GAS",
+          "gp_name": "Australia",
+          "official_lap_time": 77.574,
+          "pit": 0.6287576965382271,
+          "residual": 0.28423117305175083,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.77007985748192,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6131994117392257,
+          "driver": "GAS",
+          "gp_name": "Austria",
+          "official_lap_time": 65.084,
+          "pit": 0.6533970850587372,
+          "residual": 0.31392014251808575,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 112.36578988935402,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5612324927820099,
+          "driver": "GAS",
+          "gp_name": "Belgium",
+          "official_lap_time": 113.671,
+          "pit": 0.6373736694426999,
+          "residual": 1.3052101106459872,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.27853943363077,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.6298207987647849,
+          "driver": "GAS",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.567,
+          "pit": 0.6539861742989566,
+          "residual": 0.2884605663692241,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.56241756299846,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.5417656268351196,
+          "driver": "GAS",
+          "gp_name": "Canada",
+          "official_lap_time": 82.886,
+          "pit": 0.648435918635023,
+          "residual": 0.32358243700153366,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.05748492578537,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.639281334619536,
+          "driver": "GAS",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.689,
+          "pit": 0.7897720950328576,
+          "residual": 0.6315150742146187,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.56865569510384,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.6400090900572728,
+          "driver": "GAS",
+          "gp_name": "Hungary",
+          "official_lap_time": 78.045,
+          "pit": 0.7108287604398542,
+          "residual": 0.4763443048961591,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.26362689235543,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.6375516946520576,
+          "driver": "GAS",
+          "gp_name": "Italy",
+          "official_lap_time": 82.545,
+          "pit": 0.6105310957886263,
+          "residual": 0.28137310764456913,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.89615665870359,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.6346670803028948,
+          "driver": "GAS",
+          "gp_name": "Japan",
+          "official_lap_time": 90.509,
+          "pit": 0.5601622620067981,
+          "residual": 0.6128433412964114,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.90627106180371,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.637234265764736,
+          "driver": "GAS",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.239,
+          "pit": 0.6606356011272552,
+          "residual": 0.332728938196297,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.22541073662421,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6081998878438347,
+          "driver": "GAS",
+          "gp_name": "Mexico",
+          "official_lap_time": 78.521,
+          "pit": 0.622142654025204,
+          "residual": 0.2955892633757884,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.94889631188938,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6364033366800499,
+          "driver": "GAS",
+          "gp_name": "Miami",
+          "official_lap_time": 87.612,
+          "pit": 0.7871305040658787,
+          "residual": 0.6631036881106098,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.44660493225653,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6384325844905725,
+          "driver": "GAS",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.933,
+          "pit": 0.6026113512074938,
+          "residual": 0.48639506774347296,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.27544288491971,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.6303348356217279,
+          "driver": "GAS",
+          "gp_name": "Netherlands",
+          "official_lap_time": 80.128,
+          "pit": 0.6271418972636145,
+          "residual": 0.8525571150802875,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.08554622758382,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6247974163490112,
+          "driver": "GAS",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.553,
+          "pit": 0.566079090423321,
+          "residual": 0.467453772416178,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.3640303694829,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6370035655106432,
+          "driver": "GAS",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.274,
+          "pit": 0.782287935449817,
+          "residual": 0.9099696305170966,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.27246335749629,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.625703625780314,
+          "driver": "GAS",
+          "gp_name": "Spain",
+          "official_lap_time": 72.816,
+          "pit": 0.6306595326015676,
+          "residual": 0.5435366425037103,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.32829682807177,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6385586014930585,
+          "driver": "GAS",
+          "gp_name": "United States",
+          "official_lap_time": 95.089,
+          "pit": 0.7614657006839666,
+          "residual": 0.7607031719282276,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.86924907799929,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.5671368896996206,
+          "driver": "HAM",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.359,
+          "pit": 0.5657360252743059,
+          "residual": 0.48975092200070947,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.88542655961024,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.5669017460368431,
+          "driver": "HAM",
+          "gp_name": "Australia",
+          "official_lap_time": 77.104,
+          "pit": 0.6109259395942243,
+          "residual": 0.21857344038976123,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.554938430662,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.5495948750109609,
+          "driver": "HAM",
+          "gp_name": "Austria",
+          "official_lap_time": 64.819,
+          "pit": 0.6445784971658812,
+          "residual": 0.26406156933799707,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.63234264192411,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.544486126857319,
+          "driver": "HAM",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.177,
+          "pit": 0.514552944167585,
+          "residual": 0.5446573580758951,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.05501058678105,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5535013325180292,
+          "driver": "HAM",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.087,
+          "pit": 0.6114815525678712,
+          "residual": 1.0319894132189518,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.85318190821535,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.5612275209357046,
+          "driver": "HAM",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.266,
+          "pit": 0.7342759993145493,
+          "residual": 0.4128180917846578,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.15972992190488,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.517412844765016,
+          "driver": "HAM",
+          "gp_name": "Canada",
+          "official_lap_time": 80.426,
+          "pit": 0.6290574445632484,
+          "residual": 0.2662700780951184,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.68025127575056,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.5724594033152794,
+          "driver": "HAM",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.211,
+          "pit": 0.7763603830730927,
+          "residual": 0.5307487242494346,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.25302628056522,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.569299506776815,
+          "driver": "HAM",
+          "gp_name": "Hungary",
+          "official_lap_time": 76.609,
+          "pit": 0.6807626462315863,
+          "residual": 0.35597371943477185,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.48039636650319,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.5648783227868307,
+          "driver": "HAM",
+          "gp_name": "Italy",
+          "official_lap_time": 80.82,
+          "pit": 0.6481369118105447,
+          "residual": 0.33960363349680733,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.37627899007107,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.5634708456914829,
+          "driver": "HAM",
+          "gp_name": "Japan",
+          "official_lap_time": 89.908,
+          "pit": 0.5588109881669787,
+          "residual": 0.5317210099289298,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.38845861863668,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.562817972320463,
+          "driver": "HAM",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.837,
+          "pit": 0.7332622195301071,
+          "residual": 0.4485413813633272,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.10731628127367,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.5420826320340659,
+          "driver": "HAM",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.454,
+          "pit": 0.658023300050564,
+          "residual": 0.3466837187263252,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.31524387916646,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.5678875525603079,
+          "driver": "HAM",
+          "gp_name": "Miami",
+          "official_lap_time": 87.846,
+          "pit": 0.7643354359647292,
+          "residual": 0.5307561208335443,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.00415245733322,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.5735903755746226,
+          "driver": "HAM",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.725,
+          "pit": 0.6641575202231139,
+          "residual": 0.7208475426667746,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.56914546641926,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.563924213307631,
+          "driver": "HAM",
+          "gp_name": "Netherlands",
+          "official_lap_time": 80.151,
+          "pit": 0.5981689266388988,
+          "residual": 0.5818545335807386,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.98090786012737,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.5580204123452626,
+          "driver": "HAM",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.305,
+          "pit": 0.5514536342821916,
+          "residual": 0.32409213987263286,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.76229453522225,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.557775560503231,
+          "driver": "HAM",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.485,
+          "pit": 0.7623700520199903,
+          "residual": 0.7227054647777464,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.33949441094035,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.5549446288251625,
+          "driver": "HAM",
+          "gp_name": "Spain",
+          "official_lap_time": 72.818,
+          "pit": 0.6297498837699664,
+          "residual": 0.478505589059651,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.90089068542702,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.5722429985384834,
+          "driver": "HAM",
+          "gp_name": "United States",
+          "official_lap_time": 94.862,
+          "pit": 0.83285867516923,
+          "residual": 0.9611093145729797,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.57737882455285,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 1.0508485691617497,
+          "driver": "HUL",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.108,
+          "pit": 0.5386327751346613,
+          "residual": 0.5306211754471519,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.17091494470023,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 1.061188066749118,
+          "driver": "HUL",
+          "gp_name": "Australia",
+          "official_lap_time": 77.412,
+          "pit": 0.566158244248998,
+          "residual": 0.2410850552997772,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.94991005650827,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 1.0201451323812405,
+          "driver": "HUL",
+          "gp_name": "Austria",
+          "official_lap_time": 65.09,
+          "pit": 0.5425609665677484,
+          "residual": 0.14008994349173065,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 99.71465271127434,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.9489132967945028,
+          "driver": "HUL",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 102.755,
+          "pit": 0.5464513259076109,
+          "residual": 3.0403472887256555,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 122.27767414699574,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.7428723035011225,
+          "driver": "HUL",
+          "gp_name": "Belgium",
+          "official_lap_time": 123.166,
+          "pit": 0.5724482237652906,
+          "residual": 0.888325853004261,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.08959374580908,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 1.058690958887528,
+          "driver": "HUL",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.475,
+          "pit": 0.6240327306677877,
+          "residual": 0.38540625419091157,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 88.36691191783824,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 1.0648184482079284,
+          "driver": "HUL",
+          "gp_name": "Great Britain",
+          "official_lap_time": 88.896,
+          "pit": 0.6623716322748618,
+          "residual": 0.5290880821617634,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.75083831062977,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 1.0611537678734602,
+          "driver": "HUL",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.186,
+          "pit": 0.6220259861926581,
+          "residual": 0.4351616893702328,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.5814240783608,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 1.0599493975086092,
+          "driver": "HUL",
+          "gp_name": "Italy",
+          "official_lap_time": 81.776,
+          "pit": 0.5467238116463896,
+          "residual": 0.19457592163919912,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.49217961567975,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 1.0585503321845786,
+          "driver": "HUL",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.979,
+          "pit": 0.6427338883210425,
+          "residual": 0.48682038432025365,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.13510560355981,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 1.0267466043592104,
+          "driver": "HUL",
+          "gp_name": "Mexico",
+          "official_lap_time": 78.524,
+          "pit": 0.5960804559500178,
+          "residual": 0.3888943964401932,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.25843950294757,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 1.062157521485361,
+          "driver": "HUL",
+          "gp_name": "Miami",
+          "official_lap_time": 87.903,
+          "pit": 0.683444022581052,
+          "residual": 0.6445604970524386,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.64682009430923,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 1.058638130130637,
+          "driver": "HUL",
+          "gp_name": "Monaco",
+          "official_lap_time": 73.279,
+          "pit": 0.5810023357402958,
+          "residual": 0.6321799056907622,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.43284908251772,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 1.064367242127045,
+          "driver": "HUL",
+          "gp_name": "Netherlands",
+          "official_lap_time": 80.25,
+          "pit": 0.5736051218788716,
+          "residual": 0.8171509174822802,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 85.14871175202397,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 1.0541135907400392,
+          "driver": "HUL",
+          "gp_name": "Qatar",
+          "official_lap_time": 85.547,
+          "pit": 0.5335644648688556,
+          "residual": 0.39828824797602635,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.66554999861343,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 1.060682737516186,
+          "driver": "HUL",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.808,
+          "pit": 0.726299582612791,
+          "residual": 1.1424500013865782,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.53619345847261,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 1.0545915687835785,
+          "driver": "HUL",
+          "gp_name": "Spain",
+          "official_lap_time": 73.229,
+          "pit": 0.6000808931470439,
+          "residual": 0.6928065415273892,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 95.23358982606705,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 1.0577440554403952,
+          "driver": "HUL",
+          "gp_name": "United States",
+          "official_lap_time": 96.235,
+          "pit": 0.7169395880334553,
+          "residual": 1.0014101739329533,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.56294187069376,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.7997124231193334,
+          "driver": "LAW",
+          "gp_name": "Italy",
+          "official_lap_time": 81.758,
+          "pit": 0.561919638561121,
+          "residual": 0.19505812930623279,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.84842429458412,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 1.1091129902806676,
+          "driver": "LAW",
+          "gp_name": "Japan",
+          "official_lap_time": 90.425,
+          "pit": 0.5325379433216302,
+          "residual": 0.5765757054158769,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.77181516887302,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.8816988243884369,
+          "driver": "LAW",
+          "gp_name": "Netherlands",
+          "official_lap_time": 83.42,
+          "pit": 0.5705375316998376,
+          "residual": 0.6481848311269829,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.18461976574221,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 1.1845278259211323,
+          "driver": "LAW",
+          "gp_name": "Qatar",
+          "official_lap_time": 86.635,
+          "pit": 0.5337748026759515,
+          "residual": 0.4503802342577927,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.49927472402496,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 1.1071053404486857,
+          "driver": "LAW",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.166,
+          "pit": 0.6345734130217,
+          "residual": 0.6667252759750397,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.06351758245471,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6081126371345306,
+          "driver": "LEC",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 83.584,
+          "pit": 0.5651623450966355,
+          "residual": 0.5204824175452956,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.2102559374681,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6264745413944977,
+          "driver": "LEC",
+          "gp_name": "Australia",
+          "official_lap_time": 77.369,
+          "pit": 0.573673543192621,
+          "residual": 0.15874406253189477,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.151135113174,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6026852001422026,
+          "driver": "LEC",
+          "gp_name": "Austria",
+          "official_lap_time": 64.439,
+          "pit": 0.6437804054648621,
+          "residual": 0.2878648868259859,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 99.87599250438386,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.5844300004737274,
+          "driver": "LEC",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 100.203,
+          "pit": 0.5081423949482738,
+          "residual": 0.32700749561614373,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.10729273859674,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6115284462089,
+          "driver": "LEC",
+          "gp_name": "Belgium",
+          "official_lap_time": 106.988,
+          "pit": 0.5868896504574543,
+          "residual": 0.8807072614032592,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.00013740548798,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.6209713297901923,
+          "driver": "LEC",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.303,
+          "pit": 0.6631977166920884,
+          "residual": 0.30286259451202113,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.33132675074283,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.5581838237626612,
+          "driver": "LEC",
+          "gp_name": "Canada",
+          "official_lap_time": 80.615,
+          "pit": 0.6275327782814664,
+          "residual": 0.28367324925716275,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.58025058216904,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.6259843819790288,
+          "driver": "LEC",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.136,
+          "pit": 0.7673094331339894,
+          "residual": 0.5557494178309526,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.64209833672025,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.614066959722725,
+          "driver": "LEC",
+          "gp_name": "Hungary",
+          "official_lap_time": 76.992,
+          "pit": 0.6661260018672306,
+          "residual": 0.34990166327975203,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.52241865641987,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.6089594711541666,
+          "driver": "LEC",
+          "gp_name": "Italy",
+          "official_lap_time": 80.361,
+          "pit": 0.7972315587561057,
+          "residual": 0.838581343580131,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.23436120720775,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6270265228681077,
+          "driver": "LEC",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 92.726,
+          "pit": 0.730113461751845,
+          "residual": 0.4916387927922443,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.51738607347708,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6145518026045886,
+          "driver": "LEC",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.166,
+          "pit": 0.7444363388631889,
+          "residual": 0.6486139265229127,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.40987601881656,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6181303930844183,
+          "driver": "LEC",
+          "gp_name": "Miami",
+          "official_lap_time": 86.964,
+          "pit": 0.7557835728303827,
+          "residual": 0.5541239811834373,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.81052168277986,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6286850917331905,
+          "driver": "LEC",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.471,
+          "pit": 0.6392155806961614,
+          "residual": 0.6604783172201394,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.01777195673606,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.601087862688346,
+          "driver": "LEC",
+          "gp_name": "Netherlands",
+          "official_lap_time": 72.665,
+          "pit": 0.6022924007401971,
+          "residual": 0.6472280432639508,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.06471293967705,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6152685170008844,
+          "driver": "LEC",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.424,
+          "pit": 0.551731180692764,
+          "residual": 0.35928706032295565,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.35774465370673,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6101414879086275,
+          "driver": "LEC",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.063,
+          "pit": 0.7397727697599381,
+          "residual": 0.7052553462932707,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 73.46032000798344,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.6237762845044967,
+          "driver": "LEC",
+          "gp_name": "Spain",
+          "official_lap_time": 74.079,
+          "pit": 0.6478637323854599,
+          "residual": 0.6186799920165527,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.81571717292611,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6225850508014382,
+          "driver": "LEC",
+          "gp_name": "United States",
+          "official_lap_time": 94.723,
+          "pit": 0.803182069779119,
+          "residual": 0.9072828270738853,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.96119341068653,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6729310270458733,
+          "driver": "MAG",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.764,
+          "pit": 0.590189968404244,
+          "residual": 0.8028065893134624,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.88845708978344,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6878836075974988,
+          "driver": "MAG",
+          "gp_name": "Australia",
+          "official_lap_time": 78.129,
+          "pit": 0.600935005114007,
+          "residual": 0.24054291021656127,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 65.2674558472667,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6721237073616061,
+          "driver": "MAG",
+          "gp_name": "Austria",
+          "official_lap_time": 65.793,
+          "pit": 0.7238440080795892,
+          "residual": 0.5255441527333033,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 102.83519051065238,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.6782417116538464,
+          "driver": "MAG",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 103.417,
+          "pit": 0.512481132306922,
+          "residual": 0.58180948934762,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 113.37914049961901,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5914517887248641,
+          "driver": "MAG",
+          "gp_name": "Belgium",
+          "official_lap_time": 114.16,
+          "pit": 0.5798249234843482,
+          "residual": 0.7808595003809842,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.24122552337987,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.6833551481625005,
+          "driver": "MAG",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.602,
+          "pit": 0.6754463047137241,
+          "residual": 0.3607744766201364,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.4228967663292,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.6699901255167554,
+          "driver": "MAG",
+          "gp_name": "Canada",
+          "official_lap_time": 81.678,
+          "pit": 0.5966411863145713,
+          "residual": 0.2551032336707948,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.87053943543691,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.6925386382808233,
+          "driver": "MAG",
+          "gp_name": "Great Britain",
+          "official_lap_time": 92.378,
+          "pit": 0.7288762157463307,
+          "residual": 0.5074605645630896,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.68754830423062,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.7000533925055767,
+          "driver": "MAG",
+          "gp_name": "Hungary",
+          "official_lap_time": 79.206,
+          "pit": 0.7099252378477201,
+          "residual": 0.5184516957693859,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.3445394383258,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.692340364122602,
+          "driver": "MAG",
+          "gp_name": "Italy",
+          "official_lap_time": 82.592,
+          "pit": 0.5901158123950925,
+          "residual": 0.2474605616742025,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.70714987614444,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6981724381970262,
+          "driver": "MAG",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.537,
+          "pit": 0.8162627113702111,
+          "residual": 0.8298501238555644,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.8273545320758,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6541723913233967,
+          "driver": "MAG",
+          "gp_name": "Mexico",
+          "official_lap_time": 79.163,
+          "pit": 0.628601507141717,
+          "residual": 0.3356454679241949,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.11806364150155,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.7006451879237987,
+          "driver": "MAG",
+          "gp_name": "Miami",
+          "official_lap_time": 87.673,
+          "pit": 0.7311946634912405,
+          "residual": 0.5549363584984519,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.92960260457991,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6938621540014375,
+          "driver": "MAG",
+          "gp_name": "Monaco",
+          "official_lap_time": 73.27,
+          "pit": 0.5667928277063354,
+          "residual": 0.3403973954200836,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.54756899525118,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.7005583992228392,
+          "driver": "MAG",
+          "gp_name": "Netherlands",
+          "official_lap_time": 82.192,
+          "pit": 0.5878276712948143,
+          "residual": 0.6444310047488102,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.66375304896992,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.68568309742124,
+          "driver": "MAG",
+          "gp_name": "Qatar",
+          "official_lap_time": 87.046,
+          "pit": 0.5494057844271181,
+          "residual": 0.38224695103008344,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.90085386505913,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6972789189906339,
+          "driver": "MAG",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.575,
+          "pit": 0.7065695792405307,
+          "residual": 0.6741461349408695,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 73.47946218099521,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.6868786560402828,
+          "driver": "MAG",
+          "gp_name": "Spain",
+          "official_lap_time": 74.042,
+          "pit": 0.6235890184778486,
+          "residual": 0.5625378190047883,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.62147961072662,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.700082154375331,
+          "driver": "MAG",
+          "gp_name": "United States",
+          "official_lap_time": 95.88,
+          "pit": 0.8468383586084489,
+          "residual": 1.2585203892733716,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.36292902190291,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.627755375232989,
+          "driver": "NOR",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 83.816,
+          "pit": 0.5550674708177523,
+          "residual": 0.4530709780970881,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.97605431236565,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6328398124464949,
+          "driver": "NOR",
+          "gp_name": "Australia",
+          "official_lap_time": 78.119,
+          "pit": 0.5657832992802447,
+          "residual": 0.14294568763435223,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.33237172022706,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6109144359136267,
+          "driver": "NOR",
+          "gp_name": "Austria",
+          "official_lap_time": 64.658,
+          "pit": 0.6592391357202059,
+          "residual": 0.3256282797729426,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.88141844331184,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.6215961976755351,
+          "driver": "NOR",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.281,
+          "pit": 0.5093542210807356,
+          "residual": 0.39958155668816175,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.9211381904345,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6180122635837967,
+          "driver": "NOR",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.669,
+          "pit": 0.573298728048732,
+          "residual": 0.7478618095654923,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.46613197862094,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.6354253344653795,
+          "driver": "NOR",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.021,
+          "pit": 0.7688799821698097,
+          "residual": 0.5548680213790647,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.96830274094307,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.5936854162225332,
+          "driver": "NOR",
+          "gp_name": "Canada",
+          "official_lap_time": 79.347,
+          "pit": 0.6577537505522166,
+          "residual": 0.37869725905692064,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.54612691668447,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.639340469085869,
+          "driver": "NOR",
+          "gp_name": "Great Britain",
+          "official_lap_time": 86.961,
+          "pit": 0.7062986102511741,
+          "residual": 0.41487308331552697,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.29247755152376,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.636645872460877,
+          "driver": "NOR",
+          "gp_name": "Hungary",
+          "official_lap_time": 76.694,
+          "pit": 0.6821671606456625,
+          "residual": 0.40152244847624274,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.65526331078931,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.6343311187591357,
+          "driver": "NOR",
+          "gp_name": "Italy",
+          "official_lap_time": 80.979,
+          "pit": 0.8819592613642758,
+          "residual": 1.3237366892106905,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.37001634594758,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6263573670119724,
+          "driver": "NOR",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 94.703,
+          "pit": 0.6633173106124206,
+          "residual": 0.3329836540524269,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.76833698485103,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6199970874909749,
+          "driver": "NOR",
+          "gp_name": "Miami",
+          "official_lap_time": 88.394,
+          "pit": 0.7803584376473247,
+          "residual": 0.625663015148973,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.80005867518373,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6359838210275538,
+          "driver": "NOR",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.254,
+          "pit": 0.5963492460351436,
+          "residual": 0.45394132481627025,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.50220575980646,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.5851872039200091,
+          "driver": "NOR",
+          "gp_name": "Netherlands",
+          "official_lap_time": 71.104,
+          "pit": 0.597854852680074,
+          "residual": 0.6017942401935414,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.69106983452069,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6253557588004277,
+          "driver": "NOR",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.074,
+          "pit": 0.5542205546086143,
+          "residual": 0.38293016547930847,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.62165403535305,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.5986023972444418,
+          "driver": "NOR",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.27,
+          "pit": 0.727345778109751,
+          "residual": 0.6483459646469498,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.2377609279135,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.6233638263811692,
+          "driver": "NOR",
+          "gp_name": "Spain",
+          "official_lap_time": 72.776,
+          "pit": 0.6299177625597382,
+          "residual": 0.5382390720864976,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.95223970854951,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6203993431367211,
+          "driver": "NOR",
+          "gp_name": "United States",
+          "official_lap_time": 94.853,
+          "pit": 0.8024067354028219,
+          "residual": 0.9007602914504815,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.913246813122,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6346511283446402,
+          "driver": "OCO",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.391,
+          "pit": 0.557409428155519,
+          "residual": 0.4777531868780045,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.46606028152983,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6443682403927637,
+          "driver": "OCO",
+          "gp_name": "Australia",
+          "official_lap_time": 77.768,
+          "pit": 0.6336425330517386,
+          "residual": 0.301939718470166,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.91392832583182,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6281752183815185,
+          "driver": "OCO",
+          "gp_name": "Austria",
+          "official_lap_time": 65.295,
+          "pit": 0.6792124680109611,
+          "residual": 0.381071674168183,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 101.18837928290083,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.6397364659024243,
+          "driver": "OCO",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.798,
+          "pit": 0.5138639850120996,
+          "residual": 0.6096207170991761,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 115.6878638906934,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5294044167138797,
+          "driver": "OCO",
+          "gp_name": "Belgium",
+          "official_lap_time": 116.372,
+          "pit": 0.5781710701911158,
+          "residual": 0.684136109306607,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.32499858174022,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.643696303046767,
+          "driver": "OCO",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.562,
+          "pit": 0.6253797473878113,
+          "residual": 0.23700141825977994,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.14195978545142,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.6169789192096135,
+          "driver": "OCO",
+          "gp_name": "Canada",
+          "official_lap_time": 80.406,
+          "pit": 0.6082036669422969,
+          "residual": 0.2640402145485865,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 88.4907375350416,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.6529612043194627,
+          "driver": "OCO",
+          "gp_name": "Great Britain",
+          "official_lap_time": 88.956,
+          "pit": 0.7235463142671643,
+          "residual": 0.46526246495839985,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.35993416099457,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.6549333358549432,
+          "driver": "OCO",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.841,
+          "pit": 0.7084362133689699,
+          "residual": 0.4810658390054243,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.32789482979551,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.6519954028787466,
+          "driver": "OCO",
+          "gp_name": "Italy",
+          "official_lap_time": 82.548,
+          "pit": 0.585231544799754,
+          "residual": 0.22010517020449072,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.06890997226246,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.6495180553117985,
+          "driver": "OCO",
+          "gp_name": "Japan",
+          "official_lap_time": 90.586,
+          "pit": 0.5497038997654615,
+          "residual": 0.5170900277375381,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.97311522959164,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6537528971087158,
+          "driver": "OCO",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 94.834,
+          "pit": 0.838159941938221,
+          "residual": 0.8608847704083615,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.72411491911642,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6274691330136957,
+          "driver": "OCO",
+          "gp_name": "Mexico",
+          "official_lap_time": 79.08,
+          "pit": 0.6413416978853501,
+          "residual": 0.3558850808835814,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.81398213658208,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6508457231839706,
+          "driver": "OCO",
+          "gp_name": "Miami",
+          "official_lap_time": 87.444,
+          "pit": 0.771623883381111,
+          "residual": 0.630017863417919,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.41402355449112,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6557531037991695,
+          "driver": "OCO",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.553,
+          "pit": 0.717696022306282,
+          "residual": 1.1389764455088738,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.46389583675398,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.6364292432667508,
+          "driver": "OCO",
+          "gp_name": "Netherlands",
+          "official_lap_time": 82.11,
+          "pit": 0.59664254513984,
+          "residual": 0.6461041632460223,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.51776603276721,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6399608532413683,
+          "driver": "OCO",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.763,
+          "pit": 0.534038642557038,
+          "residual": 0.24523396723279234,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.79247345691182,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6536735669324095,
+          "driver": "OCO",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.673,
+          "pit": 0.770249088860178,
+          "residual": 0.8805265430881803,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.36796517703964,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.6404067370833778,
+          "driver": "OCO",
+          "gp_name": "Spain",
+          "official_lap_time": 73.001,
+          "pit": 0.6474031224197285,
+          "residual": 0.6330348229603686,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.13824303034721,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6558295216720813,
+          "driver": "OCO",
+          "gp_name": "United States",
+          "official_lap_time": 95.154,
+          "pit": 0.8159546311996485,
+          "residual": 1.0157569696527844,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.38781920203708,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.8545028796224755,
+          "driver": "PER",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 83.868,
+          "pit": 0.5429664623532022,
+          "residual": 0.480180797962916,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 96.66908988077854,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6056858917905079,
+          "driver": "PER",
+          "gp_name": "Australia",
+          "official_lap_time": 100.187,
+          "pit": 0.9947512454365153,
+          "residual": 3.5179101192214546,
+          "within_interval": false
+        },
+        {
+          "composed_mu": 64.75679566822535,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.8478509857489576,
+          "driver": "PER",
+          "gp_name": "Austria",
+          "official_lap_time": 64.99,
+          "pit": 0.5845649266442148,
+          "residual": 0.23320433177464395,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 99.90949887831896,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.861471767808173,
+          "driver": "PER",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 100.495,
+          "pit": 0.5098898395835992,
+          "residual": 0.5855011216810482,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.45463313235905,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.8551211663121874,
+          "driver": "PER",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.045,
+          "pit": 0.5420898876495728,
+          "residual": 0.5903668676409524,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.9424696379858,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.8605588763423743,
+          "driver": "PER",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.219,
+          "pit": 0.6100444231844468,
+          "residual": 0.2765303620141992,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.56936623164405,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.8305467125412948,
+          "driver": "PER",
+          "gp_name": "Canada",
+          "official_lap_time": 80.959,
+          "pit": 0.6181751898179959,
+          "residual": 0.38963376835594943,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.42398396958424,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.8665422755223179,
+          "driver": "PER",
+          "gp_name": "Great Britain",
+          "official_lap_time": 89.968,
+          "pit": 0.7004241763588918,
+          "residual": 0.5440160304157615,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.6775820930905,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.8675523657370593,
+          "driver": "PER",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.045,
+          "pit": 0.6258348053917848,
+          "residual": 0.3674179069094947,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.46661400271921,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.8666538220006043,
+          "driver": "PER",
+          "gp_name": "Italy",
+          "official_lap_time": 80.688,
+          "pit": 0.5648111248498747,
+          "residual": 0.221385997280791,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.17423131293745,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.8644957524749803,
+          "driver": "PER",
+          "gp_name": "Japan",
+          "official_lap_time": 89.65,
+          "pit": 0.5344384935668043,
+          "residual": 0.4757686870625548,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.44083129096308,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.8667151263384377,
+          "driver": "PER",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.855,
+          "pit": 0.6479493118752175,
+          "residual": 0.4141687090369288,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.1015901663287,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.8430508182280037,
+          "driver": "PER",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.423,
+          "pit": 0.5966917060201008,
+          "residual": 0.3214098336712965,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.24605304329036,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.8670371608030778,
+          "driver": "PER",
+          "gp_name": "Miami",
+          "official_lap_time": 86.841,
+          "pit": 0.7045278704506586,
+          "residual": 0.5949469567096344,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.41256143092178,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.8691178882320796,
+          "driver": "PER",
+          "gp_name": "Monaco",
+          "official_lap_time": 73.85,
+          "pit": 0.7089277251820516,
+          "residual": 1.4374385690782105,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.80639434332063,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.8228389216079612,
+          "driver": "PER",
+          "gp_name": "Netherlands",
+          "official_lap_time": 71.88,
+          "pit": 0.6228936077680745,
+          "residual": 1.0736056566793621,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.97991040366509,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.8660509442794493,
+          "driver": "PER",
+          "gp_name": "Qatar",
+          "official_lap_time": 85.275,
+          "pit": 0.5302789773274273,
+          "residual": 0.29508959633491827,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.49462390649573,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.8607405757973482,
+          "driver": "PER",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.099,
+          "pit": 0.6552621644255667,
+          "residual": 0.6043760935042712,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.75736375006223,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.859194998561285,
+          "driver": "PER",
+          "gp_name": "Spain",
+          "official_lap_time": 73.334,
+          "pit": 0.6021661000114638,
+          "residual": 0.5766362499377777,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.19992834401927,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.8672239195764463,
+          "driver": "PER",
+          "gp_name": "United States",
+          "official_lap_time": 95.173,
+          "pit": 0.7494607312839504,
+          "residual": 0.973071655980732,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.25354994097381,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.674768122579026,
+          "driver": "PIA",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 83.782,
+          "pit": 0.5596974394741479,
+          "residual": 0.5284500590261842,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.47685851911652,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.684119527947419,
+          "driver": "PIA",
+          "gp_name": "Australia",
+          "official_lap_time": 78.517,
+          "pit": 0.5171915954546952,
+          "residual": 0.04014148088347724,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.90786565124904,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6660885979700379,
+          "driver": "PIA",
+          "gp_name": "Austria",
+          "official_lap_time": 65.213,
+          "pit": 0.6382435278213439,
+          "residual": 0.30513434875095413,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.93052566015068,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.683128682723325,
+          "driver": "PIA",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.611,
+          "pit": 0.5144918861213704,
+          "residual": 0.6804743398493258,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.51977027242569,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6861452769638701,
+          "driver": "PIA",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.365,
+          "pit": 0.5745900102323062,
+          "residual": 0.8452297275743064,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.22624968059655,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.6607186576779456,
+          "driver": "PIA",
+          "gp_name": "Canada",
+          "official_lap_time": 79.659,
+          "pit": 0.6616348930584223,
+          "residual": 0.43275031940345343,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.83525354375747,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.6931632273064898,
+          "driver": "PIA",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.092,
+          "pit": 0.6232301443073908,
+          "residual": 0.25674645624252435,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.384475435829,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.6930013388525595,
+          "driver": "PIA",
+          "gp_name": "Hungary",
+          "official_lap_time": 76.905,
+          "pit": 0.712498977335452,
+          "residual": 0.5205245641709979,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.51440783790278,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.6892617008162455,
+          "driver": "PIA",
+          "gp_name": "Italy",
+          "official_lap_time": 80.785,
+          "pit": 0.5987193078410051,
+          "residual": 0.27059216209721626,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.57284902617391,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6886204259934054,
+          "driver": "PIA",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 94.85,
+          "pit": 0.6258167199673373,
+          "residual": 0.2771509738260818,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.37783141392327,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6469573414547162,
+          "driver": "PIA",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.623,
+          "pit": 0.5961278910639518,
+          "residual": 0.24516858607672987,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.8479580690905,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6789519802611189,
+          "driver": "PIA",
+          "gp_name": "Miami",
+          "official_lap_time": 88.484,
+          "pit": 0.7648179135731167,
+          "residual": 0.6360419309094993,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.39594307922701,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6889698494855379,
+          "driver": "PIA",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.395,
+          "pit": 0.6865182054325665,
+          "residual": 0.9990569207729862,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.21735716942482,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.6269999320508929,
+          "driver": "PIA",
+          "gp_name": "Netherlands",
+          "official_lap_time": 71.938,
+          "pit": 0.6089085669194303,
+          "residual": 0.7206428305751871,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.94589501513443,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6803058019828553,
+          "driver": "PIA",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.228,
+          "pit": 0.5368213768571894,
+          "residual": 0.282104984865569,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.35529707608302,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6462829559903691,
+          "driver": "PIA",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.902,
+          "pit": 0.6837969414418863,
+          "residual": 0.5467029239169818,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.45321992380298,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.675050612468339,
+          "driver": "PIA",
+          "gp_name": "Spain",
+          "official_lap_time": 73.059,
+          "pit": 0.6347103880090197,
+          "residual": 0.6057800761970213,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.64023277208264,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6810553513657114,
+          "driver": "PIA",
+          "gp_name": "United States",
+          "official_lap_time": 95.467,
+          "pit": 0.7652929617686358,
+          "residual": 0.8267672279173581,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.95196284557545,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 1.6487736312327113,
+          "driver": "RIC",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.442,
+          "pit": 0.5227787294496443,
+          "residual": 0.49003715442454165,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 118.82578219084033,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.9339122393879359,
+          "driver": "RIC",
+          "gp_name": "Belgium",
+          "official_lap_time": 119.483,
+          "pit": 0.5428976479136909,
+          "residual": 0.6572178091596754,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.51209765809692,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 1.7592566269132923,
+          "driver": "RIC",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.843,
+          "pit": 0.5651914682164042,
+          "residual": 0.33090234190308365,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.45232699968349,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 1.8042862103884025,
+          "driver": "RIC",
+          "gp_name": "Hungary",
+          "official_lap_time": 78.002,
+          "pit": 0.5915697499574935,
+          "residual": 0.5496730003165027,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.72167919903869,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 1.82938496156386,
+          "driver": "RIC",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 94.308,
+          "pit": 0.6010709790641631,
+          "residual": 0.5863208009613174,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.03404416254799,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 1.790535037319662,
+          "driver": "RIC",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.382,
+          "pit": 0.5498298645753277,
+          "residual": 0.3479558374520195,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.73114792931841,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 1.8255349896471882,
+          "driver": "RIC",
+          "gp_name": "United States",
+          "official_lap_time": 95.974,
+          "pit": 0.6620713200747688,
+          "residual": 1.242852070681593,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.09785601485378,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.563776779301809,
+          "driver": "RUS",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 83.788,
+          "pit": 0.5924739826494547,
+          "residual": 0.6901439851462214,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.77357894287107,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.5690049202599611,
+          "driver": "RUS",
+          "gp_name": "Australia",
+          "official_lap_time": 76.968,
+          "pit": 0.5986938959523382,
+          "residual": 0.19442105712893465,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 65.13856877160279,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.5553533237184735,
+          "driver": "RUS",
+          "gp_name": "Austria",
+          "official_lap_time": 65.408,
+          "pit": 0.6458989435306058,
+          "residual": 0.26943122839720957,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.94611490986954,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.5608643161179389,
+          "driver": "RUS",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.654,
+          "pit": 0.5183578683961637,
+          "residual": 0.7078850901304605,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 107.07810063606905,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5391100713094905,
+          "driver": "RUS",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.805,
+          "pit": 0.5814836545634311,
+          "residual": 0.7268993639309542,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.9498716839054,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.5623521441010787,
+          "driver": "RUS",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.316,
+          "pit": 0.7112623907712559,
+          "residual": 0.3661283160946027,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.74128167558277,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.5244440202186167,
+          "driver": "RUS",
+          "gp_name": "Canada",
+          "official_lap_time": 80.098,
+          "pit": 0.6673133702681433,
+          "residual": 0.35671832441722984,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.51022486227913,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.573105690862472,
+          "driver": "RUS",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.155,
+          "pit": 0.8176182508982661,
+          "residual": 0.6447751377208704,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.48477099845803,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.5726908919968127,
+          "driver": "RUS",
+          "gp_name": "Hungary",
+          "official_lap_time": 79.027,
+          "pit": 0.7574846107798098,
+          "residual": 0.5422290015419691,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.37840375260399,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.5682129697564724,
+          "driver": "RUS",
+          "gp_name": "Italy",
+          "official_lap_time": 80.671,
+          "pit": 0.628075317413331,
+          "residual": 0.29259624739601975,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.52580255104782,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.5687434239243027,
+          "driver": "RUS",
+          "gp_name": "Japan",
+          "official_lap_time": 90.219,
+          "pit": 0.5756506177032459,
+          "residual": 0.6931974489521764,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.46244691002718,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.5728958445912898,
+          "driver": "RUS",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.112,
+          "pit": 0.8061330849498546,
+          "residual": 0.6495530899728124,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.15492912611897,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.5299425070138349,
+          "driver": "RUS",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.673,
+          "pit": 0.729590475985445,
+          "residual": 0.5180708738810296,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.06636617143693,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.5690883991167529,
+          "driver": "RUS",
+          "gp_name": "Miami",
+          "official_lap_time": 87.743,
+          "pit": 0.8153670553166918,
+          "residual": 0.6766338285630695,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.463331809283,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.5737531785360349,
+          "driver": "RUS",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.964,
+          "pit": 0.6168640001613027,
+          "residual": 0.5006681907169934,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.69497491843359,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.5393634442316909,
+          "driver": "RUS",
+          "gp_name": "Netherlands",
+          "official_lap_time": 71.294,
+          "pit": 0.6053843484586625,
+          "residual": 0.5990250815664098,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.99310350749708,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.5599079756741214,
+          "driver": "RUS",
+          "gp_name": "Qatar",
+          "official_lap_time": 84.219,
+          "pit": 0.5358295765608955,
+          "residual": 0.22589649250291188,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.3088915673558,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.560725371035305,
+          "driver": "RUS",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.056,
+          "pit": 0.7680247652312411,
+          "residual": 0.7471084326441968,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.74171632197782,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.5623167232197552,
+          "driver": "RUS",
+          "gp_name": "Spain",
+          "official_lap_time": 73.326,
+          "pit": 0.6543371382991463,
+          "residual": 0.5842836780221745,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.91635313747565,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.5720078309548403,
+          "driver": "RUS",
+          "gp_name": "United States",
+          "official_lap_time": 95.079,
+          "pit": 0.8712645477263065,
+          "residual": 1.1626468625243405,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.03706371753422,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6121585871406626,
+          "driver": "SAI",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.738,
+          "pit": 0.5866615062063159,
+          "residual": 0.7009362824657757,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.94521966638523,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6236891812951213,
+          "driver": "SAI",
+          "gp_name": "Australia",
+          "official_lap_time": 77.27,
+          "pit": 0.6475901579289003,
+          "residual": 0.3247803336147683,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.18677008463385,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6007683247050768,
+          "driver": "SAI",
+          "gp_name": "Austria",
+          "official_lap_time": 64.581,
+          "pit": 0.692268365796727,
+          "residual": 0.3942299153661537,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.51886340794282,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.598957646928354,
+          "driver": "SAI",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.016,
+          "pit": 0.5120766085975822,
+          "residual": 0.4971365920571884,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 106.3211571649113,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6117530473343606,
+          "driver": "SAI",
+          "gp_name": "Belgium",
+          "official_lap_time": 107.152,
+          "pit": 0.5820619159692206,
+          "residual": 0.8308428350887027,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.87825472826262,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.6178086043364256,
+          "driver": "SAI",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.254,
+          "pit": 0.6990878365076436,
+          "residual": 0.3757452717373866,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.10192042264599,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.5846318488973034,
+          "driver": "SAI",
+          "gp_name": "Canada",
+          "official_lap_time": 79.856,
+          "pit": 0.7854354532495667,
+          "residual": 0.7540795773540054,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.67176866389534,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.6270249740835907,
+          "driver": "SAI",
+          "gp_name": "Great Britain",
+          "official_lap_time": 87.148,
+          "pit": 0.735819638169948,
+          "residual": 0.47623133610466084,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.42759870255718,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.62754974353439,
+          "driver": "SAI",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.703,
+          "pit": 0.6301652039084162,
+          "residual": 0.2754012974428264,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.25163714344305,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.5752757194834035,
+          "driver": "SAI",
+          "gp_name": "Italy",
+          "official_lap_time": 80.294,
+          "pit": 0.5187972557775371,
+          "residual": 0.042362856556948714,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.41438045328614,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6265642768311291,
+          "driver": "SAI",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 92.77,
+          "pit": 0.6733864143610422,
+          "residual": 0.35561954671385365,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.90133746044503,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.60525289137828,
+          "driver": "SAI",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.233,
+          "pit": 0.6368445608105795,
+          "residual": 0.33166253955496927,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.58411478345637,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6201199898046189,
+          "driver": "SAI",
+          "gp_name": "Miami",
+          "official_lap_time": 87.148,
+          "pit": 0.7586925694099373,
+          "residual": 0.5638852165436248,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.14799406573259,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6291956012299682,
+          "driver": "SAI",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.63,
+          "pit": 0.6031573057233719,
+          "residual": 0.4820059342674057,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.05799141551726,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.5960773570664146,
+          "driver": "SAI",
+          "gp_name": "Netherlands",
+          "official_lap_time": 71.754,
+          "pit": 0.6105681103140744,
+          "residual": 0.6960085844827404,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.99271659879284,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6217567526061295,
+          "driver": "SAI",
+          "gp_name": "Qatar",
+          "official_lap_time": 85.328,
+          "pit": 0.5478045163846796,
+          "residual": 0.33528340120716393,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.36773393403531,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6110060740782058,
+          "driver": "SAI",
+          "gp_name": "Singapore",
+          "official_lap_time": 90.984,
+          "pit": 0.7141650725568283,
+          "residual": 0.6162660659646804,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.96756970125514,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.6172090114220815,
+          "driver": "SAI",
+          "gp_name": "Spain",
+          "official_lap_time": 72.734,
+          "pit": 0.6812657197071875,
+          "residual": 0.7664302987448508,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.89817602626859,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6224453526196626,
+          "driver": "SAI",
+          "gp_name": "United States",
+          "official_lap_time": 94.945,
+          "pit": 0.8331355909793801,
+          "residual": 1.0468239737314065,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.12038298662863,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.8915437760609619,
+          "driver": "SAR",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.532,
+          "pit": 0.5353386613637696,
+          "residual": 0.41161701337136947,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.46200800503023,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.8980724365312914,
+          "driver": "SAR",
+          "gp_name": "Australia",
+          "official_lap_time": 78.557,
+          "pit": 0.5309601371437447,
+          "residual": 0.0949919949697744,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 65.64769617781165,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.8834101248483051,
+          "driver": "SAR",
+          "gp_name": "Austria",
+          "official_lap_time": 65.948,
+          "pit": 0.6039304529784588,
+          "residual": 0.30030382218834006,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 101.77329285609622,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.8992972832838182,
+          "driver": "SAR",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 102.242,
+          "pit": 0.5075845887919423,
+          "residual": 0.4687071439037851,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 120.80448952929527,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.7036614102465301,
+          "driver": "SAR",
+          "gp_name": "Belgium",
+          "official_lap_time": 121.535,
+          "pit": 0.5630421868559518,
+          "residual": 0.7305104707047292,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.77624427019299,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.8972814040324828,
+          "driver": "SAR",
+          "gp_name": "Brazil",
+          "official_lap_time": 71.035,
+          "pit": 0.599106228078533,
+          "residual": 0.2587557298070067,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.10360621904118,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.8647700084595215,
+          "driver": "SAR",
+          "gp_name": "Canada",
+          "official_lap_time": 83.337,
+          "pit": 0.5690069207978317,
+          "residual": 0.23339378095882068,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 88.49650192550064,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.9057254657409555,
+          "driver": "SAR",
+          "gp_name": "Great Britain",
+          "official_lap_time": 89.031,
+          "pit": 0.6897557310333575,
+          "residual": 0.5344980744993677,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.71412728164375,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.9098899342003397,
+          "driver": "SAR",
+          "gp_name": "Hungary",
+          "official_lap_time": 79.248,
+          "pit": 0.6706338971577931,
+          "residual": 0.5338727183562497,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.62542607560984,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.8995778705119124,
+          "driver": "SAR",
+          "gp_name": "Italy",
+          "official_lap_time": 81.93,
+          "pit": 0.5854750820395211,
+          "residual": 0.3045739243901693,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.14452418633613,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.9067223922335836,
+          "driver": "SAR",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.513,
+          "pit": 0.626980038125597,
+          "residual": 0.3684758136638777,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.6117089601892,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.8891138573790236,
+          "driver": "SAR",
+          "gp_name": "Mexico",
+          "official_lap_time": 79.965,
+          "pit": 0.6006489314205361,
+          "residual": 0.3532910398107987,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.960391642497,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.8937642112394492,
+          "driver": "SAR",
+          "gp_name": "Miami",
+          "official_lap_time": 88.577,
+          "pit": 0.705492957816545,
+          "residual": 0.6166083575029973,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.15027013497223,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.9110812889671479,
+          "driver": "SAR",
+          "gp_name": "Monaco",
+          "official_lap_time": 73.113,
+          "pit": 0.6399711073583378,
+          "residual": 0.962729865027768,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 85.76130894915968,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.8991008724871731,
+          "driver": "SAR",
+          "gp_name": "Qatar",
+          "official_lap_time": 86.21,
+          "pit": 0.5442657347677595,
+          "residual": 0.4486910508403099,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.69286686704679,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.8550125266242805,
+          "driver": "SAR",
+          "gp_name": "Singapore",
+          "official_lap_time": 93.252,
+          "pit": 0.9228481707643567,
+          "residual": 2.5591331329532068,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 74.09649014035584,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.8995457895693899,
+          "driver": "SAR",
+          "gp_name": "Spain",
+          "official_lap_time": 74.699,
+          "pit": 0.6019691238538787,
+          "residual": 0.602509859644158,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 95.96162539447405,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.9091522142394179,
+          "driver": "SAR",
+          "gp_name": "United States",
+          "official_lap_time": 96.827,
+          "pit": 0.7179292582871777,
+          "residual": 0.8653746055259433,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.03785031979908,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.6402127430058269,
+          "driver": "STR",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 84.405,
+          "pit": 0.5438428091039815,
+          "residual": 0.3671496802009244,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.14422188526868,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6424716912405432,
+          "driver": "STR",
+          "gp_name": "Australia",
+          "official_lap_time": 77.308,
+          "pit": 0.5741100337430857,
+          "residual": 0.16377811473132908,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.75429619531947,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.6253804243600578,
+          "driver": "STR",
+          "gp_name": "Austria",
+          "official_lap_time": 64.893,
+          "pit": 0.5684446615744114,
+          "residual": 0.13870380468053156,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 101.49623518023266,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.5827527555332821,
+          "driver": "STR",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.576,
+          "pit": 0.5019920592552687,
+          "residual": 0.07976481976733396,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 108.10864796972915,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6361796579877858,
+          "driver": "STR",
+          "gp_name": "Belgium",
+          "official_lap_time": 108.841,
+          "pit": 0.5697921186472885,
+          "residual": 0.7323520302708459,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.2386628703717,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.6424146532221168,
+          "driver": "STR",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.375,
+          "pit": 0.5734295425136822,
+          "residual": 0.13633712962830202,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.28914895156996,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.6111550238583241,
+          "driver": "STR",
+          "gp_name": "Canada",
+          "official_lap_time": 81.484,
+          "pit": 0.5812787699502006,
+          "residual": 0.19485104843003853,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 88.54336678321695,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.652100755295127,
+          "driver": "STR",
+          "gp_name": "Great Britain",
+          "official_lap_time": 88.935,
+          "pit": 0.6927357034545962,
+          "residual": 0.39163321678304897,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.35605627210029,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.6550666404997837,
+          "driver": "STR",
+          "gp_name": "Hungary",
+          "official_lap_time": 77.861,
+          "pit": 0.7172769056489385,
+          "residual": 0.5049437278997146,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.69006127279202,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.6501586624578586,
+          "driver": "STR",
+          "gp_name": "Italy",
+          "official_lap_time": 82.86,
+          "pit": 0.5662954166602903,
+          "residual": 0.16993872720797754,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 90.6298586080227,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.6476187375312908,
+          "driver": "STR",
+          "gp_name": "Japan",
+          "official_lap_time": 91.181,
+          "pit": 0.5530991706647775,
+          "residual": 0.5511413919772963,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.87632312845642,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6539851050350642,
+          "driver": "STR",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 94.199,
+          "pit": 0.6524290355341071,
+          "residual": 0.32267687154357816,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.88093313681622,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.6105346466988487,
+          "driver": "STR",
+          "gp_name": "Mexico",
+          "official_lap_time": 79.227,
+          "pit": 0.6412600970869597,
+          "residual": 0.3460668631837791,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.94484860306413,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.6325006838248298,
+          "driver": "STR",
+          "gp_name": "Miami",
+          "official_lap_time": 88.476,
+          "pit": 0.7426492806642724,
+          "residual": 0.5311513969358685,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.12344166821566,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6533928961746168,
+          "driver": "STR",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.623,
+          "pit": 0.602961920568853,
+          "residual": 0.4995583317843426,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.4990525054676,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.648366853296167,
+          "driver": "STR",
+          "gp_name": "Netherlands",
+          "official_lap_time": 80.121,
+          "pit": 0.5914779956487457,
+          "residual": 0.6219474945323924,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.0714190347706,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6479455239176601,
+          "driver": "STR",
+          "gp_name": "Qatar",
+          "official_lap_time": 86.345,
+          "pit": 0.5374888978512969,
+          "residual": 0.27358096522939945,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.83308635838459,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.647743361591929,
+          "driver": "STR",
+          "gp_name": "Singapore",
+          "official_lap_time": 93.397,
+          "pit": 0.6885361950533132,
+          "residual": 0.5639136416154145,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.55534162592464,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.6393257595158904,
+          "driver": "STR",
+          "gp_name": "Spain",
+          "official_lap_time": 72.994,
+          "pit": 0.6043634610010613,
+          "residual": 0.43865837407535935,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 95.73484603818568,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6509432940082017,
+          "driver": "STR",
+          "gp_name": "United States",
+          "official_lap_time": 96.589,
+          "pit": 0.7812877843923383,
+          "residual": 0.854153961814319,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.41784342810573,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.5917409941317187,
+          "driver": "TSU",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 83.968,
+          "pit": 0.5706875379546728,
+          "residual": 0.5501565718942771,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 77.81168053494352,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.6010501644537252,
+          "driver": "TSU",
+          "gp_name": "Australia",
+          "official_lap_time": 78.099,
+          "pit": 0.6361881128230849,
+          "residual": 0.2873194650564841,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 65.38248223072065,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.5889798760212955,
+          "driver": "TSU",
+          "gp_name": "Austria",
+          "official_lap_time": 65.784,
+          "pit": 0.6988560259040533,
+          "residual": 0.40151776927935146,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 100.89955782684427,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.6062431594627739,
+          "driver": "TSU",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 101.569,
+          "pit": 0.5160636671648562,
+          "residual": 0.6694421731557298,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 112.30529587233323,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5183280722398205,
+          "driver": "TSU",
+          "gp_name": "Belgium",
+          "official_lap_time": 113.148,
+          "pit": 0.5977304712043903,
+          "residual": 0.8427041276667637,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.24160515231362,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.604398009180314,
+          "driver": "TSU",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.837,
+          "pit": 0.794317408954093,
+          "residual": 0.5953948476863786,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.4415435500581,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.547955240779479,
+          "driver": "TSU",
+          "gp_name": "Canada",
+          "official_lap_time": 82.746,
+          "pit": 0.6387372345627386,
+          "residual": 0.30445644994189536,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.48533641055465,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.610345940262806,
+          "driver": "TSU",
+          "gp_name": "Great Britain",
+          "official_lap_time": 90.025,
+          "pit": 0.7664650729606866,
+          "residual": 0.5396635894453539,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.31458665183533,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.60791120167702,
+          "driver": "TSU",
+          "gp_name": "Hungary",
+          "official_lap_time": 78.919,
+          "pit": 0.7675527498506607,
+          "residual": 0.6044133481646696,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.38899436554478,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.5971941717084814,
+          "driver": "TSU",
+          "gp_name": "Italy",
+          "official_lap_time": 81.594,
+          "pit": 0.586635531122111,
+          "residual": 0.2050056344552189,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.28239348326339,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.5996906530615796,
+          "driver": "TSU",
+          "gp_name": "Japan",
+          "official_lap_time": 90.204,
+          "pit": 0.5948203138689466,
+          "residual": 0.9216065167366025,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 95.93441283893091,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.6018196827022471,
+          "driver": "TSU",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 96.447,
+          "pit": 0.7463608126525533,
+          "residual": 0.5125871610690922,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.42082306440757,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.5775758379304313,
+          "driver": "TSU",
+          "gp_name": "Mexico",
+          "official_lap_time": 78.89,
+          "pit": 0.6959882506465549,
+          "residual": 0.46917693559242934,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.73004352420692,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.608315739759181,
+          "driver": "TSU",
+          "gp_name": "Miami",
+          "official_lap_time": 88.429,
+          "pit": 0.8080263860974285,
+          "residual": 0.6989564757930822,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.49705469020036,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.6100551012201731,
+          "driver": "TSU",
+          "gp_name": "Monaco",
+          "official_lap_time": 72.082,
+          "pit": 0.6277826274013887,
+          "residual": 0.584945309799636,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 79.65158380805957,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.6017674437106904,
+          "driver": "TSU",
+          "gp_name": "Netherlands",
+          "official_lap_time": 80.23,
+          "pit": 0.5916578150324769,
+          "residual": 0.578416191940434,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.87765882059118,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.6062840048072154,
+          "driver": "TSU",
+          "gp_name": "Qatar",
+          "official_lap_time": 85.301,
+          "pit": 0.5617320720362009,
+          "residual": 0.42334117940882265,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.2078332222909,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.6086654474821617,
+          "driver": "TSU",
+          "gp_name": "Singapore",
+          "official_lap_time": 91.991,
+          "pit": 0.7609662856514403,
+          "residual": 0.7831667777090985,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.7036547794379,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.5867447741876024,
+          "driver": "TSU",
+          "gp_name": "Spain",
+          "official_lap_time": 73.316,
+          "pit": 0.6549590914568303,
+          "residual": 0.6123452205621049,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.65525410698184,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.6068788450812476,
+          "driver": "TSU",
+          "gp_name": "United States",
+          "official_lap_time": 95.697,
+          "pit": 0.837368124456468,
+          "residual": 1.0417458930181596,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.6025661506864,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.585641710827754,
+          "driver": "VER",
+          "gp_name": "Australia",
+          "official_lap_time": 76.732,
+          "pit": 0.5643833180665195,
+          "residual": 0.12943384931359958,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.13912730857908,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.5640601863118324,
+          "driver": "VER",
+          "gp_name": "Austria",
+          "official_lap_time": 64.391,
+          "pit": 0.6349470961293332,
+          "residual": 0.25187269142092816,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 99.77573360407301,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.578595797720163,
+          "driver": "VER",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 100.391,
+          "pit": 0.5154696650365358,
+          "residual": 0.6152663959269944,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 105.54108719238565,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.5697305531358233,
+          "driver": "VER",
+          "gp_name": "Belgium",
+          "official_lap_time": 106.168,
+          "pit": 0.5667618435342896,
+          "residual": 0.6269128076143602,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.78462803415441,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.5791053797633586,
+          "driver": "VER",
+          "gp_name": "Brazil",
+          "official_lap_time": 70.162,
+          "pit": 0.7114249760403989,
+          "residual": 0.3773719658455974,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.44097925660023,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.5410563148421191,
+          "driver": "VER",
+          "gp_name": "Canada",
+          "official_lap_time": 79.092,
+          "pit": 0.7710260556732172,
+          "residual": 0.6510207433997692,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 86.2259378245685,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.5901800229275408,
+          "driver": "VER",
+          "gp_name": "Great Britain",
+          "official_lap_time": 86.72,
+          "pit": 0.7552334437423014,
+          "residual": 0.49406217543149467,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.41172232791868,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.5856026516264391,
+          "driver": "VER",
+          "gp_name": "Hungary",
+          "official_lap_time": 76.612,
+          "pit": 0.6024645118882272,
+          "residual": 0.20027767208131309,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 80.06458480716056,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.5896253492915652,
+          "driver": "VER",
+          "gp_name": "Italy",
+          "official_lap_time": 80.307,
+          "pit": 0.6032310132571481,
+          "residual": 0.24241519283944513,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 88.31013327972448,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.5851857419047285,
+          "driver": "VER",
+          "gp_name": "Japan",
+          "official_lap_time": 88.877,
+          "pit": 0.5603517759168153,
+          "residual": 0.5668667202755131,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.73969267199384,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.585061178571246,
+          "driver": "VER",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 93.104,
+          "pit": 0.6884791587043266,
+          "residual": 0.36430732800616283,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.94345772601127,
+          "composed_n_eff": 0.9262475958077747,
+          "composed_sigma": 0.5337382119177683,
+          "driver": "VER",
+          "gp_name": "Mexico",
+          "official_lap_time": 77.263,
+          "pit": 0.6486586324431288,
+          "residual": 0.3195422739887306,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 85.84456880312592,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.5880009772896065,
+          "driver": "VER",
+          "gp_name": "Miami",
+          "official_lap_time": 86.814,
+          "pit": 0.8831841452699527,
+          "residual": 0.9694311968740692,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.75390424493375,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.5883359419330222,
+          "driver": "VER",
+          "gp_name": "Monaco",
+          "official_lap_time": 71.365,
+          "pit": 0.6377452774266323,
+          "residual": 0.6110957550662448,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 69.9378431067781,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.5352352465074227,
+          "driver": "VER",
+          "gp_name": "Netherlands",
+          "official_lap_time": 70.567,
+          "pit": 0.6112771827049519,
+          "residual": 0.6291568932218894,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 83.54773125710986,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.5788522182550048,
+          "driver": "VER",
+          "gp_name": "Qatar",
+          "official_lap_time": 83.778,
+          "pit": 0.5353299855013082,
+          "residual": 0.23026874289014643,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 91.00619499167634,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.5731322143989749,
+          "driver": "VER",
+          "gp_name": "Singapore",
+          "official_lap_time": 92.173,
+          "pit": 0.8551798173406981,
+          "residual": 1.1668050083236636,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 71.79708328577006,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.5762236408652589,
+          "driver": "VER",
+          "gp_name": "Spain",
+          "official_lap_time": 72.272,
+          "pit": 0.6243335935832675,
+          "residual": 0.4749167142299484,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 93.66723420774154,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.5839348920775708,
+          "driver": "VER",
+          "gp_name": "United States",
+          "official_lap_time": 94.718,
+          "pit": 0.8470401774029039,
+          "residual": 1.05076579225846,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 84.62585596829031,
+          "composed_n_eff": 0.04689942823561779,
+          "composed_sigma": 0.8001071706185148,
+          "driver": "ZHO",
+          "gp_name": "Abu Dhabi",
+          "official_lap_time": 85.114,
+          "pit": 0.546621358824041,
+          "residual": 0.48814403170969456,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 78.29663718406302,
+          "composed_n_eff": 1.5705670537222327,
+          "composed_sigma": 0.8162740409880263,
+          "driver": "ZHO",
+          "gp_name": "Australia",
+          "official_lap_time": 78.54,
+          "pit": 0.5864154538118966,
+          "residual": 0.24336281593699027,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 64.5565754307126,
+          "composed_n_eff": 2.192507764516387,
+          "composed_sigma": 0.7833353231654615,
+          "driver": "ZHO",
+          "gp_name": "Austria",
+          "official_lap_time": 65.818,
+          "pit": 0.8735300658823419,
+          "residual": 1.2614245692873993,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 102.14618359718096,
+          "composed_n_eff": 0.0016204997905873565,
+          "composed_sigma": 0.7887353443828208,
+          "driver": "ZHO",
+          "gp_name": "Azerbaijan",
+          "official_lap_time": 102.642,
+          "pit": 0.5091475142110706,
+          "residual": 0.49581640281903105,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 120.04886070779908,
+          "composed_n_eff": 0.029346968994966607,
+          "composed_sigma": 0.6249864736704781,
+          "driver": "ZHO",
+          "gp_name": "Belgium",
+          "official_lap_time": 120.832,
+          "pit": 0.5758475361615607,
+          "residual": 0.7831392922009144,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 70.84543143117014,
+          "composed_n_eff": 6.4154554574696965,
+          "composed_sigma": 0.8200027626340637,
+          "driver": "ZHO",
+          "gp_name": "Brazil",
+          "official_lap_time": 71.275,
+          "pit": 0.6742145520414609,
+          "residual": 0.4295685688298647,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 82.94798750163339,
+          "composed_n_eff": 0.9287198049077805,
+          "composed_sigma": 0.7702106745864953,
+          "driver": "ZHO",
+          "gp_name": "Canada",
+          "official_lap_time": 83.342,
+          "pit": 0.6283315594761033,
+          "residual": 0.3940124983666067,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.60556905775734,
+          "composed_n_eff": 4.694983016080855,
+          "composed_sigma": 0.8145945503467705,
+          "driver": "ZHO",
+          "gp_name": "Great Britain",
+          "official_lap_time": 90.123,
+          "pit": 0.7024921926161412,
+          "residual": 0.5174309422426688,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 76.43321066870374,
+          "composed_n_eff": 1.931479527703957,
+          "composed_sigma": 0.8194147764913997,
+          "driver": "ZHO",
+          "gp_name": "Hungary",
+          "official_lap_time": 76.971,
+          "pit": 0.6887809544804517,
+          "residual": 0.5377893312962669,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.7533345274995,
+          "composed_n_eff": 0.90061247905655,
+          "composed_sigma": 0.8063394878679528,
+          "driver": "ZHO",
+          "gp_name": "Italy",
+          "official_lap_time": 82.39,
+          "pit": 0.6897972022637427,
+          "residual": 0.6366654725004963,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 89.92722484204123,
+          "composed_n_eff": 0.030896943877374163,
+          "composed_sigma": 0.8002849207488392,
+          "driver": "ZHO",
+          "gp_name": "Japan",
+          "official_lap_time": 91.379,
+          "pit": 0.6112303450647596,
+          "residual": 1.451775157958778,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.5181858100884,
+          "composed_n_eff": 2.694634927038406,
+          "composed_sigma": 0.8187281549837816,
+          "driver": "ZHO",
+          "gp_name": "Las Vegas",
+          "official_lap_time": 94.849,
+          "pit": 0.6262888236358775,
+          "residual": 0.3308141899116066,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.30288609476828,
+          "composed_n_eff": 2.6077560921962006,
+          "composed_sigma": 0.8210013333476317,
+          "driver": "ZHO",
+          "gp_name": "Miami",
+          "official_lap_time": 88.091,
+          "pit": 0.7698814323462885,
+          "residual": 0.788113905231711,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.78987993618263,
+          "composed_n_eff": 0.16571293377649177,
+          "composed_sigma": 0.8222296125713652,
+          "driver": "ZHO",
+          "gp_name": "Monaco",
+          "official_lap_time": 73.523,
+          "pit": 0.6192844843936152,
+          "residual": 0.7331200638173669,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 81.24787299259596,
+          "composed_n_eff": 0.07663729419571441,
+          "composed_sigma": 0.8226174410852458,
+          "driver": "ZHO",
+          "gp_name": "Netherlands",
+          "official_lap_time": 82.067,
+          "pit": 0.5948507496620168,
+          "residual": 0.8191270074040347,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 87.03983587294972,
+          "composed_n_eff": 0.06409945956566522,
+          "composed_sigma": 0.8179301545356074,
+          "driver": "ZHO",
+          "gp_name": "Qatar",
+          "official_lap_time": 87.432,
+          "pit": 0.5425398331037888,
+          "residual": 0.3921641270502789,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 92.50762758439811,
+          "composed_n_eff": 0.6392237794393603,
+          "composed_sigma": 0.8211479698979167,
+          "driver": "ZHO",
+          "gp_name": "Singapore",
+          "official_lap_time": 93.258,
+          "pit": 0.6967275755266246,
+          "residual": 0.7503724156018876,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 72.89493973695431,
+          "composed_n_eff": 0.2207482578871777,
+          "composed_sigma": 0.8048681146894991,
+          "driver": "ZHO",
+          "gp_name": "Spain",
+          "official_lap_time": 73.521,
+          "pit": 0.6176855231019935,
+          "residual": 0.6260602630456873,
+          "within_interval": true
+        },
+        {
+          "composed_mu": 94.80867601691295,
+          "composed_n_eff": 0.8208396254087744,
+          "composed_sigma": 0.8203820192078957,
+          "driver": "ZHO",
+          "gp_name": "United States",
+          "official_lap_time": 95.698,
+          "pit": 0.742665406341672,
+          "residual": 0.8893239830870385,
+          "within_interval": true
+        }
+      ],
+      "coverage": {
+        "empirical": 0.994750656167979,
+        "hits": 379,
+        "n_checks": 381,
+        "nominal": 0.9
+      },
+      "sizing": {
+        "gross_miscalib_bound": 0.5,
+        "grossly_miscalibrated": false,
+        "meets_observed_min": true,
+        "observed_min_bound": 0.85
+      }
+    }
+  },
+  "instruments_2_3": {
+    "combined_per_class": {
+      "severity:2023:v1:c0": {
+        "mean_n_support": 53229.30949615103,
+        "mean_r_by_channel": {
+          "energy": -0.09875602055459445,
+          "utilization": 0.2781450084460572
+        },
+        "r_floor_applied": 0.5,
+        "tie_default_applied": false,
+        "verdict": "unresolved",
+        "winner": null
+      },
+      "severity:2023:v1:c1": {
+        "mean_n_support": null,
+        "mean_r_by_channel": {
+          "energy": null,
+          "utilization": null
+        },
+        "r_floor_applied": null,
+        "tie_default_applied": false,
+        "verdict": "unmeasurable",
+        "winner": null
+      },
+      "severity:2023:v1:c2": {
+        "mean_n_support": 25873.04672132354,
+        "mean_r_by_channel": {
+          "energy": -0.08361028940658546,
+          "utilization": 0.14459018163409815
+        },
+        "r_floor_applied": 0.5,
+        "tie_default_applied": false,
+        "verdict": "unresolved",
+        "winner": null
+      },
+      "severity:2023:v1:c3": {
+        "mean_n_support": 3545.031339166566,
+        "mean_r_by_channel": {
+          "energy": -0.19937784277243215,
+          "utilization": 0.28950975252502975
+        },
+        "r_floor_applied": 0.5,
+        "tie_default_applied": false,
+        "verdict": "unresolved",
+        "winner": null
+      }
+    },
+    "k_partitions": 10,
+    "n_circuits": 20,
+    "partitions": [
+      {
+        "half_a": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy"
+        ],
+        "half_b": [
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Singapore",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Spain",
+          "United States"
+        ]
+      },
+      {
+        "half_a": [
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "United States"
+        ]
+      }
+    ],
+    "per_partition_verdicts": [
+      {
+        "half_a": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy"
+        ],
+        "half_b": [
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 52274.275555733235,
+            "r_by_channel": {
+              "energy": 0.20903753776192616,
+              "utilization": 0.4332628579743626
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 26271.851754209576,
+            "r_by_channel": {
+              "energy": 0.3205490131322198,
+              "utilization": 0.38588852845207533
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3572.1854504417624,
+            "r_by_channel": {
+              "energy": -0.0890968482385836,
+              "utilization": 0.5053163863745315
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "resolved",
+            "winner": "utilization"
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 49025.167325327886,
+            "r_by_channel": {
+              "energy": 0.298534994160446,
+              "utilization": 0.4723866989091389
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 27378.119198456658,
+            "r_by_channel": {
+              "energy": 0.3213649542922725,
+              "utilization": 0.061405115604400304
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3641.855235417422,
+            "r_by_channel": {
+              "energy": -0.26820960328155713,
+              "utilization": 0.2994734313966684
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 50450.668086733545,
+            "r_by_channel": {
+              "energy": 0.4011817558864313,
+              "utilization": 0.42588238377845106
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 24556.528436036595,
+            "r_by_channel": {
+              "energy": 0.15020044135973942,
+              "utilization": 0.02703555504533428
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3590.5519569423054,
+            "r_by_channel": {
+              "energy": -0.3893476423399012,
+              "utilization": 0.23597089591233472
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 54392.42961861258,
+            "r_by_channel": {
+              "energy": 0.3333651087168985,
+              "utilization": 0.05889589053143692
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 22173.42408514787,
+            "r_by_channel": {
+              "energy": -0.14972157310572884,
+              "utilization": -0.08832946284049059
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3394.0314393668245,
+            "r_by_channel": {
+              "energy": -0.29954319414257535,
+              "utilization": -0.2542645348804993
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 56128.02317605493,
+            "r_by_channel": {
+              "energy": 0.2180470024294466,
+              "utilization": 0.05717559907430653
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 23607.09154474685,
+            "r_by_channel": {
+              "energy": -0.3645642688818044,
+              "utilization": -0.28328489758263337
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 2806.810653163647,
+            "r_by_channel": {
+              "energy": -0.33872447624439506,
+              "utilization": -0.2426860409960525
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 53517.41223987516,
+            "r_by_channel": {
+              "energy": 0.0778677444914797,
+              "utilization": 0.03792074986955102
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 23254.34440638459,
+            "r_by_channel": {
+              "energy": -0.47629691265551366,
+              "utilization": -0.11077833626515647
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 2686.888447931149,
+            "r_by_channel": {
+              "energy": -0.22350003660400605,
+              "utilization": 0.0744466049360315
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Qatar",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 54023.178651793845,
+            "r_by_channel": {
+              "energy": -0.5480513430312134,
+              "utilization": 0.27044381377439797
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 24952.529317207296,
+            "r_by_channel": {
+              "energy": -0.549175517934265,
+              "utilization": 0.07661439817877012
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3906.7927644387664,
+            "r_by_channel": {
+              "energy": -0.2330547976151404,
+              "utilization": 0.4382681309143346
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Great Britain",
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Singapore",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 54476.09551080027,
+            "r_by_channel": {
+              "energy": -0.727624994058287,
+              "utilization": 0.52802351613505
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "resolved",
+            "winner": "utilization"
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 29627.20645208667,
+            "r_by_channel": {
+              "energy": -0.7716731085064973,
+              "utilization": 0.3231514672868094
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 4252.019262969783,
+            "r_by_channel": {
+              "energy": -0.4210167575076079,
+              "utilization": 0.620159271387675
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "resolved",
+            "winner": "utilization"
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Hungary",
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Spain",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 52334.859452530305,
+            "r_by_channel": {
+              "energy": -0.6637839915974973,
+              "utilization": 0.3210384415709345
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 27050.517073879284,
+            "r_by_channel": {
+              "energy": 0.48461506449418557,
+              "utilization": 0.47486485749211127
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3968.5877676400405,
+            "r_by_channel": {
+              "energy": 0.41231094205370616,
+              "utilization": 0.6231428369798486
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "resolved",
+            "winner": "utilization"
+          }
+        }
+      },
+      {
+        "half_a": [
+          "Italy",
+          "Japan",
+          "Las Vegas",
+          "Mexico",
+          "Miami",
+          "Monaco",
+          "Netherlands",
+          "Qatar",
+          "Singapore",
+          "Spain"
+        ],
+        "half_b": [
+          "Abu Dhabi",
+          "Australia",
+          "Austria",
+          "Azerbaijan",
+          "Belgium",
+          "Brazil",
+          "Canada",
+          "Great Britain",
+          "Hungary",
+          "United States"
+        ],
+        "verdicts": {
+          "severity:2023:v1:c0": {
+            "n_support": 55670.98534404858,
+            "r_by_channel": {
+              "energy": -0.5861340203055749,
+              "utilization": 0.1764201328429428
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "unresolved",
+            "winner": null
+          },
+          "severity:2023:v1:c1": {
+            "n_support": null,
+            "r_by_channel": {
+              "energy": null,
+              "utilization": null
+            },
+            "r_floor_applied": null,
+            "tie_default_applied": false,
+            "verdict": "unmeasurable",
+            "winner": null
+          },
+          "severity:2023:v1:c2": {
+            "n_support": 29858.854945079973,
+            "r_by_channel": {
+              "energy": 0.19859901373953698,
+              "utilization": 0.5793345909697615
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "resolved",
+            "winner": "utilization"
+          },
+          "severity:2023:v1:c3": {
+            "n_support": 3630.5904133539607,
+            "r_by_channel": {
+              "energy": -0.1435960138042604,
+              "utilization": 0.5952705432254253
+            },
+            "r_floor_applied": 0.5,
+            "tie_default_applied": false,
+            "verdict": "resolved",
+            "winner": "utilization"
+          }
+        }
+      }
+    ],
+    "sigma_honesty": {
+      "empirical": 1.0,
+      "hits": 2604,
+      "n_checks": 2604,
+      "nominal": 0.9,
+      "thin_classes": []
+    }
+  },
+  "issue": 670,
+  "report_date": "2026-07-27",
+  "slice_identity": {
+    "circuits": [
+      "Abu Dhabi",
+      "Australia",
+      "Austria",
+      "Azerbaijan",
+      "Belgium",
+      "Brazil",
+      "Canada",
+      "Great Britain",
+      "Hungary",
+      "Italy",
+      "Japan",
+      "Las Vegas",
+      "Mexico",
+      "Miami",
+      "Monaco",
+      "Netherlands",
+      "Qatar",
+      "Singapore",
+      "Spain",
+      "United States"
+    ],
+    "n_circuits": 20,
+    "session_type": "Q",
+    "year": 2023
+  },
+  "split_scheme_note": "Split scheme: ROTATING-BLOCK (circle-method) deterministic, seed-free, balanced split-half -- circuits sorted into a fixed canonical (alphabetical) order c_0..c_{n-1}; for k=0..(n/2-1), half_a(k) = the contiguous window of n/2 circuits at positions [k..k+n/2-1] (mod n), half_b(k) = the complement. This yields K=n/2 distinct balanced partitions (no random/seed). r is AVERAGED over the K partitions, then the SAME registered per-class channel decision rule (imported r_floor + channel_tie_margin, decide_channel_from_mean_r) is re-applied to the averaged r -- the direct N-circuit generalization of the #668 4-circuit exhaustive-2v2-averaged-over-3-partitions scheme."
+}

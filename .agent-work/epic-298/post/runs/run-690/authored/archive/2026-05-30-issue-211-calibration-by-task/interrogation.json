@@ -1,0 +1,125 @@
+{
+  "work_id": "issue-211-calibration-by-task",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Goal: resolve the scope, priority, and acceptance shape of issue 211 \u2014 calibration by task/evidence mode/module family. Context loaded: issue text, ORCHESTRATOR_CONTEXT, GLOSSARY, architecture index, engine-config. Note: user says refactor is in progress; file paths may shift. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "What does the current calibration code look like?",
+      "imperative": "Ask the user: Is the current global calibration a single covariance scale applied at fusion, or does it live somewhere else (e.g. temperature scaling post-fusion, per-module weight)? Recommend: fusion.py precision-weighted composition with a global scale.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Which calibration dimension is the highest priority?",
+      "imperative": "Ask: Of task (quali/race_start/race), evidence mode (recent_history vs race_weekend), and module family (driver vs constructor) \u2014 which dimension do you want this issue to focus on first? Recommend: task-split, since it has the clearest boundary and the acceptance criteria mention it.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Diagnostic only, or does this issue also ship a new calibration scheme?",
+      "imperative": "Ask: The acceptance criteria say 'compare current against at least one more specific scheme' and 'do not replace unless metrics improve.' Does this issue ship a switchable calibration scheme (even off by default), or only diagnostics + a written recommendation? Recommend: diagnostics + comparison report; no permanent scheme change unless metrics clearly win.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4": {
+      "id": "q4",
+      "title": "Where do the diagnostics land \u2014 gold cycle artifact or standalone script?",
+      "imperative": "Ask: Should the calibration diagnostics by task/module-family be wired into the gold cycle (so they appear in every gold run), or is a standalone backtest/diagnostic script acceptable for now? Recommend: gold cycle sidecar if compact enough; standalone script if the gold cycle is already complex.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "skipped",
+      "status_detail": {
+        "reason": "same answer as q3 \u2014 stays gold-cycle artifact, same delivery point as task_calibration already uses"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q5": {
+      "id": "q5",
+      "title": "How does the in-progress refactor affect this work?",
+      "imperative": "Ask: What is the refactor touching \u2014 module boundaries, gold cycle orchestration, report schemas, or something else? The plan needs to know which files are stable enough to build on and which are moving targets.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": []
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "q5",
+      "statement": "Fusion assumes module independence but correlated modules (shared inputs) inflate effective precision. Near-term: compute pairwise rank-error correlations from existing event_level_metrics, use as basis for de-weighting correlated module pairs in fusion. Requires new artifact + fusion contract change. Separate issue."
+    }
+  ],
+  "blockers": []
+}

@@ -1,0 +1,25 @@
+Arm A — position_quality + anchor ON — issue-335 gold regen
+============================================================
+Gold cycle slug : gold_cycle_260607_231707_2018thru2024
+Trained fusion  : outputs/evo_runs/issue335_armA/fusion/fusion_260608_034748_2018thru2024.json
+Trained manifest: outputs/evo_runs/issue335_armA/fusion/reports/evo/fusion_260608_034748_2018thru2024.sampled_runtime_manifest.json
+Anchor          : enabled=true, alpha=0.5 (confirmed in manifest)
+Training config : epochs=100, lr=1e-3, dropout-seeded, median-relative encoding, utilization=max (threads=1, reproducible)
+Cycle wall-clock: ~3.7h (LOSO phase 165m, 1788 rows from 84 runs)
+
+FUSED BACKTEST (2025, sampled_state, trained manifest) -- the A/B decision metric:
+  pairwise_brier_against_actual_order   = 0.2077   <-- PRIMARY (lower=better)
+  pairwise_log_loss_against_actual_order= 0.6861
+  expected_position_mae                 = 3.760
+  sample_spearman_mean                  = 0.452
+  winner_probability_to_actual_winner   = 0.182
+  actual_winner_rank_by_win_probability = 3.875
+
+Health / cleanups:
+  sampled_state internal backtest: 24/24 scored, 0 skipped (race_count=24; resolves #330)
+  oracle_all_states: 1 race non-fatal permutation ValueError (tc2; sampled_state unaffected)
+  cleanup (a) NLL convention: corr_sigma_pi_trace_vs_nll present, no legacy _vs_log_loss
+  per-module quality vs 260603 (DIRECTIONAL, scope-mismatched): mean nll_skill 0.805->0.966, 11/12 up
+
+NOTE: baseline (260603) fused Brier on this same harness is computed in G4 for the
+promotion gate (within-tolerance/improved check). Arm B fused Brier compared in G4.

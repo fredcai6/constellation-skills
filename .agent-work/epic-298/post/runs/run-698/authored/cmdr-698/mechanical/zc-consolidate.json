@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "zc-consolidate",
+  "mechanical": {
+    "run": "cmdr-698",
+    "project": "f1Brainz",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "zc-consolidate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cmdr-698-zc-consolidate@96ebb8dfe3657c86a08593588018e9f199b284b1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cmdr-698",
+    "generated_at": "2026-08-02T20:30:52Z"
+  }
+}

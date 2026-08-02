@@ -1,0 +1,20 @@
+{
+  "work_id": "513-fp-fits",
+  "diff_ref": "src/physics/mass_model.py (additive diff), tests/unit/physics/test_mass_model.py (additive diff), src/physics/layer2/fp_lap_latent.py (new file), tests/unit/physics/test_fp_lap_latent.py (new file) -- gate g2",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, docs/architecture/packets/physics.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "", "override": {"repo_standard": "docs/architecture/packets/physics.md's struct:physics.layer2 node + direct grep confirm session_race.py, race_stint_batch.py, ideal_lap/residuals.py, and fuel_features.py each already define their OWN private _get_session_id/_ro_uri read-only-sqlite-URI helper rather than importing a shared one -- an established, repeated repo pattern across 4 existing modules before this diff.", "reason": "fp_lap_latent.py's _get_session_id/_ro_uri duplicate session_race.py's helper nearly verbatim, but the handoff explicitly directed 'mirror or import that read' and the repo has already chosen 'mirror' (copy, not share) as its convention for this small per-module DB-read seam at least 4 times. Extracting a shared helper now would deviate from established practice, not fix a newly-introduced problem -- so the duplication is not flagged as a fresh defect."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "overridden", "finding": "", "override": {"repo_standard": "handoff-g2.md's Map Anchors: 'Decision anchor: mirrors mass_model.quali_mass/race_mass conventions (mass in kg, team offset)'.", "reason": "fp_mass(..., team=None) carries a team parameter that is a no-op today (TEAM_OFFSETS ships empty), which could look like an unused hook for a hypothetical future need. It is not speculative: it matches the ALREADY-existing quali_mass/race_mass signature convention verbatim (both already accept team and both already no-op against the same empty TEAM_OFFSETS dict) -- a real, already-load-bearing pattern being followed, not a new hypothetical generalization invented for this change."}},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

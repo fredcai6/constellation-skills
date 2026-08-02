@@ -1,0 +1,198 @@
+{
+  "work_id": "g4-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-layer3",
+    "m2-layer4",
+    "m3-model"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the g4 handoff, and the composed g1/g2/g3 files + pooling.py. Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew+everyone doctrine + handoff + g1/g2/g3 + pooling.py read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-layer3": {
+      "id": "m1-layer3",
+      "title": "layer3_fieldcar.py \u2014 two-stage field-car decomposition",
+      "imperative": "Build src/physics/weekend_state/layer3_fieldcar.py: (a) RELATIVE = car residual - weekend field median (reuse floor.weekend_relative) with sigma from car _sigma + field-median SE; (b) RE-ANCHOR = smooth field-car absolute trajectory per (year) over round_idx via fit_drift/DriftFit.predict on per-weekend field medians; absolute = fieldcar_traj + relative. Each stage carries sigma. Write tests/unit/physics/weekend_state/test_layer3_fieldcar.py: reconstruction identity (fieldcar+relative==absolute), sigma present, fit_drift IMPORTED from pooling.py (assert import). Test-after.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "layer3_fieldcar.py + test_layer3_fieldcar.py pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer3_fieldcar.py -q 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-layer3-1"
+        }
+      ],
+      "constraints": [
+        "reuse floor.weekend_relative + pooling.fit_drift; no evo import; each stage carries sigma"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-layer3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer3_fieldcar.py -q 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-layer4": {
+      "id": "m2-layer4",
+      "title": "layer4_car.py \u2014 shrunk car signal (pool_random_effects)",
+      "imperative": "Build src/physics/weekend_state/layer4_car.py: car signal = pool_random_effects shrunk per-weekend relative deltas off the field car. fit_car_pools(train) -> per car-season (mu,tau,sigma_mu) via pool_random_effects; car_signal_for_row applies the SAME EB shrink formula row-wise using TRAIN mu/tau (no re-pooling of predict df). Carry sigma. Add layer4 tests to test_model.py (pool_random_effects IMPORTED + asserted; train-point shrink reproduces pool.shrunk faithfully). Test-after.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "layer3 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "layer4 tests in test_model.py pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_model.py -q -k layer4 2>&1 | tail -5"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-layer4-1"
+        }
+      ],
+      "constraints": [
+        "reuse pooling.pool_random_effects; row-wise apply with train hyperparameters (no re-pool); no evo import; carry sigma"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-layer4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_model.py -q -k layer4 2>&1 | tail -5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-model": {
+      "id": "m3-model",
+      "title": "model.py \u2014 L1->L2->L3->L4 assembler, leak-free held-out",
+      "imperative": "Build src/physics/weekend_state/model.py: WeekendStateModel.fit(train) fits L1 density betas, L3 field-car DriftFit (train-only), L4 pools (train-only); transform/car_signal applies stored TRAIN hyperparameters row-wise (per-year L1 so mass is inert), producing per axis a decomposed state + {axis}_car_signal, each layer carrying its own sigma. Finish test_model.py: assembly, per-layer sigma present, NO-LEAKAGE (held-out car-signal identical with/without other held-out weekends in the predict population), model output feeds gate_spec.signal_preservation_guard/evaluate_axis directly, no evo import. Test-after.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "layer4 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full g4 test suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer3_fieldcar.py tests/unit/physics/weekend_state/test_model.py -q 2>&1 | tail -8"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-model-1"
+        }
+      ],
+      "constraints": [
+        "train-only hyperparameters for held-out; no-leakage proven by test; feeds gate_spec; no evo import; no data/*.db staged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-model-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/f1-626 && py -m pytest tests/unit/physics/weekend_state/test_layer3_fieldcar.py tests/unit/physics/weekend_state/test_model.py -q 2>&1 | tail -8",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g4-impl-626",
+    "status": "released",
+    "claimed_at": "2026-07-18T15:27:36.429637+00:00",
+    "last_heartbeat": "2026-07-18T15:36:34.217433+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-18T15:37:46.961857+00:00"
+  }
+}

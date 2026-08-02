@@ -1,0 +1,242 @@
+{
+  "work_id": "518-g5-impl",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-repro",
+    "m2-redfail",
+    "m3-fix-green",
+    "m4-regress"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + confirm diagnosis",
+      "imperative": "Read docs/agents/CREW_CONTEXT.md, GLOSSARY.md, the g5 handoff, and the relevant physics source. Verify handoff completeness. Reproduce the over-acceleration and isolate the units root cause. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; over-acceleration reproduced; units root cause isolated (car_prior injects watts into a W/kg theta_P field)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-repro": {
+      "id": "m1-repro",
+      "title": "Reproduce + quantify before-fix top speed",
+      "imperative": "Build the RBR 2023 rd14 ceiling from data/physics_estimates_g3wired.db and simulate a straight; record before-fix top speed and the analytic terminal velocity (_power_accel zero-crossing). Confirm the 2.09x/9.3x over-shoot.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before-fix straight top speed and analytic terminal velocity recorded with numbers",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "py not python",
+        "do not change capability measurement"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-redfail": {
+      "id": "m2-redfail",
+      "title": "RED: write failing truth-anchored invariant test",
+      "imperative": "Write the L1/L2 invariant test in tests/unit/physics/: (a) car_prior theta_P specific-power conversion; (b) ideal-lap straight top speed <= 1.05x analytic terminal velocity. Run it; observe it FAIL for the right reason (top speed >> terminal velocity).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "before-fix numbers recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new invariant test fails for the right reason (top speed 921.5 m/s >> terminal 96.3 m/s); RED captured as evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "TDD: red first"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-redfail-1",
+          "type": "test-result",
+          "payload": {
+            "outcome": "red-as-expected",
+            "top_speed_ms": "921.5",
+            "terminal_velocity_ms": "96.3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-redfail-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_ideal_lap_top_speed_invariant.py -q",
+            "exit": 1
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fix-green": {
+      "id": "m3-fix-green",
+      "title": "GREEN: apply units fix; new test passes; top speed ~ terminal velocity",
+      "imperative": "Apply the minimal units conversion at the producer (per Commander ruling). Re-run the invariant test green and confirm before/after top speed drops from ~909 m/s to ~95 m/s.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red test observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "invariant test passes; straight top speed within 5% of analytic terminal velocity",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/test_ideal_lap_top_speed_invariant.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-fix-green-1"
+        }
+      ],
+      "constraints": [
+        "minimal change",
+        "no second sim path",
+        "do not change capability measurement"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-fix-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/test_ideal_lap_top_speed_invariant.py -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-regress": {
+      "id": "m4-regress",
+      "title": "Regression: full physics suite + simplification + braking/cornering spot-check",
+      "imperative": "Update any test that pinned the buggy passthrough. Run py -m pytest tests/unit/physics/ -q green, py -m src.utils.simplification_limits on touched paths clean, and a braking/cornering spot-check (forward-backward sweep still produces a sane lap).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix applied and invariant green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/unit/physics green; simplification clean; sweep spot-check sane",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-regress-2"
+        }
+      ],
+      "constraints": [
+        "touch only in-scope files plus tests"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-regress-1",
+          "type": "test-result",
+          "payload": {
+            "suite": "tests/unit/physics",
+            "result": "604passed_6skipped",
+            "simplification": "pass",
+            "braking_spotcheck": "pass"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-regress-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/ -q",
+            "exit": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

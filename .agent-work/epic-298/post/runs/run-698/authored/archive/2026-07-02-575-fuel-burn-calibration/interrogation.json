@@ -1,0 +1,67 @@
+{
+  "work_id": "575-fuel-burn-calibration",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load the handed-in goal and context (what you are resolving) and the starting questions, if any. Read the glossary and the topic's relevant code/docs. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Wiring scope: does the computed per-season burn-rate calibration get wired into mass_model.race_mass/fuel_at_lap now, or ship as a measured-not-wired calibration report first?",
+      "imperative": "DEFAULT_BURN_PER_LAP_KG currently feeds race_mass/fuel_at_lap, which are already consumed downstream by layer2 session_braking/session_traction/session_coast/session_estimator, utilization/car_prior (via quali_mass only), and the W3 race_stint tyre-age pipeline (session_race.load_race_stints calls race_mass per clean lap). Wiring a per-season multiplier in now changes those already-closed epics' numeric outputs (#511/#563 tyre-age). Ask the human whether to (a) wire immediately (recompute affected fits), or (b) ship the calibration as a standalone measured module/report first (matches the repo's established 'measured-not-wired' pattern for physics findings, e.g. #512/#511) and defer wiring to a follow-up decision once the correction is validated.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Re-batch scope: does wiring the calibration require re-running previously-computed physics/tyre-age batches in this issue?",
+      "imperative": "Wiring per-season burn rate changes race_mass's output going forward, but existing stored artifacts (data/physics_estimates.db session_estimates, data/race_stint_estimates.db from the closed W3 #511/#563 tyre-age epic) were computed with the flat 1.8 kg/lap and will NOT retroactively update. Ask whether re-running those batch populations is in scope for this issue, or should be filed as a separate follow-up (triage) once the calibration lands, given it is a substantial season-long batch job distinct from writing the calibration itself.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "resolved",
+    "findings": [],
+    "summary": "Issue 575: per-season fuel burn rate calibration. RESOLVED: (1) wire immediately into mass_model (accept re-validation cost on layer2/W3 tyre-age fits, that recompute is a separate follow-up per (3)); (2) anchor circuits specified as a per-season config map (handles Bahrain absent + Barcelona-Catalunya rename in 2026, not a flat hardcoded list); (3) compute 2026's own calibration factor now from its 7 completed races (Barcelona-Catalunya anchor), shrunk toward the 2019-2025 pooled prior given small sample -- not left prior-only; re-running affected batch populations (physics_estimates, race_stint_estimates) is OUT of scope for this issue, filed as a follow-up triage candidate instead."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

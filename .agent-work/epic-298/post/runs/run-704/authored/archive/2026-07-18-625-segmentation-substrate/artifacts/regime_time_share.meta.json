@@ -1,0 +1,14 @@
+{
+  "timestamp_utc": "2026-07-18T07:13:07.603067+00:00",
+  "db_path": "C:\\Programs\\f1Brainz\\data\\damage_integrals.db",
+  "mixture_k": 3,
+  "n_circuits": 22,
+  "f12_artifact_path": ".agent-work\\625-segmentation-substrate\\artifacts\\f12_holdout_stability.json",
+  "f12_headline_verdict": "FAIL",
+  "f12_n_pass": 0,
+  "f12_n_splits": 5,
+  "f12_mean_statistic": "Infinity",
+  "f12_min_statistic": "Infinity",
+  "f12_max_statistic": "Infinity",
+  "caveat": "this rollup's class-membership substrate did NOT pass its held-out-circuit stability check -- treat class-level sub-shares as provisional, not validated."
+}

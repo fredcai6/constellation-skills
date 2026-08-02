@@ -1,0 +1,47 @@
+Loading... (SUB=60000)
+22 circuits
+log10(radius): p1=1.31 p10=1.59 p25=1.79 p50=2.01 p75=2.32 p90=2.62 p99=3.07
+
+=== RAW space, BIC ===
+  split 0: k_a=5 k_b=6 stat=inf FAIL
+  split 1: k_a=4 k_b=3 stat=inf FAIL
+  split 2: k_a=4 k_b=4 stat=3.2690 FAIL
+  split 3: k_a=5 k_b=4 stat=inf FAIL
+  split 4: k_a=3 k_b=2 stat=inf FAIL
+  n_pass = 0/5
+
+=== LOG space, BIC ===
+  split 0: k_a=6 k_b=5 stat=inf FAIL
+  split 1: k_a=6 k_b=6 stat=0.6114 PASS
+  split 2: k_a=6 k_b=6 stat=0.7901 PASS
+  split 3: k_a=4 k_b=6 stat=inf FAIL
+  split 4: k_a=6 k_b=6 stat=0.7177 PASS
+  n_pass = 3/5
+
+=== LOG space, FIXED k=2 ===
+  split 0: k_a=2 k_b=2 stat=0.3228 PASS
+  split 1: k_a=2 k_b=2 stat=0.3889 PASS
+  split 2: k_a=2 k_b=2 stat=0.3753 PASS
+  split 3: k_a=2 k_b=2 stat=0.5142 PASS
+  split 4: k_a=2 k_b=2 stat=0.2565 PASS
+  n_pass = 5/5
+
+=== LOG space, FIXED k=3 ===
+  split 0: k_a=3 k_b=3 stat=1.5022 FAIL
+  split 1: k_a=3 k_b=3 stat=0.6301 PASS
+  split 2: k_a=3 k_b=3 stat=0.5563 PASS
+  split 3: k_a=3 k_b=3 stat=0.5958 PASS
+  split 4: k_a=3 k_b=3 stat=0.3010 PASS
+  n_pass = 4/5
+
+=== LOG space, FIXED k=4 ===
+  split 0: k_a=4 k_b=4 stat=0.5672 PASS
+  split 1: k_a=4 k_b=4 stat=0.4700 PASS
+  split 2: k_a=4 k_b=4 stat=0.4659 PASS
+  split 3: k_a=4 k_b=4 stat=0.5281 PASS
+  split 4: k_a=4 k_b=4 stat=0.3148 PASS
+  n_pass = 5/5
+
+=== LOG-space BIC centroids (split0), raw radius_m via 10**logr ===
+  split0 A k=6: (r=41m,lat=2.77g), (r=69m,lat=2.29g), (r=82m,lat=4.31g), (r=106m,lat=3.28g), (r=200m,lat=1.89g), (r=442m,lat=1.28g)
+  split0 B k=5: (r=50m,lat=2.43g), (r=83m,lat=3.21g), (r=98m,lat=4.11g), (r=251m,lat=1.93g), (r=930m,lat=0.62g)

@@ -1,0 +1,155 @@
+{
+  "work_id": "663-grip-g-g5-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew, global-everyone, project CREW_CONTEXT + GLOSSARY, handoff, g5-implement-result, the test file, grip_baseline.py source, and results JSON. Key project deltas: physics changes need highest-applicable truth-anchored evidence (this is a synthetic known-truth L2/L3 harness); new randomness must use explicit generators (test uses np.random.default_rng); DB-only access (test is pure-synthetic, DB-free).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff asked for a synthetic parameter-recovery/identifiability GATING harness calling g2's REAL fit on known-truth synthetic data, scoring recovery (2-sigma coverage) and separability (|corr|<0.8), honest-null (report, never assert rates). Criterion 1 VERIFIED: L78 imports fit_grip_baseline_from_laps + _saturating; L210 calls it once per replicate; recovered params/sigmas/curve_offset_correlation all read off the production GripEstimateRecord (L217-221). No fit reimplemented. Criterion 3 VERIFIED: two_sigma_covers (L194-197) calls predictive_t(mu,sigma,n_eff,nu_loss=DEFAULT_NU_LOSS,rule=FormulaRule()).interval(0.9545) exactly as cited; 0.9545=two-sided 2-sigma-equiv mass; re-passing the record's already-predictive sigma re-applies sqrt(1+1/n_eff) -> a marginally WIDER interval biasing coverage toward PASS, so recovery is a GENEROUS pass. Delivered exactly what was asked.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Allowed scope = new file only; exclusion = do NOT modify grip_baseline.py (or grip_store/grip_batch/tyre_supplant/g4 test). VERIFIED: git status --porcelain shows the whole physics/layer2 module untracked on branch epic659/663-grip-g (g1-g4 uncommitted), and the ONLY file the g5 work adds is test_grip_synthetic_recovery.py (git check-ignore exit 1 = committable). Decisive independent proof no fix was smuggled into grip_baseline.py: I re-fit real 2023 sessions with the worktree grip_baseline (asserted __file__ in worktree, .pth trap avoided) and reproduced the SAME degenerate large-asymptote/near-1-corr fits g4 saw (Netherlands asymptote 8040s, Vegas -7870s) -> the identifiability defect is UNCHANGED, i.e. the estimator was not secretly constrained. results JSON + engine plan are untracked/not-staged. No scope drift.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Evidence reproduces and is honestly calibrated. Criterion 7 (diagnostics reproduce): re-ran pytest -q -s -> BYTE-IDENTICAL to pasted evidence (recovery 94.4% PASS, separability 31.9% FAIL, median|corr| 0.835, per-regime table + histogram all match; determinism from fixed BASE_SEED=663). Criterion 2 (SNR realism) INDEPENDENTLY VERIFIED by fitting real 2023 FP2 sessions myself: field-pooled residual RMS = 12.2-14.5s across Spain/Canada/Saudi/Netherlands/Vegas (implementer claimed ~14-17s). Harness low-SNR tier uses noise_sigma=11.0 (~11s residual) which is if anything marginally EASIER than real -> the harness UNDERSTATES the real problem, not overstates it. Real physical rubber-evolution amplitude ~1.5s under ~13s residual => real SNR ~0.11-0.13, landing on the harness low band (0.136). My real fits also reproduced g4's degeneracy (Netherlands asymptote 8040s, Vegas -7870s, |corr|~0.73-0.77) confirming the big fitted asymptotes are aliasing, not genuine amplitude. DECISIVE: separability FAILS even at the cleanest high-SNR/high-bend tier (median|corr| 0.939, 33% clear 0.8), so the finding is robust to the exact SNR calibration. Criterion 4 (recovery passes only via sigma-widening) VERIFIED from JSON: low-SNR replicates carry huge asy_sigma (e.g. 1e7-1e8) -> 2-sigma interval trivially covers -> covAsy 100%; the ONE confident regime highSNR/modBend drops to recovery 66.7% (covAsy 66.7%) because tight sigmas let aliasing bias escape. So 'recovery PASSES' means 'error bars honestly wide', NOT 'estimates accurate' -- a materially important qualification, correctly flagged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Criterion 5 (honest-null operationalization) VERIFIED by reading every assert (L388-402): (1) len>=50 replicates ran; (2) len(ok)>=0.9*len reached the real curve-fit path; (3) per-ok finite fit output; (4) both rates finite in [0,1]; (5) SNR genuinely varied across regimes. NONE encodes recovery_rate>=0.90 or separability_rate>=0.90 -- explicit L403-405 comment states the omission is deliberate. The scientific verdict is PRINTED + written to JSON, exit 0 under the null. Correct honest-null discipline. Project rules honored: physics change carries highest-applicable truth-anchored evidence (known-truth synthetic recovery = L2/L3 known-answer + degenerate-case); randomness uses explicit np.random.default_rng(seed) with fixed BASE_SEED, no global seed; DB-only rule N/A (pure-synthetic, DB-free by design); simplification_limits --paths PASS (re-ran, exit 0). Criterion 6 (0.8 threshold guess->settled/measured): reasoning genuinely RECORDED in result doc L104-112 (not just asserted); threshold and replicate count were NOT changed from frozen 0.8/50, so per the review-gate instruction the recorded reasoning suffices. Defensible read: the estimator's cleanest regime sits at median|corr| 0.82-0.94 i.e. right at the 0.8 wall, and 49/72 replicates sit >=0.8, so 0.8 is the informative identifiability cut (higher whitewashes intrinsic aliasing; the fit fails it even in its best case). NOTE: the @grade tag in execute.json L869 still literally reads 'guess' -- flipping it to settled/measured is the commander's reconcile action, not a defect.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes match reality: test-only addition under struct:physics.layer2, no production module changed (confirmed via git + unchanged degenerate fit). Evidence backs the claimed capability change (G's synthetic-identifiability acceptance evidence = SPLIT: recovery PASS 94.4% hollow, separability FAIL 31.9%). decision:synthetic-identifiability -- evidence produced. No divergence from recorded architecture requiring a code-level reconcile. The one item for the COMMANDER (a verdict decision, not a defect, explicitly out of this gate's scope per exclusions): both GATING gates (g4 real-data, g5 synthetic known-truth) now point at the SAME defect -- G's saturating curve+offset is structurally non-separable (offset<->asymptote aliasing). Commander must adjudicate reopen-g2-to-constrain-the-fit vs accept-the-honest-null as #663's deliverable, and formalize the decision:synthetic-criterion guess->settled/measured regrade. Routed as triage candidates below.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass. Render a verdict on each Fowler baseline smell: flagged / overridden / absent. Record the pass to FOWLER_PASS record, run verify_fowler_pass.py, then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran the Fowler code-smell pass over the single new test file (~406 lines). Record at .agent-work/663-grip-g/g5-review/fowler-pass.json; verify_fowler_pass.py exit 0 (12 smells, flagged=[], overridden=['data-clumps','comments-as-deodorant']). 10 smells absent. data-clumps OVERRIDDEN: the 3 parallel per-param coverages are distinct identifiability axes reported separately by design (the per-axis covAsy breakdown IS the deliverable) -- CREW_CONTEXT minimal-change/test-locality subordinates it. comments-as-deodorant OVERRIDDEN: the dense docstring/comments carry the GATING scientific CALIBRATION rationale a reviewer/commander must read (why low-SNR~0.14 is real, why i.i.d. is benign, the sigma double-count direction) -- required evidence not deodorant; the code itself is clear. No refactor blocker.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. g5 synthetic-recovery harness is sound; all 7 close criteria pass. Real fit genuinely called (not reimplemented); numbers reproduce byte-identically; honest-null discipline verified (no rate-threshold asserts). SNR-realism spot-check INDEPENDENTLY confirmed by fitting real 2023 FP2 sessions (field-pooled residual RMS 12.2-14.5s vs harness ~11s low-SNR tier -> harness is honest, if anything conservative). The SPLIT result is REAL: recovery PASSES only hollowly (via honest sigma-widening; the one confident regime drops to 66.7%), separability FAILS decisively (31.9%, and fails even in the estimator's cleanest regime), independently confirming g4's real-data identifiability diagnosis on known-truth data. Fowler rail exit 0. Commander owns the reopen-g2-vs-accept-null verdict + the synthetic-criterion regrade (out of this gate's scope)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "CONFIRMED cross-gate (g4 real-data + g5 synthetic known-truth): G's per-session saturating curve+offset is structurally NON-SEPARABLE (offset<->asymptote |corr| pinned near +-1; on synthetic data drawn from G's OWN model separability clears 0.8 in only 31.9% of replicates, and even the cleanest high-SNR/high-bend regime reaches median|corr| 0.939). Defect is in the estimator/parameterization, not the data. Commander decides: reopen g2 to reparameterize/constrain (anchored initial-value + bounded total-gain; bound/prior asymptote+rate; or flat-offset fallback when |corr|~1) vs accept the honest-null as #663's deliverable. Also: 'subtract G' should be sigma-gated downstream (recovery passes only via honest sigma-widening, not estimate accuracy)."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "g5-rev-cmdr663",
+    "status": "released",
+    "claimed_at": "2026-07-25T18:02:27.858263+00:00",
+    "last_heartbeat": "2026-07-25T18:08:45.711461+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-25T18:09:57.593927+00:00"
+  }
+}

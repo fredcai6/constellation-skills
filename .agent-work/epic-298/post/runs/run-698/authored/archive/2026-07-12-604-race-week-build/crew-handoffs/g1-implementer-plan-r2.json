@@ -1,0 +1,236 @@
+{
+  "work_id": "604-g1-implement-r2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix",
+    "m2-tests",
+    "m3-simplification",
+    "m4-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md in the worktree, plus the REWORK handoff g1-implementer-rework-handoff.md in full, and re-read the current (buggy) explain_stage source at scripts/race_week_stages.py:274-310. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions) and reproduce the bug live BEFORE making any change. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; bug reproduced live pre-fix",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix": {
+      "id": "m1-fix",
+      "title": "Move Path(explainer_path)/with_name construction inside the try block, add hardcoded fallback stub path",
+      "imperative": "In scripts/race_week_stages.py, edit ONLY explain_stage (lines ~274-310): move `explainer_path = Path(explainer_path)` and the `stub_path = explainer_path.with_name(...)` construction inside the existing `try:` block so any exception building them (bad type, empty string, or anything else) is caught by the same broad `except Exception`. Because stub_path is derived FROM explainer_path, if explainer_path construction itself fails there is no way to derive stub_path from it -- initialize a `stub_path: Path | None = None` before the try, and in the except branch fall back to a fixed, always-constructible path (e.g. under tempfile.gettempdir(), not the repo cwd) when stub_path is still None. Document the exact fallback path chosen in IMPLEMENTER_RESULT. Do not touch discover_sessions_stage/predict_stage/optimize_stage/checkpoint I/O helpers/compute_stage_inputs_hash/should_skip_stage.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded, handoff complete, bug reproduced live",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "explain_stage(<valid stem>, None) and explain_stage(<valid stem>, '') both return a dict with a status field and do not raise (post-fix repro)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import scripts.race_week_stages as rws; r1 = rws.explain_stage('some/stem', None); r2 = rws.explain_stage('some/stem', ''); assert isinstance(r1, dict) and 'status' in r1, r1; assert isinstance(r2, dict) and 'status' in r2, r2; print('None ->', r1); print('empty ->', r2)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-1"
+        }
+      ],
+      "constraints": [
+        "only touch explain_stage",
+        "do not touch discover_sessions_stage/predict_stage/optimize_stage/checkpoint I/O helpers/compute_stage_inputs_hash/should_skip_stage",
+        "explain_stage must never raise for any input",
+        "no scripts/race_week.py",
+        "no src/ changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -c \"import scripts.race_week_stages as rws; r1 = rws.explain_stage('some/stem', None); r2 = rws.explain_stage('some/stem', ''); assert isinstance(r1, dict) and 'status' in r1, r1; assert isinstance(r2, dict) and 'status' in r2, r2; print('None ->', r1); print('empty ->', r2)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-tests": {
+      "id": "m2-tests",
+      "title": "Add regression tests; run the FULL test file",
+      "imperative": "Add regression tests to tests/unit/scripts/test_race_week_stages.py (append only -- do not delete or rewrite existing passing tests) covering at minimum explain_stage(<valid stem>, None) and explain_stage(<valid stem>, '') both returning cleanly (a dict, status field present) without raising. Then run the FULL test file (not just the new tests) to confirm nothing else regressed. Test-after mode (bug fix with reviewer-diagnosed shape): collapse to the single green postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix implemented, post-fix repro passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full tests/unit/scripts/test_race_week_stages.py passes, including new None/empty-string regression tests",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_stages.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-tests-1"
+        }
+      ],
+      "constraints": [
+        "add tests only -- do not delete or rewrite existing passing tests",
+        "tests/unit/scripts/test_race_week_stages.py only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m pytest tests/unit/scripts/test_race_week_stages.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-simplification": {
+      "id": "m3-simplification",
+      "title": "Re-run simplification-limits check on the touched file",
+      "imperative": "Run py -m src.utils.simplification_limits --paths scripts/race_week_stages.py from the worktree and capture the output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full test file green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "simplification_limits run captured",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m src.utils.simplification_limits --paths scripts/race_week_stages.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-simplification-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-simplification-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/f1Brainz/.claude/worktrees/604-build && py -m src.utils.simplification_limits --paths scripts/race_week_stages.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-result": {
+      "id": "m4-result",
+      "title": "Write IMPLEMENTER_RESULT (r2) with full evidence",
+      "imperative": "Write C:/Programs/f1Brainz/.agent-work/604-race-week-build/crew-handoffs/g1-implementer-result-r2.md using the Return Format section of the rework handoff: what changed, full pytest output for the WHOLE file pasted (not summarized), the before/after repro snippet (both raising pre-fix, both clean post-fix), simplification_limits output, assumptions (incl. the exact fallback stub path chosen), stop conditions hit (or none), out-of-scope observations, workflow feedback, Map Impact. Send a short completion note to cmdr-604b via SendMessage.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "simplification_limits captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT (r2) written to g1-implementer-result-r2.md with full pytest output pasted and completion note sent to cmdr-604b",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "result file is the deliverable; do not end turn before this exists with real content"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "604-g1-impl-r2-session",
+    "status": "released",
+    "claimed_at": "2026-07-12T21:10:48.694352+00:00",
+    "last_heartbeat": "2026-07-12T21:15:00.477573+00:00",
+    "claimed_by": "cmdr-604b-implementer",
+    "worktree": "C:/Programs/f1Brainz/.claude/worktrees/604-build",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-12T21:15:05.008840+00:00"
+  }
+}

@@ -1,0 +1,33 @@
+Arm B — quali_pace_gap (v2) + anchor ON — issue-335 gold regen
+==============================================================
+Gold cycle slug : gold_cycle_260608_043414_2018thru2024
+Trained fusion  : outputs/evo_runs/issue335_armB/fusion/fusion_260608_084626_2018thru2024.json
+Trained manifest: outputs/evo_runs/issue335_armB/fusion/reports/evo/fusion_260608_084626_2018thru2024.sampled_runtime_manifest.json
+Anchor          : enabled=true, alpha=0.5 (confirmed)
+Encoding        : quali_pace_gap; driver/constructor quali recent-history modules stamped .v2 (verified)
+Training config : epochs=100, lr=1e-3, dropout-seeded, median-relative, utilization=max
+Cycle wall-clock: ~3.7h (LOSO 159m, 1788 rows / 84 runs); sampled_state 24/24, 0 skipped
+
+FUSED BACKTEST (2025, sampled_state, trained manifest):
+  pairwise_brier_against_actual_order   = 0.2008
+  pairwise_log_loss_against_actual_order= 0.6289
+  expected_position_mae                 = 3.6877
+  sample_spearman_mean                  = 0.4470
+
+A/B HEAD-TO-HEAD (Arm B - Arm A; negative => B better):
+  fused Brier (PRIMARY) : 0.2008 vs 0.2077  (delta -0.0069)  B better
+  pairwise log-loss     : 0.6289 vs 0.6861  (delta -0.0572)  B better
+  expected position MAE : 3.688  vs 3.760   (delta -0.073)   B better
+  mean sample MAE       : 4.670  vs 4.633   (delta +0.037)   A better (marginal)
+  sample Spearman       : 0.447  vs 0.452   (delta -0.005)   A better (marginal)
+
+PER-RACE ROBUSTNESS (24 races, paired):
+  B better in 19/24 races, A better in 5
+  mean Brier delta (B-A) = -0.00693 ; paired bootstrap 95% CI [-0.0103, -0.0037] EXCLUDES 0
+  biggest B wins: Brazil -0.0264, Belgium -0.0208, Abu Dhabi -0.0202
+  biggest A wins: Emilia Romagna +0.0067, Spain +0.0054, Saudi +0.0032
+
+VERDICT: quali_pace_gap (Arm B) wins the fused comparison on the primary Brier
+(CI excludes 0), log-loss, and expected-position MAE. Modest but robust; not a tie,
+so it stands on its own (user bias toward pace_gap also favors B). Settles #369's
+deferred encoding decision: promote pace_gap as the new default.

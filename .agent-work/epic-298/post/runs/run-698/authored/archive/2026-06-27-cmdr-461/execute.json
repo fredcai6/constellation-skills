@@ -1,0 +1,382 @@
+{
+  "work_id": "cmdr-461",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Context is already loaded from the spine context step. Confirm frozen plan intent and scope: G1 = decimetre doc + scipy pin (reasoning gate, no crew); G2 = FastF1 version-guard hardening (crew gate). Item 2 (GP-name normalization) is honest-null \u2014 routed to triage. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Plan intent and scope confirmed from MISSION_FRAME.md; G1 = reasoning gate (items 1+4), G2 = crew gate (item 3), item 2 = honest-null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Items 1+4: decimetre doc + scipy pin (reasoning gate)",
+      "imperative": "REASONING GATE \u2014 no crew dispatched; commander drives in own context. Crew waiver: changes are pure docstring additions and a one-line pyproject.toml version floor bump; no independently-verifiable code path changes. 1) In src/preprocessing/trajectory/loaders.py module docstring, add Spa arc-length verification after the existing Units binding lines: 'Spa 2023 Q VER verification: raw arc 69415 dm \u00d7 0.1 = 6941.6 m vs FastF1 Distance 6949.5 m (ratio 9.99), confirming decimetres.' 2) In docs/architecture/packets/preprocessing.md, add the Spa numbers to the loaders.py description line. 3) In pyproject.toml, change 'scipy>=1.9.0' to 'scipy>=1.17.1'. Verify: py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/loaders.py and py -m pytest tests/unit/preprocessing/ -q. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "loaders.py docstring has Spa arc-length verification; preprocessing.md updated; pyproject.toml scipy floor is >=1.17.1; simplification_limits PASS; unit tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Do NOT touch smoother.py, src/physics/*, scripts/",
+        "Docstring change at module level AND in driver_streams docstring",
+        "No new code logic \u2014 doc + config only"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:preprocessing \u2014 src/preprocessing/trajectory/loaders.py (sole FastF1 cache reader)"
+        ],
+        "capability": [
+          "Windowless trajectory estimation \u2014 loaders.py provides unit-converted pos/speed streams"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import \u2014 no evo imports; not affected by this gate"
+        ],
+        "decision": [
+          "No decision anchors; hygiene gate"
+        ],
+        "evidence": [
+          "lesson:fastf1-posdata-decimetres \u2014 Spa 2023 Q VER: arc 6941.6 m vs FastF1 6949.5 m (ratio 9.99)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Items 1+4: review (reasoning gate \u2014 waived)",
+      "imperative": "REASONING GATE \u2014 review performed in commander context, not by a crew reviewer. Changes verified by: (a) simplification_limits pass, (b) unit tests green, (c) grep confirming the Spa numbers appear in loaders.py docstring and preprocessing.md, (d) grep confirming scipy>=1.17.1 in pyproject.toml. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 implement complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Changes verified in commander context \u2014 doc + version pin correct and tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Items 1+4: integrate",
+      "imperative": "Confirm G1 postconditions: loaders.py has Spa verification, preprocessing.md updated, scipy>=1.17.1 in pyproject.toml, simplification_limits PASS, unit tests green. Commit the G1 changes. Log item 2 (GP-name normalization) as a triage candidate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 review complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unit preprocessing tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits PASS on loaders.py",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/loaders.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/preprocessing/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/loaders.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Item 3: FastF1 version-guard hardening \u2014 implement",
+      "imperative": "Crew gate. Fill IMPLEMENTER_HANDOFF.template.md and dispatch an implementer subagent. Task: In src/preprocessing/trajectory/loaders.py, harden the FastF1 version guard. Specifically: (1) Add a module-level constant _FASTF1_MIN_VERSION = '3.0.0'. (2) Add a module-level _check_fastf1_version() function that imports fastf1, compares fastf1.__version__ to the minimum using packaging.version or manual tuple parse, and calls logger.warning if the installed version is below the minimum. Call it once at the bottom of the module-level definitions (not at import time \u2014 defer to first use, or call lazily). (3) In load_session_offline, replace the silent 'except AttributeError: pass' for fastf1.Cache.offline_mode with a logged warning: 'fastf1.Cache.offline_mode not available in this fastf1 version; session may attempt network requests.' This is a documentation-class code change that adds observability without changing behavior. CONSTRAINTS: do NOT change function signatures, return types, or behavior. Do NOT touch smoother.py or src/physics/*. EVIDENCE: run py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/loaders.py and py -m pytest tests/unit/preprocessing/ -q.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 integrated (scipy pin + decimetre doc committed)",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Do NOT touch smoother.py, src/physics/*, scripts/",
+        "No signature or behavior changes",
+        "No new dependencies beyond what is already in pyproject.toml"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:preprocessing \u2014 src/preprocessing/trajectory/loaders.py"
+        ],
+        "capability": [
+          "Offline FastF1 session loading; sole cache-reader boundary"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "fastf1>=3.0.0 in pyproject.toml (minimum tested version)"
+        ],
+        "decision": [],
+        "evidence": [
+          "fastf1 3.8.1 installed; Cache.offline_mode absent in 3.x (AttributeError caught but silent)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Item 3: FastF1 version-guard hardening \u2014 review",
+      "imperative": "Crew gate. Fill REVIEWER_HANDOFF.template.md and dispatch a reviewer subagent. Verify: (1) _FASTF1_MIN_VERSION constant added correctly. (2) offline_mode AttributeError now logs a warning rather than passing silently. (3) No signature changes. (4) No evo-region imports added. (5) simplification_limits PASS. (6) Tests green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Item 3: FastF1 version-guard hardening \u2014 integrate",
+      "imperative": "Check REVIEW_RESULT verdict. APPROVE: run verification commands, confirm postconditions pass, advance. BLOCK: return implementer for rework or raise blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unit preprocessing tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/preprocessing/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "simplification_limits PASS on loaders.py",
+          "check": {
+            "kind": "command",
+            "command": "py -m src.utils.simplification_limits --paths src/preprocessing/trajectory/loaders.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc-item2",
+      "title": "GP-name normalization: incomplete strip in f1_calendar.py + no shared util",
+      "detail": "f1_calendar.py strips ' Grand Prix' suffix (line 87-88) but does not handle adjective forms ('Belgian Grand Prix' -> 'Belgian', not 'Belgium'). loaders.py callers currently know the DB-canonical name so there is no active failure, but the gap is real. A shared normalizer in src/utils/ would prevent future per-caller mapping. Item 2 honest-null: no current preprocessing caller needs the bridge.",
+      "action": "file-issue",
+      "priority": "low"
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "cmdr-461",
+    "status": "active",
+    "claimed_at": "2026-06-27T19:02:55.622799+00:00",
+    "last_heartbeat": "2026-06-27T19:18:15.386791+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

@@ -1,0 +1,787 @@
+{
+  "work_id": "512",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g3-verdict"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read inherited doctrine + ORCHESTRATOR_CONTEXT + GLOSSARY + packets/physics.md (layer2 + utilization nodes). Confirm the frozen plan intent/scope (PROBLEM_STATEMENT.md + MISSION_FRAME.md). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Readiness core module + tests: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G1. Build a PURE-over-DataFrame readiness core (proposed src/physics/layer2/regime_readiness.py) that, given the five-view estimate-store DataFrame, computes per regime-vector component {slow_corner_grip=lateral_mech_grip_g, fast_corner_grip=lateral_aero_grip_g, straight_line=(max_power_w,power_drag_area_m2), braking=(brake_decel_ms2,brake_aero_decel_per_m), traction=(traction_accel_ms2,traction_aero_accel_per_m); coast minor} the four readiness metrics: (1) SEPARABILITY \u2014 car-vs-car via fit_two_way frac_team (compose pooling.fit_two_way / pool_driver), AND param-vs-param via the off-diagonal correlation of the real 2x2 covariance blobs (braking_covariance etc.); (2) COVERAGE \u2014 per-constructor valid-round fraction (fit_status='ok', finite, \u03c3 finite/positive) out of rounds present; (3) CROSS-SESSION STABILITY \u2014 random-effects \u03c4\u00b2 (pooling.pool_random_effects) vs median within-\u03c3, drift-aware (fit_drift) so real development isn't read as instability; (4) COVARIANCE HONESTY \u2014 cross-session standardized residual about the drift/RE pooled mean (z = (x_i-\u03bc_pool)/sqrt(\u03c3_i\u00b2+\u03c4\u00b2)); report calibration as std(z) and the fraction within 1\u03c3. Return a typed result object per component (metrics + a per-axis pass/fail against injectable thresholds, threshold defaults as a named constant). Honest covariance first-class. NO evo import. Tests must NOT read data/ \u2014 use synthetic in-memory DataFrame fixtures with known frac_team / \u03c4 / z so metrics are analytically checkable (L1) plus degenerate cases (single session, all-error, zero-variance \u2192 L3). Dispatch constellation-implementer. Integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "honest covariance first-class (use real 2x2 blobs, not diagonal-only)",
+        "tests independent of data/ (synthetic fixtures)"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:physics.layer2 \u2014 estimate_store.py (component columns + *_covariance blobs), pool_driver.py (pool_store/render_markdown), pooling.py (pool_random_effects/fit_two_way/fit_drift)",
+          "new: src/physics/layer2/regime_readiness.py"
+        ],
+        "capability": [
+          "new readiness readout over the five-view store; consumes pool_driver, adds coverage/param-pair-separability/covariance-honesty"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision:c1_driver_utilization_design",
+          "decision pressure: GO/CONTEXTUAL/NO-GO rubric thresholds -> reconcile decision-anchor candidate"
+        ],
+        "evidence": [
+          "claim to re-measure: 'constructors not separable frac_team<=3%' (#492-era)"
+        ],
+        "confidence_flags": [
+          "fit_evidence.py targets the OLD Layer-1 fit_store not the five-view store \u2014 reuse the idea, point at estimate_store"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "tau_resid degenerate (in-sample self-weighted drift -> 0 everywhere) makes stable flag trivial; dashboard renders flags inconsistent with core. Fix tau_resid to leave-one-out + render flags from core."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g1-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g1-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Readiness core module + tests: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan + IMPLEMENTER_RESULT. Verify: metrics are analytically correct on the synthetic fixtures (frac_team, \u03c4, z recover known values); real covariance blobs used for param-pair separability (not diagonal-only); no evo import; no data/ dependency in tests; honest-covariance posture. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "tau_resid degenerate (in-sample self-weighted drift -> 0 everywhere) makes stable flag trivial; dashboard renders flags inconsistent with core. Fix tau_resid to leave-one-out + render flags from core."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Readiness core module + tests: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run the test command, confirm pass, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "readiness core computes the 4 metrics per component; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "tau_resid degenerate (in-sample self-weighted drift -> 0 everywhere) makes stable flag trivial; dashboard renders flags inconsistent with core. Fix tau_resid to leave-one-out + render flags from core."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Dashboard + 2023-Q run: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G2. Build scripts/regime_capability_dashboard.py: loads the five-view estimate store (default DB the absolute main-checkout path C:/Programs/f1Brainz/data/physics_estimates_g3wired.db; --db override), runs the G1 readiness core over the 2023-Q pool, and renders the TRACEABLE data->readout surface: a per-component summary table (the 4 metrics + per-axis pass/fail + provisional verdict) written to reports/physics/regime_capability_2023Q.md, plus per-component diagnostic plots (e.g. between-car spread vs within-\u03c3; z-calibration histogram; coverage heatmap constructor\u00d7round) to reports/physics/regime_capability_*.png. Single canonical path (no dual formats). Add a SMOKE TEST tests/unit/physics/layer2/test_regime_capability_dashboard.py over a tiny synthetic store (NO data/ dep) asserting the summary-table assembly produces one row per component with all 4 metrics. ALSO actually run the dashboard over the real g3wired DB and capture the rendered summary table + plot paths into IMPLEMENTER_RESULT as evidence (this read uses the absolute main-checkout DB). Dispatch constellation-implementer; integrate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G1 readiness core landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "single canonical execution path (\u00a74)",
+        "dashboard real-data read uses absolute main-checkout DB; smoke test uses synthetic fixture only",
+        "no evo import"
+      ],
+      "anchors": {
+        "structural": [
+          "new: scripts/regime_capability_dashboard.py",
+          "consumes src/physics/layer2/regime_readiness.py (G1)",
+          "reports/physics/ output surface"
+        ],
+        "capability": [
+          "traceable data->dashboard evidence surface (\u00a74 done-done)"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import",
+          "single canonical path"
+        ],
+        "decision": [
+          "decision pressure: verdict rubric thresholds surfaced in the summary table"
+        ],
+        "evidence": [
+          "the rendered 2023-Q summary table IS the characterization evidence the G3 verdict reads"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g2-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Dashboard + 2023-Q run: review",
+      "imperative": "Fill REVIEWER_HANDOFF. Verify: dashboard runs over the real g3wired store and emits the summary table + plots; numbers are sane (frac_team, \u03c4, coverage, z per component); single canonical path; smoke test green and data/-independent; no evo import. Inspect the rendered reports/physics/regime_capability_2023Q.md in the IMPLEMENTER_RESULT. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g2-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Dashboard + 2023-Q run: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run the smoke-test command, confirm pass, confirm the real-data summary table exists in the IMPLEMENTER_RESULT evidence, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dashboard renders the 2023-Q per-component readout; smoke test passes",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_regime_capability_dashboard.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g2-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_capability_dashboard.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-verdict": {
+      "id": "g3-verdict",
+      "title": "Verdict synthesis (reasoning gate \u2014 no crew)",
+      "imperative": "REASONING GATE (crew-waiver: deliverable is a diagnosis/document and the commander holds full context from G1+G2 outputs). Read the rendered 2023-Q summary table + plots. Assign GO / CONTEXTUAL / NO-GO per component against the rubric, with the numeric justification (frac_team, \u03c4 vs within-\u03c3, coverage, z-calibration) cited per component. Fold #557 in as traction's pre-derived CONTEXTUAL (set-aside protocol; pick-up note = corner-indexed path). Re-state the re-measured 'constructors separable?' finding vs the #492-era frac_team<=3% claim. Write .agent-work/512/VERDICT.md (per-component verdict table + the bet-bounding readout). Surface the rubric thresholds as a reconcile decision-anchor candidate and any weak-axis lift as a triage candidate. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G4 static-latent separability landed (revise verdict to manageable-uncertainty framing)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "VERDICT.md written: GO/CONTEXTUAL/NO-GO per component with cited numbers; #557 traction set-aside folded; rubric + weak-axis lifts routed to reconcile/triage",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "structural": [
+          "consumes G1 core + G2 dashboard outputs (reports/physics/regime_capability_2023Q.md)"
+        ],
+        "capability": [
+          "the readiness verdict \u2014 the issue's terminal deliverable (\u00a74)"
+        ],
+        "constraint": [
+          "honest-null / NO-GO is a valid terminal result"
+        ],
+        "decision": [
+          "decision pressure: rubric thresholds -> reconcile decision-anchor candidate"
+        ],
+        "evidence": [
+          "#557 traction set-aside",
+          "#492-era frac_team re-measure"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "User-directed extension: test static-latent recovery at manageable-uncertainty bar (the additive frac_team under-tested the pooling thesis); add G4 static-separability + revise G3 verdict."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 1
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Static-latent separability (manageable-uncertainty): implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF for G4. Extend src/physics/layer2/regime_readiness.py with a static-latent separability readout: per component axis, for each constructor pool its per-session values into a STATIC estimate (RE pool_random_effects -> mu_c +/- sigma_mu_c, with development drift separated via fit_drift), then measure CAR separability relative to the static estimate's OWN uncertainty (separation_ratio = between-car SD of mu_c / median sigma_mu_c; plus an F = var(mu_c)/mean(sigma_mu_c^2)). This is the pooling-thesis test the additive frac_team under-tested. Add a 'manageable' flag vs an injectable threshold (default separation_ratio>=2.0). Return per-car (mu_c, sigma_mu_c) so the ordering is visible. Pure-over-DataFrame; tests data/-independent. Dispatch constellation-implementer; integrate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "G2 dashboard landed (core+store available)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "constraint:physics_region_no_evo_import",
+        "honest covariance first-class",
+        "tests independent of data/",
+        "manageable-uncertainty bar (not full recovery)"
+      ],
+      "anchors": {
+        "structural": [
+          "src/physics/layer2/regime_readiness.py (extend) \u2014 new static_separability readout",
+          "pooling.pool_random_effects/fit_drift"
+        ],
+        "capability": [
+          "static-latent recovery test: car separability vs pooled static uncertainty (distinct from additive frac_team)"
+        ],
+        "constraint": [
+          "constraint:physics_region_no_evo_import"
+        ],
+        "decision": [
+          "decision pressure: manageable-uncertainty threshold -> reconcile candidate"
+        ],
+        "evidence": [
+          "pooling thesis: stable static car latent (esp. power) recoverable across track viewpoints; drag static base setup-conflated"
+        ],
+        "confidence_flags": [
+          "drag pooled mean conflates per-track setup \u2014 report but flag as not-physically-clean; power is the clean static axis"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g4-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Static-latent separability: review",
+      "imperative": "Fill REVIEWER_HANDOFF from the gate plan + IMPLEMENTER_RESULT. Verify: per-car static estimate uses RE pooling with development separated; separation_ratio/F computed vs the static estimate's own uncertainty (NOT vs circuit variance); manageable flag against an injectable threshold; per-car mu_c+/-sigma_mu_c reported; drag flagged as setup-conflated; tests analytic on synthetic fixtures (plant separable vs non-separable static latents); no evo import; no data/ dep. Dispatch constellation-reviewer; integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g4-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Static-latent separability: integrate",
+      "imperative": "Check REVIEW_RESULT. APPROVE: run tests, confirm pass, advance. BLOCK: rework. Log out-of-scope finds as triage candidates. Ensure the dashboard renders the static-separability section over the real 2023-Q store (evidence in IMPLEMENTER_RESULT).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for G4",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "static-latent separability computed per component; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py tests/unit/physics/layer2/test_regime_capability_dashboard.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {},
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/512/crew-handoffs/g4-reviewer-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/unit/physics/layer2/test_regime_readiness.py tests/unit/physics/layer2/test_regime_capability_dashboard.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "regime_readiness imports estimate_store._cov_list (private seam) \u2014 consider a public cov-parse helper or Cartographer-record it"
+    },
+    {
+      "id": "tc2",
+      "from": "g1-review",
+      "statement": "coast is diagnostic-only (powertrain-dominated); mark it distinctly from primary components at the G3 verdict"
+    },
+    {
+      "id": "tc3",
+      "from": "g3-verdict",
+      "statement": "Circuit-confound: regime-capability params are circuit-dominated (frac_circuit 0.44-0.65 >> frac_team 0-0.04); direct regime descriptors won't discriminate cars unless circuit is conditioned/normalised first \u2014 reshapes #450 Phase-P composition"
+    },
+    {
+      "id": "tc4",
+      "from": "g3-verdict",
+      "statement": "Systematic over-claiming across all axes (LOO zstd 1.3-1.9); per-session sigma mildly optimistic -> data-driven systematic-uncertainty floor (links #506) would re-calibrate the honesty metric"
+    },
+    {
+      "id": "tc5",
+      "from": "g3-verdict",
+      "statement": "coast_rolling_decel_ms2 is the lone strongly car-separable axis (frac_team 44%) but is a powertrain/engine-braking fingerprint not a capability \u2014 evaluate as a PU diagnostic (links #502 deployed-power index)"
+    },
+    {
+      "id": "tc6",
+      "from": "g3-verdict",
+      "statement": "Rubric thresholds (DEFAULT_THRESHOLDS) are a durable choice -> record decision:regime_readiness_rubric at reconcile"
+    },
+    {
+      "id": "tc7",
+      "from": "g3-verdict",
+      "statement": "Power lever: peak-power identifiability is poor on short-straight tracks (inflates per-session sigma -> depresses separation_ratio); re-run power separability on long-straight sessions only \u2014 may lift the 1.16sigma clean-axis signal"
+    },
+    {
+      "id": "tc8",
+      "from": "g3-verdict",
+      "statement": "Aero/drag structured base-vs-setup model: pooled mean conflates per-track downforce choice; model car base aero platform + per-track setpoint (downforce-level covariate) to isolate the likely real differentiator (feeds #450, #499)"
+    },
+    {
+      "id": "tc9",
+      "from": "g3-verdict",
+      "statement": "Dashboard degenerate-ratio guard: flag implausibly-small med_sigma_mu (e.g. brake_aero 9.24sigma artifact) so a spurious high separation_ratio is never surfaced as real"
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "commander-512",
+    "status": "active",
+    "claimed_at": "2026-06-28T15:15:35.948793+00:00",
+    "last_heartbeat": "2026-06-28T19:23:46.587181+00:00",
+    "claimed_by": "commander",
+    "worktree": "C:/Programs/f1Brainz-512",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

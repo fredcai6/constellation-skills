@@ -1,0 +1,100 @@
+{
+ "ops": [
+  {
+   "op": "rescope",
+   "id": "g4-integrate",
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "targeted gate tests pass (region suite too slow for a sync gate check; crew runs broader evidence)",
+     "check": {
+      "kind": "command",
+      "command": "py -m pytest tests/unit/physics/layer2/test_fp_representativeness.py -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ]
+  },
+  {
+   "op": "rescope",
+   "id": "g5-integrate",
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "targeted gate tests pass (region suite too slow for a sync gate check; crew runs broader evidence)",
+     "check": {
+      "kind": "command",
+      "command": "py -m pytest tests/unit/physics/layer2/test_session_estimator_fp.py -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ]
+  },
+  {
+   "op": "rescope",
+   "id": "g6-integrate",
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "targeted gate tests pass (region suite too slow for a sync gate check; crew runs broader evidence)",
+     "check": {
+      "kind": "command",
+      "command": "py -m pytest tests/unit/physics/layer2/test_fp_representativeness_gate.py -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,60 @@
+{
+  "channel": "grip_ceiling_Gv",
+  "form": "G(v) = min(A + B*v^2, G_sat)  [g]; v in m/s",
+  "A_mechanical_g": 1.8010004164954592,
+  "A_sigma": 0.050689755760001266,
+  "B_downforce": 0.0017735281368707605,
+  "B_sigma": 6.798503726758392e-05,
+  "G_sat_g": 5.2,
+  "valid_range_kmh": [
+    46,
+    185
+  ],
+  "above_range": "physically capped at G_sat (unmeasurable, v^2/R too noisy)",
+  "provenance": "pooled VER corner apexes Suzuka+Monaco quali+race (2210), 90th-pct ceiling; bounds lateral, braking, traction",
+  "source_points": {
+    "speed_kmh": [
+      46,
+      58,
+      70,
+      82,
+      94,
+      106,
+      118,
+      130,
+      142,
+      154,
+      166,
+      178
+    ],
+    "ceiling_g": [
+      1.83,
+      2.56,
+      2.5,
+      2.84,
+      2.93,
+      3.38,
+      4.13,
+      4.29,
+      5.01,
+      4.85,
+      4.93,
+      5.51
+    ],
+    "sigma_g": [
+      0.09999999999999998,
+      0.08499999999999996,
+      0.09499999999999997,
+      0.05500000000000016,
+      0.030000000000000027,
+      0.1200000000000001,
+      0.17499999999999982,
+      0.10499999999999998,
+      0.20000000000000018,
+      0.125,
+      0.10499999999999998,
+      0.11499999999999977
+    ]
+  },
+  "created": "2026-06-14 11:42:17"
+}
