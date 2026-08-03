@@ -1,0 +1,723 @@
+{
+  "h3_unit_dependence": {
+    "panel_revisions": 7,
+    "revisions_where_argmax_lines_differs_from_argmax_bytes": 4,
+    "verdict": "PARTIAL"
+  },
+  "revisions": [
+    {
+      "bundled_resolutions": null,
+      "bundles_defined": false,
+      "conditional_words": 2965,
+      "corpus_files": 28,
+      "corpus_words_concatenated": 5367,
+      "date": "2026-05-22",
+      "justification": "the first commit that contains skills/ at all \u2014 H2's left endpoint, and the earliest revision the NARROW series can be compared from",
+      "label": "corpus birth",
+      "narrow_concatenated_words": 1831,
+      "narrow_words": 1831,
+      "narrow_words_per_role_mean": 305.2,
+      "rev": "a83a3befae62b3bbdb3674763f1533a900401404",
+      "role_count": 6,
+      "short": "a83a3be",
+      "spec": "a83a3be",
+      "unit_ranks": {
+        "argmax_by_bytes": "charter",
+        "argmax_by_lines": "charter",
+        "argmax_by_words": "charter",
+        "rank_by_bytes": {
+          "cartographer": 3,
+          "charter": 1,
+          "conductor": 2,
+          "crew": 5,
+          "triage": 6,
+          "workbench": 4
+        },
+        "rank_by_lines": {
+          "cartographer": 3,
+          "charter": 1,
+          "conductor": 2,
+          "crew": 5,
+          "triage": 6,
+          "workbench": 4
+        },
+        "reversal": false,
+        "top5_by_bytes": [
+          [
+            "charter",
+            4443
+          ],
+          [
+            "conductor",
+            2810
+          ],
+          [
+            "cartographer",
+            2353
+          ],
+          [
+            "workbench",
+            1536
+          ],
+          [
+            "crew",
+            1365
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "charter",
+            101
+          ],
+          [
+            "conductor",
+            78
+          ],
+          [
+            "cartographer",
+            70
+          ],
+          [
+            "workbench",
+            58
+          ],
+          [
+            "crew",
+            50
+          ]
+        ]
+      },
+      "wide_extra_words": 571
+    },
+    {
+      "bundled_resolutions": null,
+      "bundles_defined": false,
+      "conditional_words": 14071,
+      "corpus_files": 62,
+      "corpus_words_concatenated": 29120,
+      "date": "2026-06-27",
+      "justification": "the last revision at which SKILL_REFERENCE_BUNDLES and skills/_shared/ do not exist, so the WIDE bin's bundled component is UNDEFINED (null, not zero) and the WIDE series cannot be carried across this point",
+      "label": "last pre-regime revision",
+      "narrow_concatenated_words": 5807,
+      "narrow_words": 5807,
+      "narrow_words_per_role_mean": 527.9,
+      "rev": "b68c07b44981ec89504b48fc6273693d1ea7c22b",
+      "role_count": 11,
+      "short": "b68c07b",
+      "spec": "84fd28f^",
+      "unit_ranks": {
+        "argmax_by_bytes": "commander",
+        "argmax_by_lines": "commander",
+        "argmax_by_words": "commander",
+        "rank_by_bytes": {
+          "admiral": 2,
+          "cartographer": 8,
+          "charter": 6,
+          "commander": 1,
+          "implementer": 10,
+          "interrogator": 3,
+          "lessons-auditor": 4,
+          "reviewer": 9,
+          "scout": 5,
+          "triage": 11,
+          "workbench": 7
+        },
+        "rank_by_lines": {
+          "admiral": 2,
+          "cartographer": 7,
+          "charter": 5,
+          "commander": 1,
+          "implementer": 10,
+          "interrogator": 6,
+          "lessons-auditor": 8,
+          "reviewer": 11,
+          "scout": 4,
+          "triage": 9,
+          "workbench": 3
+        },
+        "reversal": false,
+        "top5_by_bytes": [
+          [
+            "commander",
+            11561
+          ],
+          [
+            "admiral",
+            7528
+          ],
+          [
+            "interrogator",
+            3418
+          ],
+          [
+            "lessons-auditor",
+            3319
+          ],
+          [
+            "scout",
+            3014
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "commander",
+            100
+          ],
+          [
+            "admiral",
+            58
+          ],
+          [
+            "workbench",
+            45
+          ],
+          [
+            "scout",
+            36
+          ],
+          [
+            "charter",
+            32
+          ]
+        ]
+      },
+      "wide_extra_words": 9243
+    },
+    {
+      "bundled_resolutions": 8,
+      "bundles_defined": true,
+      "conditional_words": 14123,
+      "corpus_files": 65,
+      "corpus_words_concatenated": 30484,
+      "date": "2026-06-27",
+      "justification": "verified (not assumed) as the FIRST commit introducing both SKILL_REFERENCE_BUNDLES and skills/_shared/; WIDE becomes defined here",
+      "label": "regime boundary",
+      "narrow_concatenated_words": 5867,
+      "narrow_words": 5867,
+      "narrow_words_per_role_mean": 533.4,
+      "rev": "84fd28ffca7e39c36d95d4e67fbd6bd6b6c96560",
+      "role_count": 11,
+      "short": "84fd28f",
+      "spec": "84fd28f",
+      "unit_ranks": {
+        "argmax_by_bytes": "commander",
+        "argmax_by_lines": "commander",
+        "argmax_by_words": "commander",
+        "rank_by_bytes": {
+          "admiral": 2,
+          "cartographer": 8,
+          "charter": 5,
+          "commander": 1,
+          "implementer": 10,
+          "interrogator": 3,
+          "lessons-auditor": 4,
+          "reviewer": 9,
+          "scout": 6,
+          "triage": 11,
+          "workbench": 7
+        },
+        "rank_by_lines": {
+          "admiral": 2,
+          "cartographer": 7,
+          "charter": 5,
+          "commander": 1,
+          "implementer": 10,
+          "interrogator": 6,
+          "lessons-auditor": 8,
+          "reviewer": 11,
+          "scout": 4,
+          "triage": 9,
+          "workbench": 3
+        },
+        "reversal": false,
+        "top5_by_bytes": [
+          [
+            "commander",
+            11704
+          ],
+          [
+            "admiral",
+            7528
+          ],
+          [
+            "interrogator",
+            3418
+          ],
+          [
+            "lessons-auditor",
+            3319
+          ],
+          [
+            "charter",
+            3204
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "commander",
+            100
+          ],
+          [
+            "admiral",
+            58
+          ],
+          [
+            "workbench",
+            45
+          ],
+          [
+            "scout",
+            36
+          ],
+          [
+            "charter",
+            32
+          ]
+        ]
+      },
+      "wide_extra_words": 10495
+    },
+    {
+      "bundled_resolutions": 19,
+      "bundles_defined": true,
+      "conditional_words": 25871,
+      "corpus_files": 100,
+      "corpus_words_concatenated": 63849,
+      "date": "2026-08-01",
+      "justification": "the left endpoint of the ONLY deletion event in this corpus documented with exact published arithmetic \u2014 the external calibration for gross",
+      "label": "#304 g2 approve",
+      "narrow_concatenated_words": 15831,
+      "narrow_words": 15831,
+      "narrow_words_per_role_mean": 833.2,
+      "rev": "a8d94677385a1aff6d12b2d01f529026acde94a0",
+      "role_count": 19,
+      "short": "a8d9467",
+      "spec": "baseline/304-g2-approve",
+      "unit_ranks": {
+        "argmax_by_bytes": "admiral",
+        "argmax_by_lines": "docent",
+        "argmax_by_words": "admiral",
+        "rank_by_bytes": {
+          "admiral": 1,
+          "cartographer": 17,
+          "charter": 13,
+          "commander": 19,
+          "commander-delegated": 7,
+          "curator": 10,
+          "diagnose": 14,
+          "docent": 6,
+          "explorer": 2,
+          "implementer": 9,
+          "interrogator": 5,
+          "lessons-auditor": 3,
+          "prototyper": 8,
+          "reviewer": 4,
+          "scout": 15,
+          "to-issues": 16,
+          "triage": 11,
+          "workbench": 18,
+          "write-a-skill": 12
+        },
+        "rank_by_lines": {
+          "admiral": 4,
+          "cartographer": 18,
+          "charter": 16,
+          "commander": 19,
+          "commander-delegated": 17,
+          "curator": 7,
+          "diagnose": 5,
+          "docent": 1,
+          "explorer": 2,
+          "implementer": 13,
+          "interrogator": 8,
+          "lessons-auditor": 3,
+          "prototyper": 6,
+          "reviewer": 9,
+          "scout": 14,
+          "to-issues": 15,
+          "triage": 11,
+          "workbench": 10,
+          "write-a-skill": 12
+        },
+        "reversal": true,
+        "top5_by_bytes": [
+          [
+            "admiral",
+            17197
+          ],
+          [
+            "explorer",
+            13630
+          ],
+          [
+            "lessons-auditor",
+            9030
+          ],
+          [
+            "reviewer",
+            8304
+          ],
+          [
+            "interrogator",
+            7169
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "docent",
+            143
+          ],
+          [
+            "explorer",
+            99
+          ],
+          [
+            "lessons-auditor",
+            80
+          ],
+          [
+            "admiral",
+            77
+          ],
+          [
+            "diagnose",
+            61
+          ]
+        ]
+      },
+      "wide_extra_words": 22148
+    },
+    {
+      "bundled_resolutions": 19,
+      "bundles_defined": true,
+      "conditional_words": 25703,
+      "corpus_files": 100,
+      "corpus_words_concatenated": 63681,
+      "date": "2026-08-01",
+      "justification": "the blocking oracle and the successor comparison's left endpoint; addressed BY TAG because it is not an ancestor of main",
+      "label": "#304 declared baseline",
+      "narrow_concatenated_words": 15831,
+      "narrow_words": 15831,
+      "narrow_words_per_role_mean": 833.2,
+      "rev": "fc1685a267304b0b1abe77a5b630f707e80bf49e",
+      "role_count": 19,
+      "short": "fc1685a",
+      "spec": "baseline/304-trend-snapshot",
+      "unit_ranks": {
+        "argmax_by_bytes": "admiral",
+        "argmax_by_lines": "docent",
+        "argmax_by_words": "admiral",
+        "rank_by_bytes": {
+          "admiral": 1,
+          "cartographer": 17,
+          "charter": 13,
+          "commander": 19,
+          "commander-delegated": 7,
+          "curator": 10,
+          "diagnose": 14,
+          "docent": 6,
+          "explorer": 2,
+          "implementer": 9,
+          "interrogator": 5,
+          "lessons-auditor": 3,
+          "prototyper": 8,
+          "reviewer": 4,
+          "scout": 15,
+          "to-issues": 16,
+          "triage": 11,
+          "workbench": 18,
+          "write-a-skill": 12
+        },
+        "rank_by_lines": {
+          "admiral": 4,
+          "cartographer": 18,
+          "charter": 16,
+          "commander": 19,
+          "commander-delegated": 17,
+          "curator": 7,
+          "diagnose": 5,
+          "docent": 1,
+          "explorer": 2,
+          "implementer": 13,
+          "interrogator": 8,
+          "lessons-auditor": 3,
+          "prototyper": 6,
+          "reviewer": 9,
+          "scout": 14,
+          "to-issues": 15,
+          "triage": 11,
+          "workbench": 10,
+          "write-a-skill": 12
+        },
+        "reversal": true,
+        "top5_by_bytes": [
+          [
+            "admiral",
+            17197
+          ],
+          [
+            "explorer",
+            13630
+          ],
+          [
+            "lessons-auditor",
+            9030
+          ],
+          [
+            "reviewer",
+            8304
+          ],
+          [
+            "interrogator",
+            7169
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "docent",
+            143
+          ],
+          [
+            "explorer",
+            99
+          ],
+          [
+            "lessons-auditor",
+            80
+          ],
+          [
+            "admiral",
+            77
+          ],
+          [
+            "diagnose",
+            61
+          ]
+        ]
+      },
+      "wide_extra_words": 22148
+    },
+    {
+      "bundled_resolutions": 19,
+      "bundles_defined": true,
+      "conditional_words": 25703,
+      "corpus_files": 100,
+      "corpus_words_concatenated": 63681,
+      "date": "2026-08-01",
+      "justification": "the revision whose countability makes n ambiguous (2 or 3); included so a reader can see for themselves that it is a zero-delta row",
+      "label": "#304 squash-merge onto main",
+      "narrow_concatenated_words": 15831,
+      "narrow_words": 15831,
+      "narrow_words_per_role_mean": 833.2,
+      "rev": "5d2585bae84635cdb5e2aad56eeeae8a58d0e8b8",
+      "role_count": 19,
+      "short": "5d2585b",
+      "spec": "5d2585b",
+      "unit_ranks": {
+        "argmax_by_bytes": "admiral",
+        "argmax_by_lines": "docent",
+        "argmax_by_words": "admiral",
+        "rank_by_bytes": {
+          "admiral": 1,
+          "cartographer": 17,
+          "charter": 13,
+          "commander": 19,
+          "commander-delegated": 7,
+          "curator": 10,
+          "diagnose": 14,
+          "docent": 6,
+          "explorer": 2,
+          "implementer": 9,
+          "interrogator": 5,
+          "lessons-auditor": 3,
+          "prototyper": 8,
+          "reviewer": 4,
+          "scout": 15,
+          "to-issues": 16,
+          "triage": 11,
+          "workbench": 18,
+          "write-a-skill": 12
+        },
+        "rank_by_lines": {
+          "admiral": 4,
+          "cartographer": 18,
+          "charter": 16,
+          "commander": 19,
+          "commander-delegated": 17,
+          "curator": 7,
+          "diagnose": 5,
+          "docent": 1,
+          "explorer": 2,
+          "implementer": 13,
+          "interrogator": 8,
+          "lessons-auditor": 3,
+          "prototyper": 6,
+          "reviewer": 9,
+          "scout": 14,
+          "to-issues": 15,
+          "triage": 11,
+          "workbench": 10,
+          "write-a-skill": 12
+        },
+        "reversal": true,
+        "top5_by_bytes": [
+          [
+            "admiral",
+            17197
+          ],
+          [
+            "explorer",
+            13630
+          ],
+          [
+            "lessons-auditor",
+            9030
+          ],
+          [
+            "reviewer",
+            8304
+          ],
+          [
+            "interrogator",
+            7169
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "docent",
+            143
+          ],
+          [
+            "explorer",
+            99
+          ],
+          [
+            "lessons-auditor",
+            80
+          ],
+          [
+            "admiral",
+            77
+          ],
+          [
+            "diagnose",
+            61
+          ]
+        ]
+      },
+      "wide_extra_words": 22148
+    },
+    {
+      "bundled_resolutions": 19,
+      "bundles_defined": true,
+      "conditional_words": 25776,
+      "corpus_files": 100,
+      "corpus_words_concatenated": 63781,
+      "date": "2026-08-02",
+      "justification": "this run's HEAD; its skills/ tree is identical to origin/main's, so the Commander's origin/main figures and these are the same measurement",
+      "label": "measurement endpoint",
+      "narrow_concatenated_words": 15858,
+      "narrow_words": 15858,
+      "narrow_words_per_role_mean": 834.6,
+      "rev": "9a90298f165bf41d7d88aef50ea430de262ed5bb",
+      "role_count": 19,
+      "short": "9a90298",
+      "spec": "HEAD",
+      "unit_ranks": {
+        "argmax_by_bytes": "admiral",
+        "argmax_by_lines": "docent",
+        "argmax_by_words": "admiral",
+        "rank_by_bytes": {
+          "admiral": 1,
+          "cartographer": 17,
+          "charter": 13,
+          "commander": 19,
+          "commander-delegated": 7,
+          "curator": 10,
+          "diagnose": 14,
+          "docent": 6,
+          "explorer": 2,
+          "implementer": 9,
+          "interrogator": 5,
+          "lessons-auditor": 3,
+          "prototyper": 8,
+          "reviewer": 4,
+          "scout": 15,
+          "to-issues": 16,
+          "triage": 11,
+          "workbench": 18,
+          "write-a-skill": 12
+        },
+        "rank_by_lines": {
+          "admiral": 4,
+          "cartographer": 18,
+          "charter": 16,
+          "commander": 19,
+          "commander-delegated": 17,
+          "curator": 7,
+          "diagnose": 5,
+          "docent": 1,
+          "explorer": 2,
+          "implementer": 13,
+          "interrogator": 8,
+          "lessons-auditor": 3,
+          "prototyper": 6,
+          "reviewer": 9,
+          "scout": 14,
+          "to-issues": 15,
+          "triage": 11,
+          "workbench": 10,
+          "write-a-skill": 12
+        },
+        "reversal": true,
+        "top5_by_bytes": [
+          [
+            "admiral",
+            17137
+          ],
+          [
+            "explorer",
+            13630
+          ],
+          [
+            "lessons-auditor",
+            9190
+          ],
+          [
+            "reviewer",
+            8304
+          ],
+          [
+            "interrogator",
+            7169
+          ]
+        ],
+        "top5_by_lines": [
+          [
+            "docent",
+            143
+          ],
+          [
+            "explorer",
+            99
+          ],
+          [
+            "lessons-auditor",
+            80
+          ],
+          [
+            "admiral",
+            77
+          ],
+          [
+            "diagnose",
+            61
+          ]
+        ]
+      },
+      "wide_extra_words": 22148
+    }
+  ],
+  "role": "REPORTING/INTERPRETATION LAYER ONLY. The panel is never the measurement \u2014 every figure here is recomputed by the same census functions that produce trends.json. The only hand-chosen thing is WHICH revisions a reader should look at, and each carries its justification inline.",
+  "schema": "issue-310-panel/1"
+}

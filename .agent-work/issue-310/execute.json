@@ -4,9 +4,6 @@
   "config_ref": "docs/agents/engine-config.json",
   "items": [
     "e0-context",
-    "g1-implement",
-    "g1-review",
-    "g1-integrate",
     "g2-competence",
     "g3-verdict"
   ],
@@ -35,165 +32,14 @@
       "evidence": [],
       "rework_count": 0
     },
-    "g1-implement": {
-      "id": "g1-implement",
-      "title": "Gate 1 \u2014 trend measurement (B2 evidence gate (a)): implement",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. DELIVERABLES: .agent-work/issue-310/TRENDS.md, .agent-work/issue-310/trends/measure_surface.py, .agent-work/issue-310/trends/trends.json, .agent-work/issue-310/trends/panel.json. READ .agent-work/issue-310/PRE_REGISTRATION.md FIRST - it is committed BEFORE this instrument exists, it fixes the bin definitions, hypotheses H1/H2/H3, the outcome-selection table and the void criteria, and it is BINDING. (1) CENSUS: walk every commit touching skills/ via git rev-list; NO checkout - git ls-tree -r --long gives blob sizes directly and git cat-file --batch gives content. Union in the off-line baseline revisions BY TAG (baseline/304-trend-snapshot, baseline/304-g2-approve): they are NOT ancestors of main because #304 squash-merged, and a bare sha is GC-eligible while a tag is not. (2) TWO SERIES, NEVER ONE LABEL: the bare term always-loaded is BANNED. Emit NARROW-ALWAYS-LOADED (skills/*/SKILL.md only - the #304 series definition and the verdict PRIMARY number) and WIDE-ALWAYS-LOADED (SKILL.md plus the references/ tokens that SKILL.md names, resolved role-locally then via that commit's own SKILL_REFERENCE_BUNDLES in scripts/install_constellation.py) as separate columns the script NEVER sums. Conditionally-loaded = templates/, scripts/, unnamed references/. Publish the recombination arithmetic. (3) BLOCKING BASELINE REPRODUCTION: reproduce TREND_SNAPSHOT section 1 at tag baseline/304-trend-snapshot (19 SKILL.md, 15831 words, 100 files, 63681 words) or the series is VOID. Also re-derive the baseline at 5d2585b (the merged form) and report the delta between the two - that delta is itself a finding about what squash-merge does to a published baseline. (4) GROSS, NEVER NET: per interval emit gross-added and gross-deleted SEPARATELY, per bin. Gate (a) asks whether deletion keeps up with growth, so growth must be measured directly, not inferred from endpoint differences. A net-only row is a defect. (5) TEST H1 ACROSS ALL ROWS: do deletions land on the conditionally-loaded bin rather than the always-loaded one? The one deletion event documented with exact arithmetic (#304, 172 words) landed entirely in templates/. This is the likeliest decisive finding for gate (a). (6) IS A TREND EVEN COMPUTABLE? Required finding, not optional: state n, the interval in commits AND days, and the smallest change the instrument can distinguish from routine edit churn. Report that n is 2 OR 3 and WHY it is ambiguous (the baseline is not an ancestor of main; whether #304's own squash-merge 5d2585b counts is a judgement call). Do NOT pick one silently. (7) ROLE COUNT 19, _shared EXCLUDED per install_constellation.py:245 (TREND_SNAPSHOT section 2 lists it as a 20th role - a defect, filed as #411). Separate corpus change from roles ENTERING or LEAVING the window; a role's death is an org change and must NEVER read as deletion pressure. Lineage is hand-authored data - say so where a reader sees it, not in an appendix. (8) Section 3's re-run has no direct analogue: define it as the enumerated deletion-event set in the window, WHICH MAY BE EMPTY, count asserted. An empty set is a complete reportable result. (9) panel.json = a small pre-registered set of hand-justified revisions used ONLY as the interpretation/reporting layer over the census, never as the measurement. Do NOT rebuild #307's instruments; reuse fingerprint_global_corpus.py digest/byte conventions and state in writing why the run drivers cannot be reused. Do NOT invent a threshold. Do NOT decide the break. Wait for and integrate the returned IMPLEMENTER_RESULT.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "e0-context complete; the #304 TREND_SNAPSHOT successor obligation is understood as binding, not optional",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "implementer-result"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "Assert every enumeration's COUNT \u2014 under-inclusive enumeration presented as complete has bitten this epic five times.",
-        "Pin every number to the revision it was measured at.",
-        "Never conflate always-loaded with conditionally-loaded.",
-        "Do NOT invent a 'small enough' threshold and do NOT render a pass/fail on the break.",
-        "Bind per-blob, not per-tree: .agent-work/ commits change the tree without touching a source blob."
-      ],
-      "anchors": {
-        "structural": [
-          "README.md \u2014 corpus inventory, the 19-skill count, repo-vs-installed shape (hash-pinned substitute; no map exists)",
-          "SKILL_INDEX.md \u2014 per-skill index, enumeration cross-check against skills/*/"
-        ],
-        "capability": [
-          "README.md \u00a7'Skill set' \u2014 the role corpus the trend loops over",
-          "README.md \u00a7'Repo layout vs. installed layout' \u2014 always-loaded is a claim about the INSTALLED shape, measured on the REPO shape"
-        ],
-        "constraint": [
-          "constraint: always-loaded != installed (#393) \u2014 measure both bins separately",
-          "constraint: no threshold exists (confirmed-spec critic S2) \u2014 report the trend, never the verdict"
-        ],
-        "decision": [
-          "run-local decision: always-loaded = SKILL.md + the references/ it names @grade: guess/empirical \u00b7 leans g1 \u00b7 settle: report both bins separately so a reader rejecting the convention recombines arithmetically, without a re-run",
-          "run-local decision: bytes primary, lines secondary @grade: settled/measured \u00b7 leans g1 \u00b7 settle: line counts hide CRLF and long-line changes on a Windows-developed corpus",
-          "decision pressure: whether the corpus's existing three-bin shape (SKILL.md=trigger/pointer, references/=doctrine, templates/=interface) already IS kernel-plus-fragments under another name \u2014 surface as a candidate, do not decide"
-        ],
-        "evidence": [
-          "claim: skills/commander/SKILL.md is 16 lines with 0 occurrences of 'map' \u2014 re-verify at the revision reported",
-          "claim: #304's two tripwired deletions removed 172 words and moved the corpus -168 \u2014 re-verify against TREND_SNAPSHOT \u00a73"
-        ],
-        "confidence_flags": [
-          "WHOLE MAP ABSENT \u2014 DEGRADED-NO-MAP discharged at the context step. There is no map inventory to check a loop against, which is exactly why the assert-the-count close criterion is mechanised into this gate rather than trusted to care."
-        ]
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g1-review": {
-      "id": "g1-review",
-      "title": "Gate 1 \u2014 trend measurement: review",
-      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. THE REVIEWER PRIMARY AND NON-NEGOTIABLE JOB: HAND-RECOMPUTE at least 2 panel revisions using git show / git ls-tree DIRECTLY, WITHOUT RUNNING THE INSTRUMENT, and compare. A 184-row census cannot be hand-audited, so its correctness rests on the walker being right; the baseline reproduction is ONE external oracle and hand-recomputation is the second. If the hand figures disagree with the instrument the series is VOID and the disagreement is REPORTED - never resolved by re-running the instrument until it agrees. Second: run the instrument twice at the same HEAD and confirm byte-identical output (non-determinism voids the series). Third: confirm the bare term always-loaded appears NOWHERE unprefixed, that NARROW and WIDE are never summed, and that gross-add/gross-delete are reported separately rather than netted. Fourth: confirm every enumeration asserts its count and every number names its revision or tag. Wait for and integrate the returned REVIEW_RESULT.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "IMPLEMENTER_RESULT received for g1",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "REVIEW_RESULT returned",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "review-result"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [],
-      "anchors": {
-        "inherits": "g1-implement anchors \u2014 review verifies the measurement against the same structural/capability/constraint/decision/evidence anchors, and additionally re-runs the instrument"
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g1-integrate": {
-      "id": "g1-integrate",
-      "title": "Gate 1 \u2014 trend measurement: integrate",
-      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the lesson-candidate pool.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "REVIEW_RESULT received for g1",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "the instrument RE-DERIVES every figure from git and reconciles it against both the committed dataset and the headline numbers quoted in TRENDS.md, INCLUDING a blocking reproduction of TREND_SNAPSHOT \u00a71 at tag baseline/304-trend-snapshot (19 SKILL.md, 15831 words, 100 files, 63681 words). A fabricated table, a drifted table, or a second-baseline-that-cites-rather-than-compares all FAIL. A keyword grep would pass all three.",
-          "check": {
-            "kind": "command",
-            "command": "python \"C:/Programs/constellation-skills-wt/e298-310/.agent-work/issue-310/trends/measure_surface.py\" --verify --data \"C:/Programs/constellation-skills-wt/e298-310/.agent-work/issue-310/trends/trends.json\" --doc \"C:/Programs/constellation-skills-wt/e298-310/.agent-work/issue-310/TRENDS.md\""
-          },
-          "override_policy": {
-            "allowed": true,
-            "authority": "human",
-            "reason_required": true
-          },
-          "satisfied": false
-        },
-        {
-          "id": "c2",
-          "statement": "reviewer verdict is APPROVE",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "review-result",
-            "match": {
-              "verdict": "APPROVE"
-            }
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [],
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
     "g2-competence": {
       "id": "g2-competence",
-      "title": "Gate 2 \u2014 role-competence evidence (B2 evidence gate (b)) [REASONING GATE]",
-      "imperative": "REASONING GATE - no crew. Crew-waiver reason: the deliverable is a diagnosis over run artifacts already held in context, and commander-core.md is explicit that a crew on a pure design note is shallower, not safer. DELIVERABLE: .agent-work/issue-310/COMPETENCE.md. OPEN WITH THIS, NOT A FOOTNOTE: gate (b) has n = 0 - not weak evidence, NO evidence. Every refresh/cold-start relaunch in this epic held the FULL monolith, so those runs hold the always-loaded surface CONSTANT. The defect is not a missing control arm - THE TREATMENT WAS NEVER VARIED. Those instances bound Assumption 1 (artifacts carry state between steps) and contribute ZERO to the kernel-vs-monolith comparison. The verdict is FORBIDDEN from entering any relaunch count in the (b) column. Then WITHDRAW the overstated claim that a competence arm is impossible. An ABLATION arm - run one representative mid-spine step with sections of today's monolith WITHHELD versus full - varies the treatment and requires ZERO authoring of a decomposition. Record the CONCRETE cost estimate (which role, which mid-spine step, both arms, run count, disposal) and the reason it was declined (RUNWAY, not impossibility) so the decline is ATTRIBUTABLE rather than asserted-impossible. File the arm design as an issue. Report any Assumption-1 observations separately and clearly labelled as bearing on Assumption 1 ONLY, count asserted, ambiguous instances reported rather than dropped. Attest c1.",
+      "title": "Gate 2 \u2014 role-competence evidence (B2 evidence gate (b)) + attributable declines [REASONING GATE]",
+      "imperative": "REASONING GATE - no crew. DELIVERABLE: .agent-work/issue-310/COMPETENCE.md. OPEN WITH THIS, NOT A FOOTNOTE: gate (b) has n = 0 - not weak evidence, NO evidence. Every refresh/cold-start relaunch in this epic held the FULL monolith, so those runs hold the always-loaded surface CONSTANT. The defect is not a missing control arm - THE TREATMENT WAS NEVER VARIED. Those instances bound Assumption 1 (artifacts carry state between steps) and contribute ZERO to the kernel-vs-monolith comparison. The verdict is FORBIDDEN from entering any relaunch count in the (b) column. Then WITHDRAW the overstated claim that a competence arm is impossible: an ABLATION arm - one representative mid-spine step with sections of today's monolith WITHHELD versus full - varies the treatment and needs ZERO authoring of a decomposition. It is declined for RUNWAY and for Tommy's premature-metric ruling, NOT for impossibility. RECORD BOTH DECLINES SO THEY ARE ATTRIBUTABLE: (i) the ablation arm, with a concrete cost estimate (which role, which mid-spine step, both arms, run count, disposal); (ii) the 184-row census, cut by Tommy on 2026-08-03 - 'we're making our life hard to come up with metrics too early... we're just reworking the substrate, we're not aiming to idealize any particular metric' - with a pointer to the partial instrument the halted implementer left behind so a future run inherits the spec rather than re-deriving it. FILE BOTH AS ISSUES. Attest c1.",
       "preconditions": [
         {
           "id": "p1",
-          "statement": "g1 integrated \u2014 the trend numbers exist, so gate (b) is being assembled against a known gate-(a) result rather than in the dark",
+          "statement": "the census gate is dropped by amendment and its salvage located, so the declines recorded here are complete",
           "check": null,
           "satisfied": false
         }
@@ -201,7 +47,7 @@
       "postconditions": [
         {
           "id": "c1",
-          "statement": "COMPETENCE.md written: GATE-B-N: 0 stated in the opening paragraph with 'the treatment was never varied' as the reason; the impossibility claim explicitly WITHDRAWN and regraded guess/structural; a concrete ablation-arm cost estimate recorded with RUNWAY named as the reason for declining; the arm filed as an issue; no relaunch datapoint entered in the (b) column",
+          "statement": "COMPETENCE.md written: GATE-B-N: 0 in the opening paragraph with 'the treatment was never varied' as the reason; the impossibility claim explicitly WITHDRAWN and regraded guess/structural; BOTH declines (ablation arm, census) recorded with cost estimate and ratifying authority; both filed as issues; no relaunch datapoint entered in the (b) column",
           "check": null,
           "satisfied": false
         }
@@ -248,7 +94,7 @@
       "preconditions": [
         {
           "id": "p1",
-          "statement": "g1 integrated and g2 complete - both evidence gates assembled before the packet is written",
+          "statement": "g2 complete - gate (b)'s n=0 finding and both attributable declines are recorded before the packet is written",
           "check": null,
           "satisfied": false
         }
@@ -320,7 +166,7 @@
     "session_id": "session_01V6pZVwMCev8MEck1gTUKuu",
     "status": "active",
     "claimed_at": "2026-08-03T02:19:56.831928+00:00",
-    "last_heartbeat": "2026-08-03T02:19:58.265860+00:00",
+    "last_heartbeat": "2026-08-03T02:56:42.156211+00:00",
     "claimed_by": "commander-310",
     "worktree": ".",
     "previous_session_id": null,
@@ -333,6 +179,20 @@
       "why": null,
       "mechanical": true,
       "ts": "2026-08-03T02:19:58.265843+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-03T02:56:42.156188+00:00",
+      "reason": "Tommy cut the census: 'that seems like we're making our life hard to come up with metrics too early. right now we're just reworking the substrate, we're not aiming to idealize any particular metric.' The objection is that the measurement is premature IN KIND -- the substrate is still being reworked, so a metric built now measures something still changing shape underneath it -- not merely that n is thin. The verdict does not need the census: it turns on gate (b) being n=0 (the conjunction cannot close), one gross-against-gross comparison already in hand, and the missing threshold AND unit. Census design and the ablation-arm design are FILED rather than built so both declines are attributable.",
+      "authority": "Tommy, 2026-08-03, scope cut: metrics are premature while the substrate is in flux (relayed via the epic-298 Admiral)",
+      "ops": [
+        "dropped g1-implement",
+        "dropped g1-review",
+        "dropped g1-integrate",
+        "rescoped g2-competence",
+        "rescoped g3-verdict"
+      ]
     }
   ]
 }

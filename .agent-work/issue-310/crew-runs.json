@@ -5,7 +5,7 @@
     "gate": "g1",
     "role": "implementer",
     "attempt": 1,
-    "status": "running",
+    "status": "abandoned",
     "session_name": "constellation/issue-310/g1/implementer/attempt-1",
     "backend": "external",
     "pid": null,
@@ -16,8 +16,8 @@
     "stderr": ".agent-work/issue-310/crew-runs/g1-implementer-attempt-1.stderr.txt",
     "started_at": "2026-08-03T02:21:04.098457+00:00",
     "last_heartbeat": "2026-08-03T02:21:04.098457+00:00",
-    "completed_at": null,
-    "abandoned": false,
+    "completed_at": "2026-08-03T02:56:49.802480+00:00",
+    "abandoned": true,
     "dispatch": "external"
   }
 ]
