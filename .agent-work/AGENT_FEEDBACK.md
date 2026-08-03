@@ -1896,3 +1896,32 @@ run, every entry having migrated to `episodes/`. This run's own observations wer
 as episodes (`issue-308-021` through `issue-308-025`), which is the accumulator this issue
 established, and its findings were filed to the tracker (**#399, #400, #403, #404, #405**)
 rather than banked worktree-locally, per the launch order's standing instruction.
+## `2026-08-02` — `epic-298` (Admiral retrospective)
+
+**Shape.** 17+ dispatches across 3 waves; 9 of 12 issues closed at writing (#307 awaiting Tommy's verdict, #308 in flight, #310 written but undispatched). **#305 alone consumed eight successive commanders**; three died mid-gate. ~40 issues filed (#313–#398), **none of which is in the epic's definition of done** — that volume is the run's real output.
+
+**The single most important thing this run produced is a correction to its own premise.** Mid-run, Tommy withdrew the two-bin rule from field capture: *"there are no catastrophic failures, just workarounds and inefficiencies... the thing that is finding the episodes cannot make a call on the importance, that requires a more global view."* An episode is now **an observation, not a diagnosis** — observable issue, context, effect including the workaround **and how many times it was needed**. That invalidated live artifacts inside the same run: #308's disposition table and its own acceptance check both ended up asserting withdrawn rules, and both were annotated rather than deleted.
+
+**The evidence for his ruling was sitting in this run.** The same defect surfaced at six surfaces — the state note, the inbox, shipped docs, my own launch briefs, a reviewer's frozen in-flight survey, and a SHA that expires on squash-merge. **No single agent saw more than one.** Each, asked to rate its instance, would have said "minor" — correctly, and uselessly. Severity is a property of the pattern; only recurrence is available locally.
+
+### What I got wrong, and the one pattern under all of it
+
+**Twelve claims failed against the tree. Every one was caught by the commander I handed it to** — never by me, never by a check. Beyond those: three merges past in-flight work (**after** I wrote #338 requiring branch FINAL/PENDING declarations), a worktree swept under a live commander whose suite died with it, and **the destruction of this run's own audit log** by fast-forwarding local `main` while `.agent-work/` was still gitignored at the old base. 292 entries were recovered from scratchpad staging files and by mining the session transcript; some are permanently lost.
+
+**They are all one defect: I reason about what *happened*; the tree records what is *in force*.** The sharpest instance came late — I told a commander a SHA "does not exist in your worktree" having checked only `git rev-parse HEAD` and an unpushed count. **Neither can establish non-existence.** I asserted the stronger claim from the weaker check, **inside a message correcting that commander for exactly that class of error.** It pushed back, was right, and gave the reason that made it worth logging: *"a doctrine rule grounded in an example that dissolves on inspection is the same defect we spent today naming."* **A false instance attached to a true rule is worse than no instance.**
+
+### Improvement signals
+
+- **A check whose output is identical in the healthy and the defective world cannot discriminate, however correctly it runs.** Ten costumes (#337), three routes: vacuity; **wrong question** (a *can-this-fail?* sweep is structurally blind to *does-it-cover-what-it-claims?*, because the answer is "yes" in both worlds); **wrong iteration set** (a comparison iterating one side never enumerates what exists only on the other). **One mechanical detector catches all three: any guard that loops must assert what it looped over.** I committed the third variant five times in a single day.
+- **A zero from the wrapper while the payload says otherwise — four layers, one shape.** CI green for a superseded head; `exit=0` with a plausible duration on a transcript two drivers wrote; `gh pr checks` exiting 0 while the text read `pending` for a **measured 8m42s**; and *committed is not reachable* — "I committed it" is metadata about intent, "it is reachable from `origin`" is the claim that matters.
+- **Sort work by what survives your death, not by what the spine lists next: push → file → gates → PR.** Grounded, not theoretical: of three commanders that died mid-gate on #305, **only committed, pushed, or filed work reached me.** No spine currently encodes this ordering.
+- **A frozen gate imperative can be measured false by the work it authorises, with no supersede mechanism (#390).** Eight commanders each had to remember not to copy a disproven claim forward; the correction lived only in Admiral messages, which do not survive the session. **Two commanders hand-built the missing mechanism as a state-note banner.**
+- **The context gauge was silent for the entire multi-day run (#383)** — subagents inherit the parent session_id, so every crew claim adds a binding (30+). **The Governor fails on exactly the runs that need it most; the failure is anti-proportional to risk.** The #265/#283 fix worked — the engine announced its own blindness — and I read past it once inside a long `current` output and never acted.
+- **A null that cannot discriminate is not a result.** The honest-null clause protects a *measured* negative, never an *unattributable* one. Two arms this epic would have nulled by construction — once because the corpus was declined, once because the contract was merged but never installed.
+- **A void criterion must be independent of the outcome and applied blind.** #307 voided a whole capture set on *two `session_id`s in one transcript* — a fact about process identity that says nothing about the result — never scored it, and preserved the void set. That is what separates hygiene from fishing.
+
+### What worked
+
+**Every cold plan critic this epic caught a blocking defect. No exceptions.** Declaring spent mutations forced successors onto novel ground and produced the run's best findings. **Two subordinates declined a superior's framing on evidentiary grounds and were right both times** — one refusing an incoherent instruction I had given it, one refusing to be a false example. Both refusals produced better artifacts than compliance would have.
+
+**Lessons bank:** the 20-heading cap **refused adds from two independent commanders on the same day** — the bank is a closed intake, not an untidy one. Both routed to the tracker rather than banked. #308 is removing the cap.
