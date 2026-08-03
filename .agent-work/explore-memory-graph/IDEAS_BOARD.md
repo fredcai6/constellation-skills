@@ -129,18 +129,27 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 | All three wins (focused retrieval → cross-domain inspiration → compounding) in scope, ordered | Settles scope + order; does NOT settle how modes coexist | cycle-1, human |
 | Mode selection is **system-owned**; interface is `question + context`; system dials exploration level | Settles who chooses (the "librarian") | cycle-1, human |
 | **The dial rule**: direct trace → silent core; unclear OR strong pull → surface associated info. Default silence, expansion triggered. Interpret-vs-answer = focus-vs-inspiration = one dial | Settles librarian behavior; does NOT settle what "pull" *is* mechanically, or static-vs-learned | cycle-1, human |
+| **Phasing**: learned pull is the long-run destination (agreed) but DEFERRED — "learning" is hard to define now. Near-term = a **reliable traversal mechanism** with static/simple pull. Steps 2–3 of the walk keep the same shape static-or-learned, so nothing built now is thrown away | Settles sequencing; does NOT settle grammar, entry, or the eventual learning rule | cycle-1, human |
 
 ## Open threads
 
-- **THE live thread — what is "pull," and is it static or learned?** The dial rule leans on
-  "strong pull" but hasn't defined it. Static (author-assigned edge weights → librarian is
-  fixed) vs. learned (pull shaped by which opened doors got *used* → librarian improves with
-  use). **Bridge:** if learned, win #3 (compounding memory) *is* the pull-learning built for
-  win #2 — no separate mechanism. If static, compounding needs another source. *(Human
-  deciding.)*
+- **THE live thread — the reliable traversal mechanism (near-term focus).** Minimum grammar
+  strawman: *weighted edges over standable nodes* (node = a place with neighbors; edge = a
+  weight = pull; edge-typing optional-for-now, the federation hook). The walk: **enter → step
+  (follow highest pull, track budget) → stop (the dial; bounded by budget + visited-set,
+  always halts)**. Steps/stop shaped by the dial already; grammar starts minimal.
+- **The crux — step 1, "enter."** question+context → start node(s) is its own retrieval
+  problem, *before* the graph can help. **Hypothesis: `episodes/` is the front door** — episode
+  retrieval finds the entry episode; the episode is/points-to a node; traverse from there.
+  Resolves the graph↔episodes interface AND entry in one move, keeps episodes doing what
+  they're good at. *(Human reacting: episodes-as-entry vs. graph-owns-its-own-index.)*
 - **What sets the dial (query side)?** Signals of "direct trace" vs. "unclear": question
   specificity, agent state (stuck/looping → widen; mid-execution → tighten). Query-side
   input; "pull" is the graph-side input. Both feed the one dial.
+- **FUTURE PATHWAY (deferred, not rejected) — learned pull → compounding memory.** When
+  "learning" is definable: pull shaped by which opened doors got *used*. If built, win #3
+  (compounding) falls out of the win-#2 machinery for free. Revisit after the traversal
+  mechanism is reliable.
 - **Is the librarian a model?** "Determine what you really need" is judgment — likely
   stochastic/LLM, not deterministic code — but the dial rule means it only runs heavy on
   ambiguity/pull, not on direct traces. Cost/latency/placement open. Grounds vs. #308 rhyme sensor.
