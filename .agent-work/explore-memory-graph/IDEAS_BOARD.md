@@ -40,6 +40,31 @@ with the episode store; "replace vs. index over episodes" is not a live question
 - **Two speeds — fast sloppy working graph + maintained long-term graph** — cheap-write during the task, then an end-of-task *merge-up* of proven conceptual changes; sloppiness filtered at promotion, not carried into long-term memory.
 - **Federation with external graphs** — same node/edge shape means public Wikipedia-style graphs plug in as memory, subject to provenance/trust.
 
+## Working model: the librarian (cycle 1)
+
+*The organizing metaphor, human-chosen. Not yet a spec — the frame the rest hangs on.*
+
+**Interface = `question + context`.** The agent submits what it wants to know and its
+situation; nothing else. No node ids, no mode names, no traversal knobs. The *intent* is
+carried by how the question is framed; the system translates it.
+
+**Two layers, matching the repo's own mechanics/judgment split (`docs/EPISODE_STORE.md`):**
+- **The stacks = the graph.** Mechanical: stores, links, traverses. Never judges what you
+  "really" need.
+- **The librarian = a judgment layer on top.** Reads question+context, **dials the
+  exploration level**, decides what to hand back. Inference, not lookup — plausibly the same
+  *stochastic-sensor* class the repo already uses for episode "rhyme" (#308), aimed at a new
+  job. **System owns mode selection** (human-settled), so agents never think about thinking.
+
+**Candidate synthesis — the tension may dissolve.** Instead of *modes you switch between*, one
+response with **two layers**: a focused **core** (exactly what was asked) + a few labeled
+**doors** (nearby shelves you might not know about). Focus lives in the core; inspiration lives
+in the optional doors you can ignore. The "dial" is then not a mode selector but **how many
+doors and how far afield** — set by the librarian from your question/context. Cross-domain
+inspiration becomes *how wide the doors open*, never a vector you're forced to chase. If this
+holds, "multiple traversal modes" collapses to one traversal + a librarian-set dial (much
+smaller to build). **Status: hypothesis, needs the human's push-back.**
+
 ## Shotgun divergence (cycle 1, un-culled)
 
 *Cheap, wide, wild-sanctioned. Nothing here is a decision or even a candidate yet — culls and clustering happen at consolidation, with reasons. Loosely grouped for reading only.*
@@ -93,10 +118,14 @@ with the episode store; "replace vs. index over episodes" is not a live question
 | Directed traversal is a *feature enabled by* the graph, not a rival to it | Settles the framing; does NOT settle the traversal design | cycle-1, human |
 | The graph is additive to `episodes/`, not a replacement | Settles coexistence; does NOT settle the graph↔episode interface | cycle-1, human |
 | All three wins (focused retrieval → cross-domain inspiration → compounding) in scope, ordered | Settles scope + order; does NOT settle how modes coexist | cycle-1, human |
+| Mode selection is **system-owned**; interface is `question + context`; system dials exploration level | Settles who chooses (the "librarian"); does NOT settle interpret-vs-answer, or what sets the dial | cycle-1, human |
 
 ## Open threads
 
-- **THE tricky bit — multiple traversal modes.** Focus (narrow, deep, alignment-gated) and inspiration (wide, weak-tie, cross-cluster) pull in opposite directions. How do both live in one graph without inspiration collapsing into "chase every vector"? What *governs mode selection* — agent intent, query type, an explicit budget? *(Central thread for the next cycle.)*
+- **Interpret vs. answer — the live librarian fork.** Silent inference (reads context, just dials, no dialogue — cheap, but wrong guesses are invisible) vs. active reframing (can say "you asked X, you probably want Y" — richer research partner, but reasons about the request → a model call and possible return of the overhead we're killing). *(Central thread — human deciding.)*
+- **What sets the dial?** Signals in question/context that widen or narrow: question specificity (narrow lookup vs. open "how might we"), agent state (stuck/looping → widen for inspiration; mid-execution → tighten). Needs enumerating.
+- **Is the librarian a model?** "Determine what you really need" is judgment — likely a stochastic/LLM layer, not deterministic code. Cost, latency, and where it runs are open. Grounds against the #308 rhyme sensor.
+- ~~Multiple traversal modes as a switch~~ — possibly dissolved by the core+doors synthesis (see Working model). Held open pending human push-back.
 - **What is "excess detail," concretely?** A real transcript of agents stepping on themselves — context-window bloat vs. wrong-thread pursuit vs. retrieval noise. Different failure → different mode design. (Excursion candidate: research.)
 - **The graph ↔ `episodes/` interface** — additive, but *how*? Does the graph index episodes, cite them, or hold its own nodes that point at them? (Not "replace" — that's retired.)
 - **Node/edge grammar** — load-bearing for federation *and* for what "pull"/alignment weights attach to. Deferred until the mode design is clearer.
