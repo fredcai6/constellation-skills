@@ -14,6 +14,29 @@ This gate is built so that **not breaking the kernel is a win**, not a shortfall
 
 **Do not treat a "no" as a null you need to apologise for, and do not go looking for a reason to say yes.** An honest *insufficient evidence* delivered early is worth more than a laboured yes. **The one outcome that is a failure is an unattributable verdict** — a conclusion that cannot say which of the three it is.
 
+## Evidence that arrived AFTER this order was drafted — read it before you plan
+
+**#307 closed with a PASS verdict, and its result bears on your gate.** Pasted, not pointed at.
+
+**Measured on the corpus at `cfa2c40`:**
+
+| surface | size | occurrences of "map" |
+|---|---|---|
+| `skills/commander/SKILL.md` (always-loaded) | **16 lines** | **0** |
+| spine template, `context` imperative | 2,210 chars | 9 |
+| spine template, `plan` imperative | 3,393 chars | 11 |
+| spine template, `understand` + `reconcile` | ~1,500 chars | 6 |
+
+The #304 map-first contract exists **only** in per-task spine imperatives. It is absent from the always-loaded skill text entirely. **And it moved the number: `map_before_src` went 0/4 → 4/4.** The PRE arm was not map-deprived — the map was present, cited in the repo's auto-loaded `CLAUDE.md`, read in 4/4 runs and useful — and still scored **0/5 on orientation order.** Whole-doctrine always-loaded delivery did not move it; **per-task delivery at the moment the task fires did.**
+
+**This is one measured datapoint in favour of the fragment thesis, and you must carry BOTH bounds on it:**
+
+1. **It measures *placement*, not *decomposition*.** One contract moved to a per-task slot is not a role broken into a kernel plus fragments. Suggestive, not proof.
+2. **The commander is ALREADY split — on a different axis.** `1e8043a` (#107) split it by **mode**: `constellation-commander` (live human, 16-line `SKILL.md`) and `constellation-commander-delegated`, both over a mode-neutral `references/commander-core.md`. **B2 proposes a split by *content*.** Do not report the mode split as though it satisfies B2, and do not report B2 as unstarted work on a monolith — the always-loaded surface is already small. **Say which axis you measured.**
+3. **The manipulation behind the 0/4→4/4 was 8 days and +31 files, not #304 alone.** Containment proven, exclusivity not.
+
+**Do not let this evidence tilt you toward yes.** The three-outcome framing above is unchanged, and *"deletion pressure alone suffices"* is still a win. What this evidence changes is that the gate now has a **direct signal** where it previously had none — use it to make the verdict *attributable*, not to make it positive.
+
 ## The two evidence gates
 
 **1. Trends — cheap and mechanical, from git history.**
@@ -41,6 +64,8 @@ This gate is built so that **not breaking the kernel is a win**, not a shortfall
 5. **Pin every number in prose to a revision, and at PR time to the PR number** — this repo squash-merges, so SHAs stop existing in `main`.
 6. **Assert against behaviour, never against text describing behaviour.**
 7. **State your limitation FIRST, not in a footnote.** #307's arm is trustworthy because it opened with *"the manipulation is 8 days and +31 files, not #304 alone"*. **An arm that overstates its own manipulation is worth less than one that bounds it.**
+8. **Pin a claim to the revision you measured it at, or it outlives its subject.** The Admiral wrote *"delivery is broken"* into this epic's routing ledger, then went on asserting it after the thing it described had been fixed — a state observed once and carried as a permanent property. **Your trend measurement is nothing but a sequence of such reads; every number you report must name the revision it came from.**
+9. **You do not get to rule that a finding earned its place.** The Admiral wrote *"doctrine that earned promotion — graduate"* into the same ledger and had to retract it: naming a verdict pre-empts the mechanism meant to make it. **The same applies to you and the kernel break — assemble evidence, name the three outcomes, and let Tommy rule.**
 
 ## Stop conditions
 
