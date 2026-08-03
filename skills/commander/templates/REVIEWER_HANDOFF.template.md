@@ -1,6 +1,6 @@
 # Reviewer Handoff
 
-> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
 
 Concise fragments. Omit filler.
 

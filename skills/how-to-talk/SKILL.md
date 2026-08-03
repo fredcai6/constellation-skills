@@ -15,7 +15,7 @@ Make each sentence carry one grounded point in the plainest words that fit — i
 **Words carry meaning.**
 
 1. Use the plainest word that carries the exact meaning.
-2. Use one name for one thing, and keep it the same throughout (the project `GLOSSARY.md` is the source of truth — see below).
+2. Use one name for one thing, and keep it the same throughout (`docs/agents/GLOSSARY.md` is the source of truth — see below).
 3. Prefer the verb to its noun form — *decide*, not *make a decision*.
 4. Choose each word for what it means, not the register it signals. Every word should be one the reader could act on.
 
@@ -44,4 +44,4 @@ These rules illuminate the point of a sentence; they do not build an austere lan
 
 ## One name for one thing — the glossary
 
-Rule 2 holds only if names stay fixed across artifacts, agents, and sessions, so it is backed by the project glossary rather than memory. Consult `templates/GLOSSARY.template.md` before naming a concept, and add a row when you coin one.
+Rule 2 holds only if names stay fixed across artifacts, agents, and sessions, so it is backed by the project glossary rather than memory. `docs/agents/GLOSSARY.md` — compiled and confirmed by `constellation-charter`, read by every role — is that source of truth. Consult it before naming a concept; when a term is missing, propose a canonical one rather than coining a synonym.

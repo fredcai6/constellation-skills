@@ -1,6 +1,6 @@
 # Prototype Handoff: `<short title>`
 
-> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
 
 One question in, one scoped answer out. Fill every field — a missing question or branch sends this handoff back.
 

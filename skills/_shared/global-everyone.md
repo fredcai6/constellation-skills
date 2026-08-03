@@ -112,7 +112,7 @@ bites (`skills/reviewer/SKILL.md`); don't assume survey parity elsewhere.
 - One canonical path; no speculative abstraction.
 - Keep Constellation context and architecture docs current when their meaning changes.
 - Every artifact you write — report, verdict, handoff, comment, doc, commit body, note — follows
-  `constellation-how-to-talk`: clear, concise, grounded, one name per thing (the project `GLOSSARY.md`).
+  `constellation-how-to-talk`: clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
 - `/compact` is user-level; most harnesses don't expose it to agents. Treat context headroom as
   opportunistic (compact if available, else rely on auto-compaction) folded into the step that needs it,
   not as its own checkable gate — a step whose only sanctioned path is "skip" is ceremony, not gate.

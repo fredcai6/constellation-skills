@@ -1,6 +1,6 @@
 # Admiral Log — `<epic-id>`
 
-> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
 
 Contract: `.agent-work/<epic-id>/LATITUDE_CONTRACT.md` · Plan: `<wave plan — issues per wave, checkpoints>`
 
