@@ -515,7 +515,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-308 --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         },
         {
           "id": "c2",
@@ -524,17 +525,41 @@
             "kind": "command",
             "command": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-308 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -546,7 +571,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream complete: feedback closed, retrospective in .agent-work/AGENT_FEEDBACK.md, all work committed and pushed."
         }
       ],
       "postconditions": [
@@ -615,7 +641,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -630,7 +656,7 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T19:23:24.450655+00:00",
-    "last_heartbeat": "2026-08-03T00:30:56.806947+00:00",
+    "last_heartbeat": "2026-08-03T00:31:36.049746+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -692,6 +718,13 @@
       "why": "The summary the Admiral needs is not the list of gates but the two numbers and their honesty: 23 migrated and 11 of 23 carrying an unknown, with zero unknown observed-behavior fields, because that last figure is what says the store was filled with what existed rather than with what would look complete. The rest of the run is best summarized as its checks being wrong twice and corrected rather than waived, and its own guard going red against its author -- a run whose acceptance rests on greens it never interrogated would have reported the same shape with none of the content.",
       "mechanical": false,
       "ts": "2026-08-03T00:27:03.912693+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "The retrospective's real content is where this run was wrong: two frozen checks inverted, a schema claim in my launch order that did not hold, an over-inclusive blast radius in one handoff and a wrong count in another. Its own observations went to EPISODES rather than the bank, which is the architecture this issue built, applied to itself on the first run that could. And the feedback gate surfaced #406 by failing for the wrong stated reason -- the installed skill could not read a header the repo's writer now emits, and blamed the file. Repointed to the repo copy and filed, because a waiver would have hidden a break every consuming repo will meet at reinstall.",
+      "mechanical": false,
+      "ts": "2026-08-03T00:31:19.050041+00:00"
     }
   ],
   "amendments": [
