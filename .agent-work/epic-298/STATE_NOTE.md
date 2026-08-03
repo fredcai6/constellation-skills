@@ -6,39 +6,22 @@ Rewrite this **before** launching any detached or multi-hour process, and again 
 
 > **REBUILT 2026-08-02 after being destroyed.** `.agent-work/` was gitignored at `b69e6c8`; fast-forwarding local `main` to `4cec87a` (where #326 made it tracked) overwrote this file and `ADMIRAL_LOG.md` with main's wave-0 versions. The log was recovered (292 entries; scratchpad + session transcript) and **committed at `3595955`**. This note was rewritten from live state, not recovered. **Both files are TRACKED now, so a future clobber shows in `git status`.**
 
-- **step:** `execute` · **10 of 12 issues CLOSED.** Remaining: **#308** (work COMPLETE, **PR #407 open, CI pass, BLOCKED ON A HUMAN MERGE**), **#310** (not started, blocked on #407 merging), then `closeout`.
+- **step:** `execute` · **11 of 12 issues CLOSED.** Remaining: **#310 ONLY** (B2 gate; launch order written, committed and updated with post-draft evidence), then `closeout`.
 
-## ⛔ THE ONE THING BLOCKING EVERYTHING — read this first
+## ✅ BLOCKER CLEARED 2026-08-03 — #407 merged, corpus reinstalled
 
-**`gh pr merge 407 --squash --delete-branch` was VETOED by the harness auto-mode permission classifier.** It is **not** a CI failure, **not** a conflict, and **not** a stale head:
+**Tommy merged PR #407 as `a4934cb`; #308 auto-closed.** The classifier veto on `gh pr merge` is real and unchanged — **filed as #408** — but it is no longer blocking: Tommy ran the merge himself. **A resuming agent must still not attempt `gh pr merge` unattended.**
 
-- PR #407 state **`CLEAN` / `MERGEABLE`**, CI status text reads **`pass`** (5m58s, run `30775293156`)
-- **PR head == branch tip == CI-tested SHA == `573842e`** — all three verified equal before the attempt
-- The latitude contract pre-cleared *"gh issue+pr"*. **Contract pre-clearance does NOT bind the classifier** (the #145 shape).
+**#406 discharged in the same breath and VERIFIED, not assumed.** Corpus reinstalled from `a4934cb` (`--agent claude --scope user --force`, **no `--wire-hooks`** — `settings.json` untouched, still reports UNWIRED). New digest **`sha256:e8bac5a3…`**. Re-ran the exact probe that proved the skew, against the live post-merge header: **both installed parsers now True** (they were both False), **count asserted at 2**.
 
-**A resuming agent must NOT try to route around this.** Ask Tommy to run the merge, or to grant the permission. Everything below waits on it.
+**Harvest confirmed on `main` before the sweep** — both retrospectives in `AGENT_FEEDBACK.md`, `LESSONS.md`, `notes-308.md` (28 KB, carries the 23-row table), and `.agent-work/archive/2026-08-02-issue-308/`. `CONSTELLATION_FEEDBACK.md` was last touched by #309: commander-308b exported nothing to it, an empty result rather than a missed harvest. **`e298-308` then swept and its remote branch deleted.**
 
-### ⚠️ THE MERGE IS NOT THE LAST STEP — #406 REQUIRES A REINSTALL IMMEDIATELY AFTER IT
-
-**Merging #407 BREAKS the installed corpus until `python scripts/install_constellation.py` is re-run.** Verified behaviourally, not taken from the commander's report: `STATE_RE` extracted from each installed copy and run against the actual post-merge header —
-
-| parser | parses post-merge header? |
-|---|---|
-| installed `constellation-admiral` | **False** |
-| installed `constellation-commander` | **False** |
-| repo `main` today (pre-merge) | **False** |
-| the branch's copy | **True** — `cap=` made a tolerated-and-discarded non-capturing group so legacy playbooks keep parsing |
-
-Blast radius **enumerated, not assumed**: exactly **two** installed parsers and **two** repo files mention `playbook-state`. Nothing else reads it.
-
-**Main is self-consistent before the merge and after it. The only broken window is the installed corpus, and only once #407 lands.** So: **merge → reinstall, in that order.** Reinstalling *before* the merge installs the fix's absence. **The reinstall is PRE-CLEARED** (install only, never `--wire-hooks`) — do it unattended the moment the merge lands.
-
-**DO NOT SWEEP `e298-308` UNTIL #407 MERGES.** commander-308b was **not fenced**, so it wrote its trio to the worktree root (`AGENT_FEEDBACK.md` 1898 lines, `LESSONS.md` 26, `CONSTELLATION_FEEDBACK.md` 210). Two of the three are carried **only** by PR #407 — sweeping first destroys the run's learning. (`CONSTELLATION_FEEDBACK.md` does not differ from main: the commander exported nothing, an empty result, not a missed harvest.)
+**LESSON PAID FOR TWICE THIS RUN:** I kept committing epic log entries to `main` while #407 was open, which staled the resolved merge behind six commits and re-conflicted the PR on the same shared append target (`AGENT_FEEDBACK.md`) — costing a second resolution and a second CI cycle. **Do not write to `main` while a PR you intend to merge is open.**
 
 **#307 CLOSED — Tommy ruled PASS (`cfa2c40`).** `map_before_src` **PRE-B 0/4 → POST 4/4** (per task, first map/first source: #690 36/23→17/25 · #688 27/23→21/37 · #698 57/25→29/46 · #704 23/7→19/22 · #716 a literal row in both arms). **`read_at_bootstrap` 0/4 in BOTH arms** — first map reads land at calls 17/21/29/19 because the spine runs `init` before `context`; **"map-first" as delivered means FIRST-AMONG-CONTENT, not first-among-actions**, and Tommy accepted that as the win ("before source was intent"). **Limitation stated first:** manipulation was `74953936`→`3595955`, **8 days and +31 files, not #304 alone** — containment proven, exclusivity not. Record: `post/POST_RECORD.md`.
 
 **CARRY INTO #310 (filed to the issue 2026-08-02):** #304's result is **evidence for B2's fragment thesis** — the map contract lives *only* in per-task spine imperatives (`context` 2210ch/9 mentions, `plan` 3393ch/11) and **`skills/commander/SKILL.md` has ZERO** occurrences; per-task delivery moved a number that always-loaded delivery could not. **Bounds:** it measures *placement*, not *decomposition*, and the commander is already split on the **mode** axis (`1e8043a`/#107), which is a different axis from B2's content split.
-- **slug:** epic-298 · main checkout `C:/Programs/constellation-skills`, local `main` at **`7bc79e5`** (log commits only; #407 not yet merged).
+- **slug:** epic-298 · main checkout `C:/Programs/constellation-skills`, local `main` at **`a4934cb`** (#407 merged).
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-298/spine.json current`
 - **pid:** harness-tracked Agent dispatches, no OS pid. **LIVENESS = filesystem mtime under the worktree, never the engine heartbeat.**
 - **expected artifact:** #407 merged → sweep `e298-308` (harvest already verified) → dispatch #310 → `closeout`.
@@ -50,7 +33,8 @@ Blast radius **enumerated, not assumed**: exactly **two** installed parsers and 
 | path | branch | state |
 |---|---|---|
 | ~~`e298-307`~~ | — | **SWEPT.** PR #398 merged `19667a3d`; #307 closed PASS. |
-| `../constellation-skills-wt/e298-308` | `epic-298/308` | **commander-308b DONE — spine TERMINAL.** Pushed `573842e`; **PR #407 open, CI pass, awaiting a human merge.** **DO NOT SWEEP — see the blocker above.** It drove reconcile→archive but **did not open the PR itself**; I opened it. |
+| ~~`e298-308`~~ | — | **SWEPT**, remote branch deleted. PR #407 merged `a4934cb`; #308 closed. Harvest verified on `main` FIRST. It drove reconcile→archive but **did not open the PR itself** — every commander this epic that reached a terminal spine had to be chased for the PR. |
+| `../constellation-skills-wt/e298-310` | `epic-298/310` | **to provision** — commander-310, the last issue |
 | ~~`e298-305`~~ | — | **SWEPT.** The earlier `Permission denied` had already unregistered it; `prune` finished the job. **Its two stranded commits were recovered via PR #391, merged `8ab0173e` — `scripts/prove_docstring_only.py` is on `main`, verified.** |
 | `governor-262`, `governor-264` | — | stale, from abandoned epic-267. **Not mine to sweep** |
 
@@ -84,4 +68,4 @@ Lessons audit with fresh context (brief at `LESSONS_RUN_BRIEF.md`, routing at `B
 
 **ARCHIVE MECHANISM:** copy `.agent-work/epic-298/` into a fresh worktree off `origin/main` and open a PR. **Do not branch-checkout in the main checkout** — that is what destroyed this file.
 
-_Updated: 2026-08-03T01:15:00Z_
+_Updated: 2026-08-03T01:45:00Z_
