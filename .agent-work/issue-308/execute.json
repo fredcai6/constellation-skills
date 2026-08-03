@@ -563,7 +563,8 @@
             "kind": "command",
             "command": "python .agent-work/issue-308/checks/lesson_intake_is_cut.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-cut-intake-implement-1"
         },
         {
           "id": "c2",
@@ -572,7 +573,8 @@
             "kind": "command",
             "command": "python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\""
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-cut-intake-implement-2"
         },
         {
           "id": "c3",
@@ -581,7 +583,8 @@
             "kind": "command",
             "command": "python -c \"import json,glob; [json.load(open(p,encoding='utf-8')) for p in glob.glob('skills/*/templates/*.json')]\""
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-cut-intake-implement-3"
         },
         {
           "id": "c4",
@@ -590,7 +593,8 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-cut-intake-implement-4"
         }
       ],
       "constraints": [
@@ -599,11 +603,56 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-cut-intake-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-308/checks/lesson_intake_is_cut.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-cut-intake-implement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json,sys; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8')); refs=d['tasks']['context']['context_refs']; sys.exit(2) if not refs else None; bad=[e['path'] for e in refs if 'LESSONS.md' in e['path']]; print('context_refs entries:',len(refs),'| naming LESSONS.md:',bad); sys.exit(1 if bad else 0)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-cut-intake-implement-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json,glob; [json.load(open(p,encoding='utf-8')) for p in glob.glob('skills/*/templates/*.json')]\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-cut-intake-implement-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -623,13 +672,14 @@
           "id": "c1",
           "statement": "reviewer verdict recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT at .agent-work/issue-308/crew-handoffs/g5-review-result.md, verdict ACCEPT (engine APPROVE; survey g5-review/review.json, 13 checks, 0 blockers, 3 observations, 4 triage candidates). All three hunted classes searched for and NOT FOUND, each by an independent route: (1) the reviewer built its own enumeration -- 34 files by semantic keys (lessons/playbook/Active section), scope wider than skills/, no allowlist -- read all 34, and found zero surviving read-intake sites, with four corroborating nulls each derived from a command; (2) every edited imperative read end to end plus every pre/postcondition on both edited spine steps -- none names a lessons read; (3) LAUNCH_ORDER's invariants parenthetical byte-identical and the charter-lite carrier sentence proven untouched by a diff-grep returning 0. The guard's green was proved non-vacuous by mutation (M1 red) and its three blind spots mapped by three more mutants that stayed green -- scope beyond skills/, the allowlist short-circuit running before any marker test, and semantic phrasing that never says LESSONS.md. All three swept by hand, clean. The reworked durable-root tests were proved still able to fail: three mutants (durable_agent_work swap, resolve-from-base_dir, re-add the declaration) each went red, so the synthetic fixture kills the same mutants the shipped one did. CORRECTION TO MY OWN HANDOFF: COMMANDER_SPINE held SIX .agent-work/LESSONS.md occurrences before and FOUR after, not five and three -- the feedback imperative invokes apply_lessons_delta.py twice. The reviewer found it by verifying the writer by content rather than by count, which is what the handoff told it to do."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -653,7 +703,8 @@
           "id": "c1",
           "statement": "verdict integrated; greps reproduced by the Commander",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Verdict ACCEPT integrated. Acceptance reproduced in my own hands at HEAD: lesson_intake_is_cut.py exit 0, the corrected c2 exit 0 (context_refs entries: 5, naming LESSONS.md: []), all skills/*/templates/*.json parse, and the full suite re-run by me -- 1621 passed, 2 skipped, 541 subtests, 414.33s -- not read from either crew transcript. Both crew results verified fresh via run_crew.py --verify-result. The writer was verified surviving BY CONTENT, not by count: apply_lessons_delta.py (x2), verify_lessons_applied.py and the deny_globs entry all still present in the Commander spine, and the reviewer drove the writer end to end on a scratch copy (add landed, run-tick 40 -> 41, real bank untouched, two malformed deltas correctly refused). Correction carried forward: my handoff said 5 occurrences before and 3 after; it is 6 and 4, because the feedback imperative invokes apply_lessons_delta.py twice. The two follow-ons the review raised are filed as #403 -- the acceptance guard is run-local so nothing shipped keeps this cut true, and it has three demonstrated blind spots (scope beyond skills/, its allowlist short-circuiting before any marker test, and semantic phrasings that never name LESSONS.md), all swept by hand and clean today; and downstream repos' already-compiled docs/agents/AGENT_GUIDE.md still carry the read instruction, so the fleet cutover is incomplete until consumers re-run Charter."
         },
         {
           "id": "c2",
@@ -662,17 +713,30 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": [
         "docs/EPISODE_STORE.md",
@@ -691,7 +755,7 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T20:02:38.399197+00:00",
-    "last_heartbeat": "2026-08-02T22:37:34.512616+00:00",
+    "last_heartbeat": "2026-08-03T00:12:32.206618+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -746,6 +810,27 @@
       "why": "The migration is complete and nothing was judged: 23 episodes, 20 of them the lessons one-for-one, none merged and none dropped. The two numbers that matter are 23 migrated and 11 of 23 carrying an UNKNOWN field, and the second is the honest one -- zero observed-behavior fields are unknown, so #342's fear that a thin lesson would force a fabricated observation did not materialize on any of the 20. Where the schema would not take an honest gap I filed it (#399, #400) rather than inventing content or relaxing a check. The sharpest moment of the gate was migration_done.py going red against me: the three run-observations carried lesson: markers for lessons that never existed, and the store was fixed rather than the check. Suite re-run green after committing the episodes (1621/2) -- the first red was test_canon_episode_store_untouched objecting to 23 legitimately-new untracked files, which is worth noting as a friction, not a defect in this work.",
       "mechanical": false,
       "ts": "2026-08-02T22:35:38.607897+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g5-cut-intake-implement",
+      "why": "The read path is cut at all six sites and the writer is intact -- 3 of the Commander spine's 5 LESSONS.md occurrences survive, each asserted by content (apply_lessons_delta.py, verify_lessons_applied.py, deny_globs), not merely by count. The gate's real hazard was over-reach, and it was defused before dispatch by correcting c2: as frozen it was a grep over that filename, which only the writer's destruction could have satisfied. The guard's count moving 11 files to 10 is LAUNCH_ORDER.template.md losing its only mention and dropping out of the git grep -l set, not a site hiding -- checked rather than skimmed. Removing the declaration deletes the corpus's only shipped durable entry; the tests that used it as a fixture were reworked onto a synthetic one and gained an assertion that no durable declaration ships, so a re-added one now fails instead of silently changing what they exercise. Suite 1621/2, run by me.",
+      "mechanical": false,
+      "ts": "2026-08-02T23:33:31.411581+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g5-review",
+      "why": "The review's value was an enumeration built on axes the acceptance guard cannot see -- semantic keys instead of the filename, scope beyond skills/, no allowlist -- because a guard going green is the failure mode this gate exists to remedy. It found no surviving site on either route, and mapped exactly where the guard is blind rather than declaring it sound. My own handoff carried a wrong count (5/3 rather than 6/4) and the instruction to verify by content is what caught it, which is the same lesson this issue migrated as episode issue-308-002. Two follow-ons are real and neither blocks: the guard is run-local so nothing ships to keep this cut true, and downstream repos' already-compiled AGENT_GUIDE.md still carry the read instruction -- the fleet cutover is not complete until consumers re-run Charter. Filing both.",
+      "mechanical": false,
+      "ts": "2026-08-02T23:57:41.104384+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g5-integrate",
+      "why": "g5 closes with the read path cut and the writer demonstrably alive. The thing worth carrying out of this gate is that BOTH of its checks were wrong when frozen and both were corrected rather than waived: c2 was a grep that only the writer's destruction could satisfy, and c1's guard is narrower than its name claims. A gate whose checks are trusted because they are green is the failure this whole issue is about, so the honest close is that the cut is verified at this commit and nothing shipped keeps it true -- filed as #403, not asserted as done.",
+      "mechanical": false,
+      "ts": "2026-08-03T00:12:32.206590+00:00"
     }
   ],
   "amendments": [

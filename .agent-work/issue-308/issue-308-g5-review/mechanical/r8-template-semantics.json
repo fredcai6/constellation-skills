@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r8-template-semantics",
+  "mechanical": {
+    "run": "issue-308-g5-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 2,
+    "spine-step": "r8-template-semantics",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-308-g5-review-r8-template-semantics@f476117d594c6bd7bd5254a9adaa7d5eb894e372",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-308-g5-review",
+    "generated_at": "2026-08-02T23:53:05Z"
+  }
+}

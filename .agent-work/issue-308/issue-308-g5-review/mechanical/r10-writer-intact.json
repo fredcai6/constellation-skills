@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r10-writer-intact",
+  "mechanical": {
+    "run": "issue-308-g5-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 2,
+    "spine-step": "r10-writer-intact",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-308-g5-review-r10-writer-intact@2ba613adbc88611d3392ee9bd78f147a7464d5a3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-308-g5-review",
+    "generated_at": "2026-08-02T23:53:40Z"
+  }
+}
