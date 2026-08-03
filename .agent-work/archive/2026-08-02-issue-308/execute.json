@@ -753,13 +753,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "commander-308-e298",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T20:02:38.399197+00:00",
     "last_heartbeat": "2026-08-03T00:12:32.206618+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-03T00:33:11.322194+00:00"
   },
   "why_trail": [
     {

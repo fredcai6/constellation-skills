@@ -583,19 +583,22 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-308 --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch epic-298/308 committed and pushed at d5dde96. git status --porcelain is empty and the branch is in sync with origin. Ten commits this session, each pushed at its gate boundary rather than batched at the end, because three commanders died mid-gate on #305 this epic and only pushed work survived. Merge deliberately NOT performed -- handed to the Admiral per #338."
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "The engine session lease commander-308-e298 is released as the immediately-following and FINAL journaled action of this run, after this step's closing advance -- release last, so the lease covers every journaled action including archive's own closeout. Two leases were held on this session id, on spine.json and on execute.json; both are released in that closing sequence. Attested here rather than after the fact because the release cannot precede the advance that consumes this condition."
         },
         {
           "id": "c4",
@@ -630,22 +633,46 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-308 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -654,13 +681,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "commander-308-e298",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-02T19:23:24.450655+00:00",
-    "last_heartbeat": "2026-08-03T00:31:36.049746+00:00",
+    "last_heartbeat": "2026-08-03T00:33:03.344252+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-03T00:33:11.672829+00:00"
   },
   "why_trail": [
     {
@@ -725,6 +753,13 @@
       "why": "The retrospective's real content is where this run was wrong: two frozen checks inverted, a schema claim in my launch order that did not hold, an over-inclusive blast radius in one handoff and a wrong count in another. Its own observations went to EPISODES rather than the bank, which is the architecture this issue built, applied to itself on the first run that could. And the feedback gate surfaced #406 by failing for the wrong stated reason -- the installed skill could not read a header the repo's writer now emits, and blamed the file. Repointed to the repo copy and filed, because a waiver would have hidden a break every consuming repo will meet at reinstall.",
       "mechanical": false,
       "ts": "2026-08-03T00:31:19.050041+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Closeout is a sequence, not an announcement: the work area is archived under .agent-work/archive/2026-08-02-issue-308/ so the Admiral can harvest the journals, gate evidence and both crew results rather than find them swept; the durable AGENT_FEEDBACK log stays at the .agent-work root, unarchived; the branch is pushed at d5dde96; and the lease release is the next and last journaled action. c4's staged-diff policy was evaluated against the REAL staged archive move before it was committed -- 133 files, all under .agent-work/, no denied glob, nothing oversized -- rather than only against the empty index it sees now, because a policy check over an empty staging area is exactly the vacuous green this run spent its day removing. Declared FINAL: every STANDS item is landed and verified, the withdrawn gates were dropped through the engine rather than left pending, and the six residuals are filed issues rather than open work. Merge is the Admiral's.",
+      "mechanical": false,
+      "ts": "2026-08-03T00:33:03.344215+00:00"
     }
   ],
   "amendments": [
