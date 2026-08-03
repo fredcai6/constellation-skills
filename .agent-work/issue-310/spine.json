@@ -154,7 +154,8 @@
           "id": "p1",
           "statement": "baseline context loaded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Baseline context loaded at the context step: commander-core.md, global-orchestrator.md, global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md; GLOSSARY.md and engine-config.json absent, substitutions recorded. Orientation receipt DEGRADED-NO-MAP discharged."
         }
       ],
       "postconditions": [
@@ -165,17 +166,31 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "interrogation.json",
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission + THREE outcomes are success + The two evidence gates",
+            "artifact": ".agent-work/issue-310/PROBLEM_STATEMENT.md",
+            "ratifying_authority": "epic-298 Admiral (frozen order); Tommy ratifies the kernel-break verdict itself at the epic return boundary",
+            "note": "Problem statement reconciled against the frozen order, the issue body, the Admiral 2026-08-02 comment, and the CONFIRMED spec at .agent-work/archive/2026-07-31-explore-grander-scale/DESIGN_SPEC.md line 77. Order-vs-tree reconciliation table included: 5 claims checked, 3 hold exactly, 2 hold on the substantive (map-count) claim with a ~0.5% char-count delta explained as JSON-escaped-vs-decoded. Escalation raised to the Admiral: the spec never defines 'small enough', so gate (a) cannot be adjudicated on its own terms -- flagged now, not at review."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "plan": {
@@ -521,12 +536,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "session_01V6pZVwMCev8MEck1gTUKuu",
     "status": "active",
     "claimed_at": "2026-08-03T01:49:52.414158+00:00",
-    "last_heartbeat": "2026-08-03T01:52:25.771164+00:00",
+    "last_heartbeat": "2026-08-03T01:56:49.490087+00:00",
     "claimed_by": "commander-310",
     "worktree": "C:/Programs/constellation-skills-wt/e298-310",
     "previous_session_id": null,
@@ -546,6 +561,13 @@
       "why": "This is a MEASUREMENT + EVIDENCE-ASSEMBLY issue, not a code change. B2 asks two evidence gates (corpus/per-role-surface trends from git history; a role-competence test of kernel+fragments vs monolith on a mid-spine step) and hands the kernel-break verdict to Tommy. Repo carries no architecture map, so every structural number must be derived from the filesystem at a NAMED revision. Critical frame: two axes -- the commander is ALREADY split by MODE (1e8043a/#107), B2 proposes a split by CONTENT; and always-loaded (SKILL.md + named references/) must be measured SEPARATELY from conditionally-loaded (templates/scripts), per #393.",
       "mechanical": false,
       "ts": "2026-08-03T01:52:25.771134+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "B2's gate is CONJUNCTIVE and gate (a) is decisive in the negative: per the confirmed spec line 77, if the corpus trend shows deletion IS getting the always-loaded role surface small enough, the break is NOT taken regardless of gate (b). Gate (a) is cheap and fully deliverable. Gate (b) cannot be run experimentally -- testing kernel+fragments needs a kernel+fragments decomposition to exist, and building it IS the break; only observational evidence (the refresh / job-file-not-agent-file relaunch, which is Assumption 1 in production) is available, labelled as such. CENTRAL FINDING already surfaced to the Admiral: the spec never defines 'small enough' (its own critic S2 said so), so the gate cannot be adjudicated on its own terms without inventing the missing threshold -- which launch-order rule 9 forbids. Report the trend, state what threshold would select each outcome, hand the choice to Tommy.",
+      "mechanical": false,
+      "ts": "2026-08-03T01:56:49.490071+00:00"
     }
   ]
 }
