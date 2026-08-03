@@ -6,22 +6,36 @@ Rewrite this **before** launching any detached or multi-hour process, and again 
 
 > **REBUILT 2026-08-02 after being destroyed.** `.agent-work/` was gitignored at `b69e6c8`; fast-forwarding local `main` to `4cec87a` (where #326 made it tracked) overwrote this file and `ADMIRAL_LOG.md` with main's wave-0 versions. The log was recovered (292 entries; scratchpad + session transcript) and **committed at `3595955`**. This note was rewritten from live state, not recovered. **Both files are TRACKED now, so a future clobber shows in `git status`.**
 
-- **step:** `execute` · **10 of 12 issues CLOSED.** Remaining: **#308** (commander-308b LIVE at g5, migration verified done), **#310** (not started; **launch order written and committed**), then `closeout`.
+- **step:** `execute` · **10 of 12 issues CLOSED.** Remaining: **#308** (work COMPLETE, **PR #407 open, CI pass, BLOCKED ON A HUMAN MERGE**), **#310** (not started, blocked on #407 merging), then `closeout`.
+
+## ⛔ THE ONE THING BLOCKING EVERYTHING — read this first
+
+**`gh pr merge 407 --squash --delete-branch` was VETOED by the harness auto-mode permission classifier.** It is **not** a CI failure, **not** a conflict, and **not** a stale head:
+
+- PR #407 state **`CLEAN` / `MERGEABLE`**, CI status text reads **`pass`** (5m58s, run `30775293156`)
+- **PR head == branch tip == CI-tested SHA == `573842e`** — all three verified equal before the attempt
+- The latitude contract pre-cleared *"gh issue+pr"*. **Contract pre-clearance does NOT bind the classifier** (the #145 shape).
+
+**A resuming agent must NOT try to route around this.** Ask Tommy to run the merge, or to grant the permission. Everything below waits on it.
+
+**DO NOT SWEEP `e298-308` UNTIL #407 MERGES.** commander-308b was **not fenced**, so it wrote its trio to the worktree root (`AGENT_FEEDBACK.md` 1898 lines, `LESSONS.md` 26, `CONSTELLATION_FEEDBACK.md` 210). Two of the three are carried **only** by PR #407 — sweeping first destroys the run's learning. (`CONSTELLATION_FEEDBACK.md` does not differ from main: the commander exported nothing, an empty result, not a missed harvest.)
 
 **#307 CLOSED — Tommy ruled PASS (`cfa2c40`).** `map_before_src` **PRE-B 0/4 → POST 4/4** (per task, first map/first source: #690 36/23→17/25 · #688 27/23→21/37 · #698 57/25→29/46 · #704 23/7→19/22 · #716 a literal row in both arms). **`read_at_bootstrap` 0/4 in BOTH arms** — first map reads land at calls 17/21/29/19 because the spine runs `init` before `context`; **"map-first" as delivered means FIRST-AMONG-CONTENT, not first-among-actions**, and Tommy accepted that as the win ("before source was intent"). **Limitation stated first:** manipulation was `74953936`→`3595955`, **8 days and +31 files, not #304 alone** — containment proven, exclusivity not. Record: `post/POST_RECORD.md`.
 
 **CARRY INTO #310 (filed to the issue 2026-08-02):** #304's result is **evidence for B2's fragment thesis** — the map contract lives *only* in per-task spine imperatives (`context` 2210ch/9 mentions, `plan` 3393ch/11) and **`skills/commander/SKILL.md` has ZERO** occurrences; per-task delivery moved a number that always-loaded delivery could not. **Bounds:** it measures *placement*, not *decomposition*, and the commander is already split on the **mode** axis (`1e8043a`/#107), which is a different axis from B2's content split.
-- **slug:** epic-298 · main checkout `C:/Programs/constellation-skills`, local `main` at **`cfa2c40`**.
+- **slug:** epic-298 · main checkout `C:/Programs/constellation-skills`, local `main` at **`7bc79e5`** (log commits only; #407 not yet merged).
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-298/spine.json current`
 - **pid:** harness-tracked Agent dispatches, no OS pid. **LIVENESS = filesystem mtime under the worktree, never the engine heartbeat.**
-- **expected artifact:** #307's paired evidence package (HITL — Tommy adjudicates); #308's consolidation + playbook retirement (HITL — Tommy rules the two-bin routing); then #310.
+- **expected artifact:** #407 merged → sweep `e298-308` (harvest already verified) → dispatch #310 → `closeout`.
+- **LIVENESS RULE, measured this run:** poll mtime over the **WHOLE WORKTREE**, never `.agent-work/<id>/`, with a **≥10-minute** threshold. A commander at `reconcile` writes to the SOURCE TREE, so a workbench-only probe goes silent exactly when reconcile is going well. Measured inter-write gaps reach ~7 min. I was one step from adjudicating a healthy commander idle.
+- **"No checks reported" has TWO causes and they are indistinguishable from the PR page:** no CI, or **no mergeable state** (GitHub will not build a merge it cannot create). **Check `mergeStateStatus` before concluding anything about CI.**
 
 ## Live worktrees
 
 | path | branch | state |
 |---|---|---|
 | ~~`e298-307`~~ | — | **SWEPT.** PR #398 merged `19667a3d`; #307 closed PASS. |
-| `../constellation-skills-wt/e298-308` | `epic-298/308` | **commander-308b LIVE** — at g5, 3 commits (`e33b933`). **Liveness confirmed by mtime, NOT by the engine heartbeat, which read 42 min stale while the spine was 18 s fresh.** |
+| `../constellation-skills-wt/e298-308` | `epic-298/308` | **commander-308b DONE — spine TERMINAL.** Pushed `573842e`; **PR #407 open, CI pass, awaiting a human merge.** **DO NOT SWEEP — see the blocker above.** It drove reconcile→archive but **did not open the PR itself**; I opened it. |
 | ~~`e298-305`~~ | — | **SWEPT.** The earlier `Permission denied` had already unregistered it; `prune` finished the job. **Its two stranded commits were recovered via PR #391, merged `8ab0173e` — `scripts/prove_docstring_only.py` is on `main`, verified.** |
 | `governor-262`, `governor-264` | — | stale, from abandoned epic-267. **Not mine to sweep** |
 
@@ -55,4 +69,4 @@ Lessons audit with fresh context (brief at `LESSONS_RUN_BRIEF.md`, routing at `B
 
 **ARCHIVE MECHANISM:** copy `.agent-work/epic-298/` into a fresh worktree off `origin/main` and open a PR. **Do not branch-checkout in the main checkout** — that is what destroyed this file.
 
-_Updated: 2026-08-02T21:20:00Z_
+_Updated: 2026-08-03T00:55:00Z_

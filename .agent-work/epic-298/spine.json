@@ -141,12 +141,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "CONTRACT EXPIRED + four rulings outstanding. Wave 0 agent-side work complete and verified. Full resume detail, closeout decisions, and harvest pointers are in .agent-work/epic-298/STATE_NOTE.md (rewritten to carry pointers, not copies, after a stale count was found in it). Both commanders idle by design with leases held, worktrees unswept. PR #320 CI-green at bef88f7, pending only the g4 trio.",
-        "authority_needed": "human",
-        "next_action": "Read .agent-work/epic-298/STATE_NOTE.md first -- it carries the blocking list, the g4 exception (#301's ruling alone suffices), the pre-made closeout decisions, and the harvest pointers. Then: refresh the contract, take the four rulings, relay to both commanders.",
-        "resume_reason": "Tommy ruled all four decisions and renewed the working agreement: (1) manifest lives in .agent-work/, no separate committed artifact; (2) retirement moves the file; (3) f1Brainz, plus a field report that the map reference pointed at a template; (4) NO third bin - both candidates are aspirations, Assumption 6 stands, mechanize the mechanizable; (5) contract renewed"
+        "blocker": "PR #407 (issue #308) cannot be merged: 'gh pr merge 407 --squash' is VETOED by the harness auto-mode permission classifier. Not a CI failure and not a conflict -- PR is CLEAN/MERGEABLE, CI status text reads 'pass' (5m58s), and PR head == branch tip == CI-tested SHA == 573842e, all three verified equal. The latitude contract pre-cleared 'gh issue+pr' but contract pre-clearance does not bind the classifier (the #145 shape). Did not route around the veto. #310 is blocked behind the merge, and e298-308 must NOT be swept until it lands because two of the commander's three feedback files exist only in that PR.",
+        "authority_needed": "admiral escalation to Tommy; out-of-taxonomy per the latitude contract",
+        "next_action": "Tommy runs 'gh pr merge 407 --squash --delete-branch' or grants the Bash permission; then sweep e298-308, dispatch #310 from the committed launch order, and drive closeout.",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -248,12 +248,19 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "PR #407 (issue #308) cannot be merged: 'gh pr merge 407 --squash' is VETOED by the harness auto-mode permission classifier. Not a CI failure and not a conflict -- PR is CLEAN/MERGEABLE, CI status text reads 'pass' (5m58s), and PR head == branch tip == CI-tested SHA == 573842e, all three verified equal. The latitude contract pre-cleared 'gh issue+pr' but contract pre-clearance does not bind the classifier (the #145 shape). Did not route around the veto. #310 is blocked behind the merge, and e298-308 must NOT be swept until it lands because two of the commander's three feedback files exist only in that PR.",
+      "authority_needed": "admiral escalation to Tommy; out-of-taxonomy per the latitude contract",
+      "next_action": "Tommy runs 'gh pr merge 407 --squash --delete-branch' or grants the Bash permission; then sweep e298-308, dispatch #310 from the committed launch order, and drive closeout."
+    }
+  ],
   "engine_session": {
     "session_id": "sess-0144fxRT9HovYs1rcStyJ8E6",
     "status": "active",
     "claimed_at": "2026-08-01T05:23:03.259687+00:00",
-    "last_heartbeat": "2026-08-02T21:12:16.169554+00:00",
+    "last_heartbeat": "2026-08-03T00:56:09.580408+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
