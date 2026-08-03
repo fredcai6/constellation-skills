@@ -41,7 +41,8 @@
           "id": "p1",
           "statement": "the census gate is dropped by amendment and its salvage located, so the declines recorded here are complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Census gate dropped by engine amend under Tommy's authority (2026-08-03). Salvage located and preserved at .agent-work/issue-310/trends/ with README-SALVAGE.md: measure_surface.py 60KB, trends.json 586KB (187 rows, UNREVIEWED), panel.json, test_measure_surface.py. Blocking external oracle PASSED (reproduced:true, exact on all 4 baseline figures)."
         }
       ],
       "postconditions": [
@@ -49,7 +50,8 @@
           "id": "c1",
           "statement": "COMPETENCE.md written: GATE-B-N: 0 in the opening paragraph with 'the treatment was never varied' as the reason; the impossibility claim explicitly WITHDRAWN and regraded guess/structural; BOTH declines (ablation arm, census) recorded with cost estimate and ratifying authority; both filed as issues; no relaunch datapoint entered in the (b) column",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "COMPETENCE.md written. GATE-B-N: 0 is the opening line, with 'the treatment was never varied' as the reason -- every relaunch held the full monolith, so there is no sample of the effect, not a small one. Impossibility claim WITHDRAWN and regraded settled/structural -> guess/structural. BOTH declines recorded with cost estimates and ratifying authority: ablation arm (runway + Tommy's premature-metric ruling) filed as #414; census (cut by Tommy) filed as #415. No relaunch datapoint entered in the (b) column; Assumption-1 observations quarantined in their own section precisely so they cannot drift there."
         }
       ],
       "constraints": [
@@ -80,7 +82,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -166,7 +168,7 @@
     "session_id": "session_01V6pZVwMCev8MEck1gTUKuu",
     "status": "active",
     "claimed_at": "2026-08-03T02:19:56.831928+00:00",
-    "last_heartbeat": "2026-08-03T02:56:42.156211+00:00",
+    "last_heartbeat": "2026-08-03T02:59:55.673588+00:00",
     "claimed_by": "commander-310",
     "worktree": ".",
     "previous_session_id": null,
@@ -179,6 +181,13 @@
       "why": null,
       "mechanical": true,
       "ts": "2026-08-03T02:19:58.265843+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g2-competence",
+      "why": "Gate (b) is n=0, established by a cold critic's correction that this Commander and the Admiral both had wrong: relaunch data varies the wrong variable. The impossibility claim that would have excused it is withdrawn -- an ablation arm needs zero authoring -- so the decline rests on runway and Tommy's ruling, both named, rather than on an asserted impossibility. Both declines filed (#414, #415) so a future run inherits specs rather than re-deriving them.",
+      "mechanical": false,
+      "ts": "2026-08-03T02:59:55.673568+00:00"
     }
   ],
   "amendments": [
