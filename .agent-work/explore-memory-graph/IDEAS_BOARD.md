@@ -63,7 +63,16 @@ in the optional doors you can ignore. The "dial" is then not a mode selector but
 doors and how far afield** — set by the librarian from your question/context. Cross-domain
 inspiration becomes *how wide the doors open*, never a vector you're forced to chase. If this
 holds, "multiple traversal modes" collapses to one traversal + a librarian-set dial (much
-smaller to build). **Status: hypothesis, needs the human's push-back.**
+smaller to build). **Status: CONFIRMED by human — the dial rule below.**
+
+**The dial rule (human, cycle 1).** One axis, default silence, expansion *triggered* not chosen:
+- **Direct trace** (clear, specific) → silent core, no doors, cheap. The common path.
+- **Unclear query OR strong associative pull in the graph** → open the doors, surface
+  associated information.
+
+"Interpret vs. answer" and "focus vs. inspiration" are the **same question** (human) — this one
+dial answers both. Cost consequence: heavy librarian judgment fires only on ambiguity/pull,
+never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 
 ## Shotgun divergence (cycle 1, un-culled)
 
@@ -118,14 +127,25 @@ smaller to build). **Status: hypothesis, needs the human's push-back.**
 | Directed traversal is a *feature enabled by* the graph, not a rival to it | Settles the framing; does NOT settle the traversal design | cycle-1, human |
 | The graph is additive to `episodes/`, not a replacement | Settles coexistence; does NOT settle the graph↔episode interface | cycle-1, human |
 | All three wins (focused retrieval → cross-domain inspiration → compounding) in scope, ordered | Settles scope + order; does NOT settle how modes coexist | cycle-1, human |
-| Mode selection is **system-owned**; interface is `question + context`; system dials exploration level | Settles who chooses (the "librarian"); does NOT settle interpret-vs-answer, or what sets the dial | cycle-1, human |
+| Mode selection is **system-owned**; interface is `question + context`; system dials exploration level | Settles who chooses (the "librarian") | cycle-1, human |
+| **The dial rule**: direct trace → silent core; unclear OR strong pull → surface associated info. Default silence, expansion triggered. Interpret-vs-answer = focus-vs-inspiration = one dial | Settles librarian behavior; does NOT settle what "pull" *is* mechanically, or static-vs-learned | cycle-1, human |
 
 ## Open threads
 
-- **Interpret vs. answer — the live librarian fork.** Silent inference (reads context, just dials, no dialogue — cheap, but wrong guesses are invisible) vs. active reframing (can say "you asked X, you probably want Y" — richer research partner, but reasons about the request → a model call and possible return of the overhead we're killing). *(Central thread — human deciding.)*
-- **What sets the dial?** Signals in question/context that widen or narrow: question specificity (narrow lookup vs. open "how might we"), agent state (stuck/looping → widen for inspiration; mid-execution → tighten). Needs enumerating.
-- **Is the librarian a model?** "Determine what you really need" is judgment — likely a stochastic/LLM layer, not deterministic code. Cost, latency, and where it runs are open. Grounds against the #308 rhyme sensor.
-- ~~Multiple traversal modes as a switch~~ — possibly dissolved by the core+doors synthesis (see Working model). Held open pending human push-back.
+- **THE live thread — what is "pull," and is it static or learned?** The dial rule leans on
+  "strong pull" but hasn't defined it. Static (author-assigned edge weights → librarian is
+  fixed) vs. learned (pull shaped by which opened doors got *used* → librarian improves with
+  use). **Bridge:** if learned, win #3 (compounding memory) *is* the pull-learning built for
+  win #2 — no separate mechanism. If static, compounding needs another source. *(Human
+  deciding.)*
+- **What sets the dial (query side)?** Signals of "direct trace" vs. "unclear": question
+  specificity, agent state (stuck/looping → widen; mid-execution → tighten). Query-side
+  input; "pull" is the graph-side input. Both feed the one dial.
+- **Is the librarian a model?** "Determine what you really need" is judgment — likely
+  stochastic/LLM, not deterministic code — but the dial rule means it only runs heavy on
+  ambiguity/pull, not on direct traces. Cost/latency/placement open. Grounds vs. #308 rhyme sensor.
+- **RESOLVED — interpret-vs-answer & multiple-modes-as-a-switch.** Collapsed into the one dial
+  (see Working model / Verdicts). No longer open.
 - **What is "excess detail," concretely?** A real transcript of agents stepping on themselves — context-window bloat vs. wrong-thread pursuit vs. retrieval noise. Different failure → different mode design. (Excursion candidate: research.)
 - **The graph ↔ `episodes/` interface** — additive, but *how*? Does the graph index episodes, cite them, or hold its own nodes that point at them? (Not "replace" — that's retired.)
 - **Node/edge grammar** — load-bearing for federation *and* for what "pull"/alignment weights attach to. Deferred until the mode design is clearer.
