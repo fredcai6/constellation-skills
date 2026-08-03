@@ -1,0 +1,47 @@
+{
+  "baselines/extract_ordering.py": {
+    "at_preb_6774181": "3b241e026a3740522f7ab82ada97bbbe7d49fd380e41a459ca062b985d8f82ea",
+    "at_post_HEAD": "3b241e026a3740522f7ab82ada97bbbe7d49fd380e41a459ca062b985d8f82ea",
+    "identical": true
+  },
+  "baselines/verify_capture.py": {
+    "at_preb_6774181": "fb6daeb27c30f70937959f2dead8ab10561d46abf2df2c5ffc0493531c29bd0c",
+    "at_post_HEAD": "fb6daeb27c30f70937959f2dead8ab10561d46abf2df2c5ffc0493531c29bd0c",
+    "identical": true
+  },
+  "baselines/capture_baseline.py": {
+    "at_preb_6774181": "465c46202f4b6501e0c76e7b52613f25fda1a34c4e102e87ce415ab009457428",
+    "at_post_HEAD": "465c46202f4b6501e0c76e7b52613f25fda1a34c4e102e87ce415ab009457428",
+    "identical": true
+  },
+  "baselines/issues.frozen.json": {
+    "at_preb_6774181": "d22bf912b24eb4e6293c709e24f72ea759307f50517899f6c0ba55c6393f5d09",
+    "at_post_HEAD": "d22bf912b24eb4e6293c709e24f72ea759307f50517899f6c0ba55c6393f5d09",
+    "identical": true
+  },
+  "baselines/RUBRIC.md": {
+    "at_preb_6774181": "78c3e5a7bcf9660d36b06750c62e0a580bce67ce6edb8171e45686b7b2046d41",
+    "at_post_HEAD": "78c3e5a7bcf9660d36b06750c62e0a580bce67ce6edb8171e45686b7b2046d41",
+    "identical": true
+  },
+  "preb/discriminate.py": {
+    "at_preb_6774181": "fed7cd9d339aecbc455355162a23e9858188300d0fba3465c2902ac8b3d91148",
+    "at_post_HEAD": "fed7cd9d339aecbc455355162a23e9858188300d0fba3465c2902ac8b3d91148",
+    "identical": true
+  },
+  "preb/verify_treatment.py": {
+    "at_preb_6774181": "d8889d41e30e04486c2a8a012831b3efee9c5e70ad644884bfd1c19fbae278af",
+    "at_post_HEAD": "d8889d41e30e04486c2a8a012831b3efee9c5e70ad644884bfd1c19fbae278af",
+    "identical": true
+  },
+  "preb/fingerprint_global_corpus.py": {
+    "at_preb_6774181": "a88b2cc5670d7ca7214adee2024e278a7c7b4f33ffb2d85deb77756d76384f4b",
+    "at_post_HEAD": "a88b2cc5670d7ca7214adee2024e278a7c7b4f33ffb2d85deb77756d76384f4b",
+    "identical": true
+  },
+  "preb/capture_preb.py": {
+    "at_preb_6774181": "014f3b8775813481f6b3fa44eb021ae0741eec01816a2d1c614a07deb1e7311a",
+    "at_post_HEAD": "8a02279e60235d2b1dc3627c3cd3c960f5fadc822ffef99c723399f02feabe09",
+    "identical": false
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "goal": "Issue #698 -- #666 follow-on hardening: H1 DriverFingerprintStore API primitive-obsession (type the read/write surface on the CellAddress value object), H2 worktree-first sys.path guard for scripts/fingerprint_class_coverage_675.py, H3 gitignore local coverage/summary artifacts. Out of scope per the issue: any behavior change to the fit or the coverage diagnostic. This engagement is PLANNING ONLY.",
+  "mode": "delegated",
+  "questions": [
+    {
+      "id": "q1-capability",
+      "kind": "fact",
+      "question": "What capability changes, in present tense, and what must stay byte-identical?",
+      "status": "resolved",
+      "resolution": "The store refuses a structurally ill-formed cell identity AT ITS OWN BOUNDARY rather than accepting four loose strings and reaching the six-field validation only after committing to a row set. Everything the fit computes, and all four keystone store invariants, stay identical. H2/H3 are independent hygiene with no runtime coupling to H1.",
+      "code_evidence": "src/physics/fingerprint/store.py:193,255,298 (the three loose-primitive signatures); store.py:163 (era-vs-vocabulary check) and :213 (reserved refusal) are the ONLY identity validation today; store.py:233 constructs the CellAddress inside the per-class write loop, i.e. after the fact; address.py:88-104 holds the validation that should be at the boundary; store.py:10-32 states the four protected invariants.",
+      "human_answer": ""
+    },
+    {
+      "id": "q2-address-shape",
+      "kind": "fact",
+      "question": "Can the store API be literally typed on CellAddress, as H1's acceptance wording says?",
+      "status": "resolved",
+      "resolution": "NO. CellAddress has six fields and addresses ONE cell; the store's unit of work is the k-cell GROUP. class_id is the fan-out axis (absent from the store key) and vocabulary_version is read off the ClassVocabulary argument rather than passed. A CellAddress with a sentinel class_id would violate the value object's own documented invariant. The genuine target is the address PREFIX, which store.py's own prose already calls a 'slot'.",
+      "code_evidence": "address.py:62-86 (six fields) vs store.py:193-203/255-257/298-300 (five args); store.py:225 loops class_id over vocabulary.class_ids and :233 builds one CellAddress per class; store.py:275 is the read-side mirror; vocabulary_version sourced at store.py:234,:270,:310; the word 'slot' for this exact tuple at store.py:22-23, :186, :301.",
+      "human_answer": ""
+    },
+    {
+      "id": "q3-slot-design",
+      "kind": "decision",
+      "question": "Given that misfit, what value object does the store API actually take -- (A) a frozen four-field slot with ClassVocabulary still supplying vocabulary_version, (B) the same plus vocabulary_version and a second refusal path, or (C) a per-cell API with the k-fan-out moved to callers?",
+      "status": "resolved",
+      "resolution": "(A). A frozen FingerprintSlot(driver, era, channel, what_measure) defined in address.py beside CellAddress, exposing address_for(class_id, vocabulary) -> CellAddress as the sole constructor of a CellAddress on the store path. (C) is rejected because the k-cells-always-populated and no-fit-on-read invariants live IN the fan-out and are #666 Protected Intent. (B) is rejected because vocabulary_version would be asserted twice per call, buying no safety and costing a second refusal path plus its tests.",
+      "code_evidence": "store.py:14-32 (protected invariants that (C) would destroy); store.py:234 (vocabulary.vocabulary_id already the single authority (B) would duplicate); store.py:22-23 (the inherited 'slot' name).",
+      "human_answer": "No human was reachable for this engagement. RULED BY THE COMMANDER under the engagement's explicit instruction to record what would have been asked, decide it, and carry on. Question as it would have been put to the human is recorded verbatim in the survey finding at .agent-work/cmdr-698/interrogation.json (q3-slot-design). Authority: Commander self-decide. @grade: settled/inherited for the group-shaped seam (it follows from #666 Protected Intent, not from this run's preference); @grade: guess for the NAME alone -- a human may rename FingerprintSlot with zero structural consequence."
+    },
+    {
+      "id": "q4-blast-radius",
+      "kind": "fact",
+      "question": "Which call sites change, and does instrument_panel really read the store directly as the architecture map claims?",
+      "status": "resolved",
+      "resolution": "Caller set is closed and small: 3 production call sites in 2 files, 2 scripts, 3 test files. instrument_panel does NOT read the store -- the map's prose is misleading if read as an import claim, and the panel needs no change under H1.",
+      "code_evidence": "src/physics/fingerprint/fit.py:356 (sole writer); src/physics/pilot/pipeline.py:257,:325; scripts/fingerprint_bounded_validation.py:124; scripts/join_bounded_validation_667.py:173; tests/unit/physics/fingerprint/test_store.py (~20 sites incl. row_count :111,:125 and refusal tests :132,:140,:153-161), test_fit.py:160, test_bounded_validation.py:173,:267,:326,:333. Negative evidence: no DriverFingerprintStore/get_fingerprint reference anywhere in src/physics/instrument_panel/ or scripts/instrument_panel_668_report.py (only FINGERPRINT_CHANNELS at replication.py:61), contradicting docs/architecture/packets/physics.md:2753. src/physics/fingerprint/__init__.py re-exports nothing.",
+      "human_answer": ""
+    },
+    {
+      "id": "q5-tightening-scope",
+      "kind": "decision",
+      "question": "How much input tightening rides along with the new boundary, given the issue forbids behavior change to fit/coverage?",
+      "status": "resolved",
+      "resolution": "Exact CellAddress parity via a SHARED validator (non-empty str, no pipe delimiter, known what_measure) -- no channel-set membership check (deferred to triage), and the dormant reserved what_measure slot stays CONSTRUCTIBLE-but-refused-at-write. Slot construction stays vocabulary-blind so era/vocabulary disagreement keeps raising EraVocabularyMismatchError rather than a construction ValueError.",
+      "code_evidence": "address.py:88-99 (the validator to share); address.py:35 defines FINGERPRINT_CHANNELS but CellAddress never enforces it; fit.py:347-350 already validates channel independently; address.py:16-19,:40-42,:100-104 document epic #659 ruling 4 and accept reserved measures at construction; store.py:213-217 refuses them only at write; tests/unit/physics/fingerprint/test_store.py:153-161 asserts ReservedWhatMeasureError, :132/:140 assert the era-mismatch path with a valid-but-wrong era string.",
+      "human_answer": "No human was reachable for this engagement. RULED BY THE COMMANDER under the engagement's explicit self-decide instruction; the question as it would have been put is recorded verbatim in the survey finding (q5-tightening-scope). Authority: Commander self-decide. @grade: settled/inherited for parity + the dormant-slot preservation (both follow from #666's recorded ruling 4 and existing test assertions); @grade: guess for deferring the channel-set check -- settle: grep whether any caller ever passes a channel outside FINGERPRINT_CHANNELS."
+    },
+    {
+      "id": "q6-h2-scope",
+      "kind": "fact",
+      "question": "Is scripts/fingerprint_class_coverage_675.py the only script in the family missing the worktree-first sys.path guard?",
+      "status": "resolved",
+      "resolution": "YES -- H2's one-file scope confirmed exactly, no sibling sweep needed. The canonical guard form is the repo's .parent.parent idiom, and it must be placed after the __future__ import and before the first src.* import, which requires hoisting `import sys` and the existing pathlib import.",
+      "code_evidence": "Guard PRESENT: scripts/fingerprint_bounded_validation.py:28-29, scripts/join_bounded_validation_667.py:42-43, scripts/instrument_panel_668_report.py:45. Guard ABSENT: scripts/fingerprint_class_coverage_675.py (imports at :86-100, no sys.path touch in the file) despite src.* imports at :98-:100. Reference form: scripts/build_class_utilization_observables.py:71-75.",
+      "human_answer": ""
+    },
+    {
+      "id": "q7-h3-truth",
+      "kind": "fact",
+      "question": "Is H3's stated premise true -- are the coverage/summary JSONs already ignored via .agent-work/?",
+      "status": "resolved",
+      "resolution": "NO, the premise is false. .gitignore has no `.agent-work/` rule; .agent-work/ is a deliberately TRACKED tree here and the #666 archived artifacts are committed on purpose. The real exposure is (a) three scripts writing regenerable JSON to hardcoded LIVE .agent-work paths with no --out flag, and (b) a higher-value omission the issue's JSON framing missed entirely: the store's own default SQLite DB is not ignored while every sibling own-DB is.",
+      "code_evidence": ".gitignore has no `.agent-work/` line (only .agent-work/**/*.pkl|*.npz|*.db, scratch/, ckpt/, backtests/ and four one-off record dirs); engine-config.json rules_root mandates committing archived Commander logs; git ls-files shows .agent-work/archive/2026-07-26-666-driver-fingerprint/artifacts/{coverage_675_verdict,bounded_fit_summary}.json tracked. Hardcoded outputs: fingerprint_class_coverage_675.py:123 (argparse at :472-473 offers no --out), fingerprint_bounded_validation.py:48, join_bounded_validation_667.py:70. The DB gap: store.py:50 DEFAULT_DB_PATH='data/driver_fingerprint.db'; grep of .gitignore for 'driver_fingerprint' returns nothing, while /data/reference_utilization.db, /data/segment_maps.db, /data/driver_utility_observables.db and /data/driver_utility.db are all ignored.",
+      "human_answer": ""
+    },
+    {
+      "id": "q8-evidence",
+      "kind": "decision",
+      "question": "What evidence closes each gate -- the full physics suite, or a scoped importer set?",
+      "status": "resolved",
+      "resolution": "Scoped to the closed importer set (tests/unit/physics/fingerprint plus tests/unit/physics/pilot), plus simplification_limits on every touched path. The consumed-module rule forces re-running store.py's own pre-existing test files with every refusal still raising the SAME exception type. H2's acceptance must be a bare direct-file invocation from outside the repo root (pytest is structurally blind to it); H3's is git check-ignore exit codes, not a test.",
+      "code_evidence": "docs/agents/ORCHESTRATOR_CONTEXT.md evidence table ('focused region suite green'); docs/agents/engine-config.json rules_root (simplification_limits mandate); .agent-work/LESSONS.md lesson:scope-self-authored-regression-to-import-graph and lesson:consumed-frozen-module-run-guard-tests; importer set closed at q4; pytest's own path insertion is why q6's defect survived #666 review.",
+      "human_answer": "No human was reachable for this engagement. RULED BY THE COMMANDER under the engagement's explicit self-decide instruction; the question as it would have been put is recorded verbatim in the survey finding (q8-evidence). Authority: Commander self-decide. @grade: settled/inherited -- the scoping rule is project doctrine plus a banked lesson, not this run's preference."
+    }
+  ],
+  "signoff": {
+    "by": "Commander (cmdr-698), standing in for the absent principal under the engagement's explicit instruction",
+    "statement": "No human is reachable for this engagement, and the dispatch instructs that wherever a step calls for a human decision I record what I would have asked, decide it myself, and carry on rather than waiting. I have done exactly that for the three decision questions (q3, q5, q8): each carries the verbatim question as it would have been put, the ruling, the reasoning, the authority, and a fixedness grade, so a human can overturn any of them without re-deriving the analysis. The five fact questions are resolved against cited source lines, and two of them contradict inputs I was handed -- H3's premise about .agent-work/ being gitignored is false, and the architecture packet's claim that instrument_panel reads the store directly is false -- both corrected here rather than carried into the plan. Questioning is complete for a planning engagement; the understanding is shared to the extent one party can make it so, and this record is the artifact that makes the gap auditable rather than invisible.",
+    "caveat": "SELF-SIGNED under instruction. This is NOT a substitute for human ratification: the three rulings above are the ones a returning human should read first."
+  },
+  "consolidated": false,
+  "rail_exception": {
+    "reviewer_cosign": "",
+    "log": "No independent reviewer is available in this single-agent planning engagement either, so the rail exception is NOT invoked. The sign-off above is an instructed self-sign-off, labelled as such."
+  }
+}

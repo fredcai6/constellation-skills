@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q2-address-shape",
+  "mechanical": {
+    "run": "cmdr-698",
+    "project": "f1Brainz",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q2-address-shape",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cmdr-698-q2-address-shape@d2785ada40f9632daf43a4ffcc60336f432b497c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cmdr-698",
+    "generated_at": "2026-08-02T20:27:03Z"
+  }
+}

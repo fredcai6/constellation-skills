@@ -257,8 +257,9 @@ rather than anything a declaration names, and because `build_manifest()` compute
 47 `true`, 1 `false`, 1 field-absent. **Both sides are given in full because the count is pinned to
 that moment deliberately and keeps growing as this producer runs**: 49 / 47 / 1 / 1 immediately
 before the removal, and 56 / 51 / 1 / 4 at the removal commit itself. (On the `epic-298/305` branch
-those were `35d2686^` and `35d2686`; the squash-merge does not carry either SHA into `main`, which is
-why the numbers rather than the refs are the durable anchor.) The lone `false` is the mechanism in
+those were `35d2686^` and `35d2686`, **landed as #389**. The squash-merge carries neither SHA into
+`main`, so the SHAs settle this on the branch and `#389` settles it afterwards — `main`'s squash
+subjects keep the `(#NNN)` suffix.) The lone `false` is the mechanism in
 miniature rather than an exception to it: it is `.agent-work/issue-305/context/g1-implement.json`,
 which exists at all only because g1 was **reopened**, and it reports clean because commit `2456130`
 cleaned the tree 2m16s before it was generated — that commit is what cleaned it. The manifest

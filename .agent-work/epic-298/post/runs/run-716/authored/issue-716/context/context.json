@@ -1,0 +1,53 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "6241c56ccda9cda53422ab3cecc1edbf168caa9c"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "b10abd32711f4579509c80e7376e9ea79806866c"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "f3e674f33a219e63967a304dff5edbb247b3edca"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "8334966b8c0e50e3057a2ad2f779b7fcfb4be0b8"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": "6c875d36c14db232786dff9a9ea50aa26babcf6f"
+    },
+    {
+      "root": "durable",
+      "path": ".agent-work/LESSONS.md",
+      "rev": "420e8dea9292836682bb848e24447821224f0a5b"
+    }
+  ],
+  "repo_rev": {
+    "commit": "3541d2929b19de37107ae13e56776b7162d07255"
+  },
+  "run": {
+    "work_id": "issue-716",
+    "generated_at": "2026-08-02T20:39:42Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/f1bwt/post716",
+      "durable": "C:/Programs/f1Brainz"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/f1bwt/post716"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "issue-704",
+    "project": "f1Brainz",
+    "role": "commander-704",
+    "refusals": 0,
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-704-init@4e4f5af972436a94af2c23d1f10829ffc071ad31",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-704",
+    "generated_at": "2026-08-02T20:41:16Z"
+  }
+}

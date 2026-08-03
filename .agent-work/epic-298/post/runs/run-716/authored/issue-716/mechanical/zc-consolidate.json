@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "zc-consolidate",
+  "mechanical": {
+    "run": "issue-716",
+    "project": "f1Brainz",
+    "role": "interrogator",
+    "refusals": 0,
+    "spine-step": "zc-consolidate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-716-zc-consolidate@0bace2b91ee4b914104e6eafa9b9ea04c1045851",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-716",
+    "generated_at": "2026-08-02T20:47:48Z"
+  }
+}
