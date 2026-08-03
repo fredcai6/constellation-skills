@@ -1,14 +1,14 @@
 ---
 name: constellation-how-to-talk
-description: Keep an agent's human-facing prose clear, concise, and grounded — each sentence one point in the plainest words. Use when writing or revising a report, review comment, design note, PR body, or doc. Not a banned-word list; not skill-goodness (which judges a skill's design, not its prose).
+description: Keep an agent's prose clear, concise, and grounded — each sentence one point in the plainest words — so meaning stays consistent across artifacts, agents, and sessions. Use when writing or revising any report, review comment, design note, PR body, doc, or internal note.
 invoker: agent
 ---
 
 # Constellation How-to-Talk
 
-Before you hand any prose to a human, make each sentence carry one grounded point in the plainest words that fit. Clarity, concision, and grounded meaning are the whole job; their absence is what reads as slop.
+Make each sentence carry one grounded point in the plainest words that fit — in anything you write, whether a human reads it, another agent does, or a later session does. Clarity, concision, and grounded meaning are the whole job.
 
-**No checklist. Apply the discipline directly** — it runs on *every* prose artifact you write, not as a workflow you start and finish. The predictable procedure is one pass over your own draft against the rules below before you return it.
+**No checklist. Apply the discipline directly** — it runs on *every* artifact you write, not as a workflow you start and finish. The predictable procedure is one pass over your own draft against the rules below before you return it.
 
 ## The rules
 
@@ -41,16 +41,8 @@ Before you hand any prose to a human, make each sentence carry one grounded poin
 
 ## Dials, not laws
 
-These rules illuminate the point of a sentence; they do not build an austere language. Passive voice is right when the actor is unknown or beside the point. Adverbs that carry information stay — cut only the empty intensifier. An em-dash or a genuine three-item list is fine; the tell is reflex, not the mark. There is no word-count cap on a sentence. Break any rule here sooner than write something stilted.
-
-## You may
-
-The myths below are not rules — following them produces worse prose, so ignore them: you *may* use the passive voice, split an infinitive, end a sentence with a preposition, begin one with *And* or *But*, and write *I* or *we* when that is who acted.
+These rules illuminate the point of a sentence; they do not build an austere language. Active voice (rule 5) is the default, but the passive is right when the actor is unknown or beside the point. Break any rule here sooner than write something stilted.
 
 ## One name for one thing — the glossary
 
-Rule 2 is enforced by the project glossary, not by memory. `templates/GLOSSARY.template.md` is the shape: **Term · Short · Definition · Instead of**. The *Instead of* column is one-way by construction — it names a variant only to point away from it, never as a synonym to swap in. Consult the glossary before naming a concept; add a row when you coin one.
-
-## The one rail
-
-`py scripts/verify_skill_registered.py --skill how-to-talk` proves this skill is well-formed and installed — nothing more. There is no linter over the prose: whether a draft is clear, concise, and grounded is the writer's judgment and, for a shipped artifact, the independent reviewer's. Fix the writing, never lower the bar to pass.
+Rule 2 holds only if names stay fixed across artifacts, agents, and sessions, so it is backed by the project glossary rather than memory. Consult `templates/GLOSSARY.template.md` before naming a concept, and add a row when you coin one.

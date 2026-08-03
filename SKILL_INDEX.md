@@ -93,7 +93,7 @@ Mints a new constellation skill from a described capability: classifies it, scaf
 ## Constellation How-to-Talk
 Path: `skills/how-to-talk/SKILL.md`
 
-Keeps an agent's human-facing prose clear, concise, and grounded — every sentence carrying one point in the plainest words that fit — through a set of positive "do" rules applied to any report, review comment, PR body, or doc. Ships the `GLOSSARY.md` template that backs one-name-for-one-thing.
+Keeps an agent's prose clear, concise, and grounded — every sentence carrying one point in the plainest words — through positive "do" rules applied to any artifact, whether human-facing, internal, or agent-to-agent, so meaning stays consistent across sessions. Ships the `GLOSSARY.md` template that backs one-name-for-one-thing.
 
 ## Constellation Curator
 Path: `skills/curator/SKILL.md`
