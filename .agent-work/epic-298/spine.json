@@ -230,7 +230,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3",
+          "attested": {
+            "evidence": "e-closeout-3",
+            "note": "Epic summary presented at .agent-work/epic-298/EPIC_SUMMARY.md (committed 70533da, archived). Tommy accepted the run verbatim and separately authorized the six doctrine graduations, which were applied at 466eafa with authority=human, suite green (1621 passed, 2 skipped), and verified present in the INSTALLED corpus rather than merely merged."
+          }
         },
         {
           "id": "c6",
@@ -272,6 +277,19 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "user-decision",
+          "payload": {
+            "decision": "accepted",
+            "by": "Tommy",
+            "verbatim": "run is accepted when you.re done. go ahead and get things all wrapped up",
+            "scope": "epic summary accepted AND the six doctrine graduations authorized separately (go ahead and publish the skill updates)",
+            "artifact": ".agent-work/epic-298/EPIC_SUMMARY.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -284,7 +302,7 @@
     "session_id": "sess-0144fxRT9HovYs1rcStyJ8E6",
     "status": "active",
     "claimed_at": "2026-08-01T05:23:03.259687+00:00",
-    "last_heartbeat": "2026-08-03T03:37:10.576616+00:00",
+    "last_heartbeat": "2026-08-03T03:51:46.561280+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
