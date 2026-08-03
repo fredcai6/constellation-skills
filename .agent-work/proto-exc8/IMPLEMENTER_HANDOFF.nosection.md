@@ -49,13 +49,6 @@ Carry each decision anchor's `@grade` tag across from the mission frame on its o
 - **Evidence expectations:** `<claim:id or check this gate must re-confirm>`
 - **Map confidence flags:** `<node id — low-confidence/stale/disputed area; verify rather than trust; omit if none>`
 
-## Deliverable Path Check
-`<required — filled by the commander at gate-planning time, before dispatch. For each of this gate's deliverable artifact path(s), classify it:>`
-- **Committed** — `<path>`
-- **Local-only** — `<path>`
-
-When a gate creates a **new** tracked-to-be file, state that it is untracked until staged: "`git diff` shows N-1 files; the new file appears in `git status`." Otherwise a scope claim like "diff touches exactly N files" reads as false against a correct working tree and the reviewer momentarily mistrusts correct evidence.
-
 ## Required Evidence
 `<what to produce: test output, command result, inspection note, generated artifact>`
 When the crew must assert a specific return/message string, **quote the EXACT expected string** so the crew asserts equality, not a substring guess; mark any illustrative example string as illustrative.

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-implement",
+  "files": [],
+  "repo_rev": {
+    "commit": "79db91844f52548545c4bb336d96f06a58d3513f"
+  },
+  "run": {
+    "work_id": "proto-exc8",
+    "generated_at": "2026-08-03T14:49:12Z",
+    "roots": {
+      "skill": "C:/Programs/.proto-exc8-spine-instructions",
+      "repo": "C:/Programs/.proto-exc8-spine-instructions",
+      "durable": "C:/Programs/.proto-exc8-spine-instructions"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/.proto-exc8-spine-instructions"
+    }
+  }
+}

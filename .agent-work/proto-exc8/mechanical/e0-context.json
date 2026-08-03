@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "mechanical": {
+    "run": "proto-exc8",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 0,
+    "spine-step": "e0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-proto-exc8-e0-context@d921454043dc9db077a33fc174a0ca174b173c3a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "proto-exc8",
+    "generated_at": "2026-08-03T14:49:03Z"
+  }
+}

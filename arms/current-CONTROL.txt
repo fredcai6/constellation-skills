@@ -1,0 +1,9 @@
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.. Run it.
+
+LEASE active: sess-CONTROL (by commander, heartbeat 2026-08-03T14:49:12.739812+00:00)
+ACTIVE g1-implement [in-progress] — Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.
+postconditions:
+  c1 [unmet] artifact — IMPLEMENTER_RESULT returned with no unresolved blockers
+1/2 met
+next: attest g1-implement --cond c1 --which postconditions --evidence <evidence-id>
+DIGEST: context loaded for the tracer gate

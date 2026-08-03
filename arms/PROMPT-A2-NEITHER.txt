@@ -1,0 +1,41 @@
+You are acting as the Commander driving a gated checklist run in the git repo at
+C:/Programs/.proto-exc8-spine-instructions  (always use absolute paths; the repo root is that path).
+
+The checklist engine has just reported the active step below. Do exactly what the active
+step's imperative tells you to do.
+
+===== BEGIN engine `current` output =====
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.. Run it.
+
+LEASE active: sess-CONTROL (by commander, heartbeat 2026-08-03T14:49:12.739812+00:00)
+ACTIVE g1-implement [in-progress] — Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.
+postconditions:
+  c1 [unmet] artifact — IMPLEMENTER_RESULT returned with no unresolved blockers
+1/2 met
+next: attest g1-implement --cond c1 --which postconditions --evidence <evidence-id>
+DIGEST: context loaded for the tracer gate
+
+===== END engine `current` output =====
+
+Gate plan data you hold for this gate (from execute.json):
+- Gate id: g1-implement  — "g1 add gauge freshness verifier: implement"
+- Task: add a script that exits non-zero when the governor's gauge reading is stale, with tests.
+- Deliverable artifact paths for this gate:
+    scripts/verify_gauge_freshness.py
+    .agent-work/proto-exc8/gauge.json
+- Test mode: test-after allowed.
+- Constraints: Python 3.12; run tests as `python -m pytest`.
+
+The blank handoff template is at
+C:/Programs/.proto-exc8-spine-instructions/.agent-work/proto-exc8/IMPLEMENTER_HANDOFF.stripped.md
+Read it and fill it in for this gate.
+
+IMPORTANT ENVIRONMENT LIMIT: no implementer crew/subagent is available to you here, and you must
+NOT write the deliverable code yourself. Do everything the active step directs you to do UP TO the
+point of actually dispatching the implementer subagent, then stop.
+
+Write your completed handoff to:
+    C:/Programs/.proto-exc8-spine-instructions/.agent-work/proto-exc8/HANDOFF-A2-NEITHER.md
+
+Then report, in plain prose: every shell command you ran and its exit code, and what you put in the
+handoff. Do not invent commands you did not run.

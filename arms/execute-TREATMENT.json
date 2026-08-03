@@ -1,5 +1,5 @@
 {
-  "work_id": "<work-id>",
+  "work_id": "proto-exc8",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
   "items": [
@@ -19,13 +19,14 @@
           "id": "c1",
           "statement": "orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -34,14 +35,15 @@
     },
     "g1-implement": {
       "id": "g1-implement",
-      "title": "<gate name>: implement",
+      "title": "g1 add gauge freshness verifier: implement",
       "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Before dispatch, fill the handoff's Deliverable Path Check section: for each committed deliverable of this gate, run 'git check-ignore <path>' and confirm it exits 1 (not ignored), recording the exact command and its exit code in the handoff; or record the artifact as intentionally local-only. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
       "preconditions": [
         {
           "id": "p1",
-          "statement": "<qualitative dependency on a prior gate, or none>",
+          "statement": "execution context loaded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
         }
       ],
       "postconditions": [
@@ -56,32 +58,29 @@
         }
       ],
       "constraints": [
-        "<inherited project or section rules>"
+        "Deliverables for this gate: scripts/verify_gauge_freshness.py; .agent-work/proto-exc8/gauge.json. Python 3.12; run tests as 'python -m pytest'."
       ],
       "anchors": {
         "structural": [
-          "<struct:id \u2014 path/symbol, level \u2014 this gate lands in or depends on>"
+          "struct:scripts \u2014 scripts/ flat script layer, module level"
         ],
         "capability": [
-          "<capability:id \u2014 behavior this gate changes or relies on>"
+          "capability:gauge-freshness \u2014 detect a stale governor reading"
         ],
         "constraint": [
-          "<constraint:id | assumption:id \u2014 must not be silently violated>"
+          "constraint:no-hooks \u2014 this gate wires no hooks"
         ],
         "decision": [
-          "<decision:id \u2014 governs this structure; append an @grade: tag INSIDE this string so grade and decision cannot separate \u2014 e.g. 'decision:dedup-wal \u2014 reuse WAL not new journal @grade: guess \u00b7 leans g1-implement \u00b7 settle: 20-line spike, assert ordering'>",
-          "<decision pressure: choice this gate may force as a candidate; carries no grade \u2014 it is not yet a decision>"
+          "decision:gauge-on-disk \u2014 readings live on disk @grade: settled"
         ],
         "evidence": [
-          "<claim:id or check the gate must re-confirm>"
+          "claim:exit-nonzero-on-stale"
         ],
-        "confidence_flags": [
-          "<node id \u2014 low-confidence/stale/disputed area touched, and the scout/verify or decision it triggers; omit if none>"
-        ]
+        "confidence_flags": []
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -90,7 +89,7 @@
     },
     "g1-review": {
       "id": "g1-review",
-      "title": "<gate name>: review",
+      "title": "g1 add gauge freshness verifier: review",
       "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
       "preconditions": [
         {
@@ -126,7 +125,7 @@
     },
     "g1-integrate": {
       "id": "g1-integrate",
-      "title": "<gate name>: integrate",
+      "title": "g1 add gauge freshness verifier: integrate",
       "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate \u2014 a command-kind postcondition (like this gate's test command) is satisfied by `advance`, which re-runs the check, NOT by `attest`, which the engine refuses for command checks (only null-check and artifact conditions are attestable ahead of advance). BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
       "preconditions": [
         {
@@ -139,10 +138,10 @@
       "postconditions": [
         {
           "id": "c1",
-          "statement": "<observable behavior>; tests pass",
+          "statement": "verifier exits non-zero on a stale reading; tests pass",
           "check": {
             "kind": "command",
-            "command": "<exact test command>"
+            "command": "python -c \"print('ok')\""
           },
           "override_policy": {
             "allowed": true,
@@ -177,5 +176,25 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "sess-TREATMENT",
+    "status": "active",
+    "claimed_at": "2026-08-03T14:49:02.721464+00:00",
+    "last_heartbeat": "2026-08-03T14:49:14.061605+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "context loaded for the tracer gate",
+      "mechanical": false,
+      "ts": "2026-08-03T14:49:04.152743+00:00"
+    }
+  ]
 }

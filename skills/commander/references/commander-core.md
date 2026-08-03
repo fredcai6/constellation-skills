@@ -70,7 +70,7 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 
 Each **crew gate** in `execute.json` has three tasks in order (a *reasoning gate* has none — see "Crew gate vs reasoning gate" below):
 
-**`gN-implement`** — Fill `templates/IMPLEMENTER_HANDOFF.template.md` from the gate plan (task, scope, close criteria, constraints, test mode). Before dispatch, fill the handoff's Deliverable Path Check: for each committed deliverable, run `git check-ignore <path>` and confirm exit 1, or record the artifact as intentionally local-only. Dispatch a subagent invoking `constellation-implementer` with the completed handoff. Wait for and integrate the returned `IMPLEMENTER_RESULT`.
+**`gN-implement`** — Fill `templates/IMPLEMENTER_HANDOFF.template.md` from the gate plan (task, scope, close criteria, constraints, test mode). Dispatch a subagent invoking `constellation-implementer` with the completed handoff. Wait for and integrate the returned `IMPLEMENTER_RESULT`.
 
 **`gN-review`** — Fill `templates/REVIEWER_HANDOFF.template.md` from the gate plan and the `IMPLEMENTER_RESULT` (task statement, how to inspect the diff, close criteria, constraints, evidence produced). Dispatch a subagent invoking `constellation-reviewer` with the completed handoff. Wait for and integrate the returned `REVIEW_RESULT`.
 
