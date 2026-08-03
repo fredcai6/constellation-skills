@@ -133,6 +133,35 @@ leftover). Treat every claim as a pointer to evidence you must independently rep
 reproduce is a defect, not an accepted fact.
 Your judgment rests on what you observed, never on what the report asserted.
 
+**The authoring-side twin: enumerate the blast radius of your own change.** The rule above is the
+consumer side — do not trust a claim someone hands you. This is the producer side, and it fails far more
+often: **before you call a change done, enumerate by command — never by memory — every artifact that
+asserts something about what you changed, and state the count.**
+
+A change to a *format* silently breaks every reader of that format. A doctrine edit strands every doc
+that quoted the old rule. Deleting a branch orphans every revision cited only through it. **In each case
+the author is the only one positioned to know, and the author is the one who does not look.**
+
+A related failure with the same root: **a fix scoped to the tier below must name why the authoring tier
+is exempt, or it is not exempt.** Doctrine written from the outside looking in at subordinates routinely
+leaves its own author uncovered — the same defect then recurs one tier up, wearing different clothes.
+
+## Pin a claim to the revision you read it at
+
+**A read of a moving target, reported as a property of the thing, is a defect.** A number measured once
+and then carried as a permanent fact outlives its subject: the tree moves, the claim does not, and it
+goes on being repeated after the thing it described has changed. **Bind every number in prose to the
+revision you measured it at.**
+
+**And a pin is only durable if the revision stays reachable.** Where a repo squash-merges, a branch's
+commits never become ancestors of the default branch — so deleting the branch orphans every revision
+cited through it, including the ones your own pinning rule just encouraged people to record. **Cite a
+revision that is an ancestor of the default branch, or tag it.**
+
+**Corollary, because the obvious test is itself a check that cannot fail: never use an ancestry test to
+decide whether a branch was merged.** `git merge-base --is-ancestor` returns the same answer for *merged*
+and for *abandoned* under squash-merge. Ask the forge whether the PR merged.
+
 ## Scoped nulls
 
 A negative result kills *that specific test under those conditions* — this input, this variant, this mechanism —

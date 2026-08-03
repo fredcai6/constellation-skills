@@ -91,6 +91,30 @@ and the artifact path — not the full transcript the artifact already holds.
 - Stop and ask when project context, user instruction, and observed artifacts conflict in a way that affects
   the task. Do not resolve a conflict by picking an authority source by policy.
 
+## A check that cannot fail
+
+**A check whose output is identical in the healthy and the defective world cannot discriminate, however
+correctly it runs.** The crew tier carries this family in full — `docs/agents/CREW_CONTEXT.md`,
+"a check that cannot fail is indistinguishable from one that passed". **It belongs here too, because the
+expensive instances are authored at this tier**, in the guards an orchestrator writes for itself: sweep
+checks, liveness probes, install-delta comparisons, gate postconditions.
+
+**Mechanical detector: any guard that loops must assert what it looped over.** State the count. An
+under-inclusive enumeration presented as complete reports clean without ever reaching the interesting
+items — and it reports clean *because* it never reached them.
+
+Three routes in, all observed: **vacuity** (the guard passes on an empty set); **wrong question** (a
+*can-this-fail?* sweep is structurally blind to *does-it-cover-what-it-claims?*, because the answer is
+"yes" in both worlds); and **wrong iteration set** (a comparison that enumerates only one side never sees
+what exists only on the other).
+
+Two corollaries worth carrying:
+
+- **Assert against the behaviour, never against text describing the behaviour.**
+- **A check that runs against your own working copy is not a check on the world.** A reachability test
+  against local refs passes while a fresh clone is already broken; a success code proves delivery, not
+  content. Test the thing a stranger would get.
+
 ## Unchanged-tree shortcut
 
 A redundant manual re-verification may be skipped ONLY when the working tree is provably identical to the
@@ -108,6 +132,13 @@ the idle signal alone: complete artifacts → integrate as if the verdict had ar
 incomplete or missing artifacts → *stalled*, rework or relaunch. This judges the **verdict**, not liveness:
 an idle/"completed" process may still resurrect, so confirm it dead before you reuse, sweep, or launch a
 continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone."
+
+**When you do judge liveness, measure it over the whole worktree — never over `.agent-work/<work-id>/`.**
+A commander at `reconcile` writes to the **source tree**, not to its workbench, so a workbench-only mtime
+probe reads silence exactly when reconcile is going *well*. Measured on a healthy commander: inter-write
+gaps at `reconcile` reach **~7 minutes**, so a threshold under ten adjudicates live agents dead. A
+workbench-only probe once came one step from killing a commander that was writing `docs/` and `skills/`
+continuously.
 
 A third read, distinct from both *done* and *stalled*: an idle subagent whose `current` carries a
 `REFRESH REQUESTED:` line (the uniform reach-up primitive — `global-everyone.md` §reach-up) tripped correctly,

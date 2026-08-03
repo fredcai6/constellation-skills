@@ -63,6 +63,23 @@ A claimed test-failure distribution must be **derived mechanically** (`pytest -q
 When the gate expects the suite to be transiently red, state the expectation **by root cause** (the failing mechanism, wherever it surfaces) with the per-file distribution shown — never by file name alone — and make any failure outside that root-cause class a stop condition.
 A handoff spends the implementer's finite **self-check budget**: every additional fact the Required Evidence asks it to *prove* divides that attention further, so an over-stuffed evidence list buys **content coverage** on paper and shallow checking in practice. Name which evidence items are load-bearing (prove rigorously) versus confirmatory (a spot-check suffices), rather than letting every item compete equally for the same self-check budget.
 
+## Wiring Grep
+
+**Required. Write `none — <reason>` only for a slice that adds no callable symbol.**
+
+One command naming every symbol this slice adds, showing for each a call site **outside its own
+definition and outside any `--self-test` path**:
+
+```bash
+<grep naming each new symbol, e.g. grep -rn "new_symbol" --include=*.py . | grep -v "def new_symbol" | grep -v self_test>
+```
+
+**We reliably build the capability and unreliably wire the guarantee.** A symbol that only its own
+definition and its own self-test reference is shipped-inert: it passes review, passes tests, and no
+caller ever reaches it. **State the count of call sites found.** Zero external call sites is a stop
+condition, not a note — `grep` for the *caller*, because `grep` for the *name* is satisfied by any
+module that ships its own self-test.
+
 ## Verification Commands
 
 Exact commands to run. Write `none — <reason>` if not applicable.
