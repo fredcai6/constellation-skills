@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "closeout",
+  "mechanical": {
+    "run": "epic-298",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-298-closeout@e6cac5dd17896aedda29048664671c035cdf0862",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-298",
+    "generated_at": "2026-08-03T03:37:10Z"
+  }
+}
