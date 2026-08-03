@@ -574,7 +574,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-310 --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
@@ -623,22 +624,46 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-310 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -648,13 +673,14 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "session_01V6pZVwMCev8MEck1gTUKuu",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-03T01:49:52.414158+00:00",
-    "last_heartbeat": "2026-08-03T03:17:29.865671+00:00",
+    "last_heartbeat": "2026-08-03T03:17:48.857727+00:00",
     "claimed_by": "commander-310",
     "worktree": "C:/Programs/constellation-skills-wt/e298-310",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-03T03:24:03.878457+00:00"
   },
   "why_trail": [
     {
@@ -719,6 +745,13 @@
       "why": "Feedback appended to the durable log at .agent-work/AGENT_FEEDBACK.md (durable root resolves to this worktree, so no fence staging is needed); verify_agent_feedback.py reports 'agent feedback invariant ok'. Four lessons BANKED, each with a bank_reason naming what re-observation would clarify -- none self-applied, because three of the four target project doctrine or shipped templates and delegated mode forbids self-applying doctrine. --ripe returns empty: no threshold-ripe lesson left unpaid.",
       "mechanical": false,
       "ts": "2026-08-03T03:16:35.662569+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work area archived to .agent-work/archive/2026-08-02-issue-310 with AGENT_FEEDBACK.md left at the root; branch pushed; PR #410 open with CI status text reading pass. Declaring PENDING per #338: the merge is handed up (gh pr merge is vetoed by the harness classifier #408, and ORCHESTRATOR_CONTEXT requires explicit human approval regardless), and the kernel-break call itself is Tommy's to make on B2_GATE_EVIDENCE.md.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:17:48.857698+00:00"
     }
   ]
 }
