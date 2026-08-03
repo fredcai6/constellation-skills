@@ -1,0 +1,119 @@
+{
+  "work_id": "issue-310",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate", "g2-competence", "g3-verdict"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md) and the project delta docs/agents/ORCHESTRATOR_CONTEXT.md (GLOSSARY.md and engine-config.json are ABSENT in this repo — substitution already recorded at the spine context step). Confirm the frozen plan's intent and scope against .agent-work/issue-310/PROBLEM_STATEMENT.md and .agent-work/issue-310/MISSION_FRAME.md. Confirm the single most important inherited constraint before any gate runs: this run ASSEMBLES evidence and does NOT make the kernel-break decision, does NOT author any kernel/fragment decomposition, and does NOT invent the missing 'small enough' threshold. Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "orchestrator context loaded (with the GLOSSARY/engine-config absence recorded); plan intent and scope confirmed; the assemble-not-rule boundary restated", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Gate 1 — trend measurement (B2 evidence gate (a)): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. DELIVERABLE: .agent-work/issue-310/TRENDS.md plus the instrument that produced it. THE CENTRAL OBLIGATION: .agent-work/archive/2026-08-02-issue-304/TREND_SNAPSHOT.md explicitly declares THIS run its successor ('at EPIC-298 CLOSE') and states what a successor must do — 're-run §1–§3 verbatim against its own HEAD, paste both numbers, and state the delta. A successor that reports only its own figures is a second baseline, not a trend.' So: re-run its commands VERBATIM first, for comparability, and only THEN add the wider always-loaded bin as a clearly-separated supplement. Changing the definition and reporting only the new one would break the series. Both bins (always-loaded = SKILL.md + the references/ SKILL.md names; conditionally-loaded = templates/, scripts/, unnamed references/) reported SEPARATELY per #393, with the arithmetic to recombine them published. Every number names the revision it was measured at. Do NOT rebuild #307's instruments; reuse them or state in writing why not. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "e0-context complete; the #304 TREND_SNAPSHOT successor obligation is understood as binding, not optional", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "Assert every enumeration's COUNT — under-inclusive enumeration presented as complete has bitten this epic five times.",
+        "Pin every number to the revision it was measured at.",
+        "Never conflate always-loaded with conditionally-loaded.",
+        "Do NOT invent a 'small enough' threshold and do NOT render a pass/fail on the break.",
+        "Bind per-blob, not per-tree: .agent-work/ commits change the tree without touching a source blob."
+      ],
+      "anchors": {
+        "structural": ["README.md — corpus inventory, the 19-skill count, repo-vs-installed shape (hash-pinned substitute; no map exists)", "SKILL_INDEX.md — per-skill index, enumeration cross-check against skills/*/"],
+        "capability": ["README.md §'Skill set' — the role corpus the trend loops over", "README.md §'Repo layout vs. installed layout' — always-loaded is a claim about the INSTALLED shape, measured on the REPO shape"],
+        "constraint": ["constraint: always-loaded != installed (#393) — measure both bins separately", "constraint: no threshold exists (confirmed-spec critic S2) — report the trend, never the verdict"],
+        "decision": ["run-local decision: always-loaded = SKILL.md + the references/ it names @grade: guess/empirical · leans g1 · settle: report both bins separately so a reader rejecting the convention recombines arithmetically, without a re-run", "run-local decision: bytes primary, lines secondary @grade: settled/measured · leans g1 · settle: line counts hide CRLF and long-line changes on a Windows-developed corpus", "decision pressure: whether the corpus's existing three-bin shape (SKILL.md=trigger/pointer, references/=doctrine, templates/=interface) already IS kernel-plus-fragments under another name — surface as a candidate, do not decide"],
+        "evidence": ["claim: skills/commander/SKILL.md is 16 lines with 0 occurrences of 'map' — re-verify at the revision reported", "claim: #304's two tripwired deletions removed 172 words and moved the corpus -168 — re-verify against TREND_SNAPSHOT §3"],
+        "confidence_flags": ["WHOLE MAP ABSENT — DEGRADED-NO-MAP discharged at the context step. There is no map inventory to check a loop against, which is exactly why the assert-the-count close criterion is mechanised into this gate rather than trusted to care."]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Gate 1 — trend measurement: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. The reviewer's PRIMARY job is to RE-RUN the instrument and confirm the numbers reproduce in its own hands — metadata about an artifact is not the artifact, and 'exit=0 plus a plausible elapsed time' is exactly what a fabricated table looks like. Second job: confirm the #304 TREND_SNAPSHOT §1–§3 commands were re-run VERBATIM and both numbers pasted with the delta stated, not silently replaced by a redefined metric. Third: confirm every enumeration asserts its count and every number names its revision. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors — review verifies the measurement against the same structural/capability/constraint/decision/evidence anchors, and additionally re-runs the instrument"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Gate 1 — trend measurement: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the lesson-candidate pool.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "TRENDS.md exists, re-runs the #304 baseline verbatim, asserts the 19-skill enumeration count, and separates the two load bins", "check": {"kind": "command", "command": "test -f .agent-work/issue-310/TRENDS.md && grep -q '63681' .agent-work/issue-310/TRENDS.md && grep -qi 'always-loaded' .agent-work/issue-310/TRENDS.md && grep -qi 'conditionally-loaded' .agent-work/issue-310/TRENDS.md && grep -q '19' .agent-work/issue-310/TRENDS.md"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-competence": {
+      "id": "g2-competence",
+      "title": "Gate 2 — role-competence evidence (B2 evidence gate (b)) [REASONING GATE]",
+      "imperative": "REASONING GATE — no crew. Crew-waiver reason, stated per commander-core.md: the deliverable is a diagnosis over run artifacts this Commander already holds in context, and commander-core is explicit that a crew on a pure design note is shallower, not safer. Nothing here produces code or an independently-verifiable change; the g1 measurement, which does, carries the crew. DELIVERABLE: .agent-work/issue-310/COMPETENCE.md. STATE THE LIMITATION FIRST, in the opening paragraph, not a footnote: the controlled paired arm the spec asks for cannot be run, because testing kernel-plus-fragments requires a kernel-plus-fragments decomposition to exist and building it IS the break. Then assemble the OBSERVATIONAL evidence on Assumption 1 (run artifacts carry sufficient state) from the epic's own field record: the refresh / job-file-not-agent-file relaunch, where a FRESH agent cold-starts from `current` alone mid-spine with no handoff document. Enumerate every such instance found and ASSERT THE COUNT. Label every datapoint observational and uncontrolled; there is no monolith arm, so 'artifacts were sufficient here' is the strongest available claim and 'as correctly as one holding the monolith' is NOT. Report failed or ambiguous instances too — never quietly drop one. Attest c1.",
+      "preconditions": [{"id": "p1", "statement": "g1 integrated — the trend numbers exist, so gate (b) is being assembled against a known gate-(a) result rather than in the dark", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "COMPETENCE.md written: experimental impossibility stated FIRST; observational instances enumerated with the count asserted; every instance labelled uncontrolled; no monolith-arm comparison claimed; ambiguous/failed instances reported not dropped", "check": null, "satisfied": false}],
+      "constraints": [
+        "Assert the enumeration count.",
+        "Never upgrade observational evidence to experimental.",
+        "A negative or insufficient result here is a complete deliverable, not a shortfall."
+      ],
+      "anchors": {
+        "structural": ["docs/CONSTELLATION_OVERVIEW.md — role graph and the Relationship Contract (Skill.md is trigger/pointer, templates are interface, references hold doctrine)"],
+        "capability": ["the refresh / reach-up primitive — global-orchestrator.md §idle-subagent adjudication and global-everyone.md §reach-up: a fresh agent cold-started from `current` alone IS Assumption 1 in production"],
+        "constraint": ["assumption: run artifacts carry sufficient state (confirmed spec, Assumption 1, line 126) — 'Untested; gated'", "constraint: launch-order rule 7 — state the limitation FIRST, not in a footnote"],
+        "decision": ["run-local decision: gate (b) is observational, never a controlled paired arm @grade: settled/structural · leans g2 · settle: there is no decomposition to test; building one is the break"],
+        "evidence": ["claim: run artifacts carry sufficient state for a cold-started agent to complete a mid-spine step — evidence surface is the epic's refresh/relaunch record"],
+        "confidence_flags": ["The observational set is drawn from ONE epic's runs and is self-selected (relaunches that failed early may leave no artifact). Say so; do not treat the surviving set as a sample."]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-verdict": {
+      "id": "g3-verdict",
+      "title": "Gate 3 — the B2 evidence packet for Tommy [REASONING GATE]",
+      "imperative": "REASONING GATE — no crew. Crew-waiver reason: the deliverable is the decision packet itself, synthesised from g1 and g2, both already reviewed; a second crew read of a document whose inputs are already independently verified adds a reader, not a check. DELIVERABLE: .agent-work/issue-310/B2_GATE_EVIDENCE.md — the artifact Tommy reads. It MUST: (1) open with the limitations, not bury them; (2) say WHICH AXIS was measured — the commander is already split on the MODE axis (1e8043a/#107) and B2 proposes the CONTENT axis; refuse both the 'already satisfied' and the 'unstarted monolith' readings explicitly; (3) name which of exactly THREE outcomes the evidence selects — not-yet-earned / deletion-pressure-suffices / break-proceeds — and say plainly which, because an UNATTRIBUTABLE verdict is the one failure mode; (4) present the threshold sensitivity: since the confirmed spec never defines 'small enough' (its own critic S2 said so), state for each of the three outcomes what threshold would select it, and HAND THE THRESHOLD CHOICE TO TOMMY rather than picking one; (5) carry #307's two bounds intact — it measures PLACEMENT not DECOMPOSITION, and its manipulation was 8 days and +31 files, not #304 alone; (6) if and only if the evidence points at 'break proceeds', note that a human-readable whole-role projection is a REQUIRED view and the break gets its own cut. Do NOT rule. Attest c1.",
+      "preconditions": [{"id": "p1", "statement": "g1 integrated and g2 complete — both evidence gates assembled before the packet is written", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "B2_GATE_EVIDENCE.md written: limitations first; the measured AXIS named and both misreadings refused; exactly one of the three outcomes named with its selecting evidence; threshold sensitivity presented and the choice handed to Tommy; #307's two bounds carried intact; no kernel-break decision taken", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "the packet names one of the three outcomes and hands the threshold choice up", "check": {"kind": "command", "command": "test -f .agent-work/issue-310/B2_GATE_EVIDENCE.md && grep -qi 'not yet earned' .agent-work/issue-310/B2_GATE_EVIDENCE.md && grep -qi 'deletion pressure' .agent-work/issue-310/B2_GATE_EVIDENCE.md && grep -qi 'threshold' .agent-work/issue-310/B2_GATE_EVIDENCE.md"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": [
+        "Launch-order rule 9: you do not get to rule that a finding earned its place. Assemble, name the three outcomes, let Tommy rule.",
+        "Do not present one reading where the evidence supports two.",
+        "A measured negative is a complete, successful deliverable — say so plainly."
+      ],
+      "anchors": {
+        "structural": ["the confirmed spec .agent-work/archive/2026-07-31-explore-grander-scale/DESIGN_SPEC.md line 77 — the gate's own text", "docs/agents/ORCHESTRATOR_CONTEXT.md §Repo Action Authority — merges require explicit human approval"],
+        "capability": ["the B2 decision itself — HITL, architectural, Tommy's call"],
+        "constraint": ["constraint: launch-order rule 9 — naming a verdict pre-empts the mechanism meant to make it", "constraint: the only failure is an unattributable verdict"],
+        "decision": ["decision pressure: the 'small enough' threshold — does not exist, must be chosen by Tommy; already escalated to the Admiral at the understand step rather than held to review"],
+        "evidence": ["claim: gate (a) and gate (b) are CONJUNCTIVE and gate (a) is decisive in the negative — if deletion IS getting the surface small enough, the break is not taken regardless of (b)"],
+        "confidence_flags": ["The threshold is missing from the spec. Any outcome this packet names is therefore CONDITIONAL on a threshold Tommy has not yet set — the packet must make that conditionality explicit rather than smuggling in a default."]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
