@@ -54,7 +54,7 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         """Write a playbook file directly so a lesson can carry a chosen added /
         last-confirmed date and dormancy count (dates the add path can't set)."""
         hdr = header or (
-            "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 "
+            "<!-- playbook-state: run-tick=0 dormancy-runs=10 "
             "apply-recurrences=1 apply-confirmed=3 -->"
         )
         self.file.write_text(
@@ -117,26 +117,74 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         book = self.m.load_playbook(self.file)
         self.assertEqual(book.active[0].status, "charter-review")
 
-    def test_cap_enforced_and_retire_before_add(self):
-        ops = [add_op(f"lesson-{i}") for i in range(20)]
-        self.run_delta({"work_id": "seed", "ops": ops})
-        self.run_delta({"work_id": "over", "ops": [add_op("lesson-21")]}, expect_rc=1)
-        # retire-before-add in one delta succeeds; the retired lesson is GONE (deleted)
+    def test_add_past_twenty_succeeds_and_retire_still_deletes(self):
+        # Replaces the old cap-enforcement test (issue #308). There is NO active-entry
+        # cap: 20 was the old limit, so an add at exactly 20/20 — the state that used to
+        # be refused — must now succeed, and adds must keep succeeding past it rather
+        # than stopping one entry later. Retention is the Curator's cleanup pass, not a
+        # number the writer refuses at.
+        self.run_delta({"work_id": "seed", "ops": [add_op(f"lesson-{i}") for i in range(20)]})
+        self.assertEqual(len(self.m.load_playbook(self.file).active), 20)
+
+        # The exact op the old cap refused, at the exact state it refused it in.
+        self.run_delta({"work_id": "over", "ops": [add_op("lesson-20")]})
+        self.assertEqual(len(self.m.load_playbook(self.file).active), 21)
+
+        # ...and it is not an off-by-one that merely moved the wall one entry out.
+        for i in range(21, 26):
+            self.run_delta({"work_id": f"over-{i}", "ops": [add_op(f"lesson-{i}")]})
+        book = self.m.load_playbook(self.file)
+        self.assertEqual(len(book.active), 26)
+
+        # No numeric limit survives on the parsed playbook in any renamed form: the
+        # field is gone from the grammar, not merely left unenforced.
+        self.assertFalse(hasattr(book, "cap"))
+        self.assertNotIn("cap=", self.file.read_text(encoding="utf-8"))
+
+        # retire-and-add in one delta still works, and the retired lesson is GONE
+        # (deleted, not parked) — this path outlived its cap rationale.
         self.run_delta(
             {
                 "work_id": "swap",
                 "ops": [
-                    add_op("lesson-21"),
+                    add_op("lesson-26"),
                     {"op": "retire", "id": "lesson-0", "reason": "superseded"},
                 ],
             }
         )
         book = self.m.load_playbook(self.file)
         ids = [l.lesson_id for l in book.active]
-        self.assertEqual(len(book.active), 20)
+        self.assertEqual(len(book.active), 26)
         self.assertNotIn("lesson-0", ids)        # deleted, not parked
-        self.assertIn("lesson-21", ids)
+        self.assertIn("lesson-26", ids)
         self.assertFalse(hasattr(book, "dormant"))
+
+    def test_legacy_cap_header_parses_and_is_dropped_on_render(self):
+        # Every playbook written before #308 carries `cap=N` in its playbook-state
+        # marker. Those files must keep loading — a hard failure on the existing corpus
+        # would be a regression, not a cleanup — and the stale field must be discarded
+        # on the next write rather than round-tripped as a claim that enforces nothing.
+        self._seed_lesson(
+            added="2026-01-01 (seed)",
+            header="<!-- playbook-state: run-tick=7 cap=20 dormancy-runs=10 "
+                   "apply-recurrences=1 apply-confirmed=3 ticked-work-ids=old-run -->",
+        )
+        book = self.m.load_playbook(self.file)   # must not raise
+        self.assertEqual(book.run_tick, 7)
+        self.assertEqual(book.dormancy_runs, 10)
+        self.assertEqual(book.apply_recurrences, 1)
+        self.assertEqual(book.apply_confirmed, 3)
+        self.assertEqual(book.ticked_work_ids, ["old-run"])
+        self.assertFalse(hasattr(book, "cap"))   # accepted, then discarded
+
+        self.run_delta({"work_id": "issue-308", "ops": [add_op("post-cap-lesson")]})
+        text = self.file.read_text(encoding="utf-8")
+        self.assertNotIn("cap=", text)           # not round-tripped back out
+        self.assertIn("run-tick=7", text)        # the rest of the header survived
+        self.assertIn("dormancy-runs=10", text)
+        self.assertIn("ticked-work-ids=old-run", text)
+        # and the rewritten file re-parses under the cap-free grammar
+        self.assertEqual(self.m.load_playbook(self.file).run_tick, 7)
 
     def test_tick_auto_deletes_unconfirmed(self):
         # Seeded with a prior-dated `added`: the same-epoch guard only shields a
@@ -303,7 +351,7 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
         # preserved) and render WITHOUT the graveyard — GC'd on first write.
         self.file.write_text(
             "# Lessons Playbook\n\n"
-            "<!-- playbook-state: run-tick=3 cap=20 dormancy-runs=10 -->\n\n"
+            "<!-- playbook-state: run-tick=3 dormancy-runs=10 -->\n\n"
             "## Active\n\n"
             "### lesson:live-one\n"
             "- scope: project\n- task-class: general-workflow\n"
@@ -554,7 +602,7 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
     def test_existing_real_header_parses_with_empty_ticked(self):
         self._seed_lesson(
             added="2026-01-01 (seed)",
-            header="<!-- playbook-state: run-tick=20 cap=20 dormancy-runs=10 "
+            header="<!-- playbook-state: run-tick=20 dormancy-runs=10 "
                    "apply-recurrences=1 apply-confirmed=3 -->",
         )
         book = self.m.load_playbook(self.file)  # must not raise
@@ -572,7 +620,7 @@ class ApplyLessonsDeltaTests(unittest.TestCase):
     def test_malformed_ticked_work_ids_raises(self):
         self._seed_lesson(
             added="2026-01-01 (seed)",
-            header="<!-- playbook-state: run-tick=1 cap=20 dormancy-runs=10 "
+            header="<!-- playbook-state: run-tick=1 dormancy-runs=10 "
                    "apply-recurrences=1 apply-confirmed=3 ticked-work-ids=a,,b -->",
         )
         with self.assertRaises(self.m.LessonsDeltaError):
@@ -627,7 +675,7 @@ class BankReasonTests(unittest.TestCase):
         # pre-existing lesson without it loads and round-trips clean.
         self.file.write_text(
             "# Lessons Playbook\n\n"
-            "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 "
+            "<!-- playbook-state: run-tick=0 dormancy-runs=10 "
             "apply-recurrences=1 apply-confirmed=3 -->\n\n## Active\n\n"
             "### lesson:legacy\n- scope: project\n- task-class: general-workflow\n"
             "- statement: seeded\n- grounding: g\n- mentions: 1\n- confirmed: 0\n"
@@ -775,7 +823,7 @@ class ResolveDispositionTests(unittest.TestCase):
         # dormancy_runs; an unresolved (recurrence-debt) sibling stays pinned.
         self.file.write_text(
             "# Lessons Playbook\n\n"
-            "<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 "
+            "<!-- playbook-state: run-tick=0 dormancy-runs=10 "
             "apply-recurrences=1 apply-confirmed=3 -->\n\n## Active\n\n"
             "### lesson:resolved-one\n"
             "- scope: constellation\n- task-class: general-workflow\n"

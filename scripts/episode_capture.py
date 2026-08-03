@@ -63,9 +63,11 @@ from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agent_work_root import durable_root  # noqa: E402  — the CHECKOUT root helper.
-# `durable_agent_work()` is the neighbouring one and is the WRONG one here: the
-# single shipped `durable` declaration is `.agent-work/LESSONS.md`, which that
-# helper would double-nest to `.agent-work/.agent-work/LESSONS.md`.
+# `durable_agent_work()` is the neighbouring one and is the WRONG one here: it
+# returns `<root>/.agent-work`, so any `.agent-work/…`-relative durable declaration
+# would double-nest to `.agent-work/.agent-work/…`. (No `durable` declaration ships
+# in the corpus today — #308 cut the lessons read path, which was the only one — so
+# the trap is currently unexercised by shipped data and correspondingly silent.)
 
 #: The installed skill directory — the parent of the `scripts/` directory this file
 #: sits in, which is where `references/global-*.md` live in an installed skill.
@@ -158,11 +160,13 @@ def resolve_roots(base_dir: Any = None) -> dict[str, Path]:
     epic lease; on **every** other path — plain checkout, active epic lease, no git,
     any git error — its documented contract is to return `start` *unchanged*. Handed
     the checklist's own directory (`<repo>/.agent-work/<work-id>`), those fallback
-    paths therefore make the durable root `<repo>/.agent-work/<work-id>`, and the one
-    shipped declaration `.agent-work/LESSONS.md` lands on
-    `<repo>/.agent-work/<work-id>/.agent-work/LESSONS.md` — a path that does not
+    paths therefore make the durable root `<repo>/.agent-work/<work-id>`, and a
+    declaration like `.agent-work/notes.md` lands on
+    `<repo>/.agent-work/<work-id>/.agent-work/notes.md` — a path that does not
     exist, which the producer records as `rev: null` without raising. Handing it the
     repo root makes every fallback resolve to the worktree root, which is correct.
+    (No `durable` declaration ships in the corpus today: #308 cut the lessons read
+    path, which was the only one. The root token stays, and so does this contract.)
 
     Keyed in `context_manifest.ROOT_TOKENS` order so `run.roots` stays deterministic.
     """

@@ -112,6 +112,17 @@ The `scope` field is the router. Everything below reuses it.
 
 ### Loop 2 — Commander across runs
 
+> **SUPERSEDED IN PART by #308 (2026-08-02): the READ half of this loop is gone.**
+> The `context`-step read below, and the `SessionStart` `LESSONS.md` digest injection
+> proposed under Loop 3, were both removed — live agents now work from local
+> (`docs/agents/*`) and global doctrine only. The **write** half stands unchanged: the
+> `feedback` step still distils delta ops through `apply_lessons_delta.py`, and the
+> bank still stages signal for the Curator to drain.
+> What replaces the read is the **episode store** (`episodes/`, #301): observations
+> accumulate there mechanically and are searched when a question arises, rather than
+> being read at every step by every agent. #308 migrated all 20 active lessons into it.
+> The bullets below are the original design record and are left intact.
+
 - Split the durable store: keep `.agent-work/AGENT_FEEDBACK.md` as the append-only
   log; add `.agent-work/LESSONS.md` as the curated playbook (small, itemized lessons
   with scope tags and a `confirmed: <n>` recurrence counter).
@@ -399,8 +410,9 @@ Commander LLM-editing LESSONS.md — Generator and Curator collapsed, the exact
 failure the Reflector split prevents. Revision: the LLM (auditor or Commander)
 emits structured operations — `ADD` / `AMEND <id>` / `RETIRE <id>` with
 justification and grounding citation — and a script (`apply_lessons_delta.py`,
-sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing cap,
-uniqueness, and counter rules. The LLM never writes the playbook directly.
+sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing
+uniqueness and counter rules (it enforced a cap too, until #308 removed it — see
+5.3). The LLM never writes the playbook directly.
 Shipped hardening: a threshold-ripe `apply` op against a doctrine target additionally
 requires a reproduction-drill record (`drill` field referencing
 `docs/superpowers/drills/<lesson-id>.md`; enforced in `apply_lessons_delta.py`) — the
@@ -409,6 +421,18 @@ never opens the drill or judges its quality (mechanism, not quality), and non-ri
 code-target applies are exempt.
 
 ### 5.3 Hard-bounded playbook with dormancy (severity 2)
+
+> **SUPERSEDED IN PART by #308 (2026-08-02): the hard cap no longer exists.**
+> `apply_lessons_delta.py` carries no `DEFAULT_CAP`, no active-entry refusal branch,
+> and no `cap=` field in the `playbook-state` grammar — the header field is tolerated
+> and discarded so legacy files keep parsing. Everything else in this section —
+> dormancy, the `ticked-work-ids` ring, the same-epoch guard — still stands as
+> described. What replaces the cap is the **Curator's regular cleanup pass**, not
+> another number. Tommy's reason: *"the hard cap was intended to not let things hang
+> out, but it just leads to forgetting when it's not cleaned up."* Measured at removal
+> time the effect was worse than forgetting: at 20/20 the writer refused **every** add,
+> so the cap had become a closed intake rather than an untidy bank. The paragraph below
+> is the original design record and is left intact.
 
 Reflexion bounds memory at 1–3 reflections; ACE prunes; "revisit at ~30" had no
 grounding. Revisions: hard cap (start 15–20, enforced by the apply script);

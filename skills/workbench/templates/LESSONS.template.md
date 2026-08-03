@@ -1,18 +1,21 @@
 # Lessons Playbook
 
-<!-- playbook-state: run-tick=0 cap=20 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 -->
+<!-- playbook-state: run-tick=0 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 -->
 
-Curated, bounded workflow lessons for this repo — the distilled derivative of the
+Curated workflow lessons for this repo — the distilled derivative of the
 append-only `.agent-work/AGENT_FEEDBACK.md` log. Read the **Active** section at the
 Commander `context` step and condition planning on it. This file is **never edited
 by hand or by an LLM directly**: propose structured delta operations
 (add/confirm/disconfirm/mention/retire) in a `lessons-delta.json` and apply them
-with `apply_lessons_delta.py`, which enforces the cap, grounding citations, and
-counter rules deterministically.
+with `apply_lessons_delta.py`, which enforces grounding citations and counter
+rules deterministically.
 
 Rules the apply script enforces:
 
-- Hard cap on Active lessons (default 20); beyond it, retire before adding.
+- No cap on Active lessons. A cap does not cause cleanup — it causes forgetting,
+  and then blocks capture outright. Size is held down by the Curator's regular
+  cleanup pass, which adjudicates each entry; a bank that has grown is a signal
+  to run that pass, not a reason to refuse the next entry.
 - Every lesson and every confirm/disconfirm cites a grounding artifact line
   (feedback entry, log line, engine state). No citation, no entry.
 - `confirmed`/`disconfirmed` are symmetric; when disconfirmed catches confirmed,

@@ -54,7 +54,7 @@ launched with that value, or a plain subprocess with the env var set for the non
 fixture that hand-injects the value you are trying to prove the harness delivers.
 
 ## Inherited Context
-`<Active lessons from .agent-work/LESSONS.md relevant to this mission; platform/technical invariants from the project playbook (encodings, shell quirks, crew-launch rules)>`
+`<The platform/technical invariants from the project playbook (encodings, shell quirks, crew-launch rules) relevant to this mission>`
 **Charter-lite carrier:** when the target project has no `docs/agents/` overlay, this block doubles as the doctrine carrier — the thin doctrine deltas the Commander would otherwise read from `docs/agents/*` ride inline here.
 
 ## Pre-empted Steps

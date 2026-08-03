@@ -1790,6 +1790,112 @@ work.**
 above are filed to the tracker rather than held locally, per `LAUNCH_ORDER-305.md:92`
 ("file findings directly, never bank them worktree-locally").
 
+---
+
+## 2026-08-02 — issue-308 (commander-308b, delegated; continuation of a planned handoff)
+
+Migrate the lessons playbook into the episode store and retire it. Branch `epic-298/308`.
+Gates closed this session: `g3` (implement/review/integrate), `g4` (migration), `g5`
+(implement/review/integrate), then reconcile → triage → review. `g6`/`g7` **dropped**
+through the engine's `amend` verb. **Result: 23 episodes migrated, 11 of 23 carrying an
+UNKNOWN field.**
+
+**Friction / unclear**
+
+- **The frozen plan encoded a withdrawn scope, and two of its checks were wrong in
+  opposite directions.** `g4`'s c1 required **exactly one** surviving active lesson and
+  failed on zero — the correct end state under the re-scope is zero. `g5`'s c2 was
+  `! grep -q 'agent-work/LESSONS.md'` over the Commander spine, a file holding **six**
+  occurrences of which only two were the read path; the other four are the writer the same
+  gate's constraints require survive. **That check could only have been satisfied by
+  destroying what the gate existed to preserve.** Both were corrected through `amend`
+  rather than waived. A waiver would have left the run green with two landmines in it.
+  What made this cheap was that the engine has a sanctioned re-planning verb; what made it
+  survivable was that my predecessor annotated the inverted check instead of leaving it to
+  be discovered by whoever it blocked.
+- **The launch order's schema claims did not hold against the writer.** It stated that
+  extra fields are fine and that a blank is a valid value. `apply_episode_delta.py` accepts
+  **exactly five** agent-supplied kinds and rejects an `other-notes` key as misfiled, and
+  every one of the five requires a non-empty statement. Measured before acting, so it cost
+  nothing but a redesign of how unknowns are expressed; taken on trust it would have cost
+  a rejected 23-op delta and a rebuild. **Filed as #399** rather than worked around.
+- **A required integer field has no way to say "not recorded".** The `mechanical` bin's
+  four counters are required non-negative ints. For a migrated observation the origin run's
+  counters are unknown, so the only exits are fabricating four numbers *in the bin trusted
+  because it is machine-derived*, or reattributing the record to the capture run. I took
+  reattribution and **stated the cost in the notes rather than hiding it**: a query by
+  `run` or `role` no longer finds a migrated observation under its origin.
+- **`test_canon_episode_store_untouched` reds the suite for any run that legitimately
+  creates episodes and has not yet committed them.** It asserts `git status --porcelain
+  episodes/` is empty, which conflates "this test module left residue" with "the working
+  tree has uncommitted episodes". Committing resolved it. Any Commander capturing an
+  episode mid-run will hit this.
+
+**Crew-reported friction**
+
+- **g3 implementer:** the handoff's Allowed Scope admitted other docs only where the suite
+  proved them pinned, while the Close Criteria independently forbade any enforced-reading
+  `cap=<N>` "anywhere". `LESSONS.template.md` sat in the gap. It ruled the Close Criterion
+  controlling and said so. That is the right call and the right way to report it, but the
+  two sections should not have disagreed.
+- **g3 reviewer:** the survey's `config_ref` points at `docs/agents/engine-config.json`,
+  **which does not exist in this repo**, and the engine tolerated the dangling reference
+  silently — no warning, no note in `current`. A `config_ref` resolving to nothing is
+  indistinguishable from one resolving to defaults. Posted as a comment on **#304**, which
+  already owns that path, rather than as a duplicate issue.
+- **g5 implementer:** my handoff's blast radius was **over-inclusive** — it named three
+  `test_episode_capture.py` tests as needing rework; only one actually read the shipped
+  declaration. It measured this instead of trusting me, reworked the one, and *added* an
+  assertion that no `durable` declaration ships, so a re-added one now fails loudly.
+- **g5 implementer:** the handoff never stated a Test Mode field; it inferred
+  `test-after / guard-led` from the Close Criteria. Unambiguous only because a red guard
+  shipped with the handoff.
+- **g5 reviewer:** my handoff said the Commander spine held **five** `LESSONS.md`
+  occurrences with three to survive. It is **six and four** — the `feedback` imperative
+  invokes `apply_lessons_delta.py` twice. Found because the handoff told it to verify the
+  writer *by content, not by count*.
+
+**Improvement signals**
+
+- **The acceptance check I wrote went red against me within minutes of being written, and
+  fixing the artifact rather than the check is the whole discipline.** `migration_done.py`
+  asserts both halves — zero active lessons AND every snapshotted lesson id reachable in
+  the store — plus an arm rejecting provenance markers *not* in the snapshot. That last arm
+  fired on my first write: the three run-observations carried `lesson:<id>` markers naming
+  lessons that never existed. The store was fixed. Relaxing the check would have shipped a
+  false claim in the store behind a green.
+- **Under-inclusive enumeration recurred a THIRD time this issue, by the commander, and was
+  caught by a crew applying the rule the same issue was migrating.** My predecessor
+  committed it twice while planning the consolidation of that exact failure mode; I
+  committed it once more in a handoff count. The catch came from an instruction I had
+  written into that handoff — verify by content, not by count — which is episode
+  `issue-308-002`'s own rule. **Recurrence count for this pattern within one issue: 3.**
+  Recorded as an episode rather than argued about, because whether that means the prose
+  works or fails is an importance judgement, and this run does not get to make it.
+- **A guard's green is a claim about what its patterns can see.** The g5 reviewer built an
+  enumeration on axes the acceptance guard could not use — semantic keys instead of the
+  filename, scope beyond `skills/`, no allowlist — read all 34 files it found, and mapped
+  three blind spots with mutants that stayed green (a control mutant did go red, so the
+  guard is narrow rather than vacuous). **Neither the guard nor the reviewer alone would
+  have produced that.** Filed as **#403**.
+- **Second-order effects of one's own change are what goes unrecorded.** Cutting the read
+  path left the `feedback` step still telling agents to bank lessons "for re-observation"
+  while `runs-since-confirmed` still drives auto-deletion and nothing re-observes (**#404**),
+  and left the `durable` root token with zero shipped declarations (**#405**). Both are
+  consequences of the work, not pre-existing debt, and both would have been invisible in a
+  report that listed only what was built.
+- **A design record gets a banner, not a rewrite.** Four documents asserted things this run
+  made false. Where the document described live machinery it was corrected; where it was a
+  *design record* (`RECURSIVE_IMPROVEMENT_DESIGN.md` §5.3 and Loop 2) it got a
+  SUPERSEDED-IN-PART banner with the original text intact. What was decided is worth more
+  than a tidy page — and that is also why the inverted check and the obsolete disposition
+  table were annotated by my predecessor rather than deleted.
+
+**Lessons bank:** no threshold-ripe lesson left unpaid — the bank is **empty** as of this
+run, every entry having migrated to `episodes/`. This run's own observations were captured
+as episodes (`issue-308-021` through `issue-308-025`), which is the accumulator this issue
+established, and its findings were filed to the tracker (**#399, #400, #403, #404, #405**)
+rather than banked worktree-locally, per the launch order's standing instruction.
 ## `2026-08-02` — `epic-298` (Admiral retrospective)
 
 **Shape.** 17+ dispatches across 3 waves; 9 of 12 issues closed at writing (#307 awaiting Tommy's verdict, #308 in flight, #310 written but undispatched). **#305 alone consumed eight successive commanders**; three died mid-gate. ~40 issues filed (#313–#398), **none of which is in the epic's definition of done** — that volume is the run's real output.

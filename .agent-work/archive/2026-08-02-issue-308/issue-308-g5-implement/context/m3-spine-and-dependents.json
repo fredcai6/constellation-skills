@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-spine-and-dependents",
+  "files": [],
+  "repo_rev": {
+    "commit": "081cb03965b580ff517fe7de2e200082668a74d4"
+  },
+  "run": {
+    "work_id": "issue-308-g5-implement",
+    "generated_at": "2026-08-02T22:55:16Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/e298-308",
+      "durable": "C:/Programs/constellation-skills-wt/e298-308"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-308"
+    }
+  }
+}
