@@ -343,7 +343,8 @@
             "kind": "command",
             "command": "cd \"C:/Programs/constellation-skills-wt/e298-310\" && git ls-files --error-unmatch .agent-work/issue-310/trends/measure_surface.py .agent-work/issue-310/trends/test_measure_surface.py .agent-work/issue-310/trends/trends.json .agent-work/issue-310/trends/panel.json .agent-work/issue-310/TRENDS.md .agent-work/issue-310/crew-handoffs/g1-result.md .agent-work/issue-310/g1-implementer-plan.json >/dev/null && test -z \"$(git status --porcelain -- .agent-work/issue-310/trends .agent-work/issue-310/TRENDS.md .agent-work/issue-310/crew-handoffs/g1-result.md)\" && ! git diff --name-only 9a90298..HEAD | grep -E '^(skills|scripts|tests|docs)/' && ! git diff --name-only 9a90298..HEAD | grep -q 'PRE_REGISTRATION.md'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-closeout-1"
         }
       ],
       "constraints": [
@@ -352,11 +353,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/e298-310\" && git ls-files --error-unmatch .agent-work/issue-310/trends/measure_surface.py .agent-work/issue-310/trends/test_measure_surface.py .agent-work/issue-310/trends/trends.json .agent-work/issue-310/trends/panel.json .agent-work/issue-310/TRENDS.md .agent-work/issue-310/crew-handoffs/g1-result.md .agent-work/issue-310/g1-implementer-plan.json >/dev/null && test -z \"$(git status --porcelain -- .agent-work/issue-310/trends .agent-work/issue-310/TRENDS.md .agent-work/issue-310/crew-handoffs/g1-result.md)\" && ! git diff --name-only 9a90298..HEAD | grep -E '^(skills|scripts|tests|docs)/' && ! git diff --name-only 9a90298..HEAD | grep -q 'PRE_REGISTRATION.md'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -366,13 +379,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "issue-310-g1-impl-a1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-03T02:24:03.288805+00:00",
-    "last_heartbeat": "2026-08-03T03:01:19.451808+00:00",
+    "last_heartbeat": "2026-08-03T03:01:47.629819+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-03T03:02:00.182632+00:00"
   },
   "why_trail": [
     {
@@ -409,6 +423,13 @@
       "why": "H1 FALSIFIED (NARROW takes 43.9% of deletion pressure corpus-wide, 54.4% post-regime - deletion falls HARDEST on the bin B2 worries about, and still loses to growth there at 1.70:1 add:delete). H2 CONFIRMED including the per-role-mean caveat (305->835 w/role). H3 CONFIRMED for the current corpus (4/7 panel revisions; the 3 non-reversal revisions predate docent's birth). (e) NO TREND COMPUTABLE: n=2-or-3 over 22.3h, window NARROW movement +27w is below the p25 (35w) of routine per-interval movement and 81% of moving intervals moved more. R3 and R5 fire; R1 and R2 BOTH fail on their own terms, which the pre-registration did not anticipate. Kernel break left to Tommy.",
       "mechanical": false,
       "ts": "2026-08-03T02:54:09.580526+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m6-closeout",
+      "why": "HALTED-BY-SCOPE-CUT, closed through the engine rather than around it. All 7 deliverables committed on epic-298/310 (a321331 + this plan's own close). Blocking baseline reproduction PASSED (19/15831/100/63681) and was decoyed to prove it can fail, so the series is NOT void. One Commander-verified number contradicted and flagged loudly: the 172-word deletion is not in the baseline..HEAD window (it landed before the baseline was taken), so the window's gross is +222/-122 net +100, not the published 272-vs-172. Result delivered to main with a relay request after commander-310 proved unreachable.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:01:47.629791+00:00"
     }
   ],
   "amendments": [
