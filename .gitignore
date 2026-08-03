@@ -21,3 +21,6 @@ junit*.xml
 # Defensive: eval run-dirs are fabricated under the system temp dir (never the
 # repo tree); this only fires if a run is ever redirected into evals/ (#106).
 evals/**/_runs/
+
+# exc-9 prototype run outputs
+runs/
