@@ -1,5 +1,7 @@
 # Reviewer Handoff
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+
 Concise fragments. Omit filler.
 
 Backtick `<...>` placeholder strings in this handoff are **illustrative**; the **contractual** criteria a verdict rests on are the Close Criteria and the Constraints sections.

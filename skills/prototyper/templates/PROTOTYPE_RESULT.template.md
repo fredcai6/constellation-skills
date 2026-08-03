@@ -1,5 +1,7 @@
 # Prototype Result: `<short title>`
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+
 ## Question
 `<the one named question, copied from the handoff>`
 

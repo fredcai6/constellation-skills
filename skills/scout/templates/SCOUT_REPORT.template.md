@@ -1,5 +1,7 @@
 # Scout Report
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+
 Work file: `.agent-work/SCOUT_REPORT.md`
 
 ## Target

@@ -1,5 +1,7 @@
 # Workflow Closeout: `<work-id>`
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+
 ## Summary
 
 `<short summary of completed workflow>`

@@ -1,5 +1,7 @@
 # Implementation Result
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+
 Status values follow `skills/workbench/references/status-model.md`.
 
 ## Assigned gate

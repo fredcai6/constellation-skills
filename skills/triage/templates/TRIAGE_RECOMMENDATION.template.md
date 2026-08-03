@@ -1,5 +1,7 @@
 # Triage Recommendation: `<title>`
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`GLOSSARY.md`).
+
 ## Classification
 `bug | cleanup | missing test | missing doc | missing architecture packet | missing structural node | missing capability anchor | architecture weakness | structure/constraint mismatch | stale generated map | ungrounded claim/decision | bad map edge | feature | tooling | unresolved decision | research hardening | dependency cleanup | security/privacy | performance/resource`
 

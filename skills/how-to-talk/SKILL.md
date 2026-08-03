@@ -35,9 +35,8 @@ Make each sentence carry one grounded point in the plainest words that fit — i
 
 **Structure serves the reader.**
 
-13. Open on the substance.
-14. Lead with the point when the reader needs it fast; let the context follow.
-15. Give the background that helps; cut what only repeats.
+13. Open on the substance and lead with the point when the reader needs it fast; let the context follow.
+14. Give the background that helps; cut what only repeats.
 
 ## Dials, not laws
 
