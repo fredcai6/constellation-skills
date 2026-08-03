@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "6241c56ccda9cda53422ab3cecc1edbf168caa9c"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "b10abd32711f4579509c80e7376e9ea79806866c"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "2a5ed203936c1dbd7703ad98dd546c87cec1c004"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "b673c88f1006909e89f212696d4cdf3dbc6c8359"
+  },
+  "run": {
+    "work_id": "issue-310",
+    "generated_at": "2026-08-03T01:51:05Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills-wt/e298-310",
+      "durable": "C:/Programs/constellation-skills-wt/e298-310"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-310"
+    }
+  }
+}

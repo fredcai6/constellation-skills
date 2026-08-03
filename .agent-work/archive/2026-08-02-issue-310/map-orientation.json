@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-310",
+  "root": "C:/Programs/constellation-skills-wt/e298-310",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7",
+      "source": "known-fallback"
+    },
+    {
+      "path": "docs/CONSTELLATION_OVERVIEW.md",
+      "content_hash": "a937845b2c1b50b0ef1ab1c3b3251b21aba87db22c18e7c5870b7a59cfdf0c79",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    },
+    {
+      "path": "SKILL_INDEX.md",
+      "content_hash": "40f5efdc4b07abd50a1e65fe0e2334f3825893092b19b98945d818c8e1250f99",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This is the skill-source repo: it has NO docs/architecture/ packet map at all (all 3 candidates absent: generated map.json, index.md, packets dir). Unmapped for this issue specifically: (a) the per-role always-loaded-vs-conditionally-loaded surface boundary is nowhere declared in a structural artifact -- #393 established it empirically, and there is no map node asserting which files a role auto-loads; (b) the corpus-size trend over git history has no structural record; (c) the kernel/fragment decomposition B2 proposes has no existing structural anchor to diff against."
+  ],
+  "escalation": "Escalating to the epic-298 Admiral: I am running B2's TREND measurement over a corpus that carries no architecture map, so every structural claim I make about per-role surface must be derived from the filesystem at a named revision rather than read off a map. This is the #393 hazard restated -- 'always-loaded' is a property of how the harness loads SKILL.md plus named references/, not a property recorded anywhere in the tree. I will measure always-loaded and conditionally-loaded separately and name the revision on every number.",
+  "emitted_at": "2026-08-03T01:51:41.305101+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
