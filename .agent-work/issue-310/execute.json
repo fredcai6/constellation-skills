@@ -98,7 +98,8 @@
           "id": "p1",
           "statement": "g2 complete - gate (b)'s n=0 finding and both attributable declines are recorded before the packet is written",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2 complete: COMPETENCE.md records GATE-B-N:0 and both attributable declines (#414 ablation arm, #415 census salvage). Census gate dropped by amend under Tommy's authority."
         }
       ],
       "postconditions": [
@@ -106,7 +107,8 @@
           "id": "c1",
           "statement": "B2_GATE_EVIDENCE.md written: limitations first; AXIS named and both misreadings refused; break-proceeds declared foreclosed with the conjunctive reasoning shown; exactly one outcome selected with the pre-registered table row that fired; threshold AND unit both handed to Tommy; the unit-reversal table present as a named finding; #307's two bounds intact; curate_corpus thresholds offered-not-adopted; no kernel-break decision taken; one cold reader dispatched and its one-sentence answer recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "B2_GATE_EVIDENCE.md written and RE-FOUNDED after a cold read caught a circularity: the verdict originally fired on '+0.17% is within routine churn', a threshold denominated in words -- i.e. selected by exactly the two choices the document says nobody has made. Re-founded on gate (b) alone (n=0, conjunction cannot close), which uses no unit, no threshold and no number. Row R3 explicitly NOT invoked and the reason stated. Also fixed: origin/main pinned to SHA fc1685a..9a90298 (a moving ref was the terminal address for all of gate (a)); the 'closes exactly' tautology deleted as a check that cannot fail; scopes named per row since NARROW nests inside corpus; the phantom '187 rows' citation removed with the census; the section-4 impossibility restated as fact-plus-labelled-inference; the section-1/section-8 contradiction resolved by marking the axis question unruled in BOTH places. AXIS named, both misreadings refused, #307's two bounds intact, curate_corpus thresholds offered-not-adopted, no break decision taken. Cold reader answered the single question on first read -- which is the test M5 existed for."
         },
         {
           "id": "c2",
@@ -120,7 +122,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-verdict-1"
         }
       ],
       "constraints": [
@@ -152,11 +155,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-verdict-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "D=\"C:/Programs/constellation-skills-wt/e298-310/.agent-work/issue-310/B2_GATE_EVIDENCE.md\"; test -f \"$D\" && test \"$(grep -c '^SELECTED-OUTCOME: ' \"$D\")\" -eq 1 && grep -qE '^SELECTED-OUTCOME: (not-yet-earned|deletion-pressure-suffices)$' \"$D\" && grep -qE '^THRESHOLD-CHOICE-HANDED-UP: Tommy$' \"$D\" && grep -qE '^UNIT-CHOICE-HANDED-UP: Tommy$' \"$D\" && grep -q 'NARROW-ALWAYS-LOADED' \"$D\" && grep -q 'WIDE-ALWAYS-LOADED' \"$D\" && grep -qE '^GATE-B-N: 0$' \"$D\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -166,13 +181,14 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "session_01V6pZVwMCev8MEck1gTUKuu",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-03T02:19:56.831928+00:00",
-    "last_heartbeat": "2026-08-03T02:59:55.673588+00:00",
+    "last_heartbeat": "2026-08-03T03:10:50.962541+00:00",
     "claimed_by": "commander-310",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-03T03:11:03.832926+00:00"
   },
   "why_trail": [
     {
@@ -188,6 +204,13 @@
       "why": "Gate (b) is n=0, established by a cold critic's correction that this Commander and the Admiral both had wrong: relaunch data varies the wrong variable. The impossibility claim that would have excused it is withdrawn -- an ablation arm needs zero authoring -- so the decline rests on runway and Tommy's ruling, both named, rather than on an asserted impossibility. Both declines filed (#414, #415) so a future run inherits specs rather than re-deriving them.",
       "mechanical": false,
       "ts": "2026-08-03T02:59:55.673568+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g3-verdict",
+      "why": "Verdict is not-yet-earned, selected by gate (b) alone: never run, n=0, conjunction cannot close, break-proceeds foreclosed. This uses no unit, no threshold and no number, which is what makes it survive the fact that neither a unit nor a threshold exists. Gate (a) demoted to corroboration. Both open choices -- threshold AND unit -- handed to Tommy. The structural finding (10 of 21 named reference tokens do not resolve role-locally at 9a90298) is led with as a measured fact, with its inference labelled separately.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:10:50.962513+00:00"
     }
   ],
   "amendments": [
