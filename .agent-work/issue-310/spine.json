@@ -323,13 +323,14 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json reports DONE: no open items, and its lease is released. Gates closed: e0-context (complete), g2-competence (complete), g3-verdict (complete). g1-implement/g1-review/g1-integrate were DROPPED through the engine's amend verb under Tommy's authority (2026-08-03 scope cut) -- not abandoned, not left pending. The dispatched implementer returned HALTED-BY-SCOPE-CUT with its engine plan driven to DONE and its lease released; its work is preserved at .agent-work/issue-310/trends/ with README-SALVAGE.md and filed as #415. Evidence integrated: COMPETENCE.md, B2_GATE_EVIDENCE.md, and a cold read of the verdict whose finding forced a re-founding rather than a patch."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -357,7 +358,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete; execute.json DONE, lease released"
         }
       ],
       "postconditions": [
@@ -365,13 +367,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REASONED NO-OP, and it is asserted PER-BLOB not per-tree: 'git diff --name-only origin/main...HEAD -- skills/ scripts/ tests/ docs/' returns 0 files. Every path this run touched is under .agent-work/. No packet map exists in this repo (DEGRADED-NO-MAP, all 3 candidates absent), so the cartographer default path does not apply and no map can be updated. The run produced NO structural change to fold in -- it is an evidence-assembly run whose deliverable is a decision packet. The one STRUCTURAL FINDING it produced (10 of 21 named reference tokens do not resolve role-locally at 9a90298, so a role's loaded surface is not computable from role-local files) is not a change to record but a property of the existing structure; it is routed to the durable record the only way this repo supports -- led with in B2_GATE_EVIDENCE.md section 4 and filed as issue #415 -- rather than written into a map that does not exist."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -387,7 +390,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete (reasoned no-op, 0 source blobs)"
         }
       ],
       "postconditions": [
@@ -395,7 +399,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "ALL 7 candidates routed, count asserted. FILED (4): #411 TREND_SNAPSHOT counts _shared as a 20th role and is built to propagate to every successor; #413 crew cannot SendMessage its dispatching commander, 4/4 dispatches, every result relayed through the Admiral; #414 ablation-arm design + cost so the gate-(b) decline is attributable; #415 census salvage, oracle-validated instrument preserved rather than deleted. ROUTED INTO THE VERDICT PACKET rather than filed (3), because each is an input to Tommy's pending decision and filing would fragment it: (a) no unit has been chosen anywhere in the corpus and rank order reverses between units; (b) 10 of 21 named reference tokens do not resolve role-locally; (c) whether the corpus's three-bin shape is already kernel-plus-fragments under another name. CONFIRMED-DUPLICATE, not re-filed (1): #394 already covers verify-frame refusing typed anchors under DEGRADED -- this run hit it and is a confirming instance, recorded here rather than filed twice. Findings surfaced by the halted implementer that belong to the epic's audit rather than to this issue (#304's published event mixing gross with net; 63681 being a concatenated count vs 63682 per-file; rev-list --reverse manufacturing 3 of 6 fake role deaths) are carried in g1-result.md and named to the Admiral for the closeout audit."
         },
         {
           "id": "c2",
@@ -404,17 +409,30 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Latitude you inherit \u2014 'issue filing, model tiers, and fix-now triage are yours'; and RULES 1-2 \u2014 'Issue filing is REQUIRED, not permitted. File findings directly with gh issue create; never bank them worktree-locally.'",
+            "filed": "#411, #413, #414, #415",
+            "ratifying_authority": "epic-298 Admiral (inherited latitude); the Admiral additionally directed #411 and #413 be filed specifically"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -426,7 +444,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: 7 candidates routed, 4 filed"
         }
       ],
       "postconditions": [
@@ -437,17 +456,33 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Stop conditions \u2014 'Declare FINAL or PENDING (#338) and hand the merge up'; and 'THIS IS HITL AND ARCHITECTURAL... TOMMY makes the kernel-break call'",
+            "verdict": "PENDING",
+            "pr": "#410",
+            "selected_outcome": "not-yet-earned",
+            "ratifying_authority": "epic-298 Admiral ratifies the run; TOMMY ratifies the kernel-break verdict itself at the epic return boundary \u2014 this run does not and must not self-adjudicate it",
+            "summary": "Gates: init, context (DEGRADED-NO-MAP discharged), understand, plan (3 candidates + cold critic, 15 findings disposed), execute (e0-context, g2-competence, g3-verdict complete; g1 census DROPPED by engine amend under Tommy's scope cut), reconcile (reasoned no-op, 0 source blobs asserted per-blob), triage (7 routed, 4 filed). Deliverable B2_GATE_EVIDENCE.md: SELECTED-OUTCOME not-yet-earned, GATE-B-N 0, threshold AND unit both handed to Tommy. No kernel-break decision taken."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -459,7 +494,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review complete; PENDING declared, merge handed up"
         }
       ],
       "postconditions": [
@@ -470,7 +506,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-310 --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         },
         {
           "id": "c2",
@@ -479,17 +516,41 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-310 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -581,12 +642,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "session_01V6pZVwMCev8MEck1gTUKuu",
     "status": "active",
     "claimed_at": "2026-08-03T01:49:52.414158+00:00",
-    "last_heartbeat": "2026-08-03T02:19:42.892892+00:00",
+    "last_heartbeat": "2026-08-03T03:16:35.662597+00:00",
     "claimed_by": "commander-310",
     "worktree": "C:/Programs/constellation-skills-wt/e298-310",
     "previous_session_id": null,
@@ -620,6 +681,41 @@
       "why": "Plan frozen as a 3-gate hybrid: g1 census crew gate (walker, two separately-labelled series NARROW/WIDE, gross-not-net, blocking baseline reproduction at tag baseline/304-trend-snapshot, reviewer hand-recomputes 2 revisions WITHOUT the instrument); g2 competence reasoning gate (gate (b) is n=0 -- the treatment was never varied; ablation-arm cost recorded so the decline is attributable); g3 verdict reasoning gate plus one cold read. Pre-registration committed BEFORE the instrument exists, fixing a 5-row outcome-selection table. break-proceeds is FORECLOSED by the conjunction, so the three-outcome frame resolves to a two-way call. Expected landing: not-yet-earned, which the spec calls success.",
       "mechanical": false,
       "ts": "2026-08-03T02:18:32.582727+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All gates closed. The census gate was cut mid-flight by Tommy and dropped through the engine rather than abandoned; its instrument had already passed its blocking external oracle and is preserved and filed. The verdict was re-founded on gate (b) after a cold read caught it selecting on a threshold nobody has set.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:11:27.918779+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Nothing structural changed: 0 source blobs touched across skills/, scripts/, tests/, docs/. The structural FINDING about cross-role reference resolution is a property of existing structure, not a change, and is routed to the verdict packet and to issue #415.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:12:06.224315+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "7 candidates, count asserted: 4 filed as issues, 3 routed into the verdict packet because they are inputs to Tommy's pending decision and filing would fragment it, 1 confirmed as a duplicate of #394 and deliberately not re-filed. Issue filing is required not permitted under the launch order, and the Admiral specifically directed #411 and #413.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:12:34.472091+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary accepted in delegated mode against the launch order's stop conditions. Declaring PENDING, not FINAL: CI has not yet reported pass, and the kernel-break call is Tommy's to make on the packet. Merge handed up -- gh pr merge is vetoed by the harness classifier (#408) and ORCHESTRATOR_CONTEXT requires explicit human approval for merges regardless.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:13:11.522468+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Feedback appended to the durable log at .agent-work/AGENT_FEEDBACK.md (durable root resolves to this worktree, so no fence staging is needed); verify_agent_feedback.py reports 'agent feedback invariant ok'. Four lessons BANKED, each with a bank_reason naming what re-observation would clarify -- none self-applied, because three of the four target project doctrine or shipped templates and delegated mode forbids self-applying doctrine. --ripe returns empty: no threshold-ripe lesson left unpaid.",
+      "mechanical": false,
+      "ts": "2026-08-03T03:16:35.662569+00:00"
     }
   ]
 }

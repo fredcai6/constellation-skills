@@ -1925,3 +1925,40 @@ rather than banked worktree-locally, per the launch order's standing instruction
 **Every cold plan critic this epic caught a blocking defect. No exceptions.** Declaring spent mutations forced successors onto novel ground and produced the run's best findings. **Two subordinates declined a superior's framing on evidentiary grounds and were right both times** — one refusing an incoherent instruction I had given it, one refusing to be a false example. Both refusals produced better artifacts than compliance would have.
 
 **Lessons bank:** the 20-heading cap **refused adds from two independent commanders on the same day** — the bank is a closed intake, not an untidy one. Both routed to the tracker rather than banked. #308 is removing the cap.
+
+---
+
+## `2026-08-03` — `issue-310` (B2 gate evaluation; commander-310, delegated)
+
+**Run shape:** `commander (delegated)` · init → context → understand → plan → execute → reconcile → triage → review → feedback → archive; execute closed 3 gates and **dropped 3 by amend under a mid-run scope cut** · subagent tiers: opus (2 plan-alternative authors, 1 cold plan critic, 1 implementer, 1 cold verdict reader)
+
+**Instruction adherence:** `minor deviations`
+- Spine driven entirely through the engine; **no checklist JSON hand-edited at any point.** The one post-freeze plan change went through `amend` with Tommy's authority recorded.
+- **Deliberate deviation, and it was right:** `commander-core.md` says a reasoning gate takes no crew. The cold critic argued *"a crew on the measurement and none on the verdict is backwards — the failure is in synthesis, not inputs."* I partially withdrew the g3 crew waiver and dispatched one cold reader with a single-question brief. **That reader found the run's worst defect.** The doctrine default was wrong for this run's shape.
+
+**Friction / unclear:**
+- **`verify-frame` refuses every typed anchor under `DEGRADED`** while `MISSION_FRAME.template.md` mandates them — hit on the first frame, worked around by rewriting three `decision:` anchors as prose. Already filed as **#394**; this run is a confirming instance, deliberately not re-filed.
+- **Peer→peer `SendMessage` never reached me — 4/4 dispatches failed**, and every result had to be relayed through the Admiral as a paraphrase. For a measurement run, receiving a summary of your own crew's numbers is precisely the wrong thing. Filed **#413**.
+- **The gate could not be adjudicated on its own terms:** the confirmed spec asks whether the surface is *"small enough"* and never defines it (its own critic S2 said so). Escalated at `understand`, not held to review.
+- **Worse, and previously unnoticed: no *unit* has been chosen either.** Rank order fully reverses between units (`docent` 1st by lines / 5th by bytes; `admiral` 4th by lines / 1st by bytes), and `curate_corpus.py` mixes three units in one file with no stated relationship.
+- **Annotated tags need `^{commit}`** — a bare `git rev-parse baseline/304-trend-snapshot` returns the tag object, not the commit.
+- **`TREND_SNAPSHOT.md` declared this run its successor but contained a defect** (`_shared` as a 20th role, contradicting `install_constellation.py:245`). Filed **#411**. A baseline built to propagate propagates its errors.
+
+**Crew-reported friction:**
+- From the halted implementer: **"Your verified-numbers table mixed one derived figure among four measured ones without marking which was which — and the derived one was the wrong one."** Fixed this run: every row in the verdict now carries provenance. Same family as *assert against behaviour, not against text describing it*.
+- From the same: **"The instrument's measurements are substrate-independent; its bins are not."** `WIDE-ALWAYS-LOADED` reconstructs a loading contract that does not exist in the tree, so a substrate rework could invalidate it **in a way no re-run would reveal.** Carried into the verdict as an independent argument that measuring now was premature.
+
+**What worked:**
+- **Pre-registering the outcome-selection table before any number existed.** It is the only reason the verdict is attributable: when the census was cut and the numbers never arrived, the pre-registration still selected a row — because it had committed to what *insufficient evidence* would look like **before** knowing whether evidence would exist.
+- **Running a check against a decoy before trusting it.** I wrote two gate checks that could not fail: `g1-integrate.c1` was passed by a one-line decoy containing only the keywords, and `g3-verdict.c2` was passed by a document listing all three outcomes and selecting none — **the fence-sitter, the single declared failure mode, was green.** I caught the first by decoying it; the critic caught the second.
+- **The design-it-twice panel converged independently, and the sampling advocate argued against its own brief to get there** — a stronger signal than either candidate's content.
+- **Stopping a gate is not failing it.** The census was halted after passing its blocking external oracle and being decoyed to prove it could fail; preserved and filed (#415), not deleted.
+
+**Improvement signals:**
+- **A check should be falsified against a decoy before it is trusted as a gate postcondition.** Two of this run's own acceptance criteria could not fail, one of them green on exactly the failure mode it existed to catch. → disposition: `distilled to a lesson (banked — needs re-observation to know whether this is a commander-authoring habit or a template gap)`
+- **Grading a contested claim `settled` launders it.** I graded "building the decomposition IS the break" as `settled/structural`; it was simply false. → disposition: `distilled to a lesson (banked)`
+- **A verdict must not select on the gap it is escalating.** Mine fired on "+0.17% is within routine churn" — a threshold denominated in words — two sections after saying nobody has chosen a threshold or unit. Re-founding on the leg that needs no number beat patching. → disposition: `distilled to a lesson (banked)`
+- **Crew cannot reach its dispatching commander** → disposition: `filed as #413 (harness limitation, not a doctrine change)`
+- **`verify-frame` vs `MISSION_FRAME.template.md` contradiction under DEGRADED** → disposition: `already filed as #394; confirming instance recorded, not re-filed`
+
+---
