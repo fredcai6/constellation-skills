@@ -244,8 +244,12 @@ three places, and here is why:
    generator under that concurrency, and nothing about the episode store's job needs
    linear human readability the way the playbook does.
 2. **No counters, no cap, no dormancy/auto-expiry.** `LESSONS.md` curates an *evolving*
-   claim that gets reconfirmed over time, so it needs mentions/confirmed/disconfirmed
-   counters and a cap to keep the bank from growing unbounded. An episode is a *raw,
+   claim that gets reconfirmed over time, so it carries mentions/confirmed/disconfirmed
+   counters. It also carried a 20-entry cap for the same reason — until #308 removed it,
+   having measured that a cap does not bound a bank so much as silently drop from it, and
+   at 20/20 refuses new entries outright. Bounding is now the Curator's regular cleanup
+   pass, in both stores. This contrast therefore holds on the counters and no longer on
+   the cap. An episode is a *raw,
    atomic capture*, written once and then either stands or is retired (§7) — the
    adjudication machinery that is right for a curated playbook is over-engineering for a
    write-once record.

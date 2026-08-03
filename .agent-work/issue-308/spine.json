@@ -337,13 +337,14 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json reports DONE: no open items. All gates closed with integrated evidence: e0-context, g1-build-destination, g2-doc-coherence (closed by my predecessor), then g3-drop-cap-implement/review/integrate and g4-disposition-lessons and g5-cut-intake-implement/review/integrate (closed by me). g6-land-consolidation and g7-retire-sources were DROPPED through the engine's amend verb, not left pending: Tommy withdrew the two-bin consolidation, so no ruling exists or is coming, and a pending gate would have represented this run as waiting on a decision. Every command postcondition was re-run by me at HEAD rather than accepted from a crew transcript, and the full suite (1621 passed, 2 skipped) was run by me at each gate boundary. Two crews dispatched through run_crew.py with durable registry entries, both results verified fresh."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -371,7 +372,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream work verified: execute.json is terminal (DONE, no open items), every gate closed with integrated evidence, and the full suite was re-run by me at HEAD (1621 passed, 2 skipped, 541 subtests). All changes are committed and pushed on epic-298/308. This repo has NO docs/architecture/ packet map -- 'ls docs/architecture/' returns 'No such file or directory' -- so this step takes the no-packet-map path: reconcile the structural record directly against the docs this change actually touched."
         }
       ],
       "postconditions": [
@@ -599,7 +601,7 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T19:23:24.450655+00:00",
-    "last_heartbeat": "2026-08-02T20:30:35.770854+00:00",
+    "last_heartbeat": "2026-08-03T00:14:19.299414+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -633,6 +635,13 @@
       "why": "Plan frozen: 7 gates. Cold critic caught 2 BLOCKING defects, both fixed pre-freeze -- g4 could not reach zero active lessons because disposing the cluster-A lesson IS the routing decision (carved out by id), and g5's guard matched only 2 of 6 real intake sites (replaced by a corpus-enumerating guard). 12 of 15 command postconditions verified RED at freeze time, so they can fail.",
       "mechanical": false,
       "ts": "2026-08-02T20:01:30.644622+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "The execution is done and the issue's deliverable is two numbers: 23 episodes migrated (20 lessons one-for-one plus this run's three own observations) and 11 of 23 carrying an UNKNOWN field. Nothing was back-filled, nothing was judged, nothing was deleted. What the run kept discovering is that its own frozen checks were wrong in both directions -- g4's asserted the opposite of the requirement, g5's c2 could only be satisfied by destroying the writer, and g5's c1 guard is narrower than its name -- so every acceptance here rests on a check that was corrected and shown able to fail, not on a green. Four findings filed rather than worked around: #399, #400, #403, and the earlier #392.",
+      "mechanical": false,
+      "ts": "2026-08-03T00:13:27.327427+00:00"
     }
   ]
 }

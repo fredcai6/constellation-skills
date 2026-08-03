@@ -112,6 +112,17 @@ The `scope` field is the router. Everything below reuses it.
 
 ### Loop 2 — Commander across runs
 
+> **SUPERSEDED IN PART by #308 (2026-08-02): the READ half of this loop is gone.**
+> The `context`-step read below, and the `SessionStart` `LESSONS.md` digest injection
+> proposed under Loop 3, were both removed — live agents now work from local
+> (`docs/agents/*`) and global doctrine only. The **write** half stands unchanged: the
+> `feedback` step still distils delta ops through `apply_lessons_delta.py`, and the
+> bank still stages signal for the Curator to drain.
+> What replaces the read is the **episode store** (`episodes/`, #301): observations
+> accumulate there mechanically and are searched when a question arises, rather than
+> being read at every step by every agent. #308 migrated all 20 active lessons into it.
+> The bullets below are the original design record and are left intact.
+
 - Split the durable store: keep `.agent-work/AGENT_FEEDBACK.md` as the append-only
   log; add `.agent-work/LESSONS.md` as the curated playbook (small, itemized lessons
   with scope tags and a `confirmed: <n>` recurrence counter).
