@@ -1,5 +1,7 @@
 # Launch Order: `<commander id — issue>`
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
+
 Commanders start cold. Paste, don't point — this covers **external finding ids** too (an f1brainz sweep hash, a cross-repo commit id): a Commander cannot open them from the target repo and is forced to guess the finding. Paste the concrete finding inline, as this order already does for prior-wave verdicts.
 
 ## Mission

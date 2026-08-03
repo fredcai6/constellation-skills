@@ -199,6 +199,10 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "curator": _GLOBAL_EVERYONE + ("skill-goodness.md",),
     "to-issues": _GLOBAL_ORCHESTRATOR,
     "diagnose": _GLOBAL_ORCHESTRATOR,
+    # how-to-talk is prose discipline any agent applies to its own human-facing
+    # output, so it is not tier-specific: it carries only the everyone-global
+    # doctrine (mirrors interrogator/lessons-auditor). It ships no script.
+    "how-to-talk": _GLOBAL_EVERYONE,
     # write-a-skill authors against the shared skill-goodness criteria, so the
     # reference travels with the installed skill alongside the everyone-global
     # doctrine (mirrors curator's tier; skill-goodness.md is its own bucket).

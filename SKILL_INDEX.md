@@ -90,6 +90,11 @@ Path: `skills/write-a-skill/SKILL.md`
 
 Mints a new constellation skill from a described capability: classifies it, scaffolds from an archetype, drafts the `skills/<name>/` tree, then hands it to an independent reviewer. For a human authoring a brand-new skill, not for maintaining an existing one.
 
+## Constellation How-to-Talk
+Path: `skills/how-to-talk/SKILL.md`
+
+Keeps an agent's prose clear, concise, and grounded — every sentence carrying one point in the plainest words — through positive "do" rules applied to any artifact, whether human-facing, internal, or agent-to-agent, so meaning stays consistent across sessions. Backs one-name-for-one-thing with the project glossary (`docs/agents/GLOSSARY.md`, compiled by charter).
+
 ## Constellation Curator
 Path: `skills/curator/SKILL.md`
 

@@ -1,5 +1,7 @@
 # Review Result
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
+
 Status values follow `skills/workbench/references/status-model.md`.
 
 Omit optional sections when empty.

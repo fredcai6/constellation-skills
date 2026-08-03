@@ -1,5 +1,7 @@
 # Design Spec — <topic>
 
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
+
 **UNCONFIRMED — DO NOT CUT**
 
 _Draft state. This spec has not passed the confirm gate. `verify_spec_confirmed.py` refuses it until the Confirmation block below is filled (Status CONFIRMED, confirmer, date) and every Disposition cell in the Critic findings table is filled. Do not cut issues or epics from this document while the marker line above stands._
