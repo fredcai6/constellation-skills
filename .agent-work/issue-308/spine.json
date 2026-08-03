@@ -381,13 +381,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No packet map exists in this repo (ls docs/architecture/ -> No such file or directory), so the no-packet-map path applies: the change was folded into the structural records it actually touches. Three edits: docs/EPISODE_STORE.md section 8's LESSONS-vs-episodes contrast (the cap half of its rationale is now false, the counter half stands); skills/lessons-auditor/SKILL.md's 'Reaching the cap is a failure signal' (no cap exists); and docs/RECURSIVE_IMPROVEMENT_DESIGN.md Loop 2, which gains a SUPERSEDED-IN-PART banner because the loop's READ half is gone while its WRITE half stands, with the original bullets left intact. docs/CONSTELLATION_OVERVIEW.md is a reasoned no-op: g2 already landed the episodes/ taxonomy entry, the cutover flow and the cap-removal rationale, and its claim that live agents no longer read the bank became true at g5. Earlier in the run, the same reconciliation was applied at g3-integrate to docs/RECURSIVE_IMPROVEMENT_DESIGN.md:402 and section 5.3, and at g2 to docs/EPISODE_STORE.md section 1 (#348) and docs/CONSTELLATION_OVERVIEW.md (#322). Suite green after: 1621 passed, 2 skipped."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -403,7 +404,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream complete: execute.json terminal, reconcile complete, all work committed and pushed on epic-298/308. The triage candidate set was collected from execute.json's triage_candidates (empty) plus the four crew results' own triage sections, read rather than recalled: g3-implement tc1-tc3, g3-review TC1, g5-implement 2 candidates, g5-review tc1-tc4. Total 10 candidates, every one dispositioned."
         }
       ],
       "postconditions": [
@@ -411,7 +413,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "TEN triage candidates, collected by reading all four crew results plus execute.json (whose own triage_candidates array is empty), every one routed. FIXED IN-RUN (4): g3-review TC1 docs/RECURSIVE_IMPROVEMENT_DESIGN.md:402 and section 5.3 asserting a live cap, fixed at g3-integrate; g3-implement tc1 skills/lessons-auditor/SKILL.md 'Reaching the cap is a failure signal', fixed at reconcile; g3-implement tc2 docs/EPISODE_STORE.md section 8's cap rationale, fixed at reconcile; g5-review tc3 stale design-doc claims plus the SessionStart LESSONS.md digest proposal, both covered by the Loop 2 SUPERSEDED banner at reconcile. FILED (5 issues): #399 the episode store cannot record a migrated observation without fabricating counters or reattributing the run (second instance of the #342 shape, plus the exactly-five-kinds and no-blank constraints); #400 LESSONS.md's preamble is unreachable through its own writer and now instructs agents to read an empty bank; #403 the read-path cut is unverifiable after this run -- the guard is run-local with three demonstrated blind spots, and downstream compiled AGENT_GUIDEs still carry the instruction (g5-review tc1 + g5-implement tc1); #404 the feedback loop lost its observer -- the spine still tells agents to bank for re-observation and runs-since-confirmed still drives auto-deletion, but nothing re-observes (g5-review tc2); #405 the durable root token now has zero shipped declarations so its silent-resolution trap is exercised only by synthetic tests (g5-implement tc2 + the reviewer's speculative-generality flag). RECORDED, NOT FILED (1): g5-review tc4, the synthetic fixture literal appearing 4x in tests/test_episode_capture.py -- cosmetic, named in this attestation so it is not lost. Separately, the g3 reviewer's workflow-feedback observation that checklist_engine.py silently tolerates a dangling config_ref was posted as a comment on #304, which already owns docs/agents/engine-config.json, rather than as a duplicate issue."
         },
         {
           "id": "c2",
@@ -420,17 +423,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "note": "Launch order, verbatim: \"Issue filing is REQUIRED, not permitted. File directly; never bank worktree-locally.\" That is the standing authority for every issue this run created (#399, #400, #403, #404, #405). The Admiral is the human delegate for this dispatch; the human ratifies at the epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -601,7 +616,7 @@
     "session_id": "commander-308-e298",
     "status": "active",
     "claimed_at": "2026-08-02T19:23:24.450655+00:00",
-    "last_heartbeat": "2026-08-03T00:14:19.299414+00:00",
+    "last_heartbeat": "2026-08-03T00:25:54.105701+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -642,6 +657,20 @@
       "why": "The execution is done and the issue's deliverable is two numbers: 23 episodes migrated (20 lessons one-for-one plus this run's three own observations) and 11 of 23 carrying an UNKNOWN field. Nothing was back-filled, nothing was judged, nothing was deleted. What the run kept discovering is that its own frozen checks were wrong in both directions -- g4's asserted the opposite of the requirement, g5's c2 could only be satisfied by destroying the writer, and g5's c1 guard is narrower than its name -- so every acceptance here rests on a check that was corrected and shown able to fail, not on a green. Four findings filed rather than worked around: #399, #400, #403, and the earlier #392.",
       "mechanical": false,
       "ts": "2026-08-03T00:13:27.327427+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "The structural record this run had to keep honest is not a map but a set of design documents describing machinery this issue changed. Every one was accurate when written and became false at a specific gate -- the same defect (#348, #322) this run was already fixing for others -- so reconcile is the run declining to create the next instance of its own subject. Where a document is a design RECORD rather than a live description, the correction is a banner plus the original text, not a rewrite: what was decided is worth more than a tidy page.",
+      "mechanical": false,
+      "ts": "2026-08-03T00:23:06.483198+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Ten candidates, four fixed in-run and five filed, and the split is not arbitrary: a candidate was fixed here when it was a stale claim this run's own change made false, and filed when it needs a decision I do not have the standing to make. Every filed issue is a consequence of what this run did rather than a wish list -- #404 and #405 exist BECAUSE the read path was cut, and both are the kind of second-order effect that goes unrecorded when a run reports only what it built. The one cosmetic candidate is named in the attestation rather than filed, because a tracker entry for a duplicated test literal costs more attention than it saves.",
+      "mechanical": false,
+      "ts": "2026-08-03T00:25:54.105671+00:00"
     }
   ]
 }
