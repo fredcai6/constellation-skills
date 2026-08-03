@@ -84,9 +84,14 @@ hash-pinned substitute or a named prior issue rather than in a map node. They ar
 2. **Bytes primary, lines secondary.** Grounded in the confirmed spec's own naming of line endings as an
    irreproducibility source (spec line 140) and in this repo being developed on Windows.
    `@grade: settled/measured · leans g1-trends · settle: line counts hide CRLF and long-line changes; both are reported so neither is load-bearing alone`
-3. **Gate (b) is observational, never a controlled paired arm.** Grounded in the spec text itself: the
-   test requires a kernel+fragments decomposition, and building it *is* the break.
-   `@grade: settled/structural · leans g2-competence · settle: there is no decomposition to test; state the limitation first, not in a footnote`
+3. **Gate (b) is not run in this run, and has n = 0.** *Originally written as "a controlled arm is
+   impossible because building the decomposition IS the break", graded `settled/structural`. **That claim
+   is WITHDRAWN and the grade was wrong.*** A cold plan critic named a cheaper honest arm: an **ablation**
+   — run one mid-spine step with sections of today's monolith *withheld* vs full — which varies the
+   treatment and requires **zero authoring**. So the arm is declined for **runway**, not impossibility.
+   Separately: this epic's refresh/cold-start relaunches are **not** gate-(b) evidence, because every one
+   held the full monolith — **the treatment was never varied**, so gate (b) is n = 0, not weak-n.
+   `@grade: guess/structural · leans g2-competence · settle: run the ablation arm; regraded from settled after a cold critic showed the impossibility claim was contested, which is exactly the laundering a grade exists to prevent`
 
 **Decision pressure (no grade — a choice this run forces, not an anchor it inherits):**
 
