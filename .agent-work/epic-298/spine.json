@@ -143,9 +143,9 @@
       "child_checklist": null,
       "status": "blocked",
       "status_detail": {
-        "blocker": "PR #407 (issue #308) cannot be merged: 'gh pr merge 407 --squash' is VETOED by the harness auto-mode permission classifier. Not a CI failure and not a conflict -- PR is CLEAN/MERGEABLE, CI status text reads 'pass' (5m58s), and PR head == branch tip == CI-tested SHA == 573842e, all three verified equal. The latitude contract pre-cleared 'gh issue+pr' but contract pre-clearance does not bind the classifier (the #145 shape). Did not route around the veto. #310 is blocked behind the merge, and e298-308 must NOT be swept until it lands because two of the commander's three feedback files exist only in that PR.",
-        "authority_needed": "admiral escalation to Tommy; out-of-taxonomy per the latitude contract",
-        "next_action": "Tommy runs 'gh pr merge 407 --squash --delete-branch' or grants the Bash permission; then sweep e298-308, dispatch #310 from the committed launch order, and drive closeout.",
+        "blocker": "PR #407 (#308) needs a human merge: 'gh pr merge 407 --squash' is VETOED by the harness permission classifier. CLEAN/MERGEABLE, CI text 'pass', head==tip==tested SHA==573842e. Filed as #408. SECOND HALF OF THE BLOCKER: the merge BREAKS the installed corpus until scripts/install_constellation.py is re-run (#406) -- verified behaviourally, both installed apply_lessons_delta.py copies fail to parse the post-merge capless playbook-state header. Reinstall is pre-cleared but must come AFTER the merge, never before.",
+        "authority_needed": "admiral escalation to Tommy",
+        "next_action": "Tommy runs 'gh pr merge 407 --squash --delete-branch'. THEN, unattended and pre-cleared: python scripts/install_constellation.py (install only, NEVER --wire-hooks), then sweep e298-308, dispatch #310, drive closeout.",
         "prior_status": "in-progress"
       },
       "result": null,
@@ -254,13 +254,19 @@
       "blocker": "PR #407 (issue #308) cannot be merged: 'gh pr merge 407 --squash' is VETOED by the harness auto-mode permission classifier. Not a CI failure and not a conflict -- PR is CLEAN/MERGEABLE, CI status text reads 'pass' (5m58s), and PR head == branch tip == CI-tested SHA == 573842e, all three verified equal. The latitude contract pre-cleared 'gh issue+pr' but contract pre-clearance does not bind the classifier (the #145 shape). Did not route around the veto. #310 is blocked behind the merge, and e298-308 must NOT be swept until it lands because two of the commander's three feedback files exist only in that PR.",
       "authority_needed": "admiral escalation to Tommy; out-of-taxonomy per the latitude contract",
       "next_action": "Tommy runs 'gh pr merge 407 --squash --delete-branch' or grants the Bash permission; then sweep e298-308, dispatch #310 from the committed launch order, and drive closeout."
+    },
+    {
+      "item": "execute",
+      "blocker": "PR #407 (#308) needs a human merge: 'gh pr merge 407 --squash' is VETOED by the harness permission classifier. CLEAN/MERGEABLE, CI text 'pass', head==tip==tested SHA==573842e. Filed as #408. SECOND HALF OF THE BLOCKER: the merge BREAKS the installed corpus until scripts/install_constellation.py is re-run (#406) -- verified behaviourally, both installed apply_lessons_delta.py copies fail to parse the post-merge capless playbook-state header. Reinstall is pre-cleared but must come AFTER the merge, never before.",
+      "authority_needed": "admiral escalation to Tommy",
+      "next_action": "Tommy runs 'gh pr merge 407 --squash --delete-branch'. THEN, unattended and pre-cleared: python scripts/install_constellation.py (install only, NEVER --wire-hooks), then sweep e298-308, dispatch #310, drive closeout."
     }
   ],
   "engine_session": {
     "session_id": "sess-0144fxRT9HovYs1rcStyJ8E6",
     "status": "active",
     "claimed_at": "2026-08-01T05:23:03.259687+00:00",
-    "last_heartbeat": "2026-08-03T00:56:09.580408+00:00",
+    "last_heartbeat": "2026-08-03T00:59:36.301639+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,

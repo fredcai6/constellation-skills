@@ -18,6 +18,21 @@ Rewrite this **before** launching any detached or multi-hour process, and again 
 
 **A resuming agent must NOT try to route around this.** Ask Tommy to run the merge, or to grant the permission. Everything below waits on it.
 
+### ⚠️ THE MERGE IS NOT THE LAST STEP — #406 REQUIRES A REINSTALL IMMEDIATELY AFTER IT
+
+**Merging #407 BREAKS the installed corpus until `python scripts/install_constellation.py` is re-run.** Verified behaviourally, not taken from the commander's report: `STATE_RE` extracted from each installed copy and run against the actual post-merge header —
+
+| parser | parses post-merge header? |
+|---|---|
+| installed `constellation-admiral` | **False** |
+| installed `constellation-commander` | **False** |
+| repo `main` today (pre-merge) | **False** |
+| the branch's copy | **True** — `cap=` made a tolerated-and-discarded non-capturing group so legacy playbooks keep parsing |
+
+Blast radius **enumerated, not assumed**: exactly **two** installed parsers and **two** repo files mention `playbook-state`. Nothing else reads it.
+
+**Main is self-consistent before the merge and after it. The only broken window is the installed corpus, and only once #407 lands.** So: **merge → reinstall, in that order.** Reinstalling *before* the merge installs the fix's absence. **The reinstall is PRE-CLEARED** (install only, never `--wire-hooks`) — do it unattended the moment the merge lands.
+
 **DO NOT SWEEP `e298-308` UNTIL #407 MERGES.** commander-308b was **not fenced**, so it wrote its trio to the worktree root (`AGENT_FEEDBACK.md` 1898 lines, `LESSONS.md` 26, `CONSTELLATION_FEEDBACK.md` 210). Two of the three are carried **only** by PR #407 — sweeping first destroys the run's learning. (`CONSTELLATION_FEEDBACK.md` does not differ from main: the commander exported nothing, an empty result, not a missed harvest.)
 
 **#307 CLOSED — Tommy ruled PASS (`cfa2c40`).** `map_before_src` **PRE-B 0/4 → POST 4/4** (per task, first map/first source: #690 36/23→17/25 · #688 27/23→21/37 · #698 57/25→29/46 · #704 23/7→19/22 · #716 a literal row in both arms). **`read_at_bootstrap` 0/4 in BOTH arms** — first map reads land at calls 17/21/29/19 because the spine runs `init` before `context`; **"map-first" as delivered means FIRST-AMONG-CONTENT, not first-among-actions**, and Tommy accepted that as the win ("before source was intent"). **Limitation stated first:** manipulation was `74953936`→`3595955`, **8 days and +31 files, not #304 alone** — containment proven, exclusivity not. Record: `post/POST_RECORD.md`.
@@ -69,4 +84,4 @@ Lessons audit with fresh context (brief at `LESSONS_RUN_BRIEF.md`, routing at `B
 
 **ARCHIVE MECHANISM:** copy `.agent-work/epic-298/` into a fresh worktree off `origin/main` and open a PR. **Do not branch-checkout in the main checkout** — that is what destroyed this file.
 
-_Updated: 2026-08-03T00:55:00Z_
+_Updated: 2026-08-03T01:15:00Z_
