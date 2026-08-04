@@ -159,6 +159,7 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 | Mode selection is **system-owned**; interface is `question + context`; system dials exploration level | Settles who chooses (the "librarian") | cycle-1, human |
 | **The dial rule**: direct trace → silent core; unclear OR strong pull → surface associated info. Default silence, expansion triggered. Interpret-vs-answer = focus-vs-inspiration = one dial | Settles librarian behavior; does NOT settle what "pull" *is* mechanically, or static-vs-learned | cycle-1, human |
 | **Phasing**: learned pull is the long-run destination (agreed) but DEFERRED — "learning" is hard to define now. Near-term = a **reliable traversal mechanism** with static/simple pull. Steps 2–3 of the walk keep the same shape static-or-learned, so nothing built now is thrown away | Settles sequencing; does NOT settle grammar, entry, or the eventual learning rule | cycle-1, human |
+| **Substrate + north star**: librarian starts on the **existing architecture map**; long-term goal is generalizing the map from a *view of the code* → a **general knowledge graph**. Design constraint: the traversal layer must NOT bake in architecture-only assumptions (treat node kinds/edge types generically) | Settles what to build on and the direction; does NOT settle the generalization mechanism (relaxing current-only/architecture-anchored) | cycle-1, human |
 
 ## Open threads
 
@@ -170,11 +171,15 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 - **The crux — step 1, "enter."** question+context → start node(s) is its own retrieval
   problem, *before* the graph can help. Entry is into a **map-shaped graph** (see finding
   below), via its struct/capability nodes — not via episodes.
-- **THE fork — substrate.** Build the librarian **over the existing architecture map** (real,
-  populated, typed, small → "reliable traversal" testable immediately; but memory is broader
-  than current-only architecture, so generalizing later means relaxing the map's "current-only"
-  + "architecture-anchored" rules) **vs.** treat the map as the *reference model* and design a
-  new, general graph. Agent lean: build-over-the-map first. *(Human deciding.)*
+- **THE live thread — static pull from the map's existing signals.** Strawman:
+  `pull ≈ edge-type-prior × confidence × distance-decay`, with node `status` (stale/disputed)
+  as a penalty. Deterministic, testable, uses only what the map already stores. The **dial** =
+  a threshold over pull: direct trace = high threshold (strong structural/high-confidence edges
+  only); opening doors = lower it to admit cross-overlay + lower-confidence edges. Learning
+  later just replaces the static edge-type priors; the walk is unchanged. *(Human reacting:
+  does the decomposition hold; which signal best separates "answer" from "door".)*
+- **RESOLVED — substrate fork.** Build over the existing architecture map; generalize to a
+  knowledge graph long-term (see Verdicts). No longer open.
 - **What sets the dial (query side)?** Signals of "direct trace" vs. "unclear": question
   specificity, agent state (stuck/looping → widen; mid-execution → tighten). Query-side
   input; "pull" is the graph-side input. Both feed the one dial.
