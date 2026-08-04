@@ -70,5 +70,29 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/explore-memory-graph/explore/x4-deleuze-machines/attempt-1",
+    "work_id": "explore-memory-graph",
+    "gate": "explore",
+    "role": "x4-deleuze-machines",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/explore-memory-graph/explore/x4-deleuze-machines/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/explore-memory-graph/excursions/x4-brief.md",
+    "result": ".agent-work/explore-memory-graph/excursions/x4-result.md",
+    "stdout": ".agent-work/explore-memory-graph/crew-runs/explore-x4-deleuze-machines-attempt-1.stdout.txt",
+    "stderr": ".agent-work/explore-memory-graph/crew-runs/explore-x4-deleuze-machines-attempt-1.stderr.txt",
+    "started_at": "2026-08-04T14:56:50.871185+00:00",
+    "last_heartbeat": "2026-08-04T15:05:55.859550+00:00",
+    "completed_at": "2026-08-04T15:05:55.859550+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

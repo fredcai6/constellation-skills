@@ -1,0 +1,40 @@
+{
+  "work_id": "explore-memory-graph",
+  "cycle": "3",
+  "flavor": "refine",
+  "type": "survey",
+  "items": ["c0-frame", "q1-structure", "x4-deleuze-machines"],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame cycle 3 as refine on structure",
+      "imperative": "Flavor refine. Cycle 2's consolidation closed, but the discussion that followed hardened the STRUCTURE of the thing: two-layer backend, address-as-identity, Wikidata statement shape, atomic storage with rendered article views, project-owned graphs. Those verdicts are already recorded on the board. This cycle holds that refinement plus any excursions it spawns.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "framed: refine on structure; discussion verdicts already on the board", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "q1-structure": {
+      "id": "q1-structure",
+      "title": "Harden the structural model (address book + graph, layers, federation)",
+      "imperative": "Chase the structural open threads through discussion with the human: what the layer list is, whether the layer mask is the dial's primary suppression axis, how a cross-project jump decides without loading, how two projects converge on one subject under opaque ids, and whether the vector layer earns its complexity over properties+queries. Verdicts land on the board as they settle.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "in-progress", "status_detail": {}, "result": null,
+      "finding": "SETTLED SO FAR (see board Verdicts): two access paths (property/address store + graph); address is opaque identity, never classification; each project owns its graph, project qualifier is a storage location not a taxonomy segment; lift Wikidata's statement shape (qualifiers + references) and identity scheme, not Wikipedia's article model; keep the type vocabulary small and our own; atomic storage with article-shaped rendered views; one node per layer sharing subject identity; the argument/decision layer is first-class. OPEN: layer list, layer-mask-as-dial, cross-project jump economics, same-subject convergence, and whether the embedding/vector layer earns its cost over properties+queries (human pushback: 'that's really just defining properties per topic' - conceded for FCA, residue is graded similarity along undeclared axes, which is exactly the cross-project case).",
+      "evidence": [], "rework_count": 0
+    },
+    "x4-deleuze-machines": {
+      "id": "x4-deleuze-machines",
+      "title": "Excursion: Deleuze's machines/assemblages at the intersection with agent networks",
+      "imperative": "Research excursion, human-initiated one-off. One named question: is there prior art at the intersection of Deleuze's concept of machines (and the assemblage/rhizome apparatus) and agent networks / knowledge organization, and is any of it load-bearing rather than decorative? Brief at excursions/x4-brief.md, recorded on the board. Dispatch background via run_crew.py (external backend); result at excursions/x4-result.md. Scoped nulls apply.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "completed; registry verified fresh",
+      "finding": "Thin but not empty, and thinner than the citation volume suggests. Deleuze's MACHINES specifically produced zero operational prior art. One running system (Serrano et al. 2026 Rupture Protocol: edge-density concentration threshold triggers injection of heterodox material) with no quantitative evaluation and an uncalibrated threshold; one modelling discipline (DeLanda's parametrized assemblage theory, via Shults); everything else interpretive. Verified clean negative: the 'Rhizome' semantic wiki (Souzis, IEEE 2005) cites no Deleuze. ANT does most of the work Deleuze is credited for, and plainer. FOUR TRANSFERABLE: (1) centralization guard - measure edge-mass concentration and push back against hub formation, the one genuinely new pressure nothing in the design has; (2) orthogonal-isolation detection - same terminology, no connecting path, which is exactly the cross-project collision case; (3) relations of exteriority as a LINT RULE - a node must be interpretable outside its home graph, the only testable claim in the corpus, directly serving cross-project sharing; (4) a disagreement edge type plus traversal preference, exposed on the dial. FLAGGED not recommended: Simondon's concretization as a maturity criterion (parts serving several functions), which cuts against one-concern-per-component. SCOPED NULLS: no prior art for flow-interruption applied to read/write boundaries; no Deleuze-derived system in the RDF/KG engineering lineage; no Deleuze citations in swarm/self-organizing MAS engineering; no quantitative evaluation anywhere. Unsearched: ACM/IEEE/AAMAS direct, French-language agencement scholarship, paywalled Shults/Muller-Schurr/Tredinnick full texts.",
+      "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

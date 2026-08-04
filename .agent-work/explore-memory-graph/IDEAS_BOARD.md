@@ -166,6 +166,22 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 - Retrieval-outcome weighting (spaced repetition) + x3's "usefulness signal" gate + deferred learned pull are one thread: the missing signal that would make culled techniques (random pairing) and learned pull both viable is *the same signal* — did a surfaced edge/door get used?
 - Codd's warning lands on the entry crux: traversal must not be the only access path, so entry (question+context → start nodes) is content-addressed query, co-equal by design, not a bolt-on.
 
+## Key finding — cycle 3: Deleuze is thin; DeLanda and Simondon carry what there is (x4)
+
+*Full cited result: `excursions/x4-result.md`. Excursion finding, agent-consolidated — not a human verdict.*
+
+**Direct answer to the question asked:** Deleuze's *machines* specifically (the *Anti-Oedipus* desiring-machine / flow-interruption apparatus) produced **zero operational prior art** in everything searched. The intersection overall is thin but not empty, and thinner than the citation volume suggests. Exactly one system turns any of it into running code (Serrano, Kevari & Narayan 2026 — a "Rupture Protocol" watching a knowledge graph for edge-density concentration and injecting heterodox material past a threshold), with no quantitative evaluation and an admittedly uncalibrated threshold. Exactly one programme turns the apparatus into a modelling discipline: DeLanda's parametrized assemblage theory (via Shults for multi-agent modelling). Everything else *reads* existing systems through Deleuze rather than deriving anything. Clean negative worth keeping: the semantic wiki literally named **Rhizome** (Souzis, IEEE 2005) was fetched and checked — it cites no Deleuze at all; the name is the entire connection. Also: on the shared claims (relationality, emergence), **actor-network theory is doing most of the work Deleuze gets credited for**, and says it plainer.
+
+**The four transferable ideas, in plain terms:**
+1. **Centralization guard** — measure how concentrated edge mass is on a few nodes and act *against* it (surface from the sparsest regions) past a bound. Cheap to compute (Gini over node degree, share-of-edges-in-top-k); natural home is the background crawler. **This is the one genuinely new pressure**: nothing in the current design pushes back on hub formation, and a used memory graph concentrates by preferential attachment. Borrow the mechanism, not their 40% number.
+2. **Orthogonal isolation detection** — clusters that share terminology but have no path between them, distinguished from genuine empty regions. Mostly standard clustering, *except* this exact signal is the cross-project collision case: two projects coining one term for different things, or one concept under two names in unconnected subgraphs.
+3. **Relations of exteriority as a lint rule** — a node's meaning must not depend on the graph it currently sits in; test by export. **The only place in the whole corpus where the philosophy states something a test can fail**: a node whose content resolves only via context on its edges (bare "this approach", project-local abbreviations, unresolved pronouns) violates it. Directly serves cross-project sharing. Real cost: self-containment overhead per node, and it pulls against context-rich nodes.
+4. **A disagreement edge type plus a traversal preference for it** — the schema cost is nil since typed edges exist; the delta is being able to ask retrieval for the strongest available objection rather than always walking toward reinforcement. Natural dial exposure. Unvalidated in the source.
+
+**Flagged, not recommended — Simondon's concretization.** A technical object matures when separate single-purpose parts converge into parts serving several functions at once. Applied here it says maturity looks like *one* structure carrying several functions rather than a new mechanism per need — which cuts directly against one-concern-per-component. Non-obvious, unoperationalized by anyone found, offered as a live question.
+
+**Honest caveats:** no quantitative evaluation exists for *any* Deleuze-derived mechanism anywhere in the pass; territorialization/coding reduce to cohesion and schema-strictness (the only non-redundant part is that the two are independent — a 2×2, not a vocabulary worth importing); smooth-vs-striated maps onto free-traversal-vs-structured-query at metaphor level only, with nobody operationalizing it. Scoped nulls and the unsearched space (ACM/IEEE/AAMAS direct, French-language *agencement* scholarship) are listed in the result.
+
 ## Verdicts
 
 *What has been decided, each with the SCOPE of what was tested. None yet — exploration has not run a cycle.*
@@ -260,6 +276,10 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 - **x1 — Organizing forms beyond the graph** (research). *Question:* what ways/tools have people used to organize diverse interconnected thoughts, and is any of them genuinely NOT a graph (or lossy to reduce to one)? Answered = cited survey of 10–20 forms with steal/decline verdicts + a 3–5 form shortlist that most challenges node-and-edge.
 - **x2 — Two-speed memory prior art** (research). *Question:* how do working-vs-long-term memory architectures (cognitive science AND software/AI systems) handle capture, consolidation/promotion, forgetting — what should the two-speed graph steal? Answered = cited comparison of promotion triggers/units/filters/authority + 3–5 mechanisms worth stealing + any evidence the two-speed split is the wrong shape.
 - **x3 — Link-building cognition rules** (research). *Question:* what deliberate techniques in the "ask why 5 times" family build conceptual links, and which could an agent run mechanically as edge-generation rules? Answered = cited catalog of 8–15 techniques with link-kind + mechanizability verdicts + top 3–5 mapped to the map's typed edges.
+
+## Excursion briefs (cycle 3 — refine on structure)
+
+- **x4 — Deleuze's machines and agent networks** (research, human-initiated one-off). *Question:* is there prior art at the intersection of Deleuze's machines/assemblages/rhizome and agent networks or knowledge organization, and is any of it load-bearing rather than decorative? Answered = cited prior art + a load-bearing-vs-decorative verdict per item + 3–5 transferable ideas in plain operational terms (or an honest thin-intersection null). Full brief: `excursions/x4-brief.md`.
 
 ## Cycle log
 
