@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "confirm",
+  "mechanical": {
+    "run": "explore-post-phase1",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 10,
+    "spine-step": "confirm",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-explore-post-phase1-confirm@8fd5c334b4401635e559ff736c30ab13bc17f03d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "explore-post-phase1",
+    "generated_at": "2026-08-03T21:14:27Z"
+  }
+}
