@@ -278,8 +278,8 @@
   "engine_session": {
     "session_id": "explore-memory-graph",
     "status": "active",
-    "claimed_at": "2026-08-03T17:47:28.059901+00:00",
-    "last_heartbeat": "2026-08-03T17:49:03.065559+00:00",
+    "claimed_at": "2026-08-04T12:09:26.277282+00:00",
+    "last_heartbeat": "2026-08-04T12:09:26.277282+00:00",
     "claimed_by": "explorer",
     "worktree": ".",
     "previous_session_id": null,
