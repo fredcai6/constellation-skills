@@ -40,6 +40,35 @@ with the episode store; "replace vs. index over episodes" is not a live question
 - **Two speeds — fast sloppy working graph + maintained long-term graph** — cheap-write during the task, then an end-of-task *merge-up* of proven conceptual changes; sloppiness filtered at promotion, not carried into long-term memory.
 - **Federation with external graphs** — same node/edge shape means public Wikipedia-style graphs plug in as memory, subject to provenance/trust.
 
+## Key finding — the closest kin already exists: the Cartographer map (cycle 1)
+
+*Human pointer: "the closer equivalent is the docs/architecture area." `episodes/` is unrelated (a holding tank for runtime issues — maybe a graph someday, separate for now).*
+
+The Cartographer map (`skills/cartographer/references/map-model.md`, artifacts under
+`docs/architecture/`) is **the same species as the memory graph, already built**:
+- **Explicitly a sparse graph** — struct hierarchy + capability/event/constraint/assumption/decision/claim overlays.
+- **Typed, directed edges with semantics** — `supports`, `depends-on`, `emits`, `constrained-by`,
+  `explained-by`, `verified-by`; each carries `provenance` (curated/generated), `evidence`,
+  `confidence`. → the federation trust/provenance problem is **already solved on this substrate**.
+- **An Inclusion Rule** — a node/edge earns its place only if it helps planning / boundary
+  correctness / rule preservation / trust; when in doubt leave it out; speculative → Triage.
+
+**The reframe this forces — two relevance filters, not one:**
+- **Write-time sparsity** = the map's Inclusion Rule. "Don't chase every vector" applied to
+  *what gets in*. **Already exists.**
+- **Read-time dial** = the librarian. Even over a clean graph, one question wants a slice; the
+  dial sets how wide. **This is the half we're designing** — the map has *no* traversal/librarian
+  layer (read today via index + packets, not question+context → core+doors).
+
+So the memory-graph work ≈ **a map-model-shaped graph + the librarian/traversal layer it lacks**,
+plus the two things the map deliberately omits (two-speed working/long-term; learned pull —
+the map is current-only, single-speed by doctrine).
+
+**Correction to the earlier strawman:** edge-typing is **not** "optional for now" on this
+substrate — the six edge types are load-bearing and a *gift to the dial*: a direct trace follows
+structural edges (`depends-on`/`supports`); inspiration follows a *different* edge kind, a
+lower-confidence edge, or crosses overlays. **Edge type may be a primary input to pull.**
+
 ## Working model: the librarian (cycle 1)
 
 *The organizing metaphor, human-chosen. Not yet a spec — the frame the rest hangs on.*
@@ -139,10 +168,13 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
   (follow highest pull, track budget) → stop (the dial; bounded by budget + visited-set,
   always halts)**. Steps/stop shaped by the dial already; grammar starts minimal.
 - **The crux — step 1, "enter."** question+context → start node(s) is its own retrieval
-  problem, *before* the graph can help. **Hypothesis: `episodes/` is the front door** — episode
-  retrieval finds the entry episode; the episode is/points-to a node; traverse from there.
-  Resolves the graph↔episodes interface AND entry in one move, keeps episodes doing what
-  they're good at. *(Human reacting: episodes-as-entry vs. graph-owns-its-own-index.)*
+  problem, *before* the graph can help. Entry is into a **map-shaped graph** (see finding
+  below), via its struct/capability nodes — not via episodes.
+- **THE fork — substrate.** Build the librarian **over the existing architecture map** (real,
+  populated, typed, small → "reliable traversal" testable immediately; but memory is broader
+  than current-only architecture, so generalizing later means relaxing the map's "current-only"
+  + "architecture-anchored" rules) **vs.** treat the map as the *reference model* and design a
+  new, general graph. Agent lean: build-over-the-map first. *(Human deciding.)*
 - **What sets the dial (query side)?** Signals of "direct trace" vs. "unclear": question
   specificity, agent state (stuck/looping → widen; mid-execution → tighten). Query-side
   input; "pull" is the graph-side input. Both feed the one dial.
@@ -166,6 +198,7 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 
 - **#25 "no persistent graph at all — rebuild per-task from episodes + ranker"** — retired: the human confirms the graph is a *given*, not a hypothesis, so this tests a fork that isn't live. *Revives only* if graph upkeep proves untenable at implementation — a feature-level cost question, never a concept fork.
 - **The "does a ranker beat a graph?" kill-condition framing** (agent-introduced) — retired: mis-set. There is no concept-level kill condition; pruning is per-pathway.
+- **"`episodes/` is the front door / entry index"** (agent-introduced) — retired: the human says episodes are *unrelated* — a holding tank for runtime issues encountered while running code, maybe a graph someday but separate for now. The closer kin is the architecture map. *Revives* only if episodes are later graph-ified and deliberately linked in.
 
 ## Cycle log
 
