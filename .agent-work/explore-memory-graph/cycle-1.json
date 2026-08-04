@@ -29,12 +29,12 @@
       "imperative": "Cheap wild one-liners in service of the point. NOT culled here (cull at consolidation). Clustered loosely for reading only.",
       "preconditions": [], "postconditions": [],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "in-progress", "status_detail": {}, "result": null,
+      "status": "complete", "status_detail": {}, "result": "24 entries generated; several elevated into the working model, two retired (see board Rejected).",
       "finding": "See IDEAS_BOARD.md 'Shotgun divergence (cycle 1, un-culled)' section — 24 entries across: reframes of relevance, traversal mechanics, two-speed/working-graph, MCP boundary, federation, and wild/kill-the-graph.",
       "evidence": [], "rework_count": 0
     }
   },
-  "consolidation": null,
+  "consolidation": "Cycle 1 started shotgun and converged toward refine as the human collapsed successive false forks into one control. SETTLED: (1) the graph is a given — exploration maps the pathways it enables, no concept-level kill condition; (2) the point is directed relevance (kill excess-detail overhead), directed traversal is a feature the graph enables; (3) the LIBRARIAN model — interface is question+context, mode selection is system-owned, response is a focused core + optional labeled doors; (4) THE DIAL is the single unifying control — it subsumes interpret-vs-answer, focus-vs-inspiration, and accumulate-vs-best-path, all shown to be one axis; dial rule: direct trace → silent core, unclear/strong-pull → open doors, default silence, expansion triggered; (5) two relevance filters — write-time sparsity already exists as the Cartographer map's Inclusion Rule, the read-time dial is the half we design; (6) SUBSTRATE = the existing architecture map (map-model.md), north star = generalize it from a code-view into a general knowledge graph, with the constraint that traversal not bake in architecture-only assumptions; (7) PULL = spreading activation, path-accumulated product of (edge-type-prior × confidence) with a status penalty — no hop-count term (retired: hop count ≠ conceptual reach). PHASING: near-term build = reliable traversal, static pull, dial pinned to its DIRECT setting (single best path). Deferred as later settings/weight-swaps, not rewrites: wider dial (cross-path accumulation, inspiration), learned pull (→ compounding memory), generalization beyond architecture. STILL OPEN (candidates for a next cycle): entry (question+context → start nodes — the crux, unsolved), dial-setting (how the system reads context to place the dial), the two-speed working/long-term graph (barely touched), and the generalization mechanism. NOT converged to spec — that is the human's call.",
   "triage_candidates": [],
   "blockers": []
 }

@@ -183,9 +183,10 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
   → moderately-activated doors). Topology-aware, deterministic, uses only what the map stores;
   learning later only replaces the static priors, walk unchanged. Grounds in the cognitive model
   of associative recall — matches "how good thinking occurs."
-  - **Sub-fork (open):** does activation **accumulate across paths** (a node reached weakly from
-    several directions bubbles up — "many roads lead here"; where cross-domain inspiration often
-    lives) or take only the **single best path** (cleaner, but blind to convergence)? *(Human deciding.)*
+  - **Sub-fork RESOLVED — it's the dial again.** accumulate-across-paths vs. single-best-path is
+    *another dial setting*, not a global choice (human): direct hops = single best path (tight);
+    open the dial = accumulate across converging paths (inspiration). **Phasing: start with the
+    direct version** (single best path); accumulation is a later, wider dial setting.
 - **RESOLVED — substrate fork.** Build over the existing architecture map; generalize to a
   knowledge graph long-term (see Verdicts). No longer open.
 - **What sets the dial (query side)?** Signals of "direct trace" vs. "unclear": question
@@ -219,7 +220,7 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 
 | Cycle | Flavor | Explored | Consolidation |
 |---|---|---|---|
-| — | — | — | — |
+| 1 | shotgun → (converged toward refine) | The point (directed relevance over a given graph); the librarian model + the one dial; substrate = existing architecture map (north star: general KG); pull as spreading activation | **Cracked the traversal question.** The near-term build is crisp (see below). Left open: **entry** (question+context → start nodes), **dial-setting** (how the system reads context to place the dial), the **two-speed** working/long-term graph (barely touched), and the **generalization** mechanism. Not converged — human's call. |
 
 ---
 
