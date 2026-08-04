@@ -204,7 +204,7 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 - **What is "excess detail," concretely?** A real transcript of agents stepping on themselves — context-window bloat vs. wrong-thread pursuit vs. retrieval noise. Different failure → different mode design. (Excursion candidate: research.)
 - **The graph ↔ `episodes/` interface** — additive, but *how*? Does the graph index episodes, cite them, or hold its own nodes that point at them? (Not "replace" — that's retired.)
 - **Node/edge grammar** — load-bearing for federation *and* for what "pull"/alignment weights attach to. Deferred until the mode design is clearer.
-- The raw-dump open-questions set lives in draft `docs/MEMORY_GRAPH_ARCHITECTURE.md` (PR #417) — *input*, not conclusion.
+- The raw-dump material (the original five ideas, the cross-cutting open questions, the not-yet-touched list) is folded into the **Raw-dump appendix** at the foot of this board — *input*, not conclusion.
 
 ## Rejected ideas (with reasons)
 
@@ -224,5 +224,28 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 
 ---
 
+## Raw-dump appendix (folded from the retired `docs/MEMORY_GRAPH_ARCHITECTURE.md`)
+
+*The original idea-dump doc was folded into this board and deleted from `docs/` — the board is the single source of truth. Preserved here verbatim-in-substance so nothing is lost; the five ideas themselves live on above under **Current candidates** (developed) and were dumped in the human's own words this session.*
+
+**The original five ideas (raw framing):**
+1. **Memory as a graph, entered through MCP** — mechanics behind a tool so agents don't think about thinking.
+2. **Coupled, project-local graphs** — a local directory couples graphs by current checkout.
+3. **Two speeds** — a fast sloppy short-term working graph with hooks into maintained memory; end-of-task *merge-up* of proven conceptual changes.
+4. **Federate external graphs** — same node/edge shape means public Wikipedia-style graphs plug in with little translation, subject to provenance/trust.
+5. *(the sharpening second dump)* **directed relevance** — kill excess-detail overhead; intentional focus + intentional expansion; connected enough to inspire without chasing every vector. *(This became the point — see top of board.)*
+
+**Cross-cutting open questions from the dump, with current exploration status:**
+1. **Node/edge grammar** — what a node/edge is; typed/directed/weighted how. → *Partly answered:* on the map substrate, edges are typed+directed+confidence-weighted; still open for the generalized graph. (Also live under Open threads.)
+2. **Storage vs. index** — is the graph the store or a layer over `episodes/`? → **Resolved/retired:** episodes are unrelated; the graph is additive and the closer kin is the architecture map, not the episode store.
+3. **Judgment boundary** — keep mechanics and judgment apart (no ranking behind the tool). → **Confirmed:** the librarian is the judgment layer *on top of* the mechanical graph; matches `docs/EPISODE_STORE.md` doctrine.
+4. **Merge-up mechanics** — delta unit, trigger, authority for sloppy→clean promotion. → **Still open, deferred:** tied to the two-speed graph (barely touched in cycle 1) and to learned pull.
+5. **Coupling resolution** — how a checkout resolves to a set of coupled graphs, durably stored. → **Still open, untouched** in cycle 1.
+6. **Provenance & trust** — one trust model spanning validated internal memory and unvalidated external nodes. → *Partly answered:* the map already carries `provenance`/`confidence` per node/edge; the federation trust model still needs its own pass.
+
+**Not yet touched (named so the gaps stay visible):** retrieval ranking *(now shaped as spreading activation)*, eviction/forgetting, conflicting-edge resolution, concurrency (two agents writing one working graph), and how any of this reaches the checklist engine.
+
+---
+
 ### Provenance of this seed
-Two idea dumps from the human (this session) + the draft capture in `docs/MEMORY_GRAPH_ARCHITECTURE.md` (PR #417). Grounded against existing repo memory doctrine: `docs/EPISODE_STORE.md` (mechanics vs. judgment), `docs/RECURSIVE_IMPROVEMENT_DESIGN.md` (ACE context-collapse warning; Voyager provenance), `docs/installed_externals_manifest.json` (external corpora already tracked). Deep-module vocabulary loaded from `skills/_shared/global-everyone.md` §"Deep-module vocabulary" for the spec phase.
+Two idea dumps from the human (this session), with the original dump doc now folded into the **Raw-dump appendix** above (doc deleted; board is the source of truth). Grounded against existing repo memory doctrine: `docs/EPISODE_STORE.md` (mechanics vs. judgment), `docs/RECURSIVE_IMPROVEMENT_DESIGN.md` (ACE context-collapse warning; Voyager provenance), `docs/installed_externals_manifest.json` (external corpora already tracked). Deep-module vocabulary loaded from `skills/_shared/global-everyone.md` §"Deep-module vocabulary" for the spec phase.
