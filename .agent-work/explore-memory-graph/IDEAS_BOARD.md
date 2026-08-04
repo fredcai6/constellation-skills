@@ -171,13 +171,21 @@ never on a direct trace, so win #1 (focused retrieval) is the cheap common case.
 - **The crux — step 1, "enter."** question+context → start node(s) is its own retrieval
   problem, *before* the graph can help. Entry is into a **map-shaped graph** (see finding
   below), via its struct/capability nodes — not via episodes.
-- **THE live thread — static pull from the map's existing signals.** Strawman:
-  `pull ≈ edge-type-prior × confidence × distance-decay`, with node `status` (stale/disputed)
-  as a penalty. Deterministic, testable, uses only what the map already stores. The **dial** =
-  a threshold over pull: direct trace = high threshold (strong structural/high-confidence edges
-  only); opening doors = lower it to admit cross-overlay + lower-confidence edges. Learning
-  later just replaces the static edge-type priors; the walk is unchanged. *(Human reacting:
-  does the decomposition hold; which signal best separates "answer" from "door".)*
+- **THE live thread — pull as spreading activation (refined).** *Distance-decay retired as a
+  raw-hop term* (human: hop count ≠ conceptual reach — topic separation varies; more hops only
+  *mildly* more likely uncertain). Replaced by **path-accumulated pull**:
+  `pull(node) = ∏ (edge-type-prior × confidence)` along the path, node `status` as a penalty.
+  Hop count gets **no term of its own** — a long path of strong/confident edges stays strong;
+  the "more reach → mild uncertainty" effect falls out of confidence compounding (each hop
+  multiplies in a confidence < 1). This is **spreading activation**: activation flows from the
+  entry frontier along type/confidence-weighted edges, fades over weak/uncertain edges, pools
+  at nodes; the **dial = the activation threshold** (high → strongly-activated core only; lower
+  → moderately-activated doors). Topology-aware, deterministic, uses only what the map stores;
+  learning later only replaces the static priors, walk unchanged. Grounds in the cognitive model
+  of associative recall — matches "how good thinking occurs."
+  - **Sub-fork (open):** does activation **accumulate across paths** (a node reached weakly from
+    several directions bubbles up — "many roads lead here"; where cross-domain inspiration often
+    lives) or take only the **single best path** (cleaner, but blind to convergence)? *(Human deciding.)*
 - **RESOLVED — substrate fork.** Build over the existing architecture map; generalize to a
   knowledge graph long-term (see Verdicts). No longer open.
 - **What sets the dial (query side)?** Signals of "direct trace" vs. "unclear": question
