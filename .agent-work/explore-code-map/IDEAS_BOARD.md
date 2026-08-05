@@ -28,6 +28,7 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | Shared substrate (all three descendants): markdown/text in git is the truth, any DB a disposable derived index; statement layers JSON-lines, prose markdown, RDF/JSON-LD export-only; opaque serial identity, selection on properties; Wikidata statement shape (qualifiers + references), small owned edge vocabulary; atomic storage, article-shaped rendered views; current view only, git holds history; per-project graphs, cross-project reach by declared location; evidence classes set durability — code change = forced supersession | Settles the substrate for this descendant; does NOT settle file granularity or the exact line schema | inherited (parent, human) |
 | Librarian/traversal/dial are mind-map-first; this map's near-term retrieval is projections and queries, not walks | Settles ownership and build order; does NOT settle the eventual traversal design | inherited (parent cycle-3, human) |
 | Input is the code itself via parse/resolve; maintainer is a deterministic crawler; agents/humans assist only on the concept layer; no postmortem input | Settles inputs and maintainer; does NOT settle where the deterministic pipeline hands off to judgment | inherited (parent cycle-3, human) |
+| **Kill condition named, and reframed as a DEGREE question.** The existing map's usefulness is already proven; the exploration's live question is whether the LLM-heavy Cartographer can be replaced by something algorithmic. If not at all, this is "more or less dead" — but the human suspects degree, not true/false. The measures: how much of the mapping job goes procedural; what higher-level-abstraction ability the procedure lacks; how much agent is needed for the "why" layer; what prior art exists for deriving the comment layer alongside the variable/function layer | Settles the kill condition's shape and cycle-1's agenda; does NOT settle the degree itself — that is what cycle 1 measures | cycle-1, human |
 
 ## Open threads
 
@@ -39,6 +40,13 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 4. **Hole-driven prioritization.** The concrete metric for "needs a description first" — presumably connectivity/centrality in the derived graph.
 5. **Pipeline concretely.** tree-sitter parse → SCIP resolve → emit statements → diff. What runs where; incrementality (SCIP is full-project today); node identity across renames; file granularity of stored statements (directory-per-subject / file-per-layer came from the parent).
 6. **Concept candidates vs concept identity.** Comment-attached candidate extraction is deterministic; naming/merging/spanning concepts across N declarations needs judgment (unsolved feature-location territory). Where the deterministic pipeline hands off to the judgment step, and how model-named concepts are stored as confirmable statements with provenance.
+
+## Excursions
+
+| Id | Question (short) | Type | Status | Brief / result |
+|---|---|---|---|---|
+| x1 | How much of f1Brainz's Cartographer map can scip-python procedurally reproduce, and what does it miss? | prototype (measurement) | dispatched (cycle 1) | `excursions/x1-brief.md` → `excursions/x1-result.md` |
+| x2 | Prior art: concept/comment layer derived together with the structural layer? Plus hole-prioritization and write-back precedents | research | dispatched (cycle 1) | `excursions/x2-brief.md` → `excursions/x2-result.md` |
 
 ## Interlinks (expected to grow)
 

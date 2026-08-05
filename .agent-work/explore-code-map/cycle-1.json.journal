@@ -1,0 +1,2 @@
+{"seq": 1, "ts": "2026-08-05T22:39:42.372447+00:00", "session_id": null, "verb": "record", "task": "c0-frame", "evidence_ids": [], "prev_hash": "", "hash": "627dbe61d3af8f1ddb8e48509928e4b768c68853e7a4eaf72ac4f02a5b543206"}
+{"seq": 2, "ts": "2026-08-05T22:39:42.637480+00:00", "session_id": null, "verb": "record", "task": "q1", "evidence_ids": [], "prev_hash": "627dbe61d3af8f1ddb8e48509928e4b768c68853e7a4eaf72ac4f02a5b543206", "hash": "171ef5e38f499445e103344e52f8602c2e8e338e2172e527be6d65284b845cc4"}
