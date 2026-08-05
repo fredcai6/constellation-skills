@@ -1,0 +1,29 @@
+{
+  "compile_db_entries_total": 110,
+  "compile_db_entries_in_repo": 106,
+  "tus_parsed": 106,
+  "tus_parse_threw": 0,
+  "tus_with_errors": 0,
+  "wall_seconds": 375.4,
+  "distinct_repo_files_touched": 141,
+  "by_kind": {
+    "class field": 814,
+    "parameter": 783,
+    "method": 455,
+    "module/class-level state": 433,
+    "class": 408,
+    "constructor": 407,
+    "destructor": 396,
+    "free function": 280,
+    "struct": 150,
+    "namespace": 27,
+    "type alias": 7,
+    "enum constant": 3,
+    "enum": 1
+  },
+  "transformers_total": 1538,
+  "named_containers_total": 2033,
+  "function_local_variables": 4648,
+  "distinct_caller_callee_pairs": 8559,
+  "member_ref_expressions": 19558
+}

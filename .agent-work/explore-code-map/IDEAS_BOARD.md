@@ -44,7 +44,8 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 3. **Comment write-back mechanism.** How a graph-side concept edit becomes a code comment (format, placement, review path) so the round trip closes.
 4. **Hole-driven prioritization.** The concrete metric for "needs a description first" — presumably connectivity/centrality in the derived graph.
 5. **Pipeline concretely.** tree-sitter parse → SCIP resolve → emit statements → diff. What runs where; incrementality (SCIP is full-project today); node identity across renames; file granularity of stored statements (directory-per-subject / file-per-layer came from the parent).
-6. **Concept candidates vs concept identity.** Comment-attached candidate extraction is deterministic; naming/merging/spanning concepts across N declarations needs judgment (unsolved feature-location territory). Where the deterministic pipeline hands off to the judgment step, and how model-named concepts are stored as confirmable statements with provenance.
+6. **MATLAB arm (new, cycle 1 — human point of interest, not chased yet).** Tommy works in MATLAB a lot; the standard working similarly there would be good; the original superCoolSpaceSim is the MATLAB case (verified: `matlab_src/`, `.m` drivers). No SCIP indexer exists for MATLAB — candidate extraction routes: MathWorks' own dependency tooling (`requiredFilesAndProducts`, Code Analyzer) or tree-sitter-matlab plus our own resolution. If the pipeline seam is "any resolver that emits our statement lines," MATLAB is an adapter question, not a redesign.
+7. **Concept candidates vs concept identity.** Comment-attached candidate extraction is deterministic; naming/merging/spanning concepts across N declarations needs judgment (unsolved feature-location territory). Where the deterministic pipeline hands off to the judgment step, and how model-named concepts are stored as confirmable statements with provenance.
 
 ## Excursions
 

@@ -1,0 +1,135 @@
+  [1/106] parsed main.cpp (0 errs) 1s
+  [2/106] parsed actor_pipeline.cpp (0 errs) 5s
+  [3/106] parsed sim_driver.cpp (0 errs) 12s
+  [4/106] parsed lvlh_prox_ops.cpp (0 errs) 14s
+  [5/106] parsed environment_integrator.cpp (0 errs) 15s
+  [6/106] parsed orbital_diagnostics.cpp (0 errs) 16s
+  [7/106] parsed fixed_tree_fk.cpp (0 errs) 21s
+  [8/106] parsed environment_aggregate.cpp (0 errs) 26s
+  [9/106] parsed hdf5_path.cpp (0 errs) 27s
+  [10/106] parsed root_rk4.cpp (0 errs) 28s
+  [11/106] parsed json_config.cpp (0 errs) 30s
+  [12/106] parsed hdf5_writer.cpp (0 errs) 32s
+  [13/106] parsed command_router.cpp (0 errs) 37s
+  [14/106] parsed parse_config.cpp (0 errs) 44s
+  [15/106] parsed satellite_assembly.cpp (0 errs) 50s
+  [16/106] parsed assembly_to_model.cpp (0 errs) 55s
+  [17/106] parsed satstate.cpp (0 errs) 56s
+  [18/106] parsed system_kane.cpp (0 errs) 58s
+  [19/106] parsed build_model.cpp (0 errs) 60s
+  [20/106] parsed init_state.cpp (0 errs) 61s
+  [21/106] parsed normalize_state.cpp (0 errs) 62s
+  [22/106] parsed build_index_map.cpp (0 errs) 63s
+  [23/106] parsed system_from_model_state.cpp (0 errs) 64s
+  [24/106] parsed resolve_system_kinematics.cpp (0 errs) 66s
+  [25/106] parsed resolve_kinematics.cpp (0 errs) 67s
+  [26/106] parsed solve_kane.cpp (0 errs) 68s
+  [27/106] parsed solve_momentum.cpp (0 errs) 70s
+  [28/106] parsed solve_dynamics.cpp (0 errs) 72s
+  [29/106] parsed build_derivative.cpp (0 errs) 73s
+  [30/106] parsed apply_prescribed_motion.cpp (0 errs) 74s
+  [31/106] parsed apply_loads.cpp (0 errs) 76s
+  [32/106] parsed resolve_loads.cpp (0 errs) 78s
+  [33/106] parsed integrate_state.cpp (0 errs) 80s
+  [34/106] parsed rk4_root.cpp (0 errs) 81s
+  [35/106] parsed step_articulated.cpp (0 errs) 83s
+  [36/106] parsed hdf5_path_test.cpp (0 errs) 87s
+  [37/106] parsed hdf5_writer_test.cpp (0 errs) 91s
+  [38/106] parsed root_rk4_test.cpp (0 errs) 94s
+  [39/106] parsed fixed_tree_fk_test.cpp (0 errs) 100s
+  [40/106] parsed mbd_data_model_test.cpp (0 errs) 104s
+  [41/106] parsed mechanism_model_test.cpp (0 errs) 109s
+  [42/106] parsed articulated_fk_test.cpp (0 errs) 113s
+  [43/106] parsed kane_assembly_test.cpp (0 errs) 117s
+  [44/106] parsed kane_solve_test.cpp (0 errs) 121s
+  [45/106] parsed load_pipeline_test.cpp (0 errs) 126s
+  [46/106] parsed split_integration_test.cpp (0 errs) 130s
+  [47/106] parsed environment_state_test.cpp (0 errs) 138s
+  [48/106] parsed kepler_parity_test.cpp (0 errs) 143s
+  [49/106] parsed momentum_solve_test.cpp (0 errs) 147s
+  [50/106] parsed drag_exp_model_test.cpp (0 errs) 152s
+  [51/106] parsed multi_body_drag_test.cpp (0 errs) 157s
+  [52/106] parsed drag_config_test.cpp (0 errs) 165s
+  [53/106] parsed drag_parity_test.cpp (0 errs) 170s
+  [54/106] parsed thruster_subsystem_test.cpp (0 errs) 175s
+  [55/106] parsed perigee_parity_test.cpp (0 errs) 183s
+  [56/106] parsed prescribed_motion_test.cpp (0 errs) 187s
+  [57/106] parsed solar_array_test.cpp (0 errs) 191s
+  [58/106] parsed solar_tracking_test.cpp (0 errs) 198s
+  [59/106] parsed attitude_sensor_test.cpp (0 errs) 203s
+  [60/106] parsed nav_box_test.cpp (0 errs) 207s
+  [61/106] parsed attitude_controller_test.cpp (0 errs) 211s
+  [62/106] parsed attitude_targeting_test.cpp (0 errs) 215s
+  [63/106] parsed mission_timeline_test.cpp (0 errs) 219s
+  [64/106] parsed orbital_maneuver_controller_test.cpp (0 errs) 223s
+  [65/106] parsed lvlh_prox_ops_test.cpp (0 errs) 227s
+  [66/106] parsed fsw_pipeline_test.cpp (0 errs) 232s
+  [67/106] parsed command_router_test.cpp (0 errs) 240s
+  [68/106] parsed parse_config_extensions_test.cpp (0 errs) 249s
+  [69/106] parsed comm_buffer_parity_test.cpp (0 errs) 253s
+  [70/106] parsed ground_access_test.cpp (0 errs) 258s
+  [71/106] parsed ground_relay_dispatch_test.cpp (0 errs) 263s
+  [72/106] parsed cross_actor_test.cpp (0 errs) 270s
+  [73/106] parsed store_forward_queue_test.cpp (0 errs) 276s
+  [74/106] parsed lunar_relay_integration_test.cpp (0 errs) 283s
+  [75/106] parsed gnss_test.cpp (0 errs) 290s
+  [76/106] parsed graduation_test.cpp (0 errs) 297s
+  [77/106] parsed sim_driver.cpp (0 errs) 306s
+  [78/106] parsed orbital_diagnostics.cpp (0 errs) 307s
+  [79/106] parsed fixed_tree_fk.cpp (0 errs) 313s
+  [80/106] parsed hdf5_path.cpp (0 errs) 314s
+  [81/106] parsed hdf5_writer.cpp (0 errs) 317s
+  [82/106] parsed satellite_assembly.cpp (0 errs) 323s
+  [83/106] parsed parse_config.cpp (0 errs) 330s
+  [84/106] parsed command_router.cpp (0 errs) 336s
+  [85/106] parsed root_rk4.cpp (0 errs) 337s
+  [86/106] parsed build_model.cpp (0 errs) 339s
+  [87/106] parsed init_state.cpp (0 errs) 340s
+  [88/106] parsed normalize_state.cpp (0 errs) 341s
+  [89/106] parsed build_index_map.cpp (0 errs) 342s
+  [90/106] parsed system_from_model_state.cpp (0 errs) 344s
+  [91/106] parsed resolve_system_kinematics.cpp (0 errs) 345s
+  [92/106] parsed resolve_kinematics.cpp (0 errs) 347s
+  [93/106] parsed system_kane.cpp (0 errs) 348s
+  [94/106] parsed solve_kane.cpp (0 errs) 350s
+  [95/106] parsed solve_momentum.cpp (0 errs) 351s
+  [96/106] parsed solve_dynamics.cpp (0 errs) 354s
+  [97/106] parsed build_derivative.cpp (0 errs) 355s
+  [98/106] parsed apply_prescribed_motion.cpp (0 errs) 357s
+  [99/106] parsed apply_loads.cpp (0 errs) 359s
+  [100/106] parsed resolve_loads.cpp (0 errs) 361s
+  [101/106] parsed integrate_state.cpp (0 errs) 363s
+  [102/106] parsed rk4_root.cpp (0 errs) 364s
+  [103/106] parsed step_articulated.cpp (0 errs) 367s
+  [104/106] parsed satstate.cpp (0 errs) 369s
+  [105/106] parsed lvlh_prox_ops.cpp (0 errs) 370s
+  [106/106] parsed assembly_to_model.cpp (0 errs) 375s
+{
+  "compile_db_entries_total": 110,
+  "compile_db_entries_in_repo": 106,
+  "tus_parsed": 106,
+  "tus_parse_threw": 0,
+  "tus_with_errors": 0,
+  "wall_seconds": 375.4,
+  "distinct_repo_files_touched": 141,
+  "by_kind": {
+    "class field": 814,
+    "parameter": 783,
+    "method": 455,
+    "module/class-level state": 433,
+    "class": 408,
+    "constructor": 407,
+    "destructor": 396,
+    "free function": 280,
+    "struct": 150,
+    "namespace": 27,
+    "type alias": 7,
+    "enum constant": 3,
+    "enum": 1
+  },
+  "transformers_total": 1538,
+  "named_containers_total": 2033,
+  "function_local_variables": 4648,
+  "distinct_caller_callee_pairs": 8559,
+  "member_ref_expressions": 19558
+}

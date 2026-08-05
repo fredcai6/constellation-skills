@@ -14,7 +14,8 @@
     "q4",
     "x4",
     "x5",
-    "q5"
+    "q5",
+    "q6"
   ],
   "tasks": {
     "c0-frame": {
@@ -190,6 +191,22 @@
       "status_detail": {},
       "result": "pass",
       "finding": "Human: superCoolSpaceSim is a bit of a dead project; the scip-clang use is proof of concept \u2014 do not chase it. x5 finishes its bounded pass; no follow-up variants (no Linux/CI chase, no Joern-for-C++). C++ support drops from requirement to PoC datum for the standard",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q6": {
+      "id": "q6",
+      "title": "MATLAB as a language of interest",
+      "imperative": "Record the human's note: he works in MATLAB a lot; the standard working similarly there would be good; the original superCoolSpaceSim is exactly that case (verified: matlab_src/, .m drivers). Record as finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Human (point of interest, not a directive): MATLAB should eventually get the same treatment; original superCoolSpaceSim is the MATLAB instance (verified). Extraction route is an open thread: SCIP has no MATLAB indexer \u2014 candidates are MathWorks' own dependency tooling (requiredFilesAndProducts, Code Analyzer) or tree-sitter-matlab + own resolution. Not chased this cycle",
       "evidence": [],
       "rework_count": 0
     }
