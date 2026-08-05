@@ -94,5 +94,29 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/explore-memory-graph/explore/x5-algorithmic-derivation/attempt-1",
+    "work_id": "explore-memory-graph",
+    "gate": "explore",
+    "role": "x5-algorithmic-derivation",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/explore-memory-graph/explore/x5-algorithmic-derivation/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/explore-memory-graph/excursions/x5-brief.md",
+    "result": ".agent-work/explore-memory-graph/excursions/x5-result.md",
+    "stdout": ".agent-work/explore-memory-graph/crew-runs/explore-x5-algorithmic-derivation-attempt-1.stdout.txt",
+    "stderr": ".agent-work/explore-memory-graph/crew-runs/explore-x5-algorithmic-derivation-attempt-1.stderr.txt",
+    "started_at": "2026-08-05T21:42:39.600505+00:00",
+    "last_heartbeat": "2026-08-05T21:51:44.283524+00:00",
+    "completed_at": "2026-08-05T21:51:44.283524+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
