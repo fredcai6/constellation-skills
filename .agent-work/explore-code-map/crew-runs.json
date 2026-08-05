@@ -118,5 +118,27 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/explore-code-map/cycle2-x6/prototyper/attempt-1",
+    "work_id": "explore-code-map",
+    "gate": "cycle2-x6",
+    "role": "prototyper",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/explore-code-map/cycle2-x6/prototyper/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/explore-code-map/excursions/x6-brief.md",
+    "result": ".agent-work/explore-code-map/excursions/x6-result.md",
+    "stdout": ".agent-work/explore-code-map/crew-runs/cycle2-x6-prototyper-attempt-1.stdout.txt",
+    "stderr": ".agent-work/explore-code-map/crew-runs/cycle2-x6-prototyper-attempt-1.stderr.txt",
+    "started_at": "2026-08-05T23:32:50.075452+00:00",
+    "last_heartbeat": "2026-08-05T23:32:50.075452+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus"
   }
 ]
