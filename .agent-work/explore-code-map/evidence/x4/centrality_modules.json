@@ -1,0 +1,2634 @@
+[
+ {
+  "module": "src.latent_power.pair_index",
+  "pagerank": 0.015650776299762217,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 1
+ },
+ {
+  "module": "src.preprocessing.trajectory.dynamics",
+  "pagerank": 0.014473156447934194,
+  "in_degree": 4,
+  "out_degree": 0,
+  "pr_rank": 2
+ },
+ {
+  "module": "src.compound_prior.observation_schema",
+  "pagerank": 0.014208558041065899,
+  "in_degree": 8,
+  "out_degree": 0,
+  "pr_rank": 3
+ },
+ {
+  "module": "src.physics.layer2.pooling",
+  "pagerank": 0.012890356883299692,
+  "in_degree": 10,
+  "out_degree": 0,
+  "pr_rank": 4
+ },
+ {
+  "module": "src.utils.constants",
+  "pagerank": 0.012536598429330944,
+  "in_degree": 21,
+  "out_degree": 0,
+  "pr_rank": 5
+ },
+ {
+  "module": "src.preprocessing.trajectory._smoother_query",
+  "pagerank": 0.011317358830295802,
+  "in_degree": 8,
+  "out_degree": 1,
+  "pr_rank": 6
+ },
+ {
+  "module": "src.compound_prior.baseline",
+  "pagerank": 0.011191640334555265,
+  "in_degree": 13,
+  "out_degree": 2,
+  "pr_rank": 7
+ },
+ {
+  "module": "src.latent_power.preprocessor_contract",
+  "pagerank": 0.010595814549743529,
+  "in_degree": 13,
+  "out_degree": 1,
+  "pr_rank": 8
+ },
+ {
+  "module": "src.models.data_models",
+  "pagerank": 0.010034242037291825,
+  "in_degree": 11,
+  "out_degree": 0,
+  "pr_rank": 9
+ },
+ {
+  "module": "src.evo_predictor.module_start_order_features",
+  "pagerank": 0.00933192988563678,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 10
+ },
+ {
+  "module": "src.utils.config",
+  "pagerank": 0.009122546528055425,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 11
+ },
+ {
+  "module": "src.physics.mass_model",
+  "pagerank": 0.008950810350196833,
+  "in_degree": 13,
+  "out_degree": 0,
+  "pr_rank": 12
+ },
+ {
+  "module": "src.common.student_t",
+  "pagerank": 0.008818665777002372,
+  "in_degree": 9,
+  "out_degree": 0,
+  "pr_rank": 13
+ },
+ {
+  "module": "src.preprocessing.trajectory.loaders",
+  "pagerank": 0.008789738135669512,
+  "in_degree": 11,
+  "out_degree": 0,
+  "pr_rank": 14
+ },
+ {
+  "module": "src.reporting.html_reports._primitives",
+  "pagerank": 0.008651924312740485,
+  "in_degree": 5,
+  "out_degree": 0,
+  "pr_rank": 15
+ },
+ {
+  "module": "src.evo_predictor.team_canonicalization",
+  "pagerank": 0.008412697634713147,
+  "in_degree": 15,
+  "out_degree": 0,
+  "pr_rank": 16
+ },
+ {
+  "module": "src.utils.environment",
+  "pagerank": 0.008058628164580504,
+  "in_degree": 9,
+  "out_degree": 0,
+  "pr_rank": 17
+ },
+ {
+  "module": "src.physics.layer2.estimate_store_fields",
+  "pagerank": 0.008042233923062405,
+  "in_degree": 7,
+  "out_degree": 2,
+  "pr_rank": 18
+ },
+ {
+  "module": "src.data.classification_status",
+  "pagerank": 0.008012920045560328,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 19
+ },
+ {
+  "module": "src.physics.physics_config",
+  "pagerank": 0.007771653084663567,
+  "in_degree": 11,
+  "out_degree": 1,
+  "pr_rank": 20
+ },
+ {
+  "module": "src.data.database._metadata_session",
+  "pagerank": 0.0077186241335704935,
+  "in_degree": 13,
+  "out_degree": 1,
+  "pr_rank": 21
+ },
+ {
+  "module": "src.latent_power.modules",
+  "pagerank": 0.007285201060410155,
+  "in_degree": 14,
+  "out_degree": 3,
+  "pr_rank": 22
+ },
+ {
+  "module": "src.data.telemetry_store",
+  "pagerank": 0.007140634255820842,
+  "in_degree": 5,
+  "out_degree": 0,
+  "pr_rank": 23
+ },
+ {
+  "module": "src.evo_predictor.module_adapters._registry",
+  "pagerank": 0.0068577070309409766,
+  "in_degree": 7,
+  "out_degree": 16,
+  "pr_rank": 24
+ },
+ {
+  "module": "src.evo_predictor.race_power_adapter",
+  "pagerank": 0.00657725121717891,
+  "in_degree": 9,
+  "out_degree": 2,
+  "pr_rank": 25
+ },
+ {
+  "module": "src.compound_prior.baseline_schema",
+  "pagerank": 0.0065361957312573835,
+  "in_degree": 6,
+  "out_degree": 1,
+  "pr_rank": 26
+ },
+ {
+  "module": "src.data.query_builder",
+  "pagerank": 0.006250983578639485,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 27
+ },
+ {
+  "module": "src.latent_power.losses",
+  "pagerank": 0.0062460437376694565,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 28
+ },
+ {
+  "module": "src.strategy.classification_futures",
+  "pagerank": 0.006155037011702967,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 29
+ },
+ {
+  "module": "src.physics.layer2.frontier_fit",
+  "pagerank": 0.0061371274264374704,
+  "in_degree": 7,
+  "out_degree": 0,
+  "pr_rank": 30
+ },
+ {
+  "module": "src.physics.session_fit",
+  "pagerank": 0.00609285257325463,
+  "in_degree": 17,
+  "out_degree": 10,
+  "pr_rank": 31
+ },
+ {
+  "module": "src.physics.segment_map.protocols",
+  "pagerank": 0.0060038611480728015,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 32
+ },
+ {
+  "module": "src.evo_predictor.pipeline_manifest_v4",
+  "pagerank": 0.0058418783516979746,
+  "in_degree": 10,
+  "out_degree": 0,
+  "pr_rank": 33
+ },
+ {
+  "module": "src.data.database._ingest",
+  "pagerank": 0.005786085123450677,
+  "in_degree": 9,
+  "out_degree": 1,
+  "pr_rank": 34
+ },
+ {
+  "module": "src.physics.physics_data_models",
+  "pagerank": 0.005712511816518069,
+  "in_degree": 5,
+  "out_degree": 0,
+  "pr_rank": 35
+ },
+ {
+  "module": "src.physics.layer2.cross_view",
+  "pagerank": 0.00560506527574058,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 36
+ },
+ {
+  "module": "src.physics.layer2.property_mixture",
+  "pagerank": 0.005603797915023231,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 37
+ },
+ {
+  "module": "src.evo_predictor.models._param_helpers",
+  "pagerank": 0.005579131409336502,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 38
+ },
+ {
+  "module": "src.physics.segment_map.runtime",
+  "pagerank": 0.00549717975639934,
+  "in_degree": 4,
+  "out_degree": 1,
+  "pr_rank": 39
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._helpers",
+  "pagerank": 0.0053876760157770725,
+  "in_degree": 4,
+  "out_degree": 3,
+  "pr_rank": 40
+ },
+ {
+  "module": "src.physics.layer2.damage_candidates",
+  "pagerank": 0.005281908464068036,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 41
+ },
+ {
+  "module": "src.compound_prior.solver._iterate",
+  "pagerank": 0.0050317566257712075,
+  "in_degree": 4,
+  "out_degree": 6,
+  "pr_rank": 42
+ },
+ {
+  "module": "src.evo_predictor.module_training_orchestration",
+  "pagerank": 0.004964464903057581,
+  "in_degree": 4,
+  "out_degree": 12,
+  "pr_rank": 43
+ },
+ {
+  "module": "src.fantasy_scoring.scoring_rules",
+  "pagerank": 0.004946855729180621,
+  "in_degree": 6,
+  "out_degree": 0,
+  "pr_rank": 44
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._types",
+  "pagerank": 0.004623802217421513,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 45
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.slug",
+  "pagerank": 0.004590637389900371,
+  "in_degree": 9,
+  "out_degree": 0,
+  "pr_rank": 46
+ },
+ {
+  "module": "src.compound_prior.solver._core",
+  "pagerank": 0.004560232112894354,
+  "in_degree": 4,
+  "out_degree": 4,
+  "pr_rank": 47
+ },
+ {
+  "module": "src.data.database._results",
+  "pagerank": 0.00435027130112263,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 48
+ },
+ {
+  "module": "src.evo_predictor.race_start_adapter",
+  "pagerank": 0.004285223844640414,
+  "in_degree": 6,
+  "out_degree": 2,
+  "pr_rank": 49
+ },
+ {
+  "module": "src.calibration.scoring",
+  "pagerank": 0.004264171350696145,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 50
+ },
+ {
+  "module": "src.preprocessing.trajectory._hp_search",
+  "pagerank": 0.004185071762444612,
+  "in_degree": 6,
+  "out_degree": 2,
+  "pr_rank": 51
+ },
+ {
+  "module": "src.evo_predictor.recency_features",
+  "pagerank": 0.004180456795866505,
+  "in_degree": 6,
+  "out_degree": 1,
+  "pr_rank": 52
+ },
+ {
+  "module": "src.physics.utilization.class_ledger",
+  "pagerank": 0.0041690447278968056,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 53
+ },
+ {
+  "module": "src.preprocessing.trajectory.smoother",
+  "pagerank": 0.0039759274978066845,
+  "in_degree": 3,
+  "out_degree": 3,
+  "pr_rank": 54
+ },
+ {
+  "module": "src.evo_predictor.models._race_params",
+  "pagerank": 0.003935630924201293,
+  "in_degree": 4,
+  "out_degree": 2,
+  "pr_rank": 55
+ },
+ {
+  "module": "src.compound_prior.diagnostics._tables",
+  "pagerank": 0.003901918615105109,
+  "in_degree": 3,
+  "out_degree": 2,
+  "pr_rank": 56
+ },
+ {
+  "module": "src.physics.layer2.systematic_budget",
+  "pagerank": 0.003896583785066347,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 57
+ },
+ {
+  "module": "src.physics.feature_view.store",
+  "pagerank": 0.0038603051289425715,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 58
+ },
+ {
+  "module": "src.evo_predictor.recent_history_adapter",
+  "pagerank": 0.0038384029924958285,
+  "in_degree": 6,
+  "out_degree": 3,
+  "pr_rank": 59
+ },
+ {
+  "module": "src.common.distribution_utils",
+  "pagerank": 0.0037342402710584584,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 60
+ },
+ {
+  "module": "src.evo_predictor.gold_module_cycle",
+  "pagerank": 0.0037290018383984293,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 61
+ },
+ {
+  "module": "src.evo_predictor.run",
+  "pagerank": 0.0037169633967535894,
+  "in_degree": 3,
+  "out_degree": 17,
+  "pr_rank": 62
+ },
+ {
+  "module": "src.preprocessing.trajectory._smoother_fit",
+  "pagerank": 0.0036765489204739115,
+  "in_degree": 6,
+  "out_degree": 5,
+  "pr_rank": 63
+ },
+ {
+  "module": "src.physics.feature_view.records",
+  "pagerank": 0.0036760287527434457,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 64
+ },
+ {
+  "module": "src.physics.layer2.params",
+  "pagerank": 0.003673574520807372,
+  "in_degree": 8,
+  "out_degree": 0,
+  "pr_rank": 65
+ },
+ {
+  "module": "src.physics.regulation_era",
+  "pagerank": 0.003625174099752894,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 66
+ },
+ {
+  "module": "src.physics.layer2.fp_representativeness",
+  "pagerank": 0.003602008092128444,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 67
+ },
+ {
+  "module": "src.physics.weekend_state.floor",
+  "pagerank": 0.0035840912727991715,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 68
+ },
+ {
+  "module": "src.physics.terrain",
+  "pagerank": 0.0035443949157615193,
+  "in_degree": 7,
+  "out_degree": 0,
+  "pr_rank": 69
+ },
+ {
+  "module": "src.evo_predictor.walkforward.periods",
+  "pagerank": 0.00350750198616705,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 70
+ },
+ {
+  "module": "src.evo_predictor.db_lap_schema",
+  "pagerank": 0.0034788089396542566,
+  "in_degree": 5,
+  "out_degree": 0,
+  "pr_rank": 71
+ },
+ {
+  "module": "src.data.telemetry_session",
+  "pagerank": 0.0034726689466321385,
+  "in_degree": 6,
+  "out_degree": 1,
+  "pr_rank": 72
+ },
+ {
+  "module": "src.latent_power.retro_comparable",
+  "pagerank": 0.0034405810334164105,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 73
+ },
+ {
+  "module": "src.evo_predictor.module_adapters._common",
+  "pagerank": 0.0034366900453045236,
+  "in_degree": 3,
+  "out_degree": 18,
+  "pr_rank": 74
+ },
+ {
+  "module": "src.evo_predictor.practice_preprocessor._compute",
+  "pagerank": 0.003380753256721042,
+  "in_degree": 6,
+  "out_degree": 2,
+  "pr_rank": 75
+ },
+ {
+  "module": "src.physics.segment_map.from_mixture",
+  "pagerank": 0.003323582204167575,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 76
+ },
+ {
+  "module": "src.latent_power.retro_loader",
+  "pagerank": 0.0033054302391961167,
+  "in_degree": 5,
+  "out_degree": 2,
+  "pr_rank": 77
+ },
+ {
+  "module": "src.compound_prior.identifiability",
+  "pagerank": 0.0032803676084056303,
+  "in_degree": 5,
+  "out_degree": 1,
+  "pr_rank": 78
+ },
+ {
+  "module": "src.physics.capability_envelope",
+  "pagerank": 0.003212667013076554,
+  "in_degree": 3,
+  "out_degree": 2,
+  "pr_rank": 79
+ },
+ {
+  "module": "src.compound_prior.runtime_normalization",
+  "pagerank": 0.0031980127594977356,
+  "in_degree": 8,
+  "out_degree": 0,
+  "pr_rank": 80
+ },
+ {
+  "module": "src.evo_predictor.race_capability_features",
+  "pagerank": 0.0031660986646260734,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 81
+ },
+ {
+  "module": "src.calibration.harness",
+  "pagerank": 0.003115849938475002,
+  "in_degree": 2,
+  "out_degree": 5,
+  "pr_rank": 82
+ },
+ {
+  "module": "src.strategy.sample_futures",
+  "pagerank": 0.0030618426874587075,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 83
+ },
+ {
+  "module": "src.latent_power.rank_chance",
+  "pagerank": 0.003047505883402914,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 84
+ },
+ {
+  "module": "src.compound_prior.solver._solve",
+  "pagerank": 0.0030178899581351543,
+  "in_degree": 1,
+  "out_degree": 6,
+  "pr_rank": 85
+ },
+ {
+  "module": "src.physics.physics_simulator",
+  "pagerank": 0.0029918961119894507,
+  "in_degree": 3,
+  "out_degree": 3,
+  "pr_rank": 86
+ },
+ {
+  "module": "src.data.database._metadata_circuit",
+  "pagerank": 0.002922152480860319,
+  "in_degree": 8,
+  "out_degree": 0,
+  "pr_rank": 87
+ },
+ {
+  "module": "src.evo_predictor.scorer",
+  "pagerank": 0.002913332392692804,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 88
+ },
+ {
+  "module": "src.physics.layer2.braking_view",
+  "pagerank": 0.002911289597297893,
+  "in_degree": 9,
+  "out_degree": 2,
+  "pr_rank": 89
+ },
+ {
+  "module": "src.latent_power.retro_solve",
+  "pagerank": 0.002870420831491649,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 90
+ },
+ {
+  "module": "src.preprocessing.trajectory._loop_geometry",
+  "pagerank": 0.0028178998848616796,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 91
+ },
+ {
+  "module": "src.evo_predictor.module_training_holdout_modes",
+  "pagerank": 0.0028068922699898934,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 92
+ },
+ {
+  "module": "src.physics.layer2.estimate_store",
+  "pagerank": 0.0027987376595416907,
+  "in_degree": 6,
+  "out_degree": 2,
+  "pr_rank": 93
+ },
+ {
+  "module": "src.physics.layer2.session_braking",
+  "pagerank": 0.0027956880800378576,
+  "in_degree": 6,
+  "out_degree": 10,
+  "pr_rank": 94
+ },
+ {
+  "module": "src.physics.layer2.grip_store",
+  "pagerank": 0.002781955731259466,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 95
+ },
+ {
+  "module": "src.data.protocols",
+  "pagerank": 0.0027704696835717706,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 96
+ },
+ {
+  "module": "src.physics.layer2.accel_obs",
+  "pagerank": 0.002740750993946908,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 97
+ },
+ {
+  "module": "src.evo_predictor.sampled_backtest",
+  "pagerank": 0.0027023189874686047,
+  "in_degree": 3,
+  "out_degree": 4,
+  "pr_rank": 98
+ },
+ {
+  "module": "src.physics.utilization.regime_utilization",
+  "pagerank": 0.002694749474899065,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 99
+ },
+ {
+  "module": "src.evo_predictor.latent_power_bundle",
+  "pagerank": 0.0026692001677519886,
+  "in_degree": 5,
+  "out_degree": 1,
+  "pr_rank": 100
+ },
+ {
+  "module": "src.evo_predictor.quali_recent_history_adapter",
+  "pagerank": 0.0025790745141420993,
+  "in_degree": 5,
+  "out_degree": 4,
+  "pr_rank": 101
+ },
+ {
+  "module": "src.fantasy_scoring.stats",
+  "pagerank": 0.0025685967145793326,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 102
+ },
+ {
+  "module": "src.calibration.baseline",
+  "pagerank": 0.0025651236477368844,
+  "in_degree": 3,
+  "out_degree": 2,
+  "pr_rank": 103
+ },
+ {
+  "module": "src.evo_predictor.data_adapter._build",
+  "pagerank": 0.0025614069276319058,
+  "in_degree": 7,
+  "out_degree": 9,
+  "pr_rank": 104
+ },
+ {
+  "module": "src.evo_predictor.constructor_projection",
+  "pagerank": 0.0025277140949634736,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 105
+ },
+ {
+  "module": "src.physics.feature_view.read",
+  "pagerank": 0.0025277140949634736,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 106
+ },
+ {
+  "module": "src.evo_predictor.race_start_history",
+  "pagerank": 0.002510658465577009,
+  "in_degree": 11,
+  "out_degree": 2,
+  "pr_rank": 107
+ },
+ {
+  "module": "src.evo_predictor.sampled_backtest_scoring",
+  "pagerank": 0.002481858162413108,
+  "in_degree": 1,
+  "out_degree": 6,
+  "pr_rank": 108
+ },
+ {
+  "module": "src.compound_prior.diagnostics._tire_wear_io",
+  "pagerank": 0.002470997989803245,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 109
+ },
+ {
+  "module": "src.calibration.run",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 110
+ },
+ {
+  "module": "src.evo_predictor.runtime_contracts",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 111
+ },
+ {
+  "module": "src.fantasy_scoring.artifacts",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 112
+ },
+ {
+  "module": "src.physics.diagnostics.smoother_validation",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 113
+ },
+ {
+  "module": "src.physics.layer2.arcs",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 114
+ },
+ {
+  "module": "src.physics.utilization.driver_utility",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 115
+ },
+ {
+  "module": "src.publishing.prediction_pipeline",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 116
+ },
+ {
+  "module": "src.reporting.visualizations",
+  "pagerank": 0.00246793482059172,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 117
+ },
+ {
+  "module": "src.physics.layer2.tyre_separation",
+  "pagerank": 0.002421904306688901,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 118
+ },
+ {
+  "module": "src.physics.wear.windows",
+  "pagerank": 0.0024175913662392917,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 119
+ },
+ {
+  "module": "src.compound_prior.solver._ridge",
+  "pagerank": 0.0024081507517685298,
+  "in_degree": 1,
+  "out_degree": 5,
+  "pr_rank": 120
+ },
+ {
+  "module": "src.fantasy_scoring.lineup_evaluator",
+  "pagerank": 0.0024071319527826595,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 121
+ },
+ {
+  "module": "src.evo_predictor.quali_power_adapter",
+  "pagerank": 0.0023882626752977044,
+  "in_degree": 7,
+  "out_degree": 2,
+  "pr_rank": 122
+ },
+ {
+  "module": "src.latent_power.retro_tau",
+  "pagerank": 0.0023601223119002457,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 123
+ },
+ {
+  "module": "src.physics.fingerprint.vocabulary",
+  "pagerank": 0.0023561749679584165,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 124
+ },
+ {
+  "module": "src.physics.ideal_lap.wear_derate",
+  "pagerank": 0.002324077012694824,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 125
+ },
+ {
+  "module": "src.evo_predictor.models._pack",
+  "pagerank": 0.0023227315729874506,
+  "in_degree": 8,
+  "out_degree": 2,
+  "pr_rank": 126
+ },
+ {
+  "module": "src.physics.fit_store",
+  "pagerank": 0.0022976438880035017,
+  "in_degree": 4,
+  "out_degree": 0,
+  "pr_rank": 127
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.config",
+  "pagerank": 0.0022704218636413857,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 128
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._calibration",
+  "pagerank": 0.002261300556170306,
+  "in_degree": 2,
+  "out_degree": 3,
+  "pr_rank": 129
+ },
+ {
+  "module": "src.physics.sim_evaluator",
+  "pagerank": 0.0022500167516636958,
+  "in_degree": 1,
+  "out_degree": 4,
+  "pr_rank": 130
+ },
+ {
+  "module": "src.physics.ribbon",
+  "pagerank": 0.0022439258745317356,
+  "in_degree": 4,
+  "out_degree": 3,
+  "pr_rank": 131
+ },
+ {
+  "module": "src.evo_predictor.data_adapter._helpers",
+  "pagerank": 0.002230957363679794,
+  "in_degree": 5,
+  "out_degree": 6,
+  "pr_rank": 132
+ },
+ {
+  "module": "src.preprocessing.trajectory.physics_adapter",
+  "pagerank": 0.0022195208598005324,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 133
+ },
+ {
+  "module": "src.physics.segment_map.identity",
+  "pagerank": 0.002214095141195806,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 134
+ },
+ {
+  "module": "src.reporting.html_reports._module_cards",
+  "pagerank": 0.002206026495818718,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 135
+ },
+ {
+  "module": "src.evo_predictor.race_start_recent_history_adapter",
+  "pagerank": 0.0021773253553894105,
+  "in_degree": 4,
+  "out_degree": 3,
+  "pr_rank": 136
+ },
+ {
+  "module": "src.physics.layer2.decoupled_longitudinal",
+  "pagerank": 0.0021715185246611933,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 137
+ },
+ {
+  "module": "src.physics.layer2.session_race",
+  "pagerank": 0.0021390748729608333,
+  "in_degree": 5,
+  "out_degree": 10,
+  "pr_rank": 138
+ },
+ {
+  "module": "src.evo_predictor.constructor_race_start_adapter",
+  "pagerank": 0.002122678967588605,
+  "in_degree": 4,
+  "out_degree": 3,
+  "pr_rank": 139
+ },
+ {
+  "module": "src.physics.weekend_state.layer3_fieldcar",
+  "pagerank": 0.0021225378660852255,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 140
+ },
+ {
+  "module": "src.evo_predictor.constructor_race_power_adapter",
+  "pagerank": 0.0021165162155322432,
+  "in_degree": 5,
+  "out_degree": 3,
+  "pr_rank": 141
+ },
+ {
+  "module": "src.physics.weekend_state.layer4_car",
+  "pagerank": 0.0021160123722174093,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 142
+ },
+ {
+  "module": "src.physics.layer2.pool_driver",
+  "pagerank": 0.002089910396746146,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 143
+ },
+ {
+  "module": "src.latent_power.start_only_baseline",
+  "pagerank": 0.002086473811074822,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 144
+ },
+ {
+  "module": "src.preprocessing.trajectory._roughness",
+  "pagerank": 0.0020830818025896,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 145
+ },
+ {
+  "module": "src.reporting.html_reports.report_index",
+  "pagerank": 0.002053561894453302,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 146
+ },
+ {
+  "module": "src.compound_prior.diagnostics._tire_wear_plots",
+  "pagerank": 0.0020342981681078067,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 147
+ },
+ {
+  "module": "src.strategy.sampled_runtime_bridge",
+  "pagerank": 0.002033084510396411,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 148
+ },
+ {
+  "module": "src.physics.weekend_state.layer1_physics",
+  "pagerank": 0.0020320069446961705,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 149
+ },
+ {
+  "module": "src.physics.weekend_state.model",
+  "pagerank": 0.0020269063261052164,
+  "in_degree": 2,
+  "out_degree": 3,
+  "pr_rank": 150
+ },
+ {
+  "module": "src.latent_power.rank_metrics",
+  "pagerank": 0.0020162970472668166,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 151
+ },
+ {
+  "module": "src.physics.fingerprint.address",
+  "pagerank": 0.0020124888166522603,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 152
+ },
+ {
+  "module": "src.fantasy_scoring.season",
+  "pagerank": 0.001995404290784752,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 153
+ },
+ {
+  "module": "src.physics.burn_rate_calibration",
+  "pagerank": 0.0019782892704454914,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 154
+ },
+ {
+  "module": "src.physics.wear.season_model",
+  "pagerank": 0.001972384843984685,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 155
+ },
+ {
+  "module": "src.physics.fit_utils",
+  "pagerank": 0.0019553842676322177,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 156
+ },
+ {
+  "module": "src.evo_predictor.quali_pace_gap_history",
+  "pagerank": 0.0019533017898268126,
+  "in_degree": 4,
+  "out_degree": 1,
+  "pr_rank": 157
+ },
+ {
+  "module": "src.models.performance_metrics",
+  "pagerank": 0.0019310105477135932,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 158
+ },
+ {
+  "module": "src.physics.layer2.race_stint_store",
+  "pagerank": 0.0019307422182848507,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 159
+ },
+ {
+  "module": "src.evo_predictor.data_adapter._config",
+  "pagerank": 0.0019008981848233583,
+  "in_degree": 1,
+  "out_degree": 5,
+  "pr_rank": 160
+ },
+ {
+  "module": "src.evo_predictor.walkforward.attestation",
+  "pagerank": 0.0019008981848233583,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 161
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.reports",
+  "pagerank": 0.0018823676909583524,
+  "in_degree": 2,
+  "out_degree": 3,
+  "pr_rank": 162
+ },
+ {
+  "module": "src.physics.apex_extract",
+  "pagerank": 0.0018784749230224274,
+  "in_degree": 3,
+  "out_degree": 4,
+  "pr_rank": 163
+ },
+ {
+  "module": "src.physics.wear.panel",
+  "pagerank": 0.001860322574950978,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 164
+ },
+ {
+  "module": "src.physics.segment_classifier",
+  "pagerank": 0.0018551185229603593,
+  "in_degree": 3,
+  "out_degree": 2,
+  "pr_rank": 165
+ },
+ {
+  "module": "src.preprocessing.trajectory._session_offset",
+  "pagerank": 0.0018505479585425822,
+  "in_degree": 4,
+  "out_degree": 1,
+  "pr_rank": 166
+ },
+ {
+  "module": "src.latent_power.field_solve",
+  "pagerank": 0.001849791177980065,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 167
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.runner",
+  "pagerank": 0.001802141706348191,
+  "in_degree": 2,
+  "out_degree": 16,
+  "pr_rank": 168
+ },
+ {
+  "module": "src.physics.wear.store",
+  "pagerank": 0.0017990275931753824,
+  "in_degree": 4,
+  "out_degree": 0,
+  "pr_rank": 169
+ },
+ {
+  "module": "src.physics.layer2.tyre_supplant",
+  "pagerank": 0.00179192086470508,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 170
+ },
+ {
+  "module": "src.reporting.html_reports.report_alignment",
+  "pagerank": 0.001791852677944827,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 171
+ },
+ {
+  "module": "src.reporting.html_reports.report_gold_cycle",
+  "pagerank": 0.001791852677944827,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 172
+ },
+ {
+  "module": "src.reporting.html_reports.report_training_data",
+  "pagerank": 0.001791852677944827,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 173
+ },
+ {
+  "module": "src.evo_predictor.race_pace_gap",
+  "pagerank": 0.0017874908576696858,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 174
+ },
+ {
+  "module": "src.physics.ideal_lap.ephemeris_store",
+  "pagerank": 0.0017871065456703892,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 175
+ },
+ {
+  "module": "src.physics.control_alignment",
+  "pagerank": 0.0017808635600870867,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 176
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.runner_support",
+  "pagerank": 0.001780674048128249,
+  "in_degree": 1,
+  "out_degree": 15,
+  "pr_rank": 177
+ },
+ {
+  "module": "src.data.database._telemetry_store",
+  "pagerank": 0.0017724680780824894,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 178
+ },
+ {
+  "module": "src.common.pairwise_ordering",
+  "pagerank": 0.0017690786521085584,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 179
+ },
+ {
+  "module": "src.physics.layer2.grip_bin_obs",
+  "pagerank": 0.001756274570387589,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 180
+ },
+ {
+  "module": "src.evo_predictor.constructor_quali_power_adapter",
+  "pagerank": 0.0017555934522222034,
+  "in_degree": 4,
+  "out_degree": 3,
+  "pr_rank": 181
+ },
+ {
+  "module": "src.evo_predictor.constructor_quali_recent_history_adapter",
+  "pagerank": 0.0017555934522222034,
+  "in_degree": 4,
+  "out_degree": 5,
+  "pr_rank": 182
+ },
+ {
+  "module": "src.evo_predictor.constructor_race_recent_history_adapter",
+  "pagerank": 0.0017555934522222034,
+  "in_degree": 4,
+  "out_degree": 3,
+  "pr_rank": 183
+ },
+ {
+  "module": "src.evo_predictor.sampled_runtime",
+  "pagerank": 0.0017380245831417388,
+  "in_degree": 3,
+  "out_degree": 10,
+  "pr_rank": 184
+ },
+ {
+  "module": "src.compound_prior.cleanliness",
+  "pagerank": 0.001711885972900571,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 185
+ },
+ {
+  "module": "src.preprocessing.trajectory._gap_metric",
+  "pagerank": 0.001708471675822298,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 186
+ },
+ {
+  "module": "src.physics.layer2.traffic",
+  "pagerank": 0.001699108413357167,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 187
+ },
+ {
+  "module": "src.evo_predictor.module_record",
+  "pagerank": 0.0016948844828454765,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 188
+ },
+ {
+  "module": "src.physics.layer2.upgrades",
+  "pagerank": 0.0016891556183606772,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 189
+ },
+ {
+  "module": "src.fantasy_scoring.beam_search",
+  "pagerank": 0.0016834730297257037,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 190
+ },
+ {
+  "module": "src.latent_power.retro_modules",
+  "pagerank": 0.0016740835305160138,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 191
+ },
+ {
+  "module": "src.physics.segment_map.derivation.derive",
+  "pagerank": 0.0016578824837797743,
+  "in_degree": 1,
+  "out_degree": 7,
+  "pr_rank": 192
+ },
+ {
+  "module": "src.utils.utilization",
+  "pagerank": 0.0016552413542003314,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 193
+ },
+ {
+  "module": "src.physics.layer2.trajectory_refine",
+  "pagerank": 0.0016549944801728268,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 194
+ },
+ {
+  "module": "src.physics.layer2.power_drag_view",
+  "pagerank": 0.0016488617031859328,
+  "in_degree": 3,
+  "out_degree": 1,
+  "pr_rank": 195
+ },
+ {
+  "module": "src.physics.segment_map.derivation.corner_attributes",
+  "pagerank": 0.0016470585054274441,
+  "in_degree": 1,
+  "out_degree": 4,
+  "pr_rank": 196
+ },
+ {
+  "module": "src.physics.segment_map.derivation.sector_nesting",
+  "pagerank": 0.0016470585054274441,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 197
+ },
+ {
+  "module": "src.preprocessing.trajectory.hp_store",
+  "pagerank": 0.0016462928263034408,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 198
+ },
+ {
+  "module": "src.physics.layer2.corner_descriptors",
+  "pagerank": 0.0016450060521734887,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 199
+ },
+ {
+  "module": "src.physics.utilization.car_prior",
+  "pagerank": 0.0016436433232196001,
+  "in_degree": 2,
+  "out_degree": 4,
+  "pr_rank": 200
+ },
+ {
+  "module": "src.physics.capability",
+  "pagerank": 0.0016376311753594757,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 201
+ },
+ {
+  "module": "src.physics.wear.sweep",
+  "pagerank": 0.0016361980368835636,
+  "in_degree": 2,
+  "out_degree": 3,
+  "pr_rank": 202
+ },
+ {
+  "module": "src.physics.wear.fingerprint",
+  "pagerank": 0.0016361980368835636,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 203
+ },
+ {
+  "module": "src.latent_power.retro_delta_join",
+  "pagerank": 0.0016205213786272695,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 204
+ },
+ {
+  "module": "src.reporting.race_report.actuals",
+  "pagerank": 0.001617379866939177,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 205
+ },
+ {
+  "module": "src.reporting.race_report.html_report",
+  "pagerank": 0.001617379866939177,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 206
+ },
+ {
+  "module": "src.reporting.race_report.json_report",
+  "pagerank": 0.001617379866939177,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 207
+ },
+ {
+  "module": "src.reporting.race_report.markdown",
+  "pagerank": 0.001617379866939177,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 208
+ },
+ {
+  "module": "src.simulation.finish_analyzer",
+  "pagerank": 0.001617379866939177,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 209
+ },
+ {
+  "module": "src.physics.layer2.grip_baseline",
+  "pagerank": 0.0016164681685230785,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 210
+ },
+ {
+  "module": "src.evo_predictor.covariance_sampling",
+  "pagerank": 0.0016152510449375158,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 211
+ },
+ {
+  "module": "src.physics.ideal_lap.generator",
+  "pagerank": 0.0016103108358764915,
+  "in_degree": 2,
+  "out_degree": 10,
+  "pr_rank": 212
+ },
+ {
+  "module": "src.latent_power.training",
+  "pagerank": 0.001608108459941126,
+  "in_degree": 3,
+  "out_degree": 2,
+  "pr_rank": 213
+ },
+ {
+  "module": "src.physics.layer2.fp_lap_latent",
+  "pagerank": 0.001599445819640157,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 214
+ },
+ {
+  "module": "src.physics.fingerprint.store",
+  "pagerank": 0.001596542466679958,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 215
+ },
+ {
+  "module": "src.calibration.sweep",
+  "pagerank": 0.0015960701595580267,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 216
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._train",
+  "pagerank": 0.0015858778316187126,
+  "in_degree": 1,
+  "out_degree": 7,
+  "pr_rank": 217
+ },
+ {
+  "module": "src.physics.weekend_state.gate_spec",
+  "pagerank": 0.0015858778316187126,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 218
+ },
+ {
+  "module": "src.physics.parameter_estimator",
+  "pagerank": 0.001574705296717948,
+  "in_degree": 1,
+  "out_degree": 10,
+  "pr_rank": 219
+ },
+ {
+  "module": "src.physics.layer2.race_priors",
+  "pagerank": 0.0015726138167469384,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 220
+ },
+ {
+  "module": "src.preprocessing.trajectory.grading",
+  "pagerank": 0.0015719026277021824,
+  "in_degree": 3,
+  "out_degree": 3,
+  "pr_rank": 221
+ },
+ {
+  "module": "src.physics.braking_fit",
+  "pagerank": 0.001571239587778198,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 222
+ },
+ {
+  "module": "src.physics.traction_fit",
+  "pagerank": 0.001571239587778198,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 223
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.calibration",
+  "pagerank": 0.0015707309538709347,
+  "in_degree": 3,
+  "out_degree": 0,
+  "pr_rank": 224
+ },
+ {
+  "module": "src.evo_predictor.race_car_channel",
+  "pagerank": 0.0015606762033623413,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 225
+ },
+ {
+  "module": "src.evo_predictor.race_driver_channel",
+  "pagerank": 0.0015606762033623413,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 226
+ },
+ {
+  "module": "src.evo_predictor.race_form_channel",
+  "pagerank": 0.0015606762033623413,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 227
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.bundle_fingerprint",
+  "pagerank": 0.0015595008826740464,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 228
+ },
+ {
+  "module": "src.physics.ideal_lap.pvat_writer",
+  "pagerank": 0.0015477654769080833,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 229
+ },
+ {
+  "module": "src.simulation.grid_analyzer",
+  "pagerank": 0.001546500287468132,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 230
+ },
+ {
+  "module": "src.evo_predictor.race_power_bundle",
+  "pagerank": 0.0015456130999095073,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 231
+ },
+ {
+  "module": "src.evo_predictor.module_runtime",
+  "pagerank": 0.0015449036709668856,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 232
+ },
+ {
+  "module": "src.evo_predictor.sample_state_adapter",
+  "pagerank": 0.0015449036709668856,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 233
+ },
+ {
+  "module": "src.physics.layer2.damage_store",
+  "pagerank": 0.0015339921263850063,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 234
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._metrics",
+  "pagerank": 0.0015321270828590086,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 235
+ },
+ {
+  "module": "src.evo_predictor.module_training_evidence_modes",
+  "pagerank": 0.0015302656451796491,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 236
+ },
+ {
+  "module": "src.evo_predictor.module_training_session_dropout",
+  "pagerank": 0.0015302656451796491,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 237
+ },
+ {
+  "module": "src.latent_power.nll_eval",
+  "pagerank": 0.0015302656451796491,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 238
+ },
+ {
+  "module": "src.compound_prior.gap_calculator",
+  "pagerank": 0.0015228737609777835,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 239
+ },
+ {
+  "module": "src.physics.fit_batch",
+  "pagerank": 0.0015228737609777835,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 240
+ },
+ {
+  "module": "src.physics.layer2.scoreboard",
+  "pagerank": 0.0015228737609777835,
+  "in_degree": 1,
+  "out_degree": 6,
+  "pr_rank": 241
+ },
+ {
+  "module": "src.physics.layer2.session_estimator",
+  "pagerank": 0.0015228737609777835,
+  "in_degree": 1,
+  "out_degree": 12,
+  "pr_rank": 242
+ },
+ {
+  "module": "src.physics.fuel_features",
+  "pagerank": 0.0015160340857513581,
+  "in_degree": 2,
+  "out_degree": 2,
+  "pr_rank": 243
+ },
+ {
+  "module": "src.evo_predictor.sampled_runtime_manifest_assembly",
+  "pagerank": 0.0015143730159502362,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 244
+ },
+ {
+  "module": "src.evo_predictor.sampled_runtime_serialization",
+  "pagerank": 0.0015143730159502362,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 245
+ },
+ {
+  "module": "src.reporting.html_reports",
+  "pagerank": 0.0015083343600606463,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 246
+ },
+ {
+  "module": "src.physics.layer2.coast_view",
+  "pagerank": 0.0015052796790381126,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 247
+ },
+ {
+  "module": "src.physics.fingerprint.fit",
+  "pagerank": 0.0014958720164173853,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 248
+ },
+ {
+  "module": "src.physics.fingerprint.join",
+  "pagerank": 0.0014958720164173853,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 249
+ },
+ {
+  "module": "src.physics.layer2.grip_batch",
+  "pagerank": 0.0014958720164173853,
+  "in_degree": 1,
+  "out_degree": 3,
+  "pr_rank": 250
+ },
+ {
+  "module": "src.evo_predictor.module_uncertainty_diagnostics",
+  "pagerank": 0.0014954201440192934,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 251
+ },
+ {
+  "module": "src.evo_predictor.pipeline",
+  "pagerank": 0.0014944646564732465,
+  "in_degree": 2,
+  "out_degree": 7,
+  "pr_rank": 252
+ },
+ {
+  "module": "src.physics.segment_map.derivation.reference_lap",
+  "pagerank": 0.0014904600272412204,
+  "in_degree": 1,
+  "out_degree": 4,
+  "pr_rank": 253
+ },
+ {
+  "module": "src.physics.segment_map.derivation.tiling",
+  "pagerank": 0.0014904600272412204,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 254
+ },
+ {
+  "module": "src.physics.layer2.decoupled_braking_input",
+  "pagerank": 0.001482371474801541,
+  "in_degree": 1,
+  "out_degree": 5,
+  "pr_rank": 255
+ },
+ {
+  "module": "src.physics.longitudinal_fit",
+  "pagerank": 0.0014772898687266628,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 256
+ },
+ {
+  "module": "src.simulation.quali_simulator",
+  "pagerank": 0.0014756207079970867,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 257
+ },
+ {
+  "module": "src.simulation.race_simulator",
+  "pagerank": 0.0014756207079970867,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 258
+ },
+ {
+  "module": "src.evo_predictor.gold_report_schema",
+  "pagerank": 0.0014734824575364266,
+  "in_degree": 2,
+  "out_degree": 0,
+  "pr_rank": 259
+ },
+ {
+  "module": "src.physics.ideal_lap.residuals",
+  "pagerank": 0.0014598696903368544,
+  "in_degree": 1,
+  "out_degree": 12,
+  "pr_rank": 260
+ },
+ {
+  "module": "src.physics.weekend_state.frame",
+  "pagerank": 0.0014598696903368544,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 261
+ },
+ {
+  "module": "src.evo_predictor.compound_push_regime",
+  "pagerank": 0.0014547973432460317,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 262
+ },
+ {
+  "module": "src.evo_predictor.compound_adapter",
+  "pagerank": 0.0014532376829009671,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 263
+ },
+ {
+  "module": "src.physics.layer2.stint_estimator",
+  "pagerank": 0.0014532376829009671,
+  "in_degree": 1,
+  "out_degree": 6,
+  "pr_rank": 264
+ },
+ {
+  "module": "src.physics.layer2.traction_view",
+  "pagerank": 0.0014438422265573617,
+  "in_degree": 2,
+  "out_degree": 3,
+  "pr_rank": 265
+ },
+ {
+  "module": "src.physics.layer2.session_coast",
+  "pagerank": 0.001437435352277768,
+  "in_degree": 1,
+  "out_degree": 7,
+  "pr_rank": 266
+ },
+ {
+  "module": "src.physics.layer2.session_lateral",
+  "pagerank": 0.001437435352277768,
+  "in_degree": 1,
+  "out_degree": 5,
+  "pr_rank": 267
+ },
+ {
+  "module": "src.physics.layer2.session_traction",
+  "pagerank": 0.001437435352277768,
+  "in_degree": 1,
+  "out_degree": 9,
+  "pr_rank": 268
+ },
+ {
+  "module": "src.compound_prior.diagnostics._plots_basic",
+  "pagerank": 0.0014324766161451464,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 269
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.parallel_jobs",
+  "pagerank": 0.0014315897870088288,
+  "in_degree": 2,
+  "out_degree": 1,
+  "pr_rank": 270
+ },
+ {
+  "module": "src.physics.layer2.lateral_view",
+  "pagerank": 0.0014211522128914655,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 271
+ },
+ {
+  "module": "src.physics.weekend_state.holdout",
+  "pagerank": 0.001417866976576235,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 272
+ },
+ {
+  "module": "src.physics.utilization.reference_utilization_store",
+  "pagerank": 0.0014148667827361908,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 273
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._correction",
+  "pagerank": 0.0014131677625766012,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 274
+ },
+ {
+  "module": "src.physics.segment_map.store",
+  "pagerank": 0.0014121607881481084,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 275
+ },
+ {
+  "module": "src.models.strength_calculator",
+  "pagerank": 0.0014047411285260415,
+  "in_degree": 1,
+  "out_degree": 2,
+  "pr_rank": 276
+ },
+ {
+  "module": "src.evo_predictor.fusion",
+  "pagerank": 0.001404208923025626,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 277
+ },
+ {
+  "module": "src.evo_predictor.physics_feature_injection",
+  "pagerank": 0.001404208923025626,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 278
+ },
+ {
+  "module": "src.evo_predictor.quali_pace_anchor",
+  "pagerank": 0.001404208923025626,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 279
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.task_calibration",
+  "pagerank": 0.0013976919060654609,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 280
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.fusion_diagnostics",
+  "pagerank": 0.0013976919060654609,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 281
+ },
+ {
+  "module": "src.evo_predictor.driver_residual_history_adapter",
+  "pagerank": 0.0013968656196959254,
+  "in_degree": 1,
+  "out_degree": 0,
+  "pr_rank": 282
+ },
+ {
+  "module": "src.data.load_fastf1",
+  "pagerank": 0.0013935496159779817,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 283
+ },
+ {
+  "module": "src.physics.lateral_envelope",
+  "pagerank": 0.001381670988945552,
+  "in_degree": 1,
+  "out_degree": 1,
+  "pr_rank": 284
+ },
+ {
+  "module": "src.physics.wear.batch",
+  "pagerank": 0.001372967523935573,
+  "in_degree": 1,
+  "out_degree": 6,
+  "pr_rank": 285
+ },
+ {
+  "module": "src.analysis.sector_analysis",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 286
+ },
+ {
+  "module": "src.calibration.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 287
+ },
+ {
+  "module": "src.calibration.__main__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 288
+ },
+ {
+  "module": "src.compound_prior.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 289
+ },
+ {
+  "module": "src.compound_prior.empirical_sensor",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 290
+ },
+ {
+  "module": "src.compound_prior.extractor",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 291
+ },
+ {
+  "module": "src.compound_prior.gamma_modifier",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 292
+ },
+ {
+  "module": "src.compound_prior.neural_rate",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 293
+ },
+ {
+  "module": "src.compound_prior.diagnostics.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 294
+ },
+ {
+  "module": "src.compound_prior.diagnostics._plots_solver",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 295
+ },
+ {
+  "module": "src.compound_prior.solver.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 6,
+  "pr_rank": 296
+ },
+ {
+  "module": "src.data.collector",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 8,
+  "pr_rank": 297
+ },
+ {
+  "module": "src.data.weather_features",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 298
+ },
+ {
+  "module": "src.evo_predictor.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 299
+ },
+ {
+  "module": "src.evo_predictor.__main__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 300
+ },
+ {
+  "module": "src.evo_predictor.race_channel_stack",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 301
+ },
+ {
+  "module": "src.evo_predictor.retro_truth_adapter",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 302
+ },
+ {
+  "module": "src.evo_predictor.sampling_contracts",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 303
+ },
+ {
+  "module": "src.evo_predictor.spread_target",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 304
+ },
+ {
+  "module": "src.evo_predictor.data_adapter.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 305
+ },
+ {
+  "module": "src.evo_predictor.data_adapter._assemble",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 306
+ },
+ {
+  "module": "src.evo_predictor.data_adapter._memory",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 6,
+  "pr_rank": 307
+ },
+ {
+  "module": "src.evo_predictor.data_adapter._quality",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 7,
+  "pr_rank": 308
+ },
+ {
+  "module": "src.evo_predictor.fusion_training.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 309
+ },
+ {
+  "module": "src.evo_predictor.fusion_training._manifest",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 310
+ },
+ {
+  "module": "src.evo_predictor.gold_cycle.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 311
+ },
+ {
+  "module": "src.evo_predictor.models.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 312
+ },
+ {
+  "module": "src.evo_predictor.models._features",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 313
+ },
+ {
+  "module": "src.evo_predictor.models._genomes",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 314
+ },
+ {
+  "module": "src.evo_predictor.models._quali_params",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 315
+ },
+ {
+  "module": "src.evo_predictor.module_adapters.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 316
+ },
+ {
+  "module": "src.evo_predictor.module_adapters._runtime_builders",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 17,
+  "pr_rank": 317
+ },
+ {
+  "module": "src.evo_predictor.module_adapters._training_builders",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 17,
+  "pr_rank": 318
+ },
+ {
+  "module": "src.evo_predictor.practice_preprocessor.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 319
+ },
+ {
+  "module": "src.evo_predictor.practice_preprocessor._compound_helpers",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 320
+ },
+ {
+  "module": "src.evo_predictor.practice_preprocessor._lap_pipeline",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 321
+ },
+ {
+  "module": "src.evo_predictor.practice_preprocessor._types",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 322
+ },
+ {
+  "module": "src.evo_predictor.walkforward.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 323
+ },
+ {
+  "module": "src.evo_predictor.walkforward.multiseason",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 324
+ },
+ {
+  "module": "src.evo_predictor.walkforward.orchestrator",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 325
+ },
+ {
+  "module": "src.evo_predictor.walkforward.pipeline",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 326
+ },
+ {
+  "module": "src.fantasy_scoring.expected_assignment",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 327
+ },
+ {
+  "module": "src.fantasy_scoring.league.reconciler",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 328
+ },
+ {
+  "module": "src.latent_power.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 329
+ },
+ {
+  "module": "src.latent_power.alignment_report",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 330
+ },
+ {
+  "module": "src.latent_power.network",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 331
+ },
+ {
+  "module": "src.latent_power.pairwise_retro_bridge",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 332
+ },
+ {
+  "module": "src.physics.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 333
+ },
+ {
+  "module": "src.physics.diagnostics.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 334
+ },
+ {
+  "module": "src.physics.feature_view.build_car_basis",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 335
+ },
+ {
+  "module": "src.physics.feature_view.build_feature_view",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 3,
+  "pr_rank": 336
+ },
+ {
+  "module": "src.physics.feature_view.build_lap_evidence",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 337
+ },
+ {
+  "module": "src.physics.feature_view.build_weekend_state",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 338
+ },
+ {
+  "module": "src.physics.ideal_lap.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 339
+ },
+ {
+  "module": "src.physics.instrument_panel.replication",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 340
+ },
+ {
+  "module": "src.physics.instrument_panel.sector_scorecard",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 341
+ },
+ {
+  "module": "src.physics.instrument_panel.variance_decomposition",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 342
+ },
+ {
+  "module": "src.physics.layer2.aero_axis_2026",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 343
+ },
+ {
+  "module": "src.physics.layer2.braking_report",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 344
+ },
+ {
+  "module": "src.physics.layer2.coast_report",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 345
+ },
+ {
+  "module": "src.physics.layer2.damage_batch",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 346
+ },
+ {
+  "module": "src.physics.layer2.decoupled_calibration",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 347
+ },
+ {
+  "module": "src.physics.layer2.estimate_batch",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 348
+ },
+ {
+  "module": "src.physics.layer2.fp_gate",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 349
+ },
+ {
+  "module": "src.physics.layer2.fp_gate_real_extractor",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 7,
+  "pr_rank": 350
+ },
+ {
+  "module": "src.physics.layer2.mixture_stability",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 351
+ },
+ {
+  "module": "src.physics.layer2.race_stint_batch",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 352
+ },
+ {
+  "module": "src.physics.layer2.regime_readiness",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 353
+ },
+ {
+  "module": "src.physics.layer2.throttle_report",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 354
+ },
+ {
+  "module": "src.physics.pilot.pipeline",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 7,
+  "pr_rank": 355
+ },
+ {
+  "module": "src.physics.segment_map.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 356
+ },
+ {
+  "module": "src.physics.utilization.characterize",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 357
+ },
+ {
+  "module": "src.physics.utilization.class_utilization_observable",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 358
+ },
+ {
+  "module": "src.physics.utilization.class_utilization_validation",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 359
+ },
+ {
+  "module": "src.physics.utilization.driver_utility_gate",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 360
+ },
+ {
+  "module": "src.physics.utilization.driver_utility_observable",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 361
+ },
+ {
+  "module": "src.physics.utilization.reference_lap_product",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 362
+ },
+ {
+  "module": "src.physics.wear.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 7,
+  "pr_rank": 363
+ },
+ {
+  "module": "src.physics.wear.push_signal",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 364
+ },
+ {
+  "module": "src.physics.weekend_state.gate_f6",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 7,
+  "pr_rank": 365
+ },
+ {
+  "module": "src.preprocessing.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 366
+ },
+ {
+  "module": "src.preprocessing.trajectory.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 8,
+  "pr_rank": 367
+ },
+ {
+  "module": "src.preprocessing.trajectory._ns_smoother",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 2,
+  "pr_rank": 368
+ },
+ {
+  "module": "src.preprocessing.trajectory.calibration",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 369
+ },
+ {
+  "module": "src.publishing.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 370
+ },
+ {
+  "module": "src.reporting.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 371
+ },
+ {
+  "module": "src.reporting.html_reports.__init__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 372
+ },
+ {
+  "module": "src.reporting.html_reports.__main__",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 5,
+  "pr_rank": 373
+ },
+ {
+  "module": "src.reporting.race_report.generator",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 4,
+  "pr_rank": 374
+ },
+ {
+  "module": "src.simulation.weekend_simulator",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 6,
+  "pr_rank": 375
+ },
+ {
+  "module": "src.strategy.sampled_runtime_report",
+  "pagerank": 0.0013338615490549963,
+  "in_degree": 0,
+  "out_degree": 1,
+  "pr_rank": 376
+ }
+]

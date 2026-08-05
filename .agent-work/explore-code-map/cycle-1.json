@@ -121,10 +121,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Premise splits, opposite verdicts. (1) 'Every comment is an assertion' \u2014 genuine GAP: no study applies speech-act/assertion typing to code comments (published taxonomies classify by topic, not illocutionary force). (2) 'Easily categorize' \u2014 FALSE for the interesting classes as free-prose classification (NLBSE benchmark: rationale F1 0.21-0.31, dev-notes 0.33; easy classes are ones with explicit syntactic markers, F1 0.85-1.0) but TRUE one-kind-at-a-time as binary+template (assumptions F1 0.96 fine-tuned; trigger-action 0.79; iComment 90%+ in-project; Jdoctor 92%p/83%r). Rationale comments are only 2-4% of comments in two independent corpora. (3) comment->typed-statement->graph: NOT found anywhere (GraphGen4Code stores docstrings untyped). Design lean: prefix conventions at write time make comments self-classifying (the marker IS why easy classes are easy); hard numbers apply to legacy backfill, where per-kind binary extractors work. Full: excursions/x3-result.md",
       "evidence": [],
       "rework_count": 0
     },

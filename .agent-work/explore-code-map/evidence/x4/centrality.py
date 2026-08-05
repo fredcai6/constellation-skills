@@ -67,10 +67,13 @@ def load_defs():
     return out
 
 
+KEEP_KINDS = {"method", "type"}  # SCIP: method = def/async def, type = class
+
+
 def build_graph(defs):
     g = nx.DiGraph()
     for sym, d in defs.items():
-        if d["kind"] in ("term",):
+        if d["kind"] not in KEEP_KINDS:
             continue
         g.add_node(sym, **d)
     n_edges = 0
@@ -152,6 +155,31 @@ def main():
         r["auth_rank"] = i
 
     (X4 / "centrality.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
+
+    # module-level graph, for comparison against the symbol-level ranking
+    mg = nx.DiGraph()
+    with open(X1 / "module_deps.jsonl", encoding="utf-8") as fh:
+        for line in fh:
+            e = json.loads(line)
+            a, b = e["from"], e["to"]
+            if a == b or not a.startswith("src") or not b.startswith("src"):
+                continue
+            w = e.get("count", 1)
+            if mg.has_edge(a, b):
+                mg[a][b]["weight"] += w
+            else:
+                mg.add_edge(a, b, weight=w)
+    mpr = nx.pagerank(mg, alpha=0.85, weight="weight")
+    mrows = [dict(module=m, pagerank=s, in_degree=mg.in_degree(m), out_degree=mg.out_degree(m))
+             for m, s in sorted(mpr.items(), key=lambda kv: -kv[1])]
+    for i, r in enumerate(mrows, 1):
+        r["pr_rank"] = i
+    (X4 / "centrality_modules.json").write_text(json.dumps(mrows, indent=1), encoding="utf-8")
+    print(f"\nMODULE GRAPH nodes={mg.number_of_nodes()} edges={mg.number_of_edges()}")
+    print("TOP 15 MODULES BY PAGERANK")
+    for r in mrows[:15]:
+        print(f"{r['pr_rank']:3d} {r['pagerank']:.5f} in={r['in_degree']:3d} {r['module']}")
+
     print("matched_lines:", sum(1 for r in rows if r["line"] is not None), "/", len(rows))
     print("\nTOP 30 BY PAGERANK")
     for r in rows[:30]:

@@ -51,7 +51,7 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 |---|---|---|---|---|
 | x1 | How much of f1Brainz's Cartographer map can scip-python procedurally reproduce, and what does it miss? | prototype (measurement) | **complete** (cycle 1) | `excursions/x1-brief.md` → `excursions/x1-result.md` |
 | x2 | Prior art: concept/comment layer derived together with the structural layer? Plus hole-prioritization and write-back precedents | research | **complete** (cycle 1) | `excursions/x2-brief.md` → `excursions/x2-result.md` |
-| x3 | Prior art: classifying code comments as typed assertions; accuracy numbers; comment→graph pipelines | research | dispatched (cycle 1) | `excursions/x3-brief.md` → `excursions/x3-result.md` |
+| x3 | Prior art: classifying code comments as typed assertions; accuracy numbers; comment→graph pipelines | research | **complete** (cycle 1) | `excursions/x3-brief.md` → `excursions/x3-result.md` |
 | x4 | Does centrality × docstring-holes reproduce the curated map's documentation choices on f1Brainz? (+ first "describe these first" artifact) | prototype (measurement) | dispatched (cycle 1) | `excursions/x4-brief.md` → `excursions/x4-result.md` |
 | x5 | scip-clang on superCoolSpaceSim_cpp: the C++ adoption cost; same completeness and role gaps as Python? | prototype (measurement) | dispatched (cycle 1) | `excursions/x5-brief.md` → `excursions/x5-result.md` |
 
@@ -78,6 +78,16 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 - **Write-back: the field splits three ways** — into the source (Doxygen groups, docstring inserters, the CUP comment-updater line), beside the source with a git pre-commit hook (RepoAgent), or never touch the file and pay LLM re-anchoring (Codetations). The transferable law from org-babel's detangle: **write-back works exactly when the emitted text carries provenance markers back to its source** — pointer lookup, not similarity matching. Where you own the repo and have comment syntax, the into-source precedents work; Codetations' objections mostly don't bind.
 - **Hole prioritization has a real literature with a live contradiction**: PageRank/HITS-style graph centrality over dependency edges is the best-performing prioritizer in several studies (and the key-class line literally uses "what humans chose to document" as ground truth for centrality), but McBurney reports static source attributes are poor predictors and *text* wins. Proposed reconciliation (unverified): per-entity attributional metrics ≠ whole-graph relational centrality. Design lean: rank holes by centrality, use text as an independent second signal.
 - **Commercial "map your codebase" products are mostly dead** (Sourcetrail unmaintained, CodeSee sunset; Understand survives selling analysis/metrics). None derived a concept layer. Consistent with the concept layer being the hard, valuable part.
+
+## Key findings — cycle 1, x3: the assertion framing is unprecedented (a gap, not a refutation); markers are what make classification easy
+
+*Excursion finding, agent-consolidated — NOT human verdicts yet. Full cited result: `excursions/x3-result.md`.*
+
+- **"Every comment is an assertion" has no prior art either way** — published comment taxonomies classify by *topic* (summary, usage, TODO, license), never by *what kind of assertion the comment performs*. Speech-act theory has been applied to developer Q&A but never to source comments. The framing is novel, not contradicted.
+- **"Easily categorize" is false for free prose on exactly the classes we care about, true one-kind-at-a-time with templates.** Shared-task benchmark (NLBSE): rationale/why classification scores F1 0.21–0.31 even for the best entrant; the classes that score 0.85–1.0 are the ones carrying an explicit syntactic marker (`@author`, code blocks, tags). Binary per-kind extractors with templates hit the 80s–90s (assumptions F1 0.96 fine-tuned; Javadoc→spec 92% precision; in-project rule comments 90%+).
+- **The design lean this hands us**: the reason easy classes are easy IS the marker — so the human's prefix-convention instinct is exactly what the literature rewards. **Write-time prefixes make comments self-classifying and delete the classification problem for new code**; the hard free-prose numbers then apply only to legacy backfill, where one-kind-at-a-time binary extraction is the working recipe. This is the Javadoc/JML tag pattern generalized to assumption/requirement/explanation.
+- **Rationale comments are 2–4% of comments** in two independent corpora (and 60–75% of entities have no comment at all, per x5) — the "why" layer barely exists in the wild; it will be *authored under the standard*, not harvested.
+- **Comment → typed statement → graph was found nowhere** — GraphGen4Code stores docstrings as untyped nodes in a 2B-triple graph; nothing types them. Another confirmation that the standard is composition, not invention — but the composed thing itself is new.
 
 ## Interlinks (expected to grow)
 
