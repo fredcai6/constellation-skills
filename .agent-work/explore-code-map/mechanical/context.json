@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "context",
+  "mechanical": {
+    "run": "explore-code-map",
+    "project": "constellation-skills",
+    "role": "explorer",
+    "refusals": 2,
+    "spine-step": "context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-explore-code-map-context@e6226664a48a5c7927069d9513d11384492b7aec",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "explore-code-map",
+    "generated_at": "2026-08-05T22:26:59Z"
+  }
+}
