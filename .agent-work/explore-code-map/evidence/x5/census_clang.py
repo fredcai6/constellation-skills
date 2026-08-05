@@ -88,6 +88,14 @@ TYPE_KINDS = {
 }
 
 
+LOGF = open(os.path.join(EV, "census_progress.log"), "w", buffering=1)
+
+
+def log(msg):
+    print(msg, flush=True)
+    LOGF.write(msg + "\n")
+
+
 def main():
     with open(os.path.join(EV, "build", "compile_commands.json")) as f:
         cdb = json.load(f)
@@ -107,8 +115,7 @@ def main():
         args = tu_args(entry)
         src = entry["file"]
         try:
-            tu = index.parse(src, args=args,
-                             options=ci.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)
+            tu = index.parse(src, args=args)
         except Exception as exc:  # noqa: BLE001
             parse_fail += 1
             errors.append(f"{src}: PARSE THREW {exc}")
@@ -117,6 +124,8 @@ def main():
         sev = [d for d in tu.diagnostics if d.severity >= 3]
         if sev:
             errors.append(f"{src}: {len(sev)} errors; first: {sev[0].spelling}")
+        log(f"  [{n}/{len(cdb)}] parsed {os.path.basename(src)} "
+            f"({len(sev)} errs) {time.time()-t0:.0f}s")
 
         def walk(cursor, enclosing_fn=None):
             nonlocal member_refs
@@ -154,10 +163,13 @@ def main():
             for ch in cursor.get_children():
                 walk(ch, enclosing_fn)
 
+        # Prune: only descend into subtrees rooted in this repo's own files.
+        # Without this we walk every cursor in <vector>, gtest, etc. -- millions
+        # per TU, and the run never finishes.
         sys.setrecursionlimit(20000)
-        walk(tu.cursor)
-        if n % 20 == 0:
-            print(f"  [{n}/{len(cdb)}] {time.time()-t0:.0f}s", flush=True)
+        for top in tu.cursor.get_children():
+            if in_repo(top):
+                walk(top)
 
     counts = Counter(seen.values())
     transformers = sum(v for k, v in counts.items() if k in set(TRANSFORMER_KINDS.values()))
