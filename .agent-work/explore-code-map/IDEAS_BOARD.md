@@ -10,7 +10,15 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 
 ## Current candidates
 
-*None yet beyond the inherited model — cycle 1 populates this from the open threads.*
+*Populated by cycle-1 consolidation. Live directions, not decisions.*
+
+- **The standard's shape** *(consolidating all cycle-1 rulings)* — three parts: (1) **write-time assertion prefixes** in ordinary docstrings/comments, making every comment self-classifying (assumption / requirement / explanation…); (2) a **deterministic derivation pipeline** over adopted tools; (3) **agent education** — constellation dev agents taught to write under the convention and consume the artifacts. Invent nothing; compose and standardize.
+- **Extractor fork (NEW, from x1+x5 — the load-bearing open design question)** — Candidate A: *SCIP-resolver + AST sidecar* (scip-python owns identity/resolution; a cheap AST pass owns read/write roles and docstring harvest). Candidate B: *AST-first single extractor* (Python `ast` / libclang per language, emitting our statement lines directly; SCIP demoted to optional). Evidence pulling toward B: the AST pass is needed regardless (WriteAccess gap), libclang runs natively where scip-clang never will, and locals keep their names. Evidence for A: SCIP's cross-file symbol resolution is the hard part pyright already does (34/34 edges perfect). Not converged — a design-it-twice candidate for a later cycle.
+- **Skeleton generation for the 50% bucket** — generate packet skeletons (headings, names, signatures, dependency lists) procedurally with typed prose holes. Untested: no generated skeleton has been put in front of a reader yet.
+- **Hole queue, certified-first** — work order for the concept layer: (1) map-named-but-undocumented entities (130 on f1Brainz — pre-certified, no ranking trusted); (2) call-frequency-ranked public holes (the validated signal); PageRank retired as a scoped null.
+- **Drift detection as a standing byproduct** — derived edges diffed against curated/asserted structure (found 5 real drift edges on f1Brainz for free); the "kept close to truth" property, runnable continuously.
+- **Write-back with provenance markers** — into-source camp (we own the repos); emitted text carries a marker back to its statement so the round trip is a pointer lookup (org-babel's law).
+- **Concept spanning via grouping markers** — Doxygen `\defgroup`-style membership in comments as the answer to one-concept-over-N-declarations; procedural resolution.
 
 ## Verdicts
 
@@ -37,15 +45,20 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 
 ## Open threads
 
-*Inherited from the handoff — these seed cycle 1.*
+*Rewritten at cycle-1 consolidation; parenthetical notes say what cycle 1 already settled or informed. These seed cycle 2.*
 
-1. **Container granularity.** x5: the ecosystem splits at "does this name cross a file boundary," not variables-vs-functions. Strong default: durable state at boundaries stored, per-function locals derived on demand — but adopt on usefulness, not affordability (the scale pressure that forced the split elsewhere doesn't exist here).
-2. **Call modeling.** Pure container↔transformer edges with the call graph as projection (x5 default, from LSP call hierarchy or occurrence-in-range), or direct call edges stored too? Side effects and closures are the test cases.
-3. **Comment write-back mechanism.** How a graph-side concept edit becomes a code comment (format, placement, review path) so the round trip closes.
-4. **Hole-driven prioritization.** The concrete metric for "needs a description first" — presumably connectivity/centrality in the derived graph.
-5. **Pipeline concretely.** tree-sitter parse → SCIP resolve → emit statements → diff. What runs where; incrementality (SCIP is full-project today); node identity across renames; file granularity of stored statements (directory-per-subject / file-per-layer came from the parent).
-6. **MATLAB arm (new, cycle 1 — human point of interest, not chased yet).** Tommy works in MATLAB a lot; the standard working similarly there would be good; the original superCoolSpaceSim is the MATLAB case (verified: `matlab_src/`, `.m` drivers). No SCIP indexer exists for MATLAB — candidate extraction routes: MathWorks' own dependency tooling (`requiredFilesAndProducts`, Code Analyzer) or tree-sitter-matlab plus our own resolution. If the pipeline seam is "any resolver that emits our statement lines," MATLAB is an adapter question, not a redesign.
-7. **Concept candidates vs concept identity.** Comment-attached candidate extraction is deterministic; naming/merging/spanning concepts across N declarations needs judgment (unsolved feature-location territory). Where the deterministic pipeline hands off to the judgment step, and how model-named concepts are stored as confirmable statements with provenance.
+1. **Incrementality — the load-bearing untested question.** x1's index is a 6-minute full rebuild; whether scip-python (or an AST-first pipeline) can re-derive cheaply on a single-file change gates the live map. Untested by any excursion.
+2. **Node identity across renames/moves.** A durable statement store needs symbols that survive refactoring, or every rename re-mints facts. Untested (single revision indexed).
+3. **The extractor fork** (see Current candidates) — SCIP+AST-sidecar vs AST-first. The concrete design-it-twice for a later cycle; the seam either way is "emits our statement lines," which is also what makes MATLAB an adapter question.
+4. **The prefix grammar itself.** q3 settled the mechanism (prefixes); the vocabulary is unauthored. x3's composite starting point: Pascarella's PURPOSE/NOTICE branches + doc-tag conventions (`@param`-style) + the assumption line. Smallest set that covers assumption/requirement/explanation without inventing dialect; IBIS discipline (parent verdict) says keep it tiny.
+5. **Skeleton usefulness test.** Bucket (b) was estimated from line counts, never exercised: generate one packet skeleton from the index and put it in front of a reader (x1's named next excursion).
+6. **Container granularity** *(inherited; now informed)*. x1: SCIP stores named boundaries and emits locals only anonymously — the boundary-stored/locals-on-demand default survives contact, with the caveat that local *names* require source-at-hand (or an AST-first extractor, which keeps them).
+7. **Call modeling** *(inherited; now informed)*. x1 recovered 10,820 caller→callee pairs from occurrences + enclosing spans — calls-as-projection works without stored call edges. Side effects and closures still untested as the hard cases.
+8. **Comment write-back mechanism** *(inherited; sharpened)*. The camp is chosen (into-source, provenance-marked); the concrete format/placement/review-path design remains, including how a graph-side edit becomes a PR.
+9. **Concept candidates vs concept identity** *(inherited; unchanged)*. Where deterministic candidate extraction hands off to judgment; how model-named concepts store as confirmable statements. The mind-map seam.
+10. **MATLAB arm** *(cycle 1, human point of interest — not chased yet)*. Original superCoolSpaceSim is the MATLAB case (verified: `matlab_src/`, `.m` drivers — note it's a mixed repo also holding the C++ measured by x5). No SCIP indexer for MATLAB exists; routes: MathWorks dependency tooling (`requiredFilesAndProducts`, Code Analyzer) or tree-sitter-matlab + own resolution.
+11. **Parked (PoC ruling):** whether scip-clang populates WriteAccess/Import — answerable only on a Linux runner; the single highest-value question if a live C++ project ever re-raises the arm.
+12. **Housekeeping flag for Tommy:** `C:\Programs\superCoolSpaceSim_cpp` is empty (one 0-byte stray `nul` file) — if it was meant to hold a split-out C++ copy, that never landed.
 
 ## Excursions
 
@@ -55,7 +68,17 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | x2 | Prior art: concept/comment layer derived together with the structural layer? Plus hole-prioritization and write-back precedents | research | **complete** (cycle 1) | `excursions/x2-brief.md` → `excursions/x2-result.md` |
 | x3 | Prior art: classifying code comments as typed assertions; accuracy numbers; comment→graph pipelines | research | **complete** (cycle 1) | `excursions/x3-brief.md` → `excursions/x3-result.md` |
 | x4 | Does centrality × docstring-holes reproduce the curated map's documentation choices on f1Brainz? (+ first "describe these first" artifact) | prototype (measurement) | **complete** (cycle 1) | `excursions/x4-brief.md` → `excursions/x4-result.md` |
-| x5 | scip-clang on superCoolSpaceSim_cpp: the C++ adoption cost; same completeness and role gaps as Python? | prototype (measurement) | dispatched (cycle 1) | `excursions/x5-brief.md` → `excursions/x5-result.md` |
+| x5 | scip-clang on superCoolSpaceSim_cpp: the C++ adoption cost; same completeness and role gaps as Python? | prototype (measurement) | **complete — blocked, productively** (cycle 1) | `excursions/x5-brief.md` → `excursions/x5-result.md` |
+
+## Key findings — cycle 1, x5: scip-clang is CI-only forever; libclang works on Windows today
+
+*Excursion finding (measured, registry-verified) — NOT human verdicts yet. Full result: `excursions/x5-result.md`. C++ arm is PoC-only per the q5 ruling — nothing here gets chased.*
+
+- **scip-clang cannot run on this machine, permanently**: no release has ever shipped a Windows asset; upstream closed Windows support `not_planned` (2026-01-03) and rejected the Windows build PR (2026-02-20). Not a missing-WSL problem — a documented upstream decision. If C++ SCIP indexing is ever wanted, it is a Linux/CI capability, and the Windows-generated compilation database does not travel (806 absolute paths) — CI must re-configure itself.
+- **The expected pain was the cheapest step**: `compile_commands.json` in 62 seconds, one command, first try; a real Clang then parsed 106/106 translation units with zero errors.
+- **The consolation redraws a design question**: `pip install libclang` (7 seconds) put a full Clang frontend on Windows natively, and an AST census yielded the complete structural picture (2,033 named containers, 1,538 transformers, 8,559 caller→callee pairs) — with *named* locals, which scip-python doesn't even emit. Combined with x1's finding that an AST pass owns the read/write layer anyway, this makes a real fork askable: **per-language SCIP indexer fleet vs a single AST-first extractor emitting our statement lines directly.** Named, not answered.
+- **New C++-specific lesson**: test scaffolding must be partitioned before counting — 395 googletest macro-expanded fixture classes dominated the raw census; the application itself is structs-and-free-functions (~150 structs, 280 free functions).
+- **Two corrections to the record**: `superCoolSpaceSim_cpp` is *empty* (one 0-byte stray file); the real C++ lives inside `superCoolSpaceSim` (which also holds the MATLAB `matlab_src/` — a mixed repo). And x1's zero-WriteAccess result is a *scip-python* property that must not be generalized to scip-clang (separate codebases sharing only the schema) — whether scip-clang populates roles stays unmeasured, parked per the PoC ruling.
 
 ## Key findings — cycle 1, x1: extraction is solved for the spine; the spine is 7% of the map's text
 
@@ -108,9 +131,13 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 
 ## Rejected ideas (with reasons)
 
-*None yet.*
+- **PageRank as the hole-prioritization signal** — culled cycle 1 (x4): fails to beat random against the curated-map ground truth on f1Brainz (p≥0.17 at every K; propagation manufactures importance for beneath-notice helpers). Scoped: one repo, one alpha, call-graph edges; revives if betweenness/boundary-crossing variants or a second repo show different behavior.
+- **Comment-scraping beyond docstrings (Python)** — culled cycle 1 (x1): leading comments add +1.7pp coverage over docstrings alone; not worth building. Revives for languages without docstring conventions.
+- **Free-prose comment classification as the pipeline's mechanism** — culled cycle 1 (x3): rationale-class F1 0.21–0.31 at state of the art; replaced by write-time prefixes (new code) + narrow per-kind binary extractors (legacy backfill). Revives only if classifiers improve materially.
+- **Native Windows scip-clang** — dead upstream (`not_planned`, PR rejected); not our decision to revive.
 
 ## Cycle log
 
 | Cycle | Flavor | Explored | Consolidation |
 |---|---|---|---|
+| 1 | refine | The degree question (can the LLM-heavy Cartographer be replaced algorithmically?) via 6 human rulings + 5 excursions: scip-python measured on f1Brainz (x1), combined-systems prior art (x2), comment-taxonomy prior art (x3), hole-prioritization dry run (x4), scip-clang PoC (x5) | Degree measured: 7% reproducible / 50% skeleton+judgment / 43% why — but the structural spine is 100% derivable and *beat* the curated map (+5 drift edges). Direction consolidated: a constellation-skills **standard** (assertion prefixes + adopted tools + agent education), invent nothing. PageRank out, call-frequency in, 130 pre-certified holes free. New fork opened: SCIP+AST vs AST-first. C++ CI-only (PoC, parked); MATLAB noted. Open threads 1–5 seed cycle 2 |

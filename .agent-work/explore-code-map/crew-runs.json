@@ -101,7 +101,7 @@
     "gate": "cycle1-x5",
     "role": "prototyper",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/cycle1-x5/prototyper/attempt-1",
     "backend": "external",
     "pid": null,
@@ -111,10 +111,12 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/cycle1-x5-prototyper-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/cycle1-x5-prototyper-attempt-1.stderr.txt",
     "started_at": "2026-08-05T23:02:42.561980+00:00",
-    "last_heartbeat": "2026-08-05T23:02:42.561980+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-05T23:27:18.610856+00:00",
+    "completed_at": "2026-08-05T23:27:18.610856+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
