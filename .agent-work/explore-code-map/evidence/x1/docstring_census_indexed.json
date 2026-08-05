@@ -1,0 +1,50 @@
+{
+  "counts": {
+    "files": 443,
+    "module": 443,
+    "module_doc": 415,
+    "class": 600,
+    "class_doc": 426,
+    "class_leading_comment": 84,
+    "class_doc_or_comment": 433,
+    "function": 3686,
+    "function_private": 2150,
+    "function_doc": 2113,
+    "function_doc_or_comment": 2174,
+    "function_public": 1536,
+    "function_public_doc": 1110,
+    "function_leading_comment": 286,
+    "function_private_doc": 1003,
+    "module_level_assignment": 1447,
+    "module_level_assignment_comment": 343,
+    "class_field": 3959,
+    "class_field_comment": 164
+  },
+  "coverage_pct": {
+    "module_docstring": 93.7,
+    "class_docstring": 71.0,
+    "class_doc_or_comment": 72.2,
+    "function_docstring": 57.3,
+    "function_doc_or_comment": 59.0,
+    "public_function_docstring": 72.3,
+    "private_function_docstring": 46.7,
+    "module_level_assignment_comment": 23.7,
+    "class_field_comment": 4.1
+  },
+  "undocumented_examples": {
+    "function": [
+      "scripts\\instrument_panel_668_report.py:154 _sqlite_readonly",
+      "scripts\\instrument_panel_668_report.py:285 _metric_field",
+      "scripts\\instrument_panel_668_report.py:475 instruments_2_3_replication",
+      "scripts\\instrument_panel_668_report.py:859 render_markdown",
+      "scripts\\instrument_panel_668_report.py:871 _to_jsonable"
+    ],
+    "class": [
+      "scripts\\validate_segment_map_662.py:123 BoundaryDriftResult",
+      "scripts\\validate_segment_map_662.py:248 FullDerivation",
+      "src\\compound_prior\\baseline.py:23 BaselineFitConfig",
+      "src\\compound_prior\\baseline.py:70 BaselineFitResult",
+      "src\\compound_prior\\gamma_modifier.py:20 GammaModifierFitResult"
+    ]
+  }
+}

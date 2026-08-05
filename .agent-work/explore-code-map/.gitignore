@@ -1,0 +1,5 @@
+# bulky derived evidence: rebuildable from the excursion commands; results/summaries stay tracked
+evidence/*/.venv/
+evidence/*/build/
+evidence/*/index.scip
+evidence/x1/*.jsonl

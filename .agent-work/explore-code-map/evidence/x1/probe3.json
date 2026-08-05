@@ -1,0 +1,141 @@
+{
+  "definition_occurrences_with_enclosing_range_by_kind": {
+    "type": 600,
+    "method": 3682
+  },
+  "methods_total": 3682,
+  "methods_with_body_span": 3682,
+  "call_site_occurrences_internal": 6972,
+  "call_site_occurrences_external": 11789,
+  "call_sites_not_inside_any_function": 2458,
+  "distinct_caller_callee_pairs": 10820,
+  "distinct_internal_module_dep_pairs": 1209,
+  "top_module_deps": [
+    [
+      "src.fantasy_scoring.league.snapshot_adapter",
+      "src.fantasy_scoring.league.snapshot_adapter",
+      81
+    ],
+    [
+      "src.evo_predictor.models._genomes",
+      "src.evo_predictor.models._genomes",
+      69
+    ],
+    [
+      "src.fantasy_scoring.league.domain",
+      "src.fantasy_scoring.league.domain",
+      62
+    ],
+    [
+      "src.evo_predictor.gold_module_cycle",
+      "src.evo_predictor.gold_module_cycle",
+      60
+    ],
+    [
+      "src.evo_predictor.data_adapter._helpers",
+      "src.evo_predictor.data_adapter._helpers",
+      56
+    ],
+    [
+      "src.evo_predictor.retro_truth_adapter",
+      "src.evo_predictor.retro_truth_adapter",
+      49
+    ],
+    [
+      "src.physics.pilot.pipeline",
+      "src.physics.pilot.pipeline",
+      49
+    ],
+    [
+      "src.evo_predictor.gold_cycle.reports",
+      "src.evo_predictor.gold_cycle.reports",
+      48
+    ],
+    [
+      "src.compound_prior.baseline",
+      "src.compound_prior.baseline",
+      45
+    ],
+    [
+      "scripts.instrument_panel_668_report",
+      "scripts.instrument_panel_668_report",
+      43
+    ]
+  ],
+  "function_reads_container_occurrences": 13019,
+  "distinct_function_container_read_pairs": 9876,
+  "local_name_recovery_samples": [
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 1",
+      "recovered_name": "df",
+      "source_line": "df = self.db.get_lap_times(session_id=session_id, driver_id=driver_id)"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 5",
+      "recovered_name": "all_sectors",
+      "source_line": "all_sectors = self.get_sector_times(session_id, driver_id, valid_only=True)"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 6",
+      "recovered_name": "drivers",
+      "source_line": "drivers = [driver_id]"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 8",
+      "recovered_name": "result_rows",
+      "source_line": "result_rows = []"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 9",
+      "recovered_name": "drv",
+      "source_line": "for drv in drivers:"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 10",
+      "recovered_name": "driver_sectors",
+      "source_line": "driver_sectors = all_sectors.loc[all_sectors['driver_id'] == drv]"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 11",
+      "recovered_name": "best_s1",
+      "source_line": "best_s1 = driver_sectors.loc[driver_sectors['sector1_time'].idxmin()]"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 13",
+      "recovered_name": "best_s2",
+      "source_line": "best_s2 = driver_sectors.loc[driver_sectors['sector2_time'].idxmin()]"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 14",
+      "recovered_name": "best_s3",
+      "source_line": "best_s3 = driver_sectors.loc[driver_sectors['sector3_time'].idxmin()]"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 15",
+      "recovered_name": "best_lap",
+      "source_line": "best_lap = driver_sectors.loc[driver_sectors['lap_time'].idxmin()]"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 16",
+      "recovered_name": "theoretical_best",
+      "source_line": "theoretical_best = best_s1['sector1_time'] + best_s2['sector2_time'] + best_s3['sector3_ti"
+    },
+    {
+      "file": "src\\analysis\\sector_analysis.py",
+      "symbol": "local 17",
+      "recovered_name": "time_gain",
+      "source_line": "time_gain = best_lap['lap_time'] - theoretical_best"
+    }
+  ]
+}

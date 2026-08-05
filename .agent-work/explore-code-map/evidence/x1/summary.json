@@ -1,0 +1,544 @@
+{
+  "metadata": {
+    "tool": "scip-python",
+    "tool_version": "0.6.6",
+    "project_root": "file:///C:/Programs/f1Brainz"
+  },
+  "documents": 443,
+  "external_symbols": 453,
+  "defined_symbols_by_kind": {
+    "local": 20115,
+    "parameter": 11436,
+    "term": 5331,
+    "method": 3686,
+    "type": 589,
+    "meta": 443
+  },
+  "occurrence_symbols_by_kind": {
+    "local": 85783,
+    "parameter": 43709,
+    "type": 39223,
+    "term": 23812,
+    "method": 22443,
+    "meta": 5826,
+    "namespace": 119
+  },
+  "occurrence_roles": {
+    "ReadAccess": 180071,
+    "Definition": 40844
+  },
+  "roles_by_symbol_kind": {
+    "meta": {
+      "Definition": 443,
+      "ReadAccess": 5383
+    },
+    "term": {
+      "Definition": 5583,
+      "ReadAccess": 18229
+    },
+    "local": {
+      "ReadAccess": 66683,
+      "Definition": 19100
+    },
+    "type": {
+      "ReadAccess": 38623,
+      "Definition": 600
+    },
+    "method": {
+      "ReadAccess": 18761,
+      "Definition": 3682
+    },
+    "namespace": {
+      "ReadAccess": 119
+    },
+    "parameter": {
+      "Definition": 11436,
+      "ReadAccess": 32273
+    }
+  },
+  "docstring_present_by_kind": {
+    "method": 2113,
+    "parameter": 646,
+    "local": 492,
+    "meta": 443,
+    "type": 419,
+    "term": 91
+  },
+  "docstring_absent_by_kind": {
+    "local": 19623,
+    "parameter": 10790,
+    "term": 5240,
+    "method": 1573,
+    "type": 170
+  },
+  "relationship_fields": 105,
+  "enclosing_symbol_fields": 0,
+  "signature_documentation_fields": 0,
+  "distinct_local_symbols": 27596,
+  "read_write_occurrences": 180071,
+  "samples": {
+    "meta": [
+      {
+        "file": "src\\__init__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 src/__init__:",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "(module) src",
+          "F1Brainz - Formula 1 Race Prediction System\n\nA comprehensive system for collecting, analyzing, and predicting F1 race results\nusing FastF1 telemetry data and machine learning.\n\nMain modules:\n  - data: Data collection and database management\n  - models: Data models and machine learning models\n  - analysis: Analysis tools for sector times and race performance\n  - utils: Utility functions and configuration\n  - features: Feature engineering for ML models"
+        ]
+      },
+      {
+        "file": "src\\analysis\\__init__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis`/__init__:",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "(module) src.analysis",
+          "Analysis Module\n\nThis module provides analysis tools for F1 race data, including\nsector performance, driver consistency, and race progression.\n\nKey components:\n  - sector\\_analysis: Sector time analysis and driver comparison\n\nExample:  \n&nbsp;&nbsp;&nbsp;&nbsp;from src.analysis.sector\\_analysis import SectorAnalysis\n\n&nbsp;&nbsp;&nbsp;&nbsp;analyzer = SectorAnalysis()\nbest\\_sectors = analyzer.get\\_best\\_sectors(session\\_id=123)\nconsistency = analyzer.get\\_driver\\_consistency(session\\_id=123, driver\\_id=\"VER\")"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/__init__:",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "(module) src.analysis.sector_analysis",
+          "Sector Analysis Module\n\nThis module provides functions for analyzing sector performance data from F1 sessions.\nIt includes tools for extracting sector times, comparing drivers, and analyzing sector performance\nover time, across different sessions, and in varying conditions."
+        ]
+      },
+      {
+        "file": "src\\calibration\\__init__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration`/__init__:",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "(module) src.calibration",
+          "Calibration scoring and (later) backtest harness for predictive distributions."
+        ]
+      },
+      {
+        "file": "src\\calibration\\__main__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.__main__`/__init__:",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "(module) src.calibration.__main__",
+          "Run the calibration harness as `python -m src.calibration`."
+        ]
+      },
+      {
+        "file": "src\\calibration\\baseline.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/__init__:",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "(module) src.calibration.baseline",
+          "Per-task calibration baseline.\n\nScores a task's predictions under the current Gaussian assumption and a\nStudent-t reference on identical `(mu, sigma, target)` data, plus the  \n`|r/sigma|` tail dashboard. Pure: operates on numpy arrays. The wiring that\npulls these arrays from the eval pipeline lives in Phase 1b-wire.\n\nSee docs/architecture/packets/calibration.md."
+        ]
+      }
+    ],
+    "term": [
+      {
+        "file": "src\\__init__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 src/__version__.",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nbuiltins.str\n```"
+        ]
+      },
+      {
+        "file": "src\\__init__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 src/__author__.",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nbuiltins.str\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/logger.",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nlogging.Logger\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#db.",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n(variable) db: DatabaseManager\n```"
+        ]
+      },
+      {
+        "file": "src\\calibration\\__init__.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration`/__all__.",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nbuiltins.list\n```"
+        ]
+      },
+      {
+        "file": "src\\calibration\\baseline.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/TaskCalibration#task.",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n(variable) task: str\n```"
+        ]
+      }
+    ],
+    "local": [
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "local 0",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n(module) pd\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "local 1",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\npandas.core.frame.DataFrame\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "local 2",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n@property\ndef empty(\n  self\n) -> _bool:\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "local 3",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n@property\ndef loc(\n  self\n) -> _LocIndexerFrame[Self]:\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "local 5",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\npandas.core.frame.DataFrame\n```"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "local 6",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nbuiltins.list\n```"
+        ]
+      }
+    ],
+    "type": [
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nclass SectorAnalysis:\n```",
+          "Class for analyzing sector times from F1 sessions.\n\nThis class provides methods to retrieve, analyze, and compare sector times\nacross different drivers, sessions, and conditions."
+        ]
+      },
+      {
+        "file": "src\\calibration\\baseline.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/TaskCalibration#",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n@dataclass(frozen=True)\nclass TaskCalibration:\n```",
+          "One task scored two ways on identical predictions, plus the tail dashboard."
+        ]
+      },
+      {
+        "file": "src\\calibration\\scoring.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.scoring`/PredictiveDist#",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nclass PredictiveDist(Protocol):\n```",
+          "Minimal frozen-distribution interface used by the calibration scorers."
+        ]
+      },
+      {
+        "file": "src\\calibration\\scoring.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.scoring`/CalibrationSummary#",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n@dataclass(frozen=True)\nclass CalibrationSummary:\n```",
+          "Per-task calibration rollup: coverage gate, PIT diagnostics, CRPS score."
+        ]
+      },
+      {
+        "file": "src\\calibration\\sweep.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.calibration.sweep`/TaskSweep#",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\n@dataclass(frozen=True)\nclass TaskSweep:\n```",
+          "One task scored under Gaussian and a fixed-`nu` grid."
+        ]
+      },
+      {
+        "file": "src\\common\\distribution_utils.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.common.distribution_utils`/DistributionStatistics#",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\nclass DistributionStatistics:\n```",
+          "Calculate statistical measures for position distributions."
+        ]
+      }
+    ],
+    "method": [
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#__init__().",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\ndef __init__(\n  self,\n  db_path: Optional[str] = None\n) -> None:\n```",
+          "\r\n        Initialize the SectorAnalysis class.\r\n\r\n        Args:\r\n            db_path: Path to the SQLite database file\r\n        "
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_sector_times().",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\ndef get_sector_times(\n  self,\n  session_id: int,\n  driver_id: Optional[str] = None,\n  valid_only: bool = True\n) -> pd.DataFrame:\n```",
+          "\r\n        Get sector times for a specific session.\r\n\r\n        Args:\r\n            session_id: ID of the session\r\n            driver_id: Driver ID to filter for (None for all drivers)\r\n            valid_only: If True, only return valid laps\r\n\r\n        Returns:\r\n            DataFrame with sector times\r\n        "
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_best_sectors().",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\ndef get_best_sectors(\n  self,\n  session_id: int,\n  driver_id: Optional[str] = None\n) -> pd.DataFrame:\n```",
+          "\r\n        Get the best sector times for each driver in a session.\r\n\r\n        Args:\r\n            session_id: ID of the session\r\n            driver_id: Driver ID to filter for (None for all drivers)\r\n\r\n        Returns:\r\n            DataFrame with best sector times for each driver\r\n        "
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_driver_consistency().",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\ndef get_driver_consistency(\n  self,\n  session_id: int,\n  driver_id: str\n) -> Dict[str, Any]:\n```",
+          "\r\n        Analyze driver consistency across sectors in a session.\r\n\r\n        Args:\r\n            session_id: ID of the session\r\n            driver_id: Driver ID to analyze\r\n\r\n        Returns:\r\n            Dictionary with consistency metrics\r\n        "
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#compare_drivers().",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\ndef compare_drivers(\n  self,\n  session_id: int,\n  driver_ids: List[str]\n) -> pd.DataFrame:\n```",
+          "\r\n        Compare sector performance between drivers in a session.\r\n\r\n        Args:\r\n            session_id: ID of the session\r\n            driver_ids: List of driver IDs to compare\r\n\r\n        Returns:\r\n            DataFrame with comparison metrics\r\n        "
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_session_summary().",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "```python\ndef get_session_summary(\n  self,\n  session_id: int\n) -> Dict[str, Any]:\n```",
+          "\r\n        Get a comprehensive summary of sector performance for a session.\r\n\r\n        Args:\r\n            session_id: ID of the session\r\n\r\n        Returns:\r\n            Dictionary with session summary\r\n        "
+        ]
+      }
+    ],
+    "parameter": [
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#__init__().(self)",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": []
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#__init__().(db_path)",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "db_path: Path to the SQLite database file"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_sector_times().(self)",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": []
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_sector_times().(session_id)",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "session_id: ID of the session"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_sector_times().(driver_id)",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "driver_id: Driver ID to filter for (None for all drivers)"
+        ]
+      },
+      {
+        "file": "src\\analysis\\sector_analysis.py",
+        "symbol": "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#get_sector_times().(valid_only)",
+        "kind_enum": null,
+        "display_name": null,
+        "enclosing_symbol": null,
+        "documentation": [
+          "valid_only: If True, only return valid laps"
+        ]
+      }
+    ]
+  },
+  "top_files_by_defs": [
+    [
+      "src\\evo_predictor\\models\\_features.py",
+      436,
+      1689
+    ],
+    [
+      "src\\compound_prior\\baseline.py",
+      429,
+      2240
+    ],
+    [
+      "src\\evo_predictor\\models\\_genomes.py",
+      403,
+      1233
+    ],
+    [
+      "src\\compound_prior\\solver\\_core.py",
+      390,
+      1717
+    ],
+    [
+      "src\\models\\data_models.py",
+      389,
+      1265
+    ],
+    [
+      "src\\physics\\layer2\\tyre_separation.py",
+      383,
+      1688
+    ],
+    [
+      "src\\preprocessing\\trajectory\\smoother.py",
+      353,
+      2271
+    ],
+    [
+      "src\\compound_prior\\diagnostics\\_plots_solver.py",
+      352,
+      1542
+    ],
+    [
+      "src\\physics\\pilot\\pipeline.py",
+      350,
+      1933
+    ],
+    [
+      "src\\compound_prior\\neural_rate.py",
+      342,
+      1696
+    ],
+    [
+      "src\\evo_predictor\\run.py",
+      342,
+      1605
+    ],
+    [
+      "src\\compound_prior\\solver\\_ridge.py",
+      327,
+      1721
+    ],
+    [
+      "src\\physics\\layer2\\session_race.py",
+      318,
+      1720
+    ],
+    [
+      "src\\evo_predictor\\gold_cycle\\runner_support.py",
+      316,
+      1776
+    ],
+    [
+      "src\\physics\\layer2\\stint_estimator.py",
+      314,
+      1623
+    ]
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "counts": {
+    "files": 677,
+    "module": 677,
+    "module_doc": 644,
+    "module_level_assignment": 2386,
+    "class": 636,
+    "class_doc": 446,
+    "class_doc_or_comment": 455,
+    "function": 5320,
+    "function_doc": 2718,
+    "function_doc_or_comment": 2868,
+    "function_private": 2900,
+    "function_private_doc": 1280,
+    "function_public": 2420,
+    "function_public_doc": 1438,
+    "class_field": 4136,
+    "function_leading_comment": 475,
+    "module_level_assignment_comment": 489,
+    "class_leading_comment": 92,
+    "class_field_comment": 171,
+    "parse_failed": 1
+  },
+  "coverage_pct": {
+    "module_docstring": 95.1,
+    "class_docstring": 70.1,
+    "class_doc_or_comment": 71.5,
+    "function_docstring": 51.1,
+    "function_doc_or_comment": 53.9,
+    "public_function_docstring": 59.4,
+    "private_function_docstring": 44.1,
+    "module_level_assignment_comment": 20.5,
+    "class_field_comment": 4.1
+  },
+  "undocumented_examples": {
+    "function": [
+      "src\\calibration\\baseline.py:30 _validate_triplet",
+      "src\\calibration\\run.py:86 cmd_baseline",
+      "src\\calibration\\run.py:103 cmd_sweep",
+      "src\\calibration\\run.py:118 _add_common_args",
+      "src\\calibration\\run.py:128 build_parser"
+    ],
+    "class": [
+      "src\\compound_prior\\baseline.py:23 BaselineFitConfig",
+      "src\\compound_prior\\baseline.py:70 BaselineFitResult",
+      "src\\compound_prior\\gamma_modifier.py:20 GammaModifierFitResult",
+      "src\\compound_prior\\identifiability.py:14 CompoundIdentifiabilityConfig",
+      "src\\compound_prior\\neural_rate.py:72 NeuralWearRateConfig"
+    ]
+  }
+}

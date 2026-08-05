@@ -1,0 +1,100 @@
+{
+  "documents": 443,
+  "documents_with_text_field": 0,
+  "occurrences_total": 220915,
+  "occurrences_with_enclosing_range": 4282,
+  "definition_occurrences_with_enclosing_range": 4282,
+  "occurrences_with_Import_role": 0,
+  "term_module_level": 1200,
+  "term_class_field": 4131,
+  "term_module_samples": [
+    [
+      "src\\__init__.py",
+      "scip-python python f1brainz excursion-x1 src/__version__."
+    ],
+    [
+      "src\\__init__.py",
+      "scip-python python f1brainz excursion-x1 src/__author__."
+    ],
+    [
+      "src\\analysis\\sector_analysis.py",
+      "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/logger."
+    ],
+    [
+      "src\\calibration\\__init__.py",
+      "scip-python python f1brainz excursion-x1 `src.calibration`/__all__."
+    ],
+    [
+      "src\\calibration\\harness.py",
+      "scip-python python f1brainz excursion-x1 `src.calibration.harness`/DEFAULT_BUNDLE_ROOT."
+    ]
+  ],
+  "term_field_samples": [
+    [
+      "src\\analysis\\sector_analysis.py",
+      "scip-python python f1brainz excursion-x1 `src.analysis.sector_analysis`/SectorAnalysis#db."
+    ],
+    [
+      "src\\calibration\\baseline.py",
+      "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/TaskCalibration#task."
+    ],
+    [
+      "src\\calibration\\baseline.py",
+      "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/TaskCalibration#n."
+    ],
+    [
+      "src\\calibration\\baseline.py",
+      "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/TaskCalibration#gaussian."
+    ],
+    [
+      "src\\calibration\\baseline.py",
+      "scip-python python f1brainz excursion-x1 `src.calibration.baseline`/TaskCalibration#student_t."
+    ]
+  ],
+  "method_reference_occurrences": 18761,
+  "method_refs_not_attributable_to_a_caller": 2103,
+  "distinct_caller_callee_pairs": 11120,
+  "top_call_edges": [
+    [
+      "scip-python python f1brainz excursion-x1 `src.data.database._telemetry_store`/DatabaseTelemetryStoreMixin#insert_processed_telemetry().",
+      "scip-python python python-stdlib 3.11 builtins/dict#get().",
+      36
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.physics.physics_config`/PhysicsEstimatorConfig#__post_init__().",
+      "scip-python python f1brainz excursion-x1 `src.physics.physics_config`/PhysicsEstimatorConfig#_validate_positive().",
+      33
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.module_uncertainty_diagnostics`/_render_module_detail().",
+      "scip-python python python-stdlib 3.11 builtins/list#append().",
+      30
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.data_adapter._helpers`/constructor_race_features_from_race_features().values().",
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.data_adapter._helpers`/constructor_race_features_from_race_features().values().",
+      26
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.reporting.race_report.html_report`/_html_recommended_picks().",
+      "scip-python python python-stdlib 3.11 builtins/list#append().",
+      26
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.data_adapter._helpers`/constructor_race_features_from_race_features().values().",
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.data_adapter._helpers`/_finite_mean().",
+      24
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.reporting.race_report.markdown`/_md_recommended_picks().",
+      "scip-python python python-stdlib 3.11 builtins/list#append().",
+      22
+    ],
+    [
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.models._genomes`/ResidualParams#v().",
+      "scip-python python f1brainz excursion-x1 `src.evo_predictor.models._genomes`/ResidualParams#v().",
+      20
+    ]
+  ],
+  "distinct_file_to_module_dep_pairs": 3185
+}
