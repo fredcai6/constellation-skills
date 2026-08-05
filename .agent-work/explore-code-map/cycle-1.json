@@ -153,10 +153,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "NO for the planned signal, YES for a dumber one. PageRank over the symbol call graph fails to beat random at every K (lift 0.87-1.73x, p>=0.17; 50% of its top-30 are private helpers like _json_ready \u2014 propagation manufactures importance for beneath-notice utilities). HITS degenerate on this sparse near-acyclic graph. What VALIDATED: raw call frequency into public entities \u2014 top-10 60% map-named vs 19.4% base (p=0.005), top-30 47% (p=0.0005). Module-level test uninformative by construction (map names 95.2% of modules \u2014 ceiling). FREE TARGET: 130 of 487 map-named entities (27%) have no docstring \u2014 pre-certified worth-describing, no ranking signal needed. Artifact shipped: evidence/x4/hole_priority_list.md (692 public holes ordered by validated signal). f1Brainz coverage 62.3% (interrogate). NOT tested: betweenness, boundary-crossing, churn, text ranking, other repos (n=1). Full: excursions/x4-result.md",
       "evidence": [],
       "rework_count": 0
     },

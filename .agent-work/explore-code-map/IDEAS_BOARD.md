@@ -52,7 +52,7 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | x1 | How much of f1Brainz's Cartographer map can scip-python procedurally reproduce, and what does it miss? | prototype (measurement) | **complete** (cycle 1) | `excursions/x1-brief.md` → `excursions/x1-result.md` |
 | x2 | Prior art: concept/comment layer derived together with the structural layer? Plus hole-prioritization and write-back precedents | research | **complete** (cycle 1) | `excursions/x2-brief.md` → `excursions/x2-result.md` |
 | x3 | Prior art: classifying code comments as typed assertions; accuracy numbers; comment→graph pipelines | research | **complete** (cycle 1) | `excursions/x3-brief.md` → `excursions/x3-result.md` |
-| x4 | Does centrality × docstring-holes reproduce the curated map's documentation choices on f1Brainz? (+ first "describe these first" artifact) | prototype (measurement) | dispatched (cycle 1) | `excursions/x4-brief.md` → `excursions/x4-result.md` |
+| x4 | Does centrality × docstring-holes reproduce the curated map's documentation choices on f1Brainz? (+ first "describe these first" artifact) | prototype (measurement) | **complete** (cycle 1) | `excursions/x4-brief.md` → `excursions/x4-result.md` |
 | x5 | scip-clang on superCoolSpaceSim_cpp: the C++ adoption cost; same completeness and role gaps as Python? | prototype (measurement) | dispatched (cycle 1) | `excursions/x5-brief.md` → `excursions/x5-result.md` |
 
 ## Key findings — cycle 1, x1: extraction is solved for the spine; the spine is 7% of the map's text
@@ -88,6 +88,16 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 - **The design lean this hands us**: the reason easy classes are easy IS the marker — so the human's prefix-convention instinct is exactly what the literature rewards. **Write-time prefixes make comments self-classifying and delete the classification problem for new code**; the hard free-prose numbers then apply only to legacy backfill, where one-kind-at-a-time binary extraction is the working recipe. This is the Javadoc/JML tag pattern generalized to assumption/requirement/explanation.
 - **Rationale comments are 2–4% of comments** in two independent corpora (and 60–75% of entities have no comment at all, per x5) — the "why" layer barely exists in the wild; it will be *authored under the standard*, not harvested.
 - **Comment → typed statement → graph was found nowhere** — GraphGen4Code stores docstrings as untyped nodes in a 2B-triple graph; nothing types them. Another confirmation that the standard is composition, not invention — but the composed thing itself is new.
+
+## Key findings — cycle 1, x4: PageRank refuted on this test; raw call frequency validated; 130 pre-certified holes for free
+
+*Excursion finding (measured, registry-verified) — NOT human verdicts yet. Full result: `excursions/x4-result.md`; artifact: `evidence/x4/hole_priority_list.md`.*
+
+- **PageRank over the symbol-level call graph failed to beat a random draw at every K** (lift 0.87–1.73x, p≥0.17); half its top 30 are private helpers (`_json_ready`, `_error`, `_ensure_matplotlib`). The mechanism of the failure is instructive: propagation *manufactures* importance for utilities that are called everywhere precisely because they are beneath notice. HITS was degenerate (sparse, near-acyclic graph). Scoped: one repo, one alpha, call-graph edges only — betweenness, boundary-crossing, churn, and text signals untested.
+- **What validated: the dumbest signals.** Distinct-caller count and total call count into *public* entities both clear significance at every K≥20 (top-10 in-weight: 60% map-named vs 19.4% base rate, p=0.005; top-30: 47%, p=0.0005). "The entities called most often are ~2.4x more likely to be map-named" — weaker than the centrality hypothesis, but real.
+- **The free target beats any ranking: 130 of the 487 entities the curated map names (27%) have no docstring.** The map already certified them worth explaining — no signal needs to be trusted. Top of that set: `PhysicsSimulator.simulate_lap`, `load_latent_power_module_bundle`, `EstimateStore.load`. This is the natural first work-queue for the concept layer.
+- **Module-level validation is impossible on this repo by construction** — the map names 95.2% of modules, so the test is at ceiling. A stricter ground truth (dedicated section, not mere mention) would be needed.
+- **The artifact shipped**: a ranked describe-these-first list (692 public docstring holes, ordered by the validated signal, with file:line). f1Brainz overall docstring coverage: 62.3% (interrogate), holes concentrated in `fantasy_scoring` (26%), `compound_prior` (30%), `latent_power` (35%).
 
 ## Interlinks (expected to grow)
 

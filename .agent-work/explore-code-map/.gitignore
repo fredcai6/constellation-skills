@@ -3,3 +3,4 @@ evidence/*/.venv/
 evidence/*/build/
 evidence/*/index.scip
 evidence/x1/*.jsonl
+evidence/*/pylib/
