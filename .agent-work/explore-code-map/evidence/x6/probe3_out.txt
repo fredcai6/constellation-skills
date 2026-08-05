@@ -1,0 +1,15 @@
+
+	Home License -- for personal use only.  Not for government,
+	academic, research, commercial, or other organizational use.
+
+
+=== PROPERTIES block #1 (line 8) ===
+  stmt#1 kind=EQUALS         line=9    text=ANGLE_ERROR_DEADBAND_RAD = Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+      Left   -> ID             ANGLE_ERROR_DEADBAND_RAD stringval=ANGLE_ERROR_DEADBAND_RAD
+      Right  -> DOT            Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+      List   -> EQUALS         ANGLE_ERROR_DEADBAND_RAD = Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+
+=== PROPERTIES block #2 (line 12) ===
+  stmt#1 kind=EQUALS         line=14   text=<tree2str FAILED>
+      Left   -> PROPTYPEDECL   joint_id double
+      Right  -> INT            0

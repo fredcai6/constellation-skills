@@ -33,10 +33,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "No scip-matlab exists (SCIP's 10-indexer list checked; beware name collision with SCIP Optimization Suite). But mtree wins outright: all 539 files parsed in 1.5s, zero failures, cheapest arm of the three (~21s full index). Emits 3493 transformers, 7085 named containers, 16269 call pairs, and \u2014 unlike scip-python \u2014 the WRITE side natively (17488 write occurrences; asgvars/sets/lhs built in). The MATLAB wall is resolution not parsing: 56% of qualified call sites unresolved without type inference. Feeds the extractor fork BOTH ways: AST-first gets writes for free; resolution is the hard part you own. Full: excursions/x6-result.md",
       "evidence": [],
       "rework_count": 0
     }

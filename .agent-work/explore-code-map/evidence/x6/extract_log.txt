@@ -1,0 +1,57 @@
+FILES 539
+{
+  "files": 539,
+  "filetype": {
+    "ScriptFile": 6,
+    "FunctionFile": 256,
+    "ClassDefinitionFile": 277,
+    "Other": 0
+  },
+  "parse_failures": 0,
+  "tx": {
+    "main_function": 256,
+    "subfunction": 85,
+    "nested_function": 2607,
+    "method": 539,
+    "script": 6,
+    "anon_function": 867,
+    "total_named": 3493
+  },
+  "classdefs": 277,
+  "methods_blocks": 539,
+  "properties_blocks": 85,
+  "co": {
+    "input_param": 5100,
+    "output_param": 1569,
+    "property": 224,
+    "persistent": 2,
+    "global": 0,
+    "local_assigned_distinct": 11695,
+    "loop_var": 504,
+    "anon_capture_param": 0,
+    "total_named": 6895
+  },
+  "varargin": 5,
+  "varargout": 0,
+  "ed": {
+    "call_sites": 22281,
+    "dot_method_or_field": 23091,
+    "subscr": 11218,
+    "write_occurrences": 17488,
+    "id_occurrences": 90400
+  },
+  "calls": {
+    "internal_occurrences": 2886,
+    "external_occurrences": 19392,
+    "dotted_method_call_occurrences": 0,
+    "distinct_internal_targets": 619,
+    "distinct_external_targets": 242,
+    "distinct_caller_callee_pairs": 13006
+  },
+  "distinct_defined_function_names": 2958,
+  "distinct_class_names": 277,
+  "distinct_property_names": 190,
+  "distinct_field_names": 1592,
+  "elapsed_seconds": 22.9636742,
+  "failures": []
+}

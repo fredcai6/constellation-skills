@@ -1,0 +1,23 @@
+
+	Home License -- for personal use only.  Not for government,
+	academic, research, commercial, or other organizational use.
+
+SolarArray block@8 : ANGLE_ERROR_DEADBAND_RAD
+SolarArray block@12 : joint_id
+SolarArray block@12 : body_id
+SolarArray block@12 : mass
+SolarArray block@12 : inertia
+SolarArray block@12 : hingePosBody
+SolarArray block@12 : panelDimensions
+SolarArray block@12 : jointType
+SolarArray block@12 : kp
+SolarArray block@12 : kd
+SolarArray block@12 : max_torque
+SolarArray block@12 : friction_coef
+SolarArray block@12 : body_rate_limit
+SolarArray block@12 : commanded_angle
+SolarArray block@12 : is_2dof
+SolarArray block@12 : actual_angle
+SolarArray block@12 : actual_rate
+SolarArray block@12 : applied_torque
+TOTAL_PROPERTIES_EXTRACTED 414

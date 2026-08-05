@@ -1,0 +1,3775 @@
+[
+  {
+    "file": "superCoolSpaceSim.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 53
+  },
+  {
+    "file": "actors\\ActorContractLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 15
+  },
+  {
+    "file": "actors\\build_environment_load_set.m",
+    "filetype": "FunctionFile",
+    "functions": 7,
+    "methods": 0,
+    "locals": 39
+  },
+  {
+    "file": "actors\\build_subsystem_feedback.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 30
+  },
+  {
+    "file": "actors\\create_ground_actor.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "actors\\empty_command_message.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "actors\\empty_ground_state.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "actors\\empty_load_set.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "actors\\empty_subsystem_feedback.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "actors\\empty_telemetry_packet.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "actors\\ground_step.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 19
+  },
+  {
+    "file": "actors\\ground_subsystem_step.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 37
+  },
+  {
+    "file": "actors\\satellite_append_cross_actor_telemetry.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 26
+  },
+  {
+    "file": "actors\\satellite_environment_step.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 31
+  },
+  {
+    "file": "actors\\satellite_sensor_step.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 23
+  },
+  {
+    "file": "actors\\satellite_software_step.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 30
+  },
+  {
+    "file": "actors\\satellite_step.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 27
+  },
+  {
+    "file": "actors\\satellite_subsystem_step.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 23
+  },
+  {
+    "file": "commands\\SimCommand.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 38
+  },
+  {
+    "file": "commands\\aggregateSoftwareStepOutputs.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 24
+  },
+  {
+    "file": "commands\\emptyMissionCommands.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "commands\\emptySubsystemCommands.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "commands\\normalizeMissionCommands.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "commands\\routeActorInbox.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 21
+  },
+  {
+    "file": "commands\\time_matches_step_window.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "commands\\+cmdproc\\apply_all.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "commands\\+cmdproc\\apply_env_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "commands\\+cmdproc\\apply_fsw_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 20
+  },
+  {
+    "file": "commands\\+cmdproc\\apply_sensor_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "commands\\+cmdproc\\apply_subsystem_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "commands\\+cmdproc\\categorize_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "commands\\+cmdproc\\load_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "commands\\+cmdproc\\matches_satellite.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "commands\\+cmdproc\\matches_time.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "commands\\+cmdproc\\merge_fsw_into_sensor_view.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "commands\\+cmdproc\\parse_command.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "commands\\+cmdproc\\select_commands.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "commands\\+cmdproc\\sort_by_time.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "commands\\+cmdproc\\validate_command_file.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\BodyDefinition.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 26,
+    "methods": 26,
+    "locals": 82
+  },
+  {
+    "file": "core\\Constants.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 51
+  },
+  {
+    "file": "core\\EnvironmentIntegrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 15
+  },
+  {
+    "file": "core\\ForceModelManager.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 26,
+    "methods": 24,
+    "locals": 102
+  },
+  {
+    "file": "core\\GroundRelaySubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 5,
+    "locals": 67
+  },
+  {
+    "file": "core\\QuaternionLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 50
+  },
+  {
+    "file": "core\\SensorManager.m",
+    "filetype": "FunctionFile",
+    "functions": 8,
+    "methods": 0,
+    "locals": 37
+  },
+  {
+    "file": "core\\SoftwareManager.m",
+    "filetype": "FunctionFile",
+    "functions": 12,
+    "methods": 0,
+    "locals": 53
+  },
+  {
+    "file": "core\\StateBuilder.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 57
+  },
+  {
+    "file": "core\\StoreForwardRelaySubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 5,
+    "locals": 42
+  },
+  {
+    "file": "core\\SubsystemManager.m",
+    "filetype": "FunctionFile",
+    "functions": 10,
+    "methods": 0,
+    "locals": 35
+  },
+  {
+    "file": "core\\Types.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 11,
+    "locals": 50
+  },
+  {
+    "file": "core\\ValidationLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 16,
+    "methods": 16,
+    "locals": 58
+  },
+  {
+    "file": "core\\VectorLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 45
+  },
+  {
+    "file": "core\\extend_integrator_topology.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 11
+  },
+  {
+    "file": "core\\mission_status_from_state.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "core\\normalize_status_config_paths.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "core\\+access\\append_satellite_pair_los_telemetry.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 28
+  },
+  {
+    "file": "core\\+access\\apply_ground_link_access_from_config.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 23
+  },
+  {
+    "file": "core\\+access\\elevation_rad_site_to_satellite.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "core\\+access\\segment_clear_of_spherical_body.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "core\\+access\\validate_ground_access_config.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "core\\+commproc\\apply_comm_link_schedule.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 13
+  },
+  {
+    "file": "core\\+commproc\\buffer_create.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+commproc\\buffer_oldest_age_s.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+commproc\\buffer_telemetry_snapshot.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+commproc\\buffer_try_deliver_one.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+commproc\\buffer_try_ingest.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "core\\+commproc\\validate_satellite_emit.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+commproc\\validate_transport_command.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+contractspec\\force_model.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+contractspec\\sensor.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+contractspec\\software.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+contractspec\\state_provider.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+contractspec\\subsystem.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+contractspec\\telemetry.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+gnssproc\\create_gnss_ephemeris_broadcast.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+gnssproc\\create_gnss_measurement_packet.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+gnssproc\\create_receiver_output.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+gnssproc\\least_squares_position.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "core\\+gnssproc\\measurement_from_ephemeris.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "core\\+gnssproc\\validate_gnss_ephemeris_broadcast.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+gnssproc\\validate_gnss_measurement_packet.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "core\\+gnssproc\\validate_receiver_output.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+intproc\\accumulate_force_models.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 20
+  },
+  {
+    "file": "core\\+intproc\\advance_links.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "core\\+intproc\\assemble_accelerations.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+intproc\\assemble_root_derivatives.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "core\\+intproc\\assert_finite_acceleration_struct.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "core\\+intproc\\assert_finite_derivative_outputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+intproc\\assert_finite_rk4_outputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 18
+  },
+  {
+    "file": "core\\+intproc\\assert_finite_state_output.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "core\\+intproc\\build_force_model_context.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "core\\+intproc\\build_runtime_state.m",
+    "filetype": "FunctionFile",
+    "functions": 8,
+    "methods": 0,
+    "locals": 42
+  },
+  {
+    "file": "core\\+intproc\\build_step_context.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "core\\+intproc\\calculate_rigid_body_derivatives.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 21
+  },
+  {
+    "file": "core\\+intproc\\compute_backend_accelerations.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "core\\+intproc\\compute_integrator_rk4_coefficients.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 38
+  },
+  {
+    "file": "core\\+intproc\\compute_rk4_coefficients.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 32
+  },
+  {
+    "file": "core\\+intproc\\compute_root_accelerations.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+intproc\\create_force_model_debug_log.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+intproc\\create_intermediate_state.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 27
+  },
+  {
+    "file": "core\\+intproc\\create_prescribed_inputs.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 30
+  },
+  {
+    "file": "core\\+intproc\\evaluate_force_model.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "core\\+intproc\\get_body_load_inputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+intproc\\get_mechanism_model.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 11
+  },
+  {
+    "file": "core\\+intproc\\get_staged_root_wrench_cbi.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "core\\+intproc\\integrator_is_articulated.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+intproc\\log_post_root_state.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 37
+  },
+  {
+    "file": "core\\+intproc\\map_state_to_root_body.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 24
+  },
+  {
+    "file": "core\\+intproc\\resolve_step_loads.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 13
+  },
+  {
+    "file": "core\\+intproc\\solve_root_derivatives.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 14
+  },
+  {
+    "file": "core\\+intproc\\step.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "core\\+intproc\\step_environment.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "core\\+intproc\\step_integrator.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 14
+  },
+  {
+    "file": "core\\+intproc\\step_integrator_articulated.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "core\\+intproc\\sum_body_wrenches_cbi.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+intproc\\sync_runtime_body_properties.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 11
+  },
+  {
+    "file": "core\\+intproc\\update_state_euler.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "core\\+intproc\\update_state_rk4.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 27
+  },
+  {
+    "file": "core\\+intproc\\update_system_kinematics.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 17
+  },
+  {
+    "file": "core\\+intproc\\validate_finite_vector.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+intproc\\validate_wrench_vector.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+kanedyn\\assemble_mass_matrix_rhs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+kanedyn\\assert_finite_root_accelerations.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+kanedyn\\check_matrix_condition.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+kanedyn\\extract_root_accelerations.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+kanedyn\\root_accel.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+kanedyn\\root_accel_from_matrices.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+kanedyn\\solve_generalized_speeds.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+kanedyn\\validate_generalized_speeds.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+kanedyn\\validate_mass_matrix_rhs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+kanedyn\\validate_system_kane_object.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+mbd\\GeometryValidator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 58
+  },
+  {
+    "file": "core\\+mbd\\JointType.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 0
+  },
+  {
+    "file": "core\\+mbd\\Link.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 17
+  },
+  {
+    "file": "core\\+mbd\\RootBody.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "core\\+mbd\\System.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 6
+  },
+  {
+    "file": "core\\+mbd\\SystemKane.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 46
+  },
+  {
+    "file": "core\\+mbdproc\\build_model.m",
+    "filetype": "FunctionFile",
+    "functions": 9,
+    "methods": 0,
+    "locals": 63
+  },
+  {
+    "file": "core\\+mbdproc\\empty_env_inputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+mbdproc\\empty_load_inputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+mbdproc\\init_state.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 41
+  },
+  {
+    "file": "core\\+mbdproc\\integrate_state.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "core\\+mbdproc\\merge_load_inputs.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+mbdproc\\normalize_state.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+mbdproc\\resolve_kinematics.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+mbdproc\\resolve_loads.m",
+    "filetype": "FunctionFile",
+    "functions": 11,
+    "methods": 0,
+    "locals": 69
+  },
+  {
+    "file": "core\\+mbdproc\\solve_dynamics.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+mbdproc\\validate_model.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 14
+  },
+  {
+    "file": "core\\+mbdproc\\+backends\\solve_kane.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "core\\+mbdproc\\+backends\\solve_kane_from_system.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "core\\+mbdproc\\+backends\\solve_momentum.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 13
+  },
+  {
+    "file": "core\\+mbdproc\\+backends\\solve_momentum_from_system.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 44
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\apply_joint_efforts_to_system.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\apply_load_set_to_system.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\apply_prescribed_motion.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\build_derivative.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\build_index_map.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\coerce_joint_type.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\compute_diagnostics.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\joint_dof.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\resolve_system_kinematics.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 14
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\resolved_from_system.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\state_from_system.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\system_from_model_state.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 14
+  },
+  {
+    "file": "core\\+mbdproc\\+internal\\system_to_model.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "core\\+mgrproc\\collect_sensor_data.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 21
+  },
+  {
+    "file": "core\\+mgrproc\\collect_subsystem_outputs.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "core\\+mgrproc\\step_sensors.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 26
+  },
+  {
+    "file": "core\\+mgrproc\\step_software.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 27
+  },
+  {
+    "file": "core\\+mgrproc\\step_subsystems.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 28
+  },
+  {
+    "file": "core\\+satfactory\\assemble_satellite_actor.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+satfactory\\build_assembly_definition.m",
+    "filetype": "FunctionFile",
+    "functions": 17,
+    "methods": 0,
+    "locals": 87
+  },
+  {
+    "file": "core\\+satfactory\\build_initial_thermal_state.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "core\\+satfactory\\create_actor_params.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+satfactory\\create_body_definition.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+satfactory\\create_component_managers.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "core\\+satfactory\\create_environment_assembly.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 43
+  },
+  {
+    "file": "core\\+satfactory\\create_initial_state.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 19
+  },
+  {
+    "file": "core\\+satfactory\\create_satellite.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 11
+  },
+  {
+    "file": "core\\+satfactory\\extract_mass_and_inertia.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+satfactory\\parse_inertia.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+satfactory\\read_environment_diagnostics_enabled.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "core\\+satfactory\\+internal\\build_body_definition.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+satfactory\\+internal\\find_component_by_id.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "core\\+satstate\\apply_environment_channels.m",
+    "filetype": "FunctionFile",
+    "functions": 21,
+    "methods": 0,
+    "locals": 92
+  },
+  {
+    "file": "core\\+satstate\\build_environment_state.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 29
+  },
+  {
+    "file": "core\\+satstate\\build_root_mechanism_model.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "core\\+satstate\\build_runtime_state.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+satstate\\compute_environment_aggregate.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 37
+  },
+  {
+    "file": "core\\+satstate\\create_trace_map.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "core\\+satstate\\empty_root_accelerations.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "core\\+satstate\\get_root.m",
+    "filetype": "FunctionFile",
+    "functions": 8,
+    "methods": 0,
+    "locals": 30
+  },
+  {
+    "file": "core\\integrator\\Integrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 50,
+    "methods": 46,
+    "locals": 302
+  },
+  {
+    "file": "examples\\multibody_systems\\01_simple_solar_array.m",
+    "filetype": "ScriptFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 40
+  },
+  {
+    "file": "examples\\multibody_systems\\02_dual_solar_arrays.m",
+    "filetype": "ScriptFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 47
+  },
+  {
+    "file": "examples\\multibody_systems\\03_robotic_arm.m",
+    "filetype": "ScriptFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 42
+  },
+  {
+    "file": "examples\\multibody_systems\\04_antenna_gimbal.m",
+    "filetype": "ScriptFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 37
+  },
+  {
+    "file": "examples\\multibody_systems\\05_complete_satellite.m",
+    "filetype": "ScriptFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 49
+  },
+  {
+    "file": "io\\HDF5LogOrchestrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 16,
+    "methods": 10,
+    "locals": 63
+  },
+  {
+    "file": "io\\HDF5Logger.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 28
+  },
+  {
+    "file": "io\\build_component_telemetry_packets.m",
+    "filetype": "FunctionFile",
+    "functions": 9,
+    "methods": 0,
+    "locals": 45
+  },
+  {
+    "file": "io\\build_environment_loggers.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\build_force_model_loggers.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\build_loggers.m",
+    "filetype": "FunctionFile",
+    "functions": 16,
+    "methods": 0,
+    "locals": 63
+  },
+  {
+    "file": "io\\create_environment_lane_logger.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 13
+  },
+  {
+    "file": "io\\create_environment_slice_logger.m",
+    "filetype": "FunctionFile",
+    "functions": 10,
+    "methods": 0,
+    "locals": 47
+  },
+  {
+    "file": "io\\create_environment_trace_logger.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 30
+  },
+  {
+    "file": "io\\create_force_model_logger.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "io\\create_logger.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "io\\create_telemetry_packet.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\finalizeTelemetryWrite.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "io\\validate_telemetry_data.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 12
+  },
+  {
+    "file": "io\\validate_telemetry_schema.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "io\\+cfgio\\load_config.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\load_json.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\load_test_json.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\parse_inertia.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "io\\+cfgio\\read_and_parse_json.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\+cfgio\\save_json.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "io\\+cfgio\\validate_config_path.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "io\\+cfgio\\validate_config_structure.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "io\\+cfgio\\validate_filename_input.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\private\\hasAttitudeSensorConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\private\\isEnabledByDefault.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\private\\rejectUnexpectedFields.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateAttitudeControllerConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 5
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateCoreSection.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateDvControllerConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateInitialState.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateInitialThermalState.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateNonnegativeFiniteScalarField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateOptionalFiniteScalarField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateOrbitalManeuverControllerConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "io\\+cfgio\\private\\validatePhysicalComponents.m",
+    "filetype": "FunctionFile",
+    "functions": 7,
+    "methods": 0,
+    "locals": 34
+  },
+  {
+    "file": "io\\+cfgio\\private\\validatePositiveFiniteScalarField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateRequiredFiniteScalarField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateRequiredIntegerField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateRequiredPositiveFiniteScalarField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateRequiredPositiveVectorField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateRequiredVectorField.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateSatelliteConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 21
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateSatellitesSection.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateSensorsConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateSoftwareConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateSolarArraySubsystemConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateThrusterSpecConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "io\\+cfgio\\private\\validateThrusterSubsystemConfig.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "math\\Frames.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 40
+  },
+  {
+    "file": "math\\StructUtils.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 11
+  },
+  {
+    "file": "math\\computeSpecificForceCBI.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "math\\rotAxisAngle.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "math\\rotXYZ.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 8
+  },
+  {
+    "file": "math\\validateAxisAngleInputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 4
+  },
+  {
+    "file": "math\\validateXYZInputs.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 2
+  },
+  {
+    "file": "models\\DragExpModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 22,
+    "methods": 21,
+    "locals": 75
+  },
+  {
+    "file": "models\\KeplerModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 6,
+    "locals": 34
+  },
+  {
+    "file": "models\\SimpleGravityModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 5,
+    "locals": 27
+  },
+  {
+    "file": "models\\aero\\AeroPlate.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 45
+  },
+  {
+    "file": "models\\aero\\MultiBodyDragModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 35,
+    "methods": 27,
+    "locals": 224
+  },
+  {
+    "file": "models\\sensors\\Accelerometer.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 19
+  },
+  {
+    "file": "models\\sensors\\AttitudeSensor.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 8,
+    "locals": 40
+  },
+  {
+    "file": "models\\sensors\\GnssReceiverBox.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 5,
+    "locals": 63
+  },
+  {
+    "file": "models\\sensors\\NavBox.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 39
+  },
+  {
+    "file": "models\\thruster\\ThrusterModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 43
+  },
+  {
+    "file": "sensors\\sensor_suite_step.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 6
+  },
+  {
+    "file": "software\\AttitudeController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 24,
+    "methods": 24,
+    "locals": 183
+  },
+  {
+    "file": "software\\AttitudeErrorProvider.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 18
+  },
+  {
+    "file": "software\\LvlhProxOpsController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 31
+  },
+  {
+    "file": "software\\MissionTimelineSoftware.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 28
+  },
+  {
+    "file": "software\\SolarArrayController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 21,
+    "methods": 18,
+    "locals": 82
+  },
+  {
+    "file": "software\\ThrusterCtrl.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 19
+  },
+  {
+    "file": "software\\targeting\\DVController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 12,
+    "methods": 12,
+    "locals": 37
+  },
+  {
+    "file": "software\\targeting\\OrbitalManeuverController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 25,
+    "methods": 24,
+    "locals": 150
+  },
+  {
+    "file": "software\\targeting\\+orbitproc\\calculate_sma_change.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 23
+  },
+  {
+    "file": "software\\targeting\\+orbitproc\\calculate_sma_from_state.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 19
+  },
+  {
+    "file": "software\\targeting\\+orbitproc\\cbi_to_vad.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "software\\targeting\\+orbitproc\\map_dv_to_body_command.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 14
+  },
+  {
+    "file": "software\\targeting\\+orbitproc\\state_to_keplerian.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 34
+  },
+  {
+    "file": "subsystems\\CommBeaconSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 22
+  },
+  {
+    "file": "subsystems\\DummyThrusterSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 13
+  },
+  {
+    "file": "subsystems\\GnssEphemerisBeaconSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 23
+  },
+  {
+    "file": "subsystems\\LeaderNavBeaconSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 23
+  },
+  {
+    "file": "subsystems\\SolarArray.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 29,
+    "methods": 27,
+    "locals": 117
+  },
+  {
+    "file": "subsystems\\Thruster.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 23
+  },
+  {
+    "file": "subsystems\\ThrusterSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 27,
+    "methods": 27,
+    "locals": 125
+  },
+  {
+    "file": "unit_tests\\MissionStatusTestDouble.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\TestBadTelemetryComponent.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 6
+  },
+  {
+    "file": "unit_tests\\TestComponentFactory.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 20,
+    "methods": 20,
+    "locals": 51
+  },
+  {
+    "file": "unit_tests\\TestConstantWrenchForceModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 5
+  },
+  {
+    "file": "unit_tests\\TestCountingSoftware.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\TestCustomCommandRoutingSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 5
+  },
+  {
+    "file": "unit_tests\\TestFailingAddForceModelIntegrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\TestFailingForceModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\TestFailingForceModelListEnvironment.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 1
+  },
+  {
+    "file": "unit_tests\\TestFailingSetTimeStepForceModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 4
+  },
+  {
+    "file": "unit_tests\\TestFixtures.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 10,
+    "locals": 33
+  },
+  {
+    "file": "unit_tests\\TestForceModelLoggerEnvironment.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 6
+  },
+  {
+    "file": "unit_tests\\TestInvalidCommandFieldsSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\TestInvalidForceOutputModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 1
+  },
+  {
+    "file": "unit_tests\\TestPathHelper.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\TestRecordingIntegrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 2
+  },
+  {
+    "file": "unit_tests\\TestSetTimeStepForceModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 5
+  },
+  {
+    "file": "unit_tests\\TestSignatureSensitiveMultiBodyDragModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\TestStubLogOrchestrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 8
+  },
+  {
+    "file": "unit_tests\\test_6dof_thrusters.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 9,
+    "locals": 49
+  },
+  {
+    "file": "unit_tests\\test_Accelerometer.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 58
+  },
+  {
+    "file": "unit_tests\\test_ActorContractLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_AeroPlate.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 11,
+    "locals": 15
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControlFlow.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 70
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControlRegressionSuite.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 23,
+    "methods": 23,
+    "locals": 159
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControlSign.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 15
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControlSolarArrayInteraction.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 86
+  },
+  {
+    "file": "unit_tests\\test_AttitudeController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 25,
+    "methods": 25,
+    "locals": 108
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControllerGainSweep.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 11,
+    "locals": 131
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControllerPostBurn.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 140
+  },
+  {
+    "file": "unit_tests\\test_AttitudeControllerSaturation.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 11,
+    "locals": 93
+  },
+  {
+    "file": "unit_tests\\test_AttitudeController_Weighted.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 39
+  },
+  {
+    "file": "unit_tests\\test_AttitudeController_software_contract.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 6,
+    "locals": 30
+  },
+  {
+    "file": "unit_tests\\test_AttitudeErrorDirection.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 10
+  },
+  {
+    "file": "unit_tests\\test_AttitudeErrorProvider_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 20
+  },
+  {
+    "file": "unit_tests\\test_AttitudeLargeError.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 15
+  },
+  {
+    "file": "unit_tests\\test_AttitudeRateFeedforward.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 8
+  },
+  {
+    "file": "unit_tests\\test_AttitudeRotation.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 18
+  },
+  {
+    "file": "unit_tests\\test_AttitudeSensor.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 8,
+    "locals": 50
+  },
+  {
+    "file": "unit_tests\\test_AttitudeSensor_KnowledgeError.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 5,
+    "locals": 34
+  },
+  {
+    "file": "unit_tests\\test_AttitudeTrackingMovingTarget.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 20
+  },
+  {
+    "file": "unit_tests\\test_AttitudeVADConvergence.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 19
+  },
+  {
+    "file": "unit_tests\\test_BodyDefinition.m",
+    "filetype": "FunctionFile",
+    "functions": 10,
+    "methods": 0,
+    "locals": 42
+  },
+  {
+    "file": "unit_tests\\test_BodyDefinition_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 10
+  },
+  {
+    "file": "unit_tests\\test_CodeCompliance.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 55,
+    "methods": 55,
+    "locals": 304
+  },
+  {
+    "file": "unit_tests\\test_CommandApplicator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 47,
+    "methods": 47,
+    "locals": 194
+  },
+  {
+    "file": "unit_tests\\test_CommandHandler_entry_smoke.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 33
+  },
+  {
+    "file": "unit_tests\\test_CommandLoader.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 22,
+    "methods": 22,
+    "locals": 56
+  },
+  {
+    "file": "unit_tests\\test_CommandSelector.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 26,
+    "methods": 26,
+    "locals": 91
+  },
+  {
+    "file": "unit_tests\\test_ConfigLoader.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 43,
+    "methods": 42,
+    "locals": 84
+  },
+  {
+    "file": "unit_tests\\test_Constants.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 13
+  },
+  {
+    "file": "unit_tests\\test_Constants_T5_issue274.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 4
+  },
+  {
+    "file": "unit_tests\\test_ContractCompliance.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 23,
+    "methods": 23,
+    "locals": 106
+  },
+  {
+    "file": "unit_tests\\test_ContractSpecs.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_DVController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 19,
+    "methods": 19,
+    "locals": 60
+  },
+  {
+    "file": "unit_tests\\test_DemoArtifactIo.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 6
+  },
+  {
+    "file": "unit_tests\\test_DemoArtifactRender.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 6
+  },
+  {
+    "file": "unit_tests\\test_DemoCatalog.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 10
+  },
+  {
+    "file": "unit_tests\\test_DemoInitializer.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 8,
+    "locals": 39
+  },
+  {
+    "file": "unit_tests\\test_DemoPolicy.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_DemoVerificationBackendComparison.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 11
+  },
+  {
+    "file": "unit_tests\\test_DemoVerification_helpers.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 3,
+    "locals": 39
+  },
+  {
+    "file": "unit_tests\\test_DragAlignment.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 40
+  },
+  {
+    "file": "unit_tests\\test_DragExpModel_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_DragExpModel_density_scale.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 11,
+    "locals": 43
+  },
+  {
+    "file": "unit_tests\\test_EntrySmoke.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 16
+  },
+  {
+    "file": "unit_tests\\test_EnvironmentDragSMA.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 23
+  },
+  {
+    "file": "unit_tests\\test_EnvironmentIntegrator_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 12,
+    "methods": 11,
+    "locals": 64
+  },
+  {
+    "file": "unit_tests\\test_EnvironmentKepler.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 52
+  },
+  {
+    "file": "unit_tests\\test_FSWThrusterPath.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 4,
+    "locals": 64
+  },
+  {
+    "file": "unit_tests\\test_ForceModelLogger.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 12,
+    "methods": 8,
+    "locals": 31
+  },
+  {
+    "file": "unit_tests\\test_ForceModelManager_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 19,
+    "methods": 18,
+    "locals": 50
+  },
+  {
+    "file": "unit_tests\\test_ForceModelManager_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_Frames.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 47
+  },
+  {
+    "file": "unit_tests\\test_GeometryValidator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 16,
+    "methods": 16,
+    "locals": 112
+  },
+  {
+    "file": "unit_tests\\test_GnssReceiverBox.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 6,
+    "locals": 31
+  },
+  {
+    "file": "unit_tests\\test_HDF5Logger.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 15,
+    "methods": 14,
+    "locals": 70
+  },
+  {
+    "file": "unit_tests\\test_HDF5Logger_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_HDF5Verifier_StringDataset.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 19,
+    "methods": 17,
+    "locals": 63
+  },
+  {
+    "file": "unit_tests\\test_Integrator.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 51
+  },
+  {
+    "file": "unit_tests\\test_IntegratorExternalForces.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 3,
+    "locals": 35
+  },
+  {
+    "file": "unit_tests\\test_IntegratorKane_simple.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 5
+  },
+  {
+    "file": "unit_tests\\test_Integrator_articulated.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 16,
+    "methods": 14,
+    "locals": 80
+  },
+  {
+    "file": "unit_tests\\test_Integrator_math_utils.m",
+    "filetype": "FunctionFile",
+    "functions": 11,
+    "methods": 0,
+    "locals": 83
+  },
+  {
+    "file": "unit_tests\\test_Integrator_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 25
+  },
+  {
+    "file": "unit_tests\\test_JSONLoader.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 8,
+    "locals": 18
+  },
+  {
+    "file": "unit_tests\\test_JSONLoader_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_KaneDynamics.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 20,
+    "methods": 19,
+    "locals": 39
+  },
+  {
+    "file": "unit_tests\\test_KaneIntegrator_Orbital.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 71
+  },
+  {
+    "file": "unit_tests\\test_KeplerModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 19
+  },
+  {
+    "file": "unit_tests\\test_Link_quaternion.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 9,
+    "locals": 24
+  },
+  {
+    "file": "unit_tests\\test_Link_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 18
+  },
+  {
+    "file": "unit_tests\\test_LvlhProxOpsController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 11,
+    "locals": 25
+  },
+  {
+    "file": "unit_tests\\test_MissionPlanner_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 10,
+    "locals": 26
+  },
+  {
+    "file": "unit_tests\\test_MissionPlanner_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 16
+  },
+  {
+    "file": "unit_tests\\test_MissionTimelineSoftware.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 24
+  },
+  {
+    "file": "unit_tests\\test_MultiBodyDragModel_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 38,
+    "methods": 38,
+    "locals": 160
+  },
+  {
+    "file": "unit_tests\\test_MultiBodyDrag_work.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_NavBox_Bias.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 12,
+    "methods": 12,
+    "locals": 70
+  },
+  {
+    "file": "unit_tests\\test_NavBox_applyStateError.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 12,
+    "methods": 12,
+    "locals": 32
+  },
+  {
+    "file": "unit_tests\\test_OrbitalManeuverController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 20,
+    "methods": 20,
+    "locals": 43
+  },
+  {
+    "file": "unit_tests\\test_OrbitalManeuverController_Apogee.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 62
+  },
+  {
+    "file": "unit_tests\\test_OrbitalManeuverController_software_contract.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 7,
+    "locals": 49
+  },
+  {
+    "file": "unit_tests\\test_OrbitalMechanics.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 10,
+    "locals": 51
+  },
+  {
+    "file": "unit_tests\\test_OrbitalMechanics_CBI_Body.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 27
+  },
+  {
+    "file": "unit_tests\\test_QuaternionErrors.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 20
+  },
+  {
+    "file": "unit_tests\\test_QuaternionLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 35,
+    "methods": 35,
+    "locals": 117
+  },
+  {
+    "file": "unit_tests\\test_RootBody_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 30
+  },
+  {
+    "file": "unit_tests\\test_SatelliteFactory_assembly.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 32,
+    "methods": 27,
+    "locals": 79
+  },
+  {
+    "file": "unit_tests\\test_SensorManager.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 14,
+    "methods": 13,
+    "locals": 53
+  },
+  {
+    "file": "unit_tests\\test_SimCommand.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 27,
+    "methods": 27,
+    "locals": 46
+  },
+  {
+    "file": "unit_tests\\test_SimpleGravityModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_SoftwareManager.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 17,
+    "methods": 15,
+    "locals": 56
+  },
+  {
+    "file": "unit_tests\\test_SolarArray.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 25,
+    "methods": 23,
+    "locals": 99
+  },
+  {
+    "file": "unit_tests\\test_SolarArrayController.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 12,
+    "locals": 37
+  },
+  {
+    "file": "unit_tests\\test_SolarArrayController_setSunPositionCbi.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 29
+  },
+  {
+    "file": "unit_tests\\test_SolarArrayController_software_contract.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 4,
+    "locals": 28
+  },
+  {
+    "file": "unit_tests\\test_SolarArray_2DOF.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 4,
+    "locals": 26
+  },
+  {
+    "file": "unit_tests\\test_SolarArray_2DOF_command_convention.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 15
+  },
+  {
+    "file": "unit_tests\\test_SolarArray_unified.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 3,
+    "locals": 22
+  },
+  {
+    "file": "unit_tests\\test_SolarArray_value_class.m",
+    "filetype": "FunctionFile",
+    "functions": 6,
+    "methods": 0,
+    "locals": 26
+  },
+  {
+    "file": "unit_tests\\test_StateBuilder.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 24,
+    "methods": 24,
+    "locals": 121
+  },
+  {
+    "file": "unit_tests\\test_StructUtils.m",
+    "filetype": "FunctionFile",
+    "functions": 7,
+    "methods": 0,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_SubsystemManager_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 50
+  },
+  {
+    "file": "unit_tests\\test_System_quaternion.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 35
+  },
+  {
+    "file": "unit_tests\\test_System_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 50
+  },
+  {
+    "file": "unit_tests\\test_TestComponentFactory_attitudeSensorData.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 20
+  },
+  {
+    "file": "unit_tests\\test_TestPathHelper.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\test_Thruster.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 10,
+    "locals": 30
+  },
+  {
+    "file": "unit_tests\\test_ThrusterAllocationDebug.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 26
+  },
+  {
+    "file": "unit_tests\\test_ThrusterAllocation_PerigeeRegression.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 10,
+    "locals": 45
+  },
+  {
+    "file": "unit_tests\\test_ThrusterCtrl.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 12,
+    "methods": 12,
+    "locals": 43
+  },
+  {
+    "file": "unit_tests\\test_ThrusterCtrl_value_class.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_ThrusterForceAllocation.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 18,
+    "methods": 17,
+    "locals": 90
+  },
+  {
+    "file": "unit_tests\\test_ThrusterIntegration.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 14,
+    "methods": 12,
+    "locals": 79
+  },
+  {
+    "file": "unit_tests\\test_ThrusterModel.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 22,
+    "methods": 8,
+    "locals": 76
+  },
+  {
+    "file": "unit_tests\\test_ThrusterModel_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 33
+  },
+  {
+    "file": "unit_tests\\test_ThrusterOppositeMapping.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_ThrusterSubsystem.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 30,
+    "methods": 26,
+    "locals": 92
+  },
+  {
+    "file": "unit_tests\\test_Thruster_value_class.m",
+    "filetype": "FunctionFile",
+    "functions": 2,
+    "methods": 0,
+    "locals": 39
+  },
+  {
+    "file": "unit_tests\\test_Types.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 23
+  },
+  {
+    "file": "unit_tests\\test_Types_value_class.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 5
+  },
+  {
+    "file": "unit_tests\\test_ValidationLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 47,
+    "methods": 47,
+    "locals": 77
+  },
+  {
+    "file": "unit_tests\\test_VectorLib.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 34,
+    "methods": 34,
+    "locals": 145
+  },
+  {
+    "file": "unit_tests\\test_WarningThrottler.m",
+    "filetype": "FunctionFile",
+    "functions": 12,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "unit_tests\\test_access_package.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 25,
+    "methods": 24,
+    "locals": 84
+  },
+  {
+    "file": "unit_tests\\test_actor_contract_shapes.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 8,
+    "locals": 22
+  },
+  {
+    "file": "unit_tests\\test_actor_inbox_routing.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 14,
+    "methods": 8,
+    "locals": 65
+  },
+  {
+    "file": "unit_tests\\test_actor_step_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 22,
+    "methods": 16,
+    "locals": 42
+  },
+  {
+    "file": "unit_tests\\test_aggregateSoftwareStepOutputs.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 5,
+    "locals": 18
+  },
+  {
+    "file": "unit_tests\\test_append_satellite_pair_los_telemetry.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 5,
+    "locals": 32
+  },
+  {
+    "file": "unit_tests\\test_appendage_generic.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 3,
+    "locals": 20
+  },
+  {
+    "file": "unit_tests\\test_comm_satellite_emit.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 23,
+    "methods": 21,
+    "locals": 80
+  },
+  {
+    "file": "unit_tests\\test_command_helpers.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 18,
+    "methods": 18,
+    "locals": 45
+  },
+  {
+    "file": "unit_tests\\test_commproc_finite_buffer.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 10,
+    "locals": 48
+  },
+  {
+    "file": "unit_tests\\test_computeSpecificForceCBI.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_demo_catalog_parity_comm_buffer.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\test_demo_cpp_eligibility_matrix.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 14,
+    "methods": 14,
+    "locals": 53
+  },
+  {
+    "file": "unit_tests\\test_demo_feature_access_gated_ground_command.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_demo_feature_command_env_sensor.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_demo_feature_gnss_constellation.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_demo_feature_lunar_relay.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 5
+  },
+  {
+    "file": "unit_tests\\test_demo_feature_mission_timeline.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_demo_satellite_cluster_maneuver.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 9
+  },
+  {
+    "file": "unit_tests\\test_demo_satellite_cubesat.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 2,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_energy_conservation.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 29
+  },
+  {
+    "file": "unit_tests\\test_entry_function_integration.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 10
+  },
+  {
+    "file": "unit_tests\\test_entry_integration.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 11
+  },
+  {
+    "file": "unit_tests\\test_entry_minimal.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 11
+  },
+  {
+    "file": "unit_tests\\test_environment_channels.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 15,
+    "methods": 13,
+    "locals": 34
+  },
+  {
+    "file": "unit_tests\\test_environment_hdf5_schema.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 4,
+    "locals": 23
+  },
+  {
+    "file": "unit_tests\\test_environment_loggers.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 19,
+    "methods": 12,
+    "locals": 61
+  },
+  {
+    "file": "unit_tests\\test_external_forces_unified.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 8
+  },
+  {
+    "file": "unit_tests\\test_feature_orbit.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 37
+  },
+  {
+    "file": "unit_tests\\test_finalizeTelemetryWrite.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 12
+  },
+  {
+    "file": "unit_tests\\test_gnssproc_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 15,
+    "methods": 15,
+    "locals": 44
+  },
+  {
+    "file": "unit_tests\\test_ground_actor_entry_smoke.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 2,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_ground_actor_runtime.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 17,
+    "methods": 6,
+    "locals": 76
+  },
+  {
+    "file": "unit_tests\\test_integrator_direct.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 15
+  },
+  {
+    "file": "unit_tests\\test_intproc_helper_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 101,
+    "methods": 89,
+    "locals": 376
+  },
+  {
+    "file": "unit_tests\\test_intproc_rk4.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 19,
+    "methods": 15,
+    "locals": 128
+  },
+  {
+    "file": "unit_tests\\test_intproc_step_integrators.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 6,
+    "locals": 64
+  },
+  {
+    "file": "unit_tests\\test_issue270_contract_help.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 10
+  },
+  {
+    "file": "unit_tests\\test_kane_analytical.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 63
+  },
+  {
+    "file": "unit_tests\\test_kane_forces.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 33
+  },
+  {
+    "file": "unit_tests\\test_kane_integration.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 10
+  },
+  {
+    "file": "unit_tests\\test_kane_keplerian_orbit.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 22
+  },
+  {
+    "file": "unit_tests\\test_kane_level1_rigid_body.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 8,
+    "locals": 91
+  },
+  {
+    "file": "unit_tests\\test_kane_level2_revolute.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 89
+  },
+  {
+    "file": "unit_tests\\test_kane_level3_double_pendulum.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 40
+  },
+  {
+    "file": "unit_tests\\test_kane_level4_spherical.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 22
+  },
+  {
+    "file": "unit_tests\\test_kane_level5_satellite.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 24
+  },
+  {
+    "file": "unit_tests\\test_lvlh_utils.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 16
+  },
+  {
+    "file": "unit_tests\\test_mbdproc_backend.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 20,
+    "methods": 20,
+    "locals": 167
+  },
+  {
+    "file": "unit_tests\\test_mbdproc_integration_and_example.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 8,
+    "methods": 8,
+    "locals": 32
+  },
+  {
+    "file": "unit_tests\\test_mbdproc_internal_helpers.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 16,
+    "methods": 16,
+    "locals": 60
+  },
+  {
+    "file": "unit_tests\\test_mbdproc_pipeline.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 23,
+    "methods": 23,
+    "locals": 98
+  },
+  {
+    "file": "unit_tests\\test_mgrproc_manager_steps.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 29,
+    "methods": 25,
+    "locals": 87
+  },
+  {
+    "file": "unit_tests\\test_mission_status_from_state.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 6
+  },
+  {
+    "file": "unit_tests\\test_multibody_drag.m",
+    "filetype": "FunctionFile",
+    "functions": 5,
+    "methods": 0,
+    "locals": 26
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_command_env_sensor_catalog_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 13
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_cubesat_catalog_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 3
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_drag_catalog_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 11
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_drag_linked_plate_catalog_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 11
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_ground_command_relay_catalog_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 12
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_hdf5_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_native_cpp_molniya_catalog_parity.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 3,
+    "locals": 32
+  },
+  {
+    "file": "unit_tests\\test_normalize_status_config_paths.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 18
+  },
+  {
+    "file": "unit_tests\\test_offCG_force.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_output_finiteness_guards.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 11,
+    "locals": 42
+  },
+  {
+    "file": "unit_tests\\test_packages.m",
+    "filetype": "ScriptFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_planar_pendulum_kane.m",
+    "filetype": "FunctionFile",
+    "functions": 3,
+    "methods": 0,
+    "locals": 32
+  },
+  {
+    "file": "unit_tests\\test_prescribed_forces_states.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 8,
+    "locals": 57
+  },
+  {
+    "file": "unit_tests\\test_pure_keplerian.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 2,
+    "locals": 16
+  },
+  {
+    "file": "unit_tests\\test_required_args_219.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 18,
+    "methods": 16,
+    "locals": 33
+  },
+  {
+    "file": "unit_tests\\test_rotAxisAngle.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 7,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_run_test_batch.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 4
+  },
+  {
+    "file": "unit_tests\\test_runner.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 1
+  },
+  {
+    "file": "unit_tests\\test_runtime_doc_mass_contracts.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 3,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_satellite_environment_step.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 2,
+    "locals": 17
+  },
+  {
+    "file": "unit_tests\\test_satellite_runtime_telemetry.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 17,
+    "methods": 13,
+    "locals": 46
+  },
+  {
+    "file": "unit_tests\\test_satellite_software_step.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 11,
+    "methods": 6,
+    "locals": 36
+  },
+  {
+    "file": "unit_tests\\test_satellite_state_shape.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 3,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_satellite_step_equivalence.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 23,
+    "methods": 4,
+    "locals": 135
+  },
+  {
+    "file": "unit_tests\\test_satellite_subsystem_step.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 7,
+    "methods": 4,
+    "locals": 41
+  },
+  {
+    "file": "unit_tests\\test_satstate_builders.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 39,
+    "methods": 34,
+    "locals": 99
+  },
+  {
+    "file": "unit_tests\\test_sensor_suite_step.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_setupSimPaths.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 10,
+    "methods": 10,
+    "locals": 25
+  },
+  {
+    "file": "unit_tests\\test_simConfig_schema_contract.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 9,
+    "methods": 6,
+    "locals": 27
+  },
+  {
+    "file": "unit_tests\\test_sma_change.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 16
+  },
+  {
+    "file": "unit_tests\\test_solar_array.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 3,
+    "locals": 20
+  },
+  {
+    "file": "unit_tests\\test_solar_array_sma_conservation.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 5,
+    "methods": 2,
+    "locals": 27
+  },
+  {
+    "file": "unit_tests\\test_telemetry_packets.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 17,
+    "methods": 16,
+    "locals": 43
+  },
+  {
+    "file": "unit_tests\\test_test_local_scenario_configs.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 6
+  },
+  {
+    "file": "unit_tests\\test_test_runner_contract.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 3,
+    "locals": 14
+  },
+  {
+    "file": "unit_tests\\test_two_body_internal_torque.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_validate_telemetry_schema.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 7
+  },
+  {
+    "file": "unit_tests\\test_verify_test_coverage.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 2
+  },
+  {
+    "file": "unit_tests\\verify_test_coverage.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 28
+  },
+  {
+    "file": "utils\\ConfigExtractor.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 21
+  },
+  {
+    "file": "utils\\DemoArtifactIo.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 2,
+    "methods": 2,
+    "locals": 7
+  },
+  {
+    "file": "utils\\DemoArtifactRender.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 3,
+    "methods": 3,
+    "locals": 17
+  },
+  {
+    "file": "utils\\DemoCatalog.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 6,
+    "methods": 6,
+    "locals": 14
+  },
+  {
+    "file": "utils\\DemoCppEligibility.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 13,
+    "methods": 13,
+    "locals": 62
+  },
+  {
+    "file": "utils\\DemoFigureCapture.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 1,
+    "methods": 1,
+    "locals": 8
+  },
+  {
+    "file": "utils\\DemoInitializer.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 21,
+    "methods": 21,
+    "locals": 98
+  },
+  {
+    "file": "utils\\HDF5Verifier.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 26,
+    "methods": 26,
+    "locals": 111
+  },
+  {
+    "file": "utils\\WarningCategory.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 0,
+    "methods": 0,
+    "locals": 0
+  },
+  {
+    "file": "utils\\WarningThrottler.m",
+    "filetype": "ClassDefinitionFile",
+    "functions": 4,
+    "methods": 4,
+    "locals": 17
+  },
+  {
+    "file": "utils\\eci_relative_to_lvlh.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 9
+  },
+  {
+    "file": "utils\\lvlh_basis_cbi.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 11
+  },
+  {
+    "file": "utils\\make_hdf5_path_name.m",
+    "filetype": "FunctionFile",
+    "functions": 1,
+    "methods": 0,
+    "locals": 3
+  },
+  {
+    "file": "utils\\printSimulationStatus.m",
+    "filetype": "FunctionFile",
+    "functions": 4,
+    "methods": 0,
+    "locals": 29
+  }
+]

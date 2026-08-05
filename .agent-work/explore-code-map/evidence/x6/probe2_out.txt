@@ -1,0 +1,79 @@
+
+	Home License -- for personal use only.  Not for government,
+	academic, research, commercial, or other organizational use.
+
+=== DUMPTREE: TestRecordingIntegrator.m (classdef, 1 methods block, 1 method) ===
+  1  *<root>:  CLASSDEF:   1/01 
+  3     *Cexpr:  LT:   1/34 
+  4        *Left:  ID:   1/10  (TestRecordingIntegrator)
+  5        *Right:  ID:   1/36  (Integrator)
+  6     *Body:  METHODS:   4/05 
+  7        *Body:  FUNCTION:   5/09 
+ 11           *Fname:  ID:   5/24  (TestRecordingIntegrator)
+ 12           *Ins:  ID:   5/48  (dt_core)
+  9           *Outs:  ID:   5/18  (obj)
+ 13           *Body:  EXPR:   6/27 
+ 14              *Arg:  CALL:   6/27 
+ 15                 *Left:  ATBASE:   6/16 
+ 16                    *Left:  ID:   6/13  (obj)
+ 17                    *Right:  ID:   6/17  (Integrator)
+ 18                 *Right:  ID:   6/28  (dt_core)
+
+=== Parent/Next structure of FUNCTION nodes in a MULTI-method class ===
+Integrator.m: 50 FUNCTION nodes, 5 METHODS blocks
+  fn#1 name=Integrator               line=59    parentKind=METHODS
+  fn#2 name=addForceModel            line=84    parentKind=FUNCTION
+  fn#3 name=get.force_models         line=96    parentKind=FUNCTION
+  fn#4 name=set.force_models         line=103   parentKind=FUNCTION
+  fn#5 name=step                     line=124   parentKind=FUNCTION
+  fn#6 name=stageSubsystemLoads      line=130   parentKind=FUNCTION
+  fn#7 name=computeGravityAccelFromState line=141   parentKind=FUNCTION
+  fn#8 name=computeRK4Coefficients   line=181   parentKind=FUNCTION
+  METHODS block spans (lefttreepos..righttreepos):
+    methods#1 line=58 span=[2576..22255]
+    methods#2 line=449 span=[22333..39950]
+    methods#3 line=782 span=[39959..41550]
+    methods#4 line=816 span=[41559..42662]
+    methods#5 line=836 span=[42671..43300]
+
+=== KIND structure: dotted calls + anon fns, sampled from AttitudeController.m ===
+DOT nodes: 214. First 6 with parent kind + rendered text:
+  DOT line=42    parent=EQUALS   text=Constants.ATTITUDE_COMMAND_THRESHOLD_FRACTION
+  DOT line=48    parent=EQUALS   text=Constants.ATTITUDE_BLEND_OMEGA_MIN
+  DOT line=49    parent=EQUALS   text=Constants.ATTITUDE_BLEND_OMEGA_MAX
+  DOT line=68    parent=SUBSCR   text=AttitudeController.validateConstructorConfig
+  DOT line=70    parent=SUBSCR   text=ConfigExtractor.applyFields
+  DOT line=78    parent=EQUALS   text=obj.kp
+ANON nodes: 0. First 4 (Left/Right/Ins kinds):
+
+CALL nodes whose Left is not a bare ID (first 8):
+  (of 226 CALL nodes in this file)
+
+=== requiredFilesAndProducts on a 6-file sample ===
+RFP superCoolSpaceSim.m                                  files=247  in_matlab_src=247  products=1  21.5s
+RFP core\+intproc\map_state_to_root_body.m               files=85   in_matlab_src=85   products=1  4.3s
+RFP io\+cfgio\load_json.m                                files=3    in_matlab_src=3    products=1  0.6s
+RFP unit_tests\test_AttitudeRotation.m                   files=129  in_matlab_src=127  products=1  6.9s
+RFP unit_tests\test_WarningThrottler.m                   files=3    in_matlab_src=3    products=1  0.6s
+RFP utils\printSimulationStatus.m                        files=2    in_matlab_src=2    products=1  0.4s
+RFP_SAMPLE_TOTAL_SECONDS 34.3  -> extrapolated for 539 files: 51.3 min
+
+=== checkcode over the whole corpus ===
+CHECKCODE_FILES 539  MESSAGES 526  SECONDS 4.0
+Top checkcode message ids:
+  NBRAK2         117
+  MSNU           99
+  ASGLU          75
+  NASGU          57
+  INUSD          43
+  MANU           36
+  COMNL          27
+  AGROW          21
+  COMNC          12
+  DEFNU          6
+  PROPLC         6
+  BDFIL          5
+  ISCL           5
+  ALIGN          4
+  MINV           4
+PROBE2_DONE

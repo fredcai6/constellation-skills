@@ -1,0 +1,44 @@
+
+=== PROPERTIES block #1 (line 8) ===
+  stmt#1 kind=EQUALS         line=9    text=ANGLE_ERROR_DEADBAND_RAD = Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+      Left   -> ID             ANGLE_ERROR_DEADBAND_RAD
+      Right  -> DOT            Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+
+=== PROPERTIES block #2 (line 12) ===
+{Error using tt2ss/expr2str (line 969)
+unknown expr node PROPTYPEDECL
+
+Error in tt2ss/expr2str (line 902)
+                        expr2str( lhs, tlev );
+                        ^^^^^^^^^^^^^^^^^^^^^
+Error in tt2ss/stmt2str (line 433)
+                expr2str( ixt, ind );
+                ^^^^^^^^^^^^^^^^^^^^
+Error in tt2ss (line 202)
+        stmt2str( IX(1), ind, false );
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in mtree/tree2str (line 35)
+        s = tt2ss( S, varargin{:} );
+            ^^^^^^^^^^^^^^^^^^^^^^^
+Error in probe3 (line 16)
+        fprintf('  stmt#%d kind=%-14s line=%-4d text=%s\n', c, char(kind(st)), lineno(st), strtrim(tree2str(st)));
+                                                                                                   ^^^^^^^^^^^^
+} 
+
+=== PROPERTIES block #1 (line 8) ===
+  stmt#1 kind=EQUALS         line=9    text=ANGLE_ERROR_DEADBAND_RAD = Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+      Left   -> ID             ANGLE_ERROR_DEADBAND_RAD stringval=ANGLE_ERROR_DEADBAND_RAD
+      Right  -> DOT            Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+      List   -> EQUALS         ANGLE_ERROR_DEADBAND_RAD = Constants.SOLAR_ARRAY_ANGLE_ERROR_DEADBAND_RAD
+
+=== PROPERTIES block #2 (line 12) ===
+  stmt#1 kind=EQUALS         line=14   text=<tree2str FAILED>
+      Left   -> PROPTYPEDECL   joint_id double
+      Right  -> INT            0
+{Error using mtree/kind (line 7)
+kind must be called on a single node
+
+Error in probe3 (line 24)
+            if strcmp(char(kind(v)),'ID'), try, sv=[' stringval=' stringval(v)]; catch, end, end
+                           ^^^^^^^
+} 

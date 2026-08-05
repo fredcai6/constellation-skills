@@ -1,0 +1,91 @@
+FILES 539
+PKG_DIRS 16  CLASSES 277  FUNCTION_FILES 260
+{
+  "files": 539,
+  "filetype": {
+    "ScriptFile": 6,
+    "FunctionFile": 256,
+    "ClassDefinitionFile": 277
+  },
+  "parse_failures": 0,
+  "tx": {
+    "script": 6,
+    "main_function": 256,
+    "subfunction": 614,
+    "nested_function": 7,
+    "method": 2606,
+    "property_accessor": 4,
+    "anon_function": 867,
+    "total_named": 3493
+  },
+  "co": {
+    "input_param": 5100,
+    "output_param": 1569,
+    "property": 224,
+    "persistent": 2,
+    "global": 0,
+    "local_assigned_distinct": 16070,
+    "loop_var": 504,
+    "anon_param": 0,
+    "total_named": 6895
+  },
+  "classdefs": 277,
+  "methods_blocks": 539,
+  "properties_blocks": 85,
+  "ed": {
+    "bare_call_sites": 22278,
+    "qualified_call_sites": 9855,
+    "subscr_total": 11218,
+    "dot_total": 23091,
+    "id_occurrences": 90400,
+    "write_occurrences": 17488,
+    "read_occurrences": 72912
+  },
+  "qual": {
+    "to_class_static": 2378,
+    "to_package_function": 1874,
+    "on_local_variable_UNRESOLVED": 5527,
+    "on_unknown_base": 76
+  },
+  "calls": {
+    "internal_occurrences": 5592,
+    "external_occurrences": 20938,
+    "distinct_internal_targets": 648,
+    "distinct_external_targets": 733,
+    "distinct_caller_callee_pairs": 16269,
+    "distinct_directory_edges": 73
+  },
+  "distinct_defined_names": 2958,
+  "distinct_property_names": 190,
+  "packages": 16,
+  "classes": 277,
+  "elapsed_seconds": 22.5649764,
+  "failures": []
+}
+
+--- top 25 directory edges ---
+529    unit_tests -> core
+177    unit_tests -> commands
+174    unit_tests -> core\integrator
+165    unit_tests -> software
+160    unit_tests -> utils
+154    unit_tests -> actors
+129    unit_tests -> subsystems
+79     unit_tests -> models
+76     unit_tests -> models\aero
+73     unit_tests -> math
+60     unit_tests -> io
+59     unit_tests -> models\sensors
+48     unit_tests -> models\thruster
+36     core\+intproc -> core\integrator
+25     unit_tests -> software\targeting
+24     software -> core
+20     core\+intproc -> core
+18     unit_tests -> <root>
+13     software\targeting\+orbitproc -> core
+12     io -> core
+10     models\aero -> core
+10     subsystems -> core
+9      actors -> io
+9      core -> subsystems
+9      core\+satfactory -> core

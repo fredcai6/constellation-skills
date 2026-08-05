@@ -1,0 +1,89 @@
+
+	Home License -- for personal use only.  Not for government,
+	academic, research, commercial, or other organizational use.
+
+
+================ unit_tests\TestRecordingIntegrator.m ================
+FileType: ClassDefinitionFile
+METHODS blocks: 1   PROPERTIES blocks: 0
+FUNCTION nodes: 1
+  line 5     method       TestRecordingIntegrator            in=1 out=1
+
+================ core\+contractspec\software.m ================
+FileType: FunctionFile
+METHODS blocks: 0   PROPERTIES blocks: 0
+FUNCTION nodes: 1
+  line 1     main         software                           in=0 out=1
+
+================ subsystems\SolarArray.m ================
+FileType: ClassDefinitionFile
+METHODS blocks: 3   PROPERTIES blocks: 2
+  properties block #1 (line 8): ANGLE_ERROR_DEADBAND_RAD   [1 names]
+  properties block #2 (line 12):   [0 names]
+FUNCTION nodes: 29
+  line 42    method       SolarArray                         in=1 out=1
+  line 109   method       setupWithSystem                    in=2 out=2
+  line 144   method       commandAngle                       in=2 out=1
+  line 185   method       step                               in=4 out=2
+  line 249   method       getCommandedAngle                  in=1 out=1
+  line 263   method       getAppliedTorque                   in=1 out=1
+  line 277   method       getActualState                     in=1 out=1
+  line 296   method       getOutputSchema                    in=1 out=1
+  line 322   method       getOutputData                      in=3 out=1
+  line 367   method       getCommandFields                   in=1 out=1
+  line 383   method       computeJointEffort                 in=2 out=3
+  line 420   method       computeEffort1DOF                  in=2 out=2
+  line 432   method       computeEffort2DOF                  in=2 out=2
+  line 481   method       defaultInertia                     in=1 out=1
+  line 492   method       parseJointType                     in=2 out=1
+  line 510   method       computePDControl                   in=3 out=1
+  line 517   method       computeFrictionTorque              in=2 out=1
+  line 532   method       saturateTorque                     in=2 out=1
+  line 551   method       requireJointFeedback               in=2 out=1
+  line 583   method       requireRootAngularVelocity         in=2 out=1
+  line 601   method       applyActuatorConfig                in=2 out=1
+  line 626   method       parseInertiaConfig                 in=2 out=1
+  line 662   method       validatePositiveScalar             in=3 out=1
+  line 671   method       validateNonnegativeScalar          in=4 out=1
+  line 684   method       validateVector                     in=4 out=1
+  line 695   method       validatePanelDimensions            in=2 out=1
+  line 708   method       requireField                       in=3 out=1
+  line 718   subfunction  normalizeAngleVector               in=2 out=1
+  line 737   subfunction  normalizeAngleScalar               in=1 out=1
+
+================ ANON structure hunt ================
+file: actors\satellite_software_step.m
+  ANON line 136 text=@(~,~) localSoftwareStatusData( manager, status_len )
+    Left   = ANONID     ~
+    Right  = CALL       localSoftwareStatusData( manager, status_len )
+    Ins    = <null>
+    Outs   = <null>
+    Arg    = <null>
+    Body   = <null>
+    Left-as-list: 2 node(s), IDs: 
+file: commands\aggregateSoftwareStepOutputs.m
+  ANON line 129 text=@(status) contains( status, 'MANEUVER' )
+    Left   = ANONID     status
+    Right  = CALL       contains( status, 'MANEUVER' )
+    Ins    = <null>
+    Outs   = <null>
+    Arg    = <null>
+    Body   = <null>
+    Left-as-list: 1 node(s), IDs: 
+  ANON line 131 text=@(status) contains( status, 'CONTROLLING' )
+    Left   = ANONID     status
+    Right  = CALL       contains( status, 'CONTROLLING' )
+    Ins    = <null>
+    Outs   = <null>
+    Arg    = <null>
+    Body   = <null>
+    Left-as-list: 1 node(s), IDs: 
+  ANON line 133 text=@(status) contains( status, 'TRACKING' )
+    Left   = ANONID     status
+    Right  = CALL       contains( status, 'TRACKING' )
+    Ins    = <null>
+    Outs   = <null>
+    Arg    = <null>
+    Body   = <null>
+    Left-as-list: 1 node(s), IDs: 
+VERIFY_DONE

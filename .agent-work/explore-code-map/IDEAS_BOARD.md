@@ -69,6 +69,15 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | x3 | Prior art: classifying code comments as typed assertions; accuracy numbers; comment→graph pipelines | research | **complete** (cycle 1) | `excursions/x3-brief.md` → `excursions/x3-result.md` |
 | x4 | Does centrality × docstring-holes reproduce the curated map's documentation choices on f1Brainz? (+ first "describe these first" artifact) | prototype (measurement) | **complete** (cycle 1) | `excursions/x4-brief.md` → `excursions/x4-result.md` |
 | x5 | scip-clang on superCoolSpaceSim_cpp: the C++ adoption cost; same completeness and role gaps as Python? | prototype (measurement) | **complete — blocked, productively** (cycle 1) | `excursions/x5-brief.md` → `excursions/x5-result.md` |
+| x6 | Is there a scip-matlab or quick equivalent, and what does the best local route emit from matlab_src? | prototype (measurement) | **complete** (cycle 2) | `excursions/x6-brief.md` → `excursions/x6-result.md` |
+
+## Key findings — cycle 2, x6: no scip-matlab; mtree is the cheapest arm of the three and carries the write side natively
+
+*Excursion finding (measured, registry-verified) — NOT human verdicts. Human pre-ruled the MATLAB result does not materially change the direction. Full result: `excursions/x6-result.md`.*
+
+- **No scip-matlab exists or ever has** (SCIP's indexer list checked at source; note the trap: `MatlabSCIPInterface` is the SCIP *optimization solver*, a name collision, not an indexer).
+- **`mtree` parsed all 539 files in 1.5 seconds, zero failures** — full index ~21s, the cheapest of the three arms (Python ~15 min, C++ blocked). Emits 3,493 transformers, 7,085 named containers, 16,269 call pairs.
+- **Feeds the extractor fork on BOTH sides**: mtree carries assignment structure natively (17,488 write occurrences — the exact thing scip-python couldn't give), but **56% of qualified call sites don't resolve** without type inference — parsing is free, *dispatch* is the hole. AST-first gets writes for free; resolution is the part you then own.
 
 ## Key findings — cycle 1, x5: scip-clang is CI-only forever; libclang works on Windows today
 

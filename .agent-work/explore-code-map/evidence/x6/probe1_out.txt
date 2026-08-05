@@ -1,0 +1,182 @@
+
+	Home License -- for personal use only.  Not for government,
+	academic, research, commercial, or other organizational use.
+
+MATLAB 25.2.0.3150157 (R2025b) Update 4
+FILES_FOUND 539
+
+=== which mtree ===
+C:\Program Files\MATLAB\R2025b\toolbox\matlab\codetools\@mtree\mtree.m
+
+=== methods(mtree) ===
+    {'Arg'                  }
+    {'Attr'                 }
+    {'Body'                 }
+    {'Catch'                }
+    {'CatchID'              }
+    {'Cattr'                }
+    {'Cexpr'                }
+    {'Fname'                }
+    {'Full'                 }
+    {'Index'                }
+    {'Ins'                  }
+    {'Left'                 }
+    {'List'                 }
+    {'Next'                 }
+    {'Outs'                 }
+    {'Parent'               }
+    {'Right'                }
+    {'Tree'                 }
+    {'Try'                  }
+    {'Vector'               }
+    {'allkind'              }
+    {'allmember'            }
+    {'allsetter'            }
+    {'allstring'            }
+    {'anykind'              }
+    {'anymember'            }
+    {'anysetter'            }
+    {'anystring'            }
+    {'asgvars'              }
+    {'bops'                 }
+    {'charno'               }
+    {'count'                }
+    {'depends'              }
+    {'disp'                 }
+    {'dominates'            }
+    {'dominator'            }
+    {'dump'                 }
+    {'dumptree'             }
+    {'endposition'          }
+    {'first'                }
+    {'fixedpoint'           }
+    {'getIX'                }
+    {'geteq'                }
+    {'getlastexecutableline'}
+    {'growset'              }
+    {'indices'              }
+    {'isbop'                }
+    {'isempty'              }
+    {'iskind'               }
+    {'ismember'             }
+    {'isnull'               }
+    {'isop'                 }
+    {'isstmt'               }
+    {'isstring'             }
+    {'isuop'                }
+    {'iswhole'              }
+    {'kind'                 }
+    {'kinds'                }
+    {'last'                 }
+    {'lastone'              }
+    {'lc2pos'               }
+    {'leftposition'         }
+    {'lefttreepos'          }
+    {'lhs'                  }
+    {'lineno'               }
+    {'mtfind'               }
+    {'mtpath'               }
+    {'mtree'                }
+    {'nodesize'             }
+    {'null'                 }
+    {'operands'             }
+    {'ops'                  }
+    {'pos2lc'               }
+    {'position'             }
+    {'previous'             }
+    {'rawdump'              }
+    {'rightfullindex'       }
+    {'rightposition'        }
+    {'righttreeindex'       }
+    {'righttreepos'         }
+    {'root'                 }
+    {'select'               }
+    {'setIX'                }
+    {'setdepends'           }
+    {'sets'                 }
+    {'setter'               }
+    {'show'                 }
+    {'stmts'                }
+    {'stringval'            }
+    {'stringvals'           }
+    {'tree2str'             }
+    {'trueparent'           }
+    {'uops'                 }
+    {'version'              }
+    {'wholetree'            }
+
+
+=== FileType over all files ===
+FILETYPE ClassDefinitionFile      277
+FILETYPE FunctionFile             256
+FILETYPE ScriptFile               6
+MTREE_PARSE_FAILURES 0
+MTREE_PARSE_ALL_SECONDS 1.54
+
+=== node Kind distribution (sample of 60 files) ===
+KIND ID                     14110
+KIND EXPR                   3692
+KIND CALL                   3512
+KIND DOT                    3509
+KIND FIELD                  3509
+KIND INT                    3440
+KIND CHARVECTOR             3003
+KIND EQUALS                 2556
+KIND ROW                    2299
+KIND SUBSCR                 1836
+KIND ETC                    1375
+KIND DOUBLE                 950
+KIND LB                     921
+KIND FUNCTION               574
+KIND IF                     396
+KIND IFHEAD                 396
+KIND NOT                    365
+KIND COLON                  197
+KIND ANON                   174
+KIND MUL                    166
+KIND OROR                   159
+KIND DIV                    139
+KIND STRING                 133
+KIND LC                     115
+KIND CELL                   103
+KIND PLUS                   101
+KIND ANDAND                 83
+KIND RETURN                 80
+KIND FOR                    77
+KIND UMINUS                 73
+KIND ELSE                   70
+KIND ATTR                   69
+KIND ATTRIBUTES             64
+KIND METHODS                64
+KIND LT                     56
+KIND CATCH                  45
+KIND EQ                     45
+KIND TRY                    45
+KIND PARENS                 36
+KIND TRANS                  34
+KIND CEXPR                  31
+KIND CLASSDEF               31
+KIND MINUS                  30
+KIND PROPTYPEDECL           30
+KIND GT                     23
+KIND NE                     23
+KIND DOTLP                  17
+KIND LE                     17
+KIND ELSEIF                 13
+KIND DOTTRANS               11
+KIND CONTINUE               10
+KIND PROPERTIES             10
+KIND EXP                    9
+KIND CASE                   8
+KIND LP                     7
+KIND LDIV                   5
+KIND GE                     4
+KIND OTHERWISE              3
+KIND SWITCH                 3
+KIND ATBASE                 2
+KIND DCALL                  2
+KIND BREAK                  1
+KIND DOTMUL                 1
+KIND_TOTAL_NODES 48862
+KIND_SCAN_SECONDS 2.34
+PROBE1_DONE

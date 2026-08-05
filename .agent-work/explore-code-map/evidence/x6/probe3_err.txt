@@ -1,0 +1,8 @@
+{Error using mtree/kind (line 7)
+kind must be called on a single node
+
+Error in probe3 (line 24)
+            if strcmp(char(kind(v)),'ID'), try, sv=[' stringval=' stringval(v)]; catch, end, end
+                           ^^^^^^^
+} 
+ERROR: MATLAB error Exit Status: 0x00000001
