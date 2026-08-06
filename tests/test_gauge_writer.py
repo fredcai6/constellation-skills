@@ -9,6 +9,7 @@ network; no dependency on a live harness.
 
 import importlib.util
 import json
+import os
 import threading
 from pathlib import Path
 
@@ -679,6 +680,574 @@ def test_ambiguous_binding_skip_flags_do_not_clobber_existing_gauge_files(proj):
     assert (work_a / "gauge.json").read_text(encoding="utf-8") == prior_a  # byte-identical
     assert json.loads((work_a / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == "ambiguous-binding"
     assert json.loads((work_b / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == "ambiguous-binding"
+
+
+# --- #419: the reading belongs to the agent that produced it -----------------
+#
+# Agent-tool subagents SHARE their parent's session_id (measured live on
+# harness 2.1.222 -- see .agent-work/issue-419-governor-identity/
+# PROBLEM_STATEMENT.md), so a session-keyed lookup piled every crew claim under
+# one key and the writer, seeing 2+ candidates, went silent. g1 landed
+# spine_rail.binding_key (session_id#agent_id for a dispatched agent, the bare
+# session_id for a top-level one, None when the identity is unusable); these
+# tests pin the WRITER half.
+#
+# The failure that must never ship is a CONFIDENT WRONG NUMBER. Silence is an
+# acceptable outcome here; misattribution is not.
+
+_PARENT_AGENT_ID = "af45cec63b2835a40"  # the real id inside the captured fixture
+
+
+def _agent_hook_data(session_id="s1", agent_id="a1", transcript_path=None):
+    """A payload as the harness delivers it for a DISPATCHED agent: the
+    parent's transcript_path plus the acting agent's own agent_id.
+
+    Constructing this by hand is legitimate at this level -- the ban on
+    supplying agent_id binds the LIVE acceptance run (gate g4), whose whole
+    point is proving the harness delivers it. Here we test rejection and
+    attribution, not delivery."""
+    data = _hook_data(session_id, transcript_path)
+    data["agent_id"] = agent_id
+    return data
+
+
+def test_binding_key_helper_returns_none_when_spine_rail_failed_to_load(proj, monkeypatch):
+    """The `_spine_rail is None` guard lives at the binding-key call site, NOT
+    only inside resolve_gauge_path. `_load_spine_rail` returns None on any
+    import failure; an unguarded `_spine_rail.binding_key(...)` would raise
+    into handle_post_tool_use's outer swallow, leaving the governor silent
+    with zero diagnostic -- wearing the same symptom as every other silence.
+
+    This asserts the guard where it is OBSERVABLE: `_binding_key` carries no
+    swallow of its own, so a missing guard surfaces as a raised AttributeError
+    here instead of being absorbed one frame up."""
+    monkeypatch.setattr(gw, "_spine_rail", None)
+    assert gw._binding_key({"session_id": "s1"}) is None
+    assert gw._binding_key({"session_id": "s1", "agent_id": "a1"}) is None
+
+
+def test_binding_key_helper_delegates_to_spine_rail(proj):
+    """It is spine_rail's binding_key that composes the key -- this module
+    calls it, it does not reimplement it (g1 shipped and reviewed that half)."""
+    assert gw._binding_key({"session_id": "s1"}) == "s1"
+    assert gw._binding_key({"session_id": "s1", "agent_id": "a1"}) == "s1#a1"
+    assert gw._binding_key({"session_id": "s1", "agent_id": "bad#id"}) is None
+    assert gw._binding_key({}) is None
+
+
+def test_resolve_gauge_path_keys_on_the_composite_key_not_the_session(proj):
+    """A parent and its dispatched agent share a session_id but hold DISTINCT
+    bindings. Each key must see exactly its own -- one candidate each, so
+    neither is ambiguous and neither goes silent."""
+    work_parent = proj / ".agent-work" / "run-parent"
+    work_sub = proj / ".agent-work" / "run-sub"
+    work_parent.mkdir(parents=True)
+    work_sub.mkdir(parents=True)
+    _bind(proj, "s1", work_parent / "spine.json")
+    _bind(proj, "s1#a1", work_sub / "spine.json")
+
+    assert gw.resolve_gauge_path(proj, "s1") == [work_parent / "gauge.json"]
+    assert gw.resolve_gauge_path(proj, "s1#a1") == [work_sub / "gauge.json"]
+
+
+def test_subagent_payload_never_writes_to_the_parents_gauge(proj):
+    """THE misattribution this gate exists to prevent. The parent holds the
+    bare-session binding; a dispatched agent's tool call carries the parent's
+    transcript_path. Resolving by session_id alone would write the PARENT's
+    reading -- from the PARENT's transcript -- as if it were this agent's.
+
+    The subagent's own key is unbound here, so the correct outcome is zero
+    candidates: write nothing, anywhere."""
+    work_parent = proj / ".agent-work" / "run-parent"
+    work_parent.mkdir(parents=True)
+    (work_parent / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_parent / "spine.json")
+
+    out = gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _FIXTURE), proj)
+    assert out == {}
+    assert list(proj.rglob("gauge.json")) == []
+    assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == []
+    assert list(proj.rglob(gw.SKIP_FILENAME)) == []
+
+
+def test_unresolvable_identity_writes_nothing(proj):
+    """The issue's own named negative control. An agent_id the key composer
+    cannot use (empty, non-string, or carrying the separator) must NOT fall
+    back to the bare session_id -- that files the SUBAGENT's reading under the
+    PARENT's key, which is the same misattribution wearing a different hat."""
+    work_parent = proj / ".agent-work" / "run-parent"
+    work_parent.mkdir(parents=True)
+    (work_parent / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_parent / "spine.json")
+
+    for bad in ("", None, "sess#agent", "..", "a/b", "a\\b", 17):
+        out = gw.handle_post_tool_use(_agent_hook_data("s1", bad, _FIXTURE), proj)
+        assert out == {}
+        assert list(proj.rglob("gauge.json")) == [], bad
+        assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == [], bad
+        assert list(proj.rglob(gw.SKIP_FILENAME)) == [], bad
+
+
+def test_spine_rail_missing_writes_nothing_and_does_not_raise(proj, monkeypatch):
+    """End-to-end companion to the guard unit test above: with the sibling
+    module unloadable, the handler skips deliberately rather than by way of an
+    exception, and still returns the neutral payload."""
+    work = _bound_work(proj)
+    monkeypatch.setattr(gw, "_spine_rail", None)
+
+    assert gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj) == {}
+    assert gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _FIXTURE), proj) == {}
+    assert not (work / "gauge.json").exists()
+    assert not (work / gw.SKIP_FILENAME).exists()
+
+
+# --- #419: agent_id is interpolated into a PATH, so validate it here ---------
+
+
+def test_local_allowlist_is_stricter_than_spine_rails_denylist(proj):
+    """g1's rejection is a hand-maintained DENYLIST (`#`, `/`, `\\`, `..`) and
+    it still admits `:`, `*` and `?` -- every one of which reaches this
+    module's `agent-{agent_id}.jsonl` interpolation on a Windows filesystem.
+    So this module validates at its OWN boundary, with an ALLOWLIST (the real
+    ids observed are hex-ish tokens plus `-` and `_`) rather than by extending
+    someone else's denylist.
+
+    Each id below is one spine_rail ADMITS and this module must not."""
+    for admitted in ("a:b", "a*b", "a?b", "a<b", "a>b", 'a"b', "a|b", "a b", "a.b", "a" * 65):
+        assert sr.binding_key({"session_id": "s1", "agent_id": admitted}) is not None, admitted
+        assert gw._binding_key({"session_id": "s1", "agent_id": admitted}) is None, admitted
+
+
+def test_local_allowlist_admits_the_real_observed_id_shape(proj):
+    """The guard must not be so tight it rejects the ids the harness actually
+    sends -- the probe captured `a8f0a946eaaa2fe6c`, `adb52b4ec6c7dbd40` and
+    the fixture's `af45cec63b2835a40`; `-` and `_` are admitted too."""
+    for good in ("a8f0a946eaaa2fe6c", "adb52b4ec6c7dbd40", _PARENT_AGENT_ID, "a-b_C9"):
+        assert gw._binding_key({"session_id": "s1", "agent_id": good}) == "s1#" + good
+
+
+def test_rejected_agent_id_writes_nothing_even_when_its_key_is_bound(proj):
+    """A rejected value means WRITE NOTHING -- never a repaired or sanitized
+    path. Adversarial setup: the offending composite key IS bound, so an
+    implementation that admitted the character would have somewhere to write
+    and would write there."""
+    for bad in ("a:b", "a*b", "a?b"):
+        work = proj / ".agent-work" / "run-sub"
+        work.mkdir(parents=True, exist_ok=True)
+        (work / "spine.json").write_text("{}", encoding="utf-8")
+        _bind(proj, "s1#" + bad, work / "spine.json")
+
+        out = gw.handle_post_tool_use(_agent_hook_data("s1", bad, _FIXTURE), proj)
+        assert out == {}
+        assert list(proj.rglob("gauge.json")) == [], bad
+        assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == [], bad
+        assert list(proj.rglob(gw.SKIP_FILENAME)) == [], bad
+
+
+def test_derived_subagent_transcript_shape(proj, tmp_path):
+    """The acting agent's transcript is DERIVED from payload fields, never
+    searched for -- which is why the identical-command race a search would
+    have to worry about cannot arise here at all. Shape confirmed on disk for
+    both agents of a live two-subagent probe."""
+    parent = tmp_path / "proj-slug" / "ce777c3b-505c-4b76-b09b-db2c11082b83.jsonl"
+    derived = gw.derive_subagent_transcript(parent, _PARENT_AGENT_ID)
+    assert derived == (
+        tmp_path / "proj-slug" / "ce777c3b-505c-4b76-b09b-db2c11082b83"
+        / "subagents" / ("agent-" + _PARENT_AGENT_ID + ".jsonl")
+    )
+
+
+def test_derive_subagent_transcript_refuses_an_unusable_id(proj, tmp_path):
+    """The derivation re-validates at its own boundary too: a rejected value
+    yields None, never a repaired path and never an exception that the outer
+    swallow would turn into indistinguishable silence."""
+    parent = tmp_path / "sess.jsonl"
+    for bad in ("a:b", "a*b", "a?b", "../escape", "a/b", "a\\b", "", None, 17, "a" * 65):
+        assert gw.derive_subagent_transcript(parent, bad) is None, bad
+    assert gw.derive_subagent_transcript(None, "a1") is None
+
+
+# --- #419: fail closed -- a subagent reads its OWN transcript or nothing -----
+
+
+def _bound_subagent_work(proj, agent_id="a1", session_id="s1", name="run-sub"):
+    """Bind the composite key `session_id#agent_id` to its own work dir."""
+    work = proj / ".agent-work" / name
+    work.mkdir(parents=True, exist_ok=True)
+    (work / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, session_id + "#" + agent_id, work / "spine.json")
+    return work
+
+
+def _parent_transcript(proj, source=None, name="sess-1"):
+    """A copy of a fixture transcript at a path INSIDE tmp_path, so the
+    derivation's `<parent>/subagents/agent-<id>.jsonl` sibling can be planted
+    without ever writing into the repo's own fixtures directory."""
+    directory = proj / "transcripts" / "proj-slug"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / (name + ".jsonl")
+    path.write_text((source or _FIXTURE).read_text(encoding="utf-8"),
+                    encoding="utf-8", newline="\n")
+    return path
+
+
+def _plant_derived_transcript(parent_transcript, agent_id, source=None):
+    """Materialize the acting agent's own transcript where the derivation
+    says it lives, from real captured harness output."""
+    derived = gw.derive_subagent_transcript(parent_transcript, agent_id)
+    derived.parent.mkdir(parents=True, exist_ok=True)
+    derived.write_text(
+        (source or _REAL_SUBAGENT_FIXTURE).read_text(encoding="utf-8"),
+        encoding="utf-8", newline="\n")
+    return derived
+
+
+def test_subagent_with_missing_derived_transcript_leaves_gauge_untouched(proj):
+    """THE fail-closed case. agent_id present, its own transcript absent: the
+    parent's transcript is RIGHT THERE and readable, and falling back to it is
+    exactly the misattribution #202/#261 already tried and reverted -- fan-out
+    did not fix ambiguity, it spread one agent's reading into an unrelated
+    agent's work area.
+
+    'Unchanged' is proved in BYTES and MTIME: the prior mtime is stamped to a
+    distinct past value first, so the assertion cannot pass by filesystem
+    timestamp granularity."""
+    work = _bound_subagent_work(proj)
+    gauge_path = work / "gauge.json"
+    prior = json.dumps({"schema_version": 1, "fill_fraction": 0.42,
+                        "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"})
+    gauge_path.write_text(prior, encoding="utf-8")
+    stamp = 1_500_000_000_000_000_000  # 2017-07-14, unmistakably not "now"
+    os.utime(gauge_path, ns=(stamp, stamp))
+    before_mtime = gauge_path.stat().st_mtime_ns
+
+    parent = _parent_transcript(proj)
+    derived = gw.derive_subagent_transcript(parent, "a1")
+    assert not derived.exists()  # premise: the acting agent's transcript is absent
+
+    out = gw.handle_post_tool_use(_agent_hook_data("s1", "a1", parent), proj)
+    assert out == {}
+
+    assert gauge_path.read_text(encoding="utf-8") == prior          # bytes
+    assert gauge_path.stat().st_mtime_ns == before_mtime            # mtime
+    assert not (work / gw.UNCALIBRATED_FILENAME).exists()
+
+    flag = json.loads((work / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
+    assert flag["reason"] == "subagent-transcript-missing"
+    assert "candidate_count" not in flag
+    assert isinstance(flag["observed_at"], str) and flag["observed_at"]
+
+
+def test_subagent_with_missing_derived_transcript_writes_no_gauge_at_all(proj):
+    """Same branch with no prior reading on disk -- the strongest form of
+    'unchanged' for a file that was never there. Only the sidecar appears."""
+    work = _bound_subagent_work(proj)
+
+    gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _parent_transcript(proj)), proj)
+
+    assert list(proj.rglob("gauge.json")) == []
+    assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == []
+    assert json.loads((work / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == \
+        "subagent-transcript-missing"
+
+
+def test_subagent_reading_is_computed_from_its_own_transcript_only(proj, monkeypatch):
+    """There must be NO code path that hands the parent's transcript to
+    compute_record while agent_id is present. Asserted by intercepting
+    compute_record and recording exactly which path it was given."""
+    work = _bound_subagent_work(proj)
+    parent = _parent_transcript(proj)
+    derived = _plant_derived_transcript(parent, "a1")
+
+    seen = []
+    real = gw.compute_record
+    monkeypatch.setattr(gw, "compute_record",
+                        lambda path, *a, **kw: (seen.append(str(path)), real(path, *a, **kw))[1])
+
+    gw.handle_post_tool_use(_agent_hook_data("s1", "a1", parent), proj)
+
+    assert seen == [str(derived)]
+    assert str(parent) not in seen
+    assert work.exists()
+
+
+def test_missing_derived_transcript_never_calls_compute_record(proj, monkeypatch):
+    """The fail-closed branch returns BEFORE any reading is computed -- it
+    does not compute one and then decline to write it."""
+    _bound_subagent_work(proj)
+    seen = []
+    monkeypatch.setattr(gw, "compute_record", lambda path, *a, **kw: seen.append(str(path)) or (None, None))
+
+    gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _parent_transcript(proj)), proj)
+    assert seen == []
+
+
+def test_top_level_payload_still_reads_the_session_transcript(proj, monkeypatch):
+    """The other half of the same invariant: with no agent_id, nothing is
+    derived and the session transcript is read exactly as today."""
+    _bound_work(proj)
+    seen = []
+    real = gw.compute_record
+    monkeypatch.setattr(gw, "compute_record",
+                        lambda path, *a, **kw: (seen.append(str(path)), real(path, *a, **kw))[1])
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert seen == [str(_FIXTURE)]
+
+
+# --- #419: the sidechain filter INVERTS for a subagent -----------------------
+#
+# EVERY line of a subagent's own transcript is `isSidechain: true` (measured;
+# docs/GAUGE_WRITER_HOOK.md's field table is wrong about this today), so the
+# filter that is correct for a top-level agent is exactly backwards for a
+# dispatched one.
+#
+# The three obvious assertions against _REAL_SUBAGENT_FIXTURE (4 lines, ALL
+# isSidechain truthy, ALL agentId af45cec63b2835a40) are ALL satisfied by an
+# implementation that checks agentId equality alone and silently drops the
+# sidechain half -- the conjunct is unfalsifiable against that fixture. Hence
+# _MAINCHAIN_TAIL_FIXTURE: the same 4 real lines plus ONE derived line
+# carrying the MATCHING agentId with isSidechain FALSY. Only the conjunct
+# skips it.
+_MAINCHAIN_TAIL_FIXTURE = (
+    Path(__file__).resolve().parent / "fixtures" / "subagent_transcript_with_mainchain_tail.jsonl")
+
+# line 4 of the real capture: 4823 + 1088 + 15111
+_REAL_SUBAGENT_TOKENS = 4823 + 1088 + 15111
+_REAL_SUBAGENT_OBSERVED_AT = "2026-07-07T05:30:40.581Z"
+# the derived tail line: 7 + 3000 + 300000, on a DIFFERENT model, so picking
+# the wrong line is unmistakable in both the fill and the model name
+_TAIL_TOKENS = 7 + 3000 + 300000
+
+
+def _reaching(monkeypatch, path, agent_id=None):
+    """Run find_latest_usage and report how many transcript lines the reverse
+    scan actually reached -- 'any guard that loops must assert what it looped
+    over'. A conjunct that was never exercised shows up here as a reach count
+    that never gets past the first line."""
+    real_iter = gw._iter_tail_lines_reverse
+    seen = []
+
+    def counting(p, *a, **kw):
+        for line in real_iter(p, *a, **kw):
+            seen.append(line)
+            yield line
+
+    monkeypatch.setattr(gw, "_iter_tail_lines_reverse", counting)
+    return gw.find_latest_usage(path, agent_id), len(seen)
+
+
+def test_fixture_premises_hold(proj):
+    """Pin the premises the assertions below rest on, so a fixture edit
+    breaks here rather than silently hollowing out the conjunct test."""
+    real_lines = [l for l in _REAL_SUBAGENT_FIXTURE.read_text(encoding="utf-8").split("\n") if l.strip()]
+    assert len(real_lines) == 4
+    for raw in real_lines:
+        line = json.loads(raw)
+        assert line["isSidechain"] is True
+        assert line["agentId"] == _PARENT_AGENT_ID
+
+    tail_lines = [l for l in _MAINCHAIN_TAIL_FIXTURE.read_text(encoding="utf-8").split("\n") if l.strip()]
+    assert len(tail_lines) == 5
+    assert tail_lines[:4] == real_lines           # the real capture, unmodified
+    tail = json.loads(tail_lines[4])
+    assert tail["type"] == "assistant"
+    assert tail["agentId"] == _PARENT_AGENT_ID    # MATCHING id ...
+    assert not tail["isSidechain"]                # ... but main-chain
+
+
+def test_find_latest_usage_takes_one_agent_id_parameter(proj):
+    """One parameter, not two. 'This is agent X's own transcript' is a single
+    fact; an expect_sidechain + expect_agent_id pair would let a caller set an
+    incoherent combination, and the agentId equality is what makes a wrong
+    derived path fail closed instead of producing a confidently misattributed
+    number."""
+    import inspect
+    assert list(inspect.signature(gw.find_latest_usage).parameters) == ["transcript_path", "agent_id"]
+    assert list(inspect.signature(gw.compute_record).parameters) == ["transcript_path", "agent_id"]
+
+
+def test_real_subagent_transcript_yields_its_usage_for_its_own_agent_id(proj, monkeypatch):
+    """Given the fixture's OWN agentId the inverted filter returns the real
+    usage sum. Reach: 1 of 4 lines -- the answer is the last line, so the
+    scan hits it immediately."""
+    (found, reach) = _reaching(monkeypatch, _REAL_SUBAGENT_FIXTURE, _PARENT_AGENT_ID)
+    assert found == ("claude-opus-4-8", _REAL_SUBAGENT_TOKENS, _REAL_SUBAGENT_OBSERVED_AT)
+    assert reach == 1
+
+
+def test_real_subagent_transcript_returns_none_for_a_different_agent_id(proj, monkeypatch):
+    """A wrong derived path must fail CLOSED, not produce a confident wrong
+    number. Reach: all 4 lines examined and all 4 rejected."""
+    (found, reach) = _reaching(monkeypatch, _REAL_SUBAGENT_FIXTURE, "a8f0a946eaaa2fe6c")
+    assert found is None
+    assert reach == 4
+
+
+def test_default_polarity_reaches_every_line_and_still_returns_none(proj, monkeypatch):
+    """The existing assertion (test_real_subagent_transcript_finds_no_usage_
+    and_writes_nothing, unedited) restated with its reach measured: at default
+    polarity all 4 sidechain lines are examined and rejected."""
+    (found, reach) = _reaching(monkeypatch, _REAL_SUBAGENT_FIXTURE, None)
+    assert found is None
+    assert reach == 4
+
+
+def test_matching_agent_id_on_a_main_chain_line_is_skipped(proj, monkeypatch):
+    """THE falsifier. The tail line carries the matching agentId, sits LAST so
+    the reverse scan meets it FIRST, and has a much bigger usage total on a
+    different model -- so an implementation checking agentId equality alone
+    returns it. The conjunct must skip it and keep going to the real sidechain
+    line. Reach: 2 of 5 lines (tail rejected, line 4 accepted)."""
+    (found, reach) = _reaching(monkeypatch, _MAINCHAIN_TAIL_FIXTURE, _PARENT_AGENT_ID)
+    assert found == ("claude-opus-4-8", _REAL_SUBAGENT_TOKENS, _REAL_SUBAGENT_OBSERVED_AT)
+    assert found[1] != _TAIL_TOKENS
+    assert reach == 2
+
+
+def test_the_skipped_tail_line_is_itself_perfectly_usable(proj, monkeypatch):
+    """Control for the test above: the tail line is skipped because of the
+    sidechain conjunct, NOT because it is unparseable or missing a field. At
+    DEFAULT polarity it is the answer, on the first line the scan reaches."""
+    (found, reach) = _reaching(monkeypatch, _MAINCHAIN_TAIL_FIXTURE, None)
+    assert found == ("claude-sonnet-5", _TAIL_TOKENS, "2026-07-07T05:31:00.000Z")
+    assert reach == 1
+
+
+def test_compute_record_carries_the_agent_id_through(proj):
+    """compute_record takes the same single parameter and forwards it."""
+    record, uncal = gw.compute_record(_REAL_SUBAGENT_FIXTURE, _PARENT_AGENT_ID)
+    assert uncal is None
+    assert record["model"] == "claude-opus-4-8"
+    assert record["fill_fraction"] == pytest.approx(_REAL_SUBAGENT_TOKENS / 1_000_000)
+    assert record["observed_at"] == _REAL_SUBAGENT_OBSERVED_AT
+
+    assert gw.compute_record(_REAL_SUBAGENT_FIXTURE) == (None, None)
+
+
+def test_dispatched_agent_writes_its_own_reading_to_its_own_binding(proj):
+    """End to end, the whole point of the gate: a dispatched agent and its
+    parent share one session_id but hold distinct bindings; the agent's
+    reading is computed from ITS OWN transcript and lands in ITS OWN work
+    dir, and the parent's gauge is not touched at all."""
+    work_parent = proj / ".agent-work" / "run-parent"
+    work_parent.mkdir(parents=True)
+    (work_parent / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_parent / "spine.json")
+    work_sub = _bound_subagent_work(proj, agent_id=_PARENT_AGENT_ID)
+
+    parent = _parent_transcript(proj)
+    _plant_derived_transcript(parent, _PARENT_AGENT_ID)
+
+    out = gw.handle_post_tool_use(_agent_hook_data("s1", _PARENT_AGENT_ID, parent), proj)
+    assert out == {}
+
+    record = json.loads((work_sub / "gauge.json").read_text(encoding="utf-8"))
+    assert record["model"] == "claude-opus-4-8"
+    assert record["fill_fraction"] == pytest.approx(_REAL_SUBAGENT_TOKENS / 1_000_000)
+    assert record["observed_at"] == _REAL_SUBAGENT_OBSERVED_AT
+    # the parent's own reading, from the parent's own transcript, is untouched
+    assert not (work_parent / "gauge.json").exists()
+    assert not (work_sub / gw.SKIP_FILENAME).exists()
+
+
+def test_a_wrong_derived_transcript_fails_closed_rather_than_misattributing(proj):
+    """If the derived path existed but belonged to a DIFFERENT agent, the
+    agentId equality is the thing standing between the governor and a
+    confidently misattributed number. Plant another agent's real transcript at
+    this agent's derived path and require silence."""
+    other = "a8f0a946eaaa2fe6c"
+    work_sub = _bound_subagent_work(proj, agent_id=other)
+    parent = _parent_transcript(proj)
+    _plant_derived_transcript(parent, other)  # content carries agentId af45...
+
+    gw.handle_post_tool_use(_agent_hook_data("s1", other, parent), proj)
+
+    assert not (work_sub / "gauge.json").exists()
+    assert json.loads((work_sub / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == \
+        "no-usable-record"
+
+
+# --- #419: the identity-resolution duration, against the 100ms budget --------
+
+_IDENTITY_BUDGET_MS = 100.0  # the issue's stated placeholder budget
+
+
+class _SlowRail:
+    """spine_rail with a deliberate delay on binding_key -- the lever that
+    makes 'is this a real measurement or a constant?' answerable."""
+
+    def __init__(self, real, delay_s):
+        self.real = real
+        self.delay_s = delay_s
+
+    def binding_key(self, data):
+        import time
+        time.sleep(self.delay_s)
+        return self.real.binding_key(data)
+
+    def __getattr__(self, name):
+        return getattr(self.real, name)
+
+
+def _write_a_subagent_reading(proj, agent_id=_PARENT_AGENT_ID):
+    work_sub = _bound_subagent_work(proj, agent_id=agent_id)
+    parent = _parent_transcript(proj)
+    _plant_derived_transcript(parent, agent_id)
+    gw.handle_post_tool_use(_agent_hook_data("s1", agent_id, parent), proj)
+    return json.loads((work_sub / "gauge.json").read_text(encoding="utf-8"))
+
+
+def test_identity_resolution_duration_is_recorded_within_budget(proj):
+    """Identity is an O(1) payload lookup plus a derived path, so the 100ms
+    placeholder budget should never be in danger -- but 'should' is not
+    evidence, so the writer records what it actually cost."""
+    record = _write_a_subagent_reading(proj)
+    assert set(record.keys()) == {
+        "schema_version", "fill_fraction", "model", "observed_at", "identity_resolution_ms"}
+    value = record["identity_resolution_ms"]
+    assert isinstance(value, float)
+    assert 0.0 <= value < _IDENTITY_BUDGET_MS
+
+
+def test_identity_resolution_duration_tracks_a_deliberately_slowed_step(proj, monkeypatch):
+    """A constant would satisfy the assertion above. Slow the identity step by
+    a known amount and require the recorded value to follow it -- if the field
+    were hardcoded, or timed something else, this fails."""
+    fast = _write_a_subagent_reading(proj)["identity_resolution_ms"]
+
+    # Same agent, same binding, same derived transcript -- the ONLY thing that
+    # differs on the second pass is the deliberate delay, so the second
+    # record's value minus the first is the delay and nothing else.
+    monkeypatch.setattr(gw, "_spine_rail", _SlowRail(gw._spine_rail, 0.030))
+    slow = _write_a_subagent_reading(proj)["identity_resolution_ms"]
+
+    assert slow >= 25.0            # the 30ms delay is in there
+    assert slow > fast + 20.0      # and it is the DELTA that moved, not a floor
+    assert slow < _IDENTITY_BUDGET_MS
+
+
+def test_top_level_record_keeps_exactly_the_frozen_four_fields(proj):
+    """The fifth field is additive and OPTIONAL, and it appears only on the
+    dispatched-agent path: a payload with no agent_id must stay byte-identical
+    to today's behavior, and the frozen 4-field record is what the reader and
+    the pre-existing tests pin. There is no identity to resolve for a
+    top-level agent, so there is nothing to report."""
+    work = _bound_work(proj)
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
+    assert set(record.keys()) == {"schema_version", "fill_fraction", "model", "observed_at"}
+
+
+def test_the_four_required_fields_keep_their_meaning_alongside_the_fifth(proj):
+    """gauge_reader validates the presence of its four required fields and
+    does not reject extras, so the fifth costs zero reader change. Pin that
+    the four are still exactly what they were."""
+    record = _write_a_subagent_reading(proj)
+    assert record["schema_version"] == 1
+    assert record["model"] == "claude-opus-4-8"
+    assert record["fill_fraction"] == pytest.approx(_REAL_SUBAGENT_TOKENS / 1_000_000)
+    assert record["observed_at"] == _REAL_SUBAGENT_OBSERVED_AT  # SAMPLED, not write time
 
 
 def test_no_default_window_constant_remains(proj):
