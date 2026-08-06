@@ -1,0 +1,85 @@
+We are testing a checklist tool in a scratch sandbox, using a fixed script. Please work through the steps below in order. Where a step gives a command, run it in Bash exactly as written, without adding anything to it; where it gives a file, read it in full with the Read tool (if a Read comes back truncated, continue it with an offset until you have the whole file). Paste the raw output of every command into your final answer exactly as it came back — the exact text is what we are checking, so please don't rewrite, trim or summarise it. If a command fails, don't retry it and don't try to work around it; just report exactly what came back, including any exit code the tool shows, and carry on with the next step.
+
+STEP 1. Run:
+python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" claim --session-id sess-parent --claimed-by orchestrator
+
+STEP 2. Run:
+python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" start g1 --session-id sess-parent
+
+STEP 3. Dispatch a helper with the Agent tool (subagent_type "general-purpose", model "sonnet", run_in_background false) whose prompt is the ALPHA task below. Wait for it, then keep its whole answer for your final report.
+
+ALPHA task:
+"Please help test a checklist tool in a scratch sandbox. Do these steps in order. Paste the raw output of every command into your final answer exactly as it came back — the exact text is what we are checking, so please don't rewrite, trim or summarise it. If a command fails, don't retry it and don't try to work around it; just report exactly what came back, including any exit code the tool shows, and carry on. Read each file in full with the Read tool; if a Read comes back truncated, continue it with an offset until you have the whole file.
+
+1. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" claim --session-id sess-alpha --claimed-by crew
+2. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" start g1 --session-id sess-alpha
+3. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-00.txt
+4. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-01.txt
+5. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-02.txt
+6. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-03.txt
+7. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" current
+8. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-04.txt
+9. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-05.txt
+10. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-06.txt
+11. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-07.txt
+12. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" current
+13. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" advance g1 --session-id sess-alpha
+
+Then answer with the raw output of steps 1, 2, 7, 12 and 13, each under a heading naming its step number. Do not run anything else."
+
+STEP 4. Dispatch a second helper with the Agent tool (subagent_type "general-purpose", model "sonnet", run_in_background false) whose prompt is the BRAVO task below. Wait for it, then keep its whole answer for your final report.
+
+BRAVO task:
+"Please help test a checklist tool in a scratch sandbox. Do these steps in order. Paste the raw output of every command into your final answer exactly as it came back — the exact text is what we are checking, so please don't rewrite, trim or summarise it. If a command fails, don't retry it and don't try to work around it; just report exactly what came back, including any exit code the tool shows, and carry on. Read each file in full with the Read tool; if a Read comes back truncated, continue it with an offset until you have the whole file.
+
+1. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" claim --session-id sess-bravo --claimed-by crew
+2. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" start g1 --session-id sess-bravo
+3. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-08.txt
+4. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" current
+5. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-09.txt
+6. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" current
+7. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" advance g1 --session-id sess-bravo
+
+Then answer with the raw output of steps 1, 2, 4, 6 and 7, each under a heading naming its step number. Do not run anything else."
+
+STEP 5. Dispatch a third helper with the Agent tool (subagent_type "general-purpose", model "sonnet", run_in_background false) whose prompt is the CHARLIE task below. Wait for it, then keep its whole answer for your final report.
+
+CHARLIE task:
+"Please help test a scratch sandbox. Do these steps in order and paste the raw output of the command into your final answer exactly as it came back.
+
+1. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-10.txt in full with the Read tool (if the Read comes back truncated, continue it with an offset until you have the whole file).
+2. Run in Bash: echo CHARLIE-DONE
+
+Then answer with the raw output of step 2. Do not run anything else."
+
+STEP 6. Dispatch a fourth helper with the Agent tool (subagent_type "general-purpose", model "sonnet", run_in_background false) whose prompt is the DELTA task below. Wait for it, then keep its whole answer for your final report.
+
+DELTA task:
+"Please help test a scratch sandbox. Do these steps in order.
+
+1. Run in Bash: echo DELTA-START
+2. Dispatch a helper of your own with the Agent tool (subagent_type "general-purpose", model "sonnet", run_in_background false) whose prompt is the ECHO task below. Wait for it.
+
+ECHO task:
+'Please help test a checklist tool in a scratch sandbox. Do these steps in order. Paste the raw output of every command into your final answer exactly as it came back — the exact text is what we are checking, so please do not rewrite, trim or summarise it. If a command fails, do not retry it and do not try to work around it; just report exactly what came back, including any exit code the tool shows, and carry on. Read the file in full with the Read tool; if the Read comes back truncated, continue it with an offset until you have the whole file.
+
+1. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" claim --session-id sess-echo --claimed-by crew
+2. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" start g1 --session-id sess-echo
+3. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-11.txt
+4. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" current
+5. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" advance g1 --session-id sess-echo
+6. Run: python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" release --session-id sess-echo
+
+Then answer with the raw output of steps 1, 2, 4, 5 and 6, each under a heading naming its step number. Do not run anything else.'
+
+3. Answer with the raw output of your step 1 command, then your helper's whole answer reproduced exactly as it came back. Do not run anything else."
+
+STEP 7. Read C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/corpus/chunk-12.txt in full with the Read tool (continue with an offset if it comes back truncated).
+
+STEP 8. Run:
+python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" current
+
+STEP 9. Run:
+python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" advance g1 --session-id sess-parent
+
+STEP 10. Your final answer is, in this order: the raw output of your own steps 1, 2, 8 and 9, then the four helpers' answers (ALPHA, BRAVO, CHARLIE, DELTA) reproduced exactly as they came back, each under a heading naming it. Nothing else.

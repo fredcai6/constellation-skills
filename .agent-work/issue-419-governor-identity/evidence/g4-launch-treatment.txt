@@ -1,0 +1,6 @@
+# TREATMENT arm launch command (cwd = <ACC>/sb-treatment)
+claude -p "$(cat ../prompt-treatment.txt)" \
+  --settings "<ACC>/settings-treatment.json" \
+  --allowedTools Bash Task Agent Read \
+  --permission-mode acceptEdits \
+  --model sonnet

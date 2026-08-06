@@ -1,0 +1,52 @@
+# control arm gauge inventory
+--- sb-control/.agent-work/wk-alpha/gauge-skip.json
+{"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:45:22.846070+00:00", "candidate_count": 3}
+--- sb-control/.agent-work/wk-bravo/gauge-skip.json
+{"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:45:22.846070+00:00", "candidate_count": 3}
+--- sb-control/.agent-work/wk-echo/gauge-skip.json
+{"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:44:45.848331+00:00", "candidate_count": 4}
+--- sb-control/.agent-work/wk-parent/gauge-skip.json
+{"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:45:22.846070+00:00", "candidate_count": 3}
+--- sb-control/.agent-work/wk-parent/gauge.json
+{"schema_version": 1, "fill_fraction": 0.047721, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:40:53.218Z"}
+# directory listing of every work dir (this listing RECORDS THE ABSENCE of gauge.json)
+sb-control/.agent-work/wk-alpha/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:45 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:41 context
+-rw-r--r-- 1 fredc 197609  125 Aug  5 21:45 gauge-skip.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:41 mechanical
+-rw-r--r-- 1 fredc 197609 2323 Aug  5 21:41 spine.json
+-rw-r--r-- 1 fredc 197609  526 Aug  5 21:41 spine.json.journal
+
+sb-control/.agent-work/wk-bravo/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:45 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:42 context
+-rw-r--r-- 1 fredc 197609  125 Aug  5 21:45 gauge-skip.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:42 mechanical
+-rw-r--r-- 1 fredc 197609 2323 Aug  5 21:42 spine.json
+-rw-r--r-- 1 fredc 197609  526 Aug  5 21:42 spine.json.journal
+
+sb-control/.agent-work/wk-echo/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 context
+-rw-r--r-- 1 fredc 197609  125 Aug  5 21:44 gauge-skip.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 mechanical
+-rw-r--r-- 1 fredc 197609 2379 Aug  5 21:44 spine.json
+-rw-r--r-- 1 fredc 197609  524 Aug  5 21:44 spine.json.journal
+
+sb-control/.agent-work/wk-parent/:
+total 15
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:45 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:44 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:40 context
+-rw-r--r-- 1 fredc 197609  125 Aug  5 21:45 gauge-skip.json
+-rw-r--r-- 1 fredc 197609  119 Aug  5 21:41 gauge.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:40 mechanical
+-rw-r--r-- 1 fredc 197609 2333 Aug  5 21:45 spine.json
+-rw-r--r-- 1 fredc 197609  528 Aug  5 21:45 spine.json.journal

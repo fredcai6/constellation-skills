@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-treatment",
+  "mechanical": {
+    "run": "issue-419-governor-identity-g4",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-treatment",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g4-m2-treatment@d75ed360b7495265ebcb47a130b5974776a950b4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity-g4",
+    "generated_at": "2026-08-06T04:22:24Z"
+  }
+}

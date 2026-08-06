@@ -1,0 +1,73 @@
+Constraint 2 -- nothing on the ACCEPTANCE PATH supplies the identity.
+The hook sources the settings wire are EXCLUDED by construction: they
+necessarily contain the string 'agent_id', which is the point of the change.
+
+acceptance path enumerated by command; FILE COUNT WALKED: 32
+
+  settings-treatment.json
+  settings-control.json
+  launch-treatment.txt
+  launch-control.txt
+  prompt-treatment.txt
+  prompt-control.txt
+  build_sandbox.py
+  make_prompts.py
+  sb-treatment\.agent-work\wk-alpha\spine.json
+  sb-treatment\.agent-work\wk-bravo\spine.json
+  sb-treatment\.agent-work\wk-echo\spine.json
+  sb-treatment\.agent-work\wk-parent\spine.json
+  sb-treatment\corpus\chunk-00.txt
+  sb-treatment\corpus\chunk-01.txt
+  sb-treatment\corpus\chunk-02.txt
+  sb-treatment\corpus\chunk-03.txt
+  sb-treatment\corpus\chunk-04.txt
+  sb-treatment\corpus\chunk-05.txt
+  sb-treatment\corpus\chunk-06.txt
+  sb-treatment\corpus\chunk-07.txt
+  sb-treatment\corpus\chunk-08.txt
+  sb-treatment\corpus\chunk-09.txt
+  sb-treatment\corpus\chunk-10.txt
+  sb-treatment\corpus\chunk-11.txt
+  sb-treatment\corpus\chunk-12.txt
+  sb-treatment\corpus\chunk-13.txt
+  sb-treatment\corpus\chunk-14.txt
+  sb-treatment\corpus\chunk-15.txt
+  sb-treatment\corpus\chunk-16.txt
+  sb-treatment\corpus\chunk-17.txt
+  sb-treatment\corpus\chunk-18.txt
+  sb-treatment\corpus\chunk-19.txt
+
+patterns searched: ['agent_id', 'agentId', 'a3ab804c97222f9c5', 'a44094d0026a4e495', 'a69093b8ea2f159f6', 'a6df3902f0bf72c29', 'acbcb46bdf651a3c7']
+
+grep -rn -F agent_id                 -> exit 1, 0 matching line(s)
+grep -rn -F agentId                  -> exit 1, 0 matching line(s)
+grep -rn -F a3ab804c97222f9c5        -> exit 1, 0 matching line(s)
+grep -rn -F a44094d0026a4e495        -> exit 1, 0 matching line(s)
+grep -rn -F a69093b8ea2f159f6        -> exit 1, 0 matching line(s)
+grep -rn -F a6df3902f0bf72c29        -> exit 1, 0 matching line(s)
+grep -rn -F acbcb46bdf651a3c7        -> exit 1, 0 matching line(s)
+
+RESULT: ZERO matches. No identity value on the acceptance path -- every agent id in the run came from the harness payload, not from the settings, the launch command, the sandbox, or any prompt.
+
+Corroborating assertions the grep cannot make (from prerun-empty.txt):
+binding store C:\Users\fredc\AppData\Local\Temp\claude\C--Programs-constellation-skills\e8249451-5c48-417b-9f38-cf2dd40d405c\scratchpad\accept419\sb-treatment\.agent-work\.spine-rail-binding.json exists=False
+harness project dir C:\Users\fredc\.claude\projects\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-treatment exists=True
+  session dirs present BEFORE this run: 2 ['b9e77515-941d-42d1-b7d0-8c97b1b61e57', 'memory']
+  subagents dirs under it: 1 ['C:\\Users\\fredc\\.claude\\projects\\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-treatment\\b9e77515-941d-42d1-b7d0-8c97b1b61e57\\subagents']
+  gauge.json files present: 0
+binding store C:\Users\fredc\AppData\Local\Temp\claude\C--Programs-constellation-skills\e8249451-5c48-417b-9f38-cf2dd40d405c\scratchpad\accept419\sb-control\.agent-work\.spine-rail-binding.json exists=False
+harness project dir C:\Users\fredc\.claude\projects\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-control exists=False
+  session dirs present BEFORE this run: 0 []
+  subagents dirs under it: 0 []
+  gauge.json files present: 0
+
+
+Set-difference proof that the run's own session and every agent transcript were
+created BY THIS RUN and existed nowhere beforehand:
+
+  sb-treatment session dirs BEFORE run 2 : ['b9e77515-941d-42d1-b7d0-8c97b1b61e57', 'memory']
+  the binding store's bare key AFTER     : e0063a6f-5f31-473e-938a-1feea2863166
+  -> e0063a6f... is not in the before-set, so this run's session dir, its
+     subagents/ directory and all five agent-<id>.jsonl files were created only
+     by the harness during this run.
+  sb-control had NO project dir and NO session dirs at all before its arm ran.

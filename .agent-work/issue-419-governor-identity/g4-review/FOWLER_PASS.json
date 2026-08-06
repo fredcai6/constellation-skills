@@ -1,0 +1,43 @@
+{
+  "work_id": "issue-419-governor-identity-g4-review",
+  "diff_ref": "g4 adds no source diff. Smell-tested the g4 work product itself: the acceptance harness, 5 Python scripts / 828 lines, archived as evidence/g4-{build_sandbox,make_prompts,recompute,assert_control,extract_commands}.py and live at scratchpad/accept419/. The shipped hook diff (scripts/hooks/spine_rail.py, scripts/hooks/gauge_writer_hook.py, scripts/gauge_reader.py, docs/GAUGE_WRITER_HOOK.md) was Fowler-passed at its own gates g1-g3, whose FOWLER_PASS.json records are in this workbench; it is closed and not re-passed here.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, reviewer references/global-crew.md, reviewer references/global-everyone.md, and the frozen g4 IMPLEMENTER_HANDOFF ('a one-shot acceptance harness, kept runnable but NOT CI-wired, living in the scratchpad outside the repo so it never enters the diff')",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "recompute.py main() runs ~175 lines and assert_control.py main() ~89, both straight-line sequences of print-then-assert with no branching structure.",
+      "override": {
+        "repo_standard": "global-crew.md 'Make the minimal change that satisfies the handoff; no speculative abstraction' plus 'The result artifact IS the task', read against the g4 handoff's explicit instruction that the harness be one-shot, uncommitted, and outside the repo.",
+        "reason": "The printed output of these two functions IS the archived evidence artifact (g4-recompute-output.txt, g4-assert-control-output.txt), so the statement order is the deliverable, not an implementation detail. Extracting helpers would fragment the narrative a reader has to follow top-to-bottom, and buys no locality: each function has exactly one caller and one lifetime. The standard subordinates the smell here specifically because the code is not repo code and will never be maintained."
+      }
+    },
+    {"smell": "large-class", "verdict": "absent", "finding": "No classes anywhere in the harness; the five scripts are module-level functions only.", "override": null},
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "Real and worth raising even for a throwaway. check(ok, label, detail) is duplicated verbatim in recompute.py and assert_control.py; slug_for(path) is duplicated three times (build_sandbox.py, recompute.py, extract_commands.py); and the transcript-line/usage-total parsing is independently re-implemented in recompute.py (usage_total, lines_of) and extract_commands.py (load, results_by_id). This matters beyond the run because the harness is archived as reusable evidence and the next acceptance run will fork it. Observation for Commander, not a blocker.",
+      "override": null
+    },
+    {"smell": "feature-envy", "verdict": "absent", "finding": "Each function operates on data it is handed; no function reaches repeatedly into another module's internals.", "override": null},
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "The tuple (arm name, sandbox directory, settings file, prompt file, ~/.claude/projects slug) travels together through all five scripts and is re-derived from the bare arm string in each. Same root as the duplicated-code finding; one shared arm module would retire both.",
+      "override": null
+    },
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Paths are pathlib.Path, agent ids and session uuids are strings guarded by explicit UUID_RE/HEX_RE regexes rather than passed around raw and hoped over.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "Widest signature in the harness takes three parameters (recompute_at(transcript, agent_id, observed_at)).", "override": null},
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Changing the sandbox layout (spine directory names, corpus location, binding-store path) requires edits in all five scripts. Same root cause as the two findings above; recorded once more because it is the consequence a future acceptance run would actually feel.",
+      "override": null
+    },
+    {"smell": "divergent-change", "verdict": "absent", "finding": "Each script has one reason to change: build the sandbox, generate the prompts, recompute the treatment arm, assert the control arm, extract raw commands.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No chained navigation; JSON is read once into a dict and indexed with guarded .get() calls.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No unused hooks, parameters or abstraction layers. make_prompts.py's single TEMPLATE with one substituted field is the opposite of speculative: it is what structurally guarantees the two arms' prompts are byte-identical, and the script self-asserts that identity before exiting.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The harness comments state guarantees the code cannot state itself - e.g. make_prompts.py's docstring recording that nothing in either prompt names an agent, an agent id, or any target number. That is evidence documentation, not cover for unclear code.", "override": null}
+  ],
+  "rail_exception": null
+}

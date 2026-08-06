@@ -364,6 +364,16 @@ to write a sidecar **to**.
   confident wrong number is not. `reason: "subagent-transcript-missing"` (no
   `candidate_count`) is written at the single resolved candidate path.
 
+  **Nesting does not break this derivation, measured.** A depth-2 agent — one
+  dispatched by an agent that was itself dispatched — was a real worry: if its
+  payload named its *parent agent's* transcript rather than the root session's,
+  the derived path would never exist and the governor would be permanently and
+  silently blind for every nested agent. It does not. The harness writes every
+  agent's transcript **flat** under the root session's `subagents/` directory
+  regardless of depth, and the payload's `transcript_path` is always the root
+  session's. Observed live during #419's acceptance run: a `spawnDepth: 2`
+  agent resolved and produced its own reading.
+
 Clearing: any successful outcome at a given path — a clean `gauge.json`
 write, or the existing uncalibrated-model flag write — clears that path's
 `gauge-skip.json`, mirroring `_clear_uncalibrated_flag`. A candidate that

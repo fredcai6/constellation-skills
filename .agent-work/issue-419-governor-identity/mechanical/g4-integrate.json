@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-integrate",
+  "mechanical": {
+    "run": "issue-419-governor-identity",
+    "project": "constellation-skills",
+    "spine-step": "g4-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g4-integrate@5d48d2cef4225a91134d8cb885f70569bd3277dd",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-419-governor-identity",
+    "generated_at": "2026-08-06T05:20:28Z"
+  }
+}

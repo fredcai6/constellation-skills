@@ -1,0 +1,198 @@
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+**Step 9 output:**
+```
+Exit code 127
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+
+All steps of the fixed script are complete. Here is the final answer, in the requested order.
+
+## Step 1 (my own)
+```
+Exit code 127
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+resumed lease sess-parent (heartbeat refreshed)
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+
+## Step 2 (my own)
+```
+Exit code 127
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+
+## Step 8 (my own)
+```
+Exit code 127
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-parent (by orchestrator, heartbeat 2026-08-06T04:23:18.585697+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 8% (>= soft): you've used most of your context. Unless you're basically done, hand off here at g1 rather than pushing through (advisory — decline with a reason if you're nearly done).
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+
+## Step 9 (my own)
+```
+Exit code 127
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+
+## ALPHA
+Here are the raw outputs for the requested steps.
+
+### Step 1
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-alpha -> active
+EXITCODE=0
+```
+
+### Step 2
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+EXITCODE=0
+```
+
+### Step 7
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-alpha (by crew, heartbeat 2026-08-06T04:24:29.113941+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 12% (>= soft): you've used most of your context. Unless you're basically done, hand off here at g1 rather than pushing through (advisory — decline with a reason if you're nearly done).
+EXITCODE=0
+```
+
+### Step 12
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-alpha (by crew, heartbeat 2026-08-06T04:24:29.113941+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 27% (>= hard): `advance` is BLOCKED until you request a refresh. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>  — then hand off.
+EXITCODE=0
+```
+
+### Step 13
+```
+RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+
+REFUSED: g1: context at 33% is at/over the hard limit — advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>
+EXITCODE=1
+```
+
+Note: per instructions, no retries or workarounds were attempted after step 13's failure; all 13 steps were executed in order exactly as specified, and all corpus files were read in full (using offset continuations where truncated).
+
+## BRAVO
+All seven steps have been executed in order exactly as specified, without retries or workarounds. Here is the raw output for the requested steps.
+
+### Step 1
+```
+<error>Command contains expandable strings with embedded expressions</error>
+```
+
+### Step 2
+```
+<error>Command contains expandable strings with embedded expressions</error>
+```
+
+### Step 4
+```
+<error>Command contains expandable strings with embedded expressions</error>
+```
+
+### Step 6
+```
+<error>Command contains expandable strings with embedded expressions</error>
+```
+
+### Step 7
+```
+<error>Command contains expandable strings with embedded expressions</error>
+```
+
+Note: steps 3 and 5 (reading chunk-08.txt and chunk-09.txt in full) were completed successfully via the Read tool, each requiring a second paginated read to get the complete file contents (967 lines total for chunk-08.txt, 969 lines total for chunk-09.txt).
+
+## CHARLIE
+The raw output of step 2 as returned:
+
+```
+/usr/bin/bash: line 1: Write-Output: command not found
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+(Exit code 127)
+
+Note: the Bash tool here runs Git Bash (POSIX sh), not PowerShell, so `Write-Output` is not a recognized command — that error above is the literal, raw output produced when running the given command through the Bash tool.
+
+## DELTA
+### Step 1 (my own command)
+
+```
+DELTA-START
+EXITCODE=$LASTEXITCODE
+```
+
+(actual raw output was an error, reproduced exactly as returned by the tool:)
+
+```
+Exit code 127
+/usr/bin/bash: line 1: Write-Output: command not found
+/usr/bin/bash: line 1: Write-Output: command not found
+```
+
+### Helper's whole answer, reproduced exactly
+
+I've completed all six steps as instructed. All five PowerShell command invocations (steps 1, 2, 4, 5, 6) failed identically at the tool level before any Python code ran, and step 3 (the file read) required a continuation to get the full 969 lines. Per instructions, I did not retry or work around the failures.
+
+#### Step 1
+```
+Command contains expandable strings with embedded expressions
+```
+
+#### Step 2
+```
+Command contains expandable strings with embedded expressions
+```
+
+#### Step 4
+```
+Command contains expandable strings with embedded expressions
+```
+
+#### Step 5
+```
+Command contains expandable strings with embedded expressions
+```
+
+#### Step 6
+```
+Command contains expandable strings with embedded expressions
+```
+
+Note: this exact same error text came back for every one of the five PowerShell invocations, verbatim — it is a rejection from my PowerShell tool itself (triggered by the `"EXITCODE=$LASTEXITCODE"` string interpolation in each command), not output from `checklist_engine.py` or from Python. No Python process appears to have run for any of these five steps. Step 3 (reading `corpus/chunk-11.txt`) succeeded but needed a second `Read` call at `offset=585` to reach the end of the 969-line file, per your instruction to continue truncated reads.

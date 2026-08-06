@@ -1,0 +1,42 @@
+=== issue #419 g4 acceptance: CONTROL arm (main checkout's unmodified hooks) ===
+
+PASS | the control arm's own binding store was written (hooks did fire)
+  key e19b7c7d-59cc-46da-8c30-ba6b393dd0ac                           -> ['wk-alpha', 'wk-bravo', 'wk-parent']
+
+PASS | NO composite per-agent key exists in the control arm  -- []
+PASS | every claim piled under ONE bare session key  -- ['e19b7c7d-59cc-46da-8c30-ba6b393dd0ac']
+PASS | that one bare key holds MORE THAN ONE spine -> ambiguous by construction  -- 3 spines: ['wk-alpha', 'wk-bravo', 'wk-parent']
+
+PASS | NO dispatched agent got a reading in the control arm  -- []
+  claim order under the one bare key:
+    2026-08-06T04:40:30.108194+00:00  wk-parent
+    2026-08-06T04:41:01.733269+00:00  wk-alpha
+    2026-08-06T04:42:21.792592+00:00  wk-bravo
+  the parent's ONLY reading: {"schema_version": 1, "fill_fraction": 0.047721, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:40:53.218Z"}
+PASS | the parent's one reading was sampled BEFORE the second claim, then froze  -- sampled 2026-08-06T04:40:53.218Z < second claim 2026-08-06T04:41:01.733269+00:00
+PASS | and every later write at that same path was refused as ambiguous  -- skip ambiguous-binding at 2026-08-06T04:45:22.846070+00:00, candidate_count=3
+PASS | the parent's frozen reading never reached any band that could trip  -- 0.047721
+
+sidecars in the control arm: 4
+  wk-alpha/gauge-skip.json: {"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:45:22.846070+00:00", "candidate_count": 3}
+  wk-bravo/gauge-skip.json: {"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:45:22.846070+00:00", "candidate_count": 3}
+  wk-echo/gauge-skip.json: {"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:44:45.848331+00:00", "candidate_count": 4}
+  wk-parent/gauge-skip.json: {"schema_version": 1, "reason": "ambiguous-binding", "observed_at": "2026-08-06T04:45:22.846070+00:00", "candidate_count": 3}
+
+--- spine state files ---
+  wk-alpha   g1=complete     refusals=0   lease=active
+  wk-bravo   g1=complete     refusals=0   lease=active
+  wk-echo    g1=complete     refusals=0   lease=released
+  wk-parent  g1=complete     refusals=0   lease=active
+PASS | the control arm did NOT trip anywhere  -- []
+PASS | the heaviest-reading agent ADVANCED NORMALLY in the control arm  -- wk-alpha g1=complete
+
+0 failure(s): none
+
+--- what the control arm's agents ACTUALLY consumed (recomputed from their own transcripts) ---
+The governor wrote no reading for any of them; these are the fills it was blind to.
+  ECHO     agent a3fcf72b927cbaaf4    peak fill 0.065880 (65880 tokens) at 2026-08-06T04:44:53.630Z  -- gauge written: NONE
+  DELTA    agent a62034c82f13dd97f    peak fill 0.027522 (27522 tokens) at 2026-08-06T04:45:02.747Z  -- gauge written: NONE
+  CHARLIE  agent a66b597e453bf34e6    peak fill 0.062080 (62080 tokens) at 2026-08-06T04:43:29.500Z  -- gauge written: NONE
+  BRAVO    agent a984bfae651d748c0    peak fill 0.102895 (102895 tokens) at 2026-08-06T04:43:08.537Z  -- gauge written: NONE
+  ALPHA    agent aa2622f7555cc7b8e    peak fill 0.329265 (329265 tokens) at 2026-08-06T04:42:03.147Z  -- gauge written: NONE

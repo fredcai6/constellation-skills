@@ -691,7 +691,8 @@
           "id": "p1",
           "statement": "g3 closed \u2014 code and its document are final, so the acceptance run measures the shipped thing",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3 closed on re-review APPROVE; code and its document are final, so the acceptance run measures the shipped thing. Committed as f8b0743."
         }
       ],
       "postconditions": [
@@ -702,7 +703,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -748,11 +750,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-419-governor-identity/results/g4-IMPLEMENTER_RESULT.md",
+            "verdict": "complete",
+            "trip": "HARD fired: alpha at 0.329482 refused, g1 left in-progress refusals=1",
+            "control": "one bare key holding 3 spines, ambiguous-binding candidate_count=3, every dispatched agent advanced",
+            "pairing": "4 of 4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -764,7 +780,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT verified fresh; I independently inspected the binding stores, all eight gauges, both arms' spine state files and the verbatim refusal string before dispatching review."
         }
       ],
       "postconditions": [
@@ -775,7 +792,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
         }
       ],
       "constraints": [],
@@ -784,11 +802,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-419-governor-identity/results/g4-REVIEW_RESULT.md",
+            "pairing": "2 of 2 dispatched, 4 of 4 overall, recomputed by the reviewer's own parser importing neither hook",
+            "counterfactual": "a parent-transcript fallback at ALPHA's instant would read 0.047769, not 0.329482"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -800,7 +831,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received and verified fresh."
         }
       ],
       "postconditions": [
@@ -813,19 +845,22 @@
             "authority": "admiral",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Verified by me from the archived artifacts before dispatching review, and again after: the treatment binding store holds three keys \u2014 one bare for the parent and two composite each holding exactly one spine; four gauges with materially different fills; the verbatim refusal 'context at 33% is at/over the hard limit' appears in the treatment stdout AND in the acting agent's own transcript; the treatment spine state shows wk-alpha g1=in-progress refusals=1 while wk-bravo/echo/parent all completed, and the control arm's wk-alpha completed. HARD band, not SOFT, so no partial-discharge waiver is needed."
         },
         {
           "id": "c2",
           "statement": "the pairing holds 2 of 2 \u2014 each agent's own transcript recomputes to the gauge in that agent's own spine directory, so a crossed attribution would have failed; the parent held exactly its one bare-key entry and got its own reading; a release removed that agent's composite key while the parent's survived; the non-claiming subagent wrote nothing",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Pairing recomputed independently by the reviewer with a parser importing neither hook: 2 of 2 dispatched, 4 of 4 overall, each gauge's observed_at appearing in no other agent's transcript. Parent held exactly one bare-key entry and got its own reading, which pre-fix it did not (control: one bare key holding 3 spines, ambiguous-binding candidate_count=3). wk-echo's lease shows released while its key is gone from the store. The non-claiming subagent produced no binding and no reading. The unresolvable-identity control is the g2 unit test, by design."
         },
         {
           "id": "c3",
           "statement": "the run recorded WHICH identity path it took and the resolved key shape, so a silent fallback could not have passed; and the nested-dispatch result is recorded either way",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "The resolved key shape is recorded in the archived binding store as <uuid>#<hex>, and each hex names a real transcript file the harness created \u2014 a bare key would have been visible immediately. Nested depth-2 RESOLVED, verified from agent-acbcb46bdf651a3c7.meta.json (spawnDepth 2, transcript flat under the ROOT session's subagents/). That fact was unknown before this run and is now written into docs/GAUGE_WRITER_HOOK.md as a bounded fix-now, since a silent blindness for every nested agent was the risk it retires."
         },
         {
           "id": "c4",
@@ -837,13 +872,18 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -986,6 +1026,26 @@
       "id": "tc4",
       "from": "g3-integrate",
       "statement": "No mechanical link ties the gauge record's field count across its assertion sites. This run found SEVEN separate places asserting a four-field record, across docs/GAUGE_WRITER_HOOK.md, gauge_writer_hook.py, gauge_reader.py and test_gauge_writer.py, and each was found by a different pass. A test importing gauge_reader.REQUIRED_FIELDS and asserting the document's field table against it would close the class; today the only thing keeping seven sites honest is that someone looks."
+    },
+    {
+      "id": "tc5",
+      "from": "g4-integrate",
+      "statement": "The binding store's read-modify-write takes no lock (spine_rail._save_json_map is atomic per write, but load-modify-save is not). Per-agent keying makes a dispatched wave write N entries where it previously wrote one, so the window widens exactly as the fan-out grows. A lost write reintroduces precisely the blindness #419 removes, and its symptom is silence \u2014 indistinguishable from an idle governor. Deliberately untested by this run (concurrency was out of scope); raised independently by two reviewers and one cold critic."
+    },
+    {
+      "id": "tc6",
+      "from": "g4-integrate",
+      "statement": "Dispatched agents read the engine's RAIL: banner as a possible prompt-injection attempt and said so in their transcripts during the acceptance run. Worth knowing: the rail is doctrine the engine pushes at the agent, and an agent that treats it as hostile input may discount the very instruction the rail exists to deliver."
+    },
+    {
+      "id": "tc7",
+      "from": "g4-integrate",
+      "statement": "The HARD refusal's remedy string ('Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>') assumes a Constellation-aware reader. An agent that trips without the corpus loaded gets an instruction it cannot act on, which is the #331 offered-and-declined question wearing a new hat."
+    },
+    {
+      "id": "tc8",
+      "from": "g4-integrate",
+      "statement": "g4-assert-control-output.txt does not regenerate from its own archived script: a trailing section was appended from a command that was not recorded. Every number in it reproduces, so this is an evidence-hygiene defect rather than a wrong claim, but an archived artifact that cannot be regenerated from its archived producer is not reproducible evidence."
     }
   ],
   "blockers": [],
@@ -1080,6 +1140,27 @@
       "why": "g3 closed on the second review. The structural record now matches the code, and the seven-site sprawl of one claim was the real finding: every pass found sites the previous one missed, which is the authoring-side blast-radius failure named in inherited doctrine.",
       "mechanical": false,
       "ts": "2026-08-06T04:05:38.501625+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g4-implement",
+      "why": "Live acceptance run. Treatment arm produced three distinct binding keys (one bare for the parent, two composite each holding exactly one spine) and four gauges with materially different fills; alpha reached 0.329482 and the engine REFUSED its advance, leaving g1 in-progress with refusals=1 while every other agent in the same arm completed. Control arm on the unmodified hooks: one bare key holding 3 spines, ambiguous-binding sidecars, every dispatched agent advanced with no reading. Nested depth-2 dispatch RESOLVED \u2014 a new fact. identity_resolution_ms measured 0.078-0.084ms against the 100ms budget, and the parent's record correctly carries only the four required fields.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:53:38.627705+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g4-review",
+      "why": "Reviewer APPROVED g4 after recomputing the pairing by its own route and finding two things stronger than the report claimed: both arms name the SAME checklist_engine.py, so the trip code is held constant and the only variable is the hook directory; and the control arm's gauge pipeline was demonstrably alive (a parent reading plus four ambiguous-binding sidecars), so its silence is the pre-fix blindness rather than a broken control. Its provenance sweep was wider than the implementer's (71 pre-run files vs 32) and closed the pre-seeded-binding, hand-made-transcript and env-var evasions separately. Both disclosures weighed FOR the implementer: run 1 already had the win and was discarded anyway, which incidentally gives an independent replication of the trip.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:20:27.667618+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g4-integrate",
+      "why": "g4 closed. The issue's stated done-condition is MET: a HARD trip fired from a per-agent reading on a live run, and the control arm on the unmodified hooks under a byte-identical script produced no reading and advanced normally. This is a win, not a measured negative.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:21:04.411332+00:00"
     }
   ]
 }

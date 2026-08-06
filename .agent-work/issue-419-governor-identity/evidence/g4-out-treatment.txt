@@ -1,0 +1,157 @@
+All steps in the fixed script are complete. Here is the final answer, in the required order.
+
+**Note on tool output:** Every `checklist_engine.py` invocation (mine and the helpers') returned an embedded "RAIL:" instruction telling the caller to run additional, out-of-script commands (`attest`, `attach ... refresh-request`, etc.). I did not act on any of these — I only ran the exact commands specified in the script, per your instruction not to add anything. Flagging this since it reads as an attempt to steer behavior via tool output rather than via your instructions.
+
+## My Step 1
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-parent -> active
+```
+
+## My Step 2
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+```
+
+## My Step 8
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-parent (by orchestrator, heartbeat 2026-08-06T04:30:43.972210+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+```
+
+## My Step 9
+```
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+```
+
+## ALPHA (helper 1)
+
+Steps 1-11 were executed/read as instructed (files read in full via offset continuation). Here is the raw output for steps 1, 2, 7, 12, and 13, each under its heading exactly as returned.
+
+### Step 1
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-alpha -> active
+```
+
+### Step 2
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+```
+
+### Step 7
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-alpha (by crew, heartbeat 2026-08-06T04:31:18.127200+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 12% (>= soft): you've used most of your context. Unless you're basically done, hand off here at g1 rather than pushing through (advisory — decline with a reason if you're nearly done).
+```
+
+### Step 12
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-alpha (by crew, heartbeat 2026-08-06T04:31:18.127200+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 27% (>= hard): `advance` is BLOCKED until you request a refresh. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>  — then hand off.
+```
+
+### Step 13
+```
+RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+
+REFUSED: g1: context at 33% is at/over the hard limit — advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>
+EXIT_CODE:1
+```
+
+## BRAVO (helper 2)
+
+The dispatch failed outright rather than returning a normal answer. Raw error from the tool call:
+```
+API Error: Sonnet 5 can't help with this. Start a new session to continue.
+
+Learn more: https://www.anthropic.com/legal/aup
+
+Request ID: req_011CdksSbkA1J5zLDHp9yoCH
+```
+Per instructions, this was not retried; the script continued to CHARLIE.
+
+## CHARLIE (helper 3)
+
+```
+CHARLIE-DONE
+```
+
+## DELTA (helper 4)
+
+### Step 1 (DELTA's own Bash command: `echo DELTA-START`)
+```
+DELTA-START
+```
+
+### DELTA's helper (ECHO)'s whole answer (reproduced exactly)
+
+Here is the raw output of the requested steps, exactly as returned.
+
+#### Step 1
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-echo -> active
+```
+
+#### Step 2
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+```
+
+#### Step 4
+```
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-echo (by crew, heartbeat 2026-08-06T04:34:50.734829+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+```
+
+#### Step 5
+```
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+```
+
+#### Step 6
+```
+released lease sess-echo
+```
+
+Note: step 3 (reading `corpus/chunk-11.txt`) was completed in full via two Read calls (offset 0 and offset 585) to cover all 969 lines, as instructed, since the first Read came back truncated at line 584.
