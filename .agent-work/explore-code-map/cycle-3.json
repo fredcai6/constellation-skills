@@ -1,0 +1,81 @@
+{
+  "work_id": "explore-code-map",
+  "cycle": "3",
+  "flavor": "refine",
+  "type": "survey",
+  "items": [
+    "c0-frame",
+    "q1",
+    "x10",
+    "x11"
+  ],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame the cycle",
+      "imperative": "Set the cycle flavor; the human picks, you may recommend. Cycle 3: refine \u2014 run the commissioned storage design-it-twice and the articles trial; head toward spec without initiating convergence.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "flavor=refine (human-directed via D1-D5 rulings); cycle 3 = storage design-it-twice + articles trial; spec direction acknowledged, convergence not initiated",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Cycle-3 opening rulings",
+      "imperative": "Record the human's D1-D5 responses. Record as finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "D1: own-resolution extractor + SCIP test oracle RULED ('agree with your method... definitely like your lighter footprint'). D2: grammar 4+1 accepted as trial vocabulary ('good starting vocabulary'); map-model amendment sign-off still pending. D3: storage DIT \u2014 'run it'. D4: human floated real f1Brainz issues, deferred to agent judgment \u2014 sequence: articles trial first, one real issue in cycle 4 with articles as context. D5: heading toward spec, open-ended; agent-use design-it-twice flagged by human, queued behind storage",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x10": {
+      "id": "x10",
+      "title": "Excursion: storage design-it-twice \u2014 identity + file layout, three candidates",
+      "imperative": "Design-it-twice (design-phase form): 3 parallel agents design the statement store's on-disk shape under distinct constraints (diff-ergonomics-first / rename-survival-first / minimal-machinery-first); compared on depth, locality, seam placement, testability + rename scenario, diff-review scenario, tag-attachment scenario, docent-rendering feasibility. Brief: excursions/x10-brief.md. Candidates land at excursions/x10-candidate-{1,2,3}.md; orchestrator synthesis + comparison at excursions/x10-result.md; recommendation presented to the human, who picks. Record the outcome as finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x11": {
+      "id": "x11",
+      "title": "Excursion: the articles trial \u2014 generate real rendered node articles and put them in front of the human",
+      "imperative": "One named question: do articles generated from the statement store read as a usable alternative to reading the code? Generate rendered articles for all of src/utils from the x7 statement artifacts; deliver the pages to the human; record generation gaps. Brief: excursions/x11-brief.md; result: excursions/x11-result.md. Record the scoped verdict as finding \u2014 the human's read of the pages is the real verdict.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
