@@ -245,7 +245,7 @@
     "gate": "cycle3-x10",
     "role": "designers",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/cycle3-x10/designers/attempt-1",
     "backend": "external",
     "pid": null,
@@ -255,11 +255,13 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/cycle3-x10-designers-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/cycle3-x10-designers-attempt-1.stderr.txt",
     "started_at": "2026-08-06T03:59:57.173111+00:00",
-    "last_heartbeat": "2026-08-06T03:59:57.173111+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-06T04:14:24.046525+00:00",
+    "completed_at": "2026-08-06T04:14:24.046525+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   },
   {
     "crew_id": "constellation/explore-code-map/cycle3-x11/prototyper/attempt-1",

@@ -51,10 +51,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Three candidates delivered, genuinely distinct; synthesis at excursions/x10-result.md. UNANIMOUS across all three (probably right): positions out of git (churn poison, measured), facts-not-occurrences, near-zero-diff file moves, no stored edge vocabulary. THE REAL FORK: what deserves identity machinery \u2014 C2 protects everything (2-line rename diffs, rename-surviving permalinks; cost: store dead without its ledger, non-auditable diffs, silent-fusion risk, cadence dependence); C3 protects only authored content ([stable-id] = free author-supplied allocator; structural ids disposable because regeneration is 2.3s and the interpreter already forced rename propagation); C1 = C3's identity stance + spends the JSON-lines verdict for skimmable text. RECOMMENDATION: C3 base + commit C2's RUN.md report + build C3's own named guards first (empty-diff assertion, mis-pairing guard, C++ colon fix); C2 machinery and C1 format recorded as untaken roads. C3 lands the tombstone ruling and x9 confidence rule for free. Human's pick pending",
       "evidence": [],
       "rework_count": 0
     },
