@@ -1,0 +1,383 @@
+{
+  "work_id": "b420-g1-implement",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "m0-context",
+    "m1-rail-red",
+    "m2-rail-green",
+    "m3-render-red",
+    "m4-render-green",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md + references/global-everyone.md (constellation-implementer skill), the g1-implement handoff in full, scripts/checklist_engine.py's state()/render_human()/_RAIL_STRINGS/_rail_position()/_rail()/_rail_prefix()/dispatch() regions, docs/CHECKLIST_SCHEMA.md's Task table, docs/CHECKLIST_ENGINE_DESIGN.md's completeness/INV sections, and tests/test_checklist_engine.py's DoctrineRail + GoldenOutputBriefing classes. Independently re-run 'python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q' to confirm the pre-change baseline (expect 388 passed, 24 subtests) rather than trusting the Commander's recorded number. Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff loaded; handoff complete; baseline independently re-run and recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-rail-red": {
+      "id": "m1-rail-red",
+      "title": "TDD red: RAIL dedup, current-verb-only",
+      "imperative": "In tests/test_checklist_engine.py, update DoctrineRail.test_rail_mid_flight to assert that on point=='current', the mid-flight RAIL substitutes a short pointer (NOT the full imperative text) so the imperative appears only once in current()'s combined output. Add a sibling assertion (same fixture) proving a non-current railed verb (e.g. E._rail('start', cl)) still gets the FULL imperative substituted, unchanged. Also add a dispatch()-level test (through E.main()/_run_main, mid-flight fixture with 3+ gates) counting occurrences of the active gate's imperative substring in the CLI-wrapped current output. Run the targeted test file and OBSERVE: the current-only dedup assertions fail (imperative still appears twice) while the non-current sibling assertion already passes (no regression there) -- record both outcomes, since only the dedup half is expected red.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded and handoff complete per m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new/updated RAIL dedup tests authored; observed RED (dedup assertions fail) against unmodified _rail() -- evidence attached; non-current sibling assertion's pre-fix PASS also recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: test_rail_mid_flight and test_dispatch_current_shows_imperative_exactly_once_mid_flight fail (2 occurrences vs expected 1) against unmodified _rail(); test_rail_mid_flight_non_current_verb_keeps_full_imperative already passes pre-fix (no regression risk on non-current verbs). 2 failed, 10 passed, 320 deselected."
+        }
+      ],
+      "constraints": [
+        "only tests/test_checklist_engine.py touched in this step",
+        "do not edit scripts/checklist_engine.py yet",
+        "_RAIL_STRINGS dict values themselves are not touched by these test edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-rail-green": {
+      "id": "m2-rail-green",
+      "title": "TDD green: verb-aware RAIL substitution for current only",
+      "imperative": "In scripts/checklist_engine.py's _rail(point, cl): when point=='current' and the derived position is 'mid-flight', substitute a short pointer string (not the full imperative) for the {imperative} token; for every other point/verb, keep substituting the full imperative exactly as today. Do NOT change any _RAIL_STRINGS dict VALUE (byte-identical). Do NOT touch _check_condition or any invariant-evaluation code (D's fence, #422). Run tests/test_checklist_engine.py -k 'DoctrineRail or RailPosition' and confirm green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RAIL dedup red observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RAIL dedup red observed in m1-rail-red"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DoctrineRail + RailPositionOrdering tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py -k \"DoctrineRail or RailPositionOrdering\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-rail-green-1"
+        }
+      ],
+      "constraints": [
+        "minimal, localized change -- do not restructure _rail_position()/_rail() beyond verb-awareness",
+        "_RAIL_STRINGS values 100% byte-unchanged",
+        "state() untouched in this step"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-rail-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py -k \"DoctrineRail or RailPositionOrdering\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-render-red": {
+      "id": "m3-render-red",
+      "title": "TDD red: render anchors/constraints + completeness property test",
+      "imperative": "In tests/test_checklist_engine.py, extend GoldenOutputBriefing (or a sibling test) with a fixture gate carrying populated 'constraints' (list of strings) and 'anchors' (both dict-of-category-lists and flat-list shapes, matching the real corpus per the handoff) on the active gate, and assert current()'s output contains that content. Also assert that a gate with EMPTY/absent constraints and anchors renders byte-identically to today (no new output). Then add a completeness property test: enumerate the Task's content fields (per docs/CHECKLIST_SCHEMA.md's table plus anchors), populate a fixture with every field, and assert every populated field's content appears in current()'s output -- build the checked-field set programmatically (iterate task dict keys minus a documented, justified exclusion set of bookkeeping/non-narrative fields: id, status, status_detail, rework_count, result, finding, evidence, why_exempt, child_checklist, context_refs, title; preconditions/postconditions checked via their own structured assertions) so a genuinely new future field defaults to being checked, not silently skipped. If 'directives' is found to be in the same unrendered-defect class as anchors/constraints but is NOT in this issue's authorized fix scope (handoff caps the fix to 'the two new fields': anchors + constraints), exclude it from the asserted set with an explicit code comment naming the reason and flag it as a triage candidate -- do not silently expand scope to fix it. Run the new tests and OBSERVE them fail (RED) against unmodified state()/render_human().",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RAIL fix green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RAIL fix green: DoctrineRail+RailPositionOrdering 18 passed; full file 332 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new anchors/constraints + completeness tests authored; observed RED against unmodified state()/render_human() -- evidence attached",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed for the right reason: 4 failed, 2 passed. All 3 RenderAnchorsAndConstraints render-when-present tests fail (constraints/anchors content missing from output); TaskFieldCompleteness fails specifically on CONSTRAINT_UNIQUE_TEXT/ANCHOR_UNIQUE_TEXT (PRECOND/POSTCOND already pass, confirming the loop's mechanics are sound and the only gap is anchors/constraints). Absent/empty-field goldens already pass pre-fix (byte-identical, as expected)."
+        }
+      ],
+      "constraints": [
+        "only tests/test_checklist_engine.py touched in this step",
+        "do not edit scripts/checklist_engine.py yet",
+        "completeness test must be a real enumeration, not a hardcoded check of only anchors/constraints by name"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-render-green": {
+      "id": "m4-render-green",
+      "title": "TDD green: state()/render_human() render anchors + constraints",
+      "imperative": "In scripts/checklist_engine.py's state(): read t.get('anchors') and t.get('constraints') into the active dict (pure passthrough, no side effect, no check re-run). In render_human(): when constraints is a non-empty list, render a 'constraints:' block listing each entry; when anchors is a non-empty dict (category -> [str]) or list ([str]), render an 'anchors:' block listing each entry (dict form: 'category: entry' per line). Emit nothing for empty/absent constraints/anchors (output unchanged from today in that case). Do not touch _check_condition or invariant-evaluation code. Fix-if-convenient: render_human()'s docstring cites tests/test_checklist_engine.py:818 as the byte-exact ACTIVE-line pin -- verified stale (818 is an unrelated require_session lease test); the real pin is GoldenOutputBriefing (~3738 on). Update the citation if it fits naturally in this same edit; otherwise skip and name it in the IMPLEMENTER_RESULT workflow feedback instead of a separate pass. Run the new render tests and confirm green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "render red observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "render red observed in m3-render-red"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new anchors/constraints + completeness tests pass; GoldenOutputBriefing class stays green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py -k \"GoldenOutputBriefing or Completeness or Anchors or Constraints\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-render-green-2"
+        }
+      ],
+      "constraints": [
+        "minimal, localized change -- do not restructure state()/render_human() beyond adding the two new fields",
+        "state() stays a PURE projection (INV-2): no side effects, no re-run of checks",
+        "render_human()'s ACTIVE line format unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Commander's independent verification found a real defect: _render_anchor_lines() iterates a dict value that is a plain string as characters instead of one item (the {category: str} shape used by g1-review's own anchors in the shipped EXECUTE_PLAN.template.json, e.g. {inherits: '...'}). Fixing before integrate."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-render-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py -k \"GoldenOutputBriefing or Completeness or Anchors or Constraints\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-render-green",
+            "reason": "Commander's independent verification found a real defect: _render_anchor_lines() iterates a dict value that is a plain string as characters instead of one item (the {category: str} shape used by g1-review's own anchors in the shipped EXECUTE_PLAN.template.json, e.g. {inherits: '...'}). Fixing before integrate.",
+            "ts": "2026-08-05T23:55:26.145030+00:00"
+          }
+        },
+        {
+          "id": "e-m4-render-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py -k \"GoldenOutputBriefing or Completeness or Anchors or Constraints\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Full targeted suite green + required evidence capture",
+      "imperative": "Run 'python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q' and capture the full output with final summary line. Capture: (1) one current-through-dispatch() sample output, mid-flight, post-fix, with the active gate's imperative substring counted explicitly; (2) one E._rail('start', cl) (or advance/attest/claim/attach) sample, same fixture, post-fix, showing the full imperative still present. Produce 'git diff --stat' for the change. Confirm test_spine_rail.py needed no edits (it exercises a different, unrelated 'mid-flight' concept in scripts/hooks/spine_rail.py, not _rail_position()/_RAIL_STRINGS) and state that finding explicitly. Refactor for clarity while green if warranted.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both TDD slices green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "both TDD slices green including rework 1/3 fix"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full targeted suite green (388+new tests, no regressions), sample outputs and git diff --stat captured",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m4-render-green"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-render-green",
+            "reason": "Commander's independent verification found a real defect: _render_anchor_lines() iterates a dict value that is a plain string as characters instead of one item (the {category: str} shape used by g1-review's own anchors in the shipped EXECUTE_PLAN.template.json, e.g. {inherits: '...'}). Fixing before integrate.",
+            "ts": "2026-08-05T23:55:26.145054+00:00"
+          }
+        },
+        {
+          "id": "e-m5-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-b-420 && python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "impl-b420-g1",
+    "status": "released",
+    "claimed_at": "2026-08-05T23:55:17.835458+00:00",
+    "last_heartbeat": "2026-08-05T23:58:02.631155+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-05T23:58:10.623701+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Doctrine, handoff, target code regions, and baseline suite (388 passed/24 subtests) independently confirmed; handoff is complete against the required-fields checklist.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:43:12.703920+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-rail-red",
+      "why": "RED observed for the right reason: duplication is real and localized to the current verb; non-current verbs unaffected pre-fix, confirming the dedup fix must be verb-aware.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:44:00.432874+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-rail-green",
+      "why": "Verb-aware dedup implemented in _rail(): current+mid-flight substitutes a short pointer; all other railed verbs unaffected. DoctrineRail+RailPositionOrdering green (18 passed); full test_checklist_engine.py green (332 passed, 24 subtests), no regressions.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:45:01.614169+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-render-red",
+      "why": "RED observed for the right reason across both new test classes; directives found to be in the same unrendered-defect class but excluded from the completeness assertion per handoff scope, documented in-code and flagged for triage.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:48:01.420095+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-render-green",
+      "why": "state()/render_human() now render populated constraints/anchors (both dict and flat-list shapes), emitting nothing when absent/empty. All new render+completeness tests green (14 passed); full test_checklist_engine.py green (338 passed, 24 subtests, +6 new tests vs the 332 post-RAIL-fix baseline). Docstring citation fixed (was tests/test_checklist_engine.py:818, now points at GoldenOutputBriefing).",
+      "mechanical": false,
+      "ts": "2026-08-05T23:49:24.768365+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify",
+      "why": "Full targeted suite green: 396 passed, 24 subtests passed (388 baseline + 8 new tests, no regressions). Load-bearing evidence captured: dispatch()-wrapped current() shows the mid-flight imperative exactly once (RAIL now says 'Next: the ACTIVE line above'); E._rail('start', cl) on the same fixture still carries the full imperative unchanged. git diff --stat confirms only scripts/checklist_engine.py and tests/test_checklist_engine.py changed; test_spine_rail.py needed no edits (its own 'mid-flight' concept in scripts/hooks/spine_rail.py is an unrelated Stop-hook nudge mechanism, not _rail_position()/_RAIL_STRINGS). No refactor needed; change stayed minimal.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:50:53.974044+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m4-render-green",
+      "reopen": true,
+      "reason": "Commander's independent verification found a real defect: _render_anchor_lines() iterates a dict value that is a plain string as characters instead of one item (the {category: str} shape used by g1-review's own anchors in the shipped EXECUTE_PLAN.template.json, e.g. {inherits: '...'}). Fixing before integrate.",
+      "ts": "2026-08-05T23:55:26.145064+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m5-verify",
+      "reopen": true,
+      "reason": "Commander's independent verification found a real defect: _render_anchor_lines() iterates a dict value that is a plain string as characters instead of one item (the {category: str} shape used by g1-review's own anchors in the shipped EXECUTE_PLAN.template.json, e.g. {inherits: '...'}). Fixing before integrate.",
+      "ts": "2026-08-05T23:55:26.145069+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m4-render-green",
+      "why": "Rework 1/3: fixed a real defect found by the Commander's independent verification -- _render_anchor_lines() iterated a dict value that is a plain string as characters instead of treating it as one item (the {category: str} shape used by g1-review's own anchors in the shipped EXECUTE_PLAN.template.json). Added test_anchors_render_when_dict_value_is_a_plain_string sourced from that exact shipped template line, observed RED (character explosion, 'inherits:' appeared many times instead of once), fixed via new _anchor_category_items() helper, now GREEN. Render tests 15 passed; full targeted suite 397 passed/24 subtests, no regressions.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:57:25.061465+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m5-verify",
+      "why": "Rework re-verification: full targeted suite green (397 passed, 24 subtests passed -- 396 prior + 1 new dict-string-value regression test, 0 regressions). git diff --stat updated (76/244 insertion counts, same 2 files). Re-confirmed the g1-review shipped-template anchors shape (dict with a plain-string value) now renders as one line, not one line per character.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:58:02.631117+00:00"
+    }
+  ]
+}

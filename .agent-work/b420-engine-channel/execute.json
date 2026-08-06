@@ -1,0 +1,303 @@
+{
+  "work_id": "b420-engine-channel-execute",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope from .agent-work/b420-engine-channel/MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + mission frame loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Engine channel: de-dup RAIL echo, render anchors/constraints, add completeness property test",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode (TDD: goldens/tests written BEFORE the code change so the diff proves the delta), close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff, model tier Sonnet. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "mission frame and issue #420 / DESIGN_SPEC.md workstream B read; RAIL dedup site (checklist_engine.py ~line 229) and anchors/constraints non-rendering in state() (~line 1548) confirmed live this run",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "VERB-AWARE DEDUP (cold-critic finding, corrects the mission frame's first sketch): _rail_prefix()/_rail() run for ALL SIX RAIL_VERBS (claim, current, start, advance, attest, attach), and _rail_position()'s mid-flight branch is verb-blind -- it derives its {imperative} substitution purely from spine state, not from which verb triggered it. For 5 of those 6 verbs (claim/start/advance/attest/attach) the RAIL line is the ONLY place the next imperative appears in that call's output -- it is NOT a duplicate there and must keep the FULL imperative text unchanged. The 2x duplication issue #420 describes is real ONLY for the `current` verb, where render_human()'s own ACTIVE line already prints the same imperative. So: make _rail_position() (or its caller) verb-aware -- pass the triggering point/verb through so the mid-flight token substitutes a short, verb-appropriate pointer (e.g. 'the ACTIVE gate above') ONLY when point == 'current'; for every other railed verb, keep substituting the full imperative exactly as today. A pointer like 'the ACTIVE gate above' would be FALSE on start/advance/attest/claim/attach output, which never prints an ACTIVE line -- do not ship a pointer phrase that is only true for one of six callers.",
+        "The five RAIL_STRINGS dict VALUES stay 100% byte-unchanged (frozen, measurement precondition for #145) -- this fix only changes what value is substituted for the {imperative} token, and only for point=='current'.",
+        "state() must stay a PURE projection (INV-2 in docs/CHECKLIST_ENGINE_DESIGN.md) -- reading anchors/constraints off the task dict adds no side effect and re-runs no check.",
+        "render_human()'s first line 'ACTIVE {id} [{status}] -- {imperative}' is byte-exact pinned by the GoldenOutputBriefing test class (tests/test_checklist_engine.py, class starts ~line 3738, e.g. test_pending_active_task_shows_open_preconditions_and_next_start ~3746) -- these call E.current(cl) directly (the pure function, before any CLI-boundary RAIL wrapping), so they are unaffected by the RAIL fix but MUST stay green through the anchors/constraints rendering change; extend them, do not break them. CORRECTION: render_human()'s own docstring cites 'tests/test_checklist_engine.py:818' for this pin -- verified live this run that citation is STALE (line 818 is an unrelated require_session call in a different test class); fix the docstring's citation to point at GoldenOutputBriefing if convenient while you're already editing that docstring, else log it as a triage candidate rather than spending a separate gate on it.",
+        "DoctrineRail.test_rail_mid_flight (tests/test_checklist_engine.py ~1825) calls E._rail('current', cl) directly and currently asserts the OLD (duplicating) substitution ('Next: do g2. Run it.') -- this is the test for the exact bug being fixed, so it is EXPECTED and REQUIRED to change as part of this fix, not a pin to preserve. Update it to assert the new pointer text for point=='current', and add a sibling assertion (e.g. E._rail('start', cl) or E._rail('advance', cl) with the same fixture) proving the OTHER railed verbs still get the full imperative unchanged -- that second assertion is what proves verb-awareness rather than a blanket dedup.",
+        "Shared-file fence with workstream D (#422): touch only the RENDERING path (state(), render_human(), _rail_position(), the dispatch()-boundary call into it, _RAIL_STRINGS token substitution). Do not touch _check_condition or any postcondition/invariant-evaluation code -- that is D's owned path this wave. If a genuine collision surfaces, stop and report it as a blocker rather than editing D's territory.",
+        "Vestigial-fields question is CLOSED for this run: corpus inventory (grep across skills/**/*.json and .agent-work/**/execute.json) found anchors and constraints genuinely populated on ~20+ real archived gates with real structured content. Build the renderer; do not delete the fields.",
+        "Goldens/tests are written FIRST against the pre-fix code (captured red), then the fix lands and the same tests go green -- this is the acceptance shape issue #420 specifies ('goldens written before the change so the diff asserts the intended delta').",
+        "The completeness property test enumerates the fields a Task may carry (per docs/CHECKLIST_SCHEMA.md's Task table plus anchors) and asserts every POPULATED one appears in current's rendered output for a fixture gate -- not just anchors/constraints by name, so a future forgotten field is caught by the same mechanism.",
+        "Do not touch the RAIL echo's assumed-behavior-neutral-for-compliance question -- that is C's tracer's job (DESIGN_SPEC.md workstream B, 'Behavior dependency, stated'), not this gate's.",
+        "Windows: run tests with 'python -m pytest ...', not 'py -m pytest ...' -- this worktree's 'py' resolves to an interpreter with no pytest installed; 'python' has pytest 9.0.2 and the full suite (1621 passed, 2 skipped, 550 subtests, ~473s) is green on this worktree's baseline before this change."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py: state() (~1548), render_human() (~1587), _RAIL_STRINGS (~225-241), _rail_position() (~244-263), _rail()/_rail_prefix() (~266-294), dispatch()'s RAIL_VERBS call site (~2464) -- the whole current-projection + RAIL rendering surface"
+        ],
+        "capability": [
+          "the current projection's completeness contract -- docs/CHECKLIST_ENGINE_DESIGN.md 'Answerability: current as a complete briefing' (INV-1: current is a superset of what the caller needs)"
+        ],
+        "constraint": [
+          "the five RAIL strings are frozen verbatim (measurement precondition for #145)",
+          "state() purity (INV-2): no side effects, no re-run of checks",
+          "the fix must be verb-aware: dedup only on point=='current'; the other 5 RAIL_VERBS keep the full imperative substitution (cold-critic finding)"
+        ],
+        "decision": [
+          "vestigial-fields question closed by this run's inventory: anchors/constraints are real corpus content, not vestigial -- render, do not delete. @grade: settled/measured \u00b7 leans g1-implement \u00b7 settle: already settled by the grep inventory this run performed"
+        ],
+        "evidence": [
+          "claim: on the `current` verb specifically, the RAIL echoes the gate imperative a second time today -- checked by a golden current call asserting the imperative appears exactly once post-fix",
+          "claim: anchors/constraints never render today -- checked by a golden current call against a fixture gate carrying both fields, red before / green after",
+          "claim: the other 5 railed verbs (claim/start/advance/attest/attach) still carry the full imperative post-fix -- checked by a sibling _rail() assertion per verb"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "summary": "RAIL verb-aware dedup + anchors/constraints rendering (3 real shapes handled: dict-of-list, dict-of-string, flat-list) + completeness property test; rework 1/3 fixed a dict-of-string explosion bug the Commander found. 397 passed, 24 subtests, 0 regressions.",
+            "result_path": ".agent-work/b420-engine-channel/g1-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Engine channel fix: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff, model tier Sonnet. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [
+        "Verify goldens genuinely preceded the fix (git log / diff order or the implementer's own stated red-then-green evidence), not tests retrofitted to already-passing code.",
+        "Verify the frozen RAIL strings were not reworded -- diff _RAIL_STRINGS and confirm only the substituted token value changed, and only for the 'current' verb.",
+        "Verify verb-awareness directly: confirm a test exercises _rail() (or the CLI output) for at least one non-current railed verb (e.g. start or advance) mid-flight and shows the FULL imperative still present there -- a fix that dedups unconditionally for every verb is a regression, not the fix asked for.",
+        "Verify no touch to _check_condition or other invariant-check code (workstream D's owned path)."
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "Independently reproduced all 3 deliverables + the rework fix; RED-before-GREEN confirmed via git-stash swap; _RAIL_STRINGS byte-identity confirmed via ast.literal_eval diff; anchors dict-of-string shape confirmed rendering as one clean line; scope/fence confirmed clean. One non-blocking Fowler DRY note (constraints/anchors blocks could fold into the existing generalized conditions loop). 2 triage candidates flagged (directives rendering follow-up; anchors missing from CHECKLIST_SCHEMA.md Task table).",
+            "result_path": ".agent-work/b420-engine-channel/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Engine channel fix: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects at the source (re-read the diff, re-run the tests yourself), then advance this gate -- the command-kind postcondition (tests pass) is satisfied by advance re-running the check, not by attest. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds (e.g. the anchors doc gap in CHECKLIST_SCHEMA.md, the DIGEST-staleness observation) as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted engine + rail tests pass, including new goldens and the completeness property test",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "directives field is in the same unrendered-defect class anchors/constraints were before issue #420: state()/render_human() never read it either. Out of #420's authorized scope (the two named fields). Recommend a follow-up issue, same shape as #420, to render it too."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "cmdr-420-engine-channel",
+    "status": "released",
+    "claimed_at": "2026-08-06T00:20:12.818260+00:00",
+    "last_heartbeat": "2026-08-06T00:20:13.026634+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T00:20:13.265014+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Global doctrine + project overlays already read at spine context step; mission frame intent/scope reconfirmed for execute.json's gate plan.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:33:51.054953+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Verified independently, not trusted from the claim: reproduced the live current() call against the anchors dict-of-string shape (g1-review's own {inherits: str} pattern from the shipped EXECUTE_PLAN.template.json) -- pre-rework it exploded into ~90 char-per-line garbage, post-rework it renders as one clean line. Re-ran python -m pytest tests/test_checklist_engine.py tests/test_spine_rail.py -q myself: 397 passed, 24 subtests, matches the implementer's claim. Reviewed the actual diff: _anchor_category_items()/_render_anchor_lines() correctly handle all 3 corpus shapes (dict-of-list, dict-of-string, flat-list); grep confirms zero _check_condition touches (D's fence intact); git status shows only the 2 allowed files changed. First implementer pass had a real defect (dict-of-string shape); sent back for rework via SendMessage (not a formal engine reopen -- gate had not yet advanced); rework fixed it cleanly via the crew's own engine-driven reopen of its internal plan, TDD red-then-green, sourced the regression test verbatim from the shipped template.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:01:42.002709+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer APPROVE, independently verified (result artifact fresh per run_crew.py --verify-result). Reviewer's own re-reproduction is rigorous: git-stash swap proved RED-before-GREEN, ast.literal_eval diff proved _RAIL_STRINGS byte-identity, module-diff proved absent-field output is byte-identical pre/post change, verbatim EXECUTE_PLAN.template.json line 41 text proved the anchors dict-of-string fix generalizes. One non-blocking Fowler DRY note and 2 triage candidates logged, neither blocking.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:16:59.179107+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "c1 command check re-runs the targeted suite as part of this advance; c2 satisfied by reference to the reviewer's APPROVE evidence e-g1-review-1. Both defects fixed and independently verified twice over (once by me, once by the reviewer, each reproducing the load-bearing dict-of-string anchor case live). Triage candidates and Fowler note already logged in review.json.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:18:01.608237+00:00"
+    }
+  ]
+}
