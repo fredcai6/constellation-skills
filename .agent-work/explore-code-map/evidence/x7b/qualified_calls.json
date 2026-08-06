@@ -1,0 +1,44 @@
+{
+  "qualified": {
+    "total": 3214,
+    "unresolved": 2017,
+    "pct_unresolved": 62.8,
+    "resolved_internal": 252,
+    "resolved_external": 945,
+    "unresolved_but_scip_knew_internal": 46,
+    "unresolved_but_scip_knew_external": 1187,
+    "unresolved_and_scip_also_blind": 784
+  },
+  "bare": {
+    "total": 3882,
+    "unresolved": 161,
+    "pct_unresolved": 4.1,
+    "resolved_internal": 1239,
+    "resolved_external": 2309,
+    "unresolved_but_scip_knew_internal": 1,
+    "unresolved_but_scip_knew_external": 160,
+    "unresolved_and_scip_also_blind": 0
+  },
+  "other": {
+    "total": 0,
+    "unresolved": 0,
+    "pct_unresolved": 0.0,
+    "resolved_internal": 0,
+    "resolved_external": 0,
+    "unresolved_but_scip_knew_internal": 0,
+    "unresolved_but_scip_knew_external": 0,
+    "unresolved_and_scip_also_blind": 0
+  },
+  "core_src_utils_only": {
+    "qualified": {
+      "total": 220,
+      "unresolved": 148,
+      "pct_unresolved": 67.3
+    },
+    "bare": {
+      "total": 160,
+      "unresolved": 8,
+      "pct_unresolved": 5.0
+    }
+  }
+}

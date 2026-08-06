@@ -74,8 +74,27 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | x4 | Does centrality × docstring-holes reproduce the curated map's documentation choices on f1Brainz? (+ first "describe these first" artifact) | prototype (measurement) | **complete** (cycle 1) | `excursions/x4-brief.md` → `excursions/x4-result.md` |
 | x5 | scip-clang on superCoolSpaceSim_cpp: the C++ adoption cost; same completeness and role gaps as Python? | prototype (measurement) | **complete — blocked, productively** (cycle 1) | `excursions/x5-brief.md` → `excursions/x5-result.md` |
 | x6 | Is there a scip-matlab or quick equivalent, and what does the best local route emit from matlab_src? | prototype (measurement) | **complete** (cycle 2) | `excursions/x6-brief.md` → `excursions/x6-result.md` |
-| x7a | Extractor fork candidate A: SCIP + AST sidecar emits statement lines for the src/utils slice — what does the glue cost? | prototype (logic, design-it-twice A) | dispatched (cycle 2) | `excursions/x7a-brief.md` → `excursions/x7a-result.md` |
-| x7b | Extractor fork candidate B: pure-AST extractor, same slice, resolution accuracy measured vs SCIP ground truth | prototype (logic, design-it-twice B) | dispatched (cycle 2) | `excursions/x7b-brief.md` → `excursions/x7b-result.md` |
+| x7a | Extractor fork candidate A: SCIP + AST sidecar emits statement lines for the src/utils slice — what does the glue cost? | prototype (logic, design-it-twice A) | **complete** (cycle 2) | `excursions/x7a-brief.md` → `excursions/x7a-result.md` |
+| x7b | Extractor fork candidate B: pure-AST extractor, same slice, resolution accuracy measured vs SCIP ground truth | prototype (logic, design-it-twice B) | **complete** (cycle 2) | `excursions/x7b-brief.md` → `excursions/x7b-result.md` |
+
+## Key findings — cycle 2, x7a+x7b: the extractor fork, prototyped both ways
+
+*Design-it-twice pair, run independently on the same slice with the same statement-line target. Agent comparison and recommendation below — the convergence decision is the human's. Full results: `excursions/x7a-result.md`, `excursions/x7b-result.md`.*
+
+| | A: SCIP + AST sidecar | B: AST-first (stdlib only) |
+|---|---|---|
+| Slice extracted | fully — 3,400 statements, all 6 predicates | fully — 2,847 statements, 6+2 predicates (`imports`, `inherits` free) |
+| Wall time | 3.2s **+ 6m05s SCIP index it depends on** | **2.3s total**, trivially incremental |
+| Dependencies | npm + patched dist file + 22MB index | **zero** — one 732-line stdlib file |
+| Code owned | 565 lines of glue (join = the hard part) | 732 lines incl. the resolver (the resolver = the hard part) |
+| Correctness signature | 99.92% positional join, but **85% of statements need both tools**; 3 debugging rounds, every one a *plausible wrong number*, incl. a naive write-rule recovering only 9% of writes silently | **90.4% agreement with SCIP** on internal refs (95.6% core), **zero genuinely-wrong** after trading confident-wrong for honest-unresolved; 99.7% write agreement |
+| What it exposed | SCIP `method` kind conflates calls/imports/property-reads (24% of naive call edges wrong); write signal split across SCIP roles; hover-text pollution in the doc field | **Four SCIP defects** — star-imports resolve to module stubs (100% of B's apparent errors were SCIP's), third-party symbols filed under the project name, doubled descriptors, aliases/builtins as anonymous locals (B strictly better on 2,612 refs) |
+| Refresh story | asymmetric: AST 1.1s / SCIP 6min, join must tolerate a stale index — unsolved | re-parse one file in milliseconds; module-table invalidation unwritten but cheap |
+
+- **The dispatch hole is language-independent and permanently open**: 62.8% of Python qualified calls unresolved without type inference — the same wall x6 hit in MATLAB at 56%. **But only 1.4% (46 of 3,214) are internal edges** — the hole is almost entirely third-party method dispatch. For the internal call graph, which is what the map is made of, pure AST is close to complete. Any design must treat unresolved qualified dispatch as a permanent class, not a gap to close.
+- **The ground truth itself cracked**: SCIP is an agreement bound, not truth — it lost outright on star-imports and anonymous aliases. "Resolution is the hard part SCIP does perfectly" (cycle-1 framing) did not survive contact.
+- **Agent recommendation (for the human to accept, adapt, or reject): AST-first as the pipeline, SCIP demoted to test oracle.** B is faster, dependency-free, incremental by construction, and equal-or-better on internal edges; A's genuine value — an independent resolver to disagree with — is worth keeping exactly as x7b used it: a periodic cross-check harness that catches resolver bugs (it caught four), not a runtime dependency. Untaken road: a type-inference layer (pyright-as-library) to close the 46-edge internal dispatch gap — deliberately not chased now.
+- **Shared open nulls, both candidates**: rename/move identity (symbols re-mint on any move — the durable-store question), whole-repo syntactic variety, non-ASCII columns (A), languages beyond Python (B's 640-line resolver cost does not generalize to C++), and usefulness — nobody has yet generated a map section from the statements and put it in front of a reader.
 | x8 | Does anything in the real map resist living as in-code comments? Known-false census. (Falsifies the human's "comments suffice" lean) | research | **complete** (cycle 2) | `excursions/x8-brief.md` → `excursions/x8-result.md` |
 | x9 | Grammar prior art → mapped onto the existing graph (constraints from x2/x3/x8 baked in) | research | dispatched (cycle 2) | `excursions/x9-brief.md` → `excursions/x9-result.md` |
 

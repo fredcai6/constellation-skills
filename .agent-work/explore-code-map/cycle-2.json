@@ -86,10 +86,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "POSITIVE, hole in a different place than expected. 732-line stdlib-only extractor, zero deps, zero install, 2.3s full run (~160x faster than the SCIP path), trivially incremental, 0 parse failures. Accuracy vs SCIP ground truth: 90.4% identical on internal refs (95.6% on core slice), ZERO genuinely-wrong answers after converting confident-wrong to honest-unresolved (a wrong edge is worse than a missing edge). Writes agree 99.7%. THE REFRAME: 62.8% of qualified calls unresolved \u2014 same hole as MATLAB's 56% (x6), language-independent, a property of parse-without-inference \u2014 BUT only 46 of 3,214 (1.4%) are internal edges; the hole is almost entirely third-party dispatch. Bonus: measurement exposed FOUR SCIP defects (star-imports resolve to module stubs \u2014 100% of x7b's apparent errors were SCIP's; third-party filed under project package name; doubled descriptors on annotated vars; aliases/builtins as anonymous locals \u2014 AST strictly better on 2,612 refs). Ground truth is an agreement bound, not truth. NOT tested: other languages (640-line resolver cost does NOT generalize to C++), whole repo, rename identity (both candidates), usefulness. Full: excursions/x7b-result.md",
       "evidence": [],
       "rework_count": 0
     },
