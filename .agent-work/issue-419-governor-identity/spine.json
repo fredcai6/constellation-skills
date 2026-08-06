@@ -300,7 +300,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Plan approved; context headroom reviewed and the commander doctrine is loaded in this context (constellation-commander-delegated + commander-core.md + crew-dispatch.md)."
         },
         {
           "id": "p2",
@@ -309,7 +310,8 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills-wt/epic418-a-419/scripts/verify_state_note.py issue-419-governor-identity"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -323,11 +325,23 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a-419/scripts/verify_state_note.py issue-419-governor-identity",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -577,7 +591,7 @@
     "session_id": "commander-issue-419-governor-identity",
     "status": "active",
     "claimed_at": "2026-08-05T23:12:25.836146+00:00",
-    "last_heartbeat": "2026-08-06T00:17:29.319640+00:00",
+    "last_heartbeat": "2026-08-06T00:18:15.552985+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,

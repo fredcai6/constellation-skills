@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-review",
+  "files": [],
+  "repo_rev": {
+    "commit": "340c46d18b501ee2be41d8e046dfbc6a0f9befac"
+  },
+  "run": {
+    "work_id": "issue-419-governor-identity",
+    "generated_at": "2026-08-06T00:51:49Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a-419",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a-419",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-a-419"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a-419"
+    }
+  }
+}

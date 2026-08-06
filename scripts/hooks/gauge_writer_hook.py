@@ -17,9 +17,14 @@ Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
   file is left exactly as it was and ages into staleness naturally. A
   fabricated 0.0 would read as genuine low fill and could suppress a
   nudge that should have fired.
-- Record is FROZEN, four fields only (identical to #181's reader):
+- Record is four REQUIRED fields (identical to #181's reader):
   {schema_version: int, fill_fraction: float 0..1, model: str,
-  observed_at: ISO-8601 str -- the SAMPLED moment, not write time}.
+  observed_at: ISO-8601 str -- the SAMPLED moment, not write time},
+  plus ONE optional fifth on the dispatched-agent path only (#419):
+  {identity_resolution_ms: float}. A top-level agent's record still
+  carries exactly the four, byte-identical to before #419. The reader
+  validates the four and does not reject extras, which is what makes an
+  additive field free on the read side.
 - Atomic write: tmp file + os.replace. A concurrent reader of gauge.json
   never observes a torn/partial record -- it always sees either the
   complete prior record or the complete new one.
@@ -299,8 +304,8 @@ def find_latest_usage(transcript_path, agent_id=None):
     - set (a dispatched agent, reading its OWN derived transcript): the line
       must be `isSidechain` TRUTHY *and* carry a top-level `agentId` EQUAL to
       it. Every line of a subagent's own transcript is `isSidechain: true`
-      (measured -- docs/GAUGE_WRITER_HOOK.md's field table is wrong about this
-      today), so the polarity has to flip; the `agentId` equality is what
+      (measured; docs/GAUGE_WRITER_HOOK.md's field table states both
+      polarities), so the polarity has to flip; the `agentId` equality is what
       makes a WRONG derived path fail closed rather than produce a confidently
       misattributed number.
     """
@@ -350,7 +355,11 @@ def find_latest_usage(transcript_path, agent_id=None):
 
 
 def compute_record(transcript_path, agent_id=None):
-    """Build the frozen 4-field record for this transcript.
+    """Build the four required fields of the record for this transcript.
+
+    Four is what THIS function returns, always. The optional fifth field
+    `identity_resolution_ms` is added by `handle_post_tool_use` on the
+    dispatched-agent path only -- see the module docstring.
 
     `agent_id` is forwarded verbatim to `find_latest_usage` -- see there for
     what it does to the sidechain polarity. One parameter, not two.
@@ -400,12 +409,15 @@ def _atomic_write_json(path: Path, record: dict) -> None:
 
 # --- uncalibrated-model flag (visible, not silent) ---------------------------
 
-# A SIDECAR, deliberately not a field on gauge.json: that record is frozen at
-# four fields and shared with the reader, and "no reading" must stay literally
-# no reading so every existing fail-safe path keeps working untouched. The flag
-# rides alongside so the engine can explain the silence instead of the governor
-# just going quiet -- an unexplained silent governor is how a miscalibration
-# survives unnoticed, which is exactly what happened with claude-opus-5.
+# A SIDECAR, deliberately not a field on gauge.json: that record's four
+# required fields are shared with the reader, and "no reading" must stay
+# literally no reading so every existing fail-safe path keeps working
+# untouched -- an uncalibrated model has no fill to report at all, which is a
+# different thing from #419's additive fifth field riding a real reading.
+# The flag rides alongside so the engine can explain the silence instead of
+# the governor just going quiet -- an unexplained silent governor is how a
+# miscalibration survives unnoticed, which is exactly what happened with
+# claude-opus-5.
 UNCALIBRATED_FILENAME = "gauge-uncalibrated.json"
 
 
@@ -528,9 +540,10 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     flag path. Only exactly one candidate ever gets a gauge.json/
     gauge-uncalibrated.json write.
 
-    Two of the skip causes are now POSITIVELY LOCALIZED (issue #271) with a
-    visible gauge-skip.json sidecar -- see _write_skip_flag's docstring for
-    why this rides a SEPARATE sidecar family rather than reusing
+    THREE of the skip causes are now POSITIVELY LOCALIZED with a visible
+    gauge-skip.json sidecar (two from issue #271, plus
+    subagent-transcript-missing from #419) -- see _write_skip_flag's docstring
+    for why this rides a SEPARATE sidecar family rather than reusing
     gauge-uncalibrated.json:
       - ambiguous binding (2+ candidates): unlike a gauge.json reading, a
         diagnostic fact about WHY nothing was written is never a fabricated/
@@ -539,8 +552,11 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         candidate (decision:skip-sidecar-fanout-and-clear).
       - no-usable-record on the single resolved candidate: same treatment,
         one path.
-    The other two causes stay silent by design -- there is no known gauge
-    path to write a sidecar TO: zero candidates (unresolvable binding) and a
+      - subagent-transcript-missing: agent_id resolved but its derived
+        transcript is absent. Fails closed -- never the parent's transcript.
+    The other causes stay silent by design -- there is no known gauge path to
+    write a sidecar TO: zero candidates (unresolvable binding, which now also
+    covers a subagent whose identity would not compose a key) and a
     missing/unreadable transcript_path (checked first, below, before
     gauge_paths is even resolved).
 

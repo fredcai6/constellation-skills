@@ -1,0 +1,390 @@
+{
+  "work_id": "issue-419-governor-identity-g3r1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-enumerate",
+    "m2-doc",
+    "m3-comments",
+    "m4-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and the BLOCK",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md from the installed constellation-implementer skill, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g3 handoff INCLUDING its REWORK 1 section, the reviewer's g3-REVIEW_RESULT.md, and the prior g3-IMPLEMENTER_RESULT.md. Verify the rework handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions); block if not. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew doctrine + handoff + REWORK 1 + review block + prior result loaded; rework handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not redo the five original edits - they are confirmed correct"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-enumerate": {
+      "id": "m1-enumerate",
+      "title": "Enumerate EVERY four-field / frozen-record site by command, BEFORE state",
+      "imperative": "Do not fix where you are pointed. Run a by-command enumeration over docs/GAUGE_WRITER_HOOK.md AND scripts/hooks/gauge_writer_hook.py AND scripts/hooks/spine_rail.py for every site claiming the gauge record is four fields or frozen. Use several token shapes (four|4|frozen|no extras|field count) and then read the candidate regions so a claim that avoids every swept token is still caught. State the COUNT. Archive command, output and count to .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-before.txt. Adjudicate each hit: same claim or different claim. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and rework handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "by-command enumeration archived with a stated count and per-hit adjudication",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-before.txt && grep -qi 'count' .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-before.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-enumerate-1"
+        }
+      ],
+      "constraints": [
+        "enumerate by command, never from memory or from the handoff's anchor list"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-enumerate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-before.txt && grep -qi 'count' .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-before.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-doc": {
+      "id": "m2-doc",
+      "title": "Correct every four-field site in docs/GAUGE_WRITER_HOOK.md",
+      "imperative": "At EVERY doc site the m1 enumeration found (the reviewer named line 35 and line 164; the count is what governs), say that four fields are the REQUIRED ones a reader validates and identity_resolution_ms is an optional fifth carried only on a dispatched agent's record, so a top-level record still carries exactly four. Say what it measures and against what budget - read the code at scripts/hooks/gauge_writer_hook.py to get both right, do not infer. The eyeball-check section must tell a human that a fifth field on a subagent's gauge is correct, not a defect. Match the document's voice and ~76-col wrap. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "enumeration complete and every doc site listed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every enumerated doc site now states four required + optional fifth",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test $(grep -c 'identity_resolution_ms' docs/GAUGE_WRITER_HOOK.md) -ge 3"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-doc-1"
+        }
+      ],
+      "constraints": [
+        "docs/GAUGE_WRITER_HOOK.md is canonical; do not edit any installed copy under skills/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-doc-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test $(grep -c 'identity_resolution_ms' docs/GAUGE_WRITER_HOOK.md) -ge 3",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-comments": {
+      "id": "m3-comments",
+      "title": "Correct the now-false comments in scripts/hooks/gauge_writer_hook.py",
+      "imperative": "Comments only. Fix the module docstring's 'FROZEN, four fields only' and the matching in-code comment, plus any other site m1 found in this file that is the same four-field claim in different words. Judge the reviewer's two further comment candidates: if the same claim, fix them; if a different claim, leave them and say so in the result. NOT ONE EXECUTABLE LINE may change. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "doc sites corrected; the hook-file sites from m1 are listed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the file's code is unchanged - only comments and docstrings differ from HEAD (AST equality after docstring removal)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -c \"import ast,subprocess,sys\ndef norm(s):\n t=ast.parse(s)\n for n in ast.walk(t):\n  b=getattr(n,'body',None)\n  if isinstance(n,(ast.Module,ast.ClassDef,ast.FunctionDef,ast.AsyncFunctionDef)) and b and isinstance(b[0],ast.Expr) and isinstance(getattr(b[0],'value',None),ast.Constant) and isinstance(b[0].value.value,str):\n   b.pop(0)\n   if not b: b.append(ast.Pass())\n return ast.dump(t)\nold=subprocess.run(['git','show','HEAD:scripts/hooks/gauge_writer_hook.py'],capture_output=True,text=True).stdout\nnew=open('scripts/hooks/gauge_writer_hook.py',encoding='utf-8').read()\nsys.exit(0 if norm(old)==norm(new) else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-comments-2"
+        }
+      ],
+      "constraints": [
+        "comments only; no behavior change; no logic edit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Commander ruling: gauge_writer_hook.py:300-306 (find_latest_usage's 'the field table is wrong about this today') is IN scope - falsified by this gate's own doc edit. Comments only, same rules."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-comments-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -c \"import ast,subprocess,sys\ndef norm(s):\n t=ast.parse(s)\n for n in ast.walk(t):\n  b=getattr(n,'body',None)\n  if isinstance(n,(ast.Module,ast.ClassDef,ast.FunctionDef,ast.AsyncFunctionDef)) and b and isinstance(b[0],ast.Expr) and isinstance(getattr(b[0],'value',None),ast.Constant) and isinstance(b[0].value.value,str):\n   b.pop(0)\n   if not b: b.append(ast.Pass())\n return ast.dump(t)\nold=subprocess.run(['git','show','HEAD:scripts/hooks/gauge_writer_hook.py'],capture_output=True,text=True).stdout\nnew=open('scripts/hooks/gauge_writer_hook.py',encoding='utf-8').read()\nsys.exit(0 if norm(old)==norm(new) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m3-comments",
+            "reason": "Commander ruling: gauge_writer_hook.py:300-306 (find_latest_usage's 'the field table is wrong about this today') is IN scope - falsified by this gate's own doc edit. Comments only, same rules.",
+            "ts": "2026-08-06T03:18:46.200285+00:00"
+          }
+        },
+        {
+          "id": "e-m3-comments-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -c \"import ast,subprocess,sys\ndef norm(s):\n t=ast.parse(s)\n for n in ast.walk(t):\n  b=getattr(n,'body',None)\n  if isinstance(n,(ast.Module,ast.ClassDef,ast.FunctionDef,ast.AsyncFunctionDef)) and b and isinstance(b[0],ast.Expr) and isinstance(getattr(b[0],'value',None),ast.Constant) and isinstance(b[0].value.value,str):\n   b.pop(0)\n   if not b: b.append(ast.Pass())\n return ast.dump(t)\nold=subprocess.run(['git','show','HEAD:scripts/hooks/gauge_writer_hook.py'],capture_output=True,text=True).stdout\nnew=open('scripts/hooks/gauge_writer_hook.py',encoding='utf-8').read()\nsys.exit(0 if norm(old)==norm(new) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "Re-enumerate AFTER the last edit, prove the suite unmoved, write the result",
+      "imperative": "Re-run the m1 enumeration AFTER your final edit so no claim rests on a stale artifact, archive it to .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-after.txt with the count. Also re-archive the sidechain sweep post-final-edit to .agent-work/issue-419-governor-identity/evidence/g3r1-grep-sweep-post.txt so the reviewer's stale-line-number observation is closed. Archive git diff --stat to .agent-work/issue-419-governor-identity/evidence/g3r1-diff-stat.txt and confirm only the document and comment lines changed. Run the suite; it must be exactly 1667 passed, 2 skipped. Then overwrite the IMPLEMENTER_RESULT at results/g3-IMPLEMENTER_RESULT.md covering the rework and keeping the original evidence for the five earlier edits. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "doc and comment edits complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "post-edit enumeration, sidechain sweep, diff stat and result archived",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-after.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-grep-sweep-post.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-diff-stat.txt && test -s .agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-3"
+        },
+        {
+          "id": "c2",
+          "statement": "the suite is at exactly 1667 passed, 2 skipped",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q > .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt 2>&1; tail -3 .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt; grep -q '1667 passed, 2 skipped' .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-4"
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py",
+        "a moved test count is a stop condition"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m3-comments"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-after.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-grep-sweep-post.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-diff-stat.txt && test -s .agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m3-comments",
+            "reason": "Commander ruling: gauge_writer_hook.py:300-306 (find_latest_usage's 'the field table is wrong about this today') is IN scope - falsified by this gate's own doc edit. Comments only, same rules.",
+            "ts": "2026-08-06T03:18:46.200310+00:00"
+          }
+        },
+        {
+          "id": "e-m4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q > .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt 2>&1; tail -3 .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt; grep -q '1667 passed, 2 skipped' .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m3-comments",
+            "reason": "Commander ruling: gauge_writer_hook.py:300-306 (find_latest_usage's 'the field table is wrong about this today') is IN scope - falsified by this gate's own doc edit. Comments only, same rules.",
+            "ts": "2026-08-06T03:18:46.200316+00:00"
+          }
+        },
+        {
+          "id": "e-m4-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-fourfield-after.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-grep-sweep-post.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3r1-diff-stat.txt && test -s .agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q > .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt 2>&1; tail -3 .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt; grep -q '1667 passed, 2 skipped' .agent-work/issue-419-governor-identity/evidence/g3r1-pytest.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "impl-419-g3r2",
+    "status": "released",
+    "claimed_at": "2026-08-06T03:18:45.529248+00:00",
+    "last_heartbeat": "2026-08-06T03:30:42.519280+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T03:31:28.244782+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Rework of a BLOCKed prose gate: the five original doc edits stand and are confirmed; the one defect is that docs/GAUGE_WRITER_HOOK.md still calls the gauge record four fields while g2 (5491bd4) shipped an optional fifth, identity_resolution_ms, on the dispatched-agent path only. Scope now also allows comment-only edits in scripts/hooks/gauge_writer_hook.py. The decisive risk is under-enumeration - the handoff named one doc site, the reviewer found two, so every site must be found by command across the doc and both hook files, with the count stated.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:59:21.174507+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-enumerate",
+      "why": "Enumerated by command, not from the anchor list: 13 matching lines across the doc and both hook files; SIX distinct sites assert the four-field/frozen-record claim (doc 35, doc 164, doc 251's frozen epithet, hook 20, hook 353, hook 403-404) and seven hits are a different claim (installer four-state report, skip-cause arithmetic, the two frozen DESIGN_SPEC references, and g2's two already-correct required-field comments). The reviewer found two sites; the real count is six.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:01:37.096313+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-doc",
+      "why": "All three doc sites corrected plus the JSON sample qualified: line 35 now names the four required fields and the optional fifth; a new short section 'The record is four required fields, plus one on a subagent' is the single authoritative statement (table, what identity_resolution_ms measures, the 100ms budget asserted at tests/test_gauge_writer.py:1201, and why a top-level record is unchanged); the eyeball check now tells a human five fields on a subagent's gauge is correct; the field table's 'frozen record' epithet is dropped. The two cosmetic over-wide lines the reviewer named in my own prior diff are rewrapped.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:03:20.563256+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-comments",
+      "why": "Three comment sites in gauge_writer_hook.py corrected: the module docstring now says four REQUIRED fields plus one optional fifth on the dispatched-agent path; compute_record's docstring says four is what that function returns and names the caller that adds the fifth; the sidecar comment no longer calls the record frozen at four and distinguishes an uncalibrated no-reading from an additive field on a real reading. The reviewer's second comment candidate (find_latest_usage's 'the field table is wrong about this today') is a DIFFERENT claim - sidechain polarity, not field count - so it stays, per the handoff. Comments-only proven mechanically by AST equality against HEAD with docstrings stripped, and the guard was shown red against a one-line mutation.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:05:25.080426+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify",
+      "why": "Post-edit enumeration re-run after the last edit (20 hits, false-assertion grep exits 1), sidechain sweep re-archived at live line numbers (5 lines / 7 occurrences), diff limited to the document plus comment lines with AST equality proving the code identical to HEAD, and the IMPLEMENTER_RESULT rewritten to cover the rework while keeping the original five edits' evidence. Suite run by the engine to pin the count.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:17:13.823508+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m3-comments",
+      "reopen": true,
+      "reason": "Commander ruling: gauge_writer_hook.py:300-306 (find_latest_usage's 'the field table is wrong about this today') is IN scope - falsified by this gate's own doc edit. Comments only, same rules.",
+      "ts": "2026-08-06T03:18:46.200324+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m4-verify",
+      "reopen": true,
+      "reason": "Commander ruling: gauge_writer_hook.py:300-306 (find_latest_usage's 'the field table is wrong about this today') is IN scope - falsified by this gate's own doc edit. Comments only, same rules.",
+      "ts": "2026-08-06T03:18:46.200329+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m3-comments",
+      "why": "Commander ruled find_latest_usage's docstring IN: it now says the field table STATES BOTH POLARITIES instead of calling it wrong. Re-swept scripts/ and tests/ for any comment asserting the document is wrong or stale: 35 raw hits, 11 naming the document, and TWO - not one - assert it is wrong. The second is tests/test_gauge_writer.py:1000-1001, the same sentence copied into the test file; it is outside this rework's scope (comments only in gauge_writer_hook.py, nothing else changes) so it is reported for a ruling, not fixed. The remaining nine references are pointers, each read and still true, including install_constellation.py:541's matcher/timeout claim and test_install_constellation.py:1996's hand-wire claim, both re-checked against the corrected document.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:21:27.410332+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m4-verify",
+      "why": "Rework 2 verified: the doc-is-wrong sweep is archived with its count (35 raw / 11 naming the document / 2 asserting it wrong, one fixed and one in tests/ reported for a ruling), the diff proof is re-earned after the reopen with AST equality still exit 0, and the suite is re-run by the engine to pin 1667 passed / 2 skipped.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:30:42.519224+00:00"
+    }
+  ]
+}

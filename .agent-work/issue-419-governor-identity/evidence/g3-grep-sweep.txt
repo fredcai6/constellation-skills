@@ -1,0 +1,18 @@
+# g3 pre-edit sweep 1 -- sidechain/falsy occurrences in docs/GAUGE_WRITER_HOOK.md
+# tree: 5491bd45d9d2760a6402bd37bc7a41e6970e264f (doc unmodified at this point)
+# run: 2026-08-06T02:12:15Z
+
+$ grep -n -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md
+26:3. Parses the tail of the transcript (JSONL) for the latest non-sidechain
+185:  `{"type": "assistant", "isSidechain": false, "message": {"model": "...",
+213:| `isSidechain` | top-level | must be falsy (subagent turns are a different context window and are skipped) |
+267:  bounded tail-scan window, that is a non-sidechain assistant message with a
+exit=0
+
+$ grep -c -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md   # matching LINES
+4
+exit=0
+
+$ grep -o -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md | wc -l   # total OCCURRENCES
+5
+exit=0

@@ -1,0 +1,70 @@
+# g3 REWORK 1 -- AFTER state, re-run after the LAST edit of this rework
+# Tree: worktree epic418-a-419, code HEAD 5491bd4 + comment-only edits to scripts/hooks/gauge_writer_hook.py
+#       and the uncommitted docs/GAUGE_WRITER_HOOK.md edits (g3 + this rework).
+# Run: 2026-08-06T03:05:47Z
+
+$ grep -n -i -E "four|4[- ]field|frozen|no extras|field count|fields only" docs/GAUGE_WRITER_HOOK.md scripts/hooks/gauge_writer_hook.py scripts/hooks/spine_rail.py
+docs/GAUGE_WRITER_HOOK.md:36:   the four required fields `schema_version`, `fill_fraction`, `model` and
+docs/GAUGE_WRITER_HOOK.md:39:   carries exactly four. See "The record is four required fields, plus one on
+docs/GAUGE_WRITER_HOOK.md:45:## The record is four required fields, plus one on a subagent
+docs/GAUGE_WRITER_HOOK.md:58:The four required fields are what a reader validates —
+docs/GAUGE_WRITER_HOOK.md:73:what it was, which is why the pre-existing tests still pass. So **four fields
+docs/GAUGE_WRITER_HOOK.md:91:That report is four-state:
+docs/GAUGE_WRITER_HOOK.md:188:   top-level agent's record, so four fields; a dispatched agent's carries a
+docs/GAUGE_WRITER_HOOK.md:202:- All four required fields present. On a **dispatched** agent's gauge a fifth
+docs/GAUGE_WRITER_HOOK.md:206:  gauge carries exactly the four. See "The record is four required fields,
+docs/GAUGE_WRITER_HOOK.md:321:(`_skip_reason_advisory`) then surfaces at the gate boundary. The other four
+scripts/hooks/gauge_writer_hook.py:10:Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
+scripts/hooks/gauge_writer_hook.py:20:- Record is four REQUIRED fields (identical to #181's reader):
+scripts/hooks/gauge_writer_hook.py:25:  carries exactly the four, byte-identical to before #419. The reader
+scripts/hooks/gauge_writer_hook.py:26:  validates the four and does not reject extras, which is what makes an
+scripts/hooks/gauge_writer_hook.py:358:    """Build the four required fields of the record for this transcript.
+scripts/hooks/gauge_writer_hook.py:360:    Four is what THIS function returns, always. The optional fifth field
+scripts/hooks/gauge_writer_hook.py:412:# A SIDECAR, deliberately not a field on gauge.json: that record's four
+scripts/hooks/gauge_writer_hook.py:646:            # the presence of its four required fields and does not reject
+scripts/hooks/gauge_writer_hook.py:650:            # to resolve for a top-level agent anyway. The four required
+scripts/hooks/spine_rail.py:9:Design contract (frozen DESIGN_SPEC #138 channel B, D3):
+exit=0
+
+$ ... | wc -l   # matching LINES
+20
+
+# The claim that had to disappear: a bare four-field/frozen record assertion.
+$ grep -n -i -E "frozen 4-field|frozen record|FROZEN, four|frozen at\s*$|four fields present, no extras|four fields only" docs/GAUGE_WRITER_HOOK.md scripts/hooks/gauge_writer_hook.py scripts/hooks/spine_rail.py
+exit=1   # 1 == no hit == every four-field/frozen-record assertion is gone
+
+$ grep -n "identity_resolution_ms" docs/GAUGE_WRITER_HOOK.md scripts/hooks/gauge_writer_hook.py
+docs/GAUGE_WRITER_HOOK.md:38:   fifth, `identity_resolution_ms` (#419). A top-level agent's record still
+docs/GAUGE_WRITER_HOOK.md:56:| `identity_resolution_ms` | **no** | dispatched agents only (#419) |
+docs/GAUGE_WRITER_HOOK.md:62:`identity_resolution_ms` is a float, milliseconds. It measures the two
+docs/GAUGE_WRITER_HOOK.md:203:  field, `identity_resolution_ms`, is also present and is **correct, not a
+scripts/hooks/gauge_writer_hook.py:24:  {identity_resolution_ms: float}. A top-level agent's record still
+scripts/hooks/gauge_writer_hook.py:361:    `identity_resolution_ms` is added by `handle_post_tool_use` on the
+scripts/hooks/gauge_writer_hook.py:653:            record["identity_resolution_ms"] = identity_ms
+exit=0
+
+# ============================================================
+# COUNT AFTER: 20 matching lines (was 13). The count RISES because the correct
+#              statement uses the same words as the wrong one -- the test is not
+#              the count, it is that every hit now reads "four REQUIRED fields
+#              plus an optional fifth" or is one of the seven unrelated claims.
+# ============================================================
+#
+# The six sites that had to change, and what they say now:
+#   doc:36-40   the four required fields by name + the optional fifth, pointing at doc:45
+#   doc:45-75   NEW single authoritative section: the field table, what
+#               identity_resolution_ms measures, the 100 ms budget, and why a
+#               top-level record is byte-identical to before #419
+#   doc:202-207 eyeball check: a fifth field on a subagent's gauge is CORRECT
+#   doc:281     the field table's "frozen record's model field" -> "the record's model field"
+#   hook:20-27  module docstring: four REQUIRED + one optional fifth, dispatched path only
+#   hook:358-362 compute_record: four is what THIS function returns; the caller adds the fifth
+#   hook:412-414 the sidecar comment no longer calls the record frozen at four
+#
+# The seven unrelated hits are unchanged and still correct:
+#   doc:91 (installer four-state report), doc:321 (skip-cause arithmetic),
+#   hook:10 and spine_rail:9 (a frozen DESIGN_SPEC document, not the record),
+#   hook:646 and hook:650 (g2's own already-correct required-vs-extras comments).
+#
+# Additional doc sites that now state the fifth field: doc:188 (the JSON sample
+# is labelled a top-level record), doc:56, doc:62, doc:203.

@@ -998,7 +998,7 @@ def test_top_level_payload_still_reads_the_session_transcript(proj, monkeypatch)
 # --- #419: the sidechain filter INVERTS for a subagent -----------------------
 #
 # EVERY line of a subagent's own transcript is `isSidechain: true` (measured;
-# docs/GAUGE_WRITER_HOOK.md's field table is wrong about this today), so the
+# docs/GAUGE_WRITER_HOOK.md's field table states both polarities), so the
 # filter that is correct for a top-level agent is exactly backwards for a
 # dispatched one.
 #

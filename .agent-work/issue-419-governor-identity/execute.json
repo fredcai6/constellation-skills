@@ -2,26 +2,75 @@
   "work_id": "issue-419-governor-identity",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate", "g2-implement", "g2-review", "g2-integrate", "g3-implement", "g3-review", "g3-integrate", "g4-implement", "g4-review", "g4-integrate", "g5-sweep", "g6-closeout"],
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-sweep",
+    "g6-closeout"
+  ],
   "tasks": {
     "e0-context": {
       "id": "e0-context",
       "title": "Load execution context",
-      "imperative": "Confirm the frozen plan's intent and scope against PROBLEM_STATEMENT.md, MISSION_FRAME.md and CRITIC_TRIAGE.md in this work area, and against the launch order at .agent-work/epic-418/launch-orders/A-419.md in the main checkout. Re-confirm the two platform facts every later gate leans on: the test runner is `python -m pytest` (the `py` launcher resolves to a codex runtime with no pytest installed — `py -m unittest discover` reports 4 loader errors and 11 mutation-floor failures that are NOT real, independently re-verified by a cold critic), and the baseline at HEAD 990712f with a clean tree is GREEN: 1621 passed, 2 skipped, 550 subtests passed. Attest c1.",
+      "imperative": "Confirm the frozen plan's intent and scope against PROBLEM_STATEMENT.md, MISSION_FRAME.md and CRITIC_TRIAGE.md in this work area, and against the launch order at .agent-work/epic-418/launch-orders/A-419.md in the main checkout. Re-confirm the two platform facts every later gate leans on: the test runner is `python -m pytest` (the `py` launcher resolves to a codex runtime with no pytest installed \u2014 `py -m unittest discover` reports 4 loader errors and 11 mutation-floor failures that are NOT real, independently re-verified by a cold critic), and the baseline at HEAD 990712f with a clean tree is GREEN: 1621 passed, 2 skipped, 550 subtests passed. Attest c1.",
       "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "plan intent and scope confirmed; test-runner and green baseline pinned to HEAD 990712f", "check": null, "satisfied": false}],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed; test-runner and green baseline pinned to HEAD 990712f",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Intent and scope re-confirmed against PROBLEM_STATEMENT.md, MISSION_FRAME.md, CRITIC_TRIAGE.md and launch order A-419.md. Runner pinned: python -m pytest (1621 passed / 2 skipped / 550 subtests at HEAD 990712f, clean tree); py -m unittest is the wrong interpreter and its 15 red results are artifacts, independently re-verified by a cold critic."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g1-implement": {
       "id": "g1-implement",
       "title": "Per-agent binding key in the store: implement",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. Task: (a) pin the real captured probe payloads as a test fixture — copy .agent-work/issue-419-governor-identity/evidence/probe-payloads.jsonl to tests/fixtures/probe_payloads.jsonl with a sha256-pinning test, so every later unit test argues with real harness output rather than a hand-typed dict. NOTE, and this will cost you a rework round-trip if you miss it: each line in that file is a WRAPPER — the real hook payload is nested under the `payload` key, alongside captured_at/cwd/env/pid/raw/raw_len — so every test must unwrap it. (b) In scripts/hooks/spine_rail.py add BINDING_KEY_SEP and two pure helpers: binding_key(payload) and session_view(binding, sid). (c) Route handle_post_tool_use's claim write, release delete and empty-set cleanup through binding_key, and decide_stop's and decide_session_start's READS through session_view. binding_key is the ONLY place the composite key is composed anywhere in the codebase; the gauge writer will call it through the module handle it already loads, so the two hooks cannot drift.",
-      "preconditions": [{"id": "p1", "statement": "execution context confirmed", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. Task: (a) pin the real captured probe payloads as a test fixture \u2014 copy .agent-work/issue-419-governor-identity/evidence/probe-payloads.jsonl to tests/fixtures/probe_payloads.jsonl with a sha256-pinning test, so every later unit test argues with real harness output rather than a hand-typed dict. NOTE, and this will cost you a rework round-trip if you miss it: each line in that file is a WRAPPER \u2014 the real hook payload is nested under the `payload` key, alongside captured_at/cwd/env/pid/raw/raw_len \u2014 so every test must unwrap it. (b) In scripts/hooks/spine_rail.py add BINDING_KEY_SEP and two pure helpers: binding_key(payload) and session_view(binding, sid). (c) Route handle_post_tool_use's claim write, release delete and empty-set cleanup through binding_key, and decide_stop's and decide_session_start's READS through session_view. binding_key is the ONLY place the composite key is composed anywhere in the codebase; the gauge writer will call it through the module handle it already loads, so the two hooks cannot drift.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context closed: runner and baseline pinned."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
       "constraints": [
-        "THREE-WAY, not two-way — a cold critic caught the two-way version contradicting the fail-closed rule. agent_id ABSENT means a top-level agent: bare session_id, unchanged behavior. agent_id PRESENT AND WELL-FORMED: session_id#agent_id. agent_id PRESENT BUT UNUSABLE (empty, non-string, or containing '#', '/', '\\\\' or '..'): return None and write NO binding at all. Do NOT fall back to the bare key in that third case — that would file the subagent's entry under the PARENT's key, push the parent to two candidates, and silence the parent's gauge, which is the exact blindness this issue exists to remove. binding_key also returns None when session_id is falsy.",
+        "THREE-WAY, not two-way \u2014 a cold critic caught the two-way version contradicting the fail-closed rule. agent_id ABSENT means a top-level agent: bare session_id, unchanged behavior. agent_id PRESENT AND WELL-FORMED: session_id#agent_id. agent_id PRESENT BUT UNUSABLE (empty, non-string, or containing '#', '/', '\\\\' or '..'): return None and write NO binding at all. Do NOT fall back to the bare key in that third case \u2014 that would file the subagent's entry under the PARENT's key, push the parent to two candidates, and silence the parent's gauge, which is the exact blindness this issue exists to remove. binding_key also returns None when session_id is falsy.",
         "agent_id is interpolated into a filesystem path by the next gate and is a harness field this repo does not own, which is why the token check exists.",
         "The nudge/escape-hatch ledger deletion on release KEEPS the bare session_id: that ledger is documented as keyed by session_id alone and decide_stop writes it under the bare id, so splitting it per-agent would weaken the 3-strike hatch. This asymmetry must carry a comment at the code site or a reviewer will read it as a missed substitution.",
         "The bind-on-resume WRITE in decide_session_start stays under the bare session_id: SessionStart never carries agent_id, so a resumed session is by definition top-level.",
@@ -30,119 +79,411 @@
         "No change to _foreign_worktree, _is_old_shape_binding_entry, the nudge ledger's shape, or any engine/reader file."
       ],
       "anchors": {
-        "structural": ["scripts/hooks/spine_rail.py — handle_post_tool_use, decide_stop, decide_session_start, load_binding", "tests/test_spine_rail.py", "tests/fixtures/probe_payloads.jsonl (new)"],
-        "capability": ["the session-to-spine binding store — the outer key becomes per-agent identity; this is the load-bearing interface shape of the whole run"],
-        "constraint": ["fail-closed: an unresolved identity binds nothing", "skip-on-uncertainty must not be weakened", "a unit test over a pure function is legitimate; a test that hand-injects the agent_id it claims the harness delivers is not"],
+        "structural": [
+          "scripts/hooks/spine_rail.py \u2014 handle_post_tool_use, decide_stop, decide_session_start, load_binding",
+          "tests/test_spine_rail.py",
+          "tests/fixtures/probe_payloads.jsonl (new)"
+        ],
+        "capability": [
+          "the session-to-spine binding store \u2014 the outer key becomes per-agent identity; this is the load-bearing interface shape of the whole run"
+        ],
+        "constraint": [
+          "fail-closed: an unresolved identity binds nothing",
+          "skip-on-uncertainty must not be weakened",
+          "a unit test over a pure function is legitimate; a test that hand-injects the agent_id it claims the harness delivers is not"
+        ],
         "decision": [
-          "decision:rekey-not-matcher — identity comes from the payload's agent_id, so the prototype's ~250-line discovery matcher does not ship. @grade: settled/measured · leans g1-implement,g2-implement · settle: already settled — 6 real payloads captured live on harness 2.1.222, independently re-verified by a cold critic against evidence/probe-payloads.jsonl",
-          "decision:binding-key-composed-in-one-place — binding_key() in spine_rail.py is the sole composer; the gauge writer calls it through the handle it already loads. @grade: settled/inherited · leans g1-implement,g2-implement",
-          "decision:unusable-agent-id-binds-nothing — a present-but-malformed agent_id returns None and writes no binding, rather than falling back to the parent's bare key. @grade: settled/measured · leans g1-implement · settle: already settled by the cold critic's traced damage path — the fallback silences the parent's own gauge",
-          "decision:union-read-preserves-stop-rail — decide_stop/decide_session_start read a merged view across bare and composite keys, because today every subagent entry already sits under the parent's bare key and re-keying would silently drop the Stop rail's deterrent with no red test. @grade: guess · leans g1-implement · settle: build a store holding ONE bare key and TWO composite keys (3 keys, state the entry count) and assert decide_stop blocks on a mid-flight spine held ONLY under a composite key — a bare-key-only store cannot settle this, because there the merge is the identity function and the test passes in the world where the union read does nothing",
-          "decision:nudge-ledger-stays-bare — the escape-hatch ledger is not split per agent. @grade: settled/inherited · leans g1-implement"
+          "decision:rekey-not-matcher \u2014 identity comes from the payload's agent_id, so the prototype's ~250-line discovery matcher does not ship. @grade: settled/measured \u00b7 leans g1-implement,g2-implement \u00b7 settle: already settled \u2014 6 real payloads captured live on harness 2.1.222, independently re-verified by a cold critic against evidence/probe-payloads.jsonl",
+          "decision:binding-key-composed-in-one-place \u2014 binding_key() in spine_rail.py is the sole composer; the gauge writer calls it through the handle it already loads. @grade: settled/inherited \u00b7 leans g1-implement,g2-implement",
+          "decision:unusable-agent-id-binds-nothing \u2014 a present-but-malformed agent_id returns None and writes no binding, rather than falling back to the parent's bare key. @grade: settled/measured \u00b7 leans g1-implement \u00b7 settle: already settled by the cold critic's traced damage path \u2014 the fallback silences the parent's own gauge",
+          "decision:union-read-preserves-stop-rail \u2014 decide_stop/decide_session_start read a merged view across bare and composite keys, because today every subagent entry already sits under the parent's bare key and re-keying would silently drop the Stop rail's deterrent with no red test. @grade: guess \u00b7 leans g1-implement \u00b7 settle: build a store holding ONE bare key and TWO composite keys (3 keys, state the entry count) and assert decide_stop blocks on a mid-flight spine held ONLY under a composite key \u2014 a bare-key-only store cannot settle this, because there the merge is the identity function and the test passes in the world where the union read does nothing",
+          "decision:nudge-ledger-stays-bare \u2014 the escape-hatch ledger is not split per agent. @grade: settled/inherited \u00b7 leans g1-implement"
         ],
         "evidence": [
-          "binding_key composition table with COUNTS STATED: all 6 real pinned payloads (2 subagent-scope with distinct ids, 4 with no agent_id), plus at least 6 adversarial rows DERIVED by mutating those real payloads. Deriving adversarial rows is NOT the forbidden injection — it proves rejection, not delivery — because the real capture contains zero malformed ids and zero falsy session_ids, so the rejection branch is otherwise unreachable by any test",
+          "binding_key composition table with COUNTS STATED: all 6 real pinned payloads (2 subagent-scope with distinct ids, 4 with no agent_id), plus at least 6 adversarial rows DERIVED by mutating those real payloads. Deriving adversarial rows is NOT the forbidden injection \u2014 it proves rejection, not delivery \u2014 because the real capture contains zero malformed ids and zero falsy session_ids, so the rejection branch is otherwise unreachable by any test",
           "claim/release isolation between two distinct agent ids on one session id",
           "a release under a composite key leaves nudges[bare_sid] untouched",
           "decide_session_start's bind-on-resume write still lands under the bare key",
           "the empty-set cleanup removes the composite key and leaves the bare key's entries intact",
-          "decide_stop and decide_session_start return identical results before and after for a bare-key-only store — necessary but NOT sufficient; see the union-read settle above"
+          "decide_stop and decide_session_start return identical results before and after for a bare-key-only store \u2014 necessary but NOT sufficient; see the union-read settle above"
         ],
-        "confidence_flags": ["No architecture map exists for scripts/hooks/ — the orientation receipt records DEGRADED-NO-MAP with an escalation. Every structural claim in this gate was re-confirmed by reading the code, not taken from the design doc, which is already known to be wrong about the sidechain filter."]
+        "confidence_flags": [
+          "No architecture map exists for scripts/hooks/ \u2014 the orientation receipt records DEGRADED-NO-MAP with an escalation. Every structural claim in this gate was re-confirmed by reading the code, not taken from the design doc, which is already known to be wrong about the sidechain filter."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-419-governor-identity/results/g1-IMPLEMENTER_RESULT.md",
+            "verdict": "complete",
+            "commit": "340c46d",
+            "tests": "module 74 passed (was 58); full suite 1637 passed = baseline+16",
+            "nonvacuity": "reverting spine_rail.py to HEAD turns 13 of 16 new tests red; the other 2 proven by mutating the fixture"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "g1-review": {
       "id": "g1-review",
       "title": "Per-agent binding key in the store: review",
       "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer via scripts/run_crew.py. Brief the reviewer on the checks-that-cannot-fail family explicitly: a check whose output is identical in the healthy and the defective world cannot discriminate however correctly it runs, and any guard that loops must assert what it looped over and state the count. Wait for and integrate the returned REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT verified fresh via run_crew --verify-result."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g1-implement anchors — review verifies the change against the same structural, capability, constraint, decision and evidence anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural, capability, constraint, decision and evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-419-governor-identity/results/g1-REVIEW_RESULT.md",
+            "reproduced": "reverting spine_rail.py to HEAD~1 gives 13 failed / 61 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "g1-integrate": {
       "id": "g1-integrate",
       "title": "Per-agent binding key in the store: integrate",
       "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself, confirm the IMPLEMENTER_RESULT is fresh, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "spine_rail composes a per-agent binding key, binds nothing on an unusable identity, and preserves both existing read views. The command names the NEW test classes by node id on purpose: a bare `pytest tests/test_spine_rail.py` is already green at HEAD and would pass in a world where nothing was written.", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k 'binding_key or session_view or probe_payload' && python -m pytest tests/test_spine_rail.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received and verified fresh."
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "spine_rail composes a per-agent binding key, binds nothing on an unusable identity, and preserves both existing read views. The command names the NEW test classes by node id on purpose: a bare `pytest tests/test_spine_rail.py` is already green at HEAD and would pass in a world where nothing was written.",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k 'binding_key or session_view or probe_payload' && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k 'binding_key or session_view or probe_payload' && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
-
     "g2-implement": {
       "id": "g2-implement",
       "title": "The gauge writer attributes the reading to the acting agent: implement",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. Task, in scripts/hooks/gauge_writer_hook.py only: (a) resolve the gauge path from the COMPOSITE key — call _spine_rail.binding_key(data) and pass that to resolve_gauge_path (rename its parameter from session_id to binding_key, update the docstring); (b) add a pure helper deriving the acting subagent's OWN transcript from the payload — Path(transcript_path).with_suffix('') / 'subagents' / f'agent-{agent_id}.jsonl'; (c) when the payload carries an agent_id, read the reading from that derived transcript and NEVER from the parent's — if the derived file does not exist, write a gauge-skip.json with reason 'subagent-transcript-missing' and return, writing no gauge.json and no gauge-uncalibrated.json; (d) invert the sidechain filter for a subagent — give find_latest_usage and compute_record an agent_id parameter, and when it is set the line must be isSidechain-TRUTHY **and** carry a top-level agentId equal to that agent_id; (e) record the identity-resolution duration in the gauge write as an optional fifth field, against the issue's stated 100ms placeholder budget.",
-      "preconditions": [{"id": "p1", "statement": "g1 closed — binding_key exists and is the sole composer", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. Task, in scripts/hooks/gauge_writer_hook.py only: (a) resolve the gauge path from the COMPOSITE key \u2014 call _spine_rail.binding_key(data) and pass that to resolve_gauge_path (rename its parameter from session_id to binding_key, update the docstring); (b) add a pure helper deriving the acting subagent's OWN transcript from the payload \u2014 Path(transcript_path).with_suffix('') / 'subagents' / f'agent-{agent_id}.jsonl'; (c) when the payload carries an agent_id, read the reading from that derived transcript and NEVER from the parent's \u2014 if the derived file does not exist, write a gauge-skip.json with reason 'subagent-transcript-missing' and return, writing no gauge.json and no gauge-uncalibrated.json; (d) invert the sidechain filter for a subagent \u2014 give find_latest_usage and compute_record an agent_id parameter, and when it is set the line must be isSidechain-TRUTHY **and** carry a top-level agentId equal to that agent_id; (e) record the identity-resolution duration in the gauge write as an optional fifth field, against the issue's stated 100ms placeholder budget.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 closed \u2014 binding_key exists and is the sole composer",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 closed: binding_key exists and is the sole composer, reviewed APPROVE."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
       "constraints": [
         "FAIL-CLOSED IS THE POINT OF THIS GATE. There must be no code path anywhere that passes the parent's transcript to compute_record when agent_id is present. Falling back to the parent is the exact misattribution #202/#261 already reverted once; it produces a confident wrong record rather than silence.",
-        "GUARD PLACEMENT: moving the binding_key call OUT to handle_post_tool_use strands the existing `_spine_rail is None` guard that currently lives inside resolve_gauge_path. _load_spine_rail returns None on any import failure, and an unguarded call would raise into handle_post_tool_use's outer swallow — the governor then goes silent with zero diagnostic, wearing the same symptom as every other silence. Carry the None guard to the new call site.",
-        "A payload with no agent_id must behave EXACTLY as today — byte-identical outcome. The existing tests are the pin for that and must pass unedited.",
-        "The gauge record's four REQUIRED fields are unchanged and keep their meaning. gauge_reader validates presence of the required four and does not reject extras, so an optional fifth diagnostic field is tolerated — but scripts/gauge_reader.py and scripts/checklist_engine.py are NOT edited by this gate.",
+        "GUARD PLACEMENT: moving the binding_key call OUT to handle_post_tool_use strands the existing `_spine_rail is None` guard that currently lives inside resolve_gauge_path. _load_spine_rail returns None on any import failure, and an unguarded call would raise into handle_post_tool_use's outer swallow \u2014 the governor then goes silent with zero diagnostic, wearing the same symptom as every other silence. Carry the None guard to the new call site.",
+        "A payload with no agent_id must behave EXACTLY as today \u2014 byte-identical outcome. The existing tests are the pin for that and must pass unedited.",
+        "The gauge record's four REQUIRED fields are unchanged and keep their meaning. gauge_reader validates presence of the required four and does not reject extras, so an optional fifth diagnostic field is tolerated \u2014 but scripts/gauge_reader.py and scripts/checklist_engine.py are NOT edited by this gate.",
         "One agent_id parameter, not a separate expect_sidechain flag: 'this is agent X's own transcript' is a single fact, and a two-flag form lets a caller set an incoherent pair. The agentId equality is what makes a wrong derived path fail closed instead of producing a confidently misattributed number.",
         "Add the new skip reason at the call site only: gauge_reader.skip_reason does not whitelist reason strings and the engine's advisory already renders an unrecognized reason verbatim, so this costs zero engine change.",
-        "The unresolvable-identity negative control the issue names lives HERE, as a unit test over a constructed payload. Constructing a payload is legitimate at this level — the prohibition on supplying agent_id binds the LIVE ACCEPTANCE PATH in g4, where the whole point is that the harness delivers it."
+        "The unresolvable-identity negative control the issue names lives HERE, as a unit test over a constructed payload. Constructing a payload is legitimate at this level \u2014 the prohibition on supplying agent_id binds the LIVE ACCEPTANCE PATH in g4, where the whole point is that the harness delivers it."
       ],
       "anchors": {
-        "structural": ["scripts/hooks/gauge_writer_hook.py — resolve_gauge_path, find_latest_usage, compute_record, handle_post_tool_use", "tests/test_gauge_writer.py", "tests/fixtures/real_subagent_transcript.jsonl (existing, real captured harness output: 4 lines, all isSidechain-truthy, all agentId af45cec63b2835a40, one usable assistant line on claude-opus-4-8)"],
-        "capability": ["the gauge write — each agent's reading now comes from that agent's own transcript, which is what turns 'a reading appeared' into 'this agent's reading appeared'"],
-        "constraint": ["fail-closed: an unresolved identity writes nothing, and never falls back to the parent's transcript", "skip-on-uncertainty, never fabricate", "the four required gauge fields are shared with the read side"],
+        "structural": [
+          "scripts/hooks/gauge_writer_hook.py \u2014 resolve_gauge_path, find_latest_usage, compute_record, handle_post_tool_use",
+          "tests/test_gauge_writer.py",
+          "tests/fixtures/real_subagent_transcript.jsonl (existing, real captured harness output: 4 lines, all isSidechain-truthy, all agentId af45cec63b2835a40, one usable assistant line on claude-opus-4-8)"
+        ],
+        "capability": [
+          "the gauge write \u2014 each agent's reading now comes from that agent's own transcript, which is what turns 'a reading appeared' into 'this agent's reading appeared'"
+        ],
+        "constraint": [
+          "fail-closed: an unresolved identity writes nothing, and never falls back to the parent's transcript",
+          "skip-on-uncertainty, never fabricate",
+          "the four required gauge fields are shared with the read side"
+        ],
         "decision": [
-          "decision:derive-transcript-not-search — the acting agent's transcript is DERIVED from payload fields, never searched for, so the identical-command race the prototype worried about cannot arise. @grade: settled/measured · leans g2-implement · settle: already settled — the derived path was confirmed on disk for both concurrent probe agents, independently re-verified by a cold critic",
-          "decision:one-agent-id-parameter — polarity and ownership ride a single agent_id parameter rather than a separate expect_sidechain flag. @grade: guess · leans g2-implement · settle: ask the reviewer whether any caller wants the two independently; if none does, regrade settled",
-          "decision:identity-duration-on-the-record — the resolution duration rides an optional fifth field on gauge.json rather than a third sidecar family, because the reader tolerates extra fields and a sidecar would need its own staleness rule. This is NOT scope creep: the issue names it in its own words ('Identity resolution records its own duration in the gauge write, per-call budget 100ms (placeholder)'), and g4 asserts the recorded value is inside budget on the live run, so it is a number somebody reads. @grade: guess · leans g2-implement,g4-implement · settle: confirm on a real record that gauge_reader and the engine advisory are indifferent to the extra field"
+          "decision:derive-transcript-not-search \u2014 the acting agent's transcript is DERIVED from payload fields, never searched for, so the identical-command race the prototype worried about cannot arise. @grade: settled/measured \u00b7 leans g2-implement \u00b7 settle: already settled \u2014 the derived path was confirmed on disk for both concurrent probe agents, independently re-verified by a cold critic",
+          "decision:one-agent-id-parameter \u2014 polarity and ownership ride a single agent_id parameter rather than a separate expect_sidechain flag. @grade: guess \u00b7 leans g2-implement \u00b7 settle: ask the reviewer whether any caller wants the two independently; if none does, regrade settled",
+          "decision:identity-duration-on-the-record \u2014 the resolution duration rides an optional fifth field on gauge.json rather than a third sidecar family, because the reader tolerates extra fields and a sidecar would need its own staleness rule. This is NOT scope creep: the issue names it in its own words ('Identity resolution records its own duration in the gauge write, per-call budget 100ms (placeholder)'), and g4 asserts the recorded value is inside budget on the live run, so it is a number somebody reads. @grade: guess \u00b7 leans g2-implement,g4-implement \u00b7 settle: confirm on a real record that gauge_reader and the engine advisory are indifferent to the extra field"
         ],
         "evidence": [
           "find_latest_usage over tests/fixtures/real_subagent_transcript.jsonl returns None at default polarity (the existing assertion stays green, unedited), and returns that fixture's real usage sum when given its own agentId; the same call with a DIFFERENT agent_id returns None",
           "THE SIDECHAIN CONJUNCT MUST BE FALSIFIABLE. All 4 lines of the real fixture are isSidechain-truthy with the same agentId, so those three assertions above are ALL satisfied by an implementation that checks agentId equality alone and silently drops the sidechain half. Add a DERIVED fixture line carrying the matching agentId with isSidechain falsy, and assert it is skipped. State the line count and how many lines each assertion reaches",
           "agent_id present + derived transcript absent leaves gauge.json byte-identical on disk (bytes and mtime) and writes the subagent-transcript-missing sidecar",
-          "an unresolvable identity writes nothing — the issue's named negative control, as a unit test here",
-          "no code path passes a parent transcript to compute_record when agent_id is present — verifiable by reading the single branch"
+          "an unresolvable identity writes nothing \u2014 the issue's named negative control, as a unit test here",
+          "no code path passes a parent transcript to compute_record when agent_id is present \u2014 verifiable by reading the single branch"
         ],
-        "confidence_flags": ["docs/GAUGE_WRITER_HOOK.md's field table is WRONG about isSidechain today. Do not treat that document as authority for this gate; g3 corrects it."]
+        "confidence_flags": [
+          "docs/GAUGE_WRITER_HOOK.md's field table is WRONG about isSidechain today. Do not treat that document as authority for this gate; g3 corrects it."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-419-governor-identity/results/g2-IMPLEMENTER_RESULT.md",
+            "verdict": "complete",
+            "commit": "5491bd4",
+            "nonvacuity": "23 of 30 new tests red when gauge_writer_hook.py is reverted to 340c46d",
+            "suite": "1667 passed = 1637 + 30"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "g2-review": {
       "id": "g2-review",
       "title": "The gauge writer attributes the reading to the acting agent: review",
       "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer via scripts/run_crew.py. The reviewer's first job is to find any path by which a parent transcript can reach compute_record when agent_id is present. The second is to check each new assertion against the checks-that-cannot-fail family: would it pass in a world where the change did nothing? Wait for and integrate the returned REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT verified fresh."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g2-implement anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-419-governor-identity/results/g2-REVIEW_RESULT.md",
+            "mutations": "5 targeted mutations all caught; parent fallback reinstated turns 3 red"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "g2-integrate": {
       "id": "g2-integrate",
       "title": "The gauge writer attributes the reading to the acting agent: integrate",
       "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself, confirm the IMPLEMENTER_RESULT is fresh, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "the writer resolves by composite key, reads the acting agent's own transcript with inverted polarity, and fails closed. The -k selector names the new tests on purpose: the bare file is already green at HEAD.", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q -k 'subagent or agent_id or fail_closed or polarity or identity' && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_spine_rail.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received and verified fresh."
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the writer resolves by composite key, reads the acting agent's own transcript with inverted polarity, and fails closed. The -k selector names the new tests on purpose: the bare file is already green at HEAD.",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q -k 'subagent or agent_id or fail_closed or polarity or identity' && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_spine_rail.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q -k 'subagent or agent_id or fail_closed or polarity or identity' && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
-
     "g3-implement": {
       "id": "g3-implement",
       "title": "Correct docs/GAUGE_WRITER_HOOK.md: implement",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. This gate has no runtime test surface, so its close criteria are the pre-authored invariant chain in g3-integrate — verify that frozen chain rather than inventing a proxy for 'the document says what it should'. Task: (a) the isSidechain row in the field table today says 'must be falsy' — replace it with the polarity rule (falsy for a main-chain read, TRUTHY for a subagent's own transcript) and add an agentId row that must equal the payload's agent_id; (b) add a short second table for the PAYLOAD fields the hook reads — transcript_path, session_id, agent_id (present ONLY on a subagent's tool call, the fact the whole fix rests on) and agent_type; (c) update the binding-shape section: the outer key is session_id for a top-level agent and session_id#agent_id for a dispatched one, an unusable agent_id binds nothing at all, and the 'exactly one spine' coupling now holds PER AGENT; (d) add subagent-transcript-missing to the enumerated skip causes, stating the never-fall-back-to-the-parent rule in the document's own voice; (e) name the TWO residuals that survive this change, beside each other: a genuine orchestrator holding several spines under one bare key is still ambiguous and still silent, AND — new with this change — a subagent that never claims a spine now resolves to zero candidates and writes nothing, where before it would have written a misattributed reading against the parent's binding. The second is a real coverage loss traded for correctness, and it must be named rather than discovered.",
-      "preconditions": [{"id": "p1", "statement": "g2 closed — the code the document describes is final", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. This gate has no runtime test surface, so its close criteria are the pre-authored invariant chain in g3-integrate \u2014 verify that frozen chain rather than inventing a proxy for 'the document says what it should'. Task: (a) the isSidechain row in the field table today says 'must be falsy' \u2014 replace it with the polarity rule (falsy for a main-chain read, TRUTHY for a subagent's own transcript) and add an agentId row that must equal the payload's agent_id; (b) add a short second table for the PAYLOAD fields the hook reads \u2014 transcript_path, session_id, agent_id (present ONLY on a subagent's tool call, the fact the whole fix rests on) and agent_type; (c) update the binding-shape section: the outer key is session_id for a top-level agent and session_id#agent_id for a dispatched one, an unusable agent_id binds nothing at all, and the 'exactly one spine' coupling now holds PER AGENT; (d) add subagent-transcript-missing to the enumerated skip causes, stating the never-fall-back-to-the-parent rule in the document's own voice; (e) name the TWO residuals that survive this change, beside each other: a genuine orchestrator holding several spines under one bare key is still ambiguous and still silent, AND \u2014 new with this change \u2014 a subagent that never claims a spine now resolves to zero candidates and writes nothing, where before it would have written a misattributed reading against the parent's binding. The second is a real coverage loss traded for correctness, and it must be named rather than discovered.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 closed \u2014 the code the document describes is final",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 closed and reviewed APPROVE; the code the document describes is final."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-2"
+        }
+      ],
       "constraints": [
         "This is the canonical source: edit docs/GAUGE_WRITER_HOOK.md, not any installed copy.",
         "Prose only. No code change rides in this gate.",
@@ -150,148 +491,595 @@
         "On the grep question, which a cold critic caught as self-contradictory: use grep to ENUMERATE occurrences and archive the count, then use JUDGEMENT to adjudicate each one, and additionally read the two named sections end to end. A token sweep alone cannot establish 'no sentence still asserts the old polarity', because a sentence can assert it without using any of the swept words."
       ],
       "anchors": {
-        "structural": ["docs/GAUGE_WRITER_HOOK.md — the field table, the skip-cause enumeration, the session-to-spine binding section"],
-        "capability": ["the governor's own structural record — this document is the repo's only architecture artifact for this area, since there is no docs/architecture map"],
-        "constraint": ["the document is wrong in a load-bearing place today; the fix belongs to this run, not to a follow-up"],
-        "decision": ["decision:doc-is-the-structural-record — with no packet map, this document IS what reconcile folds into. @grade: settled/inherited · leans g3-implement"],
-        "evidence": ["every claim the document makes about which key the binding uses matches binding_key's implementation", "no sentence anywhere in the document still asserts the pre-fix sidechain polarity", "both surviving residuals are named"]
+        "structural": [
+          "docs/GAUGE_WRITER_HOOK.md \u2014 the field table, the skip-cause enumeration, the session-to-spine binding section"
+        ],
+        "capability": [
+          "the governor's own structural record \u2014 this document is the repo's only architecture artifact for this area, since there is no docs/architecture map"
+        ],
+        "constraint": [
+          "the document is wrong in a load-bearing place today; the fix belongs to this run, not to a follow-up"
+        ],
+        "decision": [
+          "decision:doc-is-the-structural-record \u2014 with no packet map, this document IS what reconcile folds into. @grade: settled/inherited \u00b7 leans g3-implement"
+        ],
+        "evidence": [
+          "every claim the document makes about which key the binding uses matches binding_key's implementation",
+          "no sentence anywhere in the document still asserts the pre-fix sidechain polarity",
+          "both surviving residuals are named"
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK: the document asserts a four-field gauge record at two sites while g2 shipped a fifth. The handoff named only one of the two sites, so fixing where it pointed would have left the document wrong. Rework widens scope to include the two now-false comments in gauge_writer_hook.py that the same g2 change falsified."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md",
+            "verdict": "complete",
+            "sweep": "4 lines/5 occurrences before, 5 lines/7 after, each adjudicated; end-to-end read caught 2 old-polarity sentences the sweep missed"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Reviewer BLOCK: the document asserts a four-field gauge record at two sites while g2 shipped a fifth. The handoff named only one of the two sites, so fixing where it pointed would have left the document wrong. Rework widens scope to include the two now-false comments in gauge_writer_hook.py that the same g2 change falsified.",
+            "ts": "2026-08-06T02:55:35.660688+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md",
+            "verdict": "complete",
+            "attempt": "2",
+            "sites": "six distinct four-field sites found by command, not the two the review named and not the one the handoff named",
+            "proof": "comments-only proved by AST equality against HEAD with docstrings stripped, guard shown red first against a deliberate one-line mutation"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
     },
     "g3-review": {
       "id": "g3-review",
       "title": "Correct docs/GAUGE_WRITER_HOOK.md: review",
       "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer via scripts/run_crew.py. The reviewer verifies the frozen invariant chain in g3-integrate claim by claim against the CODE, never against the document's own assertions. Wait for and integrate the returned REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rework IMPLEMENTER_RESULT verified fresh (attempt-2)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2"
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g3-implement anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g3-implement"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/issue-419-governor-identity/results/g3-REVIEW_RESULT.md",
+            "reason": "all three frozen invariants MET, but the document still claims a four-field gauge record at two sites (lines 35 and 164) while this issue's own g2 commit 5491bd4 shipped a fifth"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Reviewer BLOCK: the document asserts a four-field gauge record at two sites while g2 shipped a fifth. The handoff named only one of the two sites, so fixing where it pointed would have left the document wrong. Rework widens scope to include the two now-false comments in gauge_writer_hook.py that the same g2 change falsified.",
+            "ts": "2026-08-06T02:55:35.660688+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-419-governor-identity/results/g3-REVIEW_RESULT.md",
+            "attempt": "2",
+            "method": "all three invariants re-verified from a base the reviewer rebuilt itself from git blobs; AST guard driven red twice on executable mutations plus a green comment-only control"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "g3-integrate": {
       "id": "g3-integrate",
       "title": "Correct docs/GAUGE_WRITER_HOOK.md: integrate",
       "imperative": "Check the REVIEW_RESULT verdict, then verify each pre-authored invariant yourself before advancing. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "no sentence in the document still asserts the pre-fix sidechain polarity. Evidence is a STATED COUNT of occurrences of isSidechain/sidechain/falsy from an archived command, each adjudicated, PLUS a full end-to-end read of the field-table and skip-cause sections — because the token sweep alone is blind to a sentence that asserts the old rule without those words.", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "every payload field the shipped hook reads appears in the document and no field appears that the code does not read, enumerated BY COMMAND over the data.get sites in both hook files with the resulting field list archived, not recalled from memory", "check": null, "satisfied": false},
-        {"id": "c3", "statement": "the document's stated binding key matches binding_key's implementation, including the bind-nothing case; and BOTH surviving residuals are named — the orchestrator holding several spines, and the non-claiming subagent that now writes nothing", "check": null, "satisfied": false},
-        {"id": "c4", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (attempt-2, APPROVE) received and verified fresh."
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no sentence in the document still asserts the pre-fix sidechain polarity. Evidence is a STATED COUNT of occurrences of isSidechain/sidechain/falsy from an archived command, each adjudicated, PLUS a full end-to-end read of the field-table and skip-cause sections \u2014 because the token sweep alone is blind to a sentence that asserts the old rule without those words.",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Verified myself: grep for the pre-fix polarity claim across scripts/, tests/ and docs/ returns nothing but a stale .pyc. The reviewer re-ran the sidechain sweep at live line numbers (5 lines / 7 occurrences, 234/236/291/350/432) and additionally read all 476 lines end to end, which is what caught the two sentences the token sweep missed."
+        },
+        {
+          "id": "c2",
+          "statement": "every payload field the shipped hook reads appears in the document and no field appears that the code does not read, enumerated BY COMMAND over the data.get sites in both hook files with the resulting field list archived, not recalled from memory",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Payload fields enumerated by command over both hook files: exactly 5 distinct keys, confirmed by the reviewer with a name-agnostic sweep of every .get() receiver so no read could hide under another local name. Both directions close. agent_type was correctly DROPPED rather than documented: no hook reads it (grep exits 1), so adding it would itself have broken this invariant."
+        },
+        {
+          "id": "c3",
+          "statement": "the document's stated binding key matches binding_key's implementation, including the bind-nothing case; and BOTH surviving residuals are named \u2014 the orchestrator holding several spines, and the non-claiming subagent that now writes nothing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "The document's binding key matches spine_rail.binding_key return-for-return including the bind-nothing case, verified behaviourally at spine_rail.py:423-425 rather than from prose. Both residuals named: the orchestrator holding several spines (unchanged), and the non-claiming subagent that now writes nothing (new, and the implementer sharpened it \u2014 only the case where the single bound spine belonged to another agent was a genuine misattribution)."
+        },
+        {
+          "id": "c4",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2",
+          "attested": {
+            "evidence": "e-g3-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g4-implement": {
       "id": "g4-implement",
-      "title": "Live acceptance — a real trip from a per-agent reading: implement",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. THIS GATE IS THE DELIVERABLE — the issue is not done until a trip is observed firing from a per-agent reading on a live run. Build a one-shot acceptance harness (kept runnable, NOT CI-wired, living OUTSIDE the repo in the scratchpad so it never enters the diff) and run it. Vehicle: a fresh headless `claude -p --settings <file>` whose settings wire THIS WORKTREE's hooks by absolute path, launched with its cwd in a disposable sandbox so CLAUDE_PROJECT_DIR resolves to the sandbox and the main checkout's live store is never touched. That vehicle is already proven end to end — see evidence/probe-payloads.jsonl. Sandbox: real gated spines created by THIS worktree's checklist_engine.py, each with at least two gates so there is a real advance to refuse, plus a large plain-text corpus as genuine reading material. RUN SHAPE: (i) the PARENT claims its own spine too — not only the children — so the 'parent keeps its bare key' half of done-condition 1 is actually exercised rather than passing on an empty set; (ii) at least TWO subagents on a 1M-window model in MODEL_WINDOWS, each claiming its own spine, each consuming a DELIBERATELY DIFFERENT amount of the corpus; (iii) ONE further subagent that claims NOTHING, to observe the coverage loss named in g3(e); (iv) ONE NESTED dispatch (a subagent that itself dispatches a subagent), because the probe only ever captured spawnDepth 1 while this project has 52 real depth-2 agents on disk — if a nested agent's payload names its parent AGENT's transcript rather than the root session's, the derivation yields a path that never exists and the governor is permanently, silently blind for every nested agent. Each agent runs the engine's current between chunks, reports its output verbatim, then attempts advance and reports verbatim whatever comes back. At least one agent must RELEASE, so the key-disappears-on-release claim is not tested on an empty set. Two arms, one variable: the control arm points the same settings at the main checkout's unmodified hooks.",
-      "preconditions": [{"id": "p1", "statement": "g3 closed — code and its document are final, so the acceptance run measures the shipped thing", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "title": "Live acceptance \u2014 a real trip from a per-agent reading: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer via scripts/run_crew.py. THIS GATE IS THE DELIVERABLE \u2014 the issue is not done until a trip is observed firing from a per-agent reading on a live run. Build a one-shot acceptance harness (kept runnable, NOT CI-wired, living OUTSIDE the repo in the scratchpad so it never enters the diff) and run it. Vehicle: a fresh headless `claude -p --settings <file>` whose settings wire THIS WORKTREE's hooks by absolute path, launched with its cwd in a disposable sandbox so CLAUDE_PROJECT_DIR resolves to the sandbox and the main checkout's live store is never touched. That vehicle is already proven end to end \u2014 see evidence/probe-payloads.jsonl. Sandbox: real gated spines created by THIS worktree's checklist_engine.py, each with at least two gates so there is a real advance to refuse, plus a large plain-text corpus as genuine reading material. RUN SHAPE: (i) the PARENT claims its own spine too \u2014 not only the children \u2014 so the 'parent keeps its bare key' half of done-condition 1 is actually exercised rather than passing on an empty set; (ii) at least TWO subagents on a 1M-window model in MODEL_WINDOWS, each claiming its own spine, each consuming a DELIBERATELY DIFFERENT amount of the corpus; (iii) ONE further subagent that claims NOTHING, to observe the coverage loss named in g3(e); (iv) ONE NESTED dispatch (a subagent that itself dispatches a subagent), because the probe only ever captured spawnDepth 1 while this project has 52 real depth-2 agents on disk \u2014 if a nested agent's payload names its parent AGENT's transcript rather than the root session's, the derivation yields a path that never exists and the governor is permanently, silently blind for every nested agent. Each agent runs the engine's current between chunks, reports its output verbatim, then attempts advance and reports verbatim whatever comes back. At least one agent must RELEASE, so the key-disappears-on-release claim is not tested on an empty set. Two arms, one variable: the control arm points the same settings at the main checkout's unmodified hooks.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 closed \u2014 code and its document are final, so the acceptance run measures the shipped thing",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [
-        "THE PAIRING IS THE PROOF, and it is the one a cold critic showed the obvious evidence misses. Two composite keys existing, two distinct readings, a trip firing and a silent control ALL still pass in a world where agent A's reading was written to agent B's spine — which is precisely the misattribution class this issue exists to kill. So assert the pairing directly: for EACH agent, the fill recomputed from that agent's own agent-<id>.jsonl must equal the fill_fraction in the gauge.json sitting in the spine directory that the SAME id's binding key points at. State the count: 2 of 2.",
-        "NOTHING on the acceptance path may supply the identity: not the settings file, not the launch command, not the sandbox, not any prompt. The literal-string grep is CORROBORATING, not sufficient — give the exact command, state the file count it walked, and exclude the hook source the settings wire (which necessarily contains the string). Add the assertions the grep cannot make: the sandbox binding file and the sandbox session's subagents/ directory were both EMPTY before the run and were created only by the harness.",
+        "THE PAIRING IS THE PROOF, and it is the one a cold critic showed the obvious evidence misses. Two composite keys existing, two distinct readings, a trip firing and a silent control ALL still pass in a world where agent A's reading was written to agent B's spine \u2014 which is precisely the misattribution class this issue exists to kill. So assert the pairing directly: for EACH agent, the fill recomputed from that agent's own agent-<id>.jsonl must equal the fill_fraction in the gauge.json sitting in the spine directory that the SAME id's binding key points at. State the count: 2 of 2.",
+        "NOTHING on the acceptance path may supply the identity: not the settings file, not the launch command, not the sandbox, not any prompt. The literal-string grep is CORROBORATING, not sufficient \u2014 give the exact command, state the file count it walked, and exclude the hook source the settings wire (which necessarily contains the string). Add the assertions the grep cannot make: the sandbox binding file and the sandbox session's subagents/ directory were both EMPTY before the run and were created only by the harness.",
         "The agents are NOT told what a trip is, what output to expect, or what number to reach. They report verbatim.",
         "Two agents consuming DIFFERENT amounts is load-bearing: a parent-transcript fallback would give both the same fill, so that failure mode fails by construction rather than by inspection.",
         "Target HARD (fill >= 0.15 on a 1M window) because HARD is a REFUSAL that leaves a falsifiable trace in the spine state file, where SOFT is only an advisory string. If the agents genuinely cannot reach HARD on real reading, record what they DID reach, treat it as a partial discharge, and FLOAT it to the Admiral under g4-integrate c1's override policy. Never quietly count SOFT as done.",
-        "The unresolvable-identity negative control does NOT live here — it is a g2 unit test. Feeding a malformed identity requires a constructed payload, which the acceptance path forbids by design.",
+        "The unresolvable-identity negative control does NOT live here \u2014 it is a g2 unit test. Feeding a malformed identity requires a constructed payload, which the acceptance path forbids by design.",
         "Assert the recorded identity-resolution duration is within the issue's 100ms placeholder budget, so that field is a number somebody reads rather than one written for nobody.",
         "Archive every artifact under .agent-work/issue-419-governor-identity/evidence/."
       ],
       "anchors": {
-        "structural": ["the disposable sandbox and settings files in the scratchpad — deliberately outside the repo", "scripts/hooks/* as wired by absolute path into the headless session"],
-        "capability": ["the engine's live trip mechanic — engine-side and unchanged by this run, which is precisely why fixing the writer is sufficient to make it fire"],
-        "constraint": ["CLAUDE_PROJECT_DIR is fixed at session launch, so this change CANNOT be validated from inside the worktree that contains it — a green from inside the worktree is the unchanged code running and means nothing", "a check that cannot fail is worse than no check"],
+        "structural": [
+          "the disposable sandbox and settings files in the scratchpad \u2014 deliberately outside the repo",
+          "scripts/hooks/* as wired by absolute path into the headless session"
+        ],
+        "capability": [
+          "the engine's live trip mechanic \u2014 engine-side and unchanged by this run, which is precisely why fixing the writer is sufficient to make it fire"
+        ],
+        "constraint": [
+          "CLAUDE_PROJECT_DIR is fixed at session launch, so this change CANNOT be validated from inside the worktree that contains it \u2014 a green from inside the worktree is the unchanged code running and means nothing",
+          "a check that cannot fail is worse than no check"
+        ],
         "decision": [
-          "decision:hard-band-discharges — the done-condition is discharged by a HARD trip refusing an advance; SOFT alone is a partial discharge that floats. @grade: guess · leans g4-implement · settle: this run — if the agents cannot reach 0.15 on real reading, record what they did reach and float it under c1's override policy",
-          "decision:two-arm-acceptance — a control arm on the unmodified main-checkout hooks runs the byte-identical script, so the only variable between a silent governor and a refused advance is the hook code this run changes. @grade: settled/inherited · leans g4-implement"
+          "decision:hard-band-discharges \u2014 the done-condition is discharged by a HARD trip refusing an advance; SOFT alone is a partial discharge that floats. @grade: guess \u00b7 leans g4-implement \u00b7 settle: this run \u2014 if the agents cannot reach 0.15 on real reading, record what they did reach and float it under c1's override policy",
+          "decision:two-arm-acceptance \u2014 a control arm on the unmodified main-checkout hooks runs the byte-identical script, so the only variable between a silent governor and a refused advance is the hook code this run changes. @grade: settled/inherited \u00b7 leans g4-implement"
         ],
         "evidence": [
           "the sandbox binding store holds keys of the form <uuid>#<hex>, each hex naming a real transcript file the harness created, AND the parent's own bare key holding exactly its one entry",
           "the PAIRING, 2 of 2: each agent's own transcript recomputes exactly to the gauge.json in that agent's own spine directory",
-          "the parent's own gauge.json was written — pre-fix it would not have been, because the parent's key held every child's binding",
+          "the parent's own gauge.json was written \u2014 pre-fix it would not have been, because the parent's key held every child's binding",
           "the advance attempt returned the engine's hard-limit refusal and the spine state file shows the gate did not move",
           "a release removed that agent's composite key while the parent's bare key survived",
-          "the non-claiming subagent produced no reading and no binding — the named coverage loss, observed",
+          "the non-claiming subagent produced no reading and no binding \u2014 the named coverage loss, observed",
           "the nested agent either resolved (derivation holds at depth 2) or failed closed (recorded as a measured negative)",
           "the control arm produced no reading and advanced normally"
         ],
-        "confidence_flags": ["Whether nested (depth-2) agents resolve at all is UNKNOWN before this run — the probe only captured depth 1, while 52 real depth-2 agents exist on disk in this project. This is open decision pressure, not a settled anchor, which is why it carries no grade. A measured negative here is a complete result and a triage candidate, not a blocker on this issue.", "The acceptance is a one-off that CI can never repeat, because hand-injecting agent_id is forbidden. Its failure mode is silence: if the harness ever renames agent_id, the key quietly falls back and every symptom looks like an idle governor — a signature shared with a lost binding-store update and with a failed sibling import. Name it in the return; do not build machinery for it here."]
+        "confidence_flags": [
+          "Whether nested (depth-2) agents resolve at all is UNKNOWN before this run \u2014 the probe only captured depth 1, while 52 real depth-2 agents exist on disk in this project. This is open decision pressure, not a settled anchor, which is why it carries no grade. A measured negative here is a complete result and a triage candidate, not a blocker on this issue.",
+          "The acceptance is a one-off that CI can never repeat, because hand-injecting agent_id is forbidden. Its failure mode is silence: if the harness ever renames agent_id, the key quietly falls back and every symptom looks like an idle governor \u2014 a signature shared with a lost binding-store update and with a failed sibling import. Name it in the return; do not build machinery for it here."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g4-review": {
       "id": "g4-review",
-      "title": "Live acceptance — a real trip from a per-agent reading: review",
-      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer via scripts/run_crew.py. The reviewer's job is adversarial: try to explain the observed trip WITHOUT the change. Named falsifiers, any one of which is a BLOCK — the binding key is bare; the two agents' fills match each other; the pairing is crossed (A's reading in B's spine directory); observed_at predates the agent's first read; advance succeeded despite a >= hard reading; the control arm also tripped; a reported output is paraphrased rather than verbatim; or any identity value can be traced to the harness rather than to the payload. Wait for and integrate the returned REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g4", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "title": "Live acceptance \u2014 a real trip from a per-agent reading: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer via scripts/run_crew.py. The reviewer's job is adversarial: try to explain the observed trip WITHOUT the change. Named falsifiers, any one of which is a BLOCK \u2014 the binding key is bare; the two agents' fills match each other; the pairing is crossed (A's reading in B's spine directory); observed_at predates the agent's first read; advance succeeded despite a >= hard reading; the control arm also tripped; a reported output is paraphrased rather than verbatim; or any identity value can be traced to the harness rather than to the payload. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g4-implement anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g4-integrate": {
       "id": "g4-integrate",
-      "title": "Live acceptance — a real trip from a per-agent reading: integrate",
-      "imperative": "Check the REVIEW_RESULT verdict, then verify the observed trip yourself against the archived artifacts — recompute the fills from the raw transcripts rather than trusting the harness's report. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g4", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "a trip fired from a per-agent reading on a live run, verified by re-computation from the archived raw transcripts and not from the harness's own claim. A SOFT-only outcome does NOT satisfy this condition: it is a partial discharge, waived under this policy with the Admiral as authority and floated in RETURN.md, never silently counted as done.", "check": null, "override_policy": {"allowed": true, "authority": "admiral", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "the pairing holds 2 of 2 — each agent's own transcript recomputes to the gauge in that agent's own spine directory, so a crossed attribution would have failed; the parent held exactly its one bare-key entry and got its own reading; a release removed that agent's composite key while the parent's survived; the non-claiming subagent wrote nothing", "check": null, "satisfied": false},
-        {"id": "c3", "statement": "the run recorded WHICH identity path it took and the resolved key shape, so a silent fallback could not have passed; and the nested-dispatch result is recorded either way", "check": null, "satisfied": false},
-        {"id": "c4", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "title": "Live acceptance \u2014 a real trip from a per-agent reading: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict, then verify the observed trip yourself against the archived artifacts \u2014 recompute the fills from the raw transcripts rather than trusting the harness's report. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a trip fired from a per-agent reading on a live run, verified by re-computation from the archived raw transcripts and not from the harness's own claim. A SOFT-only outcome does NOT satisfy this condition: it is a partial discharge, waived under this policy with the Admiral as authority and floated in RETURN.md, never silently counted as done.",
+          "check": null,
+          "override_policy": {
+            "allowed": true,
+            "authority": "admiral",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the pairing holds 2 of 2 \u2014 each agent's own transcript recomputes to the gauge in that agent's own spine directory, so a crossed attribution would have failed; the parent held exactly its one bare-key entry and got its own reading; a release removed that agent's composite key while the parent's survived; the non-claiming subagent wrote nothing",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the run recorded WHICH identity path it took and the resolved key shape, so a silent fallback could not have passed; and the nested-dispatch result is recorded either way",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g5-sweep": {
       "id": "g5-sweep",
       "title": "Sweep the stale bare-key bindings in the live store",
-      "imperative": "REASONING GATE, driven in the Commander's own context — no crew. Crew waiver reason: this mutates the MAIN CHECKOUT's live shared binding store while sibling runs of this same epic are in flight; the pre-clearance for that mutation was granted to this Commander by name in the launch order, it is not shippable code, and the script is deleted after its one run. Putting a crew inside live shared state is the larger risk, so the independent-eye finding is answered mechanically instead — see the constraints. Sequence, no step skippable: (1) DRY RUN — copy C:/Programs/constellation-skills/.agent-work/.spine-rail-binding.json verbatim to evidence/binding-before.json, then emit evidence/binding-sweep-plan.md listing EVERY entry with its key, spine path, whether that spine file exists, its lease status, and KEEP or DROP with the reason; state the totals. (2) REAL RUN — re-read the file immediately before writing, re-evaluate the KEEP/DROP predicate against that fresh read rather than trusting the plan-time verdict, confirm nothing changed under you, then write atomically with the same tmp+os.replace discipline the hooks use. (3) VERIFY — snapshot to evidence/binding-after.json and assert the planned DROP set is gone and every KEEP entry survives byte-identical. (4) DELETE the sweeper; the commit notes it existed. The sweeper lives in the work area, never under scripts/.",
-      "preconditions": [{"id": "p1", "statement": "g4 closed — the fix is proven before the live store is touched", "check": null, "satisfied": false}],
+      "imperative": "REASONING GATE, driven in the Commander's own context \u2014 no crew. Crew waiver reason: this mutates the MAIN CHECKOUT's live shared binding store while sibling runs of this same epic are in flight; the pre-clearance for that mutation was granted to this Commander by name in the launch order, it is not shippable code, and the script is deleted after its one run. Putting a crew inside live shared state is the larger risk, so the independent-eye finding is answered mechanically instead \u2014 see the constraints. Sequence, no step skippable: (1) DRY RUN \u2014 copy C:/Programs/constellation-skills/.agent-work/.spine-rail-binding.json verbatim to evidence/binding-before.json, then emit evidence/binding-sweep-plan.md listing EVERY entry with its key, spine path, whether that spine file exists, its lease status, and KEEP or DROP with the reason; state the totals. (2) REAL RUN \u2014 re-read the file immediately before writing, re-evaluate the KEEP/DROP predicate against that fresh read rather than trusting the plan-time verdict, confirm nothing changed under you, then write atomically with the same tmp+os.replace discipline the hooks use. (3) VERIFY \u2014 snapshot to evidence/binding-after.json and assert the planned DROP set is gone and every KEEP entry survives byte-identical. (4) DELETE the sweeper; the commit notes it existed. The sweeper lives in the work area, never under scripts/.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 closed \u2014 the fix is proven before the live store is touched",
+          "check": null,
+          "satisfied": false
+        }
+      ],
       "postconditions": [
-        {"id": "c1", "statement": "the before-state was recorded to a file in this worktree BEFORE any mutation, and the dry-run plan enumerated every entry with a KEEP or DROP reason and STATED THE TOTALS", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "the planned DROP set is absent from the after-state and every KEEP entry survives byte-identical. Deliberately NOT a full-diff equality: a cold critic measured the live store drifting 54 to 59 entries between plan time and their read, and sibling runs claim and release continuously, so a strict diff would be falsified by a healthy world. Additions by concurrent writers are tolerated and reported.", "check": null, "satisfied": false},
-        {"id": "c3", "statement": "every session key holding an ACTIVE engine lease on an existing spine survives the sweep — named explicitly and asserted present in the after-state, because sparing the epic's own in-flight bindings is the entire reason the narrowing exists and it is the one outcome the diff check does not prove", "check": null, "satisfied": false},
-        {"id": "c4", "statement": "the sweeper no longer exists on disk", "check": null, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "the before-state was recorded to a file in this worktree BEFORE any mutation, and the dry-run plan enumerated every entry with a KEEP or DROP reason and STATED THE TOTALS",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the planned DROP set is absent from the after-state and every KEEP entry survives byte-identical. Deliberately NOT a full-diff equality: a cold critic measured the live store drifting 54 to 59 entries between plan time and their read, and sibling runs claim and release continuously, so a strict diff would be falsified by a healthy world. Additions by concurrent writers are tolerated and reported.",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "every session key holding an ACTIVE engine lease on an existing spine survives the sweep \u2014 named explicitly and asserted present in the after-state, because sparing the epic's own in-flight bindings is the entire reason the narrowing exists and it is the one outcome the diff check does not prove",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the sweeper no longer exists on disk",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "constraints": [
-        "The spec retires these pre-migration bare-key bindings UNCONDITIONALLY, reasoning that no liveness test applies to them by construction. That reasoning predates this epic dispatching concurrent runs whose bindings are bare-keyed AND live right now — an unconditional sweep would delete the epic-418 Admiral's own binding mid-run. Therefore: report the unconditional DROP set in full, then actually drop everything EXCEPT entries whose spine file exists and whose engine lease is active. Both counts go in the return, and the narrowing is floated to the Admiral as a deliberate recorded departure, not absorbed silently.",
+        "The spec retires these pre-migration bare-key bindings UNCONDITIONALLY, reasoning that no liveness test applies to them by construction. That reasoning predates this epic dispatching concurrent runs whose bindings are bare-keyed AND live right now \u2014 an unconditional sweep would delete the epic-418 Admiral's own binding mid-run. Therefore: report the unconditional DROP set in full, then actually drop everything EXCEPT entries whose spine file exists and whose engine lease is active. Both counts go in the return, and the narrowing is floated to the Admiral as a deliberate recorded departure, not absorbed silently.",
         "_save_json_map is atomic per write but takes NO lock, so a load-modify-save can silently drop a concurrent sibling's claim. Mitigate by re-reading and confirming the file is unchanged immediately before the write; if it changed, redo the read-evaluate cycle rather than writing a stale map.",
         "A live parent binding under a bare key is legitimate and must survive; the sweep removes dead entries, not merely bare ones.",
-        "Do not touch the worktree C:/Programs/constellation-skills-wt/governor-264 or its branch — standing constraint from the launch order."
+        "Do not touch the worktree C:/Programs/constellation-skills-wt/governor-264 or its branch \u2014 standing constraint from the launch order."
       ],
       "anchors": {
-        "structural": ["C:/Programs/constellation-skills/.agent-work/.spine-rail-binding.json — the live shared store"],
-        "capability": ["the binding store's accumulated pre-migration state"],
-        "constraint": ["dry-run first with the before-state recorded to a file in this worktree, then the real run — the pre-clearance condition in the launch order"],
-        "decision": ["decision:sweep-spares-live-bindings — the unconditional retirement in the spec is narrowed to spare entries with an existing spine and an active lease, because this epic's own in-flight runs hold exactly such entries. Floated to the Admiral in RETURN.md; only the Admiral may unsettle it. @grade: settled/human · leans g5-sweep"],
-        "evidence": ["measured at plan time: 6 session keys, 54 entries. Re-measured by a cold critic minutes later: 6 keys, 59 entries, the dispatching session holding 10 rather than 5. The store is a MOVING TARGET and every count must be pinned to when it was read."]
+        "structural": [
+          "C:/Programs/constellation-skills/.agent-work/.spine-rail-binding.json \u2014 the live shared store"
+        ],
+        "capability": [
+          "the binding store's accumulated pre-migration state"
+        ],
+        "constraint": [
+          "dry-run first with the before-state recorded to a file in this worktree, then the real run \u2014 the pre-clearance condition in the launch order"
+        ],
+        "decision": [
+          "decision:sweep-spares-live-bindings \u2014 the unconditional retirement in the spec is narrowed to spare entries with an existing spine and an active lease, because this epic's own in-flight runs hold exactly such entries. Floated to the Admiral in RETURN.md; only the Admiral may unsettle it. @grade: settled/human \u00b7 leans g5-sweep"
+        ],
+        "evidence": [
+          "measured at plan time: 6 session keys, 54 entries. Re-measured by a cold critic minutes later: 6 keys, 59 entries, the dispatching session holding 10 rather than 5. The store is a MOVING TARGET and every count must be pinned to when it was read."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g6-closeout": {
       "id": "g6-closeout",
       "title": "Full suite and done-condition trace",
-      "imperative": "REASONING GATE, driven in the Commander's own context — the deliverable is a verification record, not code, and no crew adds independent signal to re-running a suite. Run the full suite per the project rigor delta. Then trace all six done-conditions from the problem statement to the gate that closed each and the evidence artifact that proves it, in one table. Then re-read the whole diff against the scope ruling: every added line must be traceable to a numbered done-condition or to a named non-regression obligation, and any line that fails that trace is deleted. The identity-duration field traces to the issue's own 100ms bullet and to g4's budget assertion — it is not creep, and that trace is why.",
-      "preconditions": [{"id": "p1", "statement": "g5 complete", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "the full suite is green. The baseline is 1621 passed / 2 skipped at HEAD 990712f; g1 and g2 both ADD tests, so the count must be STRICTLY GREATER than 1621 and the delta stated — a run reporting exactly 1621 means the new tests were never written and this condition FAILS.", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q > .agent-work/issue-419-governor-identity/evidence/full-suite.txt 2>&1; tail -3 .agent-work/issue-419-governor-identity/evidence/full-suite.txt; grep -qE '^[0-9]+ passed' .agent-work/issue-419-governor-identity/evidence/full-suite.txt && test $(grep -oE '^[0-9]+ passed' .agent-work/issue-419-governor-identity/evidence/full-suite.txt | grep -oE '^[0-9]+') -gt 1621"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "all six done-conditions traced to their closing gate and evidence artifact, and every corner case deliberately not chased carries a comment at its code site — specifically the abandoned-agent key that nothing ever reaps, and the unlocked load-modify-save in the binding store", "check": null, "satisfied": false}
+      "imperative": "REASONING GATE, driven in the Commander's own context \u2014 the deliverable is a verification record, not code, and no crew adds independent signal to re-running a suite. Run the full suite per the project rigor delta. Then trace all six done-conditions from the problem statement to the gate that closed each and the evidence artifact that proves it, in one table. Then re-read the whole diff against the scope ruling: every added line must be traceable to a numbered done-condition or to a named non-regression obligation, and any line that fails that trace is deleted. The identity-duration field traces to the issue's own 100ms bullet and to g4's budget assertion \u2014 it is not creep, and that trace is why.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g5 complete",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite is green. The baseline is 1621 passed / 2 skipped at HEAD 990712f; g1 and g2 both ADD tests, so the count must be STRICTLY GREATER than 1621 and the delta stated \u2014 a run reporting exactly 1621 means the new tests were never written and this condition FAILS.",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q > .agent-work/issue-419-governor-identity/evidence/full-suite.txt 2>&1; tail -3 .agent-work/issue-419-governor-identity/evidence/full-suite.txt; grep -qE '^[0-9]+ passed' .agent-work/issue-419-governor-identity/evidence/full-suite.txt && test $(grep -oE '^[0-9]+ passed' .agent-work/issue-419-governor-identity/evidence/full-suite.txt | grep -oE '^[0-9]+') -gt 1621"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "all six done-conditions traced to their closing gate and evidence artifact, and every corner case deliberately not chased carries a comment at its code site \u2014 specifically the abandoned-agent key that nothing ever reaps, and the unlocked load-modify-save in the binding store",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
-  "blockers": []
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-integrate",
+      "statement": "spine_rail's agent_id check is a DENYLIST while gauge_writer_hook's is an ALLOWLIST, so they disagree by design: an agent_id like 'a:b' gets a binding written by spine_rail that the gauge writer will never resolve, leaving an orphaned dict entry. No filesystem hazard (confirmed at source by g2's reviewer: the binding key is only ever a dict key, never a path). The durable fix is moving the allowlist into spine_rail so one rule governs both. Not done here: spine_rail was closed and reviewed at g1, and the launch order's scope ruling says note-and-pass-up rather than reopen."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-integrate",
+      "statement": "docs/agents/engine-config.json does not exist in this repo, yet every spine and plan template's config_ref points at it. The engine falls back silently, so the rework cap, replan policy and human checkpoints are all defaults nobody chose. Reported independently by three separate crews across this run."
+    },
+    {
+      "id": "tc3",
+      "from": "g2-integrate",
+      "statement": "git worktree add into the scratchpad fails on Windows MAX_PATH in this repo, so the standard isolate-the-revert move for a non-vacuity check needs a copy fallback. Worth carrying in the crew doctrine, since every gate in this run needed that measurement."
+    },
+    {
+      "id": "tc4",
+      "from": "g3-integrate",
+      "statement": "No mechanical link ties the gauge record's field count across its assertion sites. This run found SEVEN separate places asserting a four-field record, across docs/GAUGE_WRITER_HOOK.md, gauge_writer_hook.py, gauge_reader.py and test_gauge_writer.py, and each was found by a different pass. A test importing gauge_reader.REQUIRED_FIELDS and asserting the document's field table against it would close the class; today the only thing keeping seven sites honest is that someone looks."
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context loaded. Six gates: g1 re-keys the binding store, g2 makes the writer attribute to the acting agent, g3 corrects the design doc, g4 is the live acceptance that IS the deliverable, g5 sweeps the live store, g6 closes out. Crews dispatch external (Agent-tool) per crew-dispatch.md.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:18:26.103202+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "g1 implemented: binding_key three-way (bare / composite / bind-nothing) as the single composer, session_view union read, call sites routed. 16 new tests, 0 pre-existing tests edited, non-vacuity measured by revert rather than argued. Implementer corrected the handoff's payload decomposition: it is 2 parent Bash / 2 subagent Bash / 2 parent Agent-dispatch, not 3/2/1.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:51:04.248506+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer APPROVED g1, having independently reproduced the non-vacuity revert (13 red of 16 new tests) and proved criterion 6 structurally with a difflib opcode comparison rather than from a green suite. Adjudicated the nudge-ledger call as correct for a stronger reason than the implementer gave: the hook is on Stop, not SubagentStop, so the strikes belong to the parent. Seven triage candidates raised.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:12:56.220497+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "g1 closed. Binding store now keys per agent, composed in one place, binding nothing on an unusable identity. Reviewer APPROVE with the non-vacuity revert independently reproduced. Carried into g2: the reviewer found the agent_id rejection is a hand-maintained DENYLIST that still lets ':', '*' and '?' through to g2's agent-{id}.jsonl path \u2014 g2 must not rely on it alone.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:13:09.735101+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "g2 implemented: composite-key resolution, derived own-transcript read, inverted sidechain polarity with agentId equality, fail-closed sidecar, duration on the dispatched-agent record. Two flags carried to review: the duration rides the dispatched path only because a top-level record must keep exactly four keys; and spine_rail's denylist vs this module's allowlist disagree by design, so an id like a:b gets an orphaned binding entry that never resolves.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:51:11.922034+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Reviewer APPROVED g2. Reproduced the revert non-vacuity exactly (23 red, failing set diffs empty against the claim, the 7 survivors derived independently by comm), then went further with 5 targeted mutations all caught and an independent 19-check harness showing the subagent gauge reads 0.021022 while the parent transcript in the same call says 0.159203. Confirmed the parent's transcript is structurally unreachable while agent_id is present.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:06:11.115159+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "g2 closed. The governor now attributes a reading to the agent that produced it: composite-key resolution, own-transcript read, inverted polarity with agentId equality, fail-closed on a missing derived transcript. Reviewer APPROVE with mutation testing beyond the asked evidence. Three triage candidates recorded.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:06:30.422512+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "g3 implemented: the design doc now states the polarity rule, the payload fields, the per-agent binding key with its bind-nothing case, the new skip cause, and both surviving residuals. Two handoff claims did not survive contact with the code and the implementer wrote what the code says instead: agent_type is read by no hook so it is stated as a negative rather than given a row, and residual 2 is really two cases of which only one was a genuine misattribution. Flagged for review: the doc still says 'four fields, no extras' while the dispatched record now carries a fifth.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:39:52.075634+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-implement",
+      "reopen": true,
+      "reason": "Reviewer BLOCK: the document asserts a four-field gauge record at two sites while g2 shipped a fifth. The handoff named only one of the two sites, so fixing where it pointed would have left the document wrong. Rework widens scope to include the two now-false comments in gauge_writer_hook.py that the same g2 change falsified.",
+      "ts": "2026-08-06T02:55:35.660688+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-review",
+      "reopen": true,
+      "reason": "Reviewer BLOCK: the document asserts a four-field gauge record at two sites while g2 shipped a fifth. The handoff named only one of the two sites, so fixing where it pointed would have left the document wrong. Rework widens scope to include the two now-false comments in gauge_writer_hook.py that the same g2 change falsified.",
+      "ts": "2026-08-06T02:55:35.660688+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g3-implement",
+      "why": "g3 rework complete. The enumeration found SIX sites asserting a four-field record, where the handoff named one and the review found two \u2014 the general shape the reviewer's Fowler pass predicted, that this document asserts a single code fact in four-to-five places. One authoritative new section plus pointers, comments-only in the hook proved by AST equality. Two further stale twins ruled in: the hook's polarity comment by me on the rework, and the identical line in tests/test_gauge_writer.py fixed here as a bounded fix-now. Grep for the stale claim now returns nothing across scripts/, tests/ and docs/.",
+      "mechanical": false,
+      "ts": "2026-08-06T03:38:15.237268+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g3-review",
+      "why": "Re-review APPROVED g3. The reviewer rebuilt the pre-change base from git blobs rather than trusting the implementer's enumeration, confirmed the six sites and that none survive, and went past the asked evidence by driving the comments-only AST guard red twice on executable mutations with a comment-only control staying identical. Two further stale twins it found were ruled in and fixed by me: gauge_reader.py's frozen-four-fields comment (a seventh site, the authoring-side blast radius of my own record change) and the hook's 2/2 skip-cause docstring, now 3/4. Both proved comment-only by AST equality; suite unmoved at 1667.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:05:19.373910+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g3-integrate",
+      "why": "g3 closed on the second review. The structural record now matches the code, and the seven-site sprawl of one claim was the real finding: every pass found sites the previous one missed, which is the authoring-side blast-radius failure named in inherited doctrine.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:05:38.501625+00:00"
+    }
+  ]
 }

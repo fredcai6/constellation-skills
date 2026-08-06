@@ -1,0 +1,47 @@
+# g3 POST-edit sweep -- sidechain/falsy occurrences in docs/GAUGE_WRITER_HOOK.md
+# run: 2026-08-06T02:21:27Z (working tree, doc edited; code unchanged at 5491bd4)
+
+$ grep -n -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md
+189:  top-level, so its lines read `isSidechain: false`; a dispatched agent's own
+191:  `{"type": "assistant", "isSidechain": false, "message": {"model": "...",
+246:| `isSidechain` | top-level | the polarity depends on whose transcript is being read: **falsy on a main-chain read** (a top-level agent), **truthy on a dispatched agent's own transcript**, where every line carries `isSidechain: true` |
+306:  side of the sidechain polarity (see the field table above) with a well-formed
+387:| `session_id` falsy, or `agent_id` present but unusable | `None` — **bind nothing** |
+exit=0
+
+$ grep -o -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md | wc -l   # total OCCURRENCES
+7
+
+$ grep -n -i -E "non-sidechain|must be falsy|main-chain only|only main-chain" docs/GAUGE_WRITER_HOOK.md   # pre-fix polarity phrasings
+exit=1  (1 = none left)
+
+## Adjudication of every post-edit hit (5 lines, 7 occurrences)
+189  new sentence: names the measured sample as top-level, hence `false`, and says a
+     dispatched agent's own transcript reads `true`. No old polarity asserted.
+191  the measured 2026-07 sample literal from a real top-level transcript. A record of
+     what was observed, now qualified by line 189. Correct as history.
+246  the new field-table row. States both polarities. This is the fixed hit.
+306  "on the acting agent's side of the sidechain polarity" -- names the polarity as
+     agent-dependent, asserts neither direction. Correct.
+387  "`session_id` falsy" -- binding_key's falsy-session_id case. Nothing to do with
+     the transcript's sidechain flag. Correct.
+No hit asserts the pre-fix polarity. The targeted second grep (non-sidechain / must be
+falsy / main-chain only) returns exit 1: no such phrasing survives anywhere in the file.
+Beyond the token sweep, the field table (lines 233-266) and the whole skip-cause section
+(267-348) were read end to end for polarity claims that use none of the swept words. Two
+were found and fixed this way: step 3 of "What this hook does" ("the latest non-sidechain
+assistant message") and the no-usable-record bullet ("a non-sidechain assistant message").
+Both are in the sweep's post-edit state above.
+
+## Payload-field comparison, both directions
+code -> doc (every enumerated field appears):
+  transcript_path -> table row              cwd       -> named as spine_rail's own
+  session_id      -> table row              tool_input-> named as spine_rail's own
+  agent_id        -> table row
+doc -> code (every field named is really read):
+  transcript_path  gauge_writer_hook.py:551
+  session_id       spine_rail.py:174 (binding_key), 422, 536, 616
+  agent_id         gauge_writer_hook.py:225,592; spine_rail.py:177,179
+  cwd              spine_rail.py:324,427,654
+  tool_input       spine_rail.py:413
+  agent_type       NOT read (grep exit 1) -- the doc says exactly that and claims no use.

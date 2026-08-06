@@ -1,0 +1,67 @@
+# g3 sweep 2 -- every payload read site in the two hook files, and the transcript-line reads
+# tree: 5491bd45d9d2760a6402bd37bc7a41e6970e264f
+# run: 2026-08-06T02:12:31Z
+
+## A. every hook-payload read site (the payload dict is named data or payload)
+$ grep -nE "(\bdata\b|\bpayload\b)[^\n]*(\.get\(|in \(?data|in \(?payload)" scripts/hooks/spine_rail.py scripts/hooks/gauge_writer_hook.py
+scripts/hooks/spine_rail.py:174:        sid = data.get("session_id")
+scripts/hooks/spine_rail.py:179:        agent_id = data.get("agent_id")
+scripts/hooks/spine_rail.py:324:        cwd = data.get("cwd")
+scripts/hooks/spine_rail.py:413:        command = ((data.get("tool_input") or {}).get("command")) or ""
+scripts/hooks/spine_rail.py:422:        sid = data.get("session_id")
+scripts/hooks/spine_rail.py:427:        cwd = data.get("cwd") or str(project_dir)
+scripts/hooks/spine_rail.py:536:        sid = data.get("session_id")
+scripts/hooks/spine_rail.py:616:        sid = data.get("session_id")
+scripts/hooks/spine_rail.py:654:                    "worktree": data.get("cwd") or str(project_dir),
+scripts/hooks/gauge_writer_hook.py:225:    if "agent_id" in (data or {}) and not _is_usable_agent_id((data or {}).get("agent_id")):
+scripts/hooks/gauge_writer_hook.py:551:        transcript_path = data.get("transcript_path")
+scripts/hooks/gauge_writer_hook.py:592:        acting_agent_id = data.get("agent_id") if "agent_id" in data else None
+exit=0
+
+## B. distinct top-level payload KEYS from those sites
+$ grep -hoE "(data|payload)( or \{\})?\)?\.get\(\"[A-Za-z_]+\"|\"[A-Za-z_]+\" (not )?in \(?(data|payload)" scripts/hooks/spine_rail.py scripts/hooks/gauge_writer_hook.py | grep -oE "\"[A-Za-z_]+\"" | sort -u
+"agent_id"
+"cwd"
+"session_id"
+"tool_input"
+"transcript_path"
+exit=0
+$ ... | wc -l
+5
+
+## C. control: is agent_type read anywhere in the hooks?
+$ grep -n "agent_type" scripts/hooks/spine_rail.py scripts/hooks/gauge_writer_hook.py
+exit=1  (1 = no match)
+
+## D. TRANSCRIPT-LINE reads in find_latest_usage (the first table in the doc)
+$ sed -n "286,350p" scripts/hooks/gauge_writer_hook.py | grep -nE "(d|msg|usage)\.get\("
+30:            if d.get("type") != "assistant":
+33:                if d.get("isSidechain"):
+35:            elif not d.get("isSidechain") or d.get("agentId") != agent_id:
+37:            msg = d.get("message")
+40:            usage = msg.get("usage")
+43:            model = msg.get("model")
+44:            observed_at = d.get("timestamp")
+54:                v = usage.get(field)
+exit=0
+
+## A2. membership tests on the payload (section A's regex needs the dict name FIRST, so it misses these)
+$ grep -nE "\"[A-Za-z_]+\" (not )?in \(?(data|payload)" scripts/hooks/spine_rail.py scripts/hooks/gauge_writer_hook.py
+scripts/hooks/spine_rail.py:177:        if "agent_id" not in data:
+scripts/hooks/gauge_writer_hook.py:225:    if "agent_id" in (data or {}) and not _is_usable_agent_id((data or {}).get("agent_id")):
+scripts/hooks/gauge_writer_hook.py:592:        acting_agent_id = data.get("agent_id") if "agent_id" in data else None
+exit=0
+
+## E. adjudication (judgement, recorded against the sites above)
+5 distinct payload keys are read across the two files:
+  transcript_path  gauge_writer_hook.py:551                       -> gauge writer's own read
+  agent_id         gauge_writer_hook.py:225,592; spine_rail:177,179 -> gauge writer + binding_key
+  session_id       spine_rail:174 (binding_key), 422, 536, 616     -> binding_key, called by the writer
+  cwd              spine_rail:324, 427, 654                        -> spine_rail's OWN handlers only
+  tool_input       spine_rail:413 (nested .command)                -> spine_rail's OWN PostToolUse only
+The gauge writer's execution path reads transcript_path, agent_id, and (through
+spine_rail.binding_key) session_id. cwd and tool_input never reach it: they belong to
+spine_rail's claim/release parsing and its worktree comparison.
+agent_type is NOT read by either hook (section C, exit 1). It exists in the captured
+payload (tests/fixtures/probe_payloads.jsonl) and in one fixture assertion
+(tests/test_spine_rail.py:171), but no hook code consults it.

@@ -1,0 +1,368 @@
+{
+  "work_id": "issue-419-governor-identity-g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "c1-three-way",
+    "c2-composite-claim",
+    "c3-composite-release",
+    "c4-bind-nothing",
+    "c5-reads-preserved",
+    "c6-tests-unedited",
+    "n1-nonvacuity",
+    "j1-nudge-ledger"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (installed reviewer skill), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1 reviewer handoff, the implementer result, and the full diff of 340c46d. No docs/architecture map exists in this repo; docs/agents/engine-config.json is absent (spine references it) - engine degraded gracefully.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The change implements exactly what the handoff described: binding_key() as the sole composer (spine_rail.py:136-183), session_view() (186-208), routed into handle_post_tool_use claim/release/cleanup and into decide_stop/decide_session_start reads, plus tests/fixtures/probe_payloads.jsonl with a sha256 pin. Verified against the diff of 340c46d, not the report. Two implementer-report inaccuracies found, neither material: (a) the result says 'the two remaining new tests' pass against the old hook, but 16 new - 13 red = 3; the third is test_post_release_parent_still_clears_its_own_bare_nudge_ledger, which is a legitimate unchanged-behavior guard; (b) the result's revert recipe reads 'git checkout HEAD -- scripts/hooks/spine_rail.py', which now that the work is committed as 340c46d reverts to the CHANGED file; the reproducible command is HEAD~1.",
+      "evidence": [
+        {
+          "id": "e-r1-handoff-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-419-governor-identity/results/g1-REVIEW_RESULT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --stat main...HEAD: the only non-.agent-work files touched across the whole branch are the three allowed ones (scripts/hooks/spine_rail.py +156/-20, tests/test_spine_rail.py +468/-0, tests/fixtures/probe_payloads.jsonl +6/-0). scripts/hooks/gauge_writer_hook.py appears 0 times in the branch's changed-file list and its resolve_gauge_path still reads binding.get(session_id) at line 159 -- the declared g2 exclusion is honored. Working tree under scripts/ and tests/ is clean after my own revert and tamper experiments.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed number reproduced by me, not read off the report. python -m pytest tests/test_spine_rail.py -q -> 74 passed (implementer claimed 74; 58 pre-existing + 16 new). python -m pytest tests -q -> 1637 passed, 2 skipped, 550 subtests in 437s, exit 0 -- exactly the handoff's expected 1637, so the new tests demonstrably exist. Fixture verified independently: 6 lines, all one session_id c9b25095, decomposition 2 parent Bash / 2 subagent / 2 parent Agent (the handoff's provisional 3/2/1 is wrong, the fixture is 2/2/2), normalized sha256 b035368... = the pinned value, and byte-identical to .agent-work/.../evidence/probe-payloads.jsonl. Wrapper-vs-payload confirmed: agent_id exists only inside payload, never at wrapper top level, and probe_payloads() unwraps it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Against CREW_CONTEXT.md's verification discipline, the four rules that bite here all hold. (1) 'A check that cannot fail is indistinguishable from one that passed' -- reproduced both demonstrations myself; see n1-nonvacuity. (2) 'Assert against behaviour, never against text' -- the tests call sr.binding_key / sr.handle_post_tool_use / sr.decide_stop / sr.decide_session_start and assert on the store and the returned decision dict; no grep for a message string. The one string assertion (COMPOSITE-MARKER in out['reason']) is an imperative the test itself planted in the spine, so it proves the right spine was reached, not that prose exists. (3) 'Any guard that loops must assert what it looped over' -- every looping guard prints and asserts its count: composition table asserts 4 bare / 2 composite over 6, the adversarial loop asserts len(rows) >= 6 with 12 rows and prints each label, session_view asserts len(view) == 3 out of 5 store keys, and the unusable-agent_id loop asserts the whole store is json-identical afterwards. (4) 'Never compare two files by raw working-tree bytes' -- the sha256 pin hashes newline-normalized bytes and documents why; I confirmed raw 13161 vs normalized 13155 bytes on this checkout, so a raw pin would indeed have been wrong here. Python invoked as 'python', not 'py', throughout.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture baseline to diverge from: docs/architecture/ does not exist in this repo, so there is no Cartographer map to reconcile against. The one real documentation divergence is docs/GAUGE_WRITER_HOOK.md (and gauge_writer_hook.py's docstring), which the issue already owns and this gate's scope forbids touching -- flagged as triage candidates rather than treated as a defect of g1. The stated constraint that binding_key is the SINGLE composer of the composite key holds by command: grep over scripts/ finds exactly one composition site (spine_rail.py:184) and one prefix site (203), both keyed off BINDING_KEY_SEP, and no second composer anywhere.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full 12-smell pass recorded at .agent-work/issue-419-governor-identity/g1-review/FOWLER_PASS.json; rail verify_fowler_pass.py exits 0. One flagged: long-method -- handle_post_tool_use is now 85 lines (64 code) holding parse + resolve + claim + release + cleanup + nudge-ledger, a non-blocking observation aimed at g2 which will touch the same function. Six overridden with logged standards: duplicated-code (the composite-key expression is deliberately restated in tests rather than computed via binding_key, per CREW_CONTEXT's cannot-fail rule), data-clumps and divergent-change and shotgun-surgery (pre-existing or the handoff's explicit g2 exclusion, minimal-change discipline), primitive-obsession (the key must serialize as a JSON object key and does not leak -- one composer, one reader), comments-as-deodorant (the module's own pre-existing decision-carrying-docstring convention, 8 issue refs before this diff; the prose states WHY the key/sid asymmetry must not be 'fixed'). Four absent: large-class, feature-envy, long-parameter-list, message-chains, speculative-generality -- that is five absent, and speculative-generality was checked specifically because _AGENT_ID_REJECT and the null-agent_id branch look speculative until you find their named live consumer.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "command": "python verify_fowler_pass.py .agent-work/issue-419-governor-identity/g1-review/FOWLER_PASS.json",
+            "exit": "0",
+            "result": "fowler pass ok: smells=12, flagged=['long-method'], overridden=['duplicated-code','data-clumps','primitive-obsession','shotgun-surgery','divergent-change','comments-as-deodorant']"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "c1-three-way": {
+      "id": "c1-three-way",
+      "title": "Close criterion 1: three-way binding_key table",
+      "imperative": "Verify binding_key implements the three-way table exactly, including the bind-nothing third case. Read the branch, do not infer from test names.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET. Read the branch at spine_rail.py:174-186, then probed the function directly with my own 25 cases rather than through the implementer's tests. The bind-nothing case is real and is a distinct return, not a fallback: 'if not agent_id or not isinstance(agent_id, str): return None' and 'if any(tok in agent_id for tok in _AGENT_ID_REJECT): return None' both return None BEFORE any composition, and the only path that can return the bare sid is the earlier 'if agent_id not in data' branch -- so a present-but-unusable agent_id cannot reach the bare key. Confirmed by probe: agent_id of '' / None / 5 / ['A'] / True / 'a#b' / 'a/b' / backslash / '..' / 'x..y' all return None; absent agent_id returns 'S'; well-formed returns 'S#A'; falsy or missing session_id returns None regardless of agent_id; junk payloads (None, [], {}) return None without raising. One observation, not a defect against this handoff: _AGENT_ID_REJECT is a hand-maintained character list, and CREW_CONTEXT.md's verification discipline warns specifically against that ('Define a guard by its consumer's behaviour, not by a hand-maintained list'). The docstring names the consumer as the gauge writer's agent-{agent_id}.jsonl path, but ':' '*' '?' '\"' '<' '>' '|' and a whitespace-only id all pass the guard and are path-hostile on Windows. binding_key implements the handoff's table exactly, so this is not a g1 defect -- it is routed to g2, which is where the filesystem interpolation actually lives.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c2-composite-claim": {
+      "id": "c2-composite-claim",
+      "title": "Close criterion 2: composite claim leaves bare set byte-identical",
+      "imperative": "Verify a claim carrying agent_id writes under sid#agent_id and leaves the bare sid entry set byte-identical; two agent ids give two independent key sets.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET. Read the branch: the claim path (spine_rail.py:432-440) reads binding.get(key), copies it, writes the entry and assigns binding[key] -- it never touches binding[sid] when key != sid, so the bare set is untouched by construction. Two tests prove it behaviorally through the real handler, not through a stub: test_post_claim_subagent_writes_composite_key_bare_set_byte_identical snapshots json.dumps(binding[sid], sort_keys=True) before the subagent claim and asserts equality after, and asserts set(binding.keys()) == {sid, composite}; test_post_claim_two_agent_ids_give_two_independent_key_sets asserts set(binding.keys()) == {key_a, key_b}, that sid is NOT in binding, and that [len(v) for v in binding.values()] == [1, 1] -- the last assertion is the gauge writer's own ambiguity predicate, so the test states the thing the issue exists to fix rather than a proxy for it. Both tests are among the 13 that go red on the reverted hook, so neither can pass in a world where the change did nothing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c3-composite-release": {
+      "id": "c3-composite-release",
+      "title": "Close criterion 3: composite release removes only that agent's entry",
+      "imperative": "Verify a release carrying agent_id removes only that agent's entry, and that the empty-set cleanup deletes the composite key never the bare one.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET, and the dangerous line is correct. spine_rail.py:444-455: the release reads binding.get(key), deletes only abs_spine from a COPY, and on a now-empty set executes 'del binding[key]' -- key, never sid. I read that line directly rather than inferring it from the test name; it carries a comment naming the exact failure it avoids. test_post_release_composite_removes_only_that_agents_entry proves selectivity (three keys before, {sid, key_b} after, key_a gone, both survivors' entry lists asserted). test_post_release_empty_set_cleanup_deletes_composite_key_not_bare is the one that would catch a wrong substitution: it deliberately binds the parent and the subagent to the SAME abs_spine_path under different keys, so 'del binding[sid]' would wipe a live parent's whole binding; after the subagent's release it asserts composite not in after, set(after.keys()) == {sid}, and the parent's entry set json-identical. Both go red on the reverted hook.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c4-bind-nothing": {
+      "id": "c4-bind-nothing",
+      "title": "Close criterion 4: unusable agent_id writes no binding anywhere",
+      "imperative": "Verify an unusable agent_id writes no binding under any key, especially not the parent's bare key.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET. This is the case the handoff called the one that matters, so I checked the branch rather than the test name. spine_rail.py:422-425: 'key = binding_key(data); if key is None: return {}' -- the handler returns before load_binding is called at all, so an unresolved identity cannot write anywhere, cannot delete anything, and cannot touch the nudge ledger either. There is no 'or sid' anywhere on that path; grep confirms the bare sid is used later only in the 'if key == sid' nudge guard. test_post_claim_unusable_agent_id_writes_no_binding_anywhere fires seven malformed claims and asserts json.dumps(after, sort_keys=True) == before over the WHOLE store, plus explicitly that the bad run's abs_spine is not under the parent's bare key -- an assertion over the whole store rather than over the composite key alone, which is the right shape because the feared failure is a write to a DIFFERENT key. It goes red on the reverted hook.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c5-reads-preserved": {
+      "id": "c5-reads-preserved",
+      "title": "Close criterion 5: decide_stop and decide_session_start see every spine they saw before",
+      "imperative": "Verify session_view is a superset of the old read, that the session_view test is non-vacuous (one bare + two composite keys), and that the bind-on-resume write still lands under the bare key.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET, and the vacuity concern the handoff raised is answered. (a) Superset proved independently: I called session_view on a bare-key-only store and confirmed it equals the old 'binding.get(sid) or {}' exactly, returns {} for an unknown or None sid, and skips a non-dict value (which load_binding already filters, so no old-shape regression). (b) The session_view test is NOT vacuous: test_session_view_merges_one_bare_and_two_composite_keys builds a FIVE-key store through the real claim writer -- one bare, two composite, plus two decoys (another session's composite key, and a '<sid>-lookalike' key that startswith the sid but is not a child of it) -- and asserts len(view) == 3 with the exact key set and neither decoy present. The lookalike decoy is what makes the prefix test 'sid + BINDING_KEY_SEP' rather than a bare startswith, and it would fail an implementation that used startswith(sid). (c) test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key does exactly what the handoff demanded: the bare key holds only a released complete spine, the sole mid-flight spine is under a composite key, and decide_stop returns decision=block naming that spine's gate g9 and its planted COMPOSITE-MARKER imperative. (d) The bind-on-resume WRITE still lands under the bare key -- read at spine_rail.py:650-657 ('sid_bindings2 = dict(binding.get(sid) or {})', 'binding[sid] = sid_bindings2') and proved by test_session_start_bind_on_resume_still_writes_under_the_bare_key, which first plants a FOREIGN composite entry so the existing-binding read is skipped and the scan path is genuinely reached. (e) 61 pre-existing tests stay green on the reverted hook AND on the changed hook, so no previously-visible spine became invisible.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c6-tests-unedited": {
+      "id": "c6-tests-unedited",
+      "title": "Close criterion 6: every pre-existing test passes unedited",
+      "imperative": "Confirm by command that no pre-existing test line was changed, not merely that the suite is green.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET, proved structurally rather than by a green suite. Three independent commands. (1) 'git diff HEAD~1 HEAD -- tests/test_spine_rail.py | grep -c \"^-[^-]\"' -> 0 removed lines. (2) Test-name set comparison: 58 defs before, 74 after, removed set is EMPTY, 16 added. (3) The decisive one -- a difflib SequenceMatcher over the old and new files reports only two non-equal opcodes, both 'insert' (at line 11 and line 91) and zero 'replace' or 'delete'. That rules out a modified assertion inside a surviving test, which a name-set or a line-count check alone would miss. Every pre-existing test is byte-identical and all 58 pass, on the changed hook (74 passed) and on the reverted hook (61 passed, where 61 = 58 pre-existing + 3 new tests that legitimately do not depend on the hook). Minor wording nit: the implementer's result says the tests were 'appended'; they are inserted at lines 11 and 91, which changes nothing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "n1-nonvacuity": {
+      "id": "n1-nonvacuity",
+      "title": "Non-vacuity: reproduce the 13-of-16-red revert experiment",
+      "imperative": "Revert scripts/hooks/spine_rail.py to the pre-change tree, re-run tests/test_spine_rail.py, and confirm 13 new tests go red and every pre-existing test stays green. Also confirm the fixture sha256 pin fails on a mutated fixture. Restore afterwards and re-verify green. If the revert does not reproduce, BLOCK.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "REPRODUCED, and this is the check the handoff said would decide the gate. Reverting scripts/hooks/spine_rail.py to the pre-change tree with tests and fixture left in place gives exactly 13 failed, 61 passed -- the implementer's number to the test. The 13 are every hook-dependent new test: the three binding_key tests, the five write-routing tests, and the five read-routing tests. All 61 pre-existing tests stay green under the revert, so the 13 reds are caused by the change being absent, not by a broken harness. One correction to the implementer's account: it says 'the two remaining new tests' pass against the old hook, but 16 - 13 = 3. The third is test_post_release_parent_still_clears_its_own_bare_nudge_ledger, which guards UNCHANGED behavior (a top-level release still clears the bare nudge ledger) and therefore correctly passes both before and after -- it is a legitimate regression guard, not a vacuous check, but the arithmetic in the report is wrong. Second correction: the report's recipe reads 'git checkout HEAD -- scripts/hooks/spine_rail.py', which was right while the work was uncommitted and is now wrong, since HEAD is 340c46d; the reproducible command is HEAD~1. The fixture pin's own failure mode was reproduced separately: I injected agent_id into payload 0, asserted the mutation applied, and got 6 failed / 68 passed including test_probe_fixture_sha256_pin, then restored via git checkout and re-ran to 74 passed with a clean working tree. So neither the hook tests nor the fixture pin can pass in a world where the thing they guard did nothing.",
+      "evidence": [
+        {
+          "id": "e-n1-nonvacuity-1",
+          "type": "command-output",
+          "payload": {
+            "command": "git checkout HEAD~1 -- scripts/hooks/spine_rail.py && python -m pytest tests/test_spine_rail.py -q",
+            "result": "13 failed, 61 passed in 1.27s",
+            "note": "restored with git checkout HEAD --; tree clean; 74 passed after restore"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-n1-nonvacuity-2",
+          "type": "command-output",
+          "payload": {
+            "command": "inject agent_id into payload 0 of tests/fixtures/probe_payloads.jsonl, then python -m pytest tests/test_spine_rail.py -q",
+            "result": "6 failed, 68 passed in 1.21s",
+            "note": "mutation asserted applied before running; restored with git checkout HEAD --; 74 passed after restore"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "j1-nudge-ledger": {
+      "id": "j1-nudge-ledger",
+      "title": "Adjudicate the nudge-ledger judgement call",
+      "imperative": "The implementer resolved a handoff contradiction by gating the nudge-ledger delete on 'if key == sid'. State a reviewer view on whether a subagent's release must not clear the parent's three-strike escape hatch.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ADJUDICATED: the implementer's reading is right, and I would call it the only safe one -- not merely defensible. Grounding, checked rather than assumed: .claude/settings.json registers spine_rail.py on Stop, SessionStart and PostToolUse, and NOT on SubagentStop, and main() dispatches only those three. So nudges[sid] is written in exactly one place (decide_stop, spine_rail.py:560-565) and only ever for a TOP-LEVEL session's turn-end. The strikes are the parent's; a subagent has no claim on them. The failure the guard prevents is concrete: crew subagents release their spines routinely mid-run, so an unguarded 'del nudges[sid]' on every release would reset the parent's count to zero over and over, the count could never reach 3, and a genuinely stuck top-level session would never get its escape hatch -- a live-lock strictly worse than anything before this change. The opposite risk, a leaked stale ledger, does not materialize: the parent's own release still clears it (key == sid), and decide_stop rewrites nudges[sid] wholesale on every block, so a stale entry cannot accumulate false strikes. On the handoff's internal contradiction: constraint 1 ('the ledger deletion keeps the bare session_id') is about the KEY, and the implementer satisfied it -- the ledger is still bare-keyed. Gating the FIRE on key == sid is an additional, orthogonal decision that the required-evidence list demanded and that constraint 1 never forbade. There is no contradiction to resolve once the two are read as key-shape and fire-condition rather than as one rule. Both halves are tested (test_post_release_composite_leaves_bare_nudge_ledger_untouched and test_post_release_parent_still_clears_its_own_bare_nudge_ledger), and the first is among the 13 that go red on the reverted hook.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. The handoff's decisive check reproduced exactly: reverting scripts/hooks/spine_rail.py to HEAD~1 gives 13 failed / 61 passed, so 13 of the 16 new tests cannot pass in a world where the change did nothing, and every pre-existing test stays green. All six close criteria met on evidence I reproduced myself, not on the implementer's account: the three-way table probed directly with 25 of my own cases (bind-nothing is a distinct early return, not a fallback); the claim path assigns binding[key] and never binding[sid]; the empty-set cleanup is 'del binding[key]' read at the line; 'if key is None: return {}' fires before load_binding so an unusable agent_id writes nothing anywhere; session_view proved a strict superset of the old read on a bare-key-only store; and a difflib opcode comparison shows two inserts and zero replace/delete in the test file, so no surviving test body was altered. Full suite 1637 passed / 2 skipped, exactly the expected count. The session_view test is not vacuous - five keys, one bare, two composite, two decoys including a <sid>-lookalike that would break a bare startswith. Nudge-ledger judgement call adjudicated in the implementer's favour and more strongly than it argued: the hook is registered on Stop and not SubagentStop, so the strikes are the parent's, and an ungated delete would let routine subagent releases reset the count forever and live-lock a stuck session out of its escape hatch. No blockers. Seven triage candidates, the substantive ones being the stale docs/GAUGE_WRITER_HOOK.md (issue item 4 owns it), the hand-maintained _AGENT_ID_REJECT character list which lets ':' '*' '?' through to g2's filesystem path, and an untested first-entry ordering nuance in decide_session_start. Fowler pass complete, rail exit 0: one flagged (handle_post_tool_use at 85 lines), six overridden with logged standards, five absent."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "docs/GAUGE_WRITER_HOOK.md now describes the binding store incorrectly for subagents: line 14 says the gauge path is resolved by looking up session_id in .spine-rail-binding.json, and line 318 states the shape as {session_id: {abs_spine_path: ...}}. After #419 g1 a subagent's entry is keyed sid#agent_id. Issue #419's own item 4 already owns correcting this file; recording so it is not lost between g1 and g2."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "scripts/hooks/gauge_writer_hook.py's module docstring (lines 26-33) describes the binding as keyed by session_id. Stale in the same way; it sits inside g2's file, so g2 should fix the prose when it routes resolve_gauge_path through binding_key."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "The implementer's blast-radius table under-enumerates: the grep returns 88 paths here (77 under .agent-work, 11 elsewhere), not '84 .agent-work artifacts and 5 live readers'. The four unlisted non-.agent-work paths are notes-261.md, notes-269.md, skills/_shared/windows.md and tests/test_install_constellation.py. None is a behavioral reader (the notes are historical run records, windows.md cites the file as a path example, and the install test asserts hook registration by path), so nothing in the verdict changes -- but the enumeration should be redone by command for g2."
+    },
+    {
+      "id": "tc4",
+      "from": "c1-three-way",
+      "statement": "g2 scope: _AGENT_ID_REJECT ('#', '/', backslash, '..') is a hand-maintained character list, which docs/agents/CREW_CONTEXT.md warns against by name ('Define a guard by its consumer's behaviour, not by a hand-maintained list'). The docstring justifies the list by the gauge writer's agent-{agent_id}.jsonl path, but ':', '*', '?', '\"', '<', '>', '|', control characters and a whitespace-only id all pass the guard and are path-hostile on Windows (verified by probe: binding_key({'session_id':'S','agent_id':'a:b'}) returns 'S#a:b'). g1 implemented the handoff's table exactly, so this is not a g1 defect; g2 owns the filesystem interpolation and should express the guard as the property its own path builder computes."
+    },
+    {
+      "id": "tc5",
+      "from": "c5-reads-preserved",
+      "statement": "Untested behavioral nuance: decide_session_start picks the FIRST non-foreign entry from session_view's merged dict, and the merge order is store insertion order across the bare key and the composite keys. If a subagent claimed before the parent, a resumed top-level session can now be advertised a SUBAGENT's spine where before it could only see its own. Same-worktree is required for it to bite (_foreign_worktree filters the rest) and the consequence is cosmetic (which spine the RESUMING context names), so it is not a defect against any close criterion -- but no test pins the preference, and 'prefer the bare key's entries first' is a one-line change if the Commander wants it deterministic."
+    },
+    {
+      "id": "tc6",
+      "from": "c5-reads-preserved",
+      "statement": "Co-signing the implementer's out-of-scope observation 4, verified: tests/test_spine_rail.py:898 monkeypatches _scan_active_spine with 'lambda project_dir: other_spine' returning a spine DICT, while the real function returns a list of (spine_dict, spine_path) tuples. The test still proves its point because it never reaches the branch that unpacks the result, but the stub does not match the contract it replaces. Pre-existing (#261 regression test), untouched by this gate, and correctly left alone."
+    },
+    {
+      "id": "tc7",
+      "from": "c1-three-way",
+      "statement": "Reviewer view on the implementer's decision candidate 'agent-id-null-is-unusable', which it asked a Commander to glance at. Keep it as implemented (null binds nothing). It follows the handoff's table literally, it is unreachable on the probed harness 2.1.222 (which omits the key rather than sending null), and fail-closed is the right default for an identity the repo does not own. The one thing worth recording: nothing in the suite would DETECT a future harness that starts sending agent_id: null on parent calls -- the fixture pin guards a static capture, not the live harness -- and the symptom would be total, silent gauge blindness for every top-level agent rather than a noisy failure. If the Commander wants insurance, the cheap form is a g2-era assertion that a real capture still omits agent_id on parent payloads, re-taken rather than re-read."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g1-reviewer-1",
+    "status": "released",
+    "claimed_at": "2026-08-06T00:53:06.534353+00:00",
+    "last_heartbeat": "2026-08-06T01:11:59.278255+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T01:12:07.513326+00:00"
+  }
+}

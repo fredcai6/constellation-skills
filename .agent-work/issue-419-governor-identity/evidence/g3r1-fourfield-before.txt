@@ -1,0 +1,74 @@
+# g3 REWORK 1 -- BEFORE state: every site claiming the gauge record is four fields or frozen
+# Tree: worktree epic418-a-419, code at HEAD 5491bd4, docs/GAUGE_WRITER_HOOK.md with the g3 doc edit uncommitted.
+# Run: 2026-08-06T03:01:03Z
+
+$ grep -n -i -E "four|4[- ]field|frozen|no extras|field count|fields only" docs/GAUGE_WRITER_HOOK.md scripts/hooks/gauge_writer_hook.py scripts/hooks/spine_rail.py
+docs/GAUGE_WRITER_HOOK.md:35:4. Atomically (tmp file + `os.replace`) writes the frozen 4-field record to
+docs/GAUGE_WRITER_HOOK.md:55:That report is four-state:
+docs/GAUGE_WRITER_HOOK.md:164:- All four fields present, no extras.
+docs/GAUGE_WRITER_HOOK.md:251:| `model` | `message.model` | the frozen record's `model` field, and the key into `MODEL_WINDOWS` |
+docs/GAUGE_WRITER_HOOK.md:278:(`_skip_reason_advisory`) then surfaces at the gate boundary. The other four
+scripts/hooks/gauge_writer_hook.py:10:Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
+scripts/hooks/gauge_writer_hook.py:20:- Record is FROZEN, four fields only (identical to #181's reader):
+scripts/hooks/gauge_writer_hook.py:353:    """Build the frozen 4-field record for this transcript.
+scripts/hooks/gauge_writer_hook.py:403:# A SIDECAR, deliberately not a field on gauge.json: that record is frozen at
+scripts/hooks/gauge_writer_hook.py:404:# four fields and shared with the reader, and "no reading" must stay literally
+scripts/hooks/gauge_writer_hook.py:634:            # the presence of its four required fields and does not reject
+scripts/hooks/gauge_writer_hook.py:638:            # to resolve for a top-level agent anyway. The four required
+scripts/hooks/spine_rail.py:9:Design contract (frozen DESIGN_SPEC #138 channel B, D3):
+exit=0
+
+$ ... | wc -l   # matching LINES
+13
+
+# --- token-blind pass: record-shape claims that use none of the swept words ---
+$ grep -n -i -E "schema_version|fill_fraction|observed_at|REQUIRED_FIELDS|record shape|exactly (these|the) (keys|fields)|identity_resolution_ms" docs/GAUGE_WRITER_HOOK.md
+34:   context-window table to get `fill_fraction`.
+154:   {"schema_version": 1, "fill_fraction": 0.34, "model": "claude-opus-4-8", "observed_at": "2026-07-18T12:00:00.123Z"}
+157:4. Run a few more tool calls and re-check the file. `observed_at` should
+158:   advance and `fill_fraction` should trend upward as the session's context
+165:- `fill_fraction` is a float in `[0, 1]` and its trend across several tool
+173:- `observed_at` is close to "now" (within the tool call you just ran) --
+199:  152951` tokens on `claude-opus-4-8`, i.e. `fill_fraction ≈ 0.76` against a
+250:| `timestamp` | top-level | used as `observed_at` -- the sampled moment |
+276:`{schema_version, reason, observed_at, candidate_count?}` — at the exact gauge
+438:   judged by the record's own `observed_at`, never the file's mtime — see
+exit=0
+$ grep -n -i -E "REQUIRED_FIELDS|record shape|no extras|identity_resolution_ms|that record" scripts/hooks/gauge_writer_hook.py scripts/hooks/spine_rail.py
+scripts/hooks/gauge_writer_hook.py:403:# A SIDECAR, deliberately not a field on gauge.json: that record is frozen at
+scripts/hooks/gauge_writer_hook.py:641:            record["identity_resolution_ms"] = identity_ms
+exit=0
+
+# ============================================================
+# COUNT: 13 matching lines from the token sweep, across 3 files
+#        (docs/GAUGE_WRITER_HOOK.md 5, gauge_writer_hook.py 7, spine_rail.py 1).
+#        Of those, SIX distinct SITES assert the four-field / frozen-record claim
+#        and must change; SEVEN hits are a different claim and stay.
+# ============================================================
+#
+# ADJUDICATION, hit by hit
+#
+# doc:35   "writes the frozen 4-field record"           SAME CLAIM, false since 5491bd4  -> FIX
+# doc:55   "That report is four-state"                  DIFFERENT (installer wiring report states) -> leave
+# doc:164  "All four fields present, no extras."        SAME CLAIM, false since 5491bd4  -> FIX
+# doc:251  "the frozen record's `model` field"          SAME CLASS: the frozen epithet, no count -> FIX (drop epithet)
+# doc:278  "The other four stay silent by design"       DIFFERENT (skip-cause arithmetic)  -> leave
+# hook:10  "frozen DESIGN_SPEC #178"                    DIFFERENT (a frozen design document, not the record) -> leave
+# hook:20  "Record is FROZEN, four fields only"         SAME CLAIM, false since 5491bd4  -> FIX (named in the rework handoff)
+# hook:353 "Build the frozen 4-field record"            SAME CLAIM in different words. compute_record itself does
+#                                                       return four; the fifth is added by its caller at :641, so the
+#                                                       docstring is locally true but describes gauge.json's shape
+#                                                       wrongly -> FIX (qualify as the four required fields)
+# hook:403-404 "that record is frozen at four fields    SAME CLAIM -- this is the matching in-code comment the rework
+#              and shared with the reader"              handoff names -> FIX (the sidecar rationale itself survives)
+# hook:634 "the presence of its four required fields"   ALREADY CORRECT (g2's own comment, required vs extras) -> leave
+# hook:638 "The four required fields keep their ..."    ALREADY CORRECT -> leave
+# spine_rail:9 "frozen DESIGN_SPEC #138"                DIFFERENT (a frozen design document) -> leave
+#
+# TOKEN-BLIND PASS, adjudicated
+# doc:154  the 4-key JSON sample under "Confirm it on one real tool call" is a top-level
+#          session's example, not a claim about every record. Not false; the eyeball-check
+#          correction at doc:164 is what has to carry the fifth field, and it sits three
+#          lines below this sample.
+# hook:641 the write of identity_resolution_ms itself -- the code, not a claim.
+# No other sentence in either file states the record's field count without using a swept word.
