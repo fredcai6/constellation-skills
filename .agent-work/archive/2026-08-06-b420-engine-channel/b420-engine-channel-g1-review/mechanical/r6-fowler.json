@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "mechanical": {
+    "run": "b420-engine-channel-g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r6-fowler",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b420-engine-channel-g1-review-r6-fowler@b361bd76f4e75fd4c2724abf2cf9677782aa4964",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b420-engine-channel-g1-review",
+    "generated_at": "2026-08-06T00:12:10Z"
+  }
+}
