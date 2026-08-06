@@ -1,0 +1,71 @@
+# Frozen approval census for the `unapproved-store-mention` leg of
+# scripts/verify_retirement.py (#403 / #447 g1).
+#
+# Format: one `# <reason>` line, then one `<path>:<normalized line>` entry directly
+# beneath it. `normalize()` collapses all whitespace, so re-indenting or reflowing an
+# approved line does not read as a new mention. A path never contains a colon; the
+# quoted line often does, so the FIRST colon separates the two fields.
+#
+# Naming the episode store is not forbidden -- the write path has to be named
+# somewhere. What this census exists to catch is a shipped surface that starts telling
+# an agent to READ the store and condition its behaviour on what it finds. That is the
+# playbook coming back under a new name, and it is how #308's retirement was undone.
+#
+# SEEDED at #447 g1 against the untouched tree, so the leg is green by construction
+# here and goes red the moment g3 moves the store's mentions around. Zero entries sit
+# under skills/ -- no skill instructs an agent about the store today, and that is the
+# property most worth keeping.
+
+# pre-registered tripwire record for #304: names the write path its outcomes take
+TRIPWIRES.md:Git history is the tamper-evident timestamp. The episode store cannot carry a prediction: `create`
+
+# pre-registered tripwire record for #304: names the write path its outcomes take
+TRIPWIRES.md:Outcomes go to `.agent-work/issue-304/TRIPWIRE_OUTCOMES.md`, then into `episodes/active/` via
+
+# pre-registered tripwire record for #304: names the write path its outcomes take
+TRIPWIRES.md:`scripts/apply_episode_delta.py` (the only write path), each episode carrying `expected-behavior` = the
+
+# architecture overview: describes the store as a layer, instructs no agent to read it
+docs/CONSTELLATION_OVERVIEW.md:episodes/active/ + episodes/retired/:
+
+# architecture overview: describes the store as a layer, instructs no agent to read it
+docs/CONSTELLATION_OVERVIEW.md:### The episode store, and what replaces the playbook
+
+# architecture overview: describes the store as a layer, instructs no agent to read it
+docs/CONSTELLATION_OVERVIEW.md:The episode store (`episodes/`, `docs/EPISODE_STORE.md`) is a layer the other four do not
+
+# architecture overview: describes the store as a layer, instructs no agent to read it
+docs/CONSTELLATION_OVERVIEW.md:file into `episodes/retired/`; the archive stays reachable by id so a `consolidated-into:`
+
+# architecture overview: describes the store as a layer, instructs no agent to read it
+docs/CONSTELLATION_OVERVIEW.md:accumulator is `episodes/`; the doctrine is `docs/agents/`; the middle is gone.
+
+# design rationale: names what replaced the playbook read, prescribes nothing
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> What replaces the read is the **episode store** (`episodes/`, #301): observations
+
+# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+docs/agents/CREW_CONTEXT.md:python scripts/apply_episode_delta.py ...
+
+# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+docs/agents/CREW_CONTEXT.md:| `episodes/` | `scripts/apply_episode_delta.py` |
+
+# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+docs/agents/CREW_CONTEXT.md:Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
+
+# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+docs/agents/CREW_CONTEXT.md:episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
+
+# glossary: defines the term, prescribes no behaviour
+docs/agents/GLOSSARY.md:| `episode` | — | One stored record of something observed in a run, kept for later harvest. | — | Lives under `episodes/active/` or `episodes/retired/`. |
+
+# glossary: defines the term, prescribes no behaviour
+docs/agents/GLOSSARY.md:| `episode store` | — | The durable home of episodes. | ~~record store~~ — use **episode store** | — |
+
+# the capture seam's own module: a WRITE path
+scripts/episode_capture.py:#: The mechanical fields `apply_episode_delta._validate_create` requires on every
+
+# the capture seam's own module: a WRITE path
+scripts/episode_capture.py:holds. Deliberately not under `episodes/`: this is the mechanical HALF of an
+
+# the capture seam's own module: a WRITE path
+scripts/episode_capture.py:`episodes/active/` would invite exactly the wrong reading."""
