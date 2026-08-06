@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-implement",
+  "mechanical": {
+    "run": "issue-440-binding-cwd",
+    "project": "constellation-skills",
+    "role": "commander-delegated",
+    "refusals": 0,
+    "spine-step": "g1-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-binding-cwd-g1-implement@21758e928d4a5dbcd6911e761c3468643a69b95a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-binding-cwd",
+    "generated_at": "2026-08-06T08:38:00Z"
+  }
+}

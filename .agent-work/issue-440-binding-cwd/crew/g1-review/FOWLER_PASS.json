@@ -1,0 +1,89 @@
+{
+  "work_id": "issue-440-binding-cwd-g1-review",
+  "diff_ref": "git diff cbd9aee -- scripts/hooks/spine_rail.py tests/test_spine_rail.py (+895/-13; hook 281/13, tests 614/0)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, the frozen DESIGN_SPEC #138 channel B D3 contract in spine_rail.py's module docstring",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "handle_post_tool_use is 104 lines / 72 non-comment code lines (measured; was 89/64 at cbd9aee). It parses the command, resolves identity, resolves the spine path, then carries two distinct store-mutating bodies (claim and release) inline. The claim body and the release body are each a coherent unit that would read better extracted. NON-BLOCKING and explicitly NOT a regression: this change moved in the right direction by extracting the whole resolution ladder into named helpers, adding only +8 code lines to the function while removing the inline _resolve_abs logic. Raising it as an observation for the Commander, not as rework.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "spine_rail.py grew 734 -> 1002 lines, which at module scale reads as a large class.",
+      "override": {
+        "repo_standard": "The frozen DESIGN_SPEC #138 channel B D3 contract recorded in the module's own docstring: 'Three registrations only (Stop, SessionStart, PostToolUse). No PreCompact. Stdlib only... Windows-friendly: UTF-8 writes, native paths, no /tmp literals.'",
+        "reason": "The module is deliberately ONE self-contained stdlib-only file because it is a hook loaded by path, not an importable package - tests import it via importlib.util.spec_from_file_location. Splitting it into modules would break that load contract and the stdlib-only constraint. The standard subordinates the smell: single-file is a stated requirement here, not an accident of growth."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Every new helper (looks_like_checklist, normalize_shell_path, git_worktree_roots, last_cd_target, resolve_spine_candidate, resolve_recorded_release_target) repeats the same try/except Exception -> return-a-safe-empty-value envelope.",
+      "override": {
+        "repo_standard": "The hook contract stated in handle_post_tool_use's docstring - 'PostToolUse NEVER blocks -- always returns {}' - together with global-crew.md's block/stop rule that a hook must not surface failure into the agent's turn.",
+        "reason": "The repetition IS the invariant. Factoring it into a shared decorator or wrapper would make the never-raise guarantee non-local and defeat per-function review of it; each helper is independently reachable and each must independently be total. I verified the guarantee holds rather than accepting it: 23 hostile payload shapes returned {} with zero raises. The standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The new helpers operate on their own arguments; none reaches repeatedly into another object's internals.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "(data, project_dir, tokens, command) travel together as a group into _candidate_roots, and (file_val, data, project_dir, tokens, command) into resolve_spine_candidate. Three of those are redundant views of one thing: tokens is _tokenize(command), file_val is _extract_opt(tokens, '--file'), and the only field read from data is data.get('cwd'). An 'observed command' value object holding command/tokens/cwd would remove the clump and make it impossible to pass a tokens list that disagrees with the command string. Observation only.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "path_source could have been bare string literals but is not: six named PATH_SOURCE_* constants are defined and every one is referenced (verified by grep count, 2-3 references each). Paths use pathlib.Path rather than string surgery except where shell-form normalization genuinely requires string work.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "resolve_spine_candidate(file_val, data, project_dir, tokens, command) takes 5 positional parameters. Same root cause as the data-clumps entry above and would be fixed by the same parameter object; recorded separately because it is the caller-facing half of the problem. Observation only - the arity is not currently error-prone, since there is exactly one call site.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The opposite: the fix is confined to one module by deliberate design (decision-anchor fix-the-resolution-not-the-caller, graded settled/measured). git diff --name-only confirms exactly two files changed, one of them the test file.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The module changed for exactly one reason here - how a relative --file resolves to an absolute spine path. No unrelated concern was edited in the same pass.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation. The deepest access is (data.get('tool_input') or {}).get('command'), which is a guarded two-step, not a train wreck.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "Rung 1 (PATH_SOURCE_WORKTREE_OPT) accepts an ABSOLUTE --worktree, but deliberately skips relative ones - and the engine's own argparse default is --worktree '.' (scripts/checklist_engine.py:2404), which is relative. The workbench reference documents the invocation as 'claim --session-id <id> --claimed-by <role> [--worktree .]'. So under every invocation convention this repo actually documents, rung 1 can never fire; it is a rung built for a caller that does not exist. It is cheap and harmless, and the unit test test_post_claim_relative_worktree_option_is_skipped_not_joined pins the skip behaviour, so this is an observation rather than rework - but the Commander should know rung 1 is currently dead in production and that the ladder's real behaviour is rungs 2-5.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The diff is unusually comment-dense - roughly half the added hook lines are prose, including multi-paragraph docstrings on every helper and inline blocks on each ladder rung.",
+      "override": {
+        "repo_standard": "global-crew.md: 'Match the surrounding code's naming, labeling, and in-file documentation conventions - the project's specific conventions are the local delta', plus this repo's established in-file convention of recording decision anchors and explicit 'KNOWN, NOT CHASED (#nnn)' limitation markers (already present in the pre-change file at cbd9aee).",
+        "reason": "Deodorant is prose that substitutes for code a reader cannot follow. These comments do the opposite: they record WHY - the measured 60/64 evidence, the named decision anchors (fix-the-resolution-not-the-caller, not-fixing-269), and the deliberately-unfixed edges - which is information that cannot be recovered from the code and which this repo's doctrine requires be written down at the site. The code they sit beside is short and readable on its own. The standard subordinates the smell."
+      }
+    }
+  ],
+  "rail_exception": null
+}

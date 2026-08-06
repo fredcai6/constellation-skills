@@ -1,0 +1,585 @@
+{
+  "work_id": "issue-440-binding-cwd",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g1b-ambiguity",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-close"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against LAUNCH_ORDER A2-440 + _COMMON.md, the PROBLEM_STATEMENT and the MISSION_FRAME already written at .agent-work/issue-440-binding-cwd/. Project deltas already read at the spine's context step (docs/agents/ORCHESTRATOR_CONTEXT.md; no docs/architecture map exists, orientation discharged DEGRADED-NO-MAP). Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "launch order, problem statement and mission frame confirmed; plan intent and scope frozen",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "LAUNCH_ORDER A2-440 + _COMMON.md, PROBLEM_STATEMENT.md and MISSION_FRAME.md all confirmed; ORCHESTRATOR_CONTEXT read at the spine's context step; no docs/architecture map exists (DEGRADED-NO-MAP discharged). Plan intent and scope frozen at 3 gates."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "g1 resolution fix: resolve a relative --file against existence-verified candidate roots",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch a subagent invoking constellation-implementer. The change is confined to scripts/hooks/spine_rail.py: replace the 'join the relative --file onto the payload cwd and trust it' resolution with an ordered, VALIDATED candidate-root resolution. Rungs, in order: (0) --file already absolute -> keep today's behaviour, path_source='absolute'; (1) an absolute --worktree <dir> present in the observed command (the engine's claim CLI already accepts it) -> path_source='worktree_opt'; (2) the LAST cd / Set-Location / pushd target parsed out of the observed command text -> path_source='cd_target'; (3) the payload cwd -> path_source='payload_cwd'; (4) every git worktree root registered against project_dir (git worktree list --porcelain) -> path_source='git_worktree'; (5) project_dir -> path_source='project_dir'. A candidate only wins if the resolved file is a VALID CHECKLIST \u2014 it must exist AND parse as JSON AND carry the checklist shape \u2014 not merely exist, because the old defect has been seeding phantom .agent-work/<work_id>/ directories in the main checkout and a bare exists() can be decoyed by one. No candidate validates -> BIND NOTHING (fail closed). For the RELEASE verb specifically, first try to resolve against the RECORDED binding for this key (unique suffix match) before touching the filesystem, so a release still removes what its claim put there even after the spine is archived or deleted. Record the winning rung as an additive 'path_source' field on the binding entry (additive VALUE field only \u2014 the binding KEY shape is untouchable). Normalize MSYS-style '/c/foo' targets to 'C:/foo'. Targeted tests go in tests/test_spine_rail.py and must drive the real payload shapes in tests/fixtures/probe_payloads.jsonl; rung 4 additionally needs a FRESH-SUBPROCESS integration test against a REAL `git worktree add` on disk (a tmpdir repo), never an in-context fixture that hand-injects the root. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed at e0-context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Do NOT change the binding key shape (session_id / session_id#agent_id) \u2014 load-bearing interface, Admiral's to change.",
+        "Do NOT change gauge_writer_hook.py's read side or checklist_engine.py's trip bands.",
+        "Do NOT require any change to #269 (CLAUDE_PROJECT_DIR fixed at session launch).",
+        "PostToolUse must never block and must never raise: every new path stays inside the existing try/except and returns {} on any failure.",
+        "The git-worktree probe must be bounded (short timeout) and must not run on the common path \u2014 only when the earlier rungs miss.",
+        "A test that cannot fail is worse than no test. No test may hand-inject the root it claims to prove the hook derives (the #432/#446 family). Rung 4's test uses a real git worktree on disk in a fresh subprocess.",
+        "Scope discipline (settled/human): build the thing that needs to work. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, never silence."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py \u2014 _resolve_abs (l.390) and its caller in handle_post_tool_use (l.438), file level",
+          "tests/test_spine_rail.py \u2014 targeted tests",
+          "tests/fixtures/probe_payloads.jsonl \u2014 the six real captured payloads"
+        ],
+        "capability": [
+          "session->spine binding maintenance: which absolute spine path an acting agent's claim is recorded against"
+        ],
+        "constraint": [
+          "skip-on-uncertainty: silence beats a confident wrong record",
+          "PostToolUse never blocks",
+          "binding key shape unchanged"
+        ],
+        "decision": [
+          "existence-verified-resolution \u2014 ordered candidate roots, first existing wins, bind nothing if none @grade: guess \u00b7 leans g1 \u00b7 settle: the two-arm live fire in g2",
+          "fix-the-resolution-not-the-caller @grade: settled/measured \u00b7 leans g1",
+          "not-fixing-269 @grade: settled/human \u00b7 leans g1"
+        ],
+        "evidence": [
+          "a worktree-dispatched agent's binding entry names <worktree>/.agent-work/<work_id>/spine.json",
+          "tests/test_spine_rail.py stays green and grows"
+        ],
+        "confidence_flags": [
+          "no architecture map exists (DEGRADED-NO-MAP) \u2014 every structural claim here was read from source this run, none inherited from a map"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-440-binding-cwd/crew/g1-implement/IMPLEMENTER_RESULT.md",
+            "status": "complete",
+            "files_changed": "scripts/hooks/spine_rail.py +294/-13; tests/test_spine_rail.py +614",
+            "targeted_tests": "169 passed, exit 0 (re-run by the commander)",
+            "red_proof": "new tests run against git-stashed pre-change hook: 4 failed, showing the phantom main-tree path"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "g1 resolution fix: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. The reviewer must specifically attack: whether any new test can actually FAIL (a fixture that hand-injects the root it claims to prove is the #432/#446 family this epic has already filed three issues about), whether the fallback ordering can pick a WRONG existing candidate, and whether any new path can raise or block inside PostToolUse. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and verified fresh via run_crew.py --verify-result"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-440-binding-cwd/crew/g1-review/REVIEW_RESULT.md",
+            "red_reproduced": "reviewer restored cbd9aee hook itself: 24 failed / 78 passed, exit 1; rung-4 test failed with the phantom main-tree path, not an ImportError",
+            "weakening": "none - tests/test_spine_rail.py is 614 insertions, ZERO deletions; 15 hunks insert put_checklist() calls, fixtures strengthened",
+            "residual": "tc1: rung3 payload_cwd beats rung4 git_worktree when BOTH trees hold a valid checklist at the same relative path -> a confident wrong path"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "g1 resolution fix: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the targeted suite yourself, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received and verified fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted hook tests pass (spine_rail + gauge writer, the two modules the binding couples)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-440-binding-cwd/crew/g1-review/REVIEW_RESULT.md",
+            "gate": "g1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "g2 acceptance: two-arm live fire \u2014 a HARD trip from a worktree-dispatched agent's own reading",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a subagent invoking constellation-implementer to BUILD the re-runnable two-arm acceptance harness under .agent-work/issue-440-binding-cwd/acceptance/. The harness must: create a DISPOSABLE sandbox pair (a scratch git repo standing in for a main checkout, plus a real `git worktree add` of it); give each arm a COMPLETE scripts/ tree of its own (treatment = this worktree's HEAD, control = `git archive cbd9aee`) because gauge_writer_hook imports spine_rail as a filesystem sibling and nulls SILENTLY if the sibling set is incomplete; write a settings file wiring spine_rail.py AHEAD OF gauge_writer_hook.py as PostToolUse hooks BY ABSOLUTE PATH into that arm's tree; launch a headless `claude -p` whose cwd and CLAUDE_PROJECT_DIR are the sandbox MAIN (this is what reproduces the defect's own precondition); have that session dispatch a subagent INTO the sandbox worktree which claims a spine there with a RELATIVE --file, inflates its own context past its model's absolute HARD cap, runs at least one further tool call so the gauge is written, and then attempts `advance`; and capture the binding store, BOTH candidate gauge paths (worktree and phantom-in-main), the advance's real exit code and output, and observed_at against wall clock. THE CONTROL ARM MUST BE A POSITIVE CONTROL: it has to be shown to have produced a real gauge.json with fill >= hard AT THE WRONG PATH. A control that is merely quiet is worthless \u2014 a missing sibling import, an uncalibrated model, or a subagent that never got an agent_id all produce the same silence and would masquerade as 'the bug reproduced'. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 resolution fix integrated and green",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "NEVER hand-inject the value being proved. The harness must not set the worktree root into any payload, fixture or env var that the hook then reads back \u2014 the whole point is that the hook derives it. A test that cannot fail is worse than no test.",
+        "NEVER touch the live main checkout's .agent-work/.spine-rail-binding.json, the live .claude/settings*.json, or any real worktree. The sandbox is disposable and self-contained.",
+        "The control arm's script must be byte-identical to the treatment arm's except for the hook directory path \u2014 prove it with a diff in the evidence, AND with a recursive diff of the two arms' scripts/ trees showing scripts/hooks/spine_rail.py as the only difference.",
+        "Attribute the reading to the dispatched agent three independent ways, not one: the binding key must be the composite session_id#agent_id shape; the record must carry identity_resolution_ms (written only on a dispatched agent's record, #419); and the parent and the subagent must run on DIFFERENT models so gauge.json's own `model` field says whose reading it is.",
+        "Before running an arm, assert the acting model string is a key in gauge_reader._PROFILES \u2014 an uncalibrated model yields NO reading at all, which would read as a false negative.",
+        "Use `python`, never `py` \u2014 `py` resolves to a runtime with no pytest on this box.",
+        "Cap every dispatched model at Opus or lower and name the model explicitly. No Fable at any tier.",
+        "Report a measured negative with the same rigor as a win. If the trip genuinely cannot be made to fire, that is a complete deliverable \u2014 do not fabricate it."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py + scripts/hooks/gauge_writer_hook.py \u2014 wired by absolute path, the only per-arm variable",
+          "scripts/checklist_engine.py \u2014 _trip_hard_gate is the observer, identical in both arms",
+          "scripts/gauge_reader.py \u2014 _PROFILES sets the HARD cap the subagent must exceed (claude-opus-5: 150000 tokens of a 1000000 window; claude-haiku-4-5-20251001: 140000 of 200000)"
+        ],
+        "capability": [
+          "gate-boundary HARD trip driven by a per-agent gauge reading"
+        ],
+        "constraint": [
+          "hook code is not fenced by worktree isolation \u2014 an in-worktree validation runs the main checkout's hook code and proves nothing",
+          "#269 unchanged: CLAUDE_PROJECT_DIR fixed at session launch"
+        ],
+        "decision": [
+          "existence-verified-resolution @grade: guess \u00b7 leans g1 \u00b7 settle: THIS GATE \u2014 treatment must trip HARD where control does not"
+        ],
+        "evidence": [
+          "treatment: engine REFUSES the worktree-dispatched agent's advance, and gauge.json sits beside the worktree spine",
+          "control: same script advances normally and leaves a phantom .agent-work/ in the sandbox main"
+        ],
+        "confidence_flags": [
+          "the mechanism under repair is the same mechanism that makes an in-worktree green lie \u2014 the arm-difference-is-one-path construction is what makes this green real"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "g2 acceptance: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. The reviewer must independently answer two questions and refuse to take the harness's word for either: (1) is the captured trip genuinely produced by the WORKTREE-DISPATCHED agent's own reading, rather than the parent's or a hand-placed file; (2) do the two arms differ ONLY in the hook path. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "g2 acceptance: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict, then re-verify the acceptance evidence in your own hands rather than from the claim. Advance on APPROVE; return for rework on BLOCK.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the acceptance evidence is on disk and self-describing: both arms' captured output, the binding-store dumps and the arm diff",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-440-binding-cwd/acceptance/verify_evidence.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-close": {
+      "id": "g3-close",
+      "title": "g3 close: rule on the 60 existing broken bindings, reconcile the doc, prove no regression",
+      "imperative": "Reasoning gate \u2014 no crew (crew waiver: the deliverable is a ruling plus a doc reconcile, and this context already holds the measured binding-store state and the acceptance result; a crew on a prose deliverable is shallower, not safer). Do three things. (1) Read the live main checkout's .agent-work/.spine-rail-binding.json, record the before-state to a file in this worktree, and rule on decision:existing-bindings \u2014 migrate, retire, or leave to age out \u2014 on the evidence of whether a stale entry causes a WRONG reading or merely a missing one. Dry-run before any mutation. (2) Fold the net change into docs/GAUGE_WRITER_HOOK.md, whose 'Known limits of the binding store itself' section currently states this defect as unfixed \u2014 that section is the structural record of record for this area in a repo with no map. (3) Prove no regression across the full suite.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 acceptance integrated \u2014 the trip verdict is known",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the live binding store's before-state is recorded to a file in this worktree and the existing-bindings ruling is written down with its evidence",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "docs/GAUGE_WRITER_HOOK.md no longer states this defect as an open limit and describes the shipped resolution",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "full suite: zero failures AND strictly greater than the cbd9aee baseline of 1688 passed, 2 skipped, and no previously-passing test id disappeared",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "If you mutate the live store, dry-run first and record the before-state to a file in this worktree \u2014 same condition workstream A ran under.",
+        "The live store is shared with a running Admiral session. Prefer the least invasive ruling the evidence supports."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1b-ambiguity": {
+      "id": "g1b-ambiguity",
+      "title": "g1b: refuse to guess when two trees both hold a valid checklist at the same relative path",
+      "imperative": "Fix-now triage of the g1 reviewer's tc1, applied BEFORE the acceptance run so the live fire tests the code that actually ships. The reviewer built the case on disk: when BOTH the main checkout and a worktree hold a valid checklist at the same relative path, rung 3 (payload_cwd) wins over rung 4 (git_worktree) and binds the main checkout's copy -- a CONFIDENT WRONG PATH, which is the exact failure class this issue exists to end. Its reach is real, not theoretical: .agent-work/ is tracked, so committed checklists sit at identical paths in every tree. It is masked today only because rung 2 (cd_target) fires first for a subagent, whose shell cwd resets between bash calls. Make the claim ladder refuse to guess the way resolve_recorded_release_target already does: when more than one candidate root validates and they name DIFFERENT files, bind nothing rather than take the earlier rung -- skip-on-uncertainty, the store's own posture. Rungs 0, 1 and 2 are TOLD-TRUTH (an absolute --file, an absolute --worktree option, an explicit cd target in the command) and must keep winning outright without consulting the later rungs; the ambiguity check governs only the GUESSED rungs, 3 onward. Dispatch an implementer, then have the SAME reviewer that found tc1 confirm the fix and that nothing else regressed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated and green",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "an ambiguous guessed-rung resolution binds NOTHING, and rungs 0-2 still win outright; covered by tests that fail against the g1 code",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "targeted hook tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the reviewer that raised tc1 confirms it is resolved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Bounded fix. Do not restructure the ladder, do not touch the binding key shape, do not touch gauge_writer_hook.py or checklist_engine.py.",
+        "PostToolUse still never blocks and never raises.",
+        "Rungs 0-2 are told-truth and must not be made to pay for the later rungs' ambiguity -- an absolute --file must not start probing git.",
+        "The git probe must still stay off the common path."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "cmdr-440-binding-cwd",
+    "status": "active",
+    "claimed_at": "2026-08-06T08:36:15.298330+00:00",
+    "last_heartbeat": "2026-08-06T09:35:25.822859+00:00",
+    "claimed_by": "commander-delegated",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T08:36:16.601936+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer shipped the six-rung ladder with validate-as-checklist (top-level items list), bind-nothing on total failure, release-resolves-from-recorded-binding-first, path_source provenance, MSYS normalization, 2.0s bounded git probe off the common path. RED proven the strong way: the new tests run against the git-stashed cbd9aee hook fail with the exact phantom main-tree path. 74->102 tests in test_spine_rail.py; 169 passed exit 0, re-verified in my own hands. One surprise to hand the reviewer: 14 EXISTING tests had fixtures that never wrote a spine to disk, so validate-or-bind-nothing broke them and they were reseeded - the reviewer must confirm that is fixture strengthening, not assertion weakening.",
+      "mechanical": false,
+      "ts": "2026-08-06T08:59:18.350093+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "APPROVE. The review was genuinely independent: it reproduced RED itself (24 failed against the restored cbd9aee hook, failing with the defect's own phantom path), proved no weakening MECHANICALLY (zero deletions in the test diff), and proved the git probe is off the common path by spying on subprocess.run. It also found a real residual I must decide on: when BOTH the main checkout and the worktree hold a valid checklist at the same relative path, rung 3 (payload_cwd) beats rung 4 (git_worktree) and binds main - a confident wrong path, which is the exact failure class this issue exists to end. Masked today because rung 2 (cd_target) fires first for every subagent, whose shell cwd resets between calls. Not a regression and not blocking.",
+      "mechanical": false,
+      "ts": "2026-08-06T09:33:59.659321+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "APPROVE integrated. Targeted suite re-run in my own hands: 169 passed, exit 0. The reviewer's independence is what makes this real - it restored the cbd9aee hook itself and watched the new tests fail with the defect's own phantom path, and it disproved test-weakening mechanically (zero deletions in the test diff) rather than by reading. Its tc1 residual is now gate g1b, amended in AHEAD of the acceptance run so the live fire tests shipped code.",
+      "mechanical": false,
+      "ts": "2026-08-06T09:35:25.822825+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-06T09:34:43.583607+00:00",
+      "reason": "Fix-now triage of the g1 reviewer's tc1 (a confident wrong path when two trees both hold a valid checklist at the same relative path), inserted BEFORE the acceptance gate so the two-arm live fire exercises the code that ships rather than a superseded revision. Fix-now triage is delegated to this Commander by LAUNCH_ORDER A2-440 / _COMMON.md Inherited Latitude; the Admiral is the human's delegate for this run and ratifies at the epic return boundary.",
+      "authority": "human",
+      "ops": [
+        "added g1b-ambiguity"
+      ]
+    }
+  ]
+}
