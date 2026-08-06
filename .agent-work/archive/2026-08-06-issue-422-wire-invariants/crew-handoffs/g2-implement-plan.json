@@ -1,0 +1,374 @@
+{
+  "work_id": "g2-implement-issue-422",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-record-check",
+    "m2-interrogation-template",
+    "m3-fowler-template",
+    "m4-tests",
+    "m5-red-green-full-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer's references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/issue-422-wire-invariants/crew-handoffs/g2-implement-handoff.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md read; handoff g2-implement-handoff.md verified complete: task, intent, allowed scope, exclusions, constraints, evidence, wiring grep, verification commands, model tier, authority, stop conditions, return format all present"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-record-check": {
+      "id": "m1-record-check",
+      "title": "Extend record() to evaluate command-kind postconditions on result='pass'",
+      "imperative": "In scripts/checklist_engine.py, extend record() (~line 1731) to mirror advance()'s postcondition-check pattern (reuse _check_condition, same EngineError refusal shape) for command-kind postconditions ONLY: when result=='pass' and the item carries command-kind postconditions, run each via _check_condition and raise EngineError naming the unmet ones if any fail; when result=='fail', do not gate on the command check at all. Thread a base_dir parameter through record()'s signature (mirroring advance()'s) and update main()'s CLI dispatch for the record verb to pass it through. Add a code comment at the exact site stating null-kind and artifact-kind postconditions remain unevaluated by record() -- out of scope for this issue, no current template needs it. Do NOT touch render_human, _why_suffix, or current() -- if the fix requires touching those, STOP and report a blocker instead. Attest c1 after a plain python -c import sanity check; c2 is the regression-floor command check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff loaded, context verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "record() signature carries base_dir; main() CLI dispatch for record passes it through; module still imports cleanly",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import importlib.util; spec = importlib.util.spec_from_file_location('checklist_engine', 'scripts/checklist_engine.py'); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); import inspect; sig = inspect.signature(m.record); assert 'base_dir' in sig.parameters, sig; print('record() base_dir param ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-record-check-1"
+        },
+        {
+          "id": "c2",
+          "statement": "existing test_checklist_engine.py suite (the regression floor for record()'s unchanged no-command-postcondition behavior) stays green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-record-check-2"
+        }
+      ],
+      "constraints": [
+        "Fence: only record, advance, start, _check_condition, and main()'s CLI dispatch for record/advance -- never render_human, _why_suffix, current()",
+        "result=='fail' must never be blocked by the command postcondition check",
+        "null-kind and artifact-kind postconditions stay unevaluated by record() -- comment the limit, do not build it",
+        "record()'s existing behavior for items with NO command postcondition must be byte-for-byte unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-record-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import importlib.util; spec = importlib.util.spec_from_file_location('checklist_engine', 'scripts/checklist_engine.py'); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); import inspect; sig = inspect.signature(m.record); assert 'base_dir' in sig.parameters, sig; print('record() base_dir param ok')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-record-check-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-interrogation-template": {
+      "id": "m2-interrogation-template",
+      "title": "Wire zc-consolidate's command postcondition in INTERROGATION.template.json",
+      "imperative": "In skills/interrogator/templates/INTERROGATION.template.json, add to zc-consolidate's postconditions array (currently []) one command postcondition: id c1, statement naming that verify_interrogation.py refuses a self-answered decision or a consolidation with no joint-understanding sign-off, check kind=command command='python scripts/verify_interrogation.py <interrogation-record-path>', satisfied=false. Add one sentence to zc-consolidate's imperative making the hand-fill-placeholder convention explicit (the driving interrogator agent resolves <interrogation-record-path> to the real path it wrote the record to, before consolidating -- the same per-run-literal precedent EXECUTE_PLAN.template.json's <exact test command> already uses). Touch no other item in the file. Re-validate the file is valid JSON. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "record() command-postcondition check landed and regression floor green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-record-check complete: command postcondition check landed, regression floor green (330 passed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "zc-consolidate carries the new c1 command postcondition and an explicit hand-fill sentence in its imperative; file is valid JSON; no other item touched",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json; d=json.load(open('skills/interrogator/templates/INTERROGATION.template.json', encoding='utf-8')); t=d['tasks']['zc-consolidate']; posts=t['postconditions']; assert posts and posts[0]['id']=='c1', posts; assert 'verify_interrogation.py' in posts[0]['check']['command']; assert '<interrogation-record-path>' in posts[0]['check']['command']; assert 'postcondition' in t['imperative'].lower(); print('zc-consolidate wired ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-interrogation-template-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: only zc-consolidate's postconditions array and one added imperative sentence -- no other item"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-interrogation-template-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json; d=json.load(open('skills/interrogator/templates/INTERROGATION.template.json', encoding='utf-8')); t=d['tasks']['zc-consolidate']; posts=t['postconditions']; assert posts and posts[0]['id']=='c1', posts; assert 'verify_interrogation.py' in posts[0]['check']['command']; assert '<interrogation-record-path>' in posts[0]['check']['command']; assert 'postcondition' in t['imperative'].lower(); print('zc-consolidate wired ok')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fowler-template": {
+      "id": "m3-fowler-template",
+      "title": "Wire r6-fowler's command postcondition in REVIEW_SURVEY.template.json",
+      "imperative": "In skills/reviewer/templates/REVIEW_SURVEY.template.json, add to r6-fowler's postconditions array (currently []) one command postcondition, same shape as zc-consolidate: id c1, check kind=command command='python scripts/verify_fowler_pass.py <fowler-pass-record-path>', satisfied=false. Add one sentence to r6-fowler's imperative making the same hand-fill convention explicit. Touch no other item in the file. Re-validate the file is valid JSON. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "interrogation template wired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-interrogation-template complete: zc-consolidate wired"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "r6-fowler carries the new c1 command postcondition and an explicit hand-fill sentence in its imperative; file is valid JSON; no other item touched",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json; d=json.load(open('skills/reviewer/templates/REVIEW_SURVEY.template.json', encoding='utf-8')); t=d['tasks']['r6-fowler']; posts=t['postconditions']; assert posts and posts[0]['id']=='c1', posts; assert 'verify_fowler_pass.py' in posts[0]['check']['command']; assert '<fowler-pass-record-path>' in posts[0]['check']['command']; assert 'postcondition' in t['imperative'].lower(); print('r6-fowler wired ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-fowler-template-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: only r6-fowler's postconditions array and one added imperative sentence -- no other item"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-fowler-template-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json; d=json.load(open('skills/reviewer/templates/REVIEW_SURVEY.template.json', encoding='utf-8')); t=d['tasks']['r6-fowler']; posts=t['postconditions']; assert posts and posts[0]['id']=='c1', posts; assert 'verify_fowler_pass.py' in posts[0]['check']['command']; assert '<fowler-pass-record-path>' in posts[0]['check']['command']; assert 'postcondition' in t['imperative'].lower(); print('r6-fowler wired ok')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-tests": {
+      "id": "m4-tests",
+      "title": "Land tests/test_record_postcondition_wiring.py incl. deliberate-breakage tests",
+      "imperative": "Write tests/test_record_postcondition_wiring.py (test-after allowed; the deliberate-breakage tests ARE the acceptance criteria). Cover: (1) record(pass) on an item with a PASSING command postcondition succeeds, status becomes complete, result pass. (2) DELIBERATE BREAKAGE via verify_interrogation.py: build a scratch record in tmp_path with a self-answered decision (minimal invalid shape per tests/test_interrogation.py), point the item's command postcondition at it, call record(pass) and assert EngineError. (3) DELIBERATE BREAKAGE via verify_fowler_pass.py: same shape, scratch record in tmp_path with a skipped smell (minimal invalid shape per tests/test_fowler_pass.py). (4) record(fail) succeeds even when the command postcondition would fail -- never blocked. Both breakage cases must genuinely invoke the real, unmodified verify scripts (subprocess or direct import -- your call, document which) against real bad files in tmp_path -- never mocked. All fixtures live in tmp_path only. Attest c1 after the file passes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both templates wired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-fowler-template complete: both templates wired"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_record_postcondition_wiring.py exists and all its tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_record_postcondition_wiring.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-tests-1"
+        }
+      ],
+      "constraints": [
+        "New file only: tests/test_record_postcondition_wiring.py",
+        "Deliberate breakage must use the real unmodified verify_interrogation.py/verify_fowler_pass.py against real bad files in tmp_path -- not mocked/stubbed",
+        "Never touch the shared checkout or this worktree's own tracked files as breakage fixtures"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_record_postcondition_wiring.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-red-green-full-suite": {
+      "id": "m5-red-green-full-suite",
+      "title": "Prove the deliberate-breakage tests fail red without the fix; full suite green",
+      "imperative": "Demonstrate HOW the deliberate-breakage tests in tests/test_record_postcondition_wiring.py fail red without the record() fix: temporarily revert/stash the record() change in scripts/checklist_engine.py, re-run the new test file, observe the specific failure(s), then restore the fix and re-run to green -- record the exact method and output. Then run the full existing suite python -m pytest tests/ -q and confirm it stays green with no regressions. Also run the two required JSON-validity commands and the wiring grep from the handoff. Paste all outputs into the result. Attest c1 (the red/green narrative); c2 is the full-suite command check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "new tests pass on the fixed tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-tests complete: 10 passed on the fixed tree"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "red-to-green flip demonstrated against a genuinely broken before-state -- manual attest with the exact method and output recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red-to-green flip proved via git stash: 'git stash push --quiet -- scripts/checklist_engine.py' reverted record() to its last-committed pre-fix state (diff --stat empty, confirming the mutation applied). Re-ran tests/test_record_postcondition_wiring.py -q against that reverted state -> 3 failed, 7 passed: exactly the three refusal-dependent tests (test_pass_with_failing_command_postcondition_refused, InterrogationDeliberateBreakageTests::test_self_answered_decision_refuses_record_pass, FowlerDeliberateBreakageTests::test_skipped_smell_refuses_record_pass) failed with AssertionError: EngineError not raised -- the other 7 (which don't depend on the refusal path, e.g. record-fail-never-blocked, no-command-postcondition-unaffected, null-kind-unevaluated) stayed green, confirming they test something else. Then 'git stash pop --quiet' restored the fix; diff --stat showed 22 insertions(+), 2 deletions(-) confirming the restore applied; re-validated with python -c ast.parse (syntax ok). Re-ran the test file -> 10 passed in 1.66s."
+        },
+        {
+          "id": "c2",
+          "statement": "full existing suite stays green, no regressions",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-red-green-full-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-red-green-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "impl-422-g2",
+    "status": "released",
+    "claimed_at": "2026-08-06T00:23:41.602335+00:00",
+    "last_heartbeat": "2026-08-06T00:45:17.946870+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T00:46:42.986620+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T00:23:57.037318+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-record-check",
+      "why": "record() now mirrors advance()'s _check_condition pattern for command-kind postconditions only on result=pass; fail is never gated; base_dir threaded through record() and main()'s CLI dispatch; regression suite (330 tests) stays green",
+      "mechanical": false,
+      "ts": "2026-08-06T00:25:11.920292+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-interrogation-template",
+      "why": "zc-consolidate now carries a c1 command postcondition calling verify_interrogation.py <interrogation-record-path>, with the hand-fill convention stated explicitly in the imperative; no other item touched; JSON valid",
+      "mechanical": false,
+      "ts": "2026-08-06T00:25:46.789112+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-fowler-template",
+      "why": "r6-fowler now carries a c1 command postcondition calling verify_fowler_pass.py <fowler-pass-record-path>, same hand-fill convention stated explicitly; no other item touched; JSON valid",
+      "mechanical": false,
+      "ts": "2026-08-06T00:26:17.187319+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-tests",
+      "why": "tests/test_record_postcondition_wiring.py lands 10 tests: generic mechanism (pass/refuse/fail-never-blocked/no-command-postcondition-unaffected/null-kind-unevaluated/gated-guard-unchanged), plus real subprocess deliberate-breakage against verify_interrogation.py (self-answered decision) and verify_fowler_pass.py (skipped smell), all in tempfile.TemporaryDirectory scratch dirs. 10 passed",
+      "mechanical": false,
+      "ts": "2026-08-06T00:29:03.978306+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-red-green-full-suite",
+      "why": "Red-to-green flip proven via git stash (see c1 attest note); full suite green: 1633 passed, 2 skipped, 549 subtests (1623+10 new vs g1's baseline, no regressions); JSON validity and wiring grep both confirmed",
+      "mechanical": false,
+      "ts": "2026-08-06T00:45:17.946833+00:00"
+    }
+  ]
+}

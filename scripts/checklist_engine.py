@@ -1796,12 +1796,32 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
     return f"{iid} -> complete"
 
 
-def record(cl: dict, iid: str, result: str, finding: str | None) -> str:
+def record(cl: dict, iid: str, result: str, finding: str | None,
+           base_dir: Path | None = None) -> str:
     if cl["type"] != SURVEY:
         raise EngineError("record is for survey checklists; use advance")
     if result not in ("pass", "fail"):
         raise EngineError("result must be pass or fail")
     t = task(cl, iid)
+    if result == "pass":
+        # #422 D-scope ruling (survey-record-check-scope): mirror advance()'s
+        # postcondition check (same _check_condition, same refusal shape) for
+        # `command`-kind postconditions ONLY. `null`-kind and `artifact`-kind
+        # postconditions on a survey item remain UNEVALUATED here — out of
+        # scope for this issue, no current template needs it (build what's
+        # needed, comment the rest, pass it up). A `result=='fail'` request is
+        # never gated by this check: recording an honest failure must not be
+        # blocked by the very check that is failing.
+        posts = t.get("postconditions", [])
+        command_posts = [c for c in posts if _condition_kind(c) == "command"]
+        unmet = [c["id"] for c in command_posts if not _check_condition(c, t, base_dir)]
+        if unmet:
+            raise EngineError(
+                f"{iid}: command postconditions unmet {unmet}; cannot record pass",
+                task_id=iid, verb="record",
+                unmet=[{"id": c["id"], "which": "postconditions", "kind": "command"}
+                       for c in command_posts if c["id"] in unmet],
+            )
     t["result"] = result
     t["finding"] = finding
     t["status"] = "complete"
@@ -2545,7 +2565,7 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
                        base_dir=base_dir, why=getattr(args, "why", None),
                        mechanical=getattr(args, "mechanical", False))
     if v == "record":
-        return record(cl, args.id, args.result, args.finding)
+        return record(cl, args.id, args.result, args.finding, base_dir=base_dir)
     if v == "consolidate":
         return consolidate(cl, args.verdict, args.summary, args.override_reason)
     if v == "skip":

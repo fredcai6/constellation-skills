@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-reuse-check-condition",
+  "mechanical": {
+    "run": "issue-422-wire-invariants",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4a-reuse-check-condition",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-422-wire-invariants-r4a-reuse-check-condition@555e40f27319315375b7d3c053ae6823c1a51d1c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-422-wire-invariants",
+    "generated_at": "2026-08-06T01:06:07Z"
+  }
+}

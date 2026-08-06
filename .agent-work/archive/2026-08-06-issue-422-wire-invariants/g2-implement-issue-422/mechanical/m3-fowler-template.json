@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-fowler-template",
+  "mechanical": {
+    "run": "g2-implement-issue-422",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-fowler-template",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-issue-422-m3-fowler-template@7ff473955a5cf9ceb987761d6f3b6ae19c2569a6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-issue-422",
+    "generated_at": "2026-08-06T00:25:53Z"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-422-wire-invariants",
+  "root": "C:/Programs/constellation-skills-wt/epic418-d-422",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "1131f57aee3095d1d1bb700ff4d38c9ac786db6ef98d6735476f95b474642a22",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture map exists in this repo; invariant-check/template-enumeration code structure oriented from source read (scripts/checklist_engine.py, templates dir) rather than a packet map."
+  ],
+  "escalation": "None required this run -- absent architecture map is a known repo-wide gap (constellation-skills is a skill-source repo with no docs/architecture packet map), not specific to issue #422.",
+  "emitted_at": "2026-08-05T23:13:06.670464+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

@@ -1,6 +1,6 @@
 # Lessons Inbox
 
-<!-- playbook-state: run-tick=42 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310 -->
+<!-- playbook-state: run-tick=43 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,issue-422-wire-invariants -->
 
 Transitory inbox for between-audit workflow signal — **not** a playbook, and not a
 permanent home for any rule. Read the Active section at the Commander context step
@@ -37,7 +37,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:a-verdict-must-not-select-on-the-gap-it-escalates
 - scope: constellation
@@ -51,7 +51,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:grading-a-contested-claim-settled-launders-it
 - scope: constellation
@@ -65,7 +65,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:reasoning-gate-crew-waiver-can-be-wrong-for-synthesis
 - scope: constellation
@@ -79,4 +79,4 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2

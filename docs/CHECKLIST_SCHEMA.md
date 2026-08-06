@@ -15,10 +15,10 @@ Every checklist is an ordered list of items and declares one type:
 | type | walk | append | item failure | completes when | output |
 |---|---|---|---|---|---|
 | `gated` | ordered; satisfy each to advance | no | **blocks** (rework / reopen) | every item complete or skipped | the work is done |
-| `survey` | visit every item | **yes** (extend from context) | **recorded, never blocks** | every item visited (resulted or skipped) | a **consolidated** result |
+| `survey` | visit every item | **yes** (extend from context) | **recorded, never blocks** — except a `command`-kind postcondition on the item (#422/#328) | every item visited (resulted or skipped) | a **consolidated** result |
 
 - **`gated`** is execution: the Commander spine, Commander's execute.json, the implementer's own plan. Ordered, blocking, fixed.
-- **`survey`** is inquiry / verification: the **Interrogator's questions** and the **reviewer's checks** are the same shape — hit every item, add items as context warrants, nothing gates anything, then consolidate (a resolved understanding; an APPROVE/BLOCK verdict). A survey is handed a *starting* list and told "verify these, and add more based on the context we gave you."
+- **`survey`** is inquiry / verification: the **Interrogator's questions** and the **reviewer's checks** are the same shape — hit every item, add items as context warrants, then consolidate (a resolved understanding; an APPROVE/BLOCK verdict). A survey is handed a *starting* list and told "verify these, and add more based on the context we gave you." Nothing gates *appending*; a `command`-kind postcondition on an item is the one exception to "nothing gates anything" — `record <id> --result pass` REFUSES if that command fails (`zc-consolidate`, `r6-fowler`), mirroring `advance`'s check the same way. `record --result fail` is never gated by it. `null`/`artifact`-kind postconditions on a survey item remain unevaluated by `record` (#422/#328's scope).
 
 **Append is inherent to `survey`, not a separate flag**; `gated` never appends.
 
@@ -360,7 +360,7 @@ Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** 
 | `criteria <id>` | gated | emit `postconditions` + implied evidence types |
 | `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress` |
 | `advance <id> [--why "…" \| --mechanical] --evidence …` | gated | check all `postconditions`; then, for a **non-exempt** gate, require a running `--why` **or** an explicit `--mechanical` marker (silence **fails closed**) and append a `why_trail` record; `→ complete` (see *Why-capture*) |
-| `record <id> --result pass\|fail [--finding …]` | survey | record the check outcome; `→ complete`; never blocks |
+| `record <id> --result pass\|fail [--finding …]` | survey | record the check outcome; `→ complete`; `--result fail` never blocks. `--result pass` REFUSES if the item carries an unmet `command`-kind postcondition (checked via the same `_check_condition` `advance` uses) — `null`/`artifact`-kind postconditions on a survey item are not evaluated here (#422/#328) |
 | `append <id> …` | survey | add an item from context |
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |

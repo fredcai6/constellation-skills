@@ -1,0 +1,83 @@
+{
+  "work_id": "issue-422-wire-invariants",
+  "diff_ref": "skills/commander/templates/COMMANDER_SPINE.template.json (init gate preconditions array), scripts/verify_worktree_precondition_coverage.py (new), tests/test_worktree_precondition_wiring.py (new) -- worktree C:/Programs/constellation-skills-wt/epic418-d-422 at commit 990712f + uncommitted working tree",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "references/global-crew.md, Implementation discipline: Make the minimal change that satisfies the handoff; no speculative abstraction.",
+        "reason": "WORKTREE_ENTERING_GATES is a tuple of (template_path, gate_id) string pairs rather than a small NamedTuple or dataclass with named fields. A one-entry maintained list wrapped in a bespoke type today would be speculative abstraction ahead of a real second case; the module docstring already documents the pair meaning and the reviewer or next-editor context, so the plain tuple is the minimal shape, not an unnamed-primitive smell worth flagging."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

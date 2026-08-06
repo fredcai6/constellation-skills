@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4b-null-artifact-comment",
+  "mechanical": {
+    "run": "issue-422-wire-invariants",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4b-null-artifact-comment",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-422-wire-invariants-r4b-null-artifact-comment@d8c9102a62d983f6496dd26de6aaadb5aa1531a7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-422-wire-invariants",
+    "generated_at": "2026-08-06T01:06:27Z"
+  }
+}

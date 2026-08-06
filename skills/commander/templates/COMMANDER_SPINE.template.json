@@ -8,7 +8,9 @@
       "id": "init",
       "title": "Set up work area",
       "imperative": "Run: python <commander-skill-dir>/scripts/init_work_area.py <work-id>. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) — use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: <engine> claim --session-id <commander-session-id> --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id <commander-session-id> on every mutating engine call against this spine.",
-      "preconditions": [],
+      "preconditions": [
+        {"id": "c0", "statement": "this Commander is operating in the worktree it was provisioned into, not the shared checkout or another agent's worktree -- proven, not asserted", "check": {"kind": "command", "command": "python scripts/verify_worktree_isolation.py --here <repo-root>"}, "satisfied": false}
+      ],
       "postconditions": [
         {"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python <commander-skill-dir>/scripts/init_work_area.py <work-id>"}, "satisfied": false},
         {"id": "c2", "statement": "engine session lease claimed for this spine (commander owns the state)", "check": null, "satisfied": false}
