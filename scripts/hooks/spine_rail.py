@@ -125,6 +125,92 @@ def save_binding(project_dir: Path, data: dict) -> None:
     _save_json_map(binding_path(project_dir), data)
 
 
+# --- per-agent binding identity (#419) ---------------------------------------
+
+BINDING_KEY_SEP = "#"
+
+# Tokens that make an `agent_id` unusable as part of a key. `agent_id` is a
+# harness field this repo does not own, and the gauge writer interpolates it
+# into a filesystem path (`agent-{agent_id}.jsonl`), so a path separator, a
+# parent-traversal token, or our own key separator must never reach it.
+_AGENT_ID_REJECT = (BINDING_KEY_SEP, "/", "\\", "..")
+
+
+def binding_key(payload: dict):
+    """The outer key this payload's binding is filed under -- the SINGLE place
+    the composite per-agent key is composed anywhere in the codebase (the gauge
+    writer calls this same function through its `_spine_rail` module handle, so
+    the two hooks cannot drift).
+
+    Agent-tool subagents SHARE their parent's `session_id`, so keying on
+    `session_id` alone piles every crew claim under one key and the gauge writer
+    -- seeing more than one candidate -- calls it ambiguous and writes nothing.
+    The harness hands the acting agent's identity over directly as `agent_id`
+    (measured live on 2.1.222; see tests/fixtures/probe_payloads.jsonl), so the
+    key is a payload lookup, never a search.
+
+    Three-way, deliberately not two-way:
+
+    | payload                                     | returns                  |
+    |---------------------------------------------|--------------------------|
+    | `session_id`, no `agent_id` (top-level)     | bare `session_id`        |
+    | `session_id` + well-formed `agent_id`       | `"<session_id>#<agent>"` |
+    | `agent_id` present but UNUSABLE             | `None`                   |
+    | `session_id` falsy                          | `None`                   |
+
+    `None` means BIND NOTHING -- the caller writes no entry at all. An unusable
+    `agent_id` must NOT fall back to the bare `session_id`: that would file the
+    SUBAGENT's entry under the PARENT's key, push the parent to two candidates
+    and silence the PARENT's gauge, manufacturing exactly the blindness this
+    keying exists to remove. Failing closed costs that one subagent its binding
+    and affects nobody else.
+
+    A present-but-null `agent_id` reads as unusable, not as absent: it is not a
+    string, and the probed harness omits the key entirely for a top-level agent
+    rather than sending null.
+    """
+    try:
+        data = payload or {}
+        sid = data.get("session_id")
+        if not sid:
+            return None
+        if "agent_id" not in data:
+            return sid  # top-level agent -- behavior unchanged
+        agent_id = data.get("agent_id")
+        if not agent_id or not isinstance(agent_id, str):
+            return None
+        if any(tok in agent_id for tok in _AGENT_ID_REJECT):
+            return None
+        return "{sid}{sep}{aid}".format(sid=sid, sep=BINDING_KEY_SEP, aid=agent_id)
+    except Exception:
+        return None
+
+
+def session_view(binding: dict, sid) -> dict:
+    """The merged `{abs_spine_path: entry}` a harness session can see: the bare
+    `sid` key plus every per-agent key `sid + BINDING_KEY_SEP + <agent_id>`.
+
+    Readers (decide_stop, decide_session_start) must keep seeing every spine
+    they saw before the per-agent split, so they read through this view rather
+    than `binding[sid]`. The prefix test uses the separator on purpose -- a key
+    that merely starts with the sid (`<sid>-something`) is a different session,
+    not a child of this one. Never raises; returns {} on anything unusable.
+    """
+    merged = {}
+    try:
+        if not sid:
+            return {}
+        prefix = "{sid}{sep}".format(sid=sid, sep=BINDING_KEY_SEP)
+        for key, entries in (binding or {}).items():
+            if not isinstance(entries, dict):
+                continue
+            if key == sid or (isinstance(key, str) and key.startswith(prefix)):
+                merged.update(entries)
+        return merged
+    except Exception:
+        return {}
+
+
 def load_nudges(project_dir: Path) -> dict:
     return _load_json_map(nudge_path(project_dir))
 
@@ -312,8 +398,14 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     once (#202) -- the binding is keyed by the RESOLVED ABSOLUTE SPINE PATH
     itself (`abs_spine`), not by worktree or cwd
     (decision:key-binding-by-spine-path-not-worktree-or-cwd). A claim writes
-    only `binding[sid][abs_spine]`, leaving any other abs_spine_path entries
-    for that sid untouched; a release removes only that one entry.
+    only `binding[key][abs_spine]`, leaving any other abs_spine_path entries
+    for that key untouched; a release removes only that one entry.
+
+    The OUTER key is `binding_key(data)` (#419), not the bare `session_id`:
+    subagents share their parent's session_id, so keying on it alone piled
+    every crew claim under one key and left the gauge writer with no way to
+    tell whose reading it held. `binding_key` returning None means the acting
+    identity is unresolved -- bind NOTHING, write no entry at all.
 
     PostToolUse NEVER blocks -- always returns {}.
     """
@@ -328,8 +420,9 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         if verb not in ("claim", "release"):
             return {}
         sid = data.get("session_id")
-        if not sid:
-            return {}
+        key = binding_key(data)
+        if key is None:
+            return {}  # unresolved identity -> bind nothing (fail closed)
         file_val = _extract_opt(tokens, "--file")
         cwd = data.get("cwd") or str(project_dir)
         abs_spine = _resolve_abs(file_val, cwd, project_dir) if file_val else None
@@ -338,29 +431,44 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         binding = load_binding(project_dir)
         if verb == "claim":
             engine_session = _extract_opt(tokens, "--session-id")
-            sid_bindings = dict(binding.get(sid) or {})
-            sid_bindings[abs_spine] = {
+            key_bindings = dict(binding.get(key) or {})
+            key_bindings[abs_spine] = {
                 "spine": abs_spine,
                 "engine_session": engine_session,
                 "worktree": cwd,
                 "claimed_at": _now_iso(),
             }
-            binding[sid] = sid_bindings
+            binding[key] = key_bindings
             save_binding(project_dir, binding)
         else:  # release
-            sid_bindings = binding.get(sid)
-            if sid_bindings and abs_spine in sid_bindings:
-                sid_bindings = dict(sid_bindings)
-                del sid_bindings[abs_spine]
-                if sid_bindings:
-                    binding[sid] = sid_bindings
+            key_bindings = binding.get(key)
+            if key_bindings and abs_spine in key_bindings:
+                key_bindings = dict(key_bindings)
+                del key_bindings[abs_spine]
+                if key_bindings:
+                    binding[key] = key_bindings
                 else:
-                    del binding[sid]
+                    # Delete THIS key's now-empty entry set -- `key`, never
+                    # `sid`. Under a composite key those are different keys,
+                    # and deleting the bare one here would wipe a live
+                    # parent's entire binding.
+                    del binding[key]
                 save_binding(project_dir, binding)
-            nudges = load_nudges(project_dir)
-            if sid in nudges:
-                del nudges[sid]
-                save_nudges(project_dir, nudges)
+            # The nudge / three-strike escape-hatch ledger is documented and
+            # written (decide_stop) under the BARE session_id, and it stays
+            # that way: splitting strikes per-agent would fragment the count
+            # and weaken the hatch. So this delete keeps `sid` while the
+            # binding writes above use `key` -- that asymmetry is intended,
+            # not a missed substitution (#419).
+            # It also fires only for a TOP-LEVEL release (`key == sid`). The
+            # strikes belong to the session whose turn-ends get nudged, so a
+            # subagent releasing its own spine must not reset its parent's
+            # count.
+            if key == sid:
+                nudges = load_nudges(project_dir)
+                if sid in nudges:
+                    del nudges[sid]
+                    save_nudges(project_dir, nudges)
         return {}
     except Exception:
         return {}
@@ -427,7 +535,10 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
     try:
         sid = data.get("session_id")
         binding = load_binding(project_dir)
-        sid_bindings = binding.get(sid) or {}
+        # Read through the merged per-agent view (#419): a spine claimed by a
+        # subagent now lives under `sid#agent_id`, and the stopping session
+        # must still see it.
+        sid_bindings = session_view(binding, sid)
         if not sid_bindings:
             return {}  # no binding -> allow
 
@@ -504,7 +615,9 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
     try:
         sid = data.get("session_id")
         binding = load_binding(project_dir)
-        sid_bindings = (binding.get(sid) or {}) if sid else {}
+        # Merged per-agent view (#419), same reason as decide_stop: a resumed
+        # session must still find a spine claimed under a per-agent key.
+        sid_bindings = session_view(binding, sid)
         # Per-entry iteration mirroring decide_stop's already-generalized
         # pattern (#202/#261): `sid_bindings` is a dict of abs_spine_path ->
         # entry (never a flat {spine, ...} directly). Take the FIRST entry
@@ -531,6 +644,9 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
                 # silently resolve.
                 own_spine, own_spine_path = matches[0]
                 lease_for_bind = own_spine.get("engine_session") or {}
+                # Bare `sid`, NOT binding_key(data) (#419): SessionStart never
+                # carries an agent_id, so a resumed session is by definition
+                # top-level. Only the READ above changed.
                 sid_bindings2 = dict(binding.get(sid) or {})
                 sid_bindings2[own_spine_path] = {
                     "spine": own_spine_path,
