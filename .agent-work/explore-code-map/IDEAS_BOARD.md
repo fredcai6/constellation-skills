@@ -76,8 +76,19 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | x6 | Is there a scip-matlab or quick equivalent, and what does the best local route emit from matlab_src? | prototype (measurement) | **complete** (cycle 2) | `excursions/x6-brief.md` → `excursions/x6-result.md` |
 | x7a | Extractor fork candidate A: SCIP + AST sidecar emits statement lines for the src/utils slice — what does the glue cost? | prototype (logic, design-it-twice A) | dispatched (cycle 2) | `excursions/x7a-brief.md` → `excursions/x7a-result.md` |
 | x7b | Extractor fork candidate B: pure-AST extractor, same slice, resolution accuracy measured vs SCIP ground truth | prototype (logic, design-it-twice B) | dispatched (cycle 2) | `excursions/x7b-brief.md` → `excursions/x7b-result.md` |
-| x8 | Does anything in the real map resist living as in-code comments? Known-false census. (Falsifies the human's "comments suffice" lean) | research | dispatched (cycle 2) | `excursions/x8-brief.md` → `excursions/x8-result.md` |
-| x9 | Grammar prior art → mapped onto the existing graph | research | **held** until x8 lands | — |
+| x8 | Does anything in the real map resist living as in-code comments? Known-false census. (Falsifies the human's "comments suffice" lean) | research | **complete** (cycle 2) | `excursions/x8-brief.md` → `excursions/x8-result.md` |
+| x9 | Grammar prior art → mapped onto the existing graph (constraints from x2/x3/x8 baked in) | research | dispatched (cycle 2) | `excursions/x9-brief.md` → `excursions/x9-result.md` |
+
+## Key findings — cycle 2, x8: comments carry 89% of the why; the residue has a name and a mechanism
+
+*Excursion finding (measured over the full corpus, no sampling; registry-verified) — NOT human verdicts. Full result: `excursions/x8-result.md`; classification CSVs under `evidence/x8/`.*
+
+- **The human is substantially right**: of 454 why-bearing items in f1Brainz's map, 65% anchor on a single function/class/module, 24% on a small named set — **89% has a natural code home**. The repo's own authors already prove it: the decoupled-longitudinal module docstring carries its decision file's rationale nearly verbatim, unprompted; a known-false record already lives happily at `damage_batch.py:55`.
+- **Known-false is small, as suspected: 58 records** (~1 per 8 source files), and **84% anchor on live code** — the standard shape is "we chose A over B," and A's function is B's obituary.
+- **The falsification, one mechanism, six records**: *"we built B, measured it, and removed it" leaves the obituary without a corpse.* A known-false record's anchor is exactly the thing most likely deleted — the sharpest case is the P1b braking kernel, whose source is gone and whose record exists verbatim "because it is the obvious thing to re-propose... and it does not work." The comment-only design loses precisely the records whose job is preventing re-proposal. Tombstones need a home that isn't the deleted file.
+- **Two smaller resisting classes**: artifact-staleness (5 items — the code is right, a stored `.db` is wrong; no line to comment) and freeze-before-look provenance (3 — the load-bearing fact is a commit *ordering*, which only git proves; a comment claiming it is copy-paste-survivable, the exact failure the discipline exists to prevent).
+- **Decision files decompose far better than ADR folklore suggests**: 10 of 16 fully reduce to anchored comments + git history; 5 leave a small named remainder; only the forward-roadmap file (for code that doesn't exist yet) resists wholesale. The one systematic loss is the **decision-to-code index** — a navigation loss, recoverable with stable decision-ids in comments.
+- **Bonus**: one live map-drift found in passing (the `regime_rollup` OSQ row says removal-proposed; the module was removed at `b9248aef`).
 
 ## Key findings — cycle 2, x6: no scip-matlab; mtree is the cheapest arm of the three and carries the write side natively
 

@@ -1,0 +1,68 @@
+source_file,record_group,n_items,bucket,natural_code_anchor,anchor_exists,note
+decisions/builds-2-3-forward-roadmap.md,anti-orphan preamble + allocation-not-gating rule,2,c,none (meta: about why this record exists at all),n/a,"content is about the RECORD's discoverability, not about code"
+decisions/builds-2-3-forward-roadmap.md,Build 2 race-reference interfaces + P6 variant queue,5,c,none (code not built),no,"soft push/managed classification; flip stint-position component; multiplicative gate; gap-behind; SC/VSC exclusion; kinematic-headroom leg"
+decisions/builds-2-3-forward-roadmap.md,Build 3 live-loop interfaces,2,c,"store.py seeded/supersede path is NotImplementedError today",partial,"deferred lifecycle branch; feature-family fusion choir seam dormant"
+decisions/builds-2-3-forward-roadmap.md,carried follow-on threads (#654 #642 grip-null),3,b,"feature_view/records.py CarBasisPosteriorRecord; property_mixture.py; grip_store.py",yes,already partly in code as reserved slots
+decisions/burn-rate-calibration-design.md,Decision + Rationale + Structural Consequence,14,a,"burn_rate_calibration.py; fuel_features.py; mass_model.py override seam",yes,"'do NOT reintroduce a DB read inside mass_model.py' is a textbook single-anchor comment"
+decisions/burn-rate-calibration-design.md,Rejected Alternatives,4,a,"mass_model.py; burn_rate_calibration.py throttle_response_fraction",yes,"throttle_response_fraction kept in-tree as a documented negative result"
+decisions/burn-rate-calibration-design.md,Review Trigger,3,a,mass_model.py / fuel_features.py,yes,
+decisions/c1-driver-utilization-design.md,choices 1-3 + rationale + consequences,13,a,"car_prior.py build_car_ceiling/causal_predict; regime_utilization.py split_is_impure",yes,
+decisions/c1-driver-utilization-design.md,choice 4 + its consequence + 'a second inline scalar sim' rejection,3,c,"scripts/ideal_lap_compare.py, ideal_vs_actual.py, ver_monza_kde.py",NO - deleted,verified deleted from repo
+decisions/c1-driver-utilization-design.md,Rejected Alternatives (denominator / frontier),3,a,car_prior.build_car_ceiling,yes,chosen implementation is the natural host
+decisions/c1-driver-utilization-design.md,#628 strictly_pre extension + leakage diagnostic,2,a,"car_prior.build_car_ceiling(strictly_pre); driver_utility_gate.py",yes,"2.185 m/s vs 0.15 m/s bar = a measurement number, fits a comment"
+decisions/cross-view-covariance-sparse-representation.md,all,8,a,estimate_store.py _CROSS_VIEW_COVARIANCE_KEYS,yes,"dense-N-by-N rejection anchors on the sparse key set that replaced it"
+decisions/decoupled-1d-longitudinal.md,Decision + Rationale + Structural Consequence,14,a,decoupled_longitudinal.py,yes,"module docstring ALREADY carries most of this text near-verbatim"
+decisions/decoupled-1d-longitudinal.md,Rejected Alternatives,3,a,"decoupled_longitudinal.py; trajectory_refine.py",yes,
+decisions/decoupled-1d-longitudinal.md,#523/#546 verdict prose (do NOT wire coast; HOLD throttle),3,a,"run_decoupled_coast(); estimate_longitudinal(sig_a_soft_throttle)",yes,verdict sentence anchors cleanly
+decisions/decoupled-1d-longitudinal.md,#523/#546 measurement tables (6 tables),6,c-soft,same as above,yes,"technically hostable; ~95 lines of tabular sweep data would dominate the docstring"
+decisions/dual-cda-fusion-honest-total-sigma.md,all,8,a,estimate_store_fields.py _fused_cda_fields,yes,"record names itself the ONE call site; explicitly warns a 'simplifier' would regress it"
+decisions/gold-lifecycle-provenance.md,all,13,b,"scripts/promote_gold.py; pipeline_validation provenance gate; params/gold layout",yes,"three physical dirs + a script + a gate = small named set"
+decisions/grip-estimate-record-session-level-pk.md,session-level PK + related,2,a,grip_store.py GripEstimateRecord,yes,
+decisions/grip-estimate-record-session-level-pk.md,'frozen before the fit was run' provenance,1,c,gate/store constants,yes,"the load-bearing fact is a COMMIT ORDERING; a comment asserting it is unverifiable"
+decisions/ideal-lap-sim-two-sided-evaluator.md,all,19,a,"sim_evaluator.is_under_call_suspect; ribbon.drs_zone_mask; car_prior._assemble_lateral/_build_longitudinal",yes,"strong single-anchor file; 5 fired review triggers all name one function each"
+decisions/pooled-sigma-shared-systematic-floor.md,all,9,a,pooling.pool_random_effects(shared_floor); pool_driver._shared_floor_for_param,yes,
+decisions/regime-readiness-rubric.md,all,18,a,regime_readiness.py DEFAULT_THRESHOLDS,yes,"thresholds are already named constants; rationale belongs beside each"
+decisions/smoother-rounds-braking-knee.md,Decision + consequence + #505 recommendation,10,a,"braking_view.clean_longitudinal_from_raw; smoother.py",yes,
+decisions/smoother-rounds-braking-knee.md,'P1b braking time-kernel' rejected alternative,1,c,src/physics/braking_kernel.py,NO - deleted (only .pyc),"the record's own stated purpose: it is the obvious thing to re-propose and it does not work"
+decisions/smoother-rounds-braking-knee.md,#505 evidence tables (2),2,c-soft,braking_view.py / smoother.py,yes,per-circuit m/s2 comparison tables
+decisions/traction-own-measured-frontier.md,all,6,a,"traction_fit.fit_traction_frontier; capability_envelope.py",yes,"'do not reintroduce a k x lateral cap' is a one-line comment on the envelope"
+decisions/two-cycle-external-anchor-design.md,4 invariants + rationale + consequences + rejections + triggers,23,a,"accel_obs.emit_accel_obs; trajectory_refine.refine_trajectory; decoupled_longitudinal.py",yes,"every invariant names exactly one function; the strongest (a) file in the set"
+decisions/tyre-age-g-track-design.md,all,14,b,"tyre_separation.py g_track; pooling.py (the NOT-used one)",yes,"needs a comment in BOTH files: 'do not substitute pooling.py here' has to be readable from pooling.py too"
+decisions/weekend-state-f6-gate-rubric.md,thresholds + rationale + rejections,13,a,gate_spec.py named constants; gate_f6.py,yes,
+decisions/weekend-state-f6-gate-rubric.md,'authored and committed BEFORE any layer existed' freeze provenance,2,c,gate_spec.py,yes,"freeze-before-look is a claim about git history that a comment cannot make credible"
+packets/physics.md,Known Limits (single-module),18,a,named module per bullet,yes,
+packets/physics.md,Known Limits (cross-module: fit-vs-apply asymmetries; ceiling-source split),6,b,"LateralView.fit + PhysicsSimulator._banked_corner_cap + car_prior._assemble_lateral",yes,"the limit IS the mismatch between two modules; needs both ends"
+packets/physics.md,Known Limits: stores STALE vs wired burn rate,1,c,"data/physics_estimates.db, race_stint_estimates.db",n/a - data artifacts,"the CODE is correct; the DATA is stale. No code location is wrong."
+packets/physics.md,Open Questions: processed_telemetry has producer no consumer,1,b,"pvat_writer.write_lap_pvat; session_race.load_race_stints",yes,
+packets/physics.md,compound damage-unit screening: INCONCLUSIVE-NULL + 4-confound audit,2,c-soft,"damage_scoring.py; damage_candidates.py; _fit_lateral_decay",yes,"~29 lines of confound analysis spanning 4 modules + an unbuilt fix"
+packets/physics.md,'robustness scaffolding never built' (ellipse-u; self-vs-global normalization),1,c,none,NO - never built,"per-stint c_down IS already an in-code comment at damage_batch.py:55 - proving the pattern works when an anchor exists"
+packets/physics.md,tyre-supplant #511 CONTEXTUAL / NOT-A-GO finding,1,c-soft,tyre_supplant.py classify_axis_verdict,yes,
+packets/preprocessing.md,'Removed in #448' - 12 deleted modules + 2 retired docs,2,c,"windowed_estimator.py, windowed_solver/, consensus_stitcher.py, +9 more",NO - all deleted,"'do not expect them on disk and do not re-add them' has no on-disk home"
+packets/preprocessing.md,'Removed in Task 10' - artifact.py,1,c,src/preprocessing/trajectory/artifact.py,NO - deleted,
+packets/preprocessing.md,report-schema contract half describes a dead format,1,b,"grading.py compute_trust_profile + docs/report_schemas/*.md",partial,anchor is a doc not code
+packets/preprocessing.md,capability + validation numbers,1,a,trajectory/ __init__ / _hp_search.py,yes,
+packets/reporting.md,blessed raw-sqlite3 bypass (#351),3,a,html_reports/report_training_data.py _connect_report_db,yes,"already hardened into ONE helper precisely so the comment has a home"
+packets/reporting.md,retracted 'whole package is dead' claim,1,c,none,n/a,a correction to a PRIOR MAP CLAIM; no code was ever wrong
+packets/publishing.md,'those edges were removed from the map as fabricated',1,c,none,n/a,same shape: a retraction of map content
+packets/compound_prior.md,Known Limits incl. per-season beta degeneracy #382,6,a,"runtime_normalization.py; build_pooled_compound_prior.py; neural_rate.py",yes,
+packets/data.md,Known Limits + dense-weather rule,6,b,"collector.py; _metadata_session.py; check_data_quality.py",yes,"the rule 'any new weather feature must check availability' addresses code not yet written"
+packets/evo_predictor.md,Key Constraints + decision anchor,8,a,"module_adapters/_registry.py; DNF_POSITION constant",yes,"'value 21 misclassifies P21 on a 21-driver grid' belongs beside the constant"
+packets/latent_power.md,Known Limits + retro notes,6,a,"config.py; module_training_orchestration.py",yes,
+packets/analysis.md,dead-path evidence,4,a,sector_analysis.py,yes,
+packets/simulation.md,dead-path known limits,3,a,weekend_simulator.py,yes,
+packets/calibration.md,known limits + resolved forbidden dep,2,a,harness.py,yes,
+"packets/{common,models,strategy,fantasy_scoring}.md",notes + known limits,10,a,named module per bullet,yes,
+index.md,Open Structural Questions - single/multi-module rows,15,a/b,named modules,yes,"weekend_state FLOAT; DB_PATH hardcode; phase confound; altitude flag; SC_BURN_FRACTION; team-name seam; corner-class cap; reserved slots; apex_obs; driver_utility; property_mixture; dual fit engine; docstrings cite deleted spec; CANONICAL_TRAIN_YEARS; ephemeris"
+index.md,OSQ: regime_rollup disposition (superseded distance-share),1,c,src/physics/layer2/regime_rollup.py,NO - deleted at b9248aef,map still says removal-PROPOSED; already drifted
+index.md,OSQ: soft_class_membership bridge disposition,1,c,segment_classifier.soft_class_membership,NO - removed at b9248aef,
+index.md,OSQ: artifact-staleness rows (rt_comparison; compound_prior 2022; fit-store #559; stores #577),4,c,"data/*.db and params/*.json artifacts",n/a - data artifacts,"code is correct; the stored artifact is stale. No wrong line to comment on."
+index.md,OSQ: doc/map-hygiene rows (parallel schema docs; purposes.yml ontology; WEATHER_REGRESSION snippet; diagnostics has no node; evo coverage tail; #325 deferred),6,c,"markdown files and the map's own overlay files",n/a,about docs and the map itself
+overlays/purposes.yml,top-level parentless purposes (race_prediction; physics_estimation; data_ingestion),3,c,none (above every file in the repo),n/a,"a claim about what the SYSTEM is for; no file owns it"
+overlays/purposes.yml,child capability nodes (7),7,b,"named package sets e.g. C->D->E->G->H->PANEL across 6 subpackages",yes,pilot/pipeline.py REQUIRED_SLOTS is a plausible group host
+overlays/constraints.yml,6 constraint rationale blocks,6,b,"whole packages (src/physics/ must not import src/evo_predictor/)",yes,"already enforced by source-scan tests - the TEST is arguably the better anchor than a comment"
+overlays/constraints.yml,2 claim blocks (unit-conversion seam; feature_view import boundary),2,b,"car_prior._assemble_lateral/_build_longitudinal; feature_view/read.py __all__",yes,
+index.md,purpose: field on 48 nodes,48,a,each package __init__.py,yes,one node = one package
+reference/physics-unit-conventions.md,unit-convention table rows,38,b,"producer + store column + consumer + conversion seam (4 locations per row)",yes,"a table of 38 4-way relations; each cell anchors, the TABLE does not"
+reference/physics-unit-conventions.md,_g vs _ms2 rationale + single-conversion-boundary + fit/apply split,4,b,car_prior._assemble_lateral / _build_longitudinal,yes,
+MAP_BUILD.md,what the checker validates + CI wiring,3,a,scripts/check_arch_map.py; .github/workflows/arch-map.yml,yes,
+MAP_BUILD.md,"deliberately out-of-scope checks; bundled builder not vendored",2,c,none,n/a,process notes about the map's own construction

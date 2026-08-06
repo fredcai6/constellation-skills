@@ -1,0 +1,97 @@
+{
+  "scored_population_scip_internal": 12020,
+  "correct": 10872,
+  "wrong": 229,
+  "unresolved": 661,
+  "said_local": 219,
+  "other": 39,
+  "pct_correct": 90.4,
+  "pct_wrong": 1.9,
+  "pct_unresolved": 5.5,
+  "pct_said_local": 1.8,
+  "all_buckets": {
+    "scip-local/agree": 11763,
+    "scip-internal/CORRECT": 10872,
+    "scip-external/agree": 9718,
+    "scip-local/external": 2612,
+    "scip-external/unresolved": 1424,
+    "scip-local/unresolved": 753,
+    "scip-internal/UNRESOLVED": 661,
+    "no-scip-symbol/unresolved": 546,
+    "scip-internal/WRONG": 229,
+    "scip-internal/said-local": 219,
+    "no-scip-symbol/local": 52,
+    "scip-external/internal": 42,
+    "scip-internal/external": 39,
+    "scip-external/local": 19,
+    "scip-local/internal": 17,
+    "no-scip-symbol/external": 2,
+    "no-scip-symbol/internal": 2
+  },
+  "core_only_buckets": {
+    "scip-internal/CORRECT": 715,
+    "scip-local/agree": 649,
+    "scip-external/agree": 511,
+    "scip-external/unresolved": 133,
+    "scip-local/external": 50,
+    "scip-local/unresolved": 34,
+    "no-scip-symbol/unresolved": 26,
+    "scip-internal/UNRESOLVED": 22,
+    "scip-internal/external": 5,
+    "no-scip-symbol/local": 5,
+    "scip-external/local": 3,
+    "scip-external/internal": 3,
+    "scip-internal/said-local": 3,
+    "no-scip-symbol/external": 2,
+    "scip-local/internal": 1
+  },
+  "failure_classes": {
+    "EXT:dispatch-unknown-base": 1237,
+    "NO-SCIP:dispatch-unknown-base": 546,
+    "INT:dispatch-unknown-base": 470,
+    "EXT:dynamic": 160,
+    "INT:chained-attribute": 137,
+    "INT:star-import": 42,
+    "EXT:chained-attribute": 26,
+    "INT:non-name-expr": 7,
+    "INT:unbound-name": 5,
+    "EXT:unbound-name": 1
+  },
+  "wrong_classes": {
+    "scip-module-stub (star-import: SCIP could not resolve)": 229
+  },
+  "by_predicate": {
+    "calls": {
+      "scip-external/agree": 2711,
+      "scip-external/unresolved": 1347,
+      "scip-internal/CORRECT": 1321,
+      "scip-local/external": 542,
+      "scip-local/unresolved": 526,
+      "no-scip-symbol/unresolved": 258,
+      "scip-internal/said-local": 168,
+      "scip-internal/WRONG": 158
+    },
+    "reads": {
+      "scip-internal/CORRECT": 8078,
+      "scip-local/agree": 7739,
+      "scip-external/agree": 6994,
+      "scip-local/external": 2070,
+      "scip-internal/UNRESOLVED": 611,
+      "no-scip-symbol/unresolved": 288,
+      "scip-local/unresolved": 216,
+      "scip-external/unresolved": 77
+    },
+    "writes": {
+      "scip-local/agree": 4019,
+      "scip-internal/CORRECT": 1473,
+      "no-scip-symbol/local": 49,
+      "scip-local/unresolved": 11,
+      "scip-internal/UNRESOLVED": 3,
+      "scip-internal/said-local": 1,
+      "scip-external/agree": 1
+    },
+    "inherits": {
+      "scip-external/agree": 12
+    }
+  }
+}

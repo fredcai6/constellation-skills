@@ -1,0 +1,136 @@
+{
+  "unjoined_readaccess": [
+    {
+      "file": "src\\utils\\f1_calendar.py",
+      "line": 361,
+      "col": 11,
+      "kind": "term",
+      "sym": "`src.utils.f1_calendar`/_calendar.",
+      "ast": [],
+      "src": "    global _calendar"
+    },
+    {
+      "file": "src\\utils\\ids.py",
+      "line": 11,
+      "col": 17,
+      "kind": "local",
+      "sym": "0",
+      "ast": [],
+      "src": "import pandas as pd"
+    }
+  ],
+  "unjoined_local_definition": [
+    {
+      "file": "src\\utils\\config.py",
+      "line": 83,
+      "col": 37,
+      "sym": "local 6",
+      "ast": [],
+      "src": "            except yaml.YAMLError as e:"
+    },
+    {
+      "file": "src\\utils\\f1_calendar.py",
+      "line": 125,
+      "col": 28,
+      "sym": "local 20",
+      "ast": [],
+      "src": "        except Exception as e:"
+    },
+    {
+      "file": "src\\utils\\f1_calendar.py",
+      "line": 240,
+      "col": 43,
+      "sym": "local 39(r)",
+      "ast": [],
+      "src": "        return sorted(upcoming, key=lambda r: r.race_date)"
+    },
+    {
+      "file": "src\\utils\\ids.py",
+      "line": 73,
+      "col": 28,
+      "sym": "local 7",
+      "ast": [],
+      "src": "        except Exception as e:"
+    },
+    {
+      "file": "src\\utils\\ids.py",
+      "line": 185,
+      "col": 28,
+      "sym": "local 23",
+      "ast": [],
+      "src": "        except Exception as e:"
+    },
+    {
+      "file": "src\\utils\\ids.py",
+      "line": 219,
+      "col": 28,
+      "sym": "local 31",
+      "ast": [],
+      "src": "        except Exception as e:"
+    },
+    {
+      "file": "src\\utils\\ids.py",
+      "line": 270,
+      "col": 28,
+      "sym": "local 42",
+      "ast": [],
+      "src": "        except Exception as e:"
+    },
+    {
+      "file": "src\\utils\\ids.py",
+      "line": 300,
+      "col": 28,
+      "sym": "local 49",
+      "ast": [],
+      "src": "        except Exception as e:"
+    },
+    {
+      "file": "src\\utils\\simplification_limits.py",
+      "line": 154,
+      "col": 26,
+      "sym": "local 29",
+      "ast": [],
+      "src": "    except ImportError as exc:"
+    },
+    {
+      "file": "src\\utils\\simplification_limits.py",
+      "line": 253,
+      "col": 31,
+      "sym": "local 56(v)",
+      "ast": [],
+      "src": "    violations.sort(key=lambda v: (v.path, v.metric, v.symbol or \"\"))"
+    },
+    {
+      "file": "src\\utils\\utilization.py",
+      "line": 42,
+      "col": 26,
+      "sym": "local 2(cores)",
+      "ast": [],
+      "src": "    \"background\": (lambda cores: 1, 1, \"below_normal\"),"
+    },
+    {
+      "file": "src\\utils\\utilization.py",
+      "line": 43,
+      "col": 24,
+      "sym": "local 3(cores)",
+      "ast": [],
+      "src": "    \"balanced\": (lambda cores: max(1, cores // 2), 2, \"normal\"),"
+    },
+    {
+      "file": "src\\utils\\utilization.py",
+      "line": 44,
+      "col": 19,
+      "sym": "local 4(cores)",
+      "ast": [],
+      "src": "    \"max\": (lambda cores: max(1, cores - 1), 1, \"normal\"),"
+    },
+    {
+      "file": "src\\utils\\utilization.py",
+      "line": 280,
+      "col": 32,
+      "sym": "local 54",
+      "ast": [],
+      "src": "            except Exception as exc:  # noqa: BLE001 - re-wrapped with job identity below"
+    }
+  ]
+}

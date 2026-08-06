@@ -1,0 +1,332 @@
+{
+  "A_definition_occurrences_by_ast_ctx": {
+    "method | def": 786,
+    "local | store": 196,
+    "parameter | param": 157,
+    "term | store": 121,
+    "type | def": 95,
+    "local | <no ast node>": 14,
+    "meta | <no ast node>": 9
+  },
+  "A_samples": [
+    {
+      "file": "src\\utils\\config.py",
+      "line": 21,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#PROJECT_ROOT.",
+      "kind": "term",
+      "name": "PROJECT_ROOT"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 22,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#CONFIG_DIR.",
+      "kind": "term",
+      "name": "CONFIG_DIR"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 23,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#OUTPUTS_DIR.",
+      "kind": "term",
+      "name": "OUTPUTS_DIR"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 25,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#CACHE_DIR.",
+      "kind": "term",
+      "name": "CACHE_DIR"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 26,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#DATA_RAW_DIR.",
+      "kind": "term",
+      "name": "DATA_RAW_DIR"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 27,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#DATA_PROC_DIR.",
+      "kind": "term",
+      "name": "DATA_PROC_DIR"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 28,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#LOGS_DIR.",
+      "kind": "term",
+      "name": "LOGS_DIR"
+    },
+    {
+      "file": "src\\utils\\config.py",
+      "line": 29,
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#FIGURES_DIR.",
+      "kind": "term",
+      "name": "FIGURES_DIR"
+    }
+  ],
+  "B_unjoined_readaccess": {
+    "meta | import": 107,
+    "term | import": 79,
+    "parameter | kwarg": 52,
+    "term | kwarg": 44,
+    "type | import": 18,
+    "local | kwarg": 18,
+    "local | import": 5,
+    "term | <none>": 1,
+    "local | <none>": 1
+  },
+  "B_samples": [
+    {
+      "file": "src\\compound_prior\\gamma_modifier.py",
+      "line": 83,
+      "col": 13,
+      "kind": "meta",
+      "sym": "-python python f1brainz excursion-x1 `src.utils.environment`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\compound_prior\\gamma_modifier.py",
+      "line": 87,
+      "col": 16,
+      "kind": "parameter",
+      "sym": "n-x1 `src.utils.environment`/estimate_air_density_kg_m3().(altitude_m)",
+      "ast_here": [
+        "kwarg:altitude_m"
+      ]
+    },
+    {
+      "file": "src\\compound_prior\\gamma_modifier.py",
+      "line": 88,
+      "col": 16,
+      "kind": "parameter",
+      "sym": "n-x1 `src.utils.environment`/estimate_air_density_kg_m3().(air_temp_c)",
+      "ast_here": [
+        "kwarg:air_temp_c"
+      ]
+    },
+    {
+      "file": "src\\compound_prior\\gamma_modifier.py",
+      "line": 89,
+      "col": 16,
+      "kind": "parameter",
+      "sym": "x1 `src.utils.environment`/estimate_air_density_kg_m3().(humidity_pct)",
+      "ast_here": [
+        "kwarg:humidity_pct"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 26,
+      "col": 5,
+      "kind": "meta",
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 26,
+      "col": 29,
+      "kind": "type",
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#",
+      "ast_here": [
+        "import:Config"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 27,
+      "col": 5,
+      "kind": "meta",
+      "sym": "ip-python python f1brainz excursion-x1 `src.utils.constants`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 28,
+      "col": 4,
+      "kind": "term",
+      "sym": "ython python f1brainz excursion-x1 `src.utils.constants`/DNF_POSITION.",
+      "ast_here": [
+        "import:DNF_POSITION"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 29,
+      "col": 4,
+      "kind": "term",
+      "sym": "f1brainz excursion-x1 `src.utils.constants`/FASTF1_RATE_LIMIT_BACKOFF.",
+      "ast_here": [
+        "import:FASTF1_RATE_LIMIT_BACKOFF"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 30,
+      "col": 4,
+      "kind": "term",
+      "sym": "n f1brainz excursion-x1 `src.utils.constants`/FASTF1_RATE_LIMIT_DELAY.",
+      "ast_here": [
+        "import:FASTF1_RATE_LIMIT_DELAY"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 31,
+      "col": 4,
+      "kind": "term",
+      "sym": "hon f1brainz excursion-x1 `src.utils.constants`/FASTF1_RETRY_ATTEMPTS.",
+      "ast_here": [
+        "import:FASTF1_RETRY_ATTEMPTS"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 32,
+      "col": 4,
+      "kind": "term",
+      "sym": "python f1brainz excursion-x1 `src.utils.constants`/FASTF1_RETRY_DELAY.",
+      "ast_here": [
+        "import:FASTF1_RETRY_DELAY"
+      ]
+    },
+    {
+      "file": "src\\data\\collector.py",
+      "line": 33,
+      "col": 4,
+      "kind": "term",
+      "sym": "n f1brainz excursion-x1 `src.utils.constants`/TELEMETRY_SAMPLING_RATE.",
+      "ast_here": [
+        "import:TELEMETRY_SAMPLING_RATE"
+      ]
+    },
+    {
+      "file": "src\\data\\load_fastf1.py",
+      "line": 13,
+      "col": 5,
+      "kind": "meta",
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\data\\load_fastf1.py",
+      "line": 13,
+      "col": 29,
+      "kind": "type",
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#",
+      "ast_here": [
+        "import:Config"
+      ]
+    },
+    {
+      "file": "src\\data\\load_fastf1.py",
+      "line": 14,
+      "col": 5,
+      "kind": "meta",
+      "sym": "ip-python python f1brainz excursion-x1 `src.utils.constants`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\data\\load_fastf1.py",
+      "line": 14,
+      "col": 32,
+      "kind": "term",
+      "sym": "hon python f1brainz excursion-x1 `src.utils.constants`/MIN_CLEAN_LAPS.",
+      "ast_here": [
+        "import:MIN_CLEAN_LAPS"
+      ]
+    },
+    {
+      "file": "src\\data\\load_fastf1.py",
+      "line": 14,
+      "col": 48,
+      "kind": "term",
+      "sym": "python f1brainz excursion-x1 `src.utils.constants`/LONG_RUN_THRESHOLD.",
+      "ast_here": [
+        "import:LONG_RUN_THRESHOLD"
+      ]
+    },
+    {
+      "file": "src\\data\\load_fastf1.py",
+      "line": 14,
+      "col": 68,
+      "kind": "term",
+      "sym": "ython python f1brainz excursion-x1 `src.utils.constants`/DNF_POSITION.",
+      "ast_here": [
+        "import:DNF_POSITION"
+      ]
+    },
+    {
+      "file": "src\\data\\database\\__init__.py",
+      "line": 3,
+      "col": 5,
+      "kind": "meta",
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\data\\database\\__init__.py",
+      "line": 3,
+      "col": 29,
+      "kind": "type",
+      "sym": "scip-python python f1brainz excursion-x1 `src.utils.config`/Config#",
+      "ast_here": [
+        "import:Config"
+      ]
+    },
+    {
+      "file": "src\\data\\database\\_core.py",
+      "line": 20,
+      "col": 5,
+      "kind": "meta",
+      "sym": "ip-python python f1brainz excursion-x1 `src.utils.constants`/__init__:",
+      "ast_here": [
+        "import:src"
+      ]
+    },
+    {
+      "file": "src\\data\\database\\_core.py",
+      "line": 20,
+      "col": 32,
+      "kind": "term",
+      "sym": "-python python f1brainz excursion-x1 `src.utils.constants`/DB_TIMEOUT.",
+      "ast_here": [
+        "import:DB_TIMEOUT"
+      ]
+    },
+    {
+      "file": "src\\data\\database\\_core.py",
+      "line": 20,
+      "col": 44,
+      "kind": "term",
+      "sym": "rc.utils.constants`/SPRINT_PRACTICE_SESSIONS.SPRINT_PRACTICE_SESSIONS.",
+      "ast_here": [
+        "import:SPRINT_PRACTICE_SESSIONS"
+      ]
+    },
+    {
+      "file": "src\\data\\database\\_core.py",
+      "line": 20,
+      "col": 70,
+      "kind": "term",
+      "sym": "rc.utils.constants`/NORMAL_PRACTICE_SESSIONS.NORMAL_PRACTICE_SESSIONS.",
+      "ast_here": [
+        "import:NORMAL_PRACTICE_SESSIONS"
+      ]
+    }
+  ]
+}

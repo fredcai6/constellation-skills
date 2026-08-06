@@ -1,0 +1,59 @@
+id,source_file,record,kind,anchor_code,anchor_status,comment_viable
+KF01,decisions/burn-rate-calibration-design.md,fitting a burn-rate parameter / throttle_response_fraction saturating shape,rejected-and-kept-off,burn_rate_calibration.py throttle_response_fraction,EXISTS (in-tree, off by default),yes
+KF02,decisions/burn-rate-calibration-design.md,a DB read inside mass_model.py,rejected-never-built,mass_model.py,EXISTS,yes
+KF03,decisions/burn-rate-calibration-design.md,cross-season/circuit pooling of the burn rate,rejected-never-built,burn_rate_calibration.season_burn_rate_estimate,EXISTS,yes
+KF04,decisions/burn-rate-calibration-design.md,revising SC_BURN_FRACTION=0.5 from measured 0.82-1.01,deferred-not-adopted,mass_model.SC_BURN_FRACTION,EXISTS,yes
+KF05,decisions/c1-driver-utilization-design.md,driver's own fit as the denominator,rejected-never-built,car_prior.build_car_ceiling,EXISTS,yes
+KF06,decisions/c1-driver-utilization-design.md,season-average frontier,rejected-never-built,car_prior.causal_predict,EXISTS,yes
+KF07,decisions/c1-driver-utilization-design.md,excluding the measured driver from the frontier,rejected-never-built,car_prior.build_car_ceiling,EXISTS,yes
+KF08,decisions/c1-driver-utilization-design.md,a second inline scalar sim (sim_lap/_params prototype),rejected-and-DELETED,"scripts/ideal_lap_compare.py, ideal_vs_actual.py, ver_monza_kde.py",DELETED,NO
+KF09,decisions/cross-view-covariance-sparse-representation.md,dense full-basis N x N covariance matrix (A2),rejected-never-built,estimate_store._CROSS_VIEW_COVARIANCE_KEYS,EXISTS,yes
+KF10,decisions/decoupled-1d-longitudinal.md,2D smoother acc_at as the braking input (rounds knee ~5g to ~4g; wrong-sign b_b),proven-wrong,braking_view.py / smoother.py,EXISTS,yes
+KF11,decisions/decoupled-1d-longitudinal.md,plateau-only anchor extension (#498) - Spa-specific; fails Bahrain/Monaco,proven-wrong,trajectory_refine.py,EXISTS,yes
+KF12,decisions/decoupled-1d-longitudinal.md,full process-model replacement (M2/M6),rejected-never-built,decoupled_longitudinal.py,EXISTS,yes
+KF13,decisions/decoupled-1d-longitudinal.md,#523 throttle/coast HONEST-NULL (all 3 views HOLD),measured-null,"traction_view.py, power_drag_view.py, coast_view.py",EXISTS,yes (verdict); tables strain the host
+KF14,decisions/decoupled-1d-longitudinal.md,#546 throttle HP sweep - no HP in 1.0-30.0 passes,measured-null,estimate_longitudinal(sig_a_soft_throttle),EXISTS (kwarg installed unwired),yes (verdict); 2 tables strain
+KF15,decisions/decoupled-1d-longitudinal.md,#546 coast boundary-lag - post-clamp fix NOT fixable; do NOT wire,measured-null,run_decoupled_coast(),EXISTS,yes
+KF16,decisions/dual-cda-fusion-honest-total-sigma.md,bare fit-only sigma (the handoff's literal wording) -> non-PSD on 5/5 real pairs,proven-wrong,estimate_store_fields._fused_cda_fields,EXISTS,yes
+KF17,decisions/gold-lifecycle-provenance.md,slugged gold filenames + implicit promotion (the #335 leak),proven-wrong,scripts/promote_gold.py; params/gold/,EXISTS,yes
+KF18,decisions/ideal-lap-sim-two-sided-evaluator.md,curated per-season DRS-zone file,rejected-never-built,ribbon.drs_zone_mask,EXISTS,yes
+KF19,decisions/ideal-lap-sim-two-sided-evaluator.md,treating the ideal lap as a regression target / small gap as success,rejected-inverts-purpose,sim_evaluator.is_under_call_suspect,EXISTS,yes
+KF20,decisions/ideal-lap-sim-two-sided-evaluator.md,#518 G6 'phase misalignment binding constraint' conclusion SUPERSEDED by a lateral units bug,retracted-finding,car_prior._assemble_lateral,EXISTS,yes
+KF21,decisions/pooled-sigma-shared-systematic-floor.md,three-variance-component likelihood (B2),rejected-never-built,pooling.pool_random_effects,EXISTS,yes
+KF22,decisions/regime-readiness-rubric.md,hard-coded thresholds inside compute_readiness,rejected-never-built,regime_readiness.DEFAULT_THRESHOLDS,EXISTS,yes
+KF23,decisions/regime-readiness-rubric.md,higher GO floor frac_team_go=0.25,rejected-measured,regime_readiness.DEFAULT_THRESHOLDS,EXISTS,yes
+KF24,decisions/smoother-rounds-braking-knee.md,P1b braking time-kernel (built + validated on synthetic + superseded),proven-wrong-and-DELETED,src/physics/braking_kernel.py,DELETED (only .pyc remains),NO
+KF25,decisions/smoother-rounds-braking-knee.md,trusting smoothed a_long peaks directly,proven-wrong,braking_view.clean_longitudinal_from_raw,EXISTS,yes
+KF26,decisions/smoother-rounds-braking-knee.md,#505 cross-circuit: Monaco ringing + Bahrain under-read not cured by kind=3,measured-null,accel_obs.py / smoother.py,EXISTS,yes (verdict); 3 tables strain
+KF27,decisions/smoother-rounds-braking-knee.md,cycle-2 guard does NOT rescue the Monaco over-correction,measured-null,trajectory_refine.refine_trajectory,EXISTS,yes
+KF28,decisions/smoother-rounds-braking-knee.md,per-session nu_proc / sigma_floor calibration not worth it,measured-null,smoother.py make_smoother(nu_proc),EXISTS,yes
+KF29,decisions/traction-own-measured-frontier.md,0.30 x lateral traction cap,proven-wrong,capability_envelope.py; traction_fit.py,EXISTS,yes
+KF30,decisions/two-cycle-external-anchor-design.md,re-deriving the anchor from the cycle-1 trajectory (proven overfitting),proven-wrong,accel_obs.emit_accel_obs; explore_cycles.py,EXISTS (script retained),yes
+KF31,decisions/two-cycle-external-anchor-design.md,three or more cycles with a static anchor,rejected-never-built,trajectory_refine.refine_trajectory,EXISTS,yes
+KF32,decisions/two-cycle-external-anchor-design.md,anchoring across ALL samples (not just the plateau),proven-wrong,accel_obs.emit_accel_obs,EXISTS,yes
+KF33,decisions/tyre-age-g-track-design.md,use pooling.py cross-session random effects for g_track,rejected-never-built,tyre_separation.py AND pooling.py,EXISTS (both),yes (needs both ends)
+KF34,decisions/tyre-age-g-track-design.md,no g_track term (omit track evolution),rejected-never-built,tyre_separation.py,EXISTS,yes
+KF35,decisions/tyre-age-g-track-design.md,full cross-circuit pooling (single global slope),rejected-measured,tyre_separation.py tau2,EXISTS,yes
+KF36,decisions/weekend-state-f6-gate-rubric.md,comparing held-out output against the full-sample #624 floor table,rejected-never-built,gate_spec.py [F2],EXISTS,yes
+KF37,decisions/weekend-state-f6-gate-rubric.md,row-level bootstrap,rejected-never-built,gate_spec.BOOTSTRAP_N / resampling unit,EXISTS,yes
+KF38,decisions/grip-estimate-record-session-level-pk.md,grip fit honest measured-NULL (g4 +155.5% RMS; g5 31.9% FAIL),measured-null,grip_baseline.py / grip_store.py,EXISTS,yes
+KF39,packets/physics.md,compound damage-unit screening INCONCLUSIVE-NULL (no unit beats lap count),measured-null,damage_scoring.py CANDIDATES + gates,EXISTS,yes (verdict); 4-confound audit strains
+KF40,packets/physics.md,"spec robustness scaffolding (ellipse-u, per-stint c_down, self-vs-global) never built",never-built-gap,none for ellipse-u / self-vs-global,NEVER EXISTED,"partial - c_down note IS already at damage_batch.py:55"
+KF41,packets/physics.md,#511 tyre-supplant CONTEXTUAL - physics k does NOT track lap-time truth; NOT A GO,measured-null,tyre_supplant.classify_axis_verdict,EXISTS,yes
+KF42,packets/physics.md,lateral_aero axis tagged honest_null,measured-null,tyre_separation.py AxisSpec,EXISTS,yes
+KF43,packets/physics.md,weekend_state Layer-2 is an honest FLOAT (~0 marginal contribution per [F4]),measured-null,weekend_state/layer2_evolution.py,EXISTS,yes
+KF44,packets/physics.md,prior_theta_R removed rather than wired (documented as never wired into the fit),removed-not-wired,coast view / estimate_store_fields.py,EXISTS,yes
+KF45,packets/physics.md,_TERRAIN_INFLATION 5% fudge retired as unnecessary after the real banking correction,retired-fudge,estimate_store.py; PhysicsSimulator._banked_corner_cap,EXISTS,yes
+KF46,packets/physics.md,flat per-axis SYSTEMATIC_FLOOR dict retired,retired,estimate_store_fields.py,EXISTS,yes
+KF47,packets/physics.md,fp_gate powered verdict compute-deferred (~37h) - not abandoned,deferred-not-null,layer2/fp_gate_real_extractor.py,EXISTS,yes
+KF48,packets/physics.md,FP calibration placeholders are hand-set guesses not fitted,disclosed-unfitted,fp_lap_latent.py; fp_representativeness.py,EXISTS,yes
+KF49,packets/compound_prior.md,per-season beta degeneracy #382 - 8/8 seasons non-monotone even at ridge=0,measured-null,build_pooled_compound_prior.py; fit_compound_prior path,EXISTS,yes
+KF50,packets/compound_prior.md,race-side gamma-up ladder is CONFOUNDED - not recoverable without a de-confounding design,measured-impossible,compound_prior runtime path,EXISTS,yes
+KF51,packets/latent_power.md,legacy BCE/target_mode path removed (#303),removed,module_training_orchestration.py,EXISTS,yes
+KF52,packets/evo_predictor.md,DNF_POSITION=21 misclassifies P21 as a DNF on a 21-driver grid,rejected-value,DNF_POSITION constant,EXISTS,yes
+KF53,packets/preprocessing.md,"'Removed in #448' - 12 modules (windowed lineage + orphaned utils); do not re-add",removed-do-not-readd,"windowed_estimator.py, windowed_solver/, consensus_stitcher.py, +9",ALL DELETED,NO
+KF54,packets/preprocessing.md,artifact.py removed (zero live consumers at deletion),removed-do-not-readd,src/preprocessing/trajectory/artifact.py,DELETED,NO
+KF55,packets/reporting.md,retraction: 'whole package is a dead path' claim is no longer true,retracted-map-claim,none (corrects a prior map statement),n/a,NO
+KF56,packets/publishing.md,retraction: publishing->simulation/reporting edges were fabricated,retracted-map-claim,none (corrects a prior map edge),n/a,NO
+KF57,index.md OSQ,regime_rollup distance-share superseded by #664 TIME-share,superseded-and-DELETED,src/physics/layer2/regime_rollup.py,DELETED at b9248aef,NO
+KF58,index.md OSQ,soft_class_membership bridge - zero non-test callers,unwired-and-REMOVED,segment_classifier.soft_class_membership,REMOVED at b9248aef,NO

@@ -1,0 +1,342 @@
+[
+  {
+    "file": "src\\utils\\__init__.py",
+    "doc": "Utility Functions Module\n\nThis module provides utility functions and configuration management\nfor the F1Brainz system.\n\nKey components:\n    - config: Configuration management with YAML validation\n    - constants: Centralized constants (calendars, thresholds, etc.)\n    - ids: Driver ID mapping between FastF1 and Ergast\n\nExample:\n    from src.utils.config import Config\n    from src.utils.constants import F1_CALENDARS\n\n    config = Config.load_config()\n    seasons = Config.get_seasons()\n    calendar = F1_CALENDARS[2024]",
+    "nonascii": false
+  },
+  {
+    "file": "src\\utils\\config.py",
+    "doc": "Configuration management for F1Brainz Advanced ML System\n\nThis module handles loading configuration from YAML files and provides\neasy access to all system settings.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\utils\\console.py",
+    "doc": "Console encoding helpers for CLI script entrypoints.\n\nOn Windows a redirected stdout/stderr defaults to the cp1252 code page, so a plain\n``print(\"\u2192\")`` raises ``UnicodeEncodeError`` and crashes the run. Scripts that emit\nnon-ASCII status output call :func:`force_utf8_console` at the top of ``main`` so\ntheir output is safe regardless of the active code page (see issue #358).",
+    "nonascii": true
+  },
+  {
+    "file": "src\\utils\\constants.py",
+    "doc": "Constants for F1Brainz.\n\nThis module centralizes all hardcoded values that were previously scattered\nacross the codebase, making them easier to maintain and update.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\utils\\environment.py",
+    "doc": "Shared environment utilities.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\utils\\f1_calendar.py",
+    "doc": "F1 calendar integration for race scheduling.\n\nProvides utilities for tracking upcoming races, race weekends, and scheduling\nautomated predictions.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\utils\\ids.py",
+    "doc": "Driver ID Mapping Utility\n\nThis module handles mapping between FastF1 and Ergast driver identifiers,\nincluding manual overrides for edge cases and name mismatches.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\utils\\simplification_limits.py",
+    "doc": "Machine-checkable simplification limits for Python under src/ and tests/.\n\nCanonical entry: verify_simplification_limits()\nCLI: py -m src.utils.simplification_limits [--baseline] [--paths ...]",
+    "nonascii": false
+  },
+  {
+    "file": "src\\utils\\utilization.py",
+    "doc": "Shared, F1-agnostic resource-utilization policy core.\n\nThis module decides *how hard the machine is pushed* without ever changing *what is\ncomputed*. It maps a coarse utilization level to a concrete worker/thread/priority\nplan and runs a list of jobs through that plan \u2014 either in a process pool or, at one\nworker, in a plain in-process loop.\n\nDeterminism contract (load-bearing for every caller):\n  * `run_jobs` always returns results in **input order**, byte-identical regardless of\n    `n_workers`, because results are reassembled by their submission index.\n  * `n_workers == 1` short-circuits to a sequential in-process loop \u2014 no pool, no\n    pickling \u2014 so it reproduces the plain sequential path exactly.\n\nThe module is intentionally free of any F1/domain concepts (no DB, calendar, or evo\nimports) and holds no mutable module-level state. It must import cleanly even when\n`torch` is not installed; the torch import lives inside `init_worker` and is guarded.",
+    "nonascii": true
+  },
+  {
+    "file": "scripts\\validate_segment_map_662.py",
+    "doc": "GATING validation harness for #662 G6 (epic #659): the substantive falsification.\n\nComputes the two GATING checks the g6-handoff.md defines, against REAL 2023 data:\n\nGATING-1 (claim:map-stable)\n    Cross-weekend stability is a SCOPED NULL for 2023 -- F1 runs each circuit once\n    per season, so there is no second same-circuit weekend to compare (see\n    ``scoped_null_2023_no_repeat_circuits``). The substantive PROXY is split-half\n    within-weekend stability: derive the tiling from two DISJOINT driver-subset\n    halves of the same weekend's field and compare boundary distances\n    (``split_half_boundary_drift``). The MEDIAN drift is the asserted gate\n    (< ``MAP_STABILITY_DRIFT_M``, imported); the MAX is reported, never asserted --\n    it is dominated by the noisier p10 braking-onset quantile over a half-sized\n    subsample (see this module's own README-style notes below), not tiling\n    instability at the geometry level.\n\nGATING-2 (claim:typing-correct)\n    Physical-corner spot-checks against real ground truth: Bahrain's PHYSICAL\n    corner count + apex locations vs the P4 excursion's independent count\n    (``.agent-work/archive/2026-07-25-explore-ref-utilization/excursions/P4-RESULT.md``),\n    and a 2nd circuit's physical corner count vs its known official turn count.\n\n    \"Physical corner\" merges contiguous CORNER segments -- this ALREADY absorbs a\n    sector-split corner (two adjacent CORNER rows straddling an FIA sector line):\n    ``sector_nesting.nest_sectors``'s split-not-snap duplicates the SAME seg_type\n    on both sides of a sector cut, so a split corner is still two ADJACENT\n    same-type segments in the final (nested) ``seg_type_code`` array -- no\n    sector-line-aware special case is needed beyond ordinary contiguous-run\n    grouping.\n\nConstruction vs gating (review T3): tiling-completeness (G2) and sector-nesting\nexactness (G3) are CONSTRUCTION checks, already exercised in their own test\nsuites -- they catch coverage/arithmetic bugs (gaps, overlaps, a sector line\nlanding outside the lap), never mis-typing. GATING-1/GATING-2 here are the\nchecks that can falsify an unstable or physically-wrong map.\n\nNo-frame-kill: every check either produces a real number from real data, or\nreports a clean, explicit scoped-null / skip reason -- never a fabricated\nnumber and never a silently-fudged fallback.\n\nUsage\n-----\n    python scripts/validate_segment_map_662.py",
+    "nonascii": false
+  },
+  {
+    "file": "src\\compound_prior\\gamma_modifier.py",
+    "doc": "Race-level linear gamma modifier fit utilities.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\collector.py",
+    "doc": "Year-Agnostic F1 Data Collector.\n\nThis module provides a unified interface for collecting F1 data from FastF1\nfor any season, replacing the previous collection scripts with hardcoded years.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\data\\database\\__init__.py",
+    "doc": "F1Brainz database access.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\database\\_core.py",
+    "doc": "Database Manager for F1Brainz.\n\nHandles all database operations including schema creation, data insertion,\nand querying. Uses QueryBuilder for dynamic SQL generation.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\database\\_ingest.py",
+    "doc": "Database Manager for F1Brainz.\n\nHandles all database operations including schema creation, data insertion,\nand querying. Uses QueryBuilder for dynamic SQL generation.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\database\\_metadata_circuit.py",
+    "doc": "Database metadata mixin: circuit info, weekend entry list, race start order.\n\nSplit out of _metadata.py (issue #302 simplification). See _metadata.py /\nDatabaseMetadataMixin for the combined mixin used by DatabaseManager.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\database\\_metadata_session.py",
+    "doc": "Database metadata mixin: session classification, race points, session stats.\n\nSplit out of _metadata.py (issue #302 simplification). See _metadata.py /\nDatabaseMetadataMixin for the combined mixin used by DatabaseManager.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\database\\_results.py",
+    "doc": "Database Manager for F1Brainz.\n\nHandles all database operations including schema creation, data insertion,\nand querying. Uses QueryBuilder for dynamic SQL generation.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\database\\_telemetry_store.py",
+    "doc": "Database Manager for F1Brainz.\n\nHandles all database operations including schema creation, data insertion,\nand querying. Uses QueryBuilder for dynamic SQL generation.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\data\\load_fastf1.py",
+    "doc": "FastF1 Session Loader\n\nThis module handles loading and processing FastF1 session data for\npractice sessions and races.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\__init__.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\_assemble.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\_build.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\_config.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\_helpers.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\_memory.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\data_adapter\\_quality.py",
+    "doc": "Data adapter: builds evo_predictor features from the SQLite database.\n\nThe SQLite database (populated by src/data/collector.py) is the single source\nof truth.  FastF1 is NOT called here \u2014 all data comes from the\nsession_classifications table.\n\nKey public API\n--------------\nbuild_race_features(year, gp_name, calendar, db, ...)\n    Returns a RaceFeatures object ready for rank_drivers().\n\nget_circuit_profile(gp_name, year)\n    Returns a CircuitProfile from circuits.yaml, or None if no exact-year\n    entry exists (caller substitutes neutral profile).\n\nget_compound_allocation(gp_name, year)\n    Returns a CompoundAllocation from compounds.yaml, or None if missing.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\gold_cycle\\config.py",
+    "doc": "Typed loader and validator for gold-cycle TOML config files.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\gold_cycle\\runner.py",
+    "doc": "Main orchestration for the gold module training/backtest/report cycle.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\gold_cycle\\runner_support.py",
+    "doc": "Gold cycle runner helpers.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\models\\__init__.py",
+    "doc": "Data models for the evolutionary predictor.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\models\\_features.py",
+    "doc": "Data models for the evolutionary predictor.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\models\\_genomes.py",
+    "doc": "Data models for the evolutionary predictor.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\models\\_pack.py",
+    "doc": "Data models for the evolutionary predictor.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\models\\_param_arrays.py",
+    "doc": "Data models for the evolutionary predictor.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\module_adapters\\_common.py",
+    "doc": "Unified latent-power module adapter registry.\n\nEach ModuleAdapter owns both the runtime (prediction-mode) and training\nbuild functions for a module, alongside its metadata. This is the single\nregistration site for all 15 modules \u2014 add a module here and it is\nvisible to both runtime and training paths.\n\nThe runtime closure (build_pair_batch) and training closure\n(build_labeled_pair_batch) on each adapter have standardized keyword-only\nsignatures and return RuntimePairBatchResult.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\module_adapters\\_registry.py",
+    "doc": "Unified latent-power module adapter registry.\n\nEach ModuleAdapter owns both the runtime (prediction-mode) and training\nbuild functions for a module, alongside its metadata. This is the single\nregistration site for all 15 modules \u2014 add a module here and it is\nvisible to both runtime and training paths.\n\nThe runtime closure (build_pair_batch) and training closure\n(build_labeled_pair_batch) on each adapter have standardized keyword-only\nsignatures and return RuntimePairBatchResult.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\module_adapters\\_runtime_builders.py",
+    "doc": "Unified latent-power module adapter registry.\n\nEach ModuleAdapter owns both the runtime (prediction-mode) and training\nbuild functions for a module, alongside its metadata. This is the single\nregistration site for all 15 modules \u2014 add a module here and it is\nvisible to both runtime and training paths.\n\nThe runtime closure (build_pair_batch) and training closure\n(build_labeled_pair_batch) on each adapter have standardized keyword-only\nsignatures and return RuntimePairBatchResult.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\module_adapters\\_training_builders.py",
+    "doc": "Unified latent-power module adapter registry.\n\nEach ModuleAdapter owns both the runtime (prediction-mode) and training\nbuild functions for a module, alongside its metadata. This is the single\nregistration site for all 15 modules \u2014 add a module here and it is\nvisible to both runtime and training paths.\n\nThe runtime closure (build_pair_batch) and training closure\n(build_labeled_pair_batch) on each adapter have standardized keyword-only\nsignatures and return RuntimePairBatchResult.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\module_training_evidence_modes.py",
+    "doc": "Named evidence-mode configs and sprint-weekend routing for eval batches.\n\nSplit out of ``module_training_orchestration`` for file-size hygiene. The named\neval-set constants are re-exported there for backward compatibility.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\module_training_orchestration.py",
+    "doc": "Training/backtest orchestration helpers for individual latent-power modules.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\pipeline.py",
+    "doc": "EvoPipeline: owns the full prediction path for the evo module.\n\nDB \u2192 features \u2192 adapt \u2192 module \u2192 RacePrediction\n\nThis module centralises what was previously scattered across cmd_predict,\ncmd_backtest, and _race_power_prediction_from_features in run.py.\nAdding a second latent module (per ADR-0003) only requires extending\n_predict_from_features at the clearly-marked fusion slot.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\practice_preprocessor\\__init__.py",
+    "doc": "Practice Preprocessor for the Evolutionary Predictor.\n\nExtracts rich, time-based features from FP/Sprint practice session lap data,\nreplacing position-only features with sector-level performance metrics.\n\nFeatures computed per driver:\n- 6x raw sector features: lr_best, lr_expected, lr_variation, qs_best, qs_expected, qs_variation\n- 6x compound-adjusted sector features: same metrics with tire compound normalization\n- representative-lap raw bundles for LR/QS in raw and adjusted space\n- 2x teammate gap: gap to teammate in long run and quali sim configs\n- 1x clean lap count: preparation/reliability proxy\n- 1x FP progression: improvement from FP1 to final practice session\n\nEnvironment features per race:\n- air_density: estimated from altitude + temperature + humidity\n- avg_track_temp, avg_air_temp, avg_humidity\n\nStructural Clean Lap Criteria:\n- valid_lap = 1\n- No pit in/out times (full flying lap)\n- All three sector times present\n\nBucket Pace Gates:\n- Short run laps within 108% of session's fastest structural-clean lap\n- Long run laps within 110% of session's fastest structural-clean lap\n\nStint Classification:\n- Long run: > QUALI_SIM_MAX_LAPS consecutive clean laps in a stint\n- Quali sim: 1-QUALI_SIM_MAX_LAPS consecutive clean laps\n\nNormalization (median-relative gap-to-median; the sole encoding):\n- Pace-LEVEL features: (value - field_median) / field_median; faster-than-median ->\n  negative, slower -> positive. Higher-is-better levels flip the sign so better -> negative.\n- Variation / dispersions: value / field_median_lap_time (uncentered magnitude;\n  \"spread as a fraction of a lap\").\n- Missing / degenerate (median <= 0) fallback: 0.0 (median-neutral); the per-feature\n  _missing indicator carries the absence.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\practice_preprocessor\\_compound_helpers.py",
+    "doc": "Practice Preprocessor for the Evolutionary Predictor.\n\nExtracts rich, time-based features from FP/Sprint practice session lap data,\nreplacing position-only features with sector-level performance metrics.\n\nFeatures computed per driver:\n- 6x raw sector features: lr_best, lr_expected, lr_variation, qs_best, qs_expected, qs_variation\n- 6x compound-adjusted sector features: same metrics with tire compound normalization\n- representative-lap raw bundles for LR/QS in raw and adjusted space\n- 2x teammate gap: gap to teammate in long run and quali sim configs\n- 1x clean lap count: preparation/reliability proxy\n- 1x FP progression: improvement from FP1 to final practice session\n\nEnvironment features per race:\n- air_density: estimated from altitude + temperature + humidity\n- avg_track_temp, avg_air_temp, avg_humidity\n\nStructural Clean Lap Criteria:\n- valid_lap = 1\n- No pit in/out times (full flying lap)\n- All three sector times present\n\nBucket Pace Gates:\n- Short run laps within 108% of session's fastest structural-clean lap\n- Long run laps within 110% of session's fastest structural-clean lap\n\nStint Classification:\n- Long run: > QUALI_SIM_MAX_LAPS consecutive clean laps in a stint\n- Quali sim: 1-QUALI_SIM_MAX_LAPS consecutive clean laps\n\nNormalization:\n- Time-based features: 0.0 = fastest (leader), 1.0 = slowest\n- Variation: 0.0 = most consistent, 1.0 = least consistent\n- Missing data fallback: 1.0 (worst) for all features",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\practice_preprocessor\\_compute.py",
+    "doc": null,
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\practice_preprocessor\\_lap_pipeline.py",
+    "doc": null,
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\practice_preprocessor\\_types.py",
+    "doc": "Practice Preprocessor for the Evolutionary Predictor.\n\nExtracts rich, time-based features from FP/Sprint practice session lap data,\nreplacing position-only features with sector-level performance metrics.\n\nFeatures computed per driver:\n- 6x raw sector features: lr_best, lr_expected, lr_variation, qs_best, qs_expected, qs_variation\n- 6x compound-adjusted sector features: same metrics with tire compound normalization\n- representative-lap raw bundles for LR/QS in raw and adjusted space\n- 2x teammate gap: gap to teammate in long run and quali sim configs\n- 1x clean lap count: preparation/reliability proxy\n- 1x FP progression: improvement from FP1 to final practice session\n\nEnvironment features per race:\n- air_density: estimated from altitude + temperature + humidity\n- avg_track_temp, avg_air_temp, avg_humidity\n\nStructural Clean Lap Criteria:\n- valid_lap = 1\n- No pit in/out times (full flying lap)\n- All three sector times present\n\nBucket Pace Gates:\n- Short run laps within 108% of session's fastest structural-clean lap\n- Long run laps within 110% of session's fastest structural-clean lap\n\nStint Classification:\n- Long run: > QUALI_SIM_MAX_LAPS consecutive clean laps in a stint\n- Quali sim: 1-QUALI_SIM_MAX_LAPS consecutive clean laps\n\nNormalization:\n- Time-based features: 0.0 = fastest (leader), 1.0 = slowest\n- Variation: 0.0 = most consistent, 1.0 = least consistent\n- Missing data fallback: 1.0 (worst) for all features",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\quali_power_adapter.py",
+    "doc": null,
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\race_car_channel.py",
+    "doc": "Race car-capability MAP channel (per-team latent-power delta).",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\race_driver_channel.py",
+    "doc": "Race driver-capability MAP channel (per-driver latent-power delta).",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\race_form_channel.py",
+    "doc": "Race form MAP channel (race-side latent delta).",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\recency_features.py",
+    "doc": "Recency and calendar features for recent-history adapters.\n\nThese features teach the model to understand how stale its evidence is by\nencoding time gaps and season-position information.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\recent_history_adapter.py",
+    "doc": null,
+    "nonascii": false
+  },
+  {
+    "file": "src\\evo_predictor\\sampled_backtest.py",
+    "doc": "End-to-end backtesting helpers for schema-v4 sampled evo runtimes.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\sampled_backtest_scoring.py",
+    "doc": "Per-race scoring + execution helpers for :mod:`sampled_backtest`.\n\nSplit out of ``sampled_backtest.py`` to keep that file within the simplification\nfile-size limit. This module holds the pure per-race scorer ``_score_one_race`` (the\nbehavior-preservation core of the sampled backtest), its private sub-helpers, and the\ntwo execution strategies \u2014 in-process sequential and the opt-in ``run_jobs`` parallel\npath with its module-level, spawn-safe worker. Nothing here mutates module-level state.\n\n``sampled_backtest.backtest_sampled_runtime`` imports the two ``_score_races_*`` drivers\nlazily (inside the function) to avoid an import cycle: this module imports scoring\nprimitives from ``sampled_backtest`` at load time, so the reverse edge must be deferred.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\evo_predictor\\walkforward\\pipeline.py",
+    "doc": "Real per-period cutoff pipeline for the walk-forward backtest (#439).\n\nThis is the heavy path P1-P3 use (and that the G4 run executes). It automates the\n``docs/evo/analysis_refresh.md`` recipe with the in-season as-of cutoff, fully isolated\nunder a per-period work area so it never touches the committed ``params/gold`` artifacts:\n\n  1. Assemble a per-period ``compound_prior_root`` containing the train-year priors (2018-2024)\n     copied from gold. Compound priors are CROSS-SEASON throughout: ``allow_same_season_compound_prior``\n     is ``false``, matching the promoted gold's compound handling. This is leakage-safe (zero 2025\n     compound data) and avoids the 2018 same-season prior's missing beta_C1/beta_C2 entries.\n  2. Write a research-mode gold-cycle TOML with ``eval_year_train_through_round=N`` /\n     ``eval_round_range=[N+1, N+6]``, anchor + quali_pace_gap to match promoted gold, and\n     isolated output/report/calibration dirs.\n  3. Run the gold cycle, then static fusion -> assemble period-local trained manifest ->\n     trained sampled-runtime comparison (runbook Steps 3/3b/4) restricted to the period's\n     rounds. The comparison is given EXPLICIT period manifests so it scores this period's\n     cutoff-trained model, not the global promoted gold. The global ``materialize`` step is\n     skipped (it targets committed reports/evo + params/gold and needs gold/fusion timestamp\n     equality); the trained manifest's absolute period-local module paths load directly.\n  4. Collect each eval round's predicted finishing-position distribution from the trained\n     comparison result.\n\nThe path/config construction is pure and unit-tested; the subprocess steps live in\n:class:`SubprocessPipeline`, which is exercised by the real run (never in unit tests \u2014 the\nmulti-hour calls are mocked there via the orchestrator's :class:`PipelinePort`).",
+    "nonascii": true
+  },
+  {
+    "file": "src\\fantasy_scoring\\league\\attribution.py",
+    "doc": "Exact additive attribution of model-to-winner fantasy score gaps.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\fantasy_scoring\\league\\sqlite_classification.py",
+    "doc": "Strict DB-truth boundary for fantasy league race classifications.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\fantasy_scoring\\scoring_rules.py",
+    "doc": "Scoring calculator for fantasy F1 racing.\n\nImplements the fantasy scoring system:\n- Base score: Sum of |predicted_position - actual_position| for top 10 picks (+1 per error spot)\n- Bingo bonuses: Progressive negative points for exact matches (1st: -1, 2nd: -2, 3rd: -3, etc.)\n- Lower total score is better",
+    "nonascii": false
+  },
+  {
+    "file": "src\\physics\\fit_batch.py",
+    "doc": "Batch driver for the per-session physics fit store (Epic 2 P0, #492).\n\nEnumerates seasons \u00d7 calendar \u00d7 sessions \u00d7 drivers, fits each driver offline,\nand upserts the result. Idempotent (skip already-stored unless force) and\ncrash-tolerant (a missing session or a failing driver is recorded, never\nfatal). The *_fn seams let tests inject fakes without the FastF1 cache.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\physics\\ideal_lap\\residuals.py",
+    "doc": "Residual builder + ephemeris batch (#509 Step 2, Task 5 -- THE DELIVERABLE)\nper docs/superpowers/specs/2026-07-05-ideal-lap-generator-ephemeris-design.md\nSec. \"Residuals are the deliverable\".\n\nFor each clean race lap of each driver at each (year, gp): compute the lap's\nstate (compound + tyre_age from ``lap_times``, mass via ``mass_model.\nrace_mass``) -> ``ideal_lap`` at that state -> ``residual_s = observed_lap_s -\nideal_lap_s`` -> collect ``eph_state``/``eph_residual`` rows -> ``write_run``.\nThe residual distribution IS the steering instrument (low = trusted state,\nhigh = where to push next) and, at a fixed car state, the driver signal.\n\n## Scope (ratified, see design doc's Open decision 4)\n\nRace sessions only, for circuits the wear model has measured -- that\nvalidates the wear join against real in-session degradation. Q/FP are a\nfollow-on (Q has no in-session wear to validate against; FP's compound\noffsets still need the push-lap filter, tracked separately as issue #16).\n``ideal_lap`` itself is still called with ``session_type=\"Q\"`` per lap --\nthe car-capability anchor (fit row + ribbon geometry) is the Q-session\nceiling; only the STATE (compound, tyre_age, fuel_mass) being evaluated at\ncomes from the race lap.\n\n## Caching within one (year, gp, driver): the one deliberate optimization\n\n``ideal_lap`` documents its ``fit_row``/``ribbon`` parameters as \"injection\nseams for offline testing\" -- they are equally valid as a real caching seam,\nand this builder needs it: a race stint is dozens of laps, and ``ideal_lap``\nwould otherwise reload the Q session and rebuild ribbon geometry from\nscratch on EVERY lap. Per driver, this builder resolves the fit row (via\n``_load_ok_fits``, one query for the whole gp), the ribbon\n(``generator._build_ribbon``), and -- critically -- the power curve\n(``generator._power_curve_from_row``) exactly ONCE, then reuses all three\nacross every clean lap of that driver's race. The power-curve resolution\nmatters most: a fit row written before Task 1 has ``power_curve=None``, and\n``ideal_lap`` treats a miss as \"re-fit the whole session\" -- paying that cost\non every lap of a stint (instead of once) turns an O(drivers) batch into an\nO(drivers x laps) one. Baking the resolved curve back into a copy of the row\nbefore the per-lap loop keeps ``ideal_lap``'s own cheap path (``row.get(\n\"power_curve\") is not None``) live for every subsequent lap.\n\n## Terrain / banking (Task 11)\n\n``_build_terrain`` resolves ONE pooled terrain profile per (year, gp) --\nbanking is a circuit property, not a per-driver/per-lap one -- and every\n``ideal_lap``/``ideal_lap_sigma_grid`` call this gp is threaded the SAME\n``terrain`` object (see ``generator._track_df_from_ribbon``'s position-joined\n``bank_rad`` column). A session/profile build failure degrades to\n``terrain=None`` (logged once here, never fatal) -- every downstream call\nthen reproduces the pre-Task-11 flat-track simulation exactly.\n\n## Robustness (mirrors src.physics.wear.batch / sweep.sweep_event)\n\nA bad (year, gp), a driver with no ok Q fit, a driver whose ribbon/power-curve\nsetup fails, or a single lap whose ``ideal_lap`` call raises are all SKIPPED\n(logged, not fatal) -- never abort the whole batch. A lap whose ideal can't be\nbuilt gets no residual row: nothing is fabricated.\n\n## Capability vs realized kappa (Task 6, capability-wear-model-v2)\n\n``kappa_for_corner`` (called with the SAME hardcoded ``{\"label\": \"traction\"}``\nfingerprint the pre-existing ``kappa_lat``/``kappa_long`` state fields already\nuse) is called TWICE per lap when ``wear_model`` is present: once at its\ndefault ``channel=\"capability\"`` (the value that ``ideal_lap``'s own ceiling\nderates against -- Task 5's default, unchanged here) and once explicitly with\n``channel=\"realized\"``, for the identical ``(circuit, compound)``. Both calls\nreturn ``(kappa_lat, kappa_long)`` -- BOTH axes are stored (``kappa_cap_lat``/\n``kappa_cap_long``/``kappa_realized_lat``/``kappa_realized_long``), not the\nlongitudinal axis alone: lateral (apex) is the PRIMARY wear signal the panel\nactually fits on, longitudinal (traction-exit) is secondary, and the ideal's\nown ceiling derates both -- dropping either would under-represent the\ndriver's management (a Task-6-review correction; an initial build stored\nlongitudinal only).\n\n``mgmt_discount_{lat,long} = kappa_cap_{lat,long} - kappa_realized_{lat,long}``\n-- positive when the driver managed that axis's tyre wear (realized came in\nbelow what pushing flat out would have cost), ~zero when the stint was run\nflat out. NOTE this is capability MINUS realized, not the design doc Sec. 6's\nliteral \"realized - capability\" phrasing -- that phrasing is a transposition;\nthe design doc's own worked example (managed stint -> discount > 0) only\nholds under this sign, confirmed on Task-6 review.\n\n``kappa_for_corner`` keys purely on ``(circuit, compound)`` -- no lap/tyre-age\ndependence -- so every one of these six values is already constant across\nevery lap of one stint (same circuit, same compound throughout). Computing\nthem inside the existing per-lap loop is therefore equivalent to the\nratified per-stint granularity (design doc Open decision 3), not a weaker\nper-lap approximation of it -- no separate per-stint aggregation pass is\nneeded.\n\n## source_versions_json (the reproducibility pin)\n\nPer the design doc's ``eph_runs`` schema, ``source_versions_json`` must pin\nwhat this ephemeris was built from. ``wear_model_run_id`` is a real pinned\nvalue -- ordinarily ``wear.store.latest_run``, resolved ONCE and held fixed\nfor the whole build (every lap in this run derates against the SAME wear\nrun, not whatever ``latest_run`` would independently resolve to per-call);\nwhen ``wear_db_path`` doesn't exist on disk at all, ``latest_run`` is never\ncalled (it would auto-vivify an empty file there), ``load_model``'s own\nTask-12 snapshot fallback resolves the model instead, and\n``wear_model_run_id`` pins that snapshot's run via\n``wear.store.latest_snapshot_run_id`` -- still the run actually loaded, just\nnot a db row.\n``fit_store_build`` is the sorted set of distinct ``engine_sha`` values across\nevery fit row this run consumed -- a real per-row provenance field FitStore\nalready carries. ``mass_model_version``/``smoother_version`` (Task 7/9) now pin REAL\nmodule constants -- ``mass_model.MODEL_VERSION`` (the fuel/mass + mass-sigma\nlaw) and ``trajectory.SMOOTHER_VERSION`` (the PVAT smoother's Matern order +\ncalibration scheme); both were honest \"no constant yet\" placeholders before\nTasks 7/9 added those constants (the design doc's Open decision 1 gap, now\nclosed).\n``wear_model_push_quantile`` (Task 6, capability-wear-model-v2) is the push\nthreshold (``wear.batch.run_batch``'s ``push_quantile`` param) the pinned\n``wear_model_run_id`` was built with -- read via ``_wear_push_quantile``, a\nraw query on that run's own ``wear_runs.params_json`` (``WearModel`` doesn't\ncarry it). ``None`` for a realized-only/legacy wear model or no wear model at\nall -- the wear-model VERSION itself needs no separate field here, since\n``wear_model_run_id`` already pins it (a versioned-artifact run_id IS the\nversion).",
+    "nonascii": false
+  },
+  {
+    "file": "src\\physics\\layer2\\estimate_batch.py",
+    "doc": "Season batch driver for the five-view estimate store (#496/#492).\n\nFor each season x GP: load the quali ONCE, group the session's drivers by\nconstructor, run the #496 cross-view estimator on each constructor's car pair\n(with the #498 refinement optionally feeding the views), and upsert the\nper-constructor ``SessionEstimate``. Idempotent (skip stored rows unless force)\nand crash-tolerant (a missing session or a failing constructor is recorded, never\nfatal). The ``*_fn`` seams let tests inject fakes without the FastF1 cache.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\physics\\layer2\\grip_batch.py",
+    "doc": "Season batch driver for the grip-baseline store (module G, issue #663).\n\nMirrors ``estimate_batch.py``'s injectable-collaborator-fn pattern: for each\nseason -> GP (from an injectable ``calendar_fn``) -> session type (every type\nin ``src.utils.constants.SESSION_TYPES`` when ``session_type`` is\n``None``, else just the one given -- matching g2's\n``decision:session-scope-uniform``, which generalized the fit itself to any\nsession type), skip if already stored unless ``force``, call the injected\n``fit_fn`` (g2's real per-session fit by default) and upsert whatever it\nreturns.\n\nUnlike ``estimate_batch.py`` (which estimates a raw view object and needs a\nseparate ``record_fn`` to turn it into a storable record), g2's ``fit_fn``\nIS the record producer -- ``fit_session_grip_baseline`` already returns a\nfully-populated ``GripEstimateRecord`` (``fit_status`` in\n``{\"ok\", \"thin_fallback\", \"error\"}``) or ``None`` when the session is absent\nfrom the DB. So here ``record_fn`` covers the one remaining gap: building an\nerror record for a session whose ``fit_fn`` call RAISES outright (e.g. a\nDB-connection failure before g1's own internal ``error_record`` path could\nrun) -- it defaults to ``grip_store.error_record``, the same never-lose-a-\nfailure convention g1's store already implements. This is a deliberate\nre-mapping of the seam's role for grip's single-function fit shape, not a\nliteral copy of ``estimate_batch.py``'s split -- see g3's IMPLEMENTER_RESULT\nassumptions.\n\nA session missing from the DB (``fit_fn`` returns ``None``) is counted\n(``sessions_missing``), never fatal. A session whose ``fit_fn`` call raises\nis caught, converted to an error record via ``record_fn``, upserted, and the\nbatch continues -- one bad session must never sink the whole run.",
+    "nonascii": false
+  },
+  {
+    "file": "src\\physics\\layer2\\session_race.py",
+    "doc": "Race session data loader \u2014 pure data adapter for race stints (#563 g2).\n\nProduces ``RaceStintData`` objects (one per qualifying stint) consumed by the\ng3 stint estimator.  No view fitting, no decay model \u2014 this is a data-loading\nseam that sits between the SQLite ``lap_times`` table, the ``TelemetryStore``\n(Parquet telemetry), and the physics fit chain.\n\nDesign constraints (all DECIDED, do not change without flagging):\n  - ``track_status`` from ``lap_times`` must ALWAYS reach ``race_mass(...)``.\n    Passing ``track_statuses=None`` silently is a hard gate violation.\n  - ``tyre_life`` is the ABSOLUTE value from ``lap_times.tyre_life``.\n    Do NOT subtract the per-stint minimum or normalize.\n    VER Bahrain 2023 stint 1 starts at tyre_life=4 (FastF1 installation-lap\n    accounting); the consumer decides how to interpret the offset.\n  - ``n_race_laps = max(lap_number)`` across ALL drivers in the session.\n  - No imports from src/evo_predictor, src/latent_power, src/compound_prior.\n  - No direct FastF1 calls; all data from SQLite (lap_times) + TelemetryStore.\n\nClean-lap definition (g2 gate):\n  ``valid_lap=1 AND pit_in_time IS NULL AND pit_out_time IS NULL\n   AND track_status='1'``\n\nQualifying stint = one distinct ``stint_id`` in ``lap_times``.\n\nSession-type seam (#575 Phase-A task 1):\n  ``load_race_stints`` (and ``_get_session_id``) take a ``session_type``\n  parameter (default ``'R'``) selecting which SQLite session and\n  TelemetryStore payload to load: ``'R'`` (race), ``'S'`` (sprint), ``'Q'``\n  (qualifying), ``'SQ'`` (sprint qualifying). Q/SQ use a constant quali-trim\n  mass (``mass_model.quali_mass``) instead of the race burn-down model,\n  since those are short low-fuel runs; R/S use ``race_mass`` with the\n  session's own lap count (see ``_lap_masses``). The ``track_statuses``\n  hard gate above still binds for R/S.\n\nHP-calibration fallback for practice sessions (FP follow-on to #575 Phase-A):\n  When a driver's own-session smoother-HP calibration fails (fragmented FP\n  running starves the calibration window; see ``_hp_fallback``), a same-\n  weekend HP is borrowed (own race session -> own other practice session ->\n  pooled median of other drivers in the same session) rather than dropping\n  the driver outright.  Gated strictly to ``session_type != 'R'`` -- the race\n  path is untouched and returns ``{}`` exactly as before when native\n  calibration fails.\n\nTrust-profile PVAT gate (#3, D9 \"WIRE\" verdict on grading.py):\n  Whenever ``pvat_db`` is active, each fitted lap's quality is scored via\n  ``grading.compute_trust_profile`` (held-out chi^2 + NIS summary over the\n  SAME padded window the lap was fit on) and logged. The opt-in\n  ``max_trust_chi2`` argument additionally SKIPS the PVAT write (not the\n  fit itself) for a lap whose held-out chi^2 exceeds it. Default\n  ``max_trust_chi2=None`` is log-only -- every fitted lap is still\n  persisted, matching pre-#3 behaviour.\n  COST: +~33% per lap on the pvat_db path only (one extra held-out\n  StintSmoother refit over the lap+overhang window, on top of the 3\n  refits fit_lap's own bootstrap already pays) -- never paid when\n  pvat_db is None.\n  FAIL-OPEN: a scoring failure is logged and never gates or blocks the\n  write -- the lap persists with NULL trust_* columns. See\n  ``_score_and_persist_pvat``/``load_race_stints``'s ``max_trust_chi2``\n  docstring for the full contract.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\physics\\physics_config.py",
+    "doc": "Configuration for the physics parameter estimator.\n\nThis module defines the PhysicsEstimatorConfig dataclass that holds all\ntuning parameters for the physics-based parameter estimation pipeline.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\physics\\session_fit.py",
+    "doc": "Offline single-quali-session fit \u2192 FitRecord / SessionFitFull (Epic 2 P0/P1, #492).\n\nLifts the validated smoother\u2192adapter\u2192estimator chain from\n``scripts/plot_capability_diagnostics.py::fit_session`` (the #488 production\npath) with two deltas: it operates on a PRELOADED session (load once, loop\ndrivers) and loads ``weather=True`` so air density is the real measured value.\n\nPublic entry points\n-------------------\nfit_driver(session, driver, ...) -> FitRecord\n    Batch path: fit one driver, return a flat FitRecord for the store.\n\nfit_session_full(session, driver, ...) -> SessionFitFull | None\n    Diagnostic path: re-fit one driver and return params + best-lap geometry\n    (distance/speed arrays).  Used by ``sim_evaluator.evaluate_session`` as\n    its re-fit fallback and, as a DB-first-on-miss fallback, by\n    ``ideal_lap.generator`` (#575 Task 3). The fit store DOES now persist the\n    power curve (theta_P_times/theta_P_values/theta_P_covariance, as\n    ``FitRecord.power_curve`` \u2014 #575 Task 1), and ``fit_store.\n    params_from_record`` reconstructs the full params from a row without\n    this re-fit; ``ideal_lap.generator`` reads the stored power curve\n    DB-first and only falls back to this re-fit path when a row predates\n    Task 1.\n\nfit_best_lap_trace(session, driver, ...) -> (best_distance, best_speed_real, best_lap_s) | None\n    Cheap subset of ``fit_session_full`` used by ``sim_evaluator``'s\n    store-hit path (#575 follow-on, sim-evaluator wiring): when ``params``\n    itself comes from ``fit_store.params_from_record`` instead of a re-fit,\n    this recovers ONLY the real best-lap trace (never persisted by\n    ``FitStore``) via HP calibration + a single ``fit_lap`` call on the\n    fastest lap \u2014 skipping every other flying lap's smoothing and\n    ``ParameterEstimator.estimate_parameters`` entirely.",
+    "nonascii": true
+  },
+  {
+    "file": "src\\physics\\wear\\batch.py",
+    "doc": "Canonical batch path: sweep -> fingerprint -> panel -> season model ->\nversioned store, per\ndocs/superpowers/specs/2026-07-04-wear-model-productization-design.md\nSec. \"Canonical path\".\n\n    py -m src.physics.wear.batch --years 2022 2023 2024 2025 2026\n\nPer year: fingerprint_year, then panel_year for both phases (v_apex ->\nlateral axis, v_out -> longitudinal axis), restricted to whichever GPs\nfingerprint_year actually found data for (NOT the caller's raw ``gps``\nargument -- panel_year has no missing-file guard of its own, so feeding it\nan unresolved \"all\" or a GP list with holes would crash the batch; deriving\nyear_gps from fingerprint_year's own return frame is the safe intersection).\nAcross years: season_model.load_year_axis + rubber_map + is_wet assemble\neach axis's wet-excluded season cells table (the same join\n``scripts/wear_season_table.py`` did pre-promotion), season_model.fit_axis\nfits S x R + covariance per axis, and the two axes are bundled into one\n``store.WearModel`` and written via ``store.write_run``.\n\nPer-event sweep is OFF by default (``skip_sweep=True``): the per-(year, gp)\nlaps/slopes/resets/windows CSVs are the regenerable cache Task 1 built, and\nre-sweeping is expensive (telemetry-store reads); ``--sweep-missing`` opts\nin. ``sweep.sweep_event`` takes an explicit ``data_dir`` (Task 6 seam --\nresolves to ``sweep._DATA_DIR`` at call time when omitted), and\n``_sweep_missing`` forwards this batch's own ``data_dir`` through, so\n``--sweep-missing`` targets whichever ``data_dir`` the batch was invoked\nwith, not just the real data directory; it is still not exercised by the\noffline test suite (the default ``skip_sweep=True`` path never reaches it).",
+    "nonascii": false
+  },
+  {
+    "file": "src\\physics\\weekend_state\\layer1_physics.py",
+    "doc": "layer1_physics.py -- Layer 1 of the four-layer weekend-state model (#626 g2).\n\nLayer 1 is the \"explained-physics\" layer: it removes a **density** (from the\ng1 frame's MEASURED-pressure ``rho`` column) and **mass/fuel**\n(``mass_kg_assumed``) component from each of the 11 axis estimates, leaving a\nper car-weekend x axis ``explained`` value, a ``residual`` (``axis -\nexplained``), and an honest propagated ``sigma`` for that residual.\n\nWhy this is NOT \"divide by rho\" on a raw force\n------------------------------------------------\nThe 11 axes (``frame.AXES``) are already-fit CAPABILITY estimates\n(``drag_area_closed_m2`` is a CdA in m^2, ``max_power_w`` a power in W, ...)\nand the upstream estimator (``src/physics/layer2/session_fit.py`` via\n``_density_from_session``) already used the session's own MEASURED rho when\nfitting them -- so a naive \"F = 0.5*rho*v^2*CdA\" correction on top would be\ndouble-applying physics the estimator already applied.  What Layer 1 models\ninstead is the RESIDUAL density/mass leakage that survives into an\nalready-density-normalized capability estimate: e.g. an assumed-mass error\npropagates almost linearly into a force/power-derived coefficient like CdA or\nP_max (because those are recovered via F = m*a with an ASSUMED m), while a\ndirectly-measured acceleration (braking/traction/lateral) does not carry that\nleakage to first order.  This is exactly the split\n``src/physics/layer2/systematic_budget.py`` already draws per-session in\nproduction (cda/p_max carry a mass+rho systematic; the braking/traction frontier\ndoes not to first order, because \"mass/rho cancel in the de-conflation\" for\nA0/A2 and the frontier's own fit sigma already dwarfs its <2.5% systematic).\n[#627/#506 retired the static ``estimate_store.SYSTEMATIC_FLOOR`` in favour of\nthe per-session ``systematic_budget`` shared/session-varying split.]  Layer 1 extends that SAME physical split to the 11 axes,\nincluding the 3 \"aero-slope\" companions (``brake_aero_decel_per_m``,\n``traction_aero_accel_per_m``, ``lateral_aero_grip_g``) where density enters\ndirectly through their own 0.5*rho*v^2 term, and leaves the remaining 4\npurely-mechanical acceleration axes (``brake_decel_ms2``,\n``traction_accel_ms2``, ``lateral_mech_grip_g``, ``coast_rolling_decel_ms2``)\nas an honest, code-enforced NO-OP (explained == 0, residual == raw value) --\nsee ``DENSITY_SENSITIVE_AXES`` / ``MASS_SENSITIVE_AXES`` below.\n\nDensity input\n--------------\n``rho`` is the g1 frame's store column -- itself computed upstream from a\nsession's MEASURED barometric pressure via\n``src.utils.environment.moist_air_density_from_pressure`` (see\n``tests/unit/physics/weekend_state/test_layer1_physics.py::test_rho_matches_measured_pressure``\nfor the bit-for-bit reproduction against the raw telemetry store).  Layer 1\ncompares densities in LOG-space throughout (density is multiplicative), and\nits reference density ``RHO_REF_KG_M3`` is derived from the SAME measured-\npressure formula applied to the ISA standard atmosphere (15C, 0% humidity,\n101325 Pa) -- never a bare hardcoded ``1.2``.\n\nMass input and an honest identification limit\n-----------------------------------------------\n``mass_kg_assumed`` in the g1 frame is CONSTANT within a season (it tracks\nthe year's minimum-weight regulation, not per-race fuel load -- verified:\nevery (year) group has exactly one distinct value).  That means the mass\nterm:\n\n  * CANNOT be estimated from within-car-season data (zero within-season\n    variance to regress against) -- attempting a between-year fit would\n    mostly capture regulation-era performance shifts (e.g. the 2022 ground-\n    effect reset), not a clean mass-physics effect.  So the per-axis mass\n    SENSITIVITY (``MASS_ELASTICITY``) is assigned from first-principles\n    units reasoning (F = m*a: force/power-derived axes carry ~unit\n    elasticity to an assumed-mass error; already-per-unit-mass acceleration\n    axes carry none), not fit from this store.\n  * Contributes ZERO net effect to any same-year comparison (e.g. the\n    Mexico<->Monaco falsifiable check below): both venues share the same\n    year's ``mass_kg_assumed``, so the mass term cancels identically in the\n    residual gap.  It only matters for cross-year comparisons, which this\n    layer does not otherwise make.\n\nThis is reported honestly rather than manufactured: the mass component here\nis real (grounded in the same F=ma reasoning ``estimate_store.py`` cites for\n\"p_max: mass-dominated\"), but its measurable effect on this store is small\nand, for same-season comparisons, exactly zero.\n\nFalsifiable Mexico<->Monaco check\n------------------------------------\n``mexico_monaco_residual_consistency`` compares the SAME constructor's\nLayer-1 residual at Mexico (rho ~0.90-0.92) vs Monaco (rho ~1.16-1.20, a\n~24% density gap) across every shared car-season in the store.  Mexico and\nMonaco differ in aero trim and track character too (a genuine setup\nconfound, not just density) -- so the assertion this module supports is a\nCONSISTENCY-IMPROVEMENT claim (the corrected residual gap is measurably\nsmaller, in propagated-sigma units, than the raw/density-ignored gap), not a\nclaim of exact closure to <1 sigma on every car-season.",
+    "nonascii": false
+  }
+]

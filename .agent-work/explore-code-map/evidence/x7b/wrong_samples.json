@@ -1,0 +1,4430 @@
+{
+  "wrong": [
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_assemble.py",
+        "line": 272,
+        "col": 17
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:_neutral_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_assemble.py",
+        "line": 273,
+        "col": 59
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_compound_allocation",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_assemble.py",
+        "line": 274,
+        "col": 34
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_compound_allocation",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_assemble.py",
+        "line": 388,
+        "col": 19
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._quality:_compute_session_quality",
+      "scip": "src.evo_predictor.data_adapter._quality:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_assemble.py",
+        "line": 389,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_compound_allocation",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 316,
+        "col": 16
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._assemble:_apply_driver_mask_to_classification",
+      "scip": "src.evo_predictor.data_adapter._assemble:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 439,
+        "col": 10
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._assemble:_apply_driver_mask_to_classification",
+      "scip": "src.evo_predictor.data_adapter._assemble:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 442,
+        "col": 10
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._assemble:_apply_driver_mask_to_classification",
+      "scip": "src.evo_predictor.data_adapter._assemble:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 445,
+        "col": 10
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._assemble:_apply_driver_mask_to_classification",
+      "scip": "src.evo_predictor.data_adapter._assemble:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 448,
+        "col": 9
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._assemble:_apply_driver_mask_to_classification",
+      "scip": "src.evo_predictor.data_adapter._assemble:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 451,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._memory:_get_current_weekend_driver_info",
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 522,
+        "col": 34
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._memory:_compute_standings",
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 530,
+        "col": 44
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._memory:_merge_driver_info_maps",
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 540,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 545,
+        "col": 14
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:_neutral_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 547,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._memory:_compute_standings",
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 677,
+        "col": 44
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._memory:_get_current_weekend_driver_info",
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 690,
+        "col": 34
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._memory:_merge_driver_info_maps",
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 696,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 699,
+        "col": 14
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:_neutral_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 701,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_circuit_altitude",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 179,
+        "col": 12
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_circuit_altitude",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 180,
+        "col": 12
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:get_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 376,
+        "col": 27
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.data_adapter._config:_neutral_circuit_profile",
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 378,
+        "col": 31
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.models._param_arrays:DEFAULT_PARAMS",
+      "scip": "src.evo_predictor.models._param_arrays:",
+      "at": {
+        "file": "src/evo_predictor/models/_genomes.py",
+        "line": 199,
+        "col": 17
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.models._param_arrays:PARAM_BOUNDS",
+      "scip": "src.evo_predictor.models._param_arrays:",
+      "at": {
+        "file": "src/evo_predictor/models/_genomes.py",
+        "line": 363,
+        "col": 16
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.models._param_arrays:PARAM_BOUNDS",
+      "scip": "src.evo_predictor.models._param_arrays:",
+      "at": {
+        "file": "src/evo_predictor/models/_genomes.py",
+        "line": 437,
+        "col": 16
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.models._param_arrays:PARAM_BOUNDS",
+      "scip": "src.evo_predictor.models._param_arrays:",
+      "at": {
+        "file": "src/evo_predictor/models/_genomes.py",
+        "line": 544,
+        "col": 16
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_config_with_overrides",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 163,
+        "col": 13
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 175,
+        "col": 87
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 184,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 186,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 191,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 197,
+        "col": 92
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 206,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 212,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 216,
+        "col": 50
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 221,
+        "col": 92
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 230,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 235,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 239,
+        "col": 50
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 244,
+        "col": 97
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 253,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_driver_positions_from_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 263,
+        "col": 40
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 281,
+        "col": 31
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 284,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 288,
+        "col": 94
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 297,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 302,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 306,
+        "col": 50
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 311,
+        "col": 99
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 320,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 325,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 329,
+        "col": 50
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 334,
+        "col": 92
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 343,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 348,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 352,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 356,
+        "col": 97
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 365,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_driver_positions_from_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 376,
+        "col": 36
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 395,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 400,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 404,
+        "col": 94
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 413,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_race_start_history_diagnostics",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 423,
+        "col": 30
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 425,
+        "col": 31
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 428,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 432,
+        "col": 99
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 441,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_driver_positions_from_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 448,
+        "col": 44
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_race_start_history_diagnostics",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 464,
+        "col": 30
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 466,
+        "col": 31
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 469,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 473,
+        "col": 89
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 482,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 495,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 499,
+        "col": 50
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 504,
+        "col": 94
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 513,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 526,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 530,
+        "col": 50
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 535,
+        "col": 85
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 549,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 570,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_base_runtime_adapter_diag",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_runtime_builders.py",
+        "line": 576,
+        "col": 35
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 116,
+        "col": 88
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 126,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 130,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 131,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 134,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 138,
+        "col": 93
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 148,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 152,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 155,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 156,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 161,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 165,
+        "col": 93
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 175,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 179,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:race_power_training_module_start_config",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 180,
+        "col": 17
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 181,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 184,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 188,
+        "col": 98
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 198,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 202,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:race_power_training_module_start_config",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 203,
+        "col": 17
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 210,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 211,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 218,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 222,
+        "col": 93
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 232,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 236,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 243,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 249,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 253,
+        "col": 98
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 263,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 267,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 277,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 284,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 292,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 296,
+        "col": 90
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 306,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_build_recent_history_race_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 307,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 312,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 326,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 333,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 337,
+        "col": 95
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 347,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_build_recent_history_race_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 348,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 353,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 367,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 374,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 378,
+        "col": 95
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 388,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_build_recent_history_race_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 389,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 393,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:race_power_training_module_start_config",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 396,
+        "col": 31
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 400,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 407,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 411,
+        "col": 100
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 421,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_build_recent_history_race_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 422,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 426,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:race_power_training_module_start_config",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 431,
+        "col": 31
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 435,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 442,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 446,
+        "col": 95
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 456,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_build_recent_history_race_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 459,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 463,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 468,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 470,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 478,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 482,
+        "col": 100
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 492,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_build_recent_history_race_features",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 495,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 499,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 504,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_call_adapter_or_unavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 507,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:_assemble_result",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 517,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 521,
+        "col": 86
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:RuntimePairBatchResult",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 531,
+        "col": 9
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.module_adapters._common:EventDataUnavailable",
+      "scip": "src.evo_predictor.module_adapters._common:",
+      "at": {
+        "file": "src/evo_predictor/module_adapters/_training_builders.py",
+        "line": 534,
+        "col": 14
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:NormalizedPracticeFeatures",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 134,
+        "col": 15
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_filter_structural_clean_laps",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 173,
+        "col": 28
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_split_run_buckets",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 178,
+        "col": 48
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_apply_session_best_pace_filter",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 182,
+        "col": 15
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_apply_session_best_pace_filter",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 187,
+        "col": 16
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:PracticeFeatures",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 213,
+        "col": 24
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_normalize_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 218,
+        "col": 11
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:_PracticeFeatureBuckets",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 231,
+        "col": 5
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_filter_super_clean_laps",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 240,
+        "col": 21
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_filter_super_clean_laps",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 241,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_sector_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 244,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_sector_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 245,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_sector_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 246,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_sector_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 253,
+        "col": 18
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_representative_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 260,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_representative_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 266,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_representative_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 272,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_representative_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 280,
+        "col": 22
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_quantile_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 288,
+        "col": 27
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_quantile_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 295,
+        "col": 26
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_bucket_repeatability_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 302,
+        "col": 38
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_bucket_repeatability_features",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 308,
+        "col": 37
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_compute_progression",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 318,
+        "col": 23
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:PracticeFeatures",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 339,
+        "col": 5
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:PracticeFeatures",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 358,
+        "col": 11
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:_ShortRunFields",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 412,
+        "col": 5
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._types:_LongRunFields",
+      "scip": "src.evo_predictor.practice_preprocessor._types:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 420,
+        "col": 5
+      },
+      "p": "reads",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_support_saturation",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 441,
+        "col": 40
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_support_saturation",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 454,
+        "col": 44
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_support_saturation",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 552,
+        "col": 37
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_support_saturation",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 553,
+        "col": 36
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_support_saturation",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 558,
+        "col": 41
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_support_saturation",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 559,
+        "col": 40
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_median",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 615,
+        "col": 17
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    },
+    {
+      "mine": "src.evo_predictor.practice_preprocessor._lap_pipeline:_median",
+      "scip": "src.evo_predictor.practice_preprocessor._lap_pipeline:",
+      "at": {
+        "file": "src/evo_predictor/practice_preprocessor/_compute.py",
+        "line": 631,
+        "col": 10
+      },
+      "p": "calls",
+      "class": "scip-module-stub (star-import: SCIP could not resolve)"
+    }
+  ],
+  "missed": [
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_number",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 171,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.gp_name",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 189,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.gp_name",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 194,
+        "col": 39
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 223,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 226,
+        "col": 29
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 239,
+        "col": 48
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 280,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 286,
+        "col": 42
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 315,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:RaceInfo.race_date",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 320,
+        "col": 42
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:_calendar",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 361,
+        "col": 7
+      },
+      "why": "said-local",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:_calendar",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 362,
+        "col": 8
+      },
+      "why": "said-local",
+      "p": "writes"
+    },
+    {
+      "scip": "src.utils.f1_calendar:_calendar",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 363,
+        "col": 11
+      },
+      "why": "said-local",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.f1_calendar:F1Calendar.get_upcoming_races",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 369,
+        "col": 26
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.f1_calendar:F1Calendar.get_next_race",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 374,
+        "col": 26
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.f1_calendar:F1Calendar.get_race_by_number",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 379,
+        "col": 26
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.f1_calendar:F1Calendar.get_race_by_name",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 384,
+        "col": 26
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.f1_calendar:F1Calendar.is_race_weekend",
+      "at": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 389,
+        "col": 26
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.simplification_limits:",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 26,
+        "col": 20
+      },
+      "why": "unbound-name",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.simplification_limits:Violation.path",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 252,
+        "col": 37
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.simplification_limits:Violation.metric",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 252,
+        "col": 45
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.simplification_limits:Violation.symbol",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 252,
+        "col": 55
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.simplification_limits:Violation.format_message",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 266,
+        "col": 16
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.simplification_limits:SimplificationLimitsResult.to_dict",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 309,
+        "col": 32
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.simplification_limits:SimplificationLimitsResult.passed",
+      "at": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 312,
+        "col": 23
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.environment:estimate_air_density_kg_m3",
+      "at": {
+        "file": "src/compound_prior/gamma_modifier.py",
+        "line": 85,
+        "col": 22
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.models.data_models:CompoundAllocation.hard",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 87,
+        "col": 21
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CompoundAllocation.medium",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 89,
+        "col": 21
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CompoundAllocation.soft",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 91,
+        "col": 21
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.total_sessions",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 146,
+        "col": 55
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.successful_sessions",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 147,
+        "col": 60
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.failed_sessions",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 148,
+        "col": 56
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.total_laps",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 149,
+        "col": 51
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.total_drivers",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 150,
+        "col": 78
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.session_stats",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 151,
+        "col": 58
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:CollectionStats.errors",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 152,
+        "col": 51
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.models.data_models:SessionStats.was_cached",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 196,
+        "col": 33
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.data.database._ingest:DatabaseIngestMixin.insert_session",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 321,
+        "col": 29
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._ingest:DatabaseIngestMixin.insert_lap_times",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 325,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._ingest:DatabaseIngestMixin.insert_weather",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 331,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._ingest:DatabaseIngestMixin.insert_telemetry",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 337,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._ingest:DatabaseIngestMixin.mark_collection_flags",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 342,
+        "col": 16
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.load_fastf1:FastF1Loader.load_session",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 383,
+        "col": 35
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._metadata_session:DatabaseSessionMetadataMixin.upsert_session_classification",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 524,
+        "col": 24
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._safe_time",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 758,
+        "col": 24
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._safe_float",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 759,
+        "col": 30
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._safe_float",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 760,
+        "col": 28
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._safe_float",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 761,
+        "col": 28
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._safe_float",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 762,
+        "col": 28
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._metadata_circuit:DatabaseCircuitMetadataMixin.get_weekend_entry_list",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 803,
+        "col": 19
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.database._metadata_circuit:DatabaseCircuitMetadataMixin.upsert_weekend_entry_list",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 805,
+        "col": 16
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._to_m",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 939,
+        "col": 17
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._to_m",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 940,
+        "col": 17
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._to_m",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 941,
+        "col": 17
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.collector:F1DataCollector._kmh_to_ms",
+      "at": {
+        "file": "src/data/collector.py",
+        "line": 943,
+        "col": 21
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.config:Config",
+      "at": {
+        "file": "src/data/database/_core.py",
+        "line": 144,
+        "col": 37
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.config:Config.DATABASE_PATH",
+      "at": {
+        "file": "src/data/database/_core.py",
+        "line": 144,
+        "col": 44
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.data.database._core:",
+      "at": {
+        "file": "src/data/database/_core.py",
+        "line": 152,
+        "col": 31
+      },
+      "why": "unbound-name",
+      "p": "reads"
+    },
+    {
+      "scip": "src.data.query_builder:QueryBuilder.build_insert",
+      "at": {
+        "file": "src/data/database/_ingest.py",
+        "line": 46,
+        "col": 47
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.query_builder:QueryBuilder.build_select",
+      "at": {
+        "file": "src/data/database/_ingest.py",
+        "line": 518,
+        "col": 47
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.data.query_builder:QueryBuilder.build_select",
+      "at": {
+        "file": "src/data/database/_ingest.py",
+        "line": 535,
+        "col": 47
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.utils.config:Config.ensure_directories",
+      "at": {
+        "file": "src/data/load_fastf1.py",
+        "line": 33,
+        "col": 20
+      },
+      "why": "dispatch-unknown-base",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/__init__.py",
+        "line": 59,
+        "col": 20
+      },
+      "why": "star-import",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._assemble:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_assemble.py",
+        "line": 59,
+        "col": 20
+      },
+      "why": "star-import",
+      "p": "reads"
+    },
+    {
+      "scip": "src.compound_prior.runtime_normalization:CompoundNormalizer.artifact",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 79,
+        "col": 60
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._build:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 89,
+        "col": 20
+      },
+      "why": "star-import",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:RaceFeatures.drivers",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 122,
+        "col": 27
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 123,
+        "col": 37
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_training_session_dropout:FullSessionSubset",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 151,
+        "col": 42
+      },
+      "why": "said-local",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_training_session_dropout:FullSessionSubset.sessions",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 152,
+        "col": 58
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_training_session_dropout:PerDriverMask.mask",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 156,
+        "col": 45
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_training_session_dropout:PerDriverMask.mask",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 163,
+        "col": 43
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._build:_collect_prior_results._race",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 203,
+        "col": 38
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._build:_collect_prior_results._race",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 208,
+        "col": 43
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._build:_collect_prior_results._quali",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 209,
+        "col": 44
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.module_training_session_dropout:FullSessionSubset",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 286,
+        "col": 40
+      },
+      "why": "said-local",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_training_session_dropout:FullSessionSubset.sessions",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_build.py",
+        "line": 287,
+        "col": 47
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._config:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_config.py",
+        "line": 59,
+        "col": 20
+      },
+      "why": "unbound-name",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 66,
+        "col": 20
+      },
+      "why": "unbound-name",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 98,
+        "col": 31
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 107,
+        "col": 35
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 125,
+        "col": 75
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 139,
+        "col": 35
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 140,
+        "col": 35
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 141,
+        "col": 34
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 142,
+        "col": 41
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:DriverFeatures.driver_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 143,
+        "col": 40
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 151,
+        "col": 41
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 152,
+        "col": 41
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 153,
+        "col": 43
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 154,
+        "col": 43
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 155,
+        "col": 43
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 156,
+        "col": 43
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 157,
+        "col": 42
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 158,
+        "col": 42
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 159,
+        "col": 42
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 160,
+        "col": 42
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 161,
+        "col": 43
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 162,
+        "col": 42
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 163,
+        "col": 54
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 164,
+        "col": 53
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 167,
+        "col": 53
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 168,
+        "col": 52
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 169,
+        "col": 54
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 170,
+        "col": 53
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 171,
+        "col": 50
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 172,
+        "col": 49
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 173,
+        "col": 52
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 174,
+        "col": 51
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 175,
+        "col": 58
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 176,
+        "col": 57
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 177,
+        "col": 59
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._helpers:constructor_race_features_from_race_features.values",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 178,
+        "col": 58
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:ConstructorFeatures.constructor_id",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 260,
+        "col": 35
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.models._features:ConstructorRaceFeatures.constructors",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_helpers.py",
+        "line": 260,
+        "col": 90
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 59,
+        "col": 20
+      },
+      "why": "star-import",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:_accumulate_memory_sample.bucket",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 226,
+        "col": 8
+      },
+      "why": "non-name-expr",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:_accumulate_memory_sample.bucket",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 227,
+        "col": 8
+      },
+      "why": "non-name-expr",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:_accumulate_memory_sample.bucket",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 229,
+        "col": 4
+      },
+      "why": "non-name-expr",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:_accumulate_memory_sample.bucket",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 230,
+        "col": 4
+      },
+      "why": "non-name-expr",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:_accumulate_memory_sample.bucket",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 232,
+        "col": 4
+      },
+      "why": "non-name-expr",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._memory:_accumulate_memory_sample.bucket",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 233,
+        "col": 4
+      },
+      "why": "non-name-expr",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.data_adapter._quality:",
+      "at": {
+        "file": "src/evo_predictor/data_adapter/_quality.py",
+        "line": 59,
+        "col": 20
+      },
+      "why": "star-import",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleConfig.applied_overrides",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 137,
+        "col": 15
+      },
+      "why": "dispatch-unknown-base",
+      "p": "writes"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.train_years",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 465,
+        "col": 44
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_year",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 466,
+        "col": 37
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.db_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 467,
+        "col": 35
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.compound_prior_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 468,
+        "col": 47
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.race_start_target_lap",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 469,
+        "col": 49
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.retro_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 470,
+        "col": 38
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.recent_history_form_encoding",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 471,
+        "col": 56
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.qs_compound_beta_regime",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 472,
+        "col": 51
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_year_train_through_round",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 473,
+        "col": 57
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_round_range",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 476,
+        "col": 31
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_round_range",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 475,
+        "col": 33
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.epochs",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 481,
+        "col": 38
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.seed",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 482,
+        "col": 36
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.learning_rate",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 483,
+        "col": 45
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.hidden_dim",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 484,
+        "col": 42
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.dropout",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 485,
+        "col": 39
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.optimizer",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 486,
+        "col": 41
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.weight_decay",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 487,
+        "col": 44
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.early_stop_patience",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 488,
+        "col": 51
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.restore_best_checkpoint",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 489,
+        "col": 55
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.min_delta",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 490,
+        "col": 41
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.session_dropout_k",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 491,
+        "col": 49
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.session_dropout_session_prob",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 492,
+        "col": 60
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleUncertaintyConfig.enable_sigma_calibration",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 495,
+        "col": 59
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleUncertaintyConfig.lambda_sigma_nll",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 496,
+        "col": 51
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleUncertaintyConfig.student_t_nu_sigma",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 497,
+        "col": 53
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.n_samples",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 500,
+        "col": 40
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.materialize_race_start_order_from_lap_times",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 501,
+        "col": 74
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.emit_fusion_train_rows",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 502,
+        "col": 53
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.allow_same_season_compound_prior",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 503,
+        "col": 63
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.utilization",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 504,
+        "col": 42
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.emit_module_record",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 505,
+        "col": 49
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.quali_pace_anchor_enabled",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 506,
+        "col": 56
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.quali_pace_anchor_alpha",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 507,
+        "col": 54
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.physics_feature_injection_enabled",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 508,
+        "col": 64
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleOutputsConfig.output_dir",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 511,
+        "col": 41
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleOutputsConfig.report_dir",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 512,
+        "col": 41
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleOutputsConfig.uncertainty_calibration_dir",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 513,
+        "col": 58
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:_apply_overrides_to_raw.raw",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/config.py",
+        "line": 567,
+        "col": 12
+      },
+      "why": "non-name-expr",
+      "p": "writes"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.runner:_make_eta_on_complete._on_complete",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 102,
+        "col": 11
+      },
+      "why": "said-local",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_adapters._registry:ModuleAdapter.evidence_source",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 132,
+        "col": 52
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.compound_prior_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 132,
+        "col": 24
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.race_start_target_lap",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 139,
+        "col": 46
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_year_train_through_round",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 144,
+        "col": 54
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_round_range",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 145,
+        "col": 41
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.retro_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 151,
+        "col": 35
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.race_start_target_lap",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 152,
+        "col": 46
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_round_range",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 156,
+        "col": 41
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.emit_module_record",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 158,
+        "col": 46
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.utils.constants:get_calendar",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 181,
+        "col": 20
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.module_adapters._registry:ModuleAdapter.evidence_source",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 227,
+        "col": 41
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.module_adapters._registry:ModuleAdapter.evidence_source",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 259,
+        "col": 41
+      },
+      "why": "dispatch-unknown-base",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.n_samples",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 293,
+        "col": 33
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.seed",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 294,
+        "col": 29
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.race_start_target_lap",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 295,
+        "col": 42
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.quali_pace_anchor_enabled",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 296,
+        "col": 49
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.quali_pace_anchor_alpha",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 297,
+        "col": 47
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.physics_feature_injection_enabled",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 298,
+        "col": 57
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.qs_compound_beta_regime",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 299,
+        "col": 44
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.sampled_runtime:sampled_runtime_from_manifest",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 310,
+        "col": 22
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.seed",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 311,
+        "col": 56
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.data.database.manager:DatabaseManager",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 319,
+        "col": 17
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.compound_prior_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 321,
+        "col": 23
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.compound_prior.runtime_normalization:load_time_safe_compound_prior",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 325,
+        "col": 23
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.compound_prior_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 326,
+        "col": 28
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleRuntimeConfig.allow_same_season_compound_prior",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 327,
+        "col": 58
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.compound_prior.runtime_normalization:CompoundPriorArtifact",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 329,
+        "col": 36
+      },
+      "why": "said-local",
+      "p": "reads"
+    },
+    {
+      "scip": "src.compound_prior.runtime_normalization:CompoundNormalizer",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 330,
+        "col": 33
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.eval_round_range",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 331,
+        "col": 71
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.sampled_backtest:backtest_sampled_runtime",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 336,
+        "col": 32
+      },
+      "why": "said-local",
+      "p": "calls"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleDataConfig.compound_prior_root",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 341,
+        "col": 52
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.seed",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 342,
+        "col": 51
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.optimizer",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 402,
+        "col": 37
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.weight_decay",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 403,
+        "col": 40
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.early_stop_patience",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 404,
+        "col": 47
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    },
+    {
+      "scip": "src.evo_predictor.gold_cycle.config:GoldCycleTrainingConfig.restore_best_checkpoint",
+      "at": {
+        "file": "src/evo_predictor/gold_cycle/runner.py",
+        "line": 405,
+        "col": 51
+      },
+      "why": "chained-attribute",
+      "p": "reads"
+    }
+  ],
+  "no_scip": {
+    "unresolved": [
+      {
+        "s": "src.utils.config:Config._validate_config",
+        "p": "reads",
+        "o": "UNRESOLVED",
+        "q": {
+          "file": "src/utils/config.py",
+          "line": 265,
+          "col": 76
+        },
+        "ref": "ast",
+        "hash": "4fd1dc42684107a1",
+        "res": "unresolved",
+        "why": "dispatch-unknown-base"
+      },
+      {
+        "s": "src.utils.config:Config._validate_config",
+        "p": "reads",
+        "o": "UNRESOLVED",
+        "q": {
+          "file": "src/utils/config.py",
+          "line": 272,
+          "col": 50
+        },
+        "ref": "ast",
+        "hash": "a269cad00ae16e0a",
+        "res": "unresolved",
+        "why": "dispatch-unknown-base"
+      },
+      {
+        "s": "src.utils.config:Config._validate_config",
+        "p": "reads",
+        "o": "UNRESOLVED",
+        "q": {
+          "file": "src/utils/config.py",
+          "line": 273,
+          "col": 43
+        },
+        "ref": "ast",
+        "hash": "bf730db337ee64de",
+        "res": "unresolved",
+        "why": "dispatch-unknown-base"
+      },
+      {
+        "s": "src.utils.f1_calendar:F1Calendar.get_season_calendar",
+        "p": "calls",
+        "o": "UNRESOLVED",
+        "q": {
+          "file": "src/utils/f1_calendar.py",
+          "line": 87,
+          "col": 38
+        },
+        "ref": "ast",
+        "hash": "070b6069411eed05",
+        "res": "unresolved",
+        "why": "dispatch-unknown-base"
+      },
+      {
+        "s": "src.utils.ids:DriverMapper.create_mapping_table",
+        "p": "reads",
+        "o": "UNRESOLVED",
+        "q": {
+          "file": "src/utils/ids.py",
+          "line": 155,
+          "col": 65
+        },
+        "ref": "ast",
+        "hash": "3d089f589e752891",
+        "res": "unresolved",
+        "why": "dispatch-unknown-base"
+      },
+      {
+        "s": "src.utils.ids:DriverMapper.create_mapping_table",
+        "p": "reads",
+        "o": "UNRESOLVED",
+        "q": {
+          "file": "src/utils/ids.py",
+          "line": 156,
+          "col": 49
+        },
+        "ref": "ast",
+        "hash": "6ba6472a174c2e26",
+        "res": "unresolved",
+        "why": "dispatch-unknown-base"
+      }
+    ],
+    "local": [
+      {
+        "s": "src.utils.ids:DriverMapper.create_mapping_table",
+        "p": "writes",
+        "o": "local:_",
+        "q": {
+          "file": "src/utils/ids.py",
+          "line": 144,
+          "col": 16
+        },
+        "ref": "ast",
+        "hash": "b4fdcbb618842e3b",
+        "res": "local"
+      },
+      {
+        "s": "src.utils.ids:DriverMapper.suggest_mappings",
+        "p": "writes",
+        "o": "local:_",
+        "q": {
+          "file": "src/utils/ids.py",
+          "line": 241,
+          "col": 16
+        },
+        "ref": "ast",
+        "hash": "ee888bf849889f86",
+        "res": "local"
+      },
+      {
+        "s": "src.utils.ids:DriverMapper.suggest_mappings",
+        "p": "writes",
+        "o": "local:_",
+        "q": {
+          "file": "src/utils/ids.py",
+          "line": 247,
+          "col": 20
+        },
+        "ref": "ast",
+        "hash": "06bee2969174b022",
+        "res": "local"
+      },
+      {
+        "s": "src.utils.simplification_limits:load_baseline_allowlist",
+        "p": "writes",
+        "o": "local:_",
+        "q": {
+          "file": "src/utils/simplification_limits.py",
+          "line": 193,
+          "col": 15
+        },
+        "ref": "ast",
+        "hash": "f7ee846f2be433c7",
+        "res": "local"
+      },
+      {
+        "s": "src.utils.utilization:_set_os_priority",
+        "p": "reads",
+        "o": "local:nice_map",
+        "q": {
+          "file": "src/utils/utilization.py",
+          "line": 197,
+          "col": 20
+        },
+        "ref": "ast",
+        "hash": "ae9417054bbb5347",
+        "res": "local"
+      },
+      {
+        "s": "src.compound_prior.gamma_modifier:fit_gamma_modifier",
+        "p": "writes",
+        "o": "local:_",
+        "q": {
+          "file": "src/compound_prior/gamma_modifier.py",
+          "line": 141,
+          "col": 11
+        },
+        "ref": "ast",
+        "hash": "2e8a2b6c114c1dec",
+        "res": "local"
+      }
+    ],
+    "external": [
+      {
+        "s": "src.utils.utilization:_set_os_priority",
+        "p": "calls",
+        "o": "os:nice",
+        "q": {
+          "file": "src/utils/utilization.py",
+          "line": 197,
+          "col": 15
+        },
+        "ref": "ast",
+        "hash": "85baf9cc6eb719f4",
+        "res": "external"
+      },
+      {
+        "s": "src.utils.utilization:_set_os_priority",
+        "p": "reads",
+        "o": "os:",
+        "q": {
+          "file": "src/utils/utilization.py",
+          "line": 197,
+          "col": 12
+        },
+        "ref": "ast",
+        "hash": "1e3e46d5f43e3424",
+        "res": "external"
+      }
+    ],
+    "internal": [
+      {
+        "s": "src.evo_predictor.walkforward.pipeline:render_period_config",
+        "p": "reads",
+        "o": "src.evo_predictor.walkforward.pipeline:render_period_config.period",
+        "q": {
+          "file": "src/evo_predictor/walkforward/pipeline.py",
+          "line": 142,
+          "col": 89
+        },
+        "ref": "ast",
+        "hash": "526ce2280c945dac",
+        "res": "internal"
+      },
+      {
+        "s": "src.evo_predictor.walkforward.pipeline:render_period_config",
+        "p": "reads",
+        "o": "src.evo_predictor.walkforward.periods:Period.cutoff",
+        "q": {
+          "file": "src/evo_predictor/walkforward/pipeline.py",
+          "line": 142,
+          "col": 96
+        },
+        "ref": "ast",
+        "hash": "4c6e4c3ada6369b0",
+        "res": "internal"
+      }
+    ]
+  }
+}

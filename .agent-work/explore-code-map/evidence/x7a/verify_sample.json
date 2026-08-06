@@ -1,0 +1,447 @@
+[
+  {
+    "bucket": "contains(local, name recovered by join)",
+    "n_in_bucket": 196,
+    "stmt": {
+      "s": "`src.utils.ids`/DriverMapper#_load_manual_mappings().",
+      "p": "contains",
+      "o": "mappings",
+      "q": {
+        "file": "src/utils/ids.py",
+        "line": 68,
+        "kind": "local",
+        "scip_id": "local 3"
+      },
+      "ref": "scip+ast",
+      "hash": "2e8e51c5051c"
+    },
+    "source": "mappings = yaml.safe_load(f)"
+  },
+  {
+    "bucket": "contains(local, name recovered by join)",
+    "n_in_bucket": 196,
+    "stmt": {
+      "s": "`src.utils.environment`/moist_air_density_from_pressure().",
+      "p": "contains",
+      "o": "vapor_pressure",
+      "q": {
+        "file": "src/utils/environment.py",
+        "line": 58,
+        "kind": "local",
+        "scip_id": "local 2"
+      },
+      "ref": "scip+ast",
+      "hash": "410a94972f3f"
+    },
+    "source": "vapor_pressure = (humidity_pct / 100.0) * saturation_pressure"
+  },
+  {
+    "bucket": "contains(method in class)",
+    "n_in_bucket": 79,
+    "stmt": {
+      "s": "`src.utils.ids`/DriverMapper#",
+      "p": "contains",
+      "o": "`src.utils.ids`/DriverMapper#map_driver_name().",
+      "q": {
+        "file": "src/utils/ids.py",
+        "line": 103,
+        "kind": "method"
+      },
+      "ref": "scip",
+      "hash": "db56f98cc072"
+    },
+    "source": "def map_driver_name(self, first_name: str, last_name: str, source: str = 'fastf1') -> Optional[str]:"
+  },
+  {
+    "bucket": "contains(method in class)",
+    "n_in_bucket": 79,
+    "stmt": {
+      "s": "`src.utils.config`/Config#",
+      "p": "contains",
+      "o": "`src.utils.config`/Config#get_objective_weights().",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 138,
+        "kind": "method"
+      },
+      "ref": "scip",
+      "hash": "172dd100eff4"
+    },
+    "source": "def get_objective_weights(cls) -> Dict[str, float]:"
+  },
+  {
+    "bucket": "param-of",
+    "n_in_bucket": 157,
+    "stmt": {
+      "s": "`src.utils.config`/Config#ensure_directories().",
+      "p": "param-of",
+      "o": "`src.utils.config`/Config#ensure_directories().(cls)",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 233,
+        "inverse": true
+      },
+      "ref": "scip",
+      "hash": "b2f25f189fde"
+    },
+    "source": "def ensure_directories(cls):"
+  },
+  {
+    "bucket": "param-of",
+    "n_in_bucket": 157,
+    "stmt": {
+      "s": "`src.utils.utilization`/resolve_resource_plan().",
+      "p": "param-of",
+      "o": "`src.utils.utilization`/resolve_resource_plan().(mem_per_worker_gb)",
+      "q": {
+        "file": "src/utils/utilization.py",
+        "line": 113,
+        "inverse": true
+      },
+      "ref": "scip",
+      "hash": "9df5f597ddaf"
+    },
+    "source": "mem_per_worker_gb: float = 1.0,"
+  },
+  {
+    "bucket": "documents",
+    "n_in_bucket": 143,
+    "stmt": {
+      "s": "`src.utils.config`/get_config_value().(default)",
+      "p": "documents",
+      "o": "default: Default value if key not found",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 367,
+        "chars": 39
+      },
+      "ref": "scip",
+      "hash": "26c12eef3221"
+    },
+    "source": "def get_config_value(key: str, default: Any = None) -> Any:"
+  },
+  {
+    "bucket": "documents",
+    "n_in_bucket": 143,
+    "stmt": {
+      "s": "`src.utils.ids`/DriverMapper#map_driver_name().(first_name)",
+      "p": "documents",
+      "o": "first_name: Driver's first name",
+      "q": {
+        "file": "src/utils/ids.py",
+        "line": 103,
+        "chars": 31
+      },
+      "ref": "scip",
+      "hash": "8ac86e8738fd"
+    },
+    "source": "def map_driver_name(self, first_name: str, last_name: str, source: str = 'fastf1') -> Optional[str]:"
+  },
+  {
+    "bucket": "calls(internal)",
+    "n_in_bucket": 72,
+    "stmt": {
+      "s": "`src.utils.config`/Config#get_objective_weights().",
+      "p": "calls",
+      "o": "`src.utils.config`/Config#get().",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 140,
+        "external": false,
+        "direction": "internal"
+      },
+      "ref": "scip+ast",
+      "hash": "867951414aa9"
+    },
+    "source": "return cls.get('objective', {'w_topk': 1.0, 'w_spearman': 1.0})"
+  },
+  {
+    "bucket": "calls(internal)",
+    "n_in_bucket": 72,
+    "stmt": {
+      "s": "`src.utils.utilization`/resolve_resource_plan().",
+      "p": "calls",
+      "o": "`src.utils.utilization`/_detect_physical_cores().",
+      "q": {
+        "file": "src/utils/utilization.py",
+        "line": 135,
+        "external": false,
+        "direction": "internal"
+      },
+      "ref": "scip+ast",
+      "hash": "e1eb64144833"
+    },
+    "source": "cores = physical_cores if physical_cores is not None else _detect_physical_cores()"
+  },
+  {
+    "bucket": "calls(inbound cross-package)",
+    "n_in_bucket": 38,
+    "stmt": {
+      "s": "`src.evo_predictor.pipeline`/EvoPipeline#predict().",
+      "p": "calls",
+      "o": "`src.utils.constants`/get_calendar().",
+      "q": {
+        "file": "src/evo_predictor/pipeline.py",
+        "line": 216,
+        "external": false,
+        "direction": "in"
+      },
+      "ref": "scip+ast",
+      "hash": "97887230b4af"
+    },
+    "source": "calendar=get_calendar(year),"
+  },
+  {
+    "bucket": "calls(inbound cross-package)",
+    "n_in_bucket": 38,
+    "stmt": {
+      "s": "`src.data.collector`/F1DataCollector#collect_race().",
+      "p": "calls",
+      "o": "`src.utils.constants`/get_weekend_sessions().",
+      "q": {
+        "file": "src/data/collector.py",
+        "line": 190,
+        "external": false,
+        "direction": "in"
+      },
+      "ref": "scip+ast",
+      "hash": "57c41ce210c2"
+    },
+    "source": "session_types = get_weekend_sessions(year, gp_name)"
+  },
+  {
+    "bucket": "calls(outbound to another package/lib)",
+    "n_in_bucket": 157,
+    "stmt": {
+      "s": "`src.utils.config`/Config#ensure_directories().",
+      "p": "calls",
+      "o": "ext:python-stdlib/builtins/dict#items().",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 237,
+        "external": true,
+        "direction": "out"
+      },
+      "ref": "scip+ast",
+      "hash": "33b493ca2c27"
+    },
+    "source": "for name, path in paths.items():"
+  },
+  {
+    "bucket": "calls(outbound to another package/lib)",
+    "n_in_bucket": 157,
+    "stmt": {
+      "s": "`src.utils.simplification_limits`/_radon_complexity_violations().",
+      "p": "calls",
+      "o": "ext:python-stdlib/pathlib/PurePath#relative_to().",
+      "q": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 162,
+        "external": true,
+        "direction": "out"
+      },
+      "ref": "scip+ast",
+      "hash": "00acd10ef30d"
+    },
+    "source": "rel = str(path.relative_to(project_root)).replace(\"\\\\\", \"/\")"
+  },
+  {
+    "bucket": "writes(first binding, was SCIP Definition)",
+    "n_in_bucket": 317,
+    "stmt": {
+      "s": "`src.utils.simplification_limits`/__init__:",
+      "p": "writes",
+      "o": "`src.utils.simplification_limits`/DEFAULT_BASELINE_PATH.",
+      "q": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 28,
+        "name": "DEFAULT_BASELINE_PATH",
+        "binding": "first",
+        "scip_role": "Definition",
+        "direction": "internal"
+      },
+      "ref": "scip+ast",
+      "hash": "871675e39118"
+    },
+    "source": "DEFAULT_BASELINE_PATH = PROJECT_ROOT / \"config\" / \"simplification_baseline.json\""
+  },
+  {
+    "bucket": "writes(first binding, was SCIP Definition)",
+    "n_in_bucket": 317,
+    "stmt": {
+      "s": "`src.utils.config`/Config#ensure_directories().",
+      "p": "writes",
+      "o": "local 27",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 237,
+        "name": "name",
+        "binding": "first",
+        "scip_role": "Definition",
+        "direction": "internal"
+      },
+      "ref": "scip+ast",
+      "hash": "06d591d7dd28"
+    },
+    "source": "for name, path in paths.items():"
+  },
+  {
+    "bucket": "writes(re-binding, was SCIP ReadAccess)",
+    "n_in_bucket": 33,
+    "stmt": {
+      "s": "`src.utils.ids`/DriverMapper#create_mapping_table().",
+      "p": "writes",
+      "o": "local 17",
+      "q": {
+        "file": "src/utils/ids.py",
+        "line": 152,
+        "name": "ergast_match",
+        "external": true,
+        "direction": "out",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "34905fd9b996"
+    },
+    "source": "ergast_match = ergast_drivers["
+  },
+  {
+    "bucket": "writes(re-binding, was SCIP ReadAccess)",
+    "n_in_bucket": 33,
+    "stmt": {
+      "s": "`src.utils.config`/Config#reload_config().",
+      "p": "writes",
+      "o": "`src.utils.config`/Config#_config_source.",
+      "q": {
+        "file": "src/utils/config.py",
+        "line": 328,
+        "name": "_config_source",
+        "external": false,
+        "direction": "internal",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "cd81bba1f0cf"
+    },
+    "source": "cls._config_source = None"
+  },
+  {
+    "bucket": "reads(internal)",
+    "n_in_bucket": 590,
+    "stmt": {
+      "s": "`src.utils.utilization`/_run_in_pool().",
+      "p": "reads",
+      "o": "`src.utils.utilization`/_run_in_pool().(jobs)",
+      "q": {
+        "file": "src/utils/utilization.py",
+        "line": 265,
+        "name": "jobs",
+        "external": false,
+        "direction": "internal",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "720d605f99db"
+    },
+    "source": "total = len(jobs)"
+  },
+  {
+    "bucket": "reads(internal)",
+    "n_in_bucket": 590,
+    "stmt": {
+      "s": "`src.utils.simplification_limits`/_function_line_violations().",
+      "p": "reads",
+      "o": "`src.utils.simplification_limits`/Violation#",
+      "q": {
+        "file": "src/utils/simplification_limits.py",
+        "line": 140,
+        "name": "Violation",
+        "external": false,
+        "direction": "internal",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "0c94ec2e7a5c"
+    },
+    "source": "Violation("
+  },
+  {
+    "bucket": "reads(inbound cross-package)",
+    "n_in_bucket": 357,
+    "stmt": {
+      "s": "module:src/evo_predictor/data_adapter/_memory.py",
+      "p": "reads",
+      "o": "`src.utils.constants`/get_calendar().",
+      "q": {
+        "file": "src/evo_predictor/data_adapter/_memory.py",
+        "line": 56,
+        "external": false,
+        "direction": "in",
+        "via": "import"
+      },
+      "ref": "scip+ast",
+      "hash": "0b5cd7778a29"
+    },
+    "source": "from src.utils.constants import DNF_POSITION, get_calendar, get_practice_session_types, is_sprint_weekend"
+  },
+  {
+    "bucket": "reads(inbound cross-package)",
+    "n_in_bucket": 357,
+    "stmt": {
+      "s": "module:src/evo_predictor/models/__init__.py",
+      "p": "reads",
+      "o": "`src.utils.constants`/DNF_POSITION.",
+      "q": {
+        "file": "src/evo_predictor/models/__init__.py",
+        "line": 12,
+        "name": "DNF_POSITION",
+        "external": false,
+        "direction": "in",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "0f7c1e62767b"
+    },
+    "source": "from src.utils.constants import DNF_POSITION"
+  },
+  {
+    "bucket": "reads(outbound)",
+    "n_in_bucket": 1139,
+    "stmt": {
+      "s": "`src.utils.console`/force_stream_utf8().",
+      "p": "reads",
+      "o": "ext:python-stdlib/typing/TextIO#",
+      "q": {
+        "file": "src/utils/console.py",
+        "line": 15,
+        "name": "TextIO",
+        "external": true,
+        "direction": "out",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "45c47f366ca6"
+    },
+    "source": "def force_stream_utf8(stream: TextIO | None) -> None:"
+  },
+  {
+    "bucket": "reads(outbound)",
+    "n_in_bucket": 1139,
+    "stmt": {
+      "s": "`src.utils.f1_calendar`/F1Calendar#get_upcoming_races().",
+      "p": "reads",
+      "o": "local 36",
+      "q": {
+        "file": "src/utils/f1_calendar.py",
+        "line": 231,
+        "name": "hasattr",
+        "external": true,
+        "direction": "out",
+        "scip_role": "ReadAccess"
+      },
+      "ref": "scip+ast",
+      "hash": "9545c20a0066"
+    },
+    "source": "if hasattr(race_date, 'tzinfo') and race_date.tzinfo is not None:"
+  }
+]

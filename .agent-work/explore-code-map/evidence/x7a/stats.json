@@ -1,0 +1,59 @@
+{
+  "statements_total": 3400,
+  "by_predicate": {
+    "reads": 2086,
+    "contains": 397,
+    "writes": 350,
+    "calls": 267,
+    "param-of": 157,
+    "documents": 143
+  },
+  "by_ref": {
+    "scip+ast": 2897,
+    "scip": 494,
+    "ast": 9
+  },
+  "by_predicate_and_ref": {
+    "reads/scip+ast": 2084,
+    "writes/scip+ast": 350,
+    "calls/scip+ast": 267,
+    "contains/scip": 201,
+    "contains/scip+ast": 196,
+    "param-of/scip": 157,
+    "documents/scip": 134,
+    "documents/ast": 9,
+    "reads/scip": 2
+  },
+  "cross_package": {
+    "reads/out": 1139,
+    "reads/internal": 590,
+    "reads/in": 357,
+    "writes/internal": 325,
+    "calls/out": 157,
+    "calls/internal": 72,
+    "calls/in": 38,
+    "writes/out": 25
+  },
+  "slice_defs_by_kind": {
+    "local": 182,
+    "parameter": 157,
+    "term": 115,
+    "method": 79,
+    "meta": 9,
+    "type": 7
+  },
+  "slice_transformers": 86,
+  "slice_containers": 454,
+  "distinct_subjects": 362,
+  "distinct_objects": 860,
+  "hash_collisions": 100,
+  "writes_split": {
+    "first": 317,
+    "re-binding": 33
+  },
+  "reads_via": {
+    "import": 62,
+    "attribute-not-call": 21,
+    "direct": 2003
+  }
+}
