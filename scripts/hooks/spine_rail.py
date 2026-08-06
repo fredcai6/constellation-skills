@@ -410,6 +410,18 @@ PATH_SOURCE_PAYLOAD_CWD = "payload_cwd"
 PATH_SOURCE_GIT_WORKTREE = "git_worktree"
 PATH_SOURCE_PROJECT_DIR = "project_dir"
 
+# TOLD TRUTH vs GUESS (#440 g1b). The first three sources are the CALLER's own
+# statement of where it is -- an absolute --file, an absolute --worktree, a `cd`
+# in its own command. The rest are inferences this hook makes on the caller's
+# behalf. Only the inferences can be wrong about which tree the agent meant, so
+# only the inferences are subject to the ambiguity guard in
+# `resolve_spine_candidate`; a told-truth rung short-circuits ahead of it.
+TOLD_TRUTH_PATH_SOURCES = frozenset((
+    PATH_SOURCE_ABSOLUTE,
+    PATH_SOURCE_WORKTREE_OPT,
+    PATH_SOURCE_CD_TARGET,
+))
+
 
 def looks_like_checklist(path) -> bool:
     """True only if `path` is a readable JSON OBJECT carrying a top-level
@@ -543,9 +555,16 @@ def _candidate_roots(data: dict, project_dir: Path, tokens: list, command: str):
     """Candidate roots for a relative `--file`, in ladder order, as a GENERATOR.
 
     Lazy on purpose: rung 4 shells out to `git`, and a PostToolUse hook must not
-    pay for -- or hang on -- a subprocess that the common case never needs. A
-    consumer that stops at the first validating rung never advances the
-    generator far enough to run it.
+    pay for -- or hang on -- a subprocess it does not need. A consumer that stops
+    at a TOLD-TRUTH rung (0-2) never advances the generator far enough to run it,
+    which is the case a worktree-dispatched agent always takes.
+
+    Since g1b (#440) a consumer that reaches the GUESSED rungs does drain the
+    generator, because it cannot know its guess is unambiguous without asking
+    every other guessed rung -- so `git` is spawned there. That is still not the
+    turn's hot path: `handle_post_tool_use` returns before any of this unless the
+    observed command is an engine `claim` or `release`, which happens twice per
+    run, not once per tool call.
     """
     cwd = data.get("cwd")
 
@@ -592,11 +611,35 @@ def resolve_spine_candidate(file_val, data: dict, project_dir: Path,
     store most needs to survive -- a `release` whose spine has already been
     archived, moved or deleted must still be able to name its own entry.
 
-    Otherwise the first candidate root that yields a VALIDATING checklist wins.
+    Otherwise the first TOLD-TRUTH root (rungs 1-2) that yields a VALIDATING
+    checklist wins outright, exactly as before -- the caller stated where it is,
+    so there is nothing to be uncertain about and nothing to weigh it against.
+
+    The GUESSED rungs (3 onward) are held to a stricter rule (#440 g1b): the
+    EARLIEST validating guess is kept, but if a later guess validates a
+    DIFFERENT file the answer is thrown away and NOTHING is bound. `.agent-work/`
+    is tracked, so a committed checklist sits at the same relative path in the
+    main checkout and in every worktree; without this the payload cwd (rung 3)
+    simply beat the worktree (rung 4) and the store recorded the main checkout's
+    copy -- a confident wrong path, the failure class this whole issue exists to
+    end. Skip on uncertainty is the store's own posture and it is not symmetric:
+    a missing binding is recoverable, a wrong one silently misattributes one
+    agent's context reading to another agent's work area.
+
+    Two guesses resolving to the SAME file are AGREEMENT, not ambiguity (rung 5
+    re-yields the payload cwd whenever a top-level agent runs in the project
+    dir) -- bind it, and keep the earliest rung's `path_source`.
+
     `(None, None)` means BIND NOTHING: a binding naming a spine that is not
     there is precisely the defect being fixed, so silence beats a confident
-    wrong record (the same fail-closed posture as `binding_key` returning None).
+    wrong record (the same fail-closed posture as `binding_key` returning None,
+    and the same refusal `resolve_recorded_release_target` makes on two matches).
     NEVER raises.
+
+    KNOWN, NOT CHASED (#440 g1b): the guard is all-or-nothing across the guessed
+    rungs -- it does not try to BREAK a tie (by mtime, by lease freshness, or by
+    reading which spine is actually active). Any such tie-break is a new guess
+    layered on the guesses that just disagreed, which is what this is refusing.
     """
     try:
         if not file_val:
@@ -604,14 +647,21 @@ def resolve_spine_candidate(file_val, data: dict, project_dir: Path,
         rel = Path(file_val)
         if rel.is_absolute():
             return str(rel), PATH_SOURCE_ABSOLUTE
+        guess = None  # (abs_path, source) of the EARLIEST validating guess
         for base, source in _candidate_roots(data, project_dir, tokens, command):
             try:
                 candidate = str((Path(base) / rel).resolve())
             except Exception:
                 continue
-            if looks_like_checklist(candidate):
+            if not looks_like_checklist(candidate):
+                continue
+            if source in TOLD_TRUTH_PATH_SOURCES:
                 return candidate, source
-        return None, None
+            if guess is None:
+                guess = (candidate, source)
+            elif not _same_path(candidate, guess[0]):
+                return None, None  # two guesses, two files -> refuse to guess
+        return guess if guess is not None else (None, None)
     except Exception:
         return None, None
 

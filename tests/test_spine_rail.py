@@ -1840,22 +1840,29 @@ def test_git_worktree_roots_never_raises_and_is_bounded(tmp_path, monkeypatch):
 
 
 def test_git_probe_does_not_run_when_an_earlier_rung_answers(proj, monkeypatch):
-    """The probe is off the common path. Rungs 0-3 answer first, and the
-    generator is lazy, so `git` is never spawned for an ordinary claim."""
+    """The probe is off the turn's hot path: handle_post_tool_use returns before
+    the ladder is even built unless the observed command is an engine
+    claim/release, so `git` is never spawned for an ordinary tool call.
+
+    Within a claim, a TOLD-TRUTH rung still short-circuits and never probes (the
+    absolute-`--file` half below, and the `_under_ambiguity` tests further down).
+    A GUESSED rung is different since g1b (#440): rung 3 answering is not the end
+    of the scan, because rungs 4-5 have to be consulted before that guess can be
+    trusted -- so the probe runs there, exactly ONCE."""
     calls = []
     monkeypatch.setattr(sr, "git_worktree_roots",
                         lambda pd: calls.append(str(pd)) or [])
     spine = put_checklist(proj, "run1")
     sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
     assert _only_entry(proj)[0] == spine
-    assert calls == [], "git probe ran on the common path"
+    assert calls == [str(proj)], "the guessed-rung scan must probe exactly once"
 
     # ... and an absolute --file (rung 0) short-circuits before the ladder runs
     abspath = str(proj / ".agent-work" / "run1" / "spine.json")
     sr.handle_post_tool_use(
         _bash('python e/checklist_engine.py --file "%s" claim --session-id e2' % abspath,
               session_id="s2", cwd=str(proj)), proj)
-    assert calls == []
+    assert calls == [str(proj)]  # unchanged -- rung 0 added no probe of its own
 
 
 def test_post_claim_rung4_real_git_worktree_resolved_in_a_fresh_subprocess(tmp_path):
@@ -1916,6 +1923,151 @@ def test_post_claim_rung4_real_git_worktree_resolved_in_a_fresh_subprocess(tmp_p
         "bound %r, not the worktree spine %r" % (abs_spine, spine))
     assert entry["path_source"] == "git_worktree"
     assert entry["engine_session"] == "eng-wt"
+
+
+# --- #440 g1b: the guessed rungs refuse to guess when they disagree -----------
+#
+# Rungs 0-2 are TOLD TRUTH (the caller stated where it is); rungs 3-5 are
+# GUESSES the hook makes for it. Two guesses naming DIFFERENT files is the one
+# case where the ladder previously returned a confident wrong path.
+
+
+def _two_tree_ambiguity(tmp_path, work="run1"):
+    """A main checkout and a REAL `git worktree` tree beside it, BOTH holding a
+    valid checklist at the same relative path -- the g1b residual's setup.
+
+    Returns `(main_tree, worktree, main_spine, worktree_spine)`. `.agent-work/`
+    is tracked in this repo, so committed checklists really do sit at identical
+    relative paths in every tree; this is the shape that produces, not a
+    contrivance.
+    """
+    main_tree, wt = _make_repo_with_worktree(tmp_path)
+    here = put_checklist(main_tree, work)
+    there = put_checklist(wt, work)
+    assert here != there
+    return main_tree, wt, here, there
+
+
+def test_post_claim_ambiguous_guessed_rungs_bind_nothing_store_byte_unchanged(tmp_path):
+    """THE g1b RESIDUAL. Rung 3 (payload cwd -> the main checkout) and rung 4 (a
+    real git worktree) both validate, and they name DIFFERENT files, with NO
+    told-truth signal in the command to break the tie.
+
+    Pre-g1b rung 3 simply won and the store recorded the MAIN CHECKOUT's copy --
+    a confident wrong path, which is the exact failure class #440 exists to end.
+    Skip on uncertainty instead: a missing binding is recoverable, a wrong one
+    silently misattributes one agent's context reading to another agent's work
+    area."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+
+    store = sr.binding_path(main_tree)
+    store.parent.mkdir(parents=True, exist_ok=True)
+    store.write_text(json.dumps({"other-sid": {}}), encoding="utf-8")
+    before = store.read_bytes()
+
+    cmd = _claim("run1")
+    # asserted, not asserted-in-prose: nothing in the command is told truth
+    assert "cd " not in cmd and "--worktree" not in cmd
+
+    out = sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+
+    assert out == {}                              # PostToolUse never blocks
+    assert store.read_bytes() == before           # not one byte written
+    assert "s1" not in sr.load_binding(main_tree)
+    assert Path(here).exists() and Path(there).exists()  # nothing on disk touched
+
+
+def test_post_claim_cd_target_still_wins_outright_under_ambiguity(tmp_path):
+    """Rung 2 is TOLD TRUTH and must short-circuit before the ambiguity check
+    sees rungs 3-5 at all. This is the case the residual was masked by: a
+    dispatched agent's shell cwd resets between calls, so its `cd` is always
+    in-command -- and the guard must not cost it the binding it gets today."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+    cmd = ('cd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-wt' % _msys(wt))
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+    abs_spine, entry = _only_entry(main_tree)
+    assert abs_spine == there
+    assert abs_spine != here
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_absolute_worktree_opt_still_wins_outright_under_ambiguity(tmp_path):
+    """Rung 1 is TOLD TRUTH: an absolute --worktree names the tree outright, so
+    the guessed rungs never get a vote."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+    cmd = ('python scripts/checklist_engine.py --file .agent-work/run1/spine.json '
+           'claim --session-id eng-wt --worktree "%s"' % wt)
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+    abs_spine, entry = _only_entry(main_tree)
+    assert abs_spine == there
+    assert abs_spine != here
+    assert entry["path_source"] == "worktree_opt"
+
+
+def test_post_claim_absolute_file_wins_and_never_probes_git_under_ambiguity(tmp_path, monkeypatch):
+    """Rung 0 must never start probing git. An absolute --file returns before the
+    candidate ladder is built at all, so the ambiguity scan -- and its one
+    subprocess -- is not on that path even when two trees really do disagree."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+    calls = []
+    monkeypatch.setattr(sr, "git_worktree_roots",
+                        lambda pd: calls.append(str(pd)) or [])
+    cmd = ('python e/checklist_engine.py --file "%s" claim --session-id eng-abs'
+           % there)
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+    abs_spine, entry = _only_entry(main_tree)
+    assert abs_spine == there
+    assert entry["path_source"] == "absolute"
+    assert calls == [], "rung 0 probed git"
+
+
+def test_post_claim_guessed_rungs_naming_the_same_file_is_agreement_not_ambiguity(proj, monkeypatch):
+    """Agreement is not ambiguity. Here the payload cwd (rung 3), a rung-4 root
+    and the project dir (rung 5) all resolve to the SAME file -- the ordinary
+    top-level case, where cwd IS the project dir -- so the guard must still bind,
+    and must keep the EARLIEST rung's path_source rather than the last one to
+    agree."""
+    spine = put_checklist(proj, "run1")
+    seen = []
+    monkeypatch.setattr(sr, "git_worktree_roots",
+                        lambda pd: seen.append(str(pd)) or [str(pd)])
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "payload_cwd"  # earliest rung, not project_dir
+    assert seen == [str(proj)], "the ambiguity scan never consulted rung 4"
+
+
+def test_post_claim_two_worktree_roots_disagreeing_bind_nothing(proj, monkeypatch):
+    """Ambiguity needs no second RUNG: two roots from rung 4 alone are enough.
+    The payload cwd and the project dir hold nothing here, so the two worktrees
+    compete directly."""
+    elsewhere = proj.parent / "nowhere"
+    elsewhere.mkdir(exist_ok=True)
+    wt_a = _sibling(proj, "-wtA")
+    wt_b = _sibling(proj, "-wtB")
+    put_checklist(wt_a, "run1")
+    put_checklist(wt_b, "run1")
+    monkeypatch.setattr(sr, "git_worktree_roots", lambda pd: [str(wt_a), str(wt_b)])
+    out = sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(elsewhere)), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_claim_one_worktree_root_still_binds_under_the_guard(proj, monkeypatch):
+    """The guard refuses only a DISAGREEMENT. A single validating candidate is
+    not ambiguous, so rung 4's answer survives the check unchanged -- the
+    behaviour the real-`git worktree` subprocess proof above depends on."""
+    elsewhere = proj.parent / "nowhere-solo"
+    elsewhere.mkdir(exist_ok=True)
+    wt_a = _sibling(proj, "-wtSolo")
+    spine = put_checklist(wt_a, "run1")
+    monkeypatch.setattr(sr, "git_worktree_roots", lambda pd: [str(wt_a)])
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(elsewhere)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "git_worktree"
 
 
 # --- #440: release resolves against its OWN recorded binding first ------------

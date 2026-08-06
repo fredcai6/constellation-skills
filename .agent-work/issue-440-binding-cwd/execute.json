@@ -475,7 +475,8 @@
           "id": "p1",
           "statement": "g1 integrated and green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1 integrated, committed 9d44aa6, 169 passed exit 0"
         }
       ],
       "postconditions": [
@@ -483,7 +484,8 @@
           "id": "c1",
           "statement": "an ambiguous guessed-rung resolution binds NOTHING, and rungs 0-2 still win outright; covered by tests that fail against the g1 code",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Ambiguity among guessed rungs binds nothing; told-truth rungs 0-2 short-circuit unchanged; agreement (two guesses, same file) still binds with the earliest rung's path_source. Tests were written BEFORE the module was touched, so RED is native to 9d44aa6 (no stash): 3 failed / 8 passed, exit 1, headline failure 'assert store.read_bytes() == before' - the residual exactly as filed. 176 passed after."
         },
         {
           "id": "c2",
@@ -497,7 +499,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1b-ambiguity-2"
         },
         {
           "id": "c3",
@@ -509,7 +512,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1b-ambiguity-1"
         }
       ],
       "constraints": [
@@ -520,11 +524,35 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1b-ambiguity-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/REVIEW_RESULT.md",
+            "tc1": "CLOSED - reviewer rebuilt its adversarial case on disk, store now byte-unchanged",
+            "regression_measured": "2693 colliding relative paths across all worktrees, 0 of them LIVE; both live spines (epic-418, issue-440-binding-cwd) exist in exactly one tree each"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1b-ambiguity-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -536,7 +564,7 @@
     "session_id": "cmdr-440-binding-cwd",
     "status": "active",
     "claimed_at": "2026-08-06T08:36:15.298330+00:00",
-    "last_heartbeat": "2026-08-06T09:35:25.822859+00:00",
+    "last_heartbeat": "2026-08-06T10:00:17.579098+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
@@ -570,6 +598,13 @@
       "why": "APPROVE integrated. Targeted suite re-run in my own hands: 169 passed, exit 0. The reviewer's independence is what makes this real - it restored the cbd9aee hook itself and watched the new tests fail with the defect's own phantom path, and it disproved test-weakening mechanically (zero deletions in the test diff) rather than by reading. Its tc1 residual is now gate g1b, amended in AHEAD of the acceptance run so the live fire tests shipped code.",
       "mechanical": false,
       "ts": "2026-08-06T09:35:25.822825+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1b-ambiguity",
+      "why": "APPROVE, no blockers. The guard closes tc1 and I asked the reviewer to test my claim that it does not overshoot into silencing ordinary main-checkout agents - it MEASURED that rather than reasoning about it: 2693 relative paths hold a validating checklist in both main and some worktree, but every one is a tracked ARCHIVED work area that will never be claimed again, and 0 are live. The two live spines each exist in exactly one tree. The 4 test deletions are a docstring plus two assertions made STRICTER (calls == [] became calls == [str(proj)]). Its tc2 is real and forward-looking: the guard's reach is a property of what is tracked under .agent-work/, so a future work-id colliding with an archived one would bind nothing SILENTLY - filing at triage.",
+      "mechanical": false,
+      "ts": "2026-08-06T10:00:17.579061+00:00"
     }
   ],
   "amendments": [

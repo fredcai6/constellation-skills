@@ -1,0 +1,206 @@
+{
+  "work_id": "issue-440-g1b-ambiguity",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-guard",
+    "m2-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), plus the g1b IMPLEMENTER_HANDOFF.md, scripts/hooks/spine_rail.py and the #440 sections of tests/test_spine_rail.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + target module + existing #440 tests read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-guard": {
+      "id": "m1-guard",
+      "title": "Refuse to guess when two guessed rungs name different files",
+      "imperative": "TDD red then green. RED: add to tests/test_spine_rail.py a test where the main checkout AND a real git worktree both hold a valid checklist at the same relative path and the command carries NO told-truth signal; assert no entry is written and the store is byte-unchanged. Observe it FAIL against 9d44aa6 (git show 9d44aa6:scripts/hooks/spine_rail.py into a temp file / stash), paste the failure, restore and prove restored. GREEN: in resolve_spine_candidate, return the first validating TOLD-TRUTH rung (absolute/worktree_opt/cd_target) immediately, and among the GUESSED rungs keep the earliest validating candidate but bind NOTHING if a later guessed rung validates a DIFFERENT file; same file is agreement, not ambiguity. Do not reorder or rename rungs. Attest c1 (red observed), then advance so the engine runs c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new ambiguity test written and observed FAILING against 9d44aa6 (manual attest; check MUST be null so the engine does not run the by-design-failing test)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "Ambiguity among guessed rungs binds nothing; told-truth rungs still win outright; tests/test_spine_rail.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-guard-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/hooks/spine_rail.py and tests/test_spine_rail.py only",
+        "PostToolUse never blocks and never raises; every new path returns {}",
+        "Told-truth rungs must not get slower, raise, or block; git probe stays off the told-truth path and stays bounded at 2.0s",
+        "Binding key shape and binding_key() untouched; do not restructure the ladder",
+        "Use python, never py; do not run the full suite; do not commit",
+        "A corner case not chased gets a comment at the code site plus a line in the result"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-evidence": {
+      "id": "m2-evidence",
+      "title": "Produce the handoff's required evidence and write IMPLEMENTER_RESULT",
+      "imperative": "Run the handoff's verification command over BOTH test files, redirecting to a file and echoing the real exit code (a pipe to tail captures tail's code). Record git diff --numstat. Run the wiring grep for any new symbol and state the count. Then write IMPLEMENTER_RESULT.md to the handoff's return path. Attest c2 once the result file exists with real exit codes pasted in.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the guard is in and tests/test_spine_rail.py is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q is green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written to the handoff's return path with real exit codes, numstat, wiring grep count and workflow feedback",
+          "check": {
+            "kind": "command",
+            "command": "test -s C:/Programs/constellation-skills-wt/epic418-a2-440/.agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/IMPLEMENTER_RESULT.md && grep -q 'EXIT=' C:/Programs/constellation-skills-wt/epic418-a2-440/.agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-evidence-2"
+        }
+      ],
+      "constraints": [
+        "Evidence must carry REAL exit codes: redirect to a file, then echo $?",
+        "Do not commit; the Commander commits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/epic418-a2-440/.agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/IMPLEMENTER_RESULT.md && grep -q 'EXIT=' C:/Programs/constellation-skills-wt/epic418-a2-440/.agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "impl-g1b-ambiguity",
+    "status": "released",
+    "claimed_at": "2026-08-06T09:40:23.587969+00:00",
+    "last_heartbeat": "2026-08-06T09:48:11.142840+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T09:48:19.164836+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff read in full and complete: task, protected intent, test mode (TDD required), close criteria, allowed scope, exclusions, constraints, map anchors, required evidence, wiring grep, verification commands, authority, stop conditions, return format all present. Baseline HEAD=9d44aa6 confirmed; both target files tracked (git check-ignore exit 1).",
+      "mechanical": false,
+      "ts": "2026-08-06T09:40:35.450725+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-guard",
+      "why": "RED observed against unmodified 9d44aa6 (git diff --quiet on scripts/hooks/spine_rail.py exit 0 at the time): 3 of 7 new tests failed, headline being the store written where it had to stay byte-unchanged. GREEN: told-truth rungs (absolute/worktree_opt/cd_target) short-circuit; guessed rungs keep the earliest validating candidate and bind nothing when a later guess names a different file. 109 passed.",
+      "mechanical": false,
+      "ts": "2026-08-06T09:45:14.614511+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-evidence",
+      "why": "Both test files green at EXIT=0, 176 passed (169 baseline + 7 new). numstat: spine_rail.py 57/7, test_spine_rail.py 156/4 -- the 4 deletions are the one probe-spy test's docstring plus two assertions that became STRICTER, documented in the result. Wiring grep: TOLD_TRUTH_PATH_SOURCES has 1 call site outside its definition. Blast radius enumerated: 13 files mention path_source, 2 are code (both in scope), 11 are Commander-owned workflow artifacts, 0 docs stranded. IMPLEMENTER_RESULT.md written to the handoff's return path.",
+      "mechanical": false,
+      "ts": "2026-08-06T09:48:11.142802+00:00"
+    }
+  ]
+}

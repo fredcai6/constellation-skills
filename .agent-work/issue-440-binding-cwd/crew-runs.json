@@ -44,5 +44,29 @@
     "abandoned": false,
     "dispatch": "external",
     "model": "opus"
+  },
+  {
+    "crew_id": "constellation/issue-440-binding-cwd/g1b-ambiguity/implementer/attempt-1",
+    "work_id": "issue-440-binding-cwd",
+    "gate": "g1b-ambiguity",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/issue-440-binding-cwd/g1b-ambiguity/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+    "handoff": ".agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/IMPLEMENTER_HANDOFF.md",
+    "result": ".agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/IMPLEMENTER_RESULT.md",
+    "stdout": ".agent-work/issue-440-binding-cwd/crew-runs/g1b-ambiguity-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-440-binding-cwd/crew-runs/g1b-ambiguity-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-06T09:36:26.642079+00:00",
+    "last_heartbeat": "2026-08-06T09:50:13.545465+00:00",
+    "completed_at": "2026-08-06T09:50:13.545465+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
