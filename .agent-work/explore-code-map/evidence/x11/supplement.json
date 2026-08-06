@@ -1,0 +1,1922 @@
+{
+ "gaps": {
+  "G1-kind": "entity kind (class / function / method / async / property)",
+  "G2-signature": "rendered signature: annotations, defaults, *args/**kwargs, return type",
+  "G3-decorators": "decorator list (@classmethod, @staticmethod, @dataclass, ...)",
+  "G4-docbody": "docstring body past the summary line (Args/Returns/Raises/Examples)",
+  "G5-span": "entity end line / line count",
+  "G6-dunder": "module __all__ / re-export surface",
+  "G7-value": "the VALUE and annotation of a module-level constant (store records only the name, via `writes`)",
+  "G8-annassign": "annotation-only attributes (dataclass fields, ClassVar decls) -- the store has NO statement of any kind for these"
+ },
+ "entities": {
+  "src.utils.config:Config": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [],
+   "doc_summary": "Configuration manager for F1Brainz system",
+   "doc_body": null,
+   "line": 17,
+   "end_line": 329,
+   "bases": [],
+   "attrs": [
+    {
+     "name": "PROJECT_ROOT",
+     "line": 21,
+     "annotation": null,
+     "value": "Path(__file__).parent.parent.parent",
+     "form": "assign"
+    },
+    {
+     "name": "CONFIG_DIR",
+     "line": 22,
+     "annotation": null,
+     "value": "PROJECT_ROOT / 'configs'",
+     "form": "assign"
+    },
+    {
+     "name": "OUTPUTS_DIR",
+     "line": 23,
+     "annotation": null,
+     "value": "PROJECT_ROOT / 'outputs'",
+     "form": "assign"
+    },
+    {
+     "name": "CACHE_DIR",
+     "line": 25,
+     "annotation": null,
+     "value": "PROJECT_ROOT / 'data' / 'telemetry'",
+     "form": "assign"
+    },
+    {
+     "name": "DATA_RAW_DIR",
+     "line": 26,
+     "annotation": null,
+     "value": "OUTPUTS_DIR / 'data_raw'",
+     "form": "assign"
+    },
+    {
+     "name": "DATA_PROC_DIR",
+     "line": 27,
+     "annotation": null,
+     "value": "OUTPUTS_DIR / 'data_proc'",
+     "form": "assign"
+    },
+    {
+     "name": "LOGS_DIR",
+     "line": 28,
+     "annotation": null,
+     "value": "OUTPUTS_DIR / 'logs'",
+     "form": "assign"
+    },
+    {
+     "name": "FIGURES_DIR",
+     "line": 29,
+     "annotation": null,
+     "value": "OUTPUTS_DIR / 'figs'",
+     "form": "assign"
+    },
+    {
+     "name": "DATABASE_PATH",
+     "line": 32,
+     "annotation": null,
+     "value": "PROJECT_ROOT / 'data' / 'f1_data.db'",
+     "form": "assign"
+    },
+    {
+     "name": "TEST_DATABASE_PATH",
+     "line": 33,
+     "annotation": null,
+     "value": "PROJECT_ROOT / 'data' / 'f1_data_test.db'",
+     "form": "assign"
+    },
+    {
+     "name": "ERGAST_BASE_URL",
+     "line": 39,
+     "annotation": null,
+     "value": "'https://ergast.com/api/f1'",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_CACHE_DIR",
+     "line": 40,
+     "annotation": null,
+     "value": "CACHE_DIR",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_RETRIES",
+     "line": 41,
+     "annotation": null,
+     "value": "3",
+     "form": "assign"
+    },
+    {
+     "name": "REQUEST_DELAY",
+     "line": 42,
+     "annotation": null,
+     "value": "0.5",
+     "form": "assign"
+    },
+    {
+     "name": "_config_data",
+     "line": 45,
+     "annotation": "Optional[Dict[str, Any]]",
+     "value": "None",
+     "form": "annotated-assign"
+    },
+    {
+     "name": "_config_source",
+     "line": 46,
+     "annotation": "Optional[str]",
+     "value": "None",
+     "form": "annotated-assign"
+    }
+   ]
+  },
+  "src.utils.config:Config.db_path_for_year": {
+   "kind": "class method",
+   "signature": "(cls, year: int) -> Path",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Return the per-season SQLite path: data/f1_data_{year}.db",
+   "doc_body": null,
+   "line": 36,
+   "end_line": 38,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.load_config": {
+   "kind": "class method",
+   "signature": "(cls, config_file: str = 'default.yaml') -> Dict[str, Any]",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Load and validate configuration from YAML file.",
+   "doc_body": "Args:\n    config_file: Name of config file in configs/ directory\n\nReturns:\n    Validated configuration dictionary\n\nRaises:\n    ConfigurationError: If config file missing or invalid",
+   "line": 49,
+   "end_line": 104,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get": {
+   "kind": "class method",
+   "signature": "(cls, key: str, default: Any = None) -> Any",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get configuration value by key (supports nested keys with dot notation)",
+   "doc_body": null,
+   "line": 107,
+   "end_line": 120,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_seasons": {
+   "kind": "class method",
+   "signature": "(cls) -> list",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get list of seasons to analyze",
+   "doc_body": null,
+   "line": 123,
+   "end_line": 125,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_sessions": {
+   "kind": "class method",
+   "signature": "(cls) -> list",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get list of sessions to analyze",
+   "doc_body": null,
+   "line": 128,
+   "end_line": 130,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_topk": {
+   "kind": "class method",
+   "signature": "(cls) -> int",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get top-K value for rank error calculation",
+   "doc_body": null,
+   "line": 133,
+   "end_line": 135,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_objective_weights": {
+   "kind": "class method",
+   "signature": "(cls) -> Dict[str, float]",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get objective function weights",
+   "doc_body": null,
+   "line": 138,
+   "end_line": 140,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_weight_bounds": {
+   "kind": "class method",
+   "signature": "(cls) -> tuple",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get weight optimization bounds",
+   "doc_body": null,
+   "line": 143,
+   "end_line": 146,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_random_seed": {
+   "kind": "class method",
+   "signature": "(cls) -> int",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get random seed for reproducibility",
+   "doc_body": null,
+   "line": 149,
+   "end_line": 151,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_data_config": {
+   "kind": "class method",
+   "signature": "(cls) -> Dict[str, Any]",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get data processing configuration",
+   "doc_body": null,
+   "line": 154,
+   "end_line": 156,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_feature_config": {
+   "kind": "class method",
+   "signature": "(cls) -> Dict[str, Any]",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get feature engineering configuration",
+   "doc_body": null,
+   "line": 159,
+   "end_line": 161,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.get_paths": {
+   "kind": "class method",
+   "signature": "(cls) -> Dict[str, Path]",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Get all system paths",
+   "doc_body": null,
+   "line": 164,
+   "end_line": 175,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config._setup_logging": {
+   "kind": "class method",
+   "signature": "(cls)",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Setup logging configuration",
+   "doc_body": null,
+   "line": 178,
+   "end_line": 200,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config._setup_fastf1_cache": {
+   "kind": "class method",
+   "signature": "(cls)",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Setup FastF1 cache configuration",
+   "doc_body": null,
+   "line": 203,
+   "end_line": 230,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.ensure_directories": {
+   "kind": "class method",
+   "signature": "(cls)",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Ensure all required directories exist",
+   "doc_body": null,
+   "line": 233,
+   "end_line": 240,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config._validate_config": {
+   "kind": "class method",
+   "signature": "(cls)",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Validate configuration schema and required fields.",
+   "doc_body": "Raises:\n    ConfigurationError: If required fields are missing or invalid",
+   "line": 243,
+   "end_line": 314,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:Config.reload_config": {
+   "kind": "class method",
+   "signature": "(cls, config_file: str = 'default.yaml')",
+   "decorators": [
+    "classmethod"
+   ],
+   "doc_summary": "Reload configuration from file.",
+   "doc_body": "Args:\n    config_file: Name of config file to reload\n\nReturns:\n    Reloaded configuration dictionary",
+   "line": 317,
+   "end_line": 329,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:load_config": {
+   "kind": "function",
+   "signature": "(config_file: str = 'default.yaml') -> Dict[str, Any]",
+   "decorators": [],
+   "doc_summary": "Load configuration from YAML file.",
+   "doc_body": "Args:\n    config_file: Path to config file or name of file in configs/ directory\n\nReturns:\n    Configuration dictionary",
+   "line": 338,
+   "end_line": 364,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.config:get_config_value": {
+   "kind": "function",
+   "signature": "(key: str, default: Any = None) -> Any",
+   "decorators": [],
+   "doc_summary": "Get configuration value by key.",
+   "doc_body": "Args:\n    key: Configuration key (supports dot notation for nested keys)\n    default: Default value if key not found\n\nReturns:\n    Configuration value or default",
+   "line": 367,
+   "end_line": 381,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.console:force_stream_utf8": {
+   "kind": "function",
+   "signature": "(stream: TextIO | None) -> None",
+   "decorators": [],
+   "doc_summary": "Reconfigure *stream* to UTF-8 when it supports it; otherwise do nothing.",
+   "doc_body": "No-op when *stream* is ``None`` or has no ``reconfigure`` (e.g. it has already\nbeen replaced by a capture buffer), and when reconfiguration is rejected.",
+   "line": 15,
+   "end_line": 27,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.console:force_utf8_console": {
+   "kind": "function",
+   "signature": "() -> None",
+   "decorators": [],
+   "doc_summary": "Make stdout and stderr UTF-8 so unicode prints don't crash under cp1252.",
+   "doc_body": null,
+   "line": 30,
+   "end_line": 33,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:get_calendar": {
+   "kind": "function",
+   "signature": "(year: int) -> List[str]",
+   "decorators": [],
+   "doc_summary": "Get F1 calendar for a specific year.",
+   "doc_body": "Args:\n    year: Season year\n\nReturns:\n    List of GP names in calendar order\n\nRaises:\n    KeyError: If year is not in calendars",
+   "line": 263,
+   "end_line": 278,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:is_sprint_weekend": {
+   "kind": "function",
+   "signature": "(year: int, gp_name: str) -> bool",
+   "decorators": [],
+   "doc_summary": "Check if a Grand Prix has a sprint format.",
+   "doc_body": "Args:\n    year: Season year\n    gp_name: Grand Prix name\n\nReturns:\n    True if sprint weekend, False otherwise",
+   "line": 281,
+   "end_line": 292,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:is_legacy_sprint_weekend": {
+   "kind": "function",
+   "signature": "(year: int, gp_name: str) -> bool",
+   "decorators": [],
+   "doc_summary": "Sprint weekend using 2021 format: FP1+FP2 practice (no SQ/S sessions exist).",
+   "doc_body": null,
+   "line": 302,
+   "end_line": 304,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:is_modern_sprint_weekend": {
+   "kind": "function",
+   "signature": "(year: int, gp_name: str) -> bool",
+   "decorators": [],
+   "doc_summary": "Sprint weekend using 2022+ format: FP1+SQ+S practice (no FP2/FP3 exist).",
+   "doc_body": null,
+   "line": 307,
+   "end_line": 309,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:get_practice_session_types": {
+   "kind": "function",
+   "signature": "(year: int, gp_name: str) -> List[str]",
+   "decorators": [],
+   "doc_summary": "Return the ordered list of practice session types for a race weekend.",
+   "doc_body": "Modern sprint weekends (2022+) use FP1 + sprint qualifying (SQ) + sprint race (S).\nLegacy sprint weekends (2021) used FP1 + FP2 \u2014 SQ/S session codes did not exist yet.\nNormal weekends use FP1 + FP2 + FP3.\nQ and R are never included \u2014 this is the canonical source for practice-only\nsession pools used by feature builders and session dropout.\n\nArgs:\n    year: Season year\n    gp_name: Grand Prix name\n\nReturns:\n    List of practice session type strings, e.g. [\"FP1\", \"FP2\", \"FP3\"]",
+   "line": 312,
+   "end_line": 333,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:get_weekend_sessions": {
+   "kind": "function",
+   "signature": "(year: int, gp_name: str) -> List[str]",
+   "decorators": [],
+   "doc_summary": "Get session types for a specific Grand Prix weekend.",
+   "doc_body": "Args:\n    year: Season year\n    gp_name: Grand Prix name\n\nReturns:\n    List of session types for that weekend",
+   "line": 336,
+   "end_line": 351,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.constants:validate_session_type": {
+   "kind": "function",
+   "signature": "(session_type: str) -> bool",
+   "decorators": [],
+   "doc_summary": "Validate if session type is recognized.",
+   "doc_body": "Args:\n    session_type: Session type string\n\nReturns:\n    True if valid, False otherwise",
+   "line": 354,
+   "end_line": 364,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.environment:moist_air_density_from_pressure": {
+   "kind": "function",
+   "signature": "(pressure_pa: float, air_temp_c: float, humidity_pct: float) -> float",
+   "decorators": [],
+   "doc_summary": "Compute moist-air density from a MEASURED barometric pressure.",
+   "doc_body": "Uses the same moist-air physics as ``estimate_air_density_kg_m3`` but\ntakes the barometric pressure directly instead of deriving it from\naltitude via the ISA standard atmosphere.  Prefer this function when a\nmeasured ``Pressure`` field is available from FastF1 weather data.\n\n**Unit warning:** ``pressure_pa`` must be in **Pascals**.  FastF1\n``weather_data['Pressure']`` is in **mbar (hPa)**; multiply by 100.0\nbefore passing here (e.g. ``pressure_mbar * 100.0``).  Passing mbar\ndirectly (e.g. 1013 instead of 101300) underestimates density ~100\u00d7.\n\nArgs:\n    pressure_pa: Absolute barometric pressure in **Pascals** (Pa).\n        Realistic sea-level values are approximately 80 000\u2013110 000 Pa.\n        Values below 10 000 Pa are almost certainly mbar passed by\n        mistake \u2014 this function raises ``ValueError`` in that case.\n    air_temp_c: Air temperature in degrees Celsius.\n    humidity_pct: Relative humidity as a percentage (0\u2013100).\n\nReturns:\n    Moist-air density in kg/m\u00b3.\n\nRaises:\n    ValueError: If ``pressure_pa < 10000``, which almost certainly\n        indicates that the caller passed mbar (e.g. FastF1 ``Pressure``)\n        instead of Pa.",
+   "line": 17,
+   "end_line": 62,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.environment:estimate_air_density_kg_m3": {
+   "kind": "function",
+   "signature": "(altitude_m: float, air_temp_c: float, humidity_pct: float) -> float",
+   "decorators": [],
+   "doc_summary": "Estimate moist-air density from altitude, air temperature, and relative humidity.",
+   "doc_body": "Derives barometric pressure from the ISA standard atmosphere model, then\napplies the moist-air equation.  Use ``moist_air_density_from_pressure``\ninstead when a measured barometric pressure is available.\n\nArgs:\n    altitude_m: Altitude above mean sea level in metres.\n    air_temp_c: Air temperature in degrees Celsius.\n    humidity_pct: Relative humidity as a percentage (0\u2013100).\n\nReturns:\n    Moist-air density in kg/m\u00b3.",
+   "line": 65,
+   "end_line": 91,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:RaceInfo": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [
+    "dataclass"
+   ],
+   "doc_summary": "Information about an F1 race weekend.",
+   "doc_body": null,
+   "line": 21,
+   "end_line": 33,
+   "bases": [],
+   "attrs": [
+    {
+     "name": "season",
+     "line": 23,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "race_number",
+     "line": 24,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "gp_name",
+     "line": 25,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "circuit_name",
+     "line": 26,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "country",
+     "line": 27,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "race_date",
+     "line": 28,
+     "annotation": "datetime",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "quali_date",
+     "line": 29,
+     "annotation": "Optional[datetime]",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "fp1_date",
+     "line": 30,
+     "annotation": "Optional[datetime]",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "fp2_date",
+     "line": 31,
+     "annotation": "Optional[datetime]",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "fp3_date",
+     "line": 32,
+     "annotation": "Optional[datetime]",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "is_sprint_weekend",
+     "line": 33,
+     "annotation": "bool",
+     "value": null,
+     "form": "annotation-only"
+    }
+   ]
+  },
+  "src.utils.f1_calendar:F1Calendar": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [],
+   "doc_summary": "F1 calendar manager for race scheduling.",
+   "doc_body": "Uses FastF1 to get actual race dates and session times.",
+   "line": 36,
+   "end_line": 352,
+   "bases": [],
+   "attrs": []
+  },
+  "src.utils.f1_calendar:F1Calendar.__init__": {
+   "kind": "method",
+   "signature": "(self)",
+   "decorators": [],
+   "doc_summary": "Initialize calendar manager.",
+   "doc_body": null,
+   "line": 43,
+   "end_line": 45,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar._naive_datetime": {
+   "kind": "static method",
+   "signature": "(value: datetime) -> datetime",
+   "decorators": [
+    "staticmethod"
+   ],
+   "doc_summary": "Normalize timezone-aware datetimes for safe calendar comparison.",
+   "doc_body": null,
+   "line": 48,
+   "end_line": 52,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.get_season_calendar": {
+   "kind": "method",
+   "signature": "(self, season: int, force_refresh: bool = False) -> List[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get full calendar for a season.",
+   "doc_body": "Args:\n    season: Season year\n    force_refresh: Force reload even if cached\n\nReturns:\n    List of RaceInfo for all races in season",
+   "line": 54,
+   "end_line": 128,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar._get_fallback_calendar": {
+   "kind": "method",
+   "signature": "(self, season: int) -> List[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Fallback calendar when FastF1 unavailable.",
+   "doc_body": "Returns race info without dates.",
+   "line": 130,
+   "end_line": 157,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.get_race_by_number": {
+   "kind": "method",
+   "signature": "(self, season: int, race_number: int) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get race info by race number.",
+   "doc_body": "Args:\n    season: Season year\n    race_number: Race number (1-indexed)\n\nReturns:\n    RaceInfo if found, None otherwise",
+   "line": 159,
+   "end_line": 174,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.get_race_by_name": {
+   "kind": "method",
+   "signature": "(self, season: int, gp_name: str) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get race info by GP name.",
+   "doc_body": "Args:\n    season: Season year\n    gp_name: Grand Prix name (e.g., \"Monaco\", \"British\")\n\nReturns:\n    RaceInfo if found, None otherwise",
+   "line": 176,
+   "end_line": 198,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.get_upcoming_races": {
+   "kind": "method",
+   "signature": "(self, season: int, days_ahead: int = 7, reference_date: Optional[datetime] = None) -> List[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get upcoming races within specified days.",
+   "doc_body": "Args:\n    season: Season year\n    days_ahead: Number of days to look ahead\n    reference_date: Reference date (default: now)\n\nReturns:\n    List of RaceInfo for upcoming races",
+   "line": 200,
+   "end_line": 240,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.get_next_race": {
+   "kind": "method",
+   "signature": "(self, season: int, reference_date: Optional[datetime] = None) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get the next race after reference date.",
+   "doc_body": "Args:\n    season: Season year\n    reference_date: Reference date (default: now)\n\nReturns:\n    Next RaceInfo or None if season is over",
+   "line": 242,
+   "end_line": 258,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.is_race_weekend": {
+   "kind": "method",
+   "signature": "(self, season: int, check_date: Optional[datetime] = None) -> bool",
+   "decorators": [],
+   "doc_summary": "Check if date falls on a race weekend.",
+   "doc_body": "Args:\n    season: Season year\n    check_date: Date to check (default: now)\n\nReturns:\n    True if it's a race weekend",
+   "line": 260,
+   "end_line": 293,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.get_current_race_weekend": {
+   "kind": "method",
+   "signature": "(self, season: int, check_date: Optional[datetime] = None) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get race info if currently on a race weekend.",
+   "doc_body": "Args:\n    season: Season year\n    check_date: Date to check (default: now)\n\nReturns:\n    RaceInfo if on race weekend, None otherwise",
+   "line": 295,
+   "end_line": 327,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:F1Calendar.format_race_info": {
+   "kind": "method",
+   "signature": "(self, race: RaceInfo) -> str",
+   "decorators": [],
+   "doc_summary": "Format race info for display.",
+   "doc_body": "Args:\n    race: RaceInfo to format\n\nReturns:\n    Formatted string",
+   "line": 329,
+   "end_line": 352,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:get_calendar": {
+   "kind": "function",
+   "signature": "() -> F1Calendar",
+   "decorators": [],
+   "doc_summary": "Get singleton calendar instance.",
+   "doc_body": null,
+   "line": 359,
+   "end_line": 364,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:get_upcoming_races": {
+   "kind": "function",
+   "signature": "(season: int, days_ahead: int = 7) -> List[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get upcoming races. See F1Calendar.get_upcoming_races.",
+   "doc_body": null,
+   "line": 368,
+   "end_line": 370,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:get_next_race": {
+   "kind": "function",
+   "signature": "(season: int) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get next race. See F1Calendar.get_next_race.",
+   "doc_body": null,
+   "line": 373,
+   "end_line": 375,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:get_race_by_number": {
+   "kind": "function",
+   "signature": "(season: int, race_number: int) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get race by number. See F1Calendar.get_race_by_number.",
+   "doc_body": null,
+   "line": 378,
+   "end_line": 380,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:get_race_by_name": {
+   "kind": "function",
+   "signature": "(season: int, gp_name: str) -> Optional[RaceInfo]",
+   "decorators": [],
+   "doc_summary": "Get race by name. See F1Calendar.get_race_by_name.",
+   "doc_body": null,
+   "line": 383,
+   "end_line": 385,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.f1_calendar:is_race_weekend": {
+   "kind": "function",
+   "signature": "(season: int) -> bool",
+   "decorators": [],
+   "doc_summary": "Check if it's a race weekend. See F1Calendar.is_race_weekend.",
+   "doc_body": null,
+   "line": 388,
+   "end_line": 390,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [],
+   "doc_summary": "Maps driver identifiers between FastF1 and Ergast systems",
+   "doc_body": "Handles:\n- FastF1 DriverNumber/Abbreviation \u2194 Ergast driverId/code\n- Manual override mappings for edge cases\n- Driver aliases and name variations",
+   "line": 16,
+   "end_line": 325,
+   "bases": [],
+   "attrs": []
+  },
+  "src.utils.ids:DriverMapper.__init__": {
+   "kind": "method",
+   "signature": "(self, override_file: Optional[str] = None)",
+   "decorators": [],
+   "doc_summary": "Initialize driver mapper",
+   "doc_body": "Args:\n    override_file: Path to YAML file with manual override mappings",
+   "line": 26,
+   "end_line": 59,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper._load_manual_mappings": {
+   "kind": "method",
+   "signature": "(self) -> Dict[str, Dict[str, str]]",
+   "decorators": [],
+   "doc_summary": "Load manual override mappings from YAML file",
+   "doc_body": null,
+   "line": 61,
+   "end_line": 75,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.map_driver_code": {
+   "kind": "method",
+   "signature": "(self, driver_code: str, source: str = 'fastf1') -> Optional[str]",
+   "decorators": [],
+   "doc_summary": "Map driver code between systems",
+   "doc_body": "Args:\n    driver_code: Driver code to map\n    source: Source system ('fastf1' or 'ergast')\n\nReturns:\n    Mapped driver code or None if no mapping found",
+   "line": 77,
+   "end_line": 101,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.map_driver_name": {
+   "kind": "method",
+   "signature": "(self, first_name: str, last_name: str, source: str = 'fastf1') -> Optional[str]",
+   "decorators": [],
+   "doc_summary": "Map driver name to standard format",
+   "doc_body": "Args:\n    first_name: Driver's first name\n    last_name: Driver's last name\n    source: Source system\n\nReturns:\n    Standardized driver name or None if no mapping found",
+   "line": 103,
+   "end_line": 127,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.create_mapping_table": {
+   "kind": "method",
+   "signature": "(self, fastf1_drivers: pd.DataFrame, ergast_drivers: pd.DataFrame) -> pd.DataFrame",
+   "decorators": [],
+   "doc_summary": "Create a comprehensive mapping table between FastF1 and Ergast drivers",
+   "doc_body": "Args:\n    fastf1_drivers: DataFrame with FastF1 driver data\n    ergast_drivers: DataFrame with Ergast driver data\n\nReturns:\n    DataFrame with driver mappings",
+   "line": 129,
+   "end_line": 187,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.get_driver_consistency_score": {
+   "kind": "method",
+   "signature": "(self, fastf1_data: pd.DataFrame, ergast_data: pd.DataFrame) -> Dict[str, float]",
+   "decorators": [],
+   "doc_summary": "Calculate consistency score between FastF1 and Ergast driver data",
+   "doc_body": "Args:\n    fastf1_data: FastF1 driver data\n    ergast_data: Ergast driver data\n\nReturns:\n    Dictionary with consistency metrics",
+   "line": 189,
+   "end_line": 221,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.suggest_mappings": {
+   "kind": "method",
+   "signature": "(self, fastf1_data: pd.DataFrame, ergast_data: pd.DataFrame) -> List[Dict[str, str]]",
+   "decorators": [],
+   "doc_summary": "Suggest potential driver mappings based on name similarity",
+   "doc_body": "Args:\n    fastf1_data: FastF1 driver data\n    ergast_data: Ergast driver data\n\nReturns:\n    List of suggested mappings",
+   "line": 223,
+   "end_line": 272,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.export_mappings": {
+   "kind": "method",
+   "signature": "(self, output_file: str, fastf1_data: pd.DataFrame, ergast_data: pd.DataFrame)",
+   "decorators": [],
+   "doc_summary": "Export driver mappings to a file",
+   "doc_body": "Args:\n    output_file: Output file path\n    fastf1_data: FastF1 driver data\n    ergast_data: Ergast driver data",
+   "line": 274,
+   "end_line": 301,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.ids:DriverMapper.validate_mapping": {
+   "kind": "method",
+   "signature": "(self, fastf1_code: str, ergast_code: str) -> bool",
+   "decorators": [],
+   "doc_summary": "Validate if a driver mapping is correct",
+   "doc_body": "Args:\n    fastf1_code: FastF1 driver code\n    ergast_code: Ergast driver code\n\nReturns:\n    True if mapping is valid, False otherwise",
+   "line": 303,
+   "end_line": 325,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:Violation": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [
+    "dataclass(frozen=True)"
+   ],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 32,
+   "end_line": 44,
+   "bases": [],
+   "attrs": [
+    {
+     "name": "path",
+     "line": 33,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "symbol",
+     "line": 34,
+     "annotation": "Optional[str]",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "metric",
+     "line": 35,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "actual",
+     "line": 36,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "limit",
+     "line": 37,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    }
+   ]
+  },
+  "src.utils.simplification_limits:Violation.format_message": {
+   "kind": "method",
+   "signature": "(self) -> str",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 39,
+   "end_line": 44,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:SimplificationLimitsResult": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [
+    "dataclass"
+   ],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 48,
+   "end_line": 58,
+   "bases": [],
+   "attrs": [
+    {
+     "name": "passed",
+     "line": 49,
+     "annotation": "bool",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "violations",
+     "line": 50,
+     "annotation": "List[Violation]",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "files_checked",
+     "line": 51,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    }
+   ]
+  },
+  "src.utils.simplification_limits:SimplificationLimitsResult.to_dict": {
+   "kind": "method",
+   "signature": "(self) -> dict",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 53,
+   "end_line": 58,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:_is_excluded_path": {
+   "kind": "function",
+   "signature": "(path: Path, root: Path) -> bool",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 61,
+   "end_line": 74,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:iter_python_files": {
+   "kind": "function",
+   "signature": "(roots: Sequence[str | Path], *, project_root: Path = PROJECT_ROOT, extra_paths: Optional[Sequence[str | Path]] = None) -> List[Path]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 77,
+   "end_line": 102,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:_function_spans": {
+   "kind": "function",
+   "signature": "(tree: ast.AST) -> List[Tuple[str, int, int]]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 105,
+   "end_line": 115,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:_file_line_violations": {
+   "kind": "function",
+   "signature": "(path: Path, rel: str) -> List[Violation]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 118,
+   "end_line": 131,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:_function_line_violations": {
+   "kind": "function",
+   "signature": "(path: Path, rel: str, tree: ast.AST) -> List[Violation]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 134,
+   "end_line": 148,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:_radon_complexity_violations": {
+   "kind": "function",
+   "signature": "(paths: List[Path], project_root: Path) -> List[Violation]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 151,
+   "end_line": 179,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:load_baseline_config": {
+   "kind": "function",
+   "signature": "(path: Path = DEFAULT_BASELINE_PATH) -> tuple[frozenset[str], frozenset[str]]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 182,
+   "end_line": 190,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:load_baseline_allowlist": {
+   "kind": "function",
+   "signature": "(path: Path = DEFAULT_BASELINE_PATH) -> frozenset[str]",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 193,
+   "end_line": 195,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:verify_simplification_limits": {
+   "kind": "function",
+   "signature": "(*, roots: Sequence[str | Path] = DEFAULT_ROOTS, project_root: Path = PROJECT_ROOT, extra_paths: Optional[Sequence[str | Path]] = None, use_baseline: bool = False, baseline_path: Optional[Path] = None, metrics: Optional[Sequence[str]] = None) -> SimplificationLimitsResult",
+   "decorators": [],
+   "doc_summary": "Check simplification limits on Python under the given roots.",
+   "doc_body": "Returns pass/fail and structured violations (path, symbol, metric, actual, limit).\nWith use_baseline=True, paths listed in simplification_baseline.json are skipped.",
+   "line": 198,
+   "end_line": 258,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:_print_result": {
+   "kind": "function",
+   "signature": "(result: SimplificationLimitsResult) -> None",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 261,
+   "end_line": 267,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.simplification_limits:main": {
+   "kind": "function",
+   "signature": "(argv: Optional[Sequence[str]] = None) -> int",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 270,
+   "end_line": 313,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:ResourcePlan": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [
+    "dataclass(frozen=True)"
+   ],
+   "doc_summary": "An immutable, fully resolved plan for one run.",
+   "doc_body": "Attributes:\n    level: the requested utilization level (one of ``UTILIZATION_LEVELS``).\n    n_workers: number of worker processes (>= 1).\n    threads_per_worker: intra-worker thread cap (>= 1).\n    priority: OS scheduling priority label (one of ``_PRIORITIES``).",
+   "line": 52,
+   "end_line": 65,
+   "bases": [],
+   "attrs": [
+    {
+     "name": "level",
+     "line": 62,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "n_workers",
+     "line": 63,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "threads_per_worker",
+     "line": 64,
+     "annotation": "int",
+     "value": null,
+     "form": "annotation-only"
+    },
+    {
+     "name": "priority",
+     "line": 65,
+     "annotation": "str",
+     "value": null,
+     "form": "annotation-only"
+    }
+   ]
+  },
+  "src.utils.utilization:JobExecutionError": {
+   "kind": "class",
+   "signature": null,
+   "decorators": [],
+   "doc_summary": "A worker job failed; carries the failing job's identity for fail-fast surfacing.",
+   "doc_body": null,
+   "line": 68,
+   "end_line": 69,
+   "bases": [
+    "RuntimeError"
+   ],
+   "attrs": []
+  },
+  "src.utils.utilization:_detect_physical_cores": {
+   "kind": "function",
+   "signature": "() -> int",
+   "decorators": [],
+   "doc_summary": "Best available physical-core count, never below 1.",
+   "doc_body": null,
+   "line": 72,
+   "end_line": 74,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:_detect_available_mem_gb": {
+   "kind": "function",
+   "signature": "() -> float",
+   "decorators": [],
+   "doc_summary": "Currently-available system memory in GiB.",
+   "doc_body": null,
+   "line": 77,
+   "end_line": 79,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:_apply_ram_cap": {
+   "kind": "function",
+   "signature": "(n_workers: int, available_mem_gb: float, mem_per_worker_gb: float) -> int",
+   "decorators": [],
+   "doc_summary": "Lower ``n_workers`` so the run fits available RAM; never drop below 1.",
+   "doc_body": "Logs one info line *only when the cap actually binds* (i.e. lowers the count),\nnaming the before/after worker counts and the memory reason.",
+   "line": 82,
+   "end_line": 105,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:resolve_resource_plan": {
+   "kind": "function",
+   "signature": "(level: str, *, physical_cores: Optional[int] = None, available_mem_gb: Optional[float] = None, mem_per_worker_gb: float = 1.0) -> ResourcePlan",
+   "decorators": [],
+   "doc_summary": "Resolve a utilization ``level`` into a concrete :class:`ResourcePlan`.",
+   "doc_body": "Args:\n    level: one of ``UTILIZATION_LEVELS``.\n    physical_cores: physical core count; defaults to detected cores (>= 1).\n    available_mem_gb: available memory in GiB; defaults to detected free memory.\n    mem_per_worker_gb: assumed per-worker memory footprint; gates the RAM cap.\n\nThe resolved plan always satisfies ``n_workers * threads_per_worker <= cores``\nand ``n_workers >= 1``. A RAM ceiling may only lower ``n_workers`` (logged when it\nbinds). The resolved plan is logged once at info level.\n\nRaises:\n    ValueError: if ``level`` is not a known utilization level.",
+   "line": 108,
+   "end_line": 174,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:_set_os_priority": {
+   "kind": "function",
+   "signature": "(priority: str) -> None",
+   "decorators": [],
+   "doc_summary": "Best-effort OS scheduling priority for the current process.",
+   "doc_body": "Windows uses psutil priority classes; POSIX uses ``os.nice``. \"normal\" leaves the\nprocess untouched. Any failure is swallowed (priority is an optimization, not a\ncorrectness requirement).",
+   "line": 177,
+   "end_line": 200,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:init_worker": {
+   "kind": "function",
+   "signature": "(threads_per_worker: int, priority: str) -> None",
+   "decorators": [],
+   "doc_summary": "Configure the *current* process for a single worker slot.",
+   "doc_body": "Module-level and side-effect-only so it is usable as a ``ProcessPoolExecutor``\ninitializer (which must be importable/picklable). Sets the BLAS/OMP thread-cap\nenvironment variables, then \u2014 if torch is importable \u2014 caps torch's thread pool,\nthen applies a best-effort OS priority. The torch import is guarded so the module\nand this function work even when torch is absent.",
+   "line": 203,
+   "end_line": 223,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:_truncated_repr": {
+   "kind": "function",
+   "signature": "(job: object) -> str",
+   "decorators": [],
+   "doc_summary": null,
+   "doc_body": null,
+   "line": 226,
+   "end_line": 230,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:_run_in_process": {
+   "kind": "function",
+   "signature": "(jobs: Sequence, worker_fn: Callable, plan: ResourcePlan, on_complete: Optional[Callable]) -> List",
+   "decorators": [],
+   "doc_summary": "Sequential, single-process execution. Reproduces the plain sequential path.",
+   "doc_body": null,
+   "line": 233,
+   "end_line": 248,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:_run_in_pool": {
+   "kind": "function",
+   "signature": "(jobs: Sequence, worker_fn: Callable, plan: ResourcePlan, on_complete: Optional[Callable], fail_fast: bool) -> List",
+   "decorators": [],
+   "doc_summary": "Process-pool execution with input-order result reassembly.",
+   "doc_body": "Results are placed at their submission index, so the returned list is in input\norder regardless of completion order. ``on_complete`` is invoked in completion\norder. With ``fail_fast`` the first worker error is re-raised wrapped with the\nfailing job's identity after the pool is torn down by the ``with`` block.",
+   "line": 251,
+   "end_line": 291,
+   "bases": null,
+   "attrs": null
+  },
+  "src.utils.utilization:run_jobs": {
+   "kind": "function",
+   "signature": "(jobs: Sequence, worker_fn: Callable, plan: ResourcePlan, *, on_complete: Optional[Callable] = None, fail_fast: bool = True, logger: Optional[logging.Logger] = None) -> List",
+   "decorators": [],
+   "doc_summary": "Run ``worker_fn`` over ``jobs`` according to ``plan`` and return results in input order.",
+   "doc_body": "Args:\n    jobs: a sequence of job payloads (picklable when ``plan.n_workers > 1``).\n    worker_fn: a callable ``(job) -> result`` (picklable when ``plan.n_workers > 1``).\n    plan: the resolved :class:`ResourcePlan`.\n    on_complete: optional ``(completed_count, total, result)`` callback, invoked in\n        the parent process after each job finishes.\n    fail_fast: when True, the first worker error aborts the run and is re-raised\n        wrapped with the failing job's identity (the pool is torn down first).\n    logger: unused override hook reserved for callers that want their own logger;\n        module logging always goes through ``logging.getLogger(__name__)``.\n\nReturns:\n    A list of results in the same order as ``jobs``.",
+   "line": 294,
+   "end_line": 321,
+   "bases": null,
+   "attrs": null
+  }
+ },
+ "modules": {
+  "src.utils": {
+   "file": "src/utils/__init__.py",
+   "loc": 19,
+   "doc_summary": "Utility Functions Module",
+   "doc_body": "This module provides utility functions and configuration management\nfor the F1Brainz system.\n\nKey components:\n    - config: Configuration management with YAML validation\n    - constants: Centralized constants (calendars, thresholds, etc.)\n    - ids: Driver ID mapping between FastF1 and Ergast\n\nExample:\n    from src.utils.config import Config\n    from src.utils.constants import F1_CALENDARS\n\n    config = Config.load_config()\n    seasons = Config.get_seasons()\n    calendar = F1_CALENDARS[2024]",
+   "all": null,
+   "attrs": []
+  },
+  "src.utils.config": {
+   "file": "src/utils/config.py",
+   "loc": 381,
+   "doc_summary": "Configuration management for F1Brainz Advanced ML System",
+   "doc_body": "This module handles loading configuration from YAML files and provides\neasy access to all system settings.",
+   "all": null,
+   "attrs": [
+    {
+     "name": "PROJECT_ROOT",
+     "line": 332,
+     "annotation": null,
+     "value": "Config.PROJECT_ROOT",
+     "form": "assign"
+    },
+    {
+     "name": "DATABASE_PATH",
+     "line": 333,
+     "annotation": null,
+     "value": "Config.DATABASE_PATH",
+     "form": "assign"
+    },
+    {
+     "name": "TEST_DATABASE_PATH",
+     "line": 334,
+     "annotation": null,
+     "value": "Config.TEST_DATABASE_PATH",
+     "form": "assign"
+    }
+   ]
+  },
+  "src.utils.console": {
+   "file": "src/utils/console.py",
+   "loc": 33,
+   "doc_summary": "Console encoding helpers for CLI script entrypoints.",
+   "doc_body": "On Windows a redirected stdout/stderr defaults to the cp1252 code page, so a plain\n``print(\"\u2192\")`` raises ``UnicodeEncodeError`` and crashes the run. Scripts that emit\nnon-ASCII status output call :func:`force_utf8_console` at the top of ``main`` so\ntheir output is safe regardless of the active code page (see issue #358).",
+   "all": null,
+   "attrs": []
+  },
+  "src.utils.constants": {
+   "file": "src/utils/constants.py",
+   "loc": 364,
+   "doc_summary": "Constants for F1Brainz.",
+   "doc_body": "This module centralizes all hardcoded values that were previously scattered\nacross the codebase, making them easier to maintain and update.",
+   "all": null,
+   "attrs": [
+    {
+     "name": "F1_CALENDARS",
+     "line": 14,
+     "annotation": "Dict[int, List[str]]",
+     "value": "{2018: ['Australia', 'Bahrain', 'China', 'Azerbaijan', 'Spain', 'Monaco', 'Canada', 'France', 'Austria', 'Great Britain', 'Germany', 'Hungary', 'Belgium', 'Italy', 'Singapore', 'Russia', 'Japan', 'United States', 'Mexico', 'Brazil', 'Abu Dhabi'], 2019: ['Australia', 'Bahrain', 'China', 'Azerbaijan', 'Spain', 'Monaco', 'Canada', 'France', 'Austria', 'Great Britain', 'Germany', 'Hungary', 'Belgium', 'Italy', 'Singapore', 'Russia', 'Japan', 'Mexico', 'United States', 'Brazil', 'Abu Dhabi'], 2020: ['Austria', 'Styria', 'Hungary', 'Great Britain', '70th Anniversary', 'Spain', 'Belgium', 'Italy', 'Tuscany', 'Russia', 'Eifel', 'Portugal', 'Emilia Romagna', 'Turkey', 'Bahrain', 'Sakhir', 'Abu Dhabi'], 2021: ['Bahrain', 'Emilia Romagna', 'Portugal', 'Spain', 'Monaco', 'Azerbaijan', 'Canada', 'France', 'Austria', 'Great Britain', 'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Russia', 'Turkey', 'United States', 'Mexico', 'Brazil', 'Qatar', 'Saudi Arabia', 'Abu Dhabi'], 2022: ['Bahrain', 'Saudi Arabia', 'Australia', 'Emilia Romagna', 'Miami', 'Spain', 'Monaco', 'Azerbaijan', 'Canada', 'Great Britain', 'Austria', 'France', 'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Singapore', 'Japan', 'United States', 'Mexico', 'Brazil', 'Abu Dhabi'], 2023: ['Bahrain', 'Saudi Arabia', 'Australia', 'Azerbaijan', 'Miami', 'Monaco', 'Spain', 'Canada', 'Austria', 'Great Britain', 'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Singapore', 'Japan', 'Qatar', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Abu Dhabi'], 2024: ['Bahrain', 'Saudi Arabia', 'Australia', 'Japan', 'China', 'Miami', 'Emilia Romagna', 'Monaco', 'Canada', 'Spain', 'Austria', 'Great Britain', 'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Azerbaijan', 'Singapore', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Qatar', 'Abu Dhabi'], 2025: ['Australia', 'China', 'Japan', 'Bahrain', 'Saudi Arabia', 'Miami', 'Emilia Romagna', 'Monaco', 'Spain', 'Canada', 'Austria', 'Great Britain', 'Belgium', 'Hungary', 'Netherlands', 'Italy', 'Azerbaijan', 'Singapore', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Qatar', 'Abu Dhabi'], 2026: ['Australia', 'China', 'Japan', 'Miami', 'Canada', 'Monaco', 'Barcelona-Catalunya', 'Austria', 'Great Britain', 'Belgium', 'Hungary', 'Netherlands', 'Italy', 'Spain', 'Azerbaijan', 'Singapore', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Qatar', 'Abu Dhabi']}",
+     "form": "annotated-assign"
+    },
+    {
+     "name": "SPRINT_WEEKENDS",
+     "line": 82,
+     "annotation": "Dict[int, List[str]]",
+     "value": "{2021: ['Great Britain', 'Italy', 'Brazil'], 2022: ['Emilia Romagna', 'Austria', 'Brazil'], 2023: ['Azerbaijan', 'Austria', 'Belgium', 'Qatar', 'United States', 'Brazil'], 2024: ['China', 'Miami', 'Austria', 'United States', 'Brazil', 'Qatar'], 2025: ['China', 'Miami', 'Belgium', 'United States', 'Brazil', 'Qatar'], 2026: ['China', 'Miami', 'Canada', 'Great Britain', 'Netherlands', 'Singapore']}",
+     "form": "annotated-assign"
+    },
+    {
+     "name": "SESSION_TYPES",
+     "line": 108,
+     "annotation": null,
+     "value": "['FP1', 'FP2', 'FP3', 'Q', 'R', 'S', 'SQ']",
+     "form": "assign"
+    },
+    {
+     "name": "PRACTICE_SESSIONS",
+     "line": 109,
+     "annotation": null,
+     "value": "['FP1', 'FP2', 'FP3']",
+     "form": "assign"
+    },
+    {
+     "name": "RACE_SESSIONS",
+     "line": 110,
+     "annotation": null,
+     "value": "['R']",
+     "form": "assign"
+    },
+    {
+     "name": "QUALIFYING_SESSIONS",
+     "line": 111,
+     "annotation": null,
+     "value": "['Q']",
+     "form": "assign"
+    },
+    {
+     "name": "SPRINT_SESSIONS",
+     "line": 112,
+     "annotation": null,
+     "value": "['S', 'SQ']",
+     "form": "assign"
+    },
+    {
+     "name": "SPRINT_WEEKEND_SESSIONS",
+     "line": 115,
+     "annotation": null,
+     "value": "['FP1', 'SQ', 'S', 'Q', 'R']",
+     "form": "assign"
+    },
+    {
+     "name": "LEGACY_SPRINT_WEEKEND_SESSIONS",
+     "line": 116,
+     "annotation": null,
+     "value": "['FP1', 'Q', 'FP2', 'S', 'R']",
+     "form": "assign"
+    },
+    {
+     "name": "NORMAL_WEEKEND_SESSIONS",
+     "line": 117,
+     "annotation": null,
+     "value": "['FP1', 'FP2', 'FP3', 'Q', 'R']",
+     "form": "assign"
+    },
+    {
+     "name": "KNOWN_UNAVAILABLE_SESSIONS",
+     "line": 119,
+     "annotation": null,
+     "value": "{(2020, 'Emilia Romagna', 'FP2'): {'reason': 'Imola 2020 used a compressed COVID-era format: FP1 + Qualifying + Race only. FP2 did not take place.', 'source': 'FIA 2020 Emilia Romagna Grand Prix weekend schedule (compressed format due to COVID-19 protocols).', 'source_url': 'https://www.fia.com/events/fia-formula-one-world-championship/season-2020/emilia-romagna-grand-prix', 'severity': 'info'}, (2020, 'Emilia Romagna', 'FP3'): {'reason': 'Imola 2020 used a compressed COVID-era format: FP1 + Qualifying + Race only. FP3 did not take place.', 'source': 'FIA 2020 Emilia Romagna Grand Prix weekend schedule (compressed format due to COVID-19 protocols).', 'source_url': 'https://www.fia.com/events/fia-formula-one-world-championship/season-2020/emilia-romagna-grand-prix', 'severity': 'info'}, (2021, 'Russia', 'FP3'): {'reason': 'Free Practice 3 was cancelled because of heavy rain at Sochi.', 'source': 'FIA 2021 Russian Grand Prix decision: Free Practice 3 cancelled due to force majeure.', 'source_url': 'https://www.fia.com/sites/default/files/decision-document/2021%20Russian%20Grand%20Prix%20-%20Decision%20-%20Free%20Practice%203.pdf', 'severity': 'warn'}}",
+     "form": "assign"
+    },
+    {
+     "name": "DNF_POSITION",
+     "line": 146,
+     "annotation": null,
+     "value": "30",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_GRID_POSITIONS",
+     "line": 147,
+     "annotation": null,
+     "value": "20",
+     "form": "assign"
+    },
+    {
+     "name": "MIN_CLEAN_LAPS",
+     "line": 150,
+     "annotation": null,
+     "value": "3",
+     "form": "assign"
+    },
+    {
+     "name": "LONG_RUN_THRESHOLD",
+     "line": 151,
+     "annotation": null,
+     "value": "3",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_LAP_TIME_SECONDS",
+     "line": 152,
+     "annotation": null,
+     "value": "200",
+     "form": "assign"
+    },
+    {
+     "name": "TELEMETRY_SAMPLING_RATE",
+     "line": 155,
+     "annotation": null,
+     "value": "10",
+     "form": "assign"
+    },
+    {
+     "name": "WEATHER_SAMPLING_RATE",
+     "line": 156,
+     "annotation": null,
+     "value": "5",
+     "form": "assign"
+    },
+    {
+     "name": "TIRE_COMPOUNDS",
+     "line": 163,
+     "annotation": null,
+     "value": "['SOFT', 'MEDIUM', 'HARD', 'INTERMEDIATE', 'WET', 'HYPERSOFT', 'ULTRASOFT', 'SUPERSOFT', 'SUPERHARD']",
+     "form": "assign"
+    },
+    {
+     "name": "COMPOUND_COLORS",
+     "line": 171,
+     "annotation": null,
+     "value": "{'SOFT': '#FF0000', 'MEDIUM': '#FFFF00', 'HARD': '#FFFFFF', 'INTERMEDIATE': '#00FF00', 'WET': '#0000FF'}",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_DB_NAME",
+     "line": 185,
+     "annotation": null,
+     "value": "'f1_data.db'",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_DATA_DIR",
+     "line": 186,
+     "annotation": null,
+     "value": "'data'",
+     "form": "assign"
+    },
+    {
+     "name": "DB_TIMEOUT",
+     "line": 189,
+     "annotation": null,
+     "value": "30.0",
+     "form": "assign"
+    },
+    {
+     "name": "DB_CHECK_SAME_THREAD",
+     "line": 190,
+     "annotation": null,
+     "value": "False",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_RATE_LIMIT_DELAY",
+     "line": 203,
+     "annotation": null,
+     "value": "40.0",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_RETRY_ATTEMPTS",
+     "line": 204,
+     "annotation": null,
+     "value": "3",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_RETRY_DELAY",
+     "line": 205,
+     "annotation": null,
+     "value": "2.0",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_RATE_LIMIT_BACKOFF",
+     "line": 206,
+     "annotation": null,
+     "value": "60.0",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_CACHE_ENABLED",
+     "line": 209,
+     "annotation": null,
+     "value": "True",
+     "form": "assign"
+    },
+    {
+     "name": "FASTF1_CACHE_MAX_AGE_DAYS",
+     "line": 210,
+     "annotation": null,
+     "value": "30",
+     "form": "assign"
+    },
+    {
+     "name": "MIN_TRACK_TEMP",
+     "line": 218,
+     "annotation": null,
+     "value": "-10.0",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_TRACK_TEMP",
+     "line": 219,
+     "annotation": null,
+     "value": "70.0",
+     "form": "assign"
+    },
+    {
+     "name": "MIN_AIR_TEMP",
+     "line": 220,
+     "annotation": null,
+     "value": "-20.0",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_AIR_TEMP",
+     "line": 221,
+     "annotation": null,
+     "value": "50.0",
+     "form": "assign"
+    },
+    {
+     "name": "MIN_HUMIDITY",
+     "line": 222,
+     "annotation": null,
+     "value": "0.0",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_HUMIDITY",
+     "line": 223,
+     "annotation": null,
+     "value": "100.0",
+     "form": "assign"
+    },
+    {
+     "name": "MIN_SPEED",
+     "line": 226,
+     "annotation": null,
+     "value": "0.0",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_SPEED",
+     "line": 227,
+     "annotation": null,
+     "value": "400.0",
+     "form": "assign"
+    },
+    {
+     "name": "MIN_RPM",
+     "line": 230,
+     "annotation": null,
+     "value": "0.0",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_RPM",
+     "line": 231,
+     "annotation": null,
+     "value": "20000.0",
+     "form": "assign"
+    },
+    {
+     "name": "POSITION_SCORE_POWER",
+     "line": 239,
+     "annotation": null,
+     "value": "1.0",
+     "form": "assign"
+    },
+    {
+     "name": "RECENT_FORM_RACES",
+     "line": 242,
+     "annotation": null,
+     "value": "3",
+     "form": "assign"
+    },
+    {
+     "name": "RECENT_FORM_WEIGHTS",
+     "line": 243,
+     "annotation": null,
+     "value": "[0.5, 0.3, 0.2]",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_TOP_K",
+     "line": 246,
+     "annotation": null,
+     "value": "10",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_RANDOM_SEED",
+     "line": 247,
+     "annotation": null,
+     "value": "42",
+     "form": "assign"
+    },
+    {
+     "name": "LOG_FORMAT",
+     "line": 254,
+     "annotation": null,
+     "value": "'%(asctime)s - %(name)s - %(levelname)s - %(message)s'",
+     "form": "assign"
+    },
+    {
+     "name": "LOG_DATE_FORMAT",
+     "line": 255,
+     "annotation": null,
+     "value": "'%Y-%m-%d %H:%M:%S'",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_LOG_LEVEL",
+     "line": 256,
+     "annotation": null,
+     "value": "'INFO'",
+     "form": "assign"
+    },
+    {
+     "name": "LEGACY_SPRINT_YEARS",
+     "line": 295,
+     "annotation": "frozenset[int]",
+     "value": "frozenset({2021})",
+     "form": "annotated-assign"
+    },
+    {
+     "name": "SPRINT_PRACTICE_SESSIONS",
+     "line": 297,
+     "annotation": "List[str]",
+     "value": "['FP1', 'SQ', 'S']",
+     "form": "annotated-assign"
+    },
+    {
+     "name": "LEGACY_SPRINT_PRACTICE_SESSIONS",
+     "line": 298,
+     "annotation": "List[str]",
+     "value": "['FP1', 'FP2']",
+     "form": "annotated-assign"
+    },
+    {
+     "name": "NORMAL_PRACTICE_SESSIONS",
+     "line": 299,
+     "annotation": "List[str]",
+     "value": "['FP1', 'FP2', 'FP3']",
+     "form": "annotated-assign"
+    }
+   ]
+  },
+  "src.utils.environment": {
+   "file": "src/utils/environment.py",
+   "loc": 91,
+   "doc_summary": "Shared environment utilities.",
+   "doc_body": null,
+   "all": null,
+   "attrs": [
+    {
+     "name": "ISA_SEA_LEVEL_PRESSURE_PA",
+     "line": 7,
+     "annotation": null,
+     "value": "101325.0",
+     "form": "assign"
+    },
+    {
+     "name": "ISA_SEA_LEVEL_TEMP_K",
+     "line": 8,
+     "annotation": null,
+     "value": "288.15",
+     "form": "assign"
+    },
+    {
+     "name": "ISA_TEMPERATURE_LAPSE_RATE",
+     "line": 9,
+     "annotation": null,
+     "value": "0.0065",
+     "form": "assign"
+    },
+    {
+     "name": "GRAVITATIONAL_ACCEL",
+     "line": 10,
+     "annotation": null,
+     "value": "9.80665",
+     "form": "assign"
+    },
+    {
+     "name": "MOLAR_MASS_DRY_AIR",
+     "line": 11,
+     "annotation": null,
+     "value": "0.0289644",
+     "form": "assign"
+    },
+    {
+     "name": "UNIVERSAL_GAS_CONSTANT",
+     "line": 12,
+     "annotation": null,
+     "value": "8.31447",
+     "form": "assign"
+    },
+    {
+     "name": "SPECIFIC_GAS_CONSTANT_DRY_AIR",
+     "line": 13,
+     "annotation": null,
+     "value": "287.05",
+     "form": "assign"
+    },
+    {
+     "name": "SPECIFIC_GAS_CONSTANT_WATER_VAPOR",
+     "line": 14,
+     "annotation": null,
+     "value": "461.5",
+     "form": "assign"
+    }
+   ]
+  },
+  "src.utils.f1_calendar": {
+   "file": "src/utils/f1_calendar.py",
+   "loc": 390,
+   "doc_summary": "F1 calendar integration for race scheduling.",
+   "doc_body": "Provides utilities for tracking upcoming races, race weekends, and scheduling\nautomated predictions.",
+   "all": null,
+   "attrs": [
+    {
+     "name": "logger",
+     "line": 17,
+     "annotation": null,
+     "value": "logging.getLogger(__name__)",
+     "form": "assign"
+    },
+    {
+     "name": "_calendar",
+     "line": 356,
+     "annotation": null,
+     "value": "None",
+     "form": "assign"
+    }
+   ]
+  },
+  "src.utils.ids": {
+   "file": "src/utils/ids.py",
+   "loc": 325,
+   "doc_summary": "Driver ID Mapping Utility",
+   "doc_body": "This module handles mapping between FastF1 and Ergast driver identifiers,\nincluding manual overrides for edge cases and name mismatches.",
+   "all": null,
+   "attrs": [
+    {
+     "name": "logger",
+     "line": 14,
+     "annotation": null,
+     "value": "logging.getLogger(__name__)",
+     "form": "assign"
+    }
+   ]
+  },
+  "src.utils.simplification_limits": {
+   "file": "src/utils/simplification_limits.py",
+   "loc": 317,
+   "doc_summary": "Machine-checkable simplification limits for Python under src/ and tests/.",
+   "doc_body": "Canonical entry: verify_simplification_limits()\nCLI: py -m src.utils.simplification_limits [--baseline] [--paths ...]",
+   "all": null,
+   "attrs": [
+    {
+     "name": "MAX_CYCLOMATIC_COMPLEXITY",
+     "line": 19,
+     "annotation": null,
+     "value": "19",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_FUNCTION_LINES",
+     "line": 20,
+     "annotation": null,
+     "value": "99",
+     "form": "assign"
+    },
+    {
+     "name": "MAX_FILE_LINES",
+     "line": 21,
+     "annotation": null,
+     "value": "999",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_ROOTS",
+     "line": 23,
+     "annotation": null,
+     "value": "('src', 'tests')",
+     "form": "assign"
+    },
+    {
+     "name": "EXCLUDED_ROOT_PARTS",
+     "line": 25,
+     "annotation": null,
+     "value": "frozenset({'data', 'archive', '.venv', '__pycache__', '.git', 'node_modules'})",
+     "form": "assign"
+    },
+    {
+     "name": "PROJECT_ROOT",
+     "line": 27,
+     "annotation": null,
+     "value": "Path(__file__).resolve().parent.parent.parent",
+     "form": "assign"
+    },
+    {
+     "name": "DEFAULT_BASELINE_PATH",
+     "line": 28,
+     "annotation": null,
+     "value": "PROJECT_ROOT / 'config' / 'simplification_baseline.json'",
+     "form": "assign"
+    }
+   ]
+  },
+  "src.utils.utilization": {
+   "file": "src/utils/utilization.py",
+   "loc": 321,
+   "doc_summary": "Shared, F1-agnostic resource-utilization policy core.",
+   "doc_body": "This module decides *how hard the machine is pushed* without ever changing *what is\ncomputed*. It maps a coarse utilization level to a concrete worker/thread/priority\nplan and runs a list of jobs through that plan \u2014 either in a process pool or, at one\nworker, in a plain in-process loop.\n\nDeterminism contract (load-bearing for every caller):\n  * `run_jobs` always returns results in **input order**, byte-identical regardless of\n    `n_workers`, because results are reassembled by their submission index.\n  * `n_workers == 1` short-circuits to a sequential in-process loop \u2014 no pool, no\n    pickling \u2014 so it reproduces the plain sequential path exactly.\n\nThe module is intentionally free of any F1/domain concepts (no DB, calendar, or evo\nimports) and holds no mutable module-level state. It must import cleanly even when\n`torch` is not installed; the torch import lives inside `init_worker` and is guarded.",
+   "all": null,
+   "attrs": [
+    {
+     "name": "logger",
+     "line": 30,
+     "annotation": null,
+     "value": "logging.getLogger(__name__)",
+     "form": "assign"
+    },
+    {
+     "name": "UTILIZATION_LEVELS",
+     "line": 34,
+     "annotation": null,
+     "value": "('background', 'balanced', 'max')",
+     "form": "assign"
+    },
+    {
+     "name": "_PRIORITIES",
+     "line": 37,
+     "annotation": null,
+     "value": "('idle', 'below_normal', 'normal')",
+     "form": "assign"
+    },
+    {
+     "name": "_LEVEL_PLANS",
+     "line": 41,
+     "annotation": null,
+     "value": "{'background': (lambda cores: 1, 1, 'below_normal'), 'balanced': (lambda cores: max(1, cores // 2), 2, 'normal'), 'max': (lambda cores: max(1, cores - 1), 1, 'normal')}",
+     "form": "assign"
+    },
+    {
+     "name": "_JOB_REPR_LIMIT",
+     "line": 48,
+     "annotation": null,
+     "value": "120",
+     "form": "assign"
+    }
+   ]
+  }
+ }
+}
