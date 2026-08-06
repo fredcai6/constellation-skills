@@ -226,3 +226,23 @@ Where the corpus, the engine, or this launch order fought me. The full retrospec
   that lesson's bank-reason named — so it is now the template's problem, not an authoring habit. I
   exported it upstream as debt with a concrete repair: **run every `command` postcondition against the
   tree at plan-freeze time and refuse to freeze any that exits 0.**
+
+## 9. One pre-ruling I did NOT execute, and why
+
+`decision:prototype-lift` says to lift from `C:/Programs/.proto-exc6-governor-subagent-identity` @
+`75f684c` and **delete that worktree once your lift lands**.
+
+**The lift never landed, so its deletion condition never triggered.** The probe you ruled must run
+first answered the question the prototype existed to answer, and answered it differently: the payload
+hands over `agent_id`, so `agent_identity.py`'s ~250 lines of transcript matching are a search for a
+value already in the argument list. Not one line of it shipped. I read it — it is what told me what to
+look for in the payload, and its `read_fill` is where the sidechain inversion came from — but the
+production code derives its transcript rather than searching for it.
+
+So the worktree is still on disk and I have not touched it. Deleting it is trivially cheap for you to
+order and not cheap to undo, and I would rather you ruled than have me read "once your lift lands" as
+"regardless of whether your lift lands." The commit SHA keeps it recoverable either way.
+
+The same reasoning did **not** apply to the two things you did pre-clear on conditions I could verify:
+the gauge-store mutation ran (dry-run and before-state first, as conditioned), and the sweeper was
+deleted after its single run.
