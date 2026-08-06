@@ -1,0 +1,295 @@
+{
+  "work_id": "g1-implement-issue-422",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-template",
+    "m2-coverage-script",
+    "m3-tests",
+    "m4-full-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer's references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/issue-422-wire-invariants/crew-handoffs/g1-implement-handoff.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff verified complete: task, intent, allowed scope, exclusions, constraints, evidence, wiring grep, verification commands, model tier, authority, stop conditions, return format all present; global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md read"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-template": {
+      "id": "m1-template",
+      "title": "Wire the c0 precondition into COMMANDER_SPINE.template.json's init gate",
+      "imperative": "Add ONE command precondition (id c0) FIRST in skills/commander/templates/COMMANDER_SPINE.template.json's init gate preconditions array: statement 'this Commander is operating in the worktree it was provisioned into, not the shared checkout or another agent's worktree -- proven, not asserted', check kind=command, command='python scripts/verify_worktree_isolation.py --here <repo-root>', satisfied=false. Do not touch verify_worktree_isolation.py or any other gate. Re-validate the file is valid JSON after the surgical text edit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "COMMANDER_SPINE.template.json's init gate carries the new c0 precondition first in the array, and the file is valid JSON",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json', encoding='utf-8')); pre=d['tasks']['init']['preconditions']; assert pre and pre[0]['id']=='c0', pre; assert 'verify_worktree_isolation.py' in pre[0]['check']['command']; print('c0 wired ok')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-template-1"
+        }
+      ],
+      "constraints": [
+        "Allowed Scope: only the init gate's preconditions array",
+        "Do NOT modify verify_worktree_isolation.py",
+        "Do NOT touch any other gate"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-template-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json', encoding='utf-8')); pre=d['tasks']['init']['preconditions']; assert pre and pre[0]['id']=='c0', pre; assert 'verify_worktree_isolation.py' in pre[0]['check']['command']; print('c0 wired ok')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-coverage-script": {
+      "id": "m2-coverage-script",
+      "title": "Write scripts/verify_worktree_precondition_coverage.py",
+      "imperative": "Write a standalone stdlib-only CLI script scripts/verify_worktree_precondition_coverage.py, matching the style of scripts/verify_state_note.py / scripts/verify_cycles.py: holds an explicit, commented list of (template_path, gate_id) worktree-entering pairs (today exactly one: skills/commander/templates/COMMANDER_SPINE.template.json, gate init), with a module docstring explaining why this is a maintained list, not an auto-detector. For each entry, load the template JSON, find the named gate, and assert a preconditions (or postconditions) entry whose check.command contains verify_worktree_isolation.py and is unmet-by-default. Missing -> exit 1, name the offending template + gate. All wired -> exit 0, print the count of templates checked. CLI: python scripts/verify_worktree_precondition_coverage.py [--root PATH].",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "c0 precondition wired into the template",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-template complete: c0 wired into init gate preconditions[0]"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "coverage script exists, exits 0 against the fixed real tree, states the count of templates checked",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_worktree_precondition_coverage.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-coverage-script-1"
+        }
+      ],
+      "constraints": [
+        "New file only: scripts/verify_worktree_precondition_coverage.py",
+        "stdlib only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-coverage-script-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_worktree_precondition_coverage.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tests": {
+      "id": "m3-tests",
+      "title": "Land tests/test_worktree_precondition_wiring.py with both deliberate-breakage tests",
+      "imperative": "Write tests/test_worktree_precondition_wiring.py (test-after allowed per handoff Test Mode, but the deliberate-breakage tests themselves ARE the acceptance criteria). Enumeration deliberate breakage: copy COMMANDER_SPINE.template.json into a tmp_path fixture, strip the new precondition from the copy's init gate, run the coverage script against that broken copy and assert exit code 1/nonzero; then run it against the real fixed repo tree and assert exit 0 -- both assertions in the same test. Engine deliberate breakage: using scripts/checklist_engine.py's Python API (pattern from tests/test_checklist_engine.py), build a minimal in-memory/tmp_path gated checklist with one init-like gate carrying the new precondition, call start() with a --here path that does NOT match the real git rev-parse --show-toplevel and assert EngineError naming the unmet precondition; then fix the expected path and assert start() succeeds. Both deliberate-breakage constructions run in tmp_path/temp fixtures only, never against this worktree's own .git or the shared checkout, and clean up automatically as pytest teardown. TDD red is not required per test-after mode; go straight to the passing test file plus the manual proof that a reverted fix flips a specific assertion from green to red (documented at m4).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "coverage script exists and passes on the fixed tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-coverage-script complete: coverage script exists and passes on the fixed tree"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_worktree_precondition_wiring.py exists and all its tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_worktree_precondition_wiring.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tests-1"
+        }
+      ],
+      "constraints": [
+        "New file only: tests/test_worktree_precondition_wiring.py",
+        "Deliberate breakage only in tmp_path/temp fixtures, never against this worktree's own .git or the shared checkout"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_worktree_precondition_wiring.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-full-suite": {
+      "id": "m4-full-suite",
+      "title": "Prove the deliberate-breakage tests actually flip red-to-green, and the full suite stays green",
+      "imperative": "Demonstrate HOW the deliberate-breakage tests fail red without the fix: temporarily revert/strip the c0 precondition from the real template (or an equivalent before-state fixture) and re-run the new test file, observing a failure; then restore the fix and re-run to green -- record which method was used. Then run the full existing suite python -m pytest tests/ -q and confirm it stays green with no regressions. Paste both outputs into the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "new tests pass on the fixed tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-tests complete: new tests pass on the fixed tree"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "red-to-green flip demonstrated for the deliberate-breakage tests against a genuinely broken before-state -- manual attest with the exact method and output recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red-to-green flip proved via git stash: 'git stash push -- skills/commander/templates/COMMANDER_SPINE.template.json' reverted the c0 precondition to the committed pre-fix state (diff --stat confirmed empty); re-ran tests/test_worktree_precondition_wiring.py -q -> 1 failed, 1 passed (EnumerationDeliberateBreakage failed with AssertionError: real template unexpectedly missing the precondition before stripping -- confirming the enumeration test genuinely depends on the fix being present; EngineDeliberateBreakage still passed because it constructs its own in-memory checklist independent of the template file, proving the engine mechanism generically rather than the specific wiring). Then 'git stash pop' restored the fix (diff --stat showed 3 insertions, 1 deletion); JSON re-validated; re-ran the test file -> 2 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "full existing suite stays green, no regressions",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "impl-422-g1",
+    "status": "released",
+    "claimed_at": "2026-08-05T23:31:52.955518+00:00",
+    "last_heartbeat": "2026-08-05T23:53:34.794702+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-05T23:53:53.932083+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff verified complete; global doctrine + project overlays read",
+      "mechanical": false,
+      "ts": "2026-08-05T23:32:13.909645+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-template",
+      "why": "c0 precondition wired first in init gate's preconditions array; JSON re-validated",
+      "mechanical": false,
+      "ts": "2026-08-05T23:32:51.609050+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-coverage-script",
+      "why": "coverage script written, exits 0 against the fixed real tree, states count=1",
+      "mechanical": false,
+      "ts": "2026-08-05T23:33:51.005107+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-tests",
+      "why": "tests/test_worktree_precondition_wiring.py lands with both deliberate-breakage tests (enumeration + engine), both pass: 2 passed in 1.07s",
+      "mechanical": false,
+      "ts": "2026-08-05T23:36:01.999966+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-full-suite",
+      "why": "full suite green: 1623 passed, 2 skipped, 549 subtests passed; c1 red-to-green flip already attested",
+      "mechanical": false,
+      "ts": "2026-08-05T23:53:34.794674+00:00"
+    }
+  ]
+}

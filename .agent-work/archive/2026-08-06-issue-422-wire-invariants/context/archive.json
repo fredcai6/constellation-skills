@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "477c7fc9498bf26b0a439e5c7088c9b65b47dc2f"
+  },
+  "run": {
+    "work_id": "issue-422-wire-invariants",
+    "generated_at": "2026-08-06T01:33:54Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-d-422",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-d-422",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-d-422"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-d-422"
+    }
+  }
+}
