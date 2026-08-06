@@ -149,7 +149,7 @@
     "gate": "cycle2-x7a",
     "role": "prototyper",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/cycle2-x7a/prototyper/attempt-1",
     "backend": "external",
     "pid": null,
@@ -159,11 +159,13 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/cycle2-x7a-prototyper-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/cycle2-x7a-prototyper-attempt-1.stderr.txt",
     "started_at": "2026-08-05T23:54:19.425415+00:00",
-    "last_heartbeat": "2026-08-05T23:54:19.425415+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-06T00:07:47.868218+00:00",
+    "completed_at": "2026-08-06T00:07:47.868218+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   },
   {
     "crew_id": "constellation/explore-code-map/cycle2-x7b/prototyper/attempt-1",

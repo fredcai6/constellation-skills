@@ -1,0 +1,46 @@
+ 1. src.utils.config:  --contains-->  src.utils.config:Config
+    res=internal    why=-  src/utils/config.py:17
+    src | class Config:
+    hash=444a16af73ec7c06
+ 2. src.utils:  --documents-->  Utility Functions Module
+    res=literal     why=-  src/utils/__init__.py:1
+    src | """
+    hash=e38ac502c67bf68c
+ 3. src.utils.config:Config.db_path_for_year.cls  --param-of-->  src.utils.config:Config.db_path_for_year
+    res=internal    why=-  src/utils/config.py:36
+    src | def db_path_for_year(cls, year: int) -> Path:
+    hash=6816a0616a011adc
+ 4. src.utils.config:Config.load_config  --calls-->  src.models.exceptions:ConfigurationError
+    res=internal    why=-  src/utils/config.py:75
+    src | raise ConfigurationError(
+    hash=184b0f664bf8742b
+ 5. src.utils.config:Config  --calls-->  pathlib:Path
+    res=external    why=-  src/utils/config.py:21
+    src | PROJECT_ROOT = Path(__file__).parent.parent.parent
+    hash=9d8dce39f1d0500f
+ 6. src.utils.config:Config.load_config  --calls-->  UNRESOLVED
+    res=unresolved  why=dispatch-unknown-base  src/utils/config.py:63
+    src | if not config_path.is_absolute():
+    hash=f254d1bd5028a37d
+ 7. src.utils.f1_calendar:F1Calendar.get_season_calendar  --reads-->  src.utils.constants:SPRINT_WEEKENDS
+    res=internal    why=-  src/utils/f1_calendar.py:90
+    src | is_sprint = gp_name in SPRINT_WEEKENDS.get(season, [])
+    hash=c228489be77c0dcc
+ 8. src.utils.config:Config  --writes-->  src.utils.config:Config.PROJECT_ROOT
+    res=internal    why=-  src/utils/config.py:21
+    src | PROJECT_ROOT = Path(__file__).parent.parent.parent
+    hash=b1ff02c7856bb008
+ 9. src.utils.config:Config.load_config  --reads-->  local:config_path
+    res=local       why=-  src/utils/config.py:63
+    src | if not config_path.is_absolute():
+    hash=34794628a3680303
+10. src.utils.config:  --imports-->  src.models.exceptions:ConfigurationError
+    res=internal    why=-  src/utils/config.py:14
+    src | from ..models.exceptions import ConfigurationError
+    hash=15708cfe0f78db72
+11. src.utils.utilization:JobExecutionError  --inherits-->  builtins:RuntimeError
+    res=external    why=-  src/utils/utilization.py:68
+    src | class JobExecutionError(RuntimeError):
+    hash=23444a822f19599d
+
+total hand-check sample: 11

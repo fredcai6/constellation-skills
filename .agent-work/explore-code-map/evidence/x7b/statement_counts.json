@@ -1,0 +1,88 @@
+{
+  "slice_total": {
+    "n": 2847,
+    "by_predicate": {
+      "reads": 1573,
+      "calls": 412,
+      "writes": 356,
+      "imports": 180,
+      "param-of": 157,
+      "contains": 87,
+      "documents": 81,
+      "inherits": 1
+    },
+    "by_resolution": {
+      "internal": 1269,
+      "local": 660,
+      "external": 622,
+      "unresolved": 215,
+      "literal": 81
+    },
+    "internal_edge_locality": {
+      "same-module": 702,
+      "cross-module": 197
+    }
+  },
+  "core_only": {
+    "n": 2544,
+    "by_predicate": {
+      "reads": 1425,
+      "calls": 380,
+      "writes": 356,
+      "param-of": 157,
+      "contains": 87,
+      "documents": 81,
+      "imports": 57,
+      "inherits": 1
+    },
+    "by_resolution": {
+      "internal": 966,
+      "local": 660,
+      "external": 622,
+      "unresolved": 215,
+      "literal": 81
+    },
+    "internal_edge_locality": {
+      "same-module": 702,
+      "cross-module": 17
+    }
+  },
+  "inbound_only": {
+    "n": 303,
+    "by_predicate": {
+      "reads": 148,
+      "imports": 123,
+      "calls": 32
+    },
+    "by_resolution": {
+      "internal": 303
+    },
+    "internal_edge_locality": {
+      "cross-module": 180
+    }
+  },
+  "all_67_files": {
+    "n": 44554,
+    "by_predicate": {
+      "reads": 26305,
+      "calls": 7096,
+      "writes": 5557,
+      "param-of": 2592,
+      "imports": 1499,
+      "contains": 871,
+      "documents": 622,
+      "inherits": 12
+    },
+    "by_resolution": {
+      "internal": 15502,
+      "external": 12949,
+      "local": 12053,
+      "unresolved": 3428,
+      "literal": 622
+    },
+    "internal_edge_locality": {
+      "same-module": 9389,
+      "cross-module": 1773
+    }
+  }
+}

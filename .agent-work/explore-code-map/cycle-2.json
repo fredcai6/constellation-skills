@@ -70,10 +70,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Slice extracts completely: 3,400 statements, all six predicates, 3.2s wall (index reused). Cost: 565 lines of glue, 3 debugging rounds \u2014 ALL triggered by plausible-wrong-numbers, not errors. 85% of statements needed BOTH tools. Key discoveries: the write signal is split across SCIP roles ((Definition \u222a ReadAccess) \u2229 ast.Store \u2014 naive rule recovers only 9% of writes, silently); join hit 99.92% after teaching the walker SCIP's syntactic classes (imports, kwargs; residue fully explained); SCIP's 'method' kind conflates calls/imports/property-reads \u2014 24% of naive call edges wrong, only AST disambiguates; local names come back free (93%); docstring field is hover-text needing filtering. Coupling risks ranked: silent failure modes everywhere (needs invariant assertions), two independent grammars coupled by byte offsets, wildly asymmetric refresh costs (AST 1.1s vs SCIP 6min \u2014 join must tolerate stale SCIP side), symbol identity embeds index-run version string. NOT tested: whole repo, non-ASCII, incrementality, rename identity, usefulness. Full: excursions/x7a-result.md",
       "evidence": [],
       "rework_count": 0
     },
