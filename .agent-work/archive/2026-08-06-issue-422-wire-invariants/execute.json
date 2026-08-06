@@ -1,0 +1,521 @@
+{
+  "work_id": "issue-422-wire-invariants",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md + GLOSSARY.md (no Cartographer packet exists -- DEGRADED-NO-MAP, per context step). Confirm the frozen plan's intent and scope from MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context already loaded at spine context step; MISSION_FRAME.md intent/scope confirmed for execute.json's two gates (#329, #328)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "#329 -- wire worktree isolation as a real precondition + enumeration check",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: (1) add a command PRECONDITION to skills/commander/templates/COMMANDER_SPINE.template.json's `init` gate calling `python scripts/verify_worktree_isolation.py --here <repo-root>` (uses the existing instantiate_spine resolver -- no new placeholder machinery); (2) write scripts/verify_worktree_precondition_coverage.py: an enumeration check with an explicit, commented, maintained list of worktree-entering templates (today: skills/commander/templates/COMMANDER_SPINE.template.json only -- membership test documented in the script's own docstring: a role dispatched into an isolated worktree via a LAUNCH_ORDER-style provisioning), asserting each listed template's designated gate carries a command postcondition/precondition invoking verify_worktree_isolation.py; exits nonzero and names the offending template if one is missing it; (3) land tests in tests/ (not manual scratch): a deliberate-breakage test proving `start init` REFUSES when the wired precondition's command fails (construct a scratch spine instance + scratch worktree/expected-path mismatch in a temp dir, never the shared checkout -- revert/discard automatically as test teardown), and a deliberate-breakage test proving the enumeration script itself fails on a temp copy of the template with the precondition stripped, then passes once restored. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved, mission frame + execute.json authored",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan approved this run (spine plan gate complete); execute.json authored and frozen"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Do not touch checklist_engine.py's rendering path (workstream B/#420's fence) -- this gate is template + new standalone script + tests only, no engine.py changes",
+        "Never edit skills/<role>/references/global-*.md install-time copies -- N/A here (no doctrine edit in this gate)",
+        "The deliberate breakage is pre-cleared (LAUNCH_ORDER D-422 Pre-Rulings) on condition it is reverted by this same gate and never run against the shared checkout -- use a temp dir / scratch fixture",
+        "Editing skills/commander/templates/COMMANDER_SPINE.template.json: it is JSON but not the compact-template-json family this repo warns about round-tripping (that warning targets *.template.json shipped in compact single-line form elsewhere) -- verify by diff that the edit is surgical and re-validate with json.load"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:1635 start() -- preconditions checked via _check_condition before start; the new command precondition rides this existing mechanism, unchanged",
+          "skills/commander/templates/COMMANDER_SPINE.template.json init gate",
+          "scripts/verify_worktree_isolation.py -- unmodified, existing rail script"
+        ],
+        "capability": [
+          "Commander spine init gate: proves worktree isolation before any git operation, replacing a prose-only instruction (LAUNCH_ORDER.template.md:43) with a real engine gate"
+        ],
+        "constraint": [
+          "Only COMMANDER_SPINE.template.json's role is dispatched into an isolated worktree via a LAUNCH_ORDER today (source-confirmed by reading ADMIRAL_SPINE.template.json, EXPLORER_SPINE.template.json, LAUNCH_ORDER.template.md) -- the enumeration list has exactly one entry; do not invent membership for roles that do not actually enter worktrees"
+        ],
+        "decision": [
+          "decision:worktree-entering-membership -- explicit maintained list, not a heuristic auto-detector, because worktree-dispatch is an architectural fact not derivable from spine JSON alone. @grade: guess \u00b7 leans g1-implement \u00b7 settle: confirm the enumeration check's refusal-on-omission actually fires when a second worktree-entering spine ships"
+        ],
+        "evidence": [
+          "claim:no-template-wires-isolation -- grep -rln verify_worktree_isolation skills/*/templates/*.json returns nothing today; re-confirm empty before the change, non-empty (COMMANDER_SPINE only) after"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "c0 precondition added to COMMANDER_SPINE.template.json init gate; scripts/verify_worktree_precondition_coverage.py + tests/test_worktree_precondition_wiring.py landed; deliberate breakage proven via git-stash revert (1 failed/1 passed before fix, 2 passed after); full suite 1623 passed 2 skipped",
+            "result_path": ".agent-work/issue-422-wire-invariants/crew-handoffs/g1-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "#329 -- review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound anchors from g1-implement, and the evidence from IMPLEMENTER_RESULT. Verify the deliberate-breakage tests actually fail red before the fix and pass green after (re-run, don't trust the report) -- the #392 shape (a check that still passes once its guard is deleted) is the specific failure this review exists to catch. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT attached to g1-implement (e-g1-implement-1) and advanced"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "All close criteria met, independently re-verified (json valid, coverage script exit 0, targeted tests 2 passed, deliberate breakage re-proven via stash/pop, full suite 1623 passed/2 skipped re-run matches). Scope clean: only 3 allowed files touched, checklist_engine.py and verify_worktree_isolation.py byte-identical. Fowler pass clean (0 flagged, 1 justified override). 1 triage candidate (tc1: settle: experiment only half-exercised).",
+            "result_path": ".agent-work/issue-422-wire-invariants/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "#329 -- integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) attached to g1-review (e-g1-review-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "COMMANDER_SPINE.template.json init gate carries the wired precondition; enumeration + deliberate-breakage tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_worktree_precondition_wiring.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "review-result APPROVE already attached to g1-review"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_worktree_precondition_wiring.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_worktree_precondition_wiring.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "#328 -- wire record()-survey postcondition checks (zc-consolidate, r6-fowler)",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: (1) extend record() in scripts/checklist_engine.py (survey verb, invariant-check path -- our fence, not workstream B's rendering path) to evaluate any `command`-kind postconditions on the item being recorded, mirroring advance()'s existing postcondition check at line ~1699: when result=='pass' is requested and a command postcondition's check fails (nonzero exit), REFUSE (raise EngineError naming the failing command/gate), the same refusal shape start()/advance() already use; result=='fail' does not require the guard to have passed. Comment at the code site (per Tommy's scope ruling) that artifact/null-kind postconditions on survey items remain unevaluated by record() -- out of scope, no current template needs it. (2) Add a postconditions block to `zc-consolidate` in skills/interrogator/templates/INTERROGATION.template.json: one command postcondition calling `python scripts/verify_interrogation.py <interrogation-record-path>`, where `<interrogation-record-path>` is a hand-fill placeholder resolved by the driving agent at template-instantiation time (the same precedent EXECUTE_PLAN.template.json already uses for `<exact test command>` -- document this explicitly in the item's imperative text since it is new for a survey template). (3) Same shape for `r6-fowler` in skills/reviewer/templates/REVIEW_SURVEY.template.json calling `python scripts/verify_fowler_pass.py <fowler-pass-record-path>`. (4) Land tests: extend/add tests/test_record_postcondition_wiring.py proving (a) record(iid, result='pass') on an item with a passing command postcondition succeeds, (b) record(iid, result='pass') REFUSES when the command postcondition fails (deliberate breakage: feed verify_interrogation.py a self-answered decision, and verify_fowler_pass.py a record with a skipped smell, in a scratch temp record file -- never the shared checkout), (c) record(iid, result='fail') is never blocked by a failing command postcondition. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated (keeps the suite green at each gate boundary; g2 does not depend on g1's content, only its sequencing)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated (complete); g2 does not depend on g1's content, only sequencing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Own checklist_engine.py's invariant-check path only (record()/advance()/_check_condition and callers); do NOT touch the rendering path (render_human, _why_suffix, current()) -- workstream B/#420's fence. If the change would collide in the same function, stop and float to the Admiral rather than reaching into B's worktree.",
+        "#315 (command-check cwd inheritance) is a separate open issue -- do not fix it here; use a cwd-independent-in-spirit, corpus-consistent relative invocation and note the inherited fragility at the code site",
+        "The deliberate breakage is pre-cleared (LAUNCH_ORDER D-422 Pre-Rulings) on condition it is reverted by this same gate and never run against the shared checkout -- use a temp dir / scratch fixture"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:1731 record() -- currently ignores postconditions entirely; scripts/checklist_engine.py:1668 advance() -- the postcondition-check pattern to mirror",
+          "skills/interrogator/templates/INTERROGATION.template.json zc-consolidate item",
+          "skills/reviewer/templates/REVIEW_SURVEY.template.json r6-fowler item",
+          "scripts/verify_interrogation.py, scripts/verify_fowler_pass.py -- unmodified, existing rail scripts"
+        ],
+        "capability": [
+          "Survey record() verb: today stores whatever the agent types (t['result']=result) and invokes nothing; this gate makes a 'pass' result on a command-backed item provably checked"
+        ],
+        "constraint": [
+          "All 7 existing 'kind: command' postcondition examples in the corpus live on GATED spines only -- advance() checks them, record() does not, confirmed by direct source read, not assumed"
+        ],
+        "decision": [
+          "decision:survey-record-check-scope -- record()'s new check covers command-kind postconditions only, not artifact/null-kind. @grade: settled/human \u00b7 leans g2-implement (Tommy's scope ruling: build what's needed, comment the rest, pass it up)"
+        ],
+        "evidence": [
+          "claim:record-ignores-postconditions -- verified by direct read of checklist_engine.py:1731-1740; re-confirm via a red-before/green-after test, not by re-reading the source a second time"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "summary": "record() extended to check command-kind postconditions on result=pass (mirrors advance()), refuses via EngineError; zc-consolidate + r6-fowler wired; tests/test_record_postcondition_wiring.py landed (10 tests, real unmocked verify-script invocations); deliberate breakage proven via git-stash revert (3 failed/7 passed before fix, 10 passed after); full suite 1633 passed/2 skipped",
+            "result_path": ".agent-work/issue-422-wire-invariants/crew-handoffs/g2-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "#328 -- review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound anchors from g2-implement, and the evidence from IMPLEMENTER_RESULT. Verify the deliberate-breakage tests actually fail red before the fix and pass green after (re-run, don't trust the report) -- the #392 shape (a check that still passes once its guard is deleted) is the specific failure this review exists to catch. Confirm record()'s change did not touch the rendering path (B/#420's fence) by diffing the full file, not just the reported hunk. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT attached to g2-implement (e-g2-implement-1) and advanced"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "All close criteria met, independently re-verified: 330 passed/24 subtests for regression floor, 10/10 new tests, deliberate breakage re-proven via stash/pop (exact 3 named failures then restored), full-file diff confirms render_human/_why_suffix/current() byte-identical (critical fence check), full suite 1633 passed/2 skipped re-run matches. Fowler pass clean. 1 triage candidate (tc1: stale comment near line 1536).",
+            "result_path": ".agent-work/issue-422-wire-invariants/crew-handoffs/g2-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "#328 -- integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself (and the full suite once, per the mission's acceptance -- 'land in the suite'), then advance this gate. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (APPROVE) attached to g2-review (e-g2-review-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "record() refuses a failing command postcondition on result=pass; zc-consolidate/r6-fowler wired; full test suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": "review-result APPROVE already attached to g2-review"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "tc1: decision:worktree-entering-membership settle-experiment only half-exercised -- proven by stripping the one existing entry, not by adding a genuinely new second worktree-entering template. Re-confirm the enumeration check's refusal-on-omission fires for real when a second such template ships."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-integrate",
+      "statement": "tc2: checklist_engine.py's _next_verbs (~line 1536-1538) carries a comment claiming record() 'carries no precondition/postcondition gate at all' -- now partially stale post-#328-fix (record() DOES check command-kind postconditions on result=pass). Outside this gate's fence (near the rendering path); update the comment when that area is next touched."
+    }
+  ],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "cmdr-422-wire-invariants",
+    "status": "released",
+    "claimed_at": "2026-08-05T23:27:31.032703+00:00",
+    "last_heartbeat": "2026-08-06T01:24:12.424193+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T01:24:27.366273+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-05T23:27:41.082352+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer crew (Sonnet) completed g1: COMMANDER_SPINE.template.json init gate carries the c0 command precondition (verify_worktree_isolation.py --here <repo-root>); scripts/verify_worktree_precondition_coverage.py landed (enumeration, exit 0, 1 template checked); tests/test_worktree_precondition_wiring.py landed with two deliberate-breakage tests. Re-verified myself: json valid, coverage script exit 0, targeted tests 2 passed. Deliberate breakage proven via git-stash revert of the real template (1 failed before fix naming the exact AssertionError, 2 passed after) -- not a synthetic-only demo. Result artifact fresh per run_crew.py --verify-result.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:57:05.259903+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer (Sonnet) APPROVEd g1. Independently re-verified: git status matches expected 3 changed/new files; result artifact fresh. Fowler pass clean.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:17:48.597800+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "g1 APPROVE integrated: c1 (targeted pytest command) re-run by the engine itself at advance; c2 satisfied by reference to g1-review's APPROVE evidence. Triage candidate tc1 logged.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:18:24.878600+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "Implementer crew (Sonnet) completed g2: record() extended with a command-kind postcondition check on result=pass (mirrors advance(), same EngineError refusal shape, base_dir threaded through CLI); zc-consolidate/r6-fowler wired with hand-fill placeholder convention; tests/test_record_postcondition_wiring.py (10 tests) landed. Re-verified myself: json valid, targeted+regression tests re-run (340 passed), diff of checklist_engine.py confirmed surgical (record() + main() CLI dispatch only, rendering path untouched). Deliberate breakage proven via git-stash revert (3 failed/7 passed before, 10 passed after). Result artifact fresh.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:48:07.024946+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Reviewer (Sonnet) APPROVEd g2, with the critical fence check independently confirmed (full-file diff, render_human/_why_suffix/current byte-identical). Result artifact fresh.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:08:55.637918+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "g2 APPROVE integrated: c1 (full pytest suite, engine-run) passed; c2 satisfied by reference to g2-review's APPROVE evidence. Both g1 and g2 gates now complete -- execute.json's crew work is done.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:24:12.424193+00:00"
+    }
+  ]
+}

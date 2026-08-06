@@ -63,9 +63,9 @@ Every checklist is an ordered list of items and declares one of two types:
 | type | item failure | append | completes when | used by |
 |---|---|---|---|---|
 | `gated` | **blocks** (rework) | no | every item satisfied or skipped | execution: Commander spine, Commander's execute.json, the implementer's own plan |
-| `survey` | **recorded, never blocks** | yes | every item visited, then **consolidated** | inquiry/verification: Interrogator questions, reviewer checks |
+| `survey` | **recorded, never blocks** — except a `command`-kind postcondition on the item (#422/#328) | yes | every item visited, then **consolidated** | inquiry/verification: Interrogator questions, reviewer checks |
 
-A `survey` is handed a *starting* list and told "verify these, and add more based on the context we gave you" — which is why append is inherent to it. The Interrogator and the reviewer are the **same shape**: hit every item, nothing gates anything, consolidate at the end (a resolved understanding; an APPROVE/BLOCK verdict).
+A `survey` is handed a *starting* list and told "verify these, and add more based on the context we gave you" — which is why append is inherent to it. The Interrogator and the reviewer are the **same shape**: hit every item, consolidate at the end (a resolved understanding; an APPROVE/BLOCK verdict). "Nothing gates anything" holds for every item **except** one carrying a `command`-kind postcondition: `record --result pass` there REFUSES if the command fails (`zc-consolidate` runs `verify_interrogation.py`, `r6-fowler` runs `verify_fowler_pass.py`), the same `_check_condition` check `advance` already ran on gated items. `record --result fail` is never gated. `null`/`artifact`-kind postconditions on a survey item are still unevaluated by `record`.
 
 ## Permissions: structure vs state
 

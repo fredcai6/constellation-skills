@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r4c-real-unmocked-fixtures",
+  "files": [],
+  "repo_rev": {
+    "commit": "569e845160b8ece1b04d488c582ea50ac0f32c29"
+  },
+  "run": {
+    "work_id": "issue-422-wire-invariants",
+    "generated_at": "2026-08-06T01:06:44Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-d-422",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-d-422"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-d-422"
+    }
+  }
+}

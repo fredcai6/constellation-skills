@@ -1823,15 +1823,56 @@ class DoctrineRail(unittest.TestCase):
         )
 
     def test_rail_mid_flight(self):
-        # g1 done, g2 active (not first), n == 2 -> mid-flight, {n}=2 {imperative}=do g2
+        # g1 done, g2 active (not first), n == 2 -> mid-flight, {n}=2.
+        # ON THE `current` VERB SPECIFICALLY (issue #420): render_human()'s own
+        # ACTIVE line already prints g2's full imperative, so the RAIL must NOT
+        # repeat it -- it substitutes a short pointer instead. The frozen
+        # `_RAIL_STRINGS["mid-flight"]` TEMPLATE text itself is unchanged
+        # ("...Next: {imperative}. Run it."); only what fills {imperative}
+        # changes, and only for point=='current'.
         cl = gated(g1=gate("g1", "complete"),
                    g2=gate("g2", "in-progress"), g3=gate("g3"))
         rail = E._rail("current", cl)
         self.assertIn(
             "A working solution is the MIDDLE of this run — you are 2 steps "
-            "from done. Next: do g2. Run it.",
+            "from done. Next:",
             rail,
         )
+        self.assertNotIn("do g2", rail, "current's RAIL must not repeat the "
+                          "imperative already shown on the ACTIVE line")
+        # The imperative appears exactly once in current()'s full combined
+        # output (ACTIVE line) -- not a second time inside the RAIL.
+        full = E.current(cl) + rail
+        self.assertEqual(full.count("do g2"), 1)
+
+    def test_rail_mid_flight_non_current_verb_keeps_full_imperative(self):
+        # Sibling to the dedup test above: every OTHER railed verb
+        # (claim/start/advance/attest/attach) has no ACTIVE line of its own in
+        # its output, so the RAIL's imperative mention is the ONLY place the
+        # caller sees "what's next" -- it must stay the full, unabridged text,
+        # unchanged from before this fix. Same fixture as test_rail_mid_flight.
+        cl = gated(g1=gate("g1", "complete"),
+                   g2=gate("g2", "in-progress"), g3=gate("g3"))
+        for verb in ("start", "advance", "attest", "claim", "attach"):
+            rail = E._rail(verb, cl)
+            self.assertIn(
+                "A working solution is the MIDDLE of this run — you are 2 "
+                "steps from done. Next: do g2. Run it.",
+                rail,
+                f"non-current verb {verb!r} must keep the full imperative",
+            )
+
+    def test_dispatch_current_shows_imperative_exactly_once_mid_flight(self):
+        # CLI-boundary regression guard (issue #420 close criterion): drive
+        # through dispatch()/main(), not the bare current() function, since
+        # the duplication only existed at the RAIL layer appended in
+        # dispatch(). g1 complete, g2 active (not first/last), g3 pending --
+        # a genuine mid-flight spine, 3+ gates.
+        cl = gated(g1=gate("g1", "complete"),
+                   g2=gate("g2", "in-progress"), g3=gate("g3"))
+        code, out, err = _run_main(cl, ["current"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out.count("do g2"), 1, out)
 
     def test_rail_near_terminal(self):
         # one non-terminal item remains (n == 1) -> near-terminal
@@ -3828,6 +3869,205 @@ class GoldenOutputBriefing(unittest.TestCase):
     def test_all_items_visited_prompts_consolidate(self):
         cl = survey(v1=survey_item("v1", "complete"))
         self.assertEqual(E.current(cl), "ALL ITEMS VISITED. Next: consolidate")
+
+
+class RenderAnchorsAndConstraints(unittest.TestCase):
+    """Issue #420, defect 2: `anchors` and `constraints` are real, populated
+    corpus content on execute.json gates (Commander mission-frame anchors,
+    per-gate constraints) -- confirmed live against 20+ archived execute.json
+    gates -- but `state()` never read them, so `current()` silently dropped
+    them even when populated. `current` is documented as a COMPLETE briefing
+    (INV-1, docs/CHECKLIST_ENGINE_DESIGN.md); this closes that gap."""
+
+    def test_constraints_render_when_present(self):
+        t = gate("g1", "pending")
+        t["constraints"] = ["stay pinned to X", "no touching Y"]
+        cl = gated(g1=t)
+        out = E.current(cl)
+        self.assertIn("stay pinned to X", out)
+        self.assertIn("no touching Y", out)
+
+    def test_anchors_render_when_present_dict_shape(self):
+        # Real corpus shape: category -> [str] (Commander mission-frame
+        # anchors, e.g. this very issue's own execute.json g1-implement gate).
+        t = gate("g1", "pending")
+        t["anchors"] = {"structural": ["scripts/foo.py: bar()"],
+                         "constraint": ["INV-2 purity"]}
+        cl = gated(g1=t)
+        out = E.current(cl)
+        self.assertIn("scripts/foo.py: bar()", out)
+        self.assertIn("INV-2 purity", out)
+
+    def test_anchors_render_when_present_list_shape(self):
+        # Some archived gates carry a flat list instead of the category dict
+        # -- both shapes appear in the live corpus (verified this run).
+        t = gate("g1", "pending")
+        t["anchors"] = ["a flat anchor note"]
+        cl = gated(g1=t)
+        out = E.current(cl)
+        self.assertIn("a flat anchor note", out)
+
+    def test_anchors_render_when_dict_value_is_a_plain_string(self):
+        # A THIRD real corpus shape (Commander's own g1-implement-integrate
+        # rework, found during independent verification of this fix):
+        # {category: "<plain string>"} -- a dict whose VALUE is a bare
+        # string, not a list. Ground truth: skills/commander/templates/
+        # EXECUTE_PLAN.template.json's g1-review gate carries exactly this
+        # shape. A naive `for item in (items or [])` treats the string as an
+        # iterable and emits one line PER CHARACTER -- worse than the
+        # pre-#420 silent drop, because it actively renders garbage.
+        t = gate("g1-review", "pending")
+        t["anchors"] = {
+            "inherits": "g1-implement anchors — review verifies the change "
+                        "against the same structural/capability/constraint/"
+                        "decision/evidence anchors",
+        }
+        cl = gated(**{"g1-review": t})
+        out = E.current(cl)
+        self.assertIn(
+            "inherits: g1-implement anchors — review verifies the change "
+            "against the same structural/capability/constraint/decision/"
+            "evidence anchors",
+            out,
+        )
+        # The character-by-character explosion this guards against: if the
+        # bug regresses, the string is iterated and single letters appear as
+        # their own "inherits: X" lines instead of the whole sentence once.
+        self.assertEqual(out.count("inherits:"), 1, out)
+
+    def test_absent_constraints_and_anchors_render_unchanged(self):
+        # No anchors key at all, constraints defaulted to [] by gate() --
+        # output stays byte-identical to the pre-#420 shape: this fix must
+        # add nothing when the fields are empty/absent.
+        pre = [{"id": "p1", "statement": "iface exists", "check": None, "satisfied": False}]
+        cl = gated(g1=gate("g1", "pending", preconds=pre))
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "preconditions:\n"
+            "  p1 [unmet] null — iface exists\n"
+            "0/1 met\n"
+            "next: attest g1 --cond p1 --which preconditions"
+        ))
+
+    def test_empty_constraints_list_and_no_postconditions_renders_unchanged(self):
+        t = gate("g1", "pending")  # constraints defaults to [], no anchors key
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), "ACTIVE g1 [pending] — do g1\nnext: start g1")
+
+
+class TaskFieldCompleteness(unittest.TestCase):
+    """Issue #420, defect 3: a real enumeration of the fields a Task may
+    carry (docs/CHECKLIST_SCHEMA.md's Task table, plus `anchors` -- documented
+    only in commander-core.md prose, not the schema table) asserting every
+    POPULATED field's content appears somewhere in current()'s rendered
+    output for a fixture that carries every field. Built as a loop over the
+    fixture's own keys minus a documented, justified exclusion set -- NOT a
+    hardcoded check of only anchors/constraints by name -- so a genuinely new
+    field added to Task later and forgotten in render_human() fails this test
+    by default, exactly the way anchors/constraints failed before this fix."""
+
+    # Fields intentionally excluded from the generic content-presence loop,
+    # each for a stated reason -- not because checking them is inconvenient:
+    #   id, status         -- identity/control-flow, already pinned by the
+    #                          ACTIVE line's own exact format (other goldens).
+    #   preconditions,
+    #   postconditions     -- structured list-of-dict; content checked below
+    #                          by dedicated statement-text assertions, not
+    #                          this generic string-flattening loop.
+    #   status_detail      -- per-status bookkeeping (leases, blockers), not
+    #                          narrative content the briefing prints as-is.
+    #   rework_count       -- a bookkeeping counter, not caller-facing prose.
+    #   result, finding    -- survey-only fields (docs/CHECKLIST_SCHEMA.md);
+    #                          not applicable to a `gated` active-gate briefing.
+    #   evidence           -- attached artifact records, not re-echoed
+    #                          verbatim into `current`'s text.
+    #   why_exempt         -- a boolean opt-out flag, not content.
+    #   child_checklist    -- a work-id pointer to a different plan, not prose
+    #                          content this checklist's `current` narrates.
+    #   context_refs       -- a separate declared-file-manifest mechanism
+    #                          (scripts/context_manifest.py), not `current`
+    #                          prose.
+    #   title              -- a short label, historically never part of the
+    #                          briefing (redundant with `imperative`).
+    #   directives         -- KNOWN GAP, same unrendered-defect class as
+    #                          anchors/constraints (never read by state()
+    #                          either), but issue #420 caps this fix's
+    #                          authorized scope to "the two new fields":
+    #                          anchors + constraints (IMPLEMENTER_HANDOFF
+    #                          Allowed Scope). Excluded here rather than
+    #                          silently expanded into; flagged as an
+    #                          out-of-scope triage candidate in the
+    #                          IMPLEMENTER_RESULT instead.
+    _EXCLUDED_FIELDS = {
+        "id", "status", "preconditions", "postconditions", "status_detail",
+        "rework_count", "result", "finding", "evidence", "why_exempt",
+        "child_checklist", "context_refs", "title", "directives",
+    }
+
+    @staticmethod
+    def _flatten(value):
+        """Best-effort text extraction for str / [str] / {category: [str]}
+        shapes -- the shapes anchors/constraints actually carry in the live
+        corpus. Anything else (list-of-dict, bool, int, None) yields []."""
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
+            return list(value)
+        if isinstance(value, dict):
+            out = []
+            for v in value.values():
+                if isinstance(v, list):
+                    out.extend(x for x in v if isinstance(x, str))
+                elif isinstance(v, str):
+                    out.append(v)
+            return out
+        return []
+
+    def test_every_populated_field_renders_for_a_fully_populated_gate(self):
+        t = gate("g1", "in-progress", why_exempt=False)
+        # Both left OPEN (satisfied=False): render_human() only prints a
+        # condition's statement while it is open (the satisfied-hiding
+        # behavior is pre-existing and out of this issue's scope), so the
+        # completeness check needs an open condition to see the content.
+        t["preconditions"] = [{"id": "p1", "statement": "PRECOND_UNIQUE_TEXT",
+                                "check": None, "satisfied": False}]
+        t["postconditions"] = [{"id": "c1", "statement": "POSTCOND_UNIQUE_TEXT",
+                                 "check": None, "satisfied": False}]
+        t["constraints"] = ["CONSTRAINT_UNIQUE_TEXT"]
+        t["anchors"] = {"structural": ["ANCHOR_UNIQUE_TEXT"]}
+        t["directives"] = ["DIRECTIVE_UNIQUE_TEXT"]  # populated but excluded -- see class docstring
+        t["context_refs"] = [{"root": "repo", "path": "x", "required": True}]
+        t["child_checklist"] = "some-other-work-id"
+        t["evidence"] = [{"id": "e1", "type": "note", "payload": {}, "produced_by": "test", "ts": ""}]
+        t["status_detail"] = {"note": "STATUS_DETAIL_UNIQUE_TEXT"}
+        cl = gated(g1=t)
+        out = E.current(cl)
+
+        # Dedicated checks for the two structured, list-of-dict fields.
+        self.assertIn("PRECOND_UNIQUE_TEXT", out)
+        self.assertIn("POSTCOND_UNIQUE_TEXT", out)
+
+        # Generic enumeration over everything else -- fails loud for any
+        # populated, non-excluded field whose content doesn't surface. A
+        # future field added to Task and left unhandled by render_human()
+        # lands here by default (it is not in _EXCLUDED_FIELDS) and fails.
+        checked_any = False
+        for field, value in t.items():
+            if field in self._EXCLUDED_FIELDS or not value:
+                continue
+            for text in self._flatten(value):
+                checked_any = True
+                self.assertIn(
+                    text, out,
+                    f"populated field {field!r} (value {value!r}) has content "
+                    f"{text!r} missing from current()'s output",
+                )
+        self.assertTrue(checked_any, "the generic loop asserted nothing -- "
+                         "the fixture or exclusion set is miscalibrated")
+        # Sanity: name the two fields this loop is specifically proving,
+        # so a change to the fixture that accidentally drops them is loud.
+        self.assertIn("CONSTRAINT_UNIQUE_TEXT", out)
+        self.assertIn("ANCHOR_UNIQUE_TEXT", out)
 
 
 class Inv1CompletenessOracle(unittest.TestCase):

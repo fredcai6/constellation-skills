@@ -1,6 +1,6 @@
 # Lessons Inbox
 
-<!-- playbook-state: run-tick=43 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,issue-419-governor-identity -->
+<!-- playbook-state: run-tick=43 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,issue-419-governor-identity,issue-422-wire-invariants -->
 
 Transitory inbox for between-audit workflow signal — **not** a playbook, and not a
 permanent home for any rule. Read the Active section at the Commander context step

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-review",
+  "mechanical": {
+    "run": "b420-engine-channel-execute",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "g1-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b420-engine-channel-execute-g1-review@6742e3578563e1494948768e7aef813290ac667a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b420-engine-channel-execute",
+    "generated_at": "2026-08-06T00:01:51Z"
+  }
+}

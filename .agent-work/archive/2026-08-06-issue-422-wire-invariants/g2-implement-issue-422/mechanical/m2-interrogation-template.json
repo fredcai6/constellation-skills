@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-interrogation-template",
+  "mechanical": {
+    "run": "g2-implement-issue-422",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-interrogation-template",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-issue-422-m2-interrogation-template@7c272178790a139ee4042caa9631d220703b7434",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-issue-422",
+    "generated_at": "2026-08-06T00:25:18Z"
+  }
+}

@@ -15,10 +15,10 @@ Every checklist is an ordered list of items and declares one type:
 | type | walk | append | item failure | completes when | output |
 |---|---|---|---|---|---|
 | `gated` | ordered; satisfy each to advance | no | **blocks** (rework / reopen) | every item complete or skipped | the work is done |
-| `survey` | visit every item | **yes** (extend from context) | **recorded, never blocks** | every item visited (resulted or skipped) | a **consolidated** result |
+| `survey` | visit every item | **yes** (extend from context) | **recorded, never blocks** — except a `command`-kind postcondition on the item (#422/#328) | every item visited (resulted or skipped) | a **consolidated** result |
 
 - **`gated`** is execution: the Commander spine, Commander's execute.json, the implementer's own plan. Ordered, blocking, fixed.
-- **`survey`** is inquiry / verification: the **Interrogator's questions** and the **reviewer's checks** are the same shape — hit every item, add items as context warrants, nothing gates anything, then consolidate (a resolved understanding; an APPROVE/BLOCK verdict). A survey is handed a *starting* list and told "verify these, and add more based on the context we gave you."
+- **`survey`** is inquiry / verification: the **Interrogator's questions** and the **reviewer's checks** are the same shape — hit every item, add items as context warrants, then consolidate (a resolved understanding; an APPROVE/BLOCK verdict). A survey is handed a *starting* list and told "verify these, and add more based on the context we gave you." Nothing gates *appending*; a `command`-kind postcondition on an item is the one exception to "nothing gates anything" — `record <id> --result pass` REFUSES if that command fails (`zc-consolidate`, `r6-fowler`), mirroring `advance`'s check the same way. `record --result fail` is never gated by it. `null`/`artifact`-kind postconditions on a survey item remain unevaluated by `record` (#422/#328's scope).
 
 **Append is inherent to `survey`, not a separate flag**; `gated` never appends.
 
@@ -119,6 +119,7 @@ A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**.
 | `preconditions` | `[Condition]` | *optional*; an unmet precondition **fails** the task — hard dependencies only |
 | `postconditions` | `[Condition]` | `gated`: **required (≥1)**. `survey`: usually none — the item *is* the check |
 | `constraints` | `[string]` | rules; inherited down a delegated child; forced specifics |
+| `anchors` | `{category: [string]\|string}` \| `[string]` \| absent | *optional*; map-context carried down from the mission frame at plan time — categories are `structural`/`capability`/`constraint`/`decision`/`evidence`/`confidence_flags` per the Commander's `MISSION_FRAME.template.md`, though the engine does not enforce that set. A category's value is a list of strings, or (e.g. `EXECUTE_PLAN.template.json`'s `g1-review` gate: `{"inherits": "..."}`) a single bare string; a legacy/simple gate may instead carry a flat `[string]`. When populated, `current` renders it (issue #420) — see *Rendering* below. |
 | `directives` | `[string]` \| null | forced primitive specifics handed down |
 | `context_refs` | `[{root, path, required}]` \| absent | *optional*; an ordered list declaring which files `scripts/context_manifest.py` projects for this task — `root` is one of `skill`\|`repo`\|`durable`, `path` is a posix-relative path under that root, `required` is advisory (not enforced by the producer). Absent means an empty manifest; declaration order is content and is never sorted. The declaration sits *beside* the `imperative` prose, not in place of it — `scripts/verify_context_declaration.py` lints that every declared path appears verbatim in the task's own `imperative`. |
 | `child_checklist` | work-id \| null | a **delegating** gate: the sub-plan this gate waits on |
@@ -131,6 +132,10 @@ A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**.
 | `rework_count` | int | reopen count vs `config.rework_cap` |
 
 There is no `owner`/`executor` (see Scope) and no `compound`/`primitive` flag — a gate is "delegating" iff `child_checklist` is set, otherwise it is a primitive the agent does itself.
+
+### Rendering — which Task fields `current` shows (issue #420)
+
+`current`'s projection (`state()`/`render_human()` in `checklist_engine.py`) renders a populated `constraints` block and a populated `anchors` block (all three shapes above) on the active gate; either is omitted entirely when absent or empty, so an unpopulated field adds no output. This closed a gap where both fields carried real corpus content the engine never surfaced — the completeness property test in `tests/test_checklist_engine.py` (`TaskFieldCompleteness`) enumerates the Task fields above and fails if a future populated field goes unrendered. **Known gap, not yet closed:** `directives`, when populated, is not rendered — same defect shape as `anchors`/`constraints` were, tracked as a follow-up, not fixed by #420 (that issue's authorized scope was the two named fields only).
 
 ## Condition (pre / post)
 
@@ -355,7 +360,7 @@ Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** 
 | `criteria <id>` | gated | emit `postconditions` + implied evidence types |
 | `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress` |
 | `advance <id> [--why "…" \| --mechanical] --evidence …` | gated | check all `postconditions`; then, for a **non-exempt** gate, require a running `--why` **or** an explicit `--mechanical` marker (silence **fails closed**) and append a `why_trail` record; `→ complete` (see *Why-capture*) |
-| `record <id> --result pass\|fail [--finding …]` | survey | record the check outcome; `→ complete`; never blocks |
+| `record <id> --result pass\|fail [--finding …]` | survey | record the check outcome; `→ complete`; `--result fail` never blocks. `--result pass` REFUSES if the item carries an unmet `command`-kind postcondition (checked via the same `_check_condition` `advance` uses) — `null`/`artifact`-kind postconditions on a survey item are not evaluated here (#422/#328) |
 | `append <id> …` | survey | add an item from context |
 | `consolidate` | survey | every item visited → produce `consolidation` (verdict / understanding) |
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |

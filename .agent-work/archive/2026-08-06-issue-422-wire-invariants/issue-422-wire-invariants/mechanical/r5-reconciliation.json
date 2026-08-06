@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "issue-422-wire-invariants",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-422-wire-invariants-r5-reconciliation@e772afb10522e2c2464229cdb5c820c8a0cfbd4c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-422-wire-invariants",
+    "generated_at": "2026-08-06T01:03:41Z"
+  }
+}

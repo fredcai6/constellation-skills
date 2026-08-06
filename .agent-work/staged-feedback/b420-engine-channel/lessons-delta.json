@@ -1,0 +1,15 @@
+{
+  "work_id": "b420-engine-channel",
+  "tick": true,
+  "ops": [
+    {
+      "op": "add",
+      "id": "docstring-line-citations-drift-silently",
+      "scope": "constellation",
+      "task_class": "code-hygiene",
+      "statement": "A docstring/comment that cites a specific line number in another file (e.g. 'tests/test_checklist_engine.py:818 pins this') drifts silently as either file grows or is edited -- nothing re-verifies the citation, so it can point at unrelated code for an unknown number of edits before someone happens to check it by hand.",
+      "grounding": "scripts/checklist_engine.py's render_human() docstring (pre-#420) cited 'tests/test_checklist_engine.py:818' as the byte-exact pin for the ACTIVE-line format. Verified live this run: line 818 is E.require_session(cl, \"start\", None, {}) in an unrelated lease test (ReleaseCloses... class); the real pin is the GoldenOutputBriefing class, ~line 3779 on. Fixed in this run's diff (issue #420, PR pending) -- corroborated by the cold-critic review that independently found the same stale citation before I fixed it, and by the reviewer's independent re-verification confirming the corrected citation resolves.",
+      "bank_reason": "One confirmed instance in this run's own file; re-observation across future runs will show whether this is a recurring shape across the corpus (any docstring/comment citing a line number in a different file -- template imperatives, other engine modules, doc cross-references) worth a lint (e.g. a script asserting cited line ranges still contain the class/function named nearby) or a one-off that doesn't recur once this instance is fixed."
+    }
+  ]
+}

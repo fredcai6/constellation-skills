@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-coverage-script",
+  "mechanical": {
+    "run": "g1-implement-issue-422",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-coverage-script",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-issue-422-m2-coverage-script@c5e86bcb8f77c58cc8be7963bbe4bcd2f957fb09",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-issue-422",
+    "generated_at": "2026-08-05T23:32:58Z"
+  }
+}
