@@ -263,17 +263,34 @@ def _rail_position(cl: dict) -> tuple[str, dict]:
     return "mid-flight", {"n": n, "imperative": cl["tasks"][active].get("imperative", "")}
 
 
+_RAIL_CURRENT_MIDFLIGHT_POINTER = "the ACTIVE line above"
+
+
 def _rail(point: str, cl: dict) -> str:
     """Return the doctrine block to append at a decision point, or ``""`` when no
     rail applies. Non-gated (survey) checklists get NO rail. ``point`` is either
     ``"check-failure"`` (the REFUSED path, no token substitution) or any railed verb
-    name, in which case the position is derived from ``items`` state."""
+    name, in which case the position is derived from ``items`` state.
+
+    Issue #420: on the `current` verb specifically, `render_human()`'s own
+    ``ACTIVE {id} [{status}] — {imperative}`` line already prints the active
+    gate's full imperative, so substituting it AGAIN into the mid-flight rail's
+    ``{imperative}`` token duplicated it. For every OTHER railed verb
+    (claim/start/advance/attest/attach) there is no ACTIVE line in that verb's
+    own output — the rail's imperative mention is the ONLY place the caller
+    sees "what's next" there, so it must keep the full text unchanged. The fix
+    is verb-aware and touches only what fills the token, never the frozen
+    `_RAIL_STRINGS` values themselves: substitute a short pointer for
+    `{imperative}` only when `point == "current"` and the position is
+    `mid-flight` (the only position that uses the `{imperative}` token)."""
     if cl.get("type") != GATED:
         return ""
     if point == "check-failure":
         text = _RAIL_STRINGS["check-failure"]
     else:
         pos, tokens = _rail_position(cl)
+        if pos == "mid-flight" and point == "current":
+            tokens = dict(tokens, imperative=_RAIL_CURRENT_MIDFLIGHT_POINTER)
         text = _RAIL_STRINGS[pos]
         for key, value in tokens.items():
             text = text.replace("{" + key + "}", str(value))
@@ -1561,6 +1578,13 @@ def state(cl: dict) -> dict:
             "preconditions": [_condition_view(c) for c in (t.get("preconditions") or [])],
             "postconditions": [_condition_view(c) for c in (t.get("postconditions") or [])],
             "next_verbs": _next_verbs(aid, t, kind),
+            # Issue #420 defect 2: pure passthrough, no side effect, no check
+            # re-run (INV-2) -- `constraints` ([str]) and `anchors` (dict of
+            # category -> [str], or a flat [str] on some archived gates) are
+            # real, populated corpus content that never reached `current`
+            # before this fix. render_human() does the shape-handling.
+            "constraints": t.get("constraints") or [],
+            "anchors": t.get("anchors"),
         }
     waived_postconditions: list[str] = []
     consolidation_pending = False
@@ -1584,13 +1608,50 @@ def state(cl: dict) -> dict:
     }
 
 
+def _anchor_category_items(items) -> list[str]:
+    """Normalize one `anchors` dict category's value to a list of strings.
+    Two shapes appear in the live corpus: a list of strings (most mission-
+    frame anchors), or a single bare string (e.g. EXECUTE_PLAN.template.json's
+    g1-review gate: `{"inherits": "g1-implement anchors — ..."}`). A bare
+    string must NOT be treated as an iterable of characters — that silently
+    exploded one sentence into one line per letter (found in review of issue
+    #420, reproduced against `skills/commander/templates/
+    EXECUTE_PLAN.template.json`'s shipped g1-review gate)."""
+    if isinstance(items, str):
+        return [items]
+    if isinstance(items, list):
+        return [item for item in items if isinstance(item, str)]
+    return []
+
+
+def _render_anchor_lines(anchors) -> list[str]:
+    """Format the `anchors` field for display. Three shapes appear in the
+    live corpus (verified against 20+ archived execute.json gates plus the
+    shipped EXECUTE_PLAN.template.json, issue #420): a dict of
+    category -> [str] (most Commander mission-frame anchors), a dict of
+    category -> str (e.g. g1-review's `{"inherits": "..."}`), or a flat [str]
+    on some archived gates. Unrecognized shapes render nothing rather than
+    guessing at a format the corpus doesn't actually use."""
+    if isinstance(anchors, dict):
+        return [f"  {category}: {item}"
+                for category, items in anchors.items()
+                for item in _anchor_category_items(items)]
+    if isinstance(anchors, list):
+        return [f"  {item}" for item in anchors]
+    return []
+
+
 def render_human(view: dict) -> str:
     """Human adapter: format a StateView as the text agents read from
     `current`. Pure presentation — every fact comes from `view`; this function
     adds none of its own. The FIRST line of the active branch stays exactly
-    `ACTIVE {id} [{status}] — {imperative}` (tests/test_checklist_engine.py:818
-    pins this across every shipped template); the conditions block, `n/m met`
-    summary and `next:` hint are appended AFTER it. The why/refresh suffix
+    `ACTIVE {id} [{status}] — {imperative}` (tests/test_checklist_engine.py's
+    GoldenOutputBriefing class, ~3779 on, pins this across every shipped
+    template — the docstring used to cite line 818, a stale reference to an
+    unrelated `require_session` lease test, corrected by issue #420); the
+    conditions block, `n/m met` summary, `constraints:`/`anchors:` blocks (issue
+    #420 defect 2 — emitted only when populated, so an empty/absent field adds
+    no output) and `next:` hint are appended AFTER it. The why/refresh suffix
     (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
     `state()`) rides last, same relative order as before this change; the Trip
     `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
@@ -1619,6 +1680,13 @@ def render_human(view: dict) -> str:
     if total:
         met = total - len(open_pre) - len(open_post)
         lines.append(f"{met}/{total} met")
+    if active.get("constraints"):
+        lines.append("constraints:")
+        lines.extend(f"  {c}" for c in active["constraints"])
+    anchor_lines = _render_anchor_lines(active.get("anchors"))
+    if anchor_lines:
+        lines.append("anchors:")
+        lines.extend(anchor_lines)
     if active.get("next_verbs"):
         lines.append("next: " + " | ".join(active["next_verbs"]))
     body = "\n".join(lines)
