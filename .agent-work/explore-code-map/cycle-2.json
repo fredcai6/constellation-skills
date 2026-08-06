@@ -118,15 +118,19 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Recommended grammar: FOUR node-minting tags + one reference form, as Word: paragraph prefixes in ordinary docstrings \u2014 Assumption:, Constraint:, Rationale:, Rejected:, See: <node-id>. Untagged body = struct purpose (the zero-tag majority case). Strongest anchor: Go's Deprecated: convention (bare word+colon, no sigil, ecosystem-wide without a spec). SURVIVAL CONDITION from 11 surveyed families: a tag survives when writing it changes what a tool does and the author sees it; dies when it requires installing machinery (.NET Code Contracts died; SAL/go-deprecated survived) \u2014 so the tags MUST ship with their consumer. MAPPING NEEDS NO EDGE VOCABULARY: edge type is a pure function of target node kind (six-row lookup); tags only mint nodes whose truth is LOCAL to one anchor \u2014 capability/event/decision stay behind the model's promotion gate, referenced by See:, never minted. Found a real contradiction in map-model.md (explained-by targets decision-only vs migration section allowing claim) \u2014 one-line amendment required. Residue refused with reasons: deleted-anchor tombstones (cannot tag a deleted file), artifact staleness (runnable check not tag), freeze provenance (no tag may assert the file's own history), forward roadmap, parentless purposes, emits edge. Untaken roads: 2-tag parsimony (discards highest-value-per-record Rejected:), 7-tag 1:1 (breaks the promotion gate). Nulls: nothing executed; napoleon-only collision check; Checker Framework unsurveyed; adoption unpredictable. Full: excursions/x9-result.md",
       "evidence": [],
       "rework_count": 0
     }
   },
-  "consolidation": null,
+  "consolidation": {
+    "verdict": "consolidated",
+    "findings": [],
+    "summary": "Refine cycle 2 complete: 5 tension rulings + docent target recorded; 4 excursions landed and registry-verified (x6 mtree, x7a/x7b fork pair, x8 why-placement falsification, x9 grammar). Fork evidence in with AST-first recommendation; comments-suffice survived at 89% with tombstones as the named loss; grammar proposed (4 tags + See:, survival law, no edge vocabulary, one map-model amendment). Board fully updated: three rulings on the table, threads 4-8 next-cycle work"
+  },
   "triage_candidates": [],
   "blockers": []
 }

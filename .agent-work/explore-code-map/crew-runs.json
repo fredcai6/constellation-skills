@@ -221,7 +221,7 @@
     "gate": "cycle2-x9",
     "role": "researcher",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/cycle2-x9/researcher/attempt-1",
     "backend": "external",
     "pid": null,
@@ -231,10 +231,12 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/cycle2-x9-researcher-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/cycle2-x9-researcher-attempt-1.stderr.txt",
     "started_at": "2026-08-06T00:06:13.740478+00:00",
-    "last_heartbeat": "2026-08-06T00:06:13.740478+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-06T00:15:00.054924+00:00",
+    "completed_at": "2026-08-06T00:15:00.054924+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
