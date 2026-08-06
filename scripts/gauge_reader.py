@@ -21,8 +21,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-# The frozen gauge record has exactly these four fields -- no `source`, no
-# `window` (both cut as YAGNI; `fill_fraction` is already normalized).
+# The gauge record's four REQUIRED fields -- no `source`, no `window` (both cut
+# as YAGNI; `fill_fraction` is already normalized). "Required", not "the whole
+# record": this reader checks these four are present and does NOT reject extras,
+# which is what lets the writer add the optional `identity_resolution_ms` on a
+# dispatched agent's record (#419) without touching this module. A record with
+# only these four is still exactly what a top-level agent produces.
 REQUIRED_FIELDS = ("schema_version", "fill_fraction", "model", "observed_at")
 
 # Staleness is resolved from the embedded `observed_at`, never file mtime --

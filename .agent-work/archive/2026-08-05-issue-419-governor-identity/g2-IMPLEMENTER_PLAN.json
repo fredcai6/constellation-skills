@@ -1,0 +1,476 @@
+{
+  "work_id": "issue-419-governor-identity-g2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5",
+    "m6"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the g2 handoff, PROBLEM_STATEMENT.md, scripts/hooks/spine_rail.py binding_key, scripts/hooks/gauge_writer_hook.py and tests/test_gauge_writer.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Record the baseline suite count. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + target module + existing tests loaded; handoff complete; baseline suite count recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Resolve the gauge path from the composite binding key",
+      "imperative": "Rename resolve_gauge_path's second parameter from session_id to binding_key and update its docstring; call _spine_rail.binding_key(data) at the handle_post_tool_use call site, carrying the `_spine_rail is None` guard OUT to that call site so an import failure is a deliberate silent skip rather than an exception into the outer swallow. binding_key returning None means write nothing at all. TDD: write the new tests first and observe them red (attest c1), then implement to green (c2). New tests: a subagent bound under `session#agent` resolves ITS OWN gauge path while the parent bound under the bare session resolves its own (neither ambiguous); _spine_rail None writes nothing; an unresolvable identity writes nothing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new composite-key tests written and observed failing against the unmodified module",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "gauge path resolves from the composite key; parent and subagent each see exactly one candidate; _spine_rail-None and unresolvable-identity write nothing; every pre-existing test in tests/test_gauge_writer.py passes unedited",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/hooks/gauge_writer_hook.py, tests/test_gauge_writer.py, a new fixture under tests/fixtures/ only.",
+        "scripts/hooks/spine_rail.py, scripts/gauge_reader.py, scripts/checklist_engine.py and docs/GAUGE_WRITER_HOOK.md are OUT of scope.",
+        "A payload with no agent_id must behave byte-identically to today; existing tests pass UNEDITED."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Validate agent_id at this module's own boundary and derive its transcript path",
+      "imperative": "Add an ALLOWLIST agent_id check local to gauge_writer_hook.py (hex-ish token plus - and _), not a denylist extension of spine_rail's, because that denylist still admits `:`, `*` and `?` which all reach the agent-{agent_id}.jsonl interpolation on a Windows filesystem. Add the pure derivation helper Path(transcript_path).with_suffix('') / 'subagents' / f'agent-{agent_id}.jsonl'. A payload whose agent_id fails the check writes NOTHING - never a repaired or sanitized path, and never an exception into the outer swallow. TDD red (c1) then green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: composite-key resolution in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the allowlist-rejection and derivation tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "a rejected agent_id character (including `:`, `*`, `?`) writes nothing anywhere; the derived path helper returns the confirmed on-disk shape",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
+        }
+      ],
+      "constraints": [
+        "Allowlist, not denylist. A failing value means write nothing.",
+        "No exception may escape into handle_post_tool_use's outer except - the skip must be deliberate and visible."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Fail closed: a subagent reads only its own derived transcript",
+      "imperative": "When the payload carries an agent_id, the reading comes from the derived transcript and ONLY from it - there must be no code path anywhere that passes the parent's transcript to compute_record while agent_id is present (the #202/#261 misattribution). If the derived file is absent, write a gauge-skip.json with reason 'subagent-transcript-missing' and return: no gauge.json, no gauge-uncalibrated.json. TDD red (c1) then green (c2). The fail-closed test asserts gauge.json is unchanged in BYTES and MTIME, plus the sidecar's reason.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: derivation helper and allowlist in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the fail-closed tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "agent_id present + derived transcript absent leaves gauge.json byte- and mtime-identical, raises no uncalibrated flag, and writes gauge-skip.json reason 'subagent-transcript-missing'",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
+        }
+      ],
+      "constraints": [
+        "Silence is acceptable; a confident wrong number is not.",
+        "The new skip reason costs zero engine change - add it at the call site only, do not touch gauge_reader.py."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Invert the sidechain filter for a subagent, with agentId equality",
+      "imperative": "Give find_latest_usage and compute_record ONE agent_id parameter (not an expect_sidechain/expect_agent_id pair - an incoherent combination must be unrepresentable). agent_id None keeps today's filter exactly (skip isSidechain truthy). agent_id set requires the line to be isSidechain TRUTHY *and* carry a top-level agentId EQUAL to that agent_id - the equality is what makes a wrong derived path fail closed. The conjunct is unfalsifiable against tests/fixtures/real_subagent_transcript.jsonl (all 4 lines sidechain, same agentId), so ADD a derived fixture whose extra line carries the matching agentId with isSidechain falsy and assert it is skipped. Record the line count of each fixture and how many lines each assertion actually reaches. TDD red (c1) then green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete: subagent reads only its own derived transcript",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the polarity/equality tests and the derived fixture written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "default polarity on the real subagent fixture still returns None (existing assertion unedited); its own agent_id returns the real usage sum; a different agent_id returns None; the derived fixture's matching-agentId non-sidechain line is SKIPPED; reach counts measured",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
+        }
+      ],
+      "constraints": [
+        "One parameter, not two.",
+        "tests/fixtures/real_subagent_transcript.jsonl is real captured output - do not modify it; add a separate derived fixture."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5": {
+      "id": "m5",
+      "title": "Record the identity-resolution duration on the written record",
+      "imperative": "Measure the identity-resolution step and record it on the gauge write as an optional fifth field, against the issue's 100ms placeholder budget. The reader validates its four required fields and tolerates extras. Because a no-agent_id payload must stay byte-identical (and a pre-existing test pins the record to exactly four keys), the field appears only on the subagent path - state that reasoning in the code. Prove it is a real measurement, not a constant: slow the identity step deliberately and assert the recorded value tracks it. TDD red (c1) then green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete: polarity inverted and equality enforced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the duration-field tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the duration appears on a subagent's written record, is within the 100ms budget, and demonstrably tracks a deliberately-slowed identity step; the four-key record for a no-agent_id payload is unchanged",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
+        }
+      ],
+      "constraints": [
+        "gauge_reader.py and checklist_engine.py are NOT edited; the four required fields keep their meaning."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6": {
+      "id": "m6",
+      "title": "Integrate: full suite, revert-measured non-vacuity, IMPLEMENTER_RESULT",
+      "imperative": "Run the handoff's three required verification commands with real exit codes. Then MEASURE non-vacuity rather than arguing it: revert scripts/hooks/gauge_writer_hook.py to HEAD, re-run tests/test_gauge_writer.py, record exactly how many of the NEW tests go red, restore the file, and re-confirm green. Any new test that stays green under the revert is not evidence - say so. Then write the IMPLEMENTER_RESULT to .agent-work/issue-419-governor-identity/results/g2-IMPLEMENTER_RESULT.md with real command output, every close criterion met or not, the revert count, out-of-scope findings and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 complete: all five pieces implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the three-module verification command passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green with a count exceeding the 1637 baseline; real output and exit code captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "revert-measured non-vacuity count recorded: file reverted to HEAD, N new tests observed red, file restored, suite re-confirmed green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c4",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/issue-419-governor-identity/results/g2-IMPLEMENTER_RESULT.md",
+          "check": {
+            "kind": "command",
+            "command": "test -s C:/Programs/constellation-skills-wt/epic418-a-419/.agent-work/issue-419-governor-identity/results/g2-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-2"
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py.",
+        "Local commits are fine; do not push, do not open a PR, do not file issues."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/epic418-a-419/.agent-work/issue-419-governor-identity/results/g2-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "impl-419-g2",
+    "status": "released",
+    "claimed_at": "2026-08-06T01:25:49.544366+00:00",
+    "last_heartbeat": "2026-08-06T01:49:00.305602+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T01:49:37.815183+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Read global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g2 handoff, PROBLEM_STATEMENT.md, spine_rail.binding_key (line 139), gauge_writer_hook.py in full and all 778 lines of tests/test_gauge_writer.py. Handoff complete on all seven required fields. Baseline measured: python -m pytest tests -q -> 1637 passed, 2 skipped, 550 subtests, exit 0 at HEAD 340c46d.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:26:27.682647+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "6 new tests added; 4 observed RED against the unmodified module (binding-key helper absent x2, subagent payload wrote the parent's gauge, unresolvable identity wrote the parent's gauge). Implemented _binding_key(data) carrying the _spine_rail-None guard out to the call site, renamed resolve_gauge_path's 2nd param to binding_key, and switched handle_post_tool_use to key on it. 43 passed, exit 0; all 37 pre-existing tests unedited and green.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:28:47.023286+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "5 new tests added; 4 observed RED (local allowlist absent, rejected id still wrote a gauge.json into a bound key, derive_subagent_transcript absent x2). Added _AGENT_ID_ALLOWED allowlist [A-Za-z0-9_-]{1,64} + _is_usable_agent_id, applied inside _binding_key BEFORE delegating, and derive_subagent_transcript() which re-validates at its own boundary and returns None rather than a repaired path. 48 passed, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:30:25.976882+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "5 new tests added; 4 observed RED (subagent with an absent derived transcript overwrote the prior gauge.json from the PARENT's transcript; the no-prior variant wrote a fresh misattributed gauge.json; compute_record was called with the parent's path; the fail-closed branch did not exist). Implemented the derive-or-skip branch in handle_post_tool_use: acting_agent_id present => read_path = derive_subagent_transcript(...), and an absent file writes gauge-skip.json reason subagent-transcript-missing and returns before compute_record is reached. Unchanged proved in bytes AND mtime_ns (prior mtime stamped to 2017 so granularity cannot fake it). 53 passed, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:32:28.020297+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "10 new tests + 1 new fixture; 8 observed RED (find_latest_usage/compute_record took no agent_id at all, so every polarity assertion errored, and the end-to-end dispatched-agent write produced no gauge.json). Implemented the single agent_id parameter on find_latest_usage and compute_record: None keeps today's skip-isSidechain filter byte-identically; set requires isSidechain TRUTHY *and* agentId == agent_id. Added tests/fixtures/subagent_transcript_with_mainchain_tail.jsonl = the 4 real captured lines byte-identical + 1 derived tail line with the MATCHING agentId and isSidechain falsy, which falsifies an equality-only implementation. Reach counts measured by wrapping _iter_tail_lines_reverse: real fixture 4 lines - default polarity reaches 4 -> None, own id reaches 1 -> hit, different id reaches 4 -> None; derived fixture 5 lines - own id reaches 2 (tail rejected, real line accepted), default polarity reaches 1 (tail IS the answer, proving it is usable and skipped only by the conjunct). 63 passed, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:35:24.147065+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "4 new tests; 2 observed RED (KeyError identity_resolution_ms). Added an accumulated identity_ms across the two identity steps (binding-key composition, transcript derivation incl. the existence check) and wrote it as an optional FIFTH field identity_resolution_ms, dispatched-agent path only. Rationale for subagent-only, stated in code: a no-agent_id payload must stay byte-identical and the pre-existing test_golden_fixture_produces_well_formed_record pins the record to exactly four keys. Non-constant proved by slowing spine_rail.binding_key 30ms and requiring the recorded value to follow (slow >= 25ms and slow > fast + 20ms); measured unslowed value ~0.06ms against the 100ms budget. One test-authoring defect found and fixed mid-gate: planting agent A's transcript at agent B's derived path correctly fails closed, which is now its own test. 67 passed, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:37:32.725506+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6",
+      "why": "Three required verification commands run with real exit codes: gauge_writer 67 passed exit 0; three-module 186 passed exit 0; full suite 1667 passed, 2 skipped, 550 subtests, exit 0 in 430.86s (baseline 1637 at HEAD 340c46d, +30 = exactly the tests added). Revert-measured non-vacuity: gauge_writer_hook.py restored to git show HEAD, tests untouched, 23 failed / 44 passed exit 1 -> 23 of 30 new tests are evidence; file restored, 67 passed exit 0. The 7 that stay green are named individually in the result with why, and 2 of them were red at their own gate against the then-current tree. git diff -U0 on the test file shows ZERO removed lines, so all 37 pre-existing tests are literally unedited. IMPLEMENTER_RESULT written to .agent-work/issue-419-governor-identity/results/g2-IMPLEMENTER_RESULT.md.",
+      "mechanical": false,
+      "ts": "2026-08-06T01:49:00.305574+00:00"
+    }
+  ]
+}

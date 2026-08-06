@@ -1,0 +1,2 @@
+{"seq": 1, "ts": "2026-08-06T04:40:33.499060+00:00", "session_id": "sess-parent", "verb": "start", "task": "g1", "evidence_ids": [], "prev_hash": "", "hash": "2bde3cc6cbc8f45e9bec5b327045283434d9e95c1a35d0d55e7f51c882d8345a"}
+{"seq": 2, "ts": "2026-08-06T04:45:22.674545+00:00", "session_id": "sess-parent", "verb": "advance", "task": "g1", "evidence_ids": ["e-g1-1"], "prev_hash": "2bde3cc6cbc8f45e9bec5b327045283434d9e95c1a35d0d55e7f51c882d8345a", "hash": "11d8d5c8d9a589c904a64bcbc29bd1aaf048aebf62194a7e5b9ce9a37b18319b"}

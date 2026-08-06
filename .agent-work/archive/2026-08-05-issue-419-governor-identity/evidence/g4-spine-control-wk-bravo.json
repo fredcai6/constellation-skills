@@ -1,0 +1,91 @@
+{
+  "work_id": "wk-bravo",
+  "type": "gated",
+  "items": [
+    "g1",
+    "g2"
+  ],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "First reading pass",
+      "imperative": "Work the sandbox reading task for g1, then move the gate through the engine.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the reading pass for this gate is done",
+          "check": {
+            "kind": "command",
+            "command": "exit 0"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "why_exempt": true,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "exit 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "Second reading pass",
+      "imperative": "Work the sandbox reading task for g2, then move the gate through the engine.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the reading pass for this gate is done",
+          "check": {
+            "kind": "command",
+            "command": "exit 0"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "why_exempt": true,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "sess-bravo",
+    "status": "active",
+    "claimed_at": "2026-08-06T04:42:21.626183+00:00",
+    "last_heartbeat": "2026-08-06T04:42:58.658476+00:00",
+    "claimed_by": "crew",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "f1-sixsites",
+  "mechanical": {
+    "run": "issue-419-governor-identity-g3-rereview",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "f1-sixsites",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g3-rereview-f1-sixsites@cee156b2667513e6097604f09b859ad78bab1e54",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity-g3-rereview",
+    "generated_at": "2026-08-06T03:49:54Z"
+  }
+}

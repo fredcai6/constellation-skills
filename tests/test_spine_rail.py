@@ -9,6 +9,7 @@ genuinely engine-claimed spine, specifically so the bind-on-resume write path
 is proven against production machinery, not a hand-built fixture.
 """
 
+import hashlib
 import importlib.util
 import json
 import subprocess
@@ -89,6 +90,473 @@ def bind(project_dir, sid, spine_path, engine_session="eng-1", worktree=None):
 def proj(tmp_path, monkeypatch):
     monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
     return tmp_path
+
+
+# --- the real captured hook payloads (#419) ----------------------------------
+#
+# Six payloads captured from a REAL headless `claude -p` run on harness 2.1.222
+# (a parent Bash call, two concurrent subagents each running a Bash call, a
+# second parent Bash call, and the parent's own Agent-tool dispatch calls).
+# They are pinned here so a later hand-edit fails the suite instead of silently
+# weakening every test built on them -- the whole unit layer below is a check
+# over real harness output, not over a dict someone typed.
+
+_PROBE_FIXTURE = _REPO_ROOT / "tests" / "fixtures" / "probe_payloads.jsonl"
+
+# sha256 of the fixture's NEWLINE-NORMALIZED bytes, and that normalized length.
+# Normalized, never raw: `.gitattributes` sets `* text=auto`, so the working
+# tree legitimately holds CRLF while the blob holds LF, and a raw working-tree
+# byte hash is silently wrong on Windows (docs/agents/CREW_CONTEXT.md).
+_PROBE_FIXTURE_SHA256 = "b03536865c8c0215939346447ebd196c579cf051228aa5a9bb75898c10a37402"
+_PROBE_FIXTURE_NORMALIZED_BYTES = 13155
+
+
+def _probe_wrappers():
+    """Every line of the pinned capture as the probe's CAPTURE WRAPPER dict
+    ({captured_at, cwd, env, env_claude_keys, pid, raw, raw_len, payload})."""
+    text = _PROBE_FIXTURE.read_bytes().replace(b"\r\n", b"\n").decode("utf-8")
+    return [json.loads(line) for line in text.splitlines() if line.strip()]
+
+
+def probe_payloads():
+    """The real hook payloads, UNWRAPPED out of the capture wrapper's `payload`
+    key. Every test built on the capture goes through here: the wrapper is the
+    probe's own envelope and carries no `agent_id` at its top level, so reading
+    a wrapper as if it were a payload would test nothing that ships."""
+    return [w["payload"] for w in _probe_wrappers()]
+
+
+def test_probe_fixture_sha256_pin():
+    """Pin the fixture's content. If someone hand-edits the capture -- adding a
+    convenient agent_id, say -- this fails first and loudly, instead of every
+    downstream test quietly proving something about invented input."""
+    assert _PROBE_FIXTURE.exists(), "pinned capture missing: %s" % _PROBE_FIXTURE
+    norm = _PROBE_FIXTURE.read_bytes().replace(b"\r\n", b"\n")
+    digest = hashlib.sha256(norm).hexdigest()
+    print("\nprobe_payloads.jsonl normalized bytes = %d, sha256 = %s" % (len(norm), digest))
+    assert len(norm) == _PROBE_FIXTURE_NORMALIZED_BYTES
+    assert digest == _PROBE_FIXTURE_SHA256, (
+        "pinned capture changed: expected %s, got %s" % (_PROBE_FIXTURE_SHA256, digest)
+    )
+
+
+def test_probe_fixture_decomposition():
+    """State what the capture actually holds, measured here rather than
+    inherited from prose. Printed so the counts land in the evidence."""
+    wrappers = _probe_wrappers()
+    payloads = probe_payloads()
+    assert len(wrappers) == 6
+    assert len(payloads) == 6
+    # wrapper != payload: `agent_id` exists only INSIDE `payload`.
+    assert all("payload" in w for w in wrappers)
+    assert not any("agent_id" in w for w in wrappers)
+
+    sids = {p.get("session_id") for p in payloads}
+    assert len(sids) == 1, "the whole capture is ONE harness session_id: %r" % sids
+
+    subagent = [p for p in payloads if "agent_id" in p]
+    parent_bash = [p for p in payloads
+                   if "agent_id" not in p and p.get("tool_name") == "Bash"]
+    parent_dispatch = [p for p in payloads
+                       if "agent_id" not in p and p.get("tool_name") == "Agent"]
+
+    print("probe decomposition: %d parent Bash / %d subagent-scope / %d parent Agent-dispatch"
+          % (len(parent_bash), len(subagent), len(parent_dispatch)))
+    print("subagent agent_ids: %s" % sorted(p["agent_id"] for p in subagent))
+
+    # Measured, and it is NOT the 3/2/1 the handoff offered provisionally.
+    assert (len(parent_bash), len(subagent), len(parent_dispatch)) == (2, 2, 2)
+    assert len(parent_bash) + len(subagent) + len(parent_dispatch) == len(payloads)
+    assert len({p["agent_id"] for p in subagent}) == 2  # distinct ids, one per agent
+    assert all(p.get("agent_type") == "general-purpose" for p in subagent)
+    assert all(p.get("agent_id") and isinstance(p["agent_id"], str) for p in subagent)
+
+
+# --- binding_key: the per-agent outer key (#419) -----------------------------
+
+_ABSENT = object()
+
+
+def _derive(payload, **overrides):
+    """Derive an adversarial row by MUTATING a real captured payload.
+
+    This is not the forbidden hand-injection: these rows prove REJECTION, never
+    delivery. They are necessary because the real capture holds zero malformed
+    agent_ids and zero falsy session_ids, so the reject branch is unreachable
+    from unmutated capture alone.
+    """
+    row = dict(payload)
+    for key, value in overrides.items():
+        if value is _ABSENT:
+            row.pop(key, None)
+        else:
+            row[key] = value
+    return row
+
+
+def test_binding_key_composition_table_over_the_six_real_payloads():
+    payloads = probe_payloads()
+    assert len(payloads) == 6
+    bare, composite = [], []
+    for p in payloads:
+        key = sr.binding_key(p)
+        sid = p["session_id"]
+        if "agent_id" in p:
+            assert key == sid + sr.BINDING_KEY_SEP + p["agent_id"]
+            composite.append(key)
+        else:
+            assert key == sid  # top-level agent: bare key, behavior unchanged
+            bare.append(key)
+        print("  %-6s agent_id=%-18r -> %r"
+              % (p.get("tool_name"), p.get("agent_id"), key))
+    print("composition table: %d bare / %d composite over %d real payloads"
+          % (len(bare), len(composite), len(payloads)))
+    assert len(bare) == 4
+    assert len(composite) == 2
+    assert len(set(bare)) == 1          # one parent session
+    assert len(set(composite)) == 2     # two agents -> two independent keys
+    assert set(bare).isdisjoint(set(composite))
+    assert all(k.startswith(bare[0] + sr.BINDING_KEY_SEP) for k in composite)
+
+
+def test_binding_key_rejects_unusable_agent_ids_derived_from_real_payloads():
+    """Fail closed. Every row below is a real captured payload with ONE field
+    mutated; each must bind NOTHING rather than fall back to the bare key."""
+    real_sub = [p for p in probe_payloads() if "agent_id" in p][0]
+    real_parent = [p for p in probe_payloads() if "agent_id" not in p][0]
+    # Positive controls: the unmutated bases are usable, so a None below is
+    # caused by the mutation and not by the base payload.
+    assert sr.binding_key(real_sub) == real_sub["session_id"] + "#" + real_sub["agent_id"]
+    assert sr.binding_key(real_parent) == real_parent["session_id"]
+
+    rows = [
+        ("empty agent_id", _derive(real_sub, agent_id="")),
+        ("null agent_id", _derive(real_sub, agent_id=None)),
+        ("int agent_id", _derive(real_sub, agent_id=12345)),
+        ("dict agent_id", _derive(real_sub, agent_id={"id": "a8f0a946eaaa2fe6c"})),
+        ("separator in agent_id", _derive(real_sub, agent_id="a8f0a946eaaa2fe6c#b")),
+        ("forward slash in agent_id", _derive(real_sub, agent_id="a8f0a946/eaaa2fe6c")),
+        ("backslash in agent_id", _derive(real_sub, agent_id="a8f0a946\\eaaa2fe6c")),
+        ("parent traversal in agent_id", _derive(real_sub, agent_id="../../a8f0a946")),
+        ("empty session_id, subagent", _derive(real_sub, session_id="")),
+        ("missing session_id, subagent", _derive(real_sub, session_id=_ABSENT)),
+        ("empty session_id, parent", _derive(real_parent, session_id="")),
+        ("missing session_id, parent", _derive(real_parent, session_id=_ABSENT)),
+    ]
+    for label, row in rows:
+        assert sr.binding_key(row) is None, "%s should bind nothing" % label
+        print("  rejected: %s" % label)
+    print("adversarial rows derived from real payloads and rejected: %d" % len(rows))
+    assert len(rows) >= 6
+
+
+def test_binding_key_never_raises_on_junk():
+    # The hook must never raise; a key it cannot compose is None, not an error.
+    assert sr.binding_key({}) is None
+    assert sr.binding_key(None) is None
+    assert sr.binding_key({"session_id": None}) is None
+
+
+# --- write routing: claim / release / cleanup key off binding_key (#419) -----
+
+def _real_post_tool_use(payload, command, cwd):
+    """A PostToolUse payload built from a REAL captured payload: its own
+    session_id, and its own agent_id or the genuine ABSENCE of one, preserved
+    verbatim from the capture. Only `tool_input` and `cwd` are swapped, for the
+    engine command whose effect is under test. No agent_id is ever invented
+    here -- the point is that the harness delivers it."""
+    data = dict(payload)
+    data["tool_input"] = {"command": command}
+    data["cwd"] = str(cwd)
+    return data
+
+
+def _claim_cmd(work, engine_session):
+    return ('py scripts/checklist_engine.py --file .agent-work/%s/spine.json '
+            'claim --session-id %s --claimed-by commander' % (work, engine_session))
+
+
+def _release_cmd(work, engine_session):
+    return ('py scripts/checklist_engine.py --file .agent-work/%s/spine.json '
+            'release --session-id %s' % (work, engine_session))
+
+
+def _abs_spine(proj, work):
+    return str((proj / ".agent-work" / work / "spine.json").resolve())
+
+
+def _real_parent_payloads():
+    return [p for p in probe_payloads() if "agent_id" not in p]
+
+
+def _real_subagent_payloads():
+    return [p for p in probe_payloads() if "agent_id" in p]
+
+
+def test_post_claim_subagent_writes_composite_key_bare_set_byte_identical(proj):
+    """A claim carrying agent_id files under sid#agent_id and leaves the bare
+    sid entry set byte-identical -- the parent's gauge candidate count is
+    unchanged, which is the whole point of the re-key."""
+    parent = _real_parent_payloads()[0]
+    sub = _real_subagent_payloads()[0]
+    sid = parent["session_id"]
+    assert sub["session_id"] == sid  # the shared session_id that caused the pile-up
+
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-parent"), proj), proj)
+    bare_before = json.dumps(sr.load_binding(proj)[sid], sort_keys=True)
+
+    out = sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-sub"), proj), proj)
+    assert out == {}  # PostToolUse never blocks
+
+    binding = sr.load_binding(proj)
+    composite = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
+    assert set(binding.keys()) == {sid, composite}
+    assert json.dumps(binding[sid], sort_keys=True) == bare_before  # untouched
+    assert list(binding[sid].keys()) == [_abs_spine(proj, "run-parent")]
+    assert list(binding[composite].keys()) == [_abs_spine(proj, "run-sub")]
+    assert binding[composite][_abs_spine(proj, "run-sub")]["engine_session"] == "eng-sub"
+
+
+def test_post_claim_two_agent_ids_give_two_independent_key_sets(proj):
+    """Two distinct agent_ids on ONE session_id produce two independent key
+    sets -- exactly the case that used to collapse into one ambiguous key."""
+    sub_a, sub_b = _real_subagent_payloads()
+    sid = sub_a["session_id"]
+    assert sub_a["agent_id"] != sub_b["agent_id"]
+
+    sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
+
+    binding = sr.load_binding(proj)
+    key_a = sid + sr.BINDING_KEY_SEP + sub_a["agent_id"]
+    key_b = sid + sr.BINDING_KEY_SEP + sub_b["agent_id"]
+    assert set(binding.keys()) == {key_a, key_b}
+    assert sid not in binding  # nothing piled under the bare parent key
+    assert list(binding[key_a].keys()) == [_abs_spine(proj, "run-a")]
+    assert list(binding[key_b].keys()) == [_abs_spine(proj, "run-b")]
+    # Each key holds exactly ONE candidate -- the gauge writer's ambiguity test.
+    assert [len(v) for v in binding.values()] == [1, 1]
+
+
+def test_post_release_composite_removes_only_that_agents_entry(proj):
+    """A release carrying agent_id removes only that agent's entry: the other
+    agent's key set and the parent's bare key set both survive."""
+    sub_a, sub_b = _real_subagent_payloads()
+    parent = _real_parent_payloads()[0]
+    sid = parent["session_id"]
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-parent"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
+    assert len(sr.load_binding(proj)) == 3
+
+    out = sr.handle_post_tool_use(_real_post_tool_use(sub_a, _release_cmd("run-a", "eng-a"), proj), proj)
+    assert out == {}
+
+    binding = sr.load_binding(proj)
+    key_a = sid + sr.BINDING_KEY_SEP + sub_a["agent_id"]
+    key_b = sid + sr.BINDING_KEY_SEP + sub_b["agent_id"]
+    assert set(binding.keys()) == {sid, key_b}
+    assert key_a not in binding
+    assert list(binding[sid].keys()) == [_abs_spine(proj, "run-parent")]
+    assert list(binding[key_b].keys()) == [_abs_spine(proj, "run-b")]
+
+
+def test_post_release_composite_leaves_bare_nudge_ledger_untouched(proj):
+    """The nudge / three-strike escape-hatch ledger stays keyed by the BARE
+    session_id, so a subagent's release must not clear the parent's strikes."""
+    sub = _real_subagent_payloads()[0]
+    sid = sub["session_id"]
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-sub"), proj), proj)
+    sr.save_nudges(proj, {sid: {"count": 2, "journal_seq": 7, "active_id": ["g1"]}})
+
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _release_cmd("run-sub", "eng-sub"), proj), proj)
+
+    nudges = sr.load_nudges(proj)
+    assert nudges[sid] == {"count": 2, "journal_seq": 7, "active_id": ["g1"]}
+
+
+def test_post_release_parent_still_clears_its_own_bare_nudge_ledger(proj):
+    """The other half of the same rule: a top-level release still clears the
+    bare-keyed ledger, so the pre-#419 behavior is intact."""
+    parent = _real_parent_payloads()[0]
+    sid = parent["session_id"]
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+    sr.save_nudges(proj, {sid: {"count": 2, "journal_seq": 7, "active_id": ["g1"]}})
+
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _release_cmd("run-parent", "eng-p"), proj), proj)
+    assert sid not in sr.load_nudges(proj)
+
+
+def test_post_claim_unusable_agent_id_writes_no_binding_anywhere(proj):
+    """An unresolved identity binds NOTHING -- not under a composite key, and
+    above all not under the parent's bare key, which is where a two-way
+    fallback would have silenced the parent's gauge."""
+    sub = _real_subagent_payloads()[0]
+    parent = _real_parent_payloads()[0]
+    sid = parent["session_id"]
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+    before = json.dumps(sr.load_binding(proj), sort_keys=True)
+
+    for bad in ("", None, 12345, "a8f0#b", "a8f0/b", "a8f0\\b", "../a8f0"):
+        payload = _real_post_tool_use(
+            _derive(sub, agent_id=bad), _claim_cmd("run-bad", "eng-bad"), proj)
+        assert sr.handle_post_tool_use(payload, proj) == {}
+
+    after = sr.load_binding(proj)
+    assert json.dumps(after, sort_keys=True) == before  # nothing written at all
+    assert set(after.keys()) == {sid}
+    assert list(after[sid].keys()) == [_abs_spine(proj, "run-parent")]
+    assert _abs_spine(proj, "run-bad") not in after[sid]
+
+
+def test_post_release_empty_set_cleanup_deletes_composite_key_not_bare(proj):
+    """The single line where a wrong substitution deletes a live parent's whole
+    binding. Parent and subagent both hold an entry for the SAME spine path
+    under different keys; the subagent's release empties ITS key set, and the
+    cleanup must delete that composite key while the bare key's entries stay."""
+    parent = _real_parent_payloads()[0]
+    sub = _real_subagent_payloads()[0]
+    sid = parent["session_id"]
+    composite = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
+
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("shared-run", "eng-p"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("shared-run", "eng-s"), proj), proj)
+    binding = sr.load_binding(proj)
+    assert set(binding.keys()) == {sid, composite}
+    assert list(binding[sid].keys()) == list(binding[composite].keys()) == [_abs_spine(proj, "shared-run")]
+    parent_entry_before = json.dumps(binding[sid], sort_keys=True)
+
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _release_cmd("shared-run", "eng-s"), proj), proj)
+
+    after = sr.load_binding(proj)
+    assert composite not in after            # emptied key set removed
+    assert set(after.keys()) == {sid}        # bare key survives
+    assert json.dumps(after[sid], sort_keys=True) == parent_entry_before
+
+
+# --- read routing: session_view merges bare + composite keys (#419) ----------
+
+def test_session_view_merges_one_bare_and_two_composite_keys(proj):
+    """The settle a cold critic flagged as otherwise vacuous: on a store with
+    ONLY bare keys the merge is the identity function, so it would pass in
+    exactly the world where session_view ignores composite keys. This store
+    holds one bare key and TWO composite keys, written by the real claim
+    writer from real payloads, plus two decoy keys that must NOT be merged."""
+    parent = _real_parent_payloads()[0]
+    sub_a, sub_b = _real_subagent_payloads()
+    sid = parent["session_id"]
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
+
+    # Decoys: a different session's composite key, and a key that merely starts
+    # with the sid but is not a child of it (no separator) -- the prefix test
+    # must be sid + BINDING_KEY_SEP, not a bare startswith.
+    binding = sr.load_binding(proj)
+    decoy_entry = {
+        "C:/decoy/spine.json": {
+            "spine": "C:/decoy/spine.json", "engine_session": "eng-decoy",
+            "worktree": "C:/decoy", "claimed_at": "2026-08-05T00:00:00+00:00",
+        }
+    }
+    binding["other-session#a8f0a946eaaa2fe6c"] = dict(decoy_entry)
+    binding[sid + "-lookalike"] = dict(decoy_entry)
+    sr.save_binding(proj, binding)
+
+    binding = sr.load_binding(proj)
+    key_a = sid + sr.BINDING_KEY_SEP + sub_a["agent_id"]
+    key_b = sid + sr.BINDING_KEY_SEP + sub_b["agent_id"]
+    assert set(binding.keys()) == {sid, key_a, key_b,
+                                   "other-session#a8f0a946eaaa2fe6c", sid + "-lookalike"}
+
+    view = sr.session_view(binding, sid)
+    print("\nstore keys = %d (1 bare + 2 composite + 2 decoy); merged view entries = %d"
+          % (len(binding), len(view)))
+    assert len(view) == 3
+    assert set(view.keys()) == {
+        _abs_spine(proj, "run-parent"), _abs_spine(proj, "run-a"), _abs_spine(proj, "run-b")
+    }
+    assert "C:/decoy/spine.json" not in view
+    # An unknown / falsy sid sees nothing, and the call never raises.
+    assert sr.session_view(binding, "no-such-session") == {}
+    assert sr.session_view(binding, None) == {}
+    assert sr.session_view({}, sid) == {}
+
+
+def test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key(proj):
+    """The parent's bare key holds nothing mid-flight; the only mid-flight
+    spine is bound under a SUBAGENT's composite key. Before the read routing
+    this Stop was allowed (the bare key looked idle), which is exactly the
+    silence being fixed."""
+    parent = _real_parent_payloads()[0]
+    sub = _real_subagent_payloads()[0]
+    sid = parent["session_id"]
+
+    write_spine(proj, make_spine([("g1", "complete")], lease_status="released"), work="run-parent")
+    write_spine(proj, make_spine([("g9", "in-progress")], imperatives={"g9": "COMPOSITE-MARKER keep going"}),
+                work="run-sub", journal_lines=1)
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-s"), proj), proj)
+
+    binding = sr.load_binding(proj)
+    assert len(binding) == 2
+    assert list(binding[sid].keys()) == [_abs_spine(proj, "run-parent")]
+
+    out = sr.decide_stop({"session_id": sid, "cwd": str(proj)}, proj)
+    assert out["decision"] == "block"
+    assert "g9" in out["reason"]
+    assert "COMPOSITE-MARKER" in out["reason"]
+    # Strikes still accrue under the BARE sid -- the hatch is not fragmented.
+    assert list(sr.load_nudges(proj).keys()) == [sid]
+
+
+def test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key(proj):
+    """decide_session_start's read goes through session_view too. The spine
+    lives outside proj/.agent-work so the fallback scan cannot find it -- the
+    only route to it is the composite key."""
+    sub = _real_subagent_payloads()[0]
+    sid = sub["session_id"]
+    alt = proj / "altwt"
+    write_spine(alt, make_spine([("g4", "in-progress")], imperatives={"g4": "COMPOSITE-RESUME keep going"}),
+                work="run-sub")
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-s"), alt), proj)
+
+    binding = sr.load_binding(proj)
+    assert list(binding.keys()) == [sid + sr.BINDING_KEY_SEP + sub["agent_id"]]
+    assert sr._scan_active_spine(proj) == []  # nothing for the fallback to find
+
+    out = sr.decide_session_start({"session_id": sid, "cwd": str(alt), "source": "resume"}, proj)
+    ctx = out["hookSpecificOutput"]["additionalContext"]
+    assert "RESUMING" in ctx
+    assert "COMPOSITE-RESUME" in ctx
+
+
+def test_session_start_bind_on_resume_still_writes_under_the_bare_key(proj):
+    """SessionStart never carries an agent_id, so a resumed session is by
+    definition top-level: the bind-on-unambiguous-scan write must land under
+    the BARE session_id, never under a composite one. The sid's pre-existing
+    composite entry is FOREIGN so the existing-binding read is skipped and the
+    scan path is actually reached."""
+    sub = _real_subagent_payloads()[0]
+    sid = sub["session_id"]
+    composite = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
+    alt = proj / "altwt"
+    write_spine(alt, make_spine([("gx", "in-progress")]), work="run-sub")
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-s"), alt), proj)
+    assert list(sr.load_binding(proj).keys()) == [composite]
+
+    sp = write_spine(proj, make_spine([("g1", "in-progress")], session_id="eng-alone",
+                                      imperatives={"g1": "ONLY-MARKER keep going"}),
+                     work="run-alone")
+
+    out = sr.decide_session_start({"session_id": sid, "cwd": str(proj), "source": "resume"}, proj)
+    assert "ONLY-MARKER" in out["hookSpecificOutput"]["additionalContext"]
+
+    binding = sr.load_binding(proj)
+    assert set(binding.keys()) == {composite, sid}   # new entry under the BARE key
+    assert list(binding[sid].keys()) == [sp]
+    assert binding[sid][sp]["engine_session"] == "eng-alone"
+    assert list(binding[composite].keys()) == [_abs_spine(alt, "run-sub")]  # untouched
 
 
 # --- pure functions ----------------------------------------------------------

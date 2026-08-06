@@ -1,0 +1,11 @@
+{
+  "work_id": "issue-419-governor-identity",
+  "tick": false,
+  "ops": [
+    {
+      "op": "export",
+      "id": "falsify-a-check-against-a-decoy-before-trusting-it",
+      "grounding": ".agent-work/CONSTELLATION_FEEDBACK.md 2026-08-05 entry for issue-419-governor-identity - the recurrence is exported with a concrete upstream shape (run every command postcondition against the tree at plan-freeze time and refuse to freeze any that exits 0), because confirming a constellation defect a second time logs debt, not trust."
+    }
+  ]
+}

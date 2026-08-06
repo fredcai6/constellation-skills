@@ -1,0 +1,92 @@
+{
+  "work_id": "issue-419-governor-identity-g3-review",
+  "diff_ref": "git diff -- docs/GAUGE_WRITER_HOOK.md in C:/Programs/constellation-skills-wt/epic418-a-419 (182 insertions, 67 deletions; prose only, no code). Smells are read against their structural-document analogue: this file is the governor write side's structural record and, with no docs/architecture/ map in this repo, carries architecture-packet weight (handoff, g3).",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/constellation-reviewer/references/global-crew.md, skills/constellation-reviewer/references/global-everyone.md, constellation-how-to-talk",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "Residual 2 (lines 427-445) is a single 19-line bullet doing four jobs: what the new behaviour is, historical case A (parent's own spine, loss = coverage), a parenthetical boundedness argument about observed_at vs mtime, and historical case B (a different top-level agent, loss = a real misattribution). Each clause is correct and each earns its place, but one bullet carrying four claims is how a reader drops the last one. Observation, not a blocker: split into the claim plus two labelled cases.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-everyone.md \u00a7Deep-module vocabulary: 'Interface -- EVERYTHING a caller must know to use the module: invariants, ordering, error modes, config, performance envelope', plus the handoff's ruling that this file carries architecture-packet weight because the repo has no docs/architecture/ map.",
+        "reason": "At 476 lines covering wiring, the HITL seam, transcript format, skip causes, binding and known limits, the file has the shape of a large class. But those are the parts of ONE module's interface, and the documented standard says the interface is everything a caller must know. Splitting them across files would scatter one module's interface, which is the failure the standard exists to prevent; the size is the interface's real size."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "Load-bearing here, not cosmetic. The same claim is asserted in several places with no single source: the per-agent binding claim appears at steps 1-2 (13-27), the HITL ordering note (135-143), the ambiguous-binding bullet (284-304) and the binding section (380-416); the record's field count appears at line 35 AND line 164. That second duplication is exactly how the surviving defect got through -- the handoff named line 164 and line 35 was never looked at. The duplication is what makes a correct edit at one site leave the document wrong.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The gate's frozen close criterion 2: 'Enumerate the data.get(...) sites in BOTH hook files by command and compare in both directions.'",
+        "reason": "The paragraph at 230-233 spends itself on spine_rail.py's own payload reads (cwd, tool_input) inside the gauge writer's document -- textbook feature envy. But the criterion demands the enumeration span both hooks in both directions, and the paragraph is what closes the code->doc direction for the two keys the gauge writer never sees. Omitting it would fail the gate."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Same root as duplicated-code but a distinct cost, on the editor rather than the reader. One code fact -- the binding key becoming per-agent -- forced edits in five separate sections of this one file, and the implementer's own workflow feedback names it ('the same binding claim appears in four places in the document, not one'; the anchors gave three line numbers and two more sites had to be found by grepping). A prose gate whose anchors are 'the section to edit' rather than 'every place claim X is asserted' will keep paying this. Route to Commander as a handoff-shape lesson.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-everyone.md \u00a7Universal posture: 'One canonical path; no speculative abstraction.'",
+        "reason": "Line 306-307 states the polarity only as 'the acting agent's side of the sidechain polarity (see the field table above)', so a reader chases payload table -> field table -> whose-transcript rule to land one fact. The alternative is restating the polarity inline -- which is precisely the duplication that produced the defect this gate exists to fix. One canonical statement plus a pointer is the correct trade, so the chain is accepted rather than flagged."
+      }
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-everyone.md \u00a7Universal posture: 'Fail visibly rather than emit plausible wrong output; no hidden fallback.'",
+        "reason": "The bind-nothing justification at 391-400 is a long paragraph explaining why a mechanism does NOT do the obvious thing, which reads as prose apologising for a confusing design. It is kept because the standard makes fail-closed the required behaviour and the paragraph records why the fallback would be wrong; delete it and the next editor re-introduces the fallback that silences the parent's gauge."
+      }
+    }
+  ],
+  "rail_exception": null
+}

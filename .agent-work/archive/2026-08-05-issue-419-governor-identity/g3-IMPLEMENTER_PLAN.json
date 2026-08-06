@@ -1,0 +1,393 @@
+{
+  "work_id": "issue-419-governor-identity-g3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-evidence",
+    "m2-fields",
+    "m3-binding",
+    "m4-skips",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), the constellation-how-to-talk skill, the g3 handoff, docs/GAUGE_WRITER_HOOK.md end to end, and both hook files at HEAD (scripts/hooks/spine_rail.py, scripts/hooks/gauge_writer_hook.py). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "global doctrine + how-to-talk + handoff + target doc + both hook files read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-evidence": {
+      "id": "m1-evidence",
+      "title": "Archive the pre-edit sweeps: sidechain-token occurrences and the payload-field enumeration",
+      "imperative": "Produce the two archived command outputs the close criteria demand, BEFORE editing. (1) Enumerate every occurrence of isSidechain / sidechain / falsy in docs/GAUGE_WRITER_HOOK.md with line numbers and a total count, into .agent-work/issue-419-governor-identity/evidence/g3-grep-sweep.txt. (2) Enumerate every data.get(...) site in scripts/hooks/spine_rail.py and scripts/hooks/gauge_writer_hook.py and reduce it to the distinct payload field list, into .agent-work/issue-419-governor-identity/evidence/g3-payload-fields.txt. Both files must record the exact command and its exit code. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both sweep archives exist and are non-empty",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3-grep-sweep.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3-payload-fields.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-evidence-1"
+        }
+      ],
+      "constraints": [
+        "enumerate by command, never from memory",
+        "no doc edit in this item"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3-grep-sweep.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3-payload-fields.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fields": {
+      "id": "m2-fields",
+      "title": "Edits (a) and (b): the transcript field table's polarity rule, and a payload-field table",
+      "imperative": "In docs/GAUGE_WRITER_HOOK.md: replace the isSidechain row's 'must be falsy' with the polarity rule (falsy on a main-chain read, truthy on a dispatched agent's own transcript), add an agentId row (top-level on the line, must equal the payload's agent_id, checked only on the dispatched-agent path), and add a short second table for the payload fields the hook actually reads, stating plainly that agent_id appears only on a subagent's tool call and is absent on a parent's. Every row must match the enumeration archived in m1 -- include no field the code does not read. Also correct the pre-fix polarity assertion in step 3 of 'What this hook does'. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweeps archived; the field list is the enumerated one, not a recalled one",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the field table states both polarities, carries an agentId row, and a payload-field table exists; no 'must be falsy' assertion remains",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'falsy on a main-chain read' docs/GAUGE_WRITER_HOOK.md && grep -q '| `agentId` |' docs/GAUGE_WRITER_HOOK.md && grep -q 'payload fields this hook reads' docs/GAUGE_WRITER_HOOK.md && ! grep -q 'must be falsy' docs/GAUGE_WRITER_HOOK.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fields-1"
+        }
+      ],
+      "constraints": [
+        "docs/GAUGE_WRITER_HOOK.md only",
+        "no code change",
+        "constellation-how-to-talk: plain words, one name per thing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fields-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'falsy on a main-chain read' docs/GAUGE_WRITER_HOOK.md && grep -q '| `agentId` |' docs/GAUGE_WRITER_HOOK.md && grep -q 'payload fields this hook reads' docs/GAUGE_WRITER_HOOK.md && ! grep -q 'must be falsy' docs/GAUGE_WRITER_HOOK.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-binding": {
+      "id": "m3-binding",
+      "title": "Edits (c) and (e): the binding key, the bind-nothing case, and both residuals side by side",
+      "imperative": "Correct the session-to-spine binding section against spine_rail.binding_key at HEAD: the outer key is session_id for a top-level agent and session_id#agent_id for a dispatched one; an unusable agent_id binds nothing at all; and the exactly-one-spine coupling now holds per agent. Then name BOTH surviving residuals beside each other -- the orchestrator holding several spines under one bare key (unchanged), and the new one: a subagent that never claims a spine resolves to zero candidates and writes nothing, where before it would have resolved against the parent's bare key and written a misattributed reading in a single-spine session. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "binding_key, session_view and both PostToolUse handlers read at HEAD",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "binding section states the composite key and the bind-nothing case, and both residuals are named together",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'session_id#agent_id' docs/GAUGE_WRITER_HOOK.md && grep -q 'binds nothing' docs/GAUGE_WRITER_HOOK.md && grep -q 'Two residuals survive this change' docs/GAUGE_WRITER_HOOK.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-binding-2"
+        }
+      ],
+      "constraints": [
+        "docs/GAUGE_WRITER_HOOK.md only",
+        "no code change",
+        "every claim checked against HEAD"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-binding-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'session_id#agent_id' docs/GAUGE_WRITER_HOOK.md && grep -q 'binds nothing' docs/GAUGE_WRITER_HOOK.md && grep -q 'Two residuals survive this change' docs/GAUGE_WRITER_HOOK.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-binding-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'session_id#agent_id' docs/GAUGE_WRITER_HOOK.md && grep -q 'binds nothing' docs/GAUGE_WRITER_HOOK.md && grep -q 'Two residuals survive this change' docs/GAUGE_WRITER_HOOK.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-skips": {
+      "id": "m4-skips",
+      "title": "Edit (d): the enumerated skip causes gain subagent-transcript-missing and the never-fall-back rule",
+      "imperative": "Add subagent-transcript-missing to the flagged skip causes in docs/GAUGE_WRITER_HOOK.md, and state the never-fall-back rule in the document's own voice: when a dispatched agent's derived transcript is absent, the writer writes nothing rather than reading the parent's. Re-check the section's own arithmetic (how many causes are flagged, how many stay silent) against handle_post_tool_use at HEAD and correct it, including any silent cause the code has that the list does not. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "handle_post_tool_use's skip branches read at HEAD",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "subagent-transcript-missing is enumerated with the never-fall-back rule stated",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'subagent-transcript-missing' docs/GAUGE_WRITER_HOOK.md && grep -q 'never reads the parent' docs/GAUGE_WRITER_HOOK.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-skips-2"
+        }
+      ],
+      "constraints": [
+        "docs/GAUGE_WRITER_HOOK.md only",
+        "no code change"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-skips-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'subagent-transcript-missing' docs/GAUGE_WRITER_HOOK.md && grep -q 'never reads the parent' docs/GAUGE_WRITER_HOOK.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-skips-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && grep -q 'subagent-transcript-missing' docs/GAUGE_WRITER_HOOK.md && grep -q 'never reads the parent' docs/GAUGE_WRITER_HOOK.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Verify the frozen invariant chain and write the result",
+      "imperative": "Re-run the m1 sweep against the edited document, adjudicate every hit one by one, and read the field-table and skip-cause sections end to end for any sentence that still asserts the old polarity without using a swept word. Compare the payload-field enumeration against the document in BOTH directions. Confirm the stated binding key matches binding_key including the bind-nothing case and that both residuals are named. Archive the post-edit sweep and the diff. Run the handoff's verification command and confirm the suite has not moved. Then write the IMPLEMENTER_RESULT with real command output and exit codes. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all five edits are in the document",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "post-edit sweep adjudicated hit by hit, both sections read end to end, field list compared in both directions, and the archives written",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3-grep-sweep-post.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3-diff.txt && test -s .agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the test suite is unmoved by the doc edit",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-2"
+        }
+      ],
+      "constraints": [
+        "python -m pytest, never py",
+        "report out-of-scope wrong claims rather than fixing them"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && test -s .agent-work/issue-419-governor-identity/evidence/g3-grep-sweep-post.txt && test -s .agent-work/issue-419-governor-identity/evidence/g3-diff.txt && test -s .agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "impl-419-g3",
+    "status": "released",
+    "claimed_at": "2026-08-06T02:10:46.251979+00:00",
+    "last_heartbeat": "2026-08-06T02:38:05.109332+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T02:38:16.548578+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Read global-crew, global-everyone, how-to-talk, CREW_CONTEXT, GLOSSARY rows for gauge/trip, the g3 handoff, docs/GAUGE_WRITER_HOOK.md end to end, and both hook files at HEAD 5491bd4. Handoff carries all eight required fields. One conflict already visible: handoff edit (b) names agent_type, which no hook reads.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:11:37.624982+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-evidence",
+      "why": "Both sweeps archived at HEAD 5491bd4. Sweep 1: 4 matching lines, 5 occurrences of isSidechain/sidechain/falsy (doc lines 26, 185, 213, 267). Sweep 2: 5 distinct payload keys read across both hooks (transcript_path, agent_id, session_id, cwd, tool_input); agent_type read by neither (grep exit 1).",
+      "mechanical": false,
+      "ts": "2026-08-06T02:13:09.191645+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fields",
+      "why": "Edits (a) and (b) in. isSidechain row now states both polarities; agentId row added and scoped to the dispatched path; new 'The payload fields this hook reads' table carries exactly the three fields the writer's path reads, names cwd/tool_input as spine_rail's own, and states agent_type is sent but read by neither hook. Steps 1-3 of 'What this hook does' and the #202 example corrected.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:14:47.054816+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-binding",
+      "why": "Edits (c) and (e) in; the refused check named the missing 'binds nothing' phrasing and the sentence now carries it. Binding section: binding_key's three-way table, bind-nothing rule and its reason, both usability tests, SessionStart's bare-key rule, session_view, per-agent coupling. Residual 2 rewritten against git show 4767782^ and gauge_reader's observed_at-not-mtime staleness.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:18:00.432048+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-skips",
+      "why": "Edit (d) in; the refused check named the never-fall-back sentence, which was wrapped across two lines and is now one. Recount against handle_post_tool_use at HEAD: 3 flagged (ambiguous-binding, no-usable-record, subagent-transcript-missing), 4 silent (transcript_path missing, unresolvable acting identity [new], zero candidates, hook unwired). Ambiguous-binding example rewritten to the live case (one agent holding spine.json + execute.json), checked against .agent-work/.spine-rail-binding.json.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:20:55.697583+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify",
+      "why": "Invariant chain verified. (1) Post-edit sweep 5 lines/7 occurrences, each adjudicated in the archive, plus an end-to-end read of the field-table and skip-cause sections; targeted grep for pre-fix phrasings exits 1. (2) Payload fields enumerated by command over both hook files, 5 distinct keys, compared both directions; agent_type omitted because grep exits 1 on it. (3) Binding table matches binding_key lines 139-186 including the None/bind-nothing case, and both residuals sit together. pytest: 1667 passed, 2 skipped, exit 0. Result written.",
+      "mechanical": false,
+      "ts": "2026-08-06T02:38:05.109302+00:00"
+    }
+  ]
+}

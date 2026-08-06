@@ -1,0 +1,87 @@
+=== issue #419 g4 acceptance: independent re-computation (TREATMENT arm) ===
+
+binding store: C:\Users\fredc\AppData\Local\Temp\claude\C--Programs-constellation-skills\e8249451-5c48-417b-9f38-cf2dd40d405c\scratchpad\accept419\sb-treatment\.agent-work\.spine-rail-binding.json
+  key e0063a6f-5f31-473e-938a-1feea2863166                           -> ['wk-parent']
+  key e0063a6f-5f31-473e-938a-1feea2863166#a6df3902f0bf72c29         -> ['wk-alpha']
+  key e0063a6f-5f31-473e-938a-1feea2863166#a69093b8ea2f159f6         -> ['wk-bravo']
+
+PASS | exactly one bare key (the parent)  -- ['e0063a6f-5f31-473e-938a-1feea2863166']
+PASS | the bare binding key IS this run's harness session dir  -- e0063a6f-5f31-473e-938a-1feea2863166
+session e0063a6f-5f31-473e-938a-1feea2863166 -> 5 agent transcripts
+
+  agent a3ab804c97222f9c5    role=DELTA    lines=11
+  agent a44094d0026a4e495    role=CHARLIE  lines=14
+  agent a69093b8ea2f159f6    role=BRAVO    lines=33
+  agent a6df3902f0bf72c29    role=ALPHA    lines=63
+  agent acbcb46bdf651a3c7    role=ECHO     lines=27
+
+PASS | the parent's key is a bare session uuid  -- e0063a6f-5f31-473e-938a-1feea2863166
+PASS | the parent holds exactly its one bare-key entry, its own spine  -- ['wk-parent']
+PASS | composite key is <uuid>#<hex>, not bare: e0063a6f-5f31-473e-938a-1feea2863166#a69093b8ea2f159f6
+PASS | composite key carries this session's uuid: e0063a6f-5f31-473e-938a-1feea2863166#a69093b8ea2f159f6
+PASS | composite key is <uuid>#<hex>, not bare: e0063a6f-5f31-473e-938a-1feea2863166#a6df3902f0bf72c29
+PASS | composite key carries this session's uuid: e0063a6f-5f31-473e-938a-1feea2863166#a6df3902f0bf72c29
+
+--- THE PAIRING: each agent's OWN transcript vs the gauge in the spine its key points at ---
+PASS | key e0063a6f-5f31-473e-938a-1feea2863166#a69093b8ea2f159f6 binds exactly one spine  -- ['C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-bravo\\spine.json']
+PASS | own transcript exists for a69093b8ea2f159f6  -- C:\Users\fredc\.claude\projects\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-treatment\e0063a6f-5f31-473e-938a-1feea2863166\subagents\agent-a69093b8ea2f159f6.jsonl
+
+  agent a69093b8ea2f159f6 (BRAVO)  ->  binding key points at spine dir wk-bravo
+    recomputed from agent-a69093b8ea2f159f6.jsonl @ 2026-08-06T04:33:30.534Z : fill=0.102211  model=claude-sonnet-5  tokens=102211
+    gauge.json in wk-bravo                                 : fill=0.102211  model=claude-sonnet-5
+PASS | PAIRED: a69093b8ea2f159f6's own reading IS the gauge in wk-bravo  -- recomputed 0.102211 vs gauge 0.102211
+PASS | NOT CROSSED: wk-bravo's sampled moment appears in no other agent's transcript  -- []
+PASS | identity_resolution_ms inside the 100ms budget for a69093b8ea2f159f6  -- 0.07760 ms
+PASS | observed_at does not predate a69093b8ea2f159f6's first chunk read  -- first read 2026-08-06T04:32:59.547Z vs observed_at 2026-08-06T04:33:30.534Z
+    (transcript tail, for context: fill=0.102629 at 2026-08-06T04:33:42.559Z)
+PASS | key e0063a6f-5f31-473e-938a-1feea2863166#a6df3902f0bf72c29 binds exactly one spine  -- ['C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-alpha\\spine.json']
+PASS | own transcript exists for a6df3902f0bf72c29  -- C:\Users\fredc\.claude\projects\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-treatment\e0063a6f-5f31-473e-938a-1feea2863166\subagents\agent-a6df3902f0bf72c29.jsonl
+
+  agent a6df3902f0bf72c29 (ALPHA)  ->  binding key points at spine dir wk-alpha
+    recomputed from agent-a6df3902f0bf72c29.jsonl @ 2026-08-06T04:32:19.675Z : fill=0.329482  model=claude-sonnet-5  tokens=329482
+    gauge.json in wk-alpha                                 : fill=0.329482  model=claude-sonnet-5
+PASS | PAIRED: a6df3902f0bf72c29's own reading IS the gauge in wk-alpha  -- recomputed 0.329482 vs gauge 0.329482
+PASS | NOT CROSSED: wk-alpha's sampled moment appears in no other agent's transcript  -- []
+PASS | identity_resolution_ms inside the 100ms budget for a6df3902f0bf72c29  -- 0.08370 ms
+PASS | observed_at does not predate a6df3902f0bf72c29's first chunk read  -- first read 2026-08-06T04:31:21.087Z vs observed_at 2026-08-06T04:32:19.675Z
+    (transcript tail, for context: fill=0.330102 at 2026-08-06T04:32:29.670Z)
+
+PASS | THE PAIRING HOLDS 2 of 2
+PASS | the two agents' fills DIFFER  -- [('a69093b8ea2f159f6', 0.102211), ('a6df3902f0bf72c29', 0.329482)]
+PASS | at least one agent reached the HARD band (>= 0.15)  -- max fill 0.329482
+
+--- the parent's own reading ---
+PASS | the parent got its OWN reading (pre-fix it got none at all)
+  wk-parent gauge.json: {"schema_version": 1, "fill_fraction": 0.094663, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:35:45.657Z"}
+PASS | the parent's record is the untouched four fields, byte-shape unchanged
+  recomputed from the parent's own transcript @ 2026-08-06T04:35:45.657Z: fill=0.094663 tokens=94663
+PASS | PAIRED: the parent's own reading IS the gauge in wk-parent  -- recomputed 0.094663 vs gauge 0.094663
+
+--- the release (wk-echo, a NESTED depth-2 agent) ---
+PASS | the nested dispatch produced its own agent transcript (depth 2)  -- DELTA=['a3ab804c97222f9c5'] ECHO=['acbcb46bdf651a3c7']
+PASS | NESTED DISPATCH RESOLVED: the depth-2 agent got its own per-agent reading
+  wk-echo gauge.json: {"schema_version": 1, "fill_fraction": 0.064216, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:35:11.133Z", "identity_resolution_ms": 0.08049991447478533}
+PASS | PAIRED: the nested agent's own reading IS the gauge in wk-echo  -- recomputed 0.064216 vs gauge 0.064216
+PASS | the released agent's composite key is GONE from the store  -- []
+PASS | the parent's bare key SURVIVED that release
+
+--- the non-claiming subagent ---
+PASS | the non-claiming subagent ran and made tool calls  -- ['a44094d0026a4e495']
+PASS | the non-claiming subagent bound NOTHING
+PASS | the non-claiming subagent wrote NOTHING anywhere  -- []
+PASS | the nested dispatcher, which claimed nothing, bound nothing either
+
+--- sidecars ---
+PASS | no skip / uncalibrated sidecar anywhere in the treatment arm  -- []
+
+--- the trip, read from the spine STATE FILES, not from any agent's report ---
+  wk-alpha   g1=in-progress  refusals=1   lease=active
+  wk-bravo   g1=complete     refusals=0   lease=active
+  wk-echo    g1=complete     refusals=0   lease=released
+  wk-parent  g1=complete     refusals=0   lease=active
+PASS | HARD TRIP FIRED: the >= hard agent's advance was REFUSED and its gate did not move  -- wk-alpha g1=in-progress refusals=1
+PASS | the below-hard agent advanced normally in the SAME arm  -- wk-bravo g1=complete refusals=0
+
+NOTE: nested depth-2 dispatch RESOLVED (agent acbcb46bdf651a3c7, spine wk-echo)
+
+0 failure(s): none

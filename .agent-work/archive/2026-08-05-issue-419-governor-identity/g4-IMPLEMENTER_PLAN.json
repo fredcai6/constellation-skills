@@ -1,0 +1,348 @@
+{
+  "work_id": "issue-419-governor-identity-g4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-sandbox",
+    "m2-treatment",
+    "m3-pairing",
+    "m4-control",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the g4 handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md, references/global-everyone.md), then the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), then the g4 handoff, PROBLEM_STATEMENT.md (pre-build probe section), evidence/probe-payloads.jsonl, and the code under proof: scripts/hooks/spine_rail.py, scripts/hooks/gauge_writer_hook.py, plus the trip mechanic in scripts/checklist_engine.py and scripts/gauge_reader.py. Verify the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format; block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + problem statement + probe payloads + both hooks + trip mechanic read; handoff complete on all eight fields",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md, CREW_CONTEXT.md (python not py), GLOSSARY.md (gauge/trip/spine rows), the g4 handoff, PROBLEM_STATEMENT.md incl. the pre-build probe, all six probe payloads, both hooks at f8b0743, and the trip mechanic (_trip_advisory/_trip_hard_gate in checklist_engine.py + gauge_reader thresholds 0.08/0.15 on 1M windows). Handoff carries all eight fields: task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-sandbox": {
+      "id": "m1-sandbox",
+      "title": "Build the disposable acceptance sandbox: corpus, real gated spines, both arms' settings, pre-run emptiness proof",
+      "imperative": "Under scratchpad/accept419/ (OUTSIDE the repo, so it never enters the diff), build two sibling sandboxes -- sb-treatment and sb-control -- each with its OWN .agent-work/ (its own .spine-rail-binding.json location, empty before the run) and real gated spine.json files with at least two gates each, every one of them validated by running THIS worktree's scripts/checklist_engine.py current against it. Generate a plain-text corpus of chunked prose sized so an agent reading many chunks genuinely consumes ~200K tokens. Write both settings files: treatment wires PostToolUse matcher '*' to THIS worktree's scripts/hooks/spine_rail.py PostToolUse and scripts/hooks/gauge_writer_hook.py by absolute path; control wires the byte-identical shape to the MAIN checkout's C:/Programs/constellation-skills/scripts/hooks/... Record the pre-run emptiness checks (constraint 2): the sandbox binding file absent and no subagents/ dir for the sandbox session. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete: doctrine, handoff and code under proof all read"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both sandboxes exist with validated gated spines, the corpus is generated, both settings files exist, and the pre-run emptiness proof is archived",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && test -s settings-treatment.json && test -s settings-control.json && test -s prerun-empty.txt && test -s corpus/chunk-00.txt && test -s sb-treatment/.agent-work/wk-parent/spine.json && test -s sb-control/.agent-work/wk-parent/spine.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-sandbox-1"
+        }
+      ],
+      "constraints": [
+        "sandbox lives outside the repo; nothing here may enter the diff",
+        "the main checkout's live .agent-work/.spine-rail-binding.json must not be touched",
+        "nothing on the acceptance path may supply an agent identity"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-sandbox-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && test -s settings-treatment.json && test -s settings-control.json && test -s prerun-empty.txt && test -s corpus/chunk-00.txt && test -s sb-treatment/.agent-work/wk-parent/spine.json && test -s sb-control/.agent-work/wk-parent/spine.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-treatment": {
+      "id": "m2-treatment",
+      "title": "Run the TREATMENT arm live: headless claude -p, parent claims its own spine, subagents A/B/C plus a nested dispatch",
+      "imperative": "Launch a fresh headless `claude -p ... --settings <abs treatment settings> --allowedTools Bash Task Agent --permission-mode acceptEdits --model sonnet` with cwd inside sb-treatment. The parent claims its own spine, dispatches subagent A (many corpus chunks), subagent B (deliberately fewer chunks), subagent C (claims nothing), and subagent D which itself dispatches a nested subagent E. Each claiming agent runs the engine's `current` between chunks and reports it VERBATIM, then attempts `advance` and reports VERBATIM whatever comes back; at least one releases. The agents are NOT told what a trip is, what output to expect, or what number to reach. Capture the full stdout with its real exit code, the sandbox binding store, every gauge.json (or a listing recording its absence), and copies of every agent transcript.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sandbox built and pre-run emptiness proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Sandbox built and validated; pre-run emptiness archived in prerun-empty.txt. Vehicle smoke-tested in a throwaway sb-smoke: composite key a59d7727...#a3f2dd03113efc73f written for a subagent, per-agent gauge with identity_resolution_ms 0.074ms."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the treatment arm ran to completion; full stdout, exit code, binding store and gauge listing archived",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && test -s out-treatment.txt && test -s out-treatment.exit && test -s sb-treatment/.agent-work/.spine-rail-binding.json && test -s gauges-treatment.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-treatment-1"
+        }
+      ],
+      "constraints": [
+        "no fixture may hand-inject agent_id; the harness must deliver it",
+        "agents report verbatim, never paraphrased",
+        "target HARD (fill >= 0.15 of a 1M window) on real reading; if not reached, record what WAS reached"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-treatment-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && test -s out-treatment.txt && test -s out-treatment.exit && test -s sb-treatment/.agent-work/.spine-rail-binding.json && test -s gauges-treatment.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-pairing": {
+      "id": "m3-pairing",
+      "title": "Prove the pairing 2 of 2 by re-computation from the raw per-agent transcripts",
+      "imperative": "Write a recomputation script that, for EACH claiming agent id, recomputes fill from that agent's OWN agent-<id>.jsonl and asserts it equals the fill_fraction in the gauge.json sitting in the spine directory that the SAME id's binding key points at. Assert also: key shape <uuid>#<hex>; the parent's key is bare; the two agents' fills DIFFER; observed_at does not predate the agent's first chunk read; identity_resolution_ms is inside the 100ms budget; the released agent's composite key is gone while the parent's survives; the non-claiming subagent wrote nothing; and the nested-dispatch outcome is recorded either way. Exit non-zero if the pairing does not hold 2 of 2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "treatment arm ran and its artifacts are archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "treatment arm artifacts archived"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "recomputation from raw transcripts confirms the pairing 2 of 2 and every derived assertion; script exits 0",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && python recompute.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-pairing-1"
+        }
+      ],
+      "constraints": [
+        "verify by re-computation from raw transcripts, never from the harness's own report",
+        "a crossed attribution (A's reading in B's spine) is a falsifier, not a note"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-pairing-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && python recompute.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-control": {
+      "id": "m4-control",
+      "title": "Run the CONTROL arm against the main checkout's unmodified hooks and show it stays silent",
+      "imperative": "Run the byte-identical harness script against sb-control with settings-control.json pointing at the MAIN checkout's unmodified hooks. Capture full stdout and its real exit code. Assert the control arm produced NO gauge.json reading for the subagents and that advance proceeded normally, and record the control binding store's key shapes (expected: bare session_id holding multiple spines -> ambiguous). One variable between arms: which hook directory the settings name.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "treatment arm measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "treatment measured, pairing 2 of 2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "control arm ran; stdout, exit code, binding store and gauge listing archived, and the control assertion script exits 0",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && test -s out-control.txt && test -s out-control.exit && test -s gauges-control.txt && python assert_control.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-control-1"
+        }
+      ],
+      "constraints": [
+        "exactly one variable differs between arms: the hook directory the settings file names"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-control-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419\" && test -s out-control.txt && test -s out-control.exit && test -s gauges-control.txt && python assert_control.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Archive every artifact and write the IMPLEMENTER_RESULT",
+      "imperative": "Copy every required artifact into .agent-work/issue-419-governor-identity/evidence/g4-* : both settings files, both launch commands, both arms' full stdout, both binding stores, every gauge.json (or the listing recording absence), each agent's own transcript and the parent's, the recomputation script and its output, the sandbox spines and journals after each arm, the agent_id literal-string grep with its command and file count, and the pre/post emptiness checks. Then write the IMPLEMENTER_RESULT to results/g4-IMPLEMENTER_RESULT.md: what was run, each close criterion met or not, each named falsifier checked with its result, real command output with real exit codes, the two fill numbers side by side, what was deliberately not done, out-of-scope findings, Map Impact, and an honest Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both arms measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "both arms measured"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "evidence archived under evidence/g4-* and the IMPLEMENTER_RESULT exists and is non-empty",
+          "check": {
+            "kind": "command",
+            "command": "cd \"C:/Programs/constellation-skills-wt/epic418-a-419\" && test -s .agent-work/issue-419-governor-identity/results/g4-IMPLEMENTER_RESULT.md && test -s .agent-work/issue-419-governor-identity/evidence/g4-settings-treatment.json && test -s .agent-work/issue-419-governor-identity/evidence/g4-out-treatment.txt && test -s .agent-work/issue-419-governor-identity/evidence/g4-out-control.txt && test -s .agent-work/issue-419-governor-identity/evidence/g4-recompute-output.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-result-1"
+        }
+      ],
+      "constraints": [
+        "a measured negative is a complete deliverable; report it with the same rigor as a win"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd \"C:/Programs/constellation-skills-wt/epic418-a-419\" && test -s .agent-work/issue-419-governor-identity/results/g4-IMPLEMENTER_RESULT.md && test -s .agent-work/issue-419-governor-identity/evidence/g4-settings-treatment.json && test -s .agent-work/issue-419-governor-identity/evidence/g4-out-treatment.txt && test -s .agent-work/issue-419-governor-identity/evidence/g4-out-control.txt && test -s .agent-work/issue-419-governor-identity/evidence/g4-recompute-output.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "impl-419-g4",
+    "status": "released",
+    "claimed_at": "2026-08-06T04:10:53.413543+00:00",
+    "last_heartbeat": "2026-08-06T04:51:04.485006+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T04:51:21.040279+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete on all eight fields. Mechanism understood: HARD trip needs fill>=0.15 on a 1M-window model, gauge.json written per PostToolUse into the spine dir the binding key points at, and advance refuses via _trip_hard_gate. Control arm is genuinely pre-fix: main checkout has zero binding_key occurrences.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:11:39.342487+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-sandbox",
+      "why": "Sandbox built outside the repo. 20 chunks / 1,921,073 bytes of prose per arm; 8 gated spines (4 per arm, 2 gates each) all validated by this worktree's engine, exit 0, ACTIVE g1. Gates are why_exempt with a trivially-true command postcondition so the ONLY thing that can refuse an advance is the trip. Both sandboxes' binding stores and harness project dirs confirmed absent before the run.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:15:49.602286+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-treatment",
+      "why": "Treatment arm ran twice. Run 1 (archived under run1/) already fired the HARD trip but a PowerShell-only exit-code suffix in my prompt blocked BRAVO and ECHO from claiming at all; harness fixed, sandboxes rebuilt, run 2 clean. Run 2: parent bare key + 2 composite keys, four distinct readings 0.329482 / 0.102211 / 0.064216 / 0.094663, wk-alpha advance REFUSED at 33%. BRAVO's authored report was blocked by a classifier at its final message, so its raw commands and results are recovered verbatim from its own transcript instead.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:39:34.685292+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-pairing",
+      "why": "recompute.py parses each agent-<id>.jsonl from scratch (the hook under test is never imported) and pins the comparison to the gauge's own observed_at, which also makes the anti-crossing test direct: a crossed reading would name a moment absent from that agent's transcript. 2 of 2 paired exactly (0.329482 and 0.102211, token-for-token), parent 0.094663, nested depth-2 agent 0.064216, all four NOT CROSSED, identity_resolution_ms 0.078-0.084ms, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:39:48.018135+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-control",
+      "why": "Control arm ran the byte-identical script with one variable: settings name the MAIN checkout's hooks. Result is the pre-fix blindness exactly: one bare key holding 3 spines, zero readings for any dispatched agent, ambiguous-binding skip sidecars at all four paths, no trip anywhere, every advance succeeded. My first control assertion overclaimed 'no reading anywhere' and failed: the parent DOES get one reading in the 31s window before the first subagent claims, then it freezes at 4.77% for the rest of the run. Corrected to that measured invariant. Control ALPHA independently reached 0.329265 -- the same context as treatment ALPHA's 0.329482 -- and advanced unimpeded.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:47:48.533336+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-result",
+      "why": "49 evidence files plus both transcript sets (1.8MB each arm) archived under evidence/g4-*; IMPLEMENTER_RESULT written with the verdict, all five close criteria, all eight named falsifiers checked, both arms' real command output and exit codes, the two fill numbers side by side, what was deliberately not done, three triage candidates and honest workflow feedback.",
+      "mechanical": false,
+      "ts": "2026-08-06T04:51:04.484980+00:00"
+    }
+  ]
+}

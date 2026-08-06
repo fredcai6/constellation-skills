@@ -1,0 +1,291 @@
+{
+  "work_id": "issue-419-governor-identity-g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "i1-sidechain-polarity",
+    "i2-payload-fields",
+    "i3-binding-key",
+    "f1-fifth-field",
+    "s1-code-untouched",
+    "v1-suite"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, the g3 handoff, the full git diff of docs/GAUGE_WRITER_HOOK.md, and the implementer result. No engine-config.json exists at docs/agents/; config_ref degrades to defaults.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All five assigned edits are present and each was checked against the code, not against the document: (a) the isSidechain row + new agentId row at 248-249, (b) the payload-field table at 216-233, (c) the binding-key table + bind-nothing case at 385-400, (d) subagent-transcript-missing in the flagged list at 312-322, (e) both residuals side by side at 418-445. The two documented departures from the handoff's wording are BOTH correct and I reproduced each: dropping the agent_type row (no hook reads it; an agent_type row would have broken close criterion 2) and splitting residual 2's 'misattributed but present' into the two cases the pre-change code actually had (verified at git show 4767782^:439,457). The implementer also recomputed the skip arithmetic to 3 flagged / 4 silent, which matches handle_post_tool_use's branches exactly. The one referred question is ruled at f1-fifth-field, not here -- the handoff delegated that ruling to me rather than requiring the implementer to act on it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No drift. Only docs/GAUGE_WRITER_HOOK.md differs from HEAD outside .agent-work/; nothing under scripts/ or tests/ changed, so the code the invariants were verified against is the shipped code. No untracked file outside .agent-work/. Full evidence at s1-code-untouched, including the note that the skills/ exclusion is vacuous by absence rather than genuinely satisfied.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Evidence is present and its substance reproduces, with one artifact defect I could not reproduce verbatim and am naming rather than absorbing. Reproduced independently: the sidechain sweep counts (5 lines, 7 occurrences) and every hit's text; the payload enumeration (5 distinct keys) via my own broader and name-agnostic regexes; agent_type's absence (grep exit 1); binding_key's three returns; the pre-change call sites at 4767782^; gauge_reader's observed_at staleness. NOT reproduced: the archived g3-grep-sweep-post.txt line numbers (189,191,246,306,387 vs the delivered file's 191,193,248,307,389, offsets [2,2,2,1,2] -- a mix of insertions and deletions after the archived run). The archive is pinned to a state that no longer exists, so its line numbers are unusable even though its counts and adjudications are sound. Doctrine calls this out directly (global-everyone.md, 'Pin a claim to the revision you read it at'). Observation, not a blocker: no substantive claim rests on it, and my own end-to-end read of all 476 lines is what carries invariant 1.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets the inherited rules. CREW_CONTEXT 'assert against behaviour, never against text describing it' is honoured -- every claim I checked was checked at the code, and the implementer's own method was the same. 'Any guard that loops must assert what it looped over and state the count' is honoured: the sweeps carry counts (5 lines/7 occurrences, 5 distinct keys) rather than a bare clean exit. Prose quality is good and the document reads at one point per sentence. Two minor wrap artifacts introduced by this diff, cosmetic only: lines 295 (101 cols) and 395 (112 cols) run well past the file's ~76-col prose wrap. Long Markdown table rows (218-220, 248-249) are NOT a defect -- pre-existing rows at 60 and 62 are equally long.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence for Commander to reconcile; this change is the reconciliation. With no docs/architecture/ map in this repo, docs/GAUGE_WRITER_HOOK.md is the governor write side's structural record, and the diff brings it back level with the code g1/g2 shipped. The implementer's Map Impact notes match the diff: the anchors it names (field table, payload table, skip-cause enumeration, binding section, new residuals subsection) are exactly the sections the diff touches, no overstated or missing structural impact, and the constraint change is stated correctly -- the session-to-spine coupling is now per agent rather than per session. Decision candidates were surfaced rather than absorbed (the agent_type and residual-2 departures, both correct). Durable out-of-scope context is routed, not dropped.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full pass run, NOT skipped -- the whole-pass docs-only exception needs an independent co-sign I cannot self-grant, so I ran all 12 baseline smells against their structural-document analogue instead. Record at .agent-work/issue-419-governor-identity/g3-review/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, duplicated-code, shotgun-surgery], overridden=[large-class, feature-envy, message-chains, comments-as-deodorant]). The pass earned its place: duplicated-code is the load-bearing finding -- the record's field count is asserted at BOTH line 35 and line 164, and that duplication is the mechanism by which the surviving fifth-field defect got through, since the handoff named only 164. Shotgun-surgery is its editor-side twin: one code fact forced edits in five sections, which the implementer's own feedback independently reports.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "i1-sidechain-polarity": {
+      "id": "i1-sidechain-polarity",
+      "title": "Invariant 1: no sentence asserts pre-fix sidechain polarity",
+      "imperative": "Re-run the token sweep (isSidechain/sidechain/falsy) over docs/GAUGE_WRITER_HOOK.md, AND read the field-table and skip-cause sections end to end. Verify every polarity claim against the shipped hook code at HEAD, not against the document. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET for the sidechain polarity itself. Reproduced the token sweep on the delivered file: 5 matching lines (191,193,248,307,389), 7 occurrences -- counts match the archive, but the archive's line numbers (189,191,246,306,387) do not, offsets [2,2,2,1,2], so a few edits landed after the archived run; counts and hit text reproduce exactly. Adjudicated all 5: 191/193 historical top-level sample now explicitly qualified; 248 field-table row states both polarities; 307 names the polarity as agent-dependent without a direction; 389 is binding_key's falsy session_id, unrelated. Beyond the sweep I read all 476 lines and ran a token-blind sweep for main-chain|main chain|top-level assistant|subagent turns|different context window|skipped: only line 29 (states both, correct), 248, 259 (a drift condition, not a polarity claim) and 277 (false hit on the word 'skipped'). No surviving assertion of the pre-fix polarity. Checked against find_latest_usage at scripts/hooks/gauge_writer_hook.py:286-322: agent_id None -> skip truthy isSidechain; agent_id set -> require truthy isSidechain AND agentId equality. Doc matches.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "i2-payload-fields": {
+      "id": "i2-payload-fields",
+      "title": "Invariant 2: payload fields match the code both directions",
+      "imperative": "Enumerate every data.get(...) site in BOTH hook files by command. Compare code->doc and doc->code. Adjudicate the claim of 5 distinct keys and the decision to drop the agent_type row. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET, both directions, reproduced with my own broader and name-agnostic regexes. Payload keys read across BOTH hooks = exactly 5 (counted, not eyeballed): session_id (spine_rail 174,422,536,616), agent_id (spine_rail 177,179; gauge 225,592), cwd (spine_rail 324,427,654), tool_input (spine_rail 413), transcript_path (gauge 551). A name-agnostic sweep of every .get(\"key\") receiver in both files confirms no payload read hides under another local name -- the other receivers (b, d, entry, lease, msg, own_spine, prior, spine, task) are binding entries, transcript lines or checklist objects. No data[...]/payload[...] subscript reads exist. code->doc: all 5 appear (3 as table rows at 218-220, cwd and tool_input in the paragraph at 230-231). doc->code: every field the document names is read at a cited line. AGENT_TYPE RULING: the implementer's drop is CORRECT and the handoff's edit (b) was wrong. grep -n agent_type scripts/hooks/*.py exits 1 -- neither hook reads it; it appears only in tests/fixtures/probe_payloads.jsonl and tests/test_spine_rail.py:171. Invariant 2 forbids a field the code does not read, so an agent_type row would have BROKEN this invariant. The doc's replacement clause at 232-233 ('No other payload field is read by either hook -- notably not agent_type, which the harness does send') is true on both halves: verified in the fixture, agent_type rides subagent payloads.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "i3-binding-key": {
+      "id": "i3-binding-key",
+      "title": "Invariant 3: binding key + both residuals",
+      "imperative": "Compare the document's stated binding key against spine_rail.binding_key in code, including the bind-nothing case. Verify BOTH residuals are named. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MET. Doc table at 385-389 matches spine_rail.binding_key (scripts/hooks/spine_rail.py:139-186) return-for-return: bare sid when 'agent_id' not in data (177-178); '<sid>#<aid>' when the id is a non-empty str free of #,/,\\,.. (179-185); None when sid is falsy (174-176) or the id is unusable (181-184). BIND-NOTHING verified behaviourally, not from prose: spine_rail.handle_post_tool_use:423-425 'if key is None: return {}' before any store write, so no entry lands anywhere and there is no fallback to the bare sid. The gauge writer's stricter allowlist is real and is applied BEFORE delegating: _AGENT_ID_ALLOWED = [A-Za-z0-9_-]{1,64} (172) checked in _binding_key (225). SessionStart-binds-bare verified at decide_session_start:649-655 (binding[sid] = ...). session_view merge verified at 189-210 and is what decide_stop (541) and decide_session_start (620) read through. BOTH RESIDUALS NAMED at 418-445 and both check out behaviourally: residual 1 -> N>1 candidates under a bare key hits gauge_writer handle_post_tool_use len(gauge_paths)>1, ambiguous-binding sidecar at every candidate, no gauge.json; residual 2 -> sid#aid with nothing bound gives resolve_gauge_path == [] and 'if not gauge_paths: return {}', silent, no sidecar path. Residual 2's historical half also reproduces: at git show 4767782^ the pre-change calls were resolve_gauge_path(project_dir, data.get('session_id')) (:439) and compute_record(transcript_path) (:457) -- the PARENT's transcript -- so the implementer's correction of the handoff's 'misattributed but present' wording is right, and its bounded-loss claim checks out (scripts/gauge_reader.py:28 and :205 resolve staleness from observed_at, never mtime). Minor observation, not a blocker: the silent-cause bullet at 337-340 names only two triggers for key is None (unusable agent_id, spine_rail import failure) and omits the falsy-session_id trigger, which the binding table at 389 does state.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "f1-fifth-field": {
+      "id": "f1-fifth-field",
+      "title": "Referred question: identity_resolution_ms vs 'four fields only'",
+      "imperative": "Verify the fifth field against code, then rule on whether it falls inside invariant 1's spirit. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "IN SCOPE -- ruled inside invariant 1's spirit, so BLOCK with a named fix. Decisive evidence: git log -S identity_resolution_ms -- scripts/hooks/gauge_writer_hook.py returns exactly one commit, 5491bd4 'feat(#419 g2)'. The fifth field was added by THIS issue's own previous gate, which is precisely the causal class the handoff gives this gate ('Gates g1 and g2 changed the code it describes; this gate corrects the document'). Code at HEAD: gauge_writer_hook.py:638-641 sets record['identity_resolution_ms'] on the dispatched-agent path; tests/test_gauge_writer.py:1207 pins the resulting key set at five. TWO doc sites are now false, not the one the handoff named: line 35 ('writes the frozen 4-field record to gauge.json', NOT named in the handoff) and line 164 ('All four fields present, no extras.', named). A fix applied only where the handoff pointed would leave the document still wrong. The harm is not machine-level -- gauge_reader._parse_fields (scripts/gauge_reader.py:163-192) checks only presence of REQUIRED_FIELDS and tolerates extras -- it is human-level, landing exactly on the HITL eyeball check this document exists to serve: a human following section (c) against a subagent's gauge reads a correct file as wrong. NAMED FIX, doc only, both sites: line 35 say the four required fields plus the dispatched-agent path's additive identity_resolution_ms; line 164 say 'All four required fields present; a subagent's gauge also carries identity_resolution_ms, additive and expected.' FLAG ONLY, do not edit: gauge_writer_hook.py:20 'Record is FROZEN, four fields only' is now false on the dispatched-agent path -- previous gate's file, comment only, gate forbids code changes.",
+      "evidence": [
+        {
+          "id": "e-f1-fifth-field-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/issue-419-governor-identity/results/g3-REVIEW_RESULT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "s1-code-untouched": {
+      "id": "s1-code-untouched",
+      "title": "No code file changed in this gate",
+      "imperative": "Verify via git that only docs/GAUGE_WRITER_HOOK.md changed outside .agent-work and no installed copy under skills/ was edited. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. git status --porcelain limited to skills/ scripts/ tests/ docs/ returns exactly one line, ' M docs/GAUGE_WRITER_HOOK.md'. No file under scripts/ or tests/ differs from HEAD (5491bd4), so the code I verified the invariants against is the shipped code. Zero untracked files outside .agent-work/. The 'do not edit any installed copy under skills/' exclusion is VACUOUS here and I state that rather than counting it as a pass: grep -rl GAUGE_WRITER_HOOK skills/ exits 1 -- no installed copy exists to edit, so that check could not have failed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v1-suite": {
+      "id": "v1-suite",
+      "title": "Test suite unchanged at 1667 passed, 2 skipped",
+      "imperative": "Run python -m pytest tests -q and confirm the count. Record pass/fail with actual counts.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS, re-run by me rather than accepted from the archive. 'python -m pytest tests -q' in the worktree: 1667 passed, 2 skipped, 550 subtests passed in 430.86s, exit 0. Exactly the handoff's expected 1667 passed / 2 skipped, which corroborates s1 independently -- a doc edit that had touched a code file would have moved the count. Used python, not py, per docs/agents/CREW_CONTEXT.md.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "f1-fifth-field: IN SCOPE -- ruled inside invariant 1's spirit, so BLOCK with a named fix. Decisive evidence: git log -S identity_resolution_ms -- scripts/hooks/gauge_writer_hook.py returns exactly one commit, 5491bd4 'feat(#419 g2)'. The fifth field was added by THIS issue's own previous gate, which is precisely the causal class the handoff gives this gate ('Gates g1 and g2 changed the code it describes; this gate corrects the document'). Code at HEAD: gauge_writer_hook.py:638-641 sets record['identity_resolution_ms'] on the dispatched-agent path; tests/test_gauge_writer.py:1207 pins the resulting key set at five. TWO doc sites are now false, not the one the handoff named: line 35 ('writes the frozen 4-field record to gauge.json', NOT named in the handoff) and line 164 ('All four fields present, no extras.', named). A fix applied only where the handoff pointed would leave the document still wrong. The harm is not machine-level -- gauge_reader._parse_fields (scripts/gauge_reader.py:163-192) checks only presence of REQUIRED_FIELDS and tolerates extras -- it is human-level, landing exactly on the HITL eyeball check this document exists to serve: a human following section (c) against a subagent's gauge reads a correct file as wrong. NAMED FIX, doc only, both sites: line 35 say the four required fields plus the dispatched-agent path's additive identity_resolution_ms; line 164 say 'All four required fields present; a subagent's gauge also carries identity_resolution_ms, additive and expected.' FLAG ONLY, do not edit: gauge_writer_hook.py:20 'Record is FROZEN, four fields only' is now false on the dispatched-agent path -- previous gate's file, comment only, gate forbids code changes."
+    ],
+    "summary": "BLOCK with one named, doc-only fix. All three frozen invariants are MET and independently reproduced against the code at HEAD (5491bd4): no sentence asserts the pre-fix sidechain polarity (sweep plus an end-to-end read of all 476 lines plus a token-blind sweep); the payload fields match the code in both directions at exactly 5 distinct keys, and dropping the agent_type row was the CORRECT call because an agent_type row would itself have broken criterion 2; the stated binding key matches spine_rail.binding_key return-for-return including bind-nothing, and both residuals are named and check out behaviourally. Suite re-run at 1667 passed, 2 skipped. The block is the referred fifth-field question, which I rule IN SCOPE: git log -S identity_resolution_ms returns exactly 5491bd4 'feat(#419 g2)', so the fifth field was added by this issue's own previous gate -- the same causal class as the polarity row, and the exact defect class the handoff says this gate exists to remove. TWO doc sites are false, not the one the handoff named: line 35 'writes the frozen 4-field record' and line 164 'All four fields present, no extras'. A fix applied only where the handoff pointed would leave the document wrong."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "f1-fifth-field",
+      "statement": "gauge_writer_hook.py:20 module docstring still says 'Record is FROZEN, four fields only', false on the dispatched-agent path since 5491bd4. Code comment in the previous gate's file; this gate forbids code changes, so flagged not fixed."
+    },
+    {
+      "id": "tc2",
+      "from": "r1-handoff",
+      "statement": "gauge_writer_hook.py:300-302 find_latest_usage docstring says \"docs/GAUGE_WRITER_HOOK.md's field table is wrong about this today\". After this gate that sentence is false. Code comment; route to a code gate."
+    },
+    {
+      "id": "tc3",
+      "from": "r1-handoff",
+      "statement": "docs/GAUGE_WRITER_HOOK.md:256-264 format-drift paragraph still says drift means 'the writer silently stops producing records'. Wrong since #271, not since #419: that case now writes a no-usable-record sidecar on a single resolved candidate. Genuinely out of scope for this gate -- no #419 change falsified it -- but it is the same defect class."
+    },
+    {
+      "id": "tc4",
+      "from": "i3-binding-key",
+      "statement": "docs/GAUGE_WRITER_HOOK.md:337-340 silent-cause bullet names only two triggers for a None binding key (unusable agent_id, spine_rail import failure) and omits the falsy-session_id trigger that binding_key also returns None for. The binding table at 389 does state it, so the document is not wrong overall, only that bullet is incomplete."
+    },
+    {
+      "id": "tc5",
+      "from": "r6-fowler",
+      "statement": "Handoff-shape lesson (Fowler shotgun-surgery + duplicated-code): in this document one code fact is asserted in four-to-five places, so anchors given as 'the section to edit' systematically miss sites. The fifth-field defect survived exactly this way -- the handoff named line 164 and line 35 went unlooked-at. For a prose gate, anchor lists should be 'every place claim X is asserted', derived by command."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-reviewer-e8249451",
+    "status": "released",
+    "claimed_at": "2026-08-06T02:41:02.453811+00:00",
+    "last_heartbeat": "2026-08-06T02:54:42.333560+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T02:54:42.983495+00:00"
+  }
+}

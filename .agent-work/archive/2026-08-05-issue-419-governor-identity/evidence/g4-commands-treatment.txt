@@ -1,0 +1,173 @@
+RAW engine commands and results, read out of each agent's OWN transcript
+sandbox: C:\Users\fredc\AppData\Local\Temp\claude\C--Programs-constellation-skills\e8249451-5c48-417b-9f38-cf2dd40d405c\scratchpad\accept419\sb-treatment
+harness session: e0063a6f-5f31-473e-938a-1feea2863166
+
+==============================================================================
+PARENT (top-level) -- e0063a6f-5f31-473e-938a-1feea2863166.jsonl (53 lines)
+==============================================================================
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" claim --session-id sess-parent --claimed-by orchestrator
+[ts 2026-08-06T04:30:38.818Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-parent -> active
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" start g1 --session-id sess-parent
+[ts 2026-08-06T04:30:43.359Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" current
+[ts 2026-08-06T04:35:42.024Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-parent (by orchestrator, heartbeat 2026-08-06T04:30:43.972210+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-parent/spine.json" advance g1 --session-id sess-parent
+[ts 2026-08-06T04:35:45.657Z]
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+
+==============================================================================
+SUBAGENT a3ab804c97222f9c5 -- agent-a3ab804c97222f9c5.jsonl (11 lines)
+==============================================================================
+
+==============================================================================
+SUBAGENT a44094d0026a4e495 -- agent-a44094d0026a4e495.jsonl (14 lines)
+==============================================================================
+
+==============================================================================
+SUBAGENT a69093b8ea2f159f6 -- agent-a69093b8ea2f159f6.jsonl (33 lines)
+==============================================================================
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" claim --session-id sess-bravo --claimed-by crew
+[ts 2026-08-06T04:32:50.533Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-bravo -> active
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" start g1 --session-id sess-bravo
+[ts 2026-08-06T04:32:56.367Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" current
+[ts 2026-08-06T04:33:09.957Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-bravo (by crew, heartbeat 2026-08-06T04:32:56.953818+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" current
+[ts 2026-08-06T04:33:24.248Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-bravo (by crew, heartbeat 2026-08-06T04:32:56.953818+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 9% (>= soft): you've used most of your context. Unless you're basically done, hand off here at g1 rather than pushing through (advisory — decline with a reason if you're nearly done).
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-bravo/spine.json" advance g1 --session-id sess-bravo
+[ts 2026-08-06T04:33:30.534Z]
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+
+==============================================================================
+SUBAGENT a6df3902f0bf72c29 -- agent-a6df3902f0bf72c29.jsonl (63 lines)
+==============================================================================
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" claim --session-id sess-alpha --claimed-by crew
+[ts 2026-08-06T04:31:12.476Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-alpha -> active
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" start g1 --session-id sess-alpha
+[ts 2026-08-06T04:31:17.548Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" current
+[ts 2026-08-06T04:31:42.288Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-alpha (by crew, heartbeat 2026-08-06T04:31:18.127200+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 12% (>= soft): you've used most of your context. Unless you're basically done, hand off here at g1 rather than pushing through (advisory — decline with a reason if you're nearly done).
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" current
+[ts 2026-08-06T04:32:13.443Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-alpha (by crew, heartbeat 2026-08-06T04:31:18.127200+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+CONTEXT 27% (>= hard): `advance` is BLOCKED until you request a refresh. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>  — then hand off.
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-alpha/spine.json" advance g1 --session-id sess-alpha; echo "EXIT_CODE:$?"
+[ts 2026-08-06T04:32:19.675Z]
+RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+
+REFUSED: g1: context at 33% is at/over the hard limit — advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>
+EXIT_CODE:1
+
+==============================================================================
+SUBAGENT acbcb46bdf651a3c7 -- agent-acbcb46bdf651a3c7.jsonl (27 lines)
+==============================================================================
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" claim --session-id sess-echo --claimed-by crew
+[ts 2026-08-06T04:34:43.471Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease sess-echo -> active
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" start g1 --session-id sess-echo
+[ts 2026-08-06T04:34:50.165Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" current
+[ts 2026-08-06T04:35:07.295Z]
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: sess-echo (by crew, heartbeat 2026-08-06T04:34:50.734829+00:00)
+ACTIVE g1 [in-progress] — Work the sandbox reading task for g1, then move the gate through the engine.
+postconditions:
+  c1 [unmet] command — the reading pass for this gate is done
+0/1 met
+next: advance g1
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" advance g1 --session-id sess-echo
+[ts 2026-08-06T04:35:11.133Z]
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> complete
+
+$ python "C:/Programs/constellation-skills-wt/epic418-a-419/scripts/checklist_engine.py" --file "C:/Users/fredc/AppData/Local/Temp/claude/C--Programs-constellation-skills/e8249451-5c48-417b-9f38-cf2dd40d405c/scratchpad/accept419/sb-treatment/.agent-work/wk-echo/spine.json" release --session-id sess-echo
+[ts 2026-08-06T04:35:15.357Z]
+released lease sess-echo

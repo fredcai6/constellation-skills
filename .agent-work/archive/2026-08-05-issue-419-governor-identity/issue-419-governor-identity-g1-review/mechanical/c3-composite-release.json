@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "c3-composite-release",
+  "mechanical": {
+    "run": "issue-419-governor-identity-g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "c3-composite-release",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g1-review-c3-composite-release@a9406743655a5ec888adb6f0b12603ac4a3102c0",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity-g1-review",
+    "generated_at": "2026-08-06T01:07:37Z"
+  }
+}

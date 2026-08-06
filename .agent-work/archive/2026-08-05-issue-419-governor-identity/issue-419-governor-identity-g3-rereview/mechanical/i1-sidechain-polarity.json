@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "i1-sidechain-polarity",
+  "mechanical": {
+    "run": "issue-419-governor-identity-g3-rereview",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "i1-sidechain-polarity",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g3-rereview-i1-sidechain-polarity@778f242f8cfd9e6666fe52609f398bf7dd18df4c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity-g3-rereview",
+    "generated_at": "2026-08-06T03:47:49Z"
+  }
+}

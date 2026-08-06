@@ -1,0 +1,21 @@
+# g3 REWORK 2 -- diff stat and the comments-only proof, re-run after the Commander-ruled edit
+# Run: 2026-08-06T03:21:42Z  base: HEAD 5491bd4
+
+$ git status --porcelain -- docs/ scripts/ skills/ tests/
+ M docs/GAUGE_WRITER_HOOK.md
+ M scripts/hooks/gauge_writer_hook.py
+exit=0
+
+$ git diff --stat -- docs/ scripts/ skills/ tests/
+warning: in the working copy of 'scripts/hooks/gauge_writer_hook.py', LF will be replaced by CRLF the next time Git touches it
+ docs/GAUGE_WRITER_HOOK.md          | 302 ++++++++++++++++++++++++++++---------
+ scripts/hooks/gauge_writer_hook.py |  34 +++--
+ 2 files changed, 253 insertions(+), 83 deletions(-)
+exit=0
+
+# AST equality against HEAD with docstrings stripped -- NOT ONE EXECUTABLE LINE changed:
+exit=0   # 0 == code identical to HEAD
+
+# Mutation drill (archived from rework 1): the same check against a copy with ONE
+# executable line changed (record["identity_resolution_ms"] = identity_ms -> = 0.0)
+# prints DIFFERENT and exits 1. The guard can fail.

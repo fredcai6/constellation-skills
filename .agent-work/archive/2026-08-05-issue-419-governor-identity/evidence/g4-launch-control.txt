@@ -1,0 +1,6 @@
+# CONTROL arm launch command (cwd = <ACC>/sb-control)
+claude -p "$(cat ../prompt-control.txt)" \
+  --settings "<ACC>/settings-control.json" \
+  --allowedTools Bash Task Agent Read \
+  --permission-mode acceptEdits \
+  --model sonnet
