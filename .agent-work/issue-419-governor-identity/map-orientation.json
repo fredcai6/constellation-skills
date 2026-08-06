@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-419-governor-identity",
+  "root": "C:/Programs/constellation-skills-wt/epic418-a-419",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/GAUGE_WRITER_HOOK.md",
+      "content_hash": "5cef9022ce3a3dbef61be70246a8ea3da0076b9bbe4182cd1205ea2408cb60a4",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This repo has no docs/architecture/ packet map at all: the governor's module boundaries (spine_rail binding store, gauge writer hook, gauge_reader, checklist_engine trip mechanic) exist only in code and in two design docs. There is no structural anchor inventory for scripts/hooks/, so no map anchor can be cited for the seam I am changing."
+  ],
+  "escalation": "Escalating to the Admiral of epic-418: workstream A edits scripts/hooks/gauge_writer_hook.py and the session-to-spine binding key with no architecture map to reconcile against; the reconcile step will fold into docs/GAUGE_WRITER_HOOK.md as the structural record of record, per the commander spine's no-packet-map path.",
+  "emitted_at": "2026-08-05T23:13:24.380388+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
