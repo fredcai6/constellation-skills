@@ -77,7 +77,18 @@ def _load_json_map(path: Path) -> dict:
 
 
 def _save_json_map(path: Path, data: dict) -> None:
-    """Atomically write a JSON object map. Never raises."""
+    """Atomically write a JSON object map. Never raises.
+
+    KNOWN, NOT CHASED (#419, deliberately outside that issue's scope; filed as
+    a triage candidate): the write is atomic but the surrounding
+    load-modify-save is NOT, and nothing takes a lock, so two agents claiming
+    at the same moment can lose one of the two claims. Per-agent keying widens
+    that window rather than creating it -- a dispatched wave now writes N
+    entries where it wrote one, so exposure grows with fan-out. The symptom of
+    a lost write is SILENCE, indistinguishable from an idle governor, and it
+    reintroduces exactly the blindness #419 removes. Raised independently by
+    two reviewers and a cold critic.
+    """
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_name(path.name + ".tmp")
@@ -441,6 +452,12 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             binding[key] = key_bindings
             save_binding(project_dir, binding)
         else:  # release
+            # KNOWN, NOT CHASED (#419, filed as a triage candidate): a
+            # successful release is the ONLY path that removes a key. An agent
+            # that dies, is cancelled, or is killed mid-run leaves its key
+            # behind forever, and per-agent keying multiplies the key count by
+            # every wave's fan-out. Nothing reaps them -- #419's one-time
+            # sweeper was deleted after its single run, as that issue required.
             key_bindings = binding.get(key)
             if key_bindings and abs_spine in key_bindings:
                 key_bindings = dict(key_bindings)

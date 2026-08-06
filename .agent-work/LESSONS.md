@@ -1,6 +1,6 @@
 # Lessons Inbox
 
-<!-- playbook-state: run-tick=42 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310 -->
+<!-- playbook-state: run-tick=43 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,issue-419-governor-identity -->
 
 Transitory inbox for between-audit workflow signal — **not** a playbook, and not a
 permanent home for any rule. Read the Active section at the Commander context step
@@ -31,13 +31,16 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - statement: A gate postcondition must be run against a deliberately-wrong decoy before it is trusted. A check that cannot fail is worse than no check, because it reports green on the exact condition it exists to catch.
 - grounding: .agent-work/issue-310/PLAN_ALTERNATIVES.md - 'Two of the four BLOCKING findings were checks that could not fail, sitting in this run's own gate acceptance criteria.' Corroborated by engine telemetry: both checks were replaced by amend at the plan step (commit c60f0ad) BEFORE any gate ran on them, so neither produced a false green in the journal.
 - bank-reason: Re-observation will tell whether this is a per-author habit or a template gap. Both instances here were keyword greps standing in for a semantic property, which suggests the template's command-postcondition examples invite grep-shaped checks -- but n=1 run cannot separate that from one commander's authoring style. If a second commander writes a grep-theatre check from the same template, it is the template.
-- mentions: 1
+- mentions: 2
 - confirmed: 0
 - disconfirmed: 0
-- status: active
+- recurrences: 1
+- status: exported
 - added: 2026-08-02 (issue-310)
-- last-confirmed: none
+- last-confirmed: 2026-08-05 (issue-419-governor-identity)
 - runs-since-confirmed: 1
+- history: recurred 2026-08-05 (issue-419-governor-identity) (constellation debt, not trust) — .agent-work/issue-419-governor-identity/CRITIC_TRIAGE.md finding 2 - 'Every machine-checkable postcondition in the plan is already green, at HEAD, with zero code written': all three command postconditions I authored were re-runs of the green baseline dressed as verification of a change. A cold critic measured it (140 passed / 1621 passed on the unmodified tree) rather than arguing it. This is the SECOND commander, from the same template, writing checks that cannot fail - which is exactly the discriminator the lesson's own bank-reason named ('If a second commander writes a grep-theatre check from the same template, it is the template'). Corroborated by engine telemetry: the checks were rewritten to name new test node ids at the plan step, before any gate ran on them, so none produced a false green in the journal.
+- history: exported 2026-08-05 (issue-419-governor-identity) — .agent-work/CONSTELLATION_FEEDBACK.md 2026-08-05 entry for issue-419-governor-identity - the recurrence is exported with a concrete upstream shape (run every command postcondition against the tree at plan-freeze time and refuse to freeze any that exits 0), because confirming a constellation defect a second time logs debt, not trust.
 
 ### lesson:a-verdict-must-not-select-on-the-gap-it-escalates
 - scope: constellation
@@ -51,7 +54,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:grading-a-contested-claim-settled-launders-it
 - scope: constellation
@@ -65,7 +68,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:reasoning-gate-crew-waiver-can-be-wrong-for-synthesis
 - scope: constellation
@@ -78,5 +81,33 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - disconfirmed: 0
 - status: active
 - added: 2026-08-02 (issue-310)
+- last-confirmed: none
+- runs-since-confirmed: 2
+
+### lesson:enumerate-the-sites-by-command-before-editing-a-claim
+- scope: constellation
+- task-class: gate-authoring
+- statement: When a change falsifies a stated claim, the handoff must require enumerating every site asserting that claim BY COMMAND, with the count stated, before any edit. A handoff that names the site to fix produces a fix at that site and leaves the others, and each later pass finds sites the previous one reported clean.
+- grounding: .agent-work/issue-419-governor-identity/results/g3-REVIEW_RESULT.md and g3-IMPLEMENTER_RESULT.md - one claim ('the gauge record is four fields') was asserted at SEVEN sites across four files. The handoff named one; the first review found two and BLOCKed; the rework's by-command enumeration found six; the re-review found a seventh in a fourth file nobody had swept. Each pass had reported the previous state clean.
+- bank-reason: Re-observation will tell whether the fix belongs in the handoff template (an explicit enumerate-then-edit step) or in the author's habit. This run cannot separate them: I wrote the under-inclusive handoff AND the enumeration that repaired it, so the same person supplied both the defect and the remedy. If a different commander's handoff names a single site for a claim that turns out to be repeated, it is the template.
+- mentions: 1
+- confirmed: 0
+- disconfirmed: 0
+- status: active
+- added: 2026-08-05 (issue-419-governor-identity)
+- last-confirmed: none
+- runs-since-confirmed: 1
+
+### lesson:archive-the-producer-with-the-output
+- scope: constellation
+- task-class: evidence
+- statement: An archived output that cannot be regenerated from its archived producer is testimony, not evidence. Archive the command or script alongside its output, and treat a non-reproducing artifact as a defect even when every number in it independently checks out.
+- grounding: .agent-work/issue-419-governor-identity/results/g4-REVIEW_RESULT.md - evidence/g4-assert-control-output.txt does not regenerate from its own archived script: a trailing section was appended from a command that was not recorded. Every number in it reproduced independently when the reviewer re-derived them, so no claim rested on it - which is precisely why nobody would have caught it without a reviewer who tried to regenerate the file rather than read it.
+- bank-reason: Needs re-observation to know whether this is worth a mechanical check or stays a habit. Here it was caught only because one reviewer chose to regenerate an artifact instead of reading it, which is not something any current gate asks for. If it recurs where the numbers do NOT reproduce, the cost is a wrong claim surviving review and the case for mechanizing it gets much stronger.
+- mentions: 1
+- confirmed: 0
+- disconfirmed: 0
+- status: active
+- added: 2026-08-05 (issue-419-governor-identity)
 - last-confirmed: none
 - runs-since-confirmed: 1

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "issue-419-governor-identity",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-reconcile@bf26e9c521d45ad15ec16730bd892a3cd3d8971b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity",
+    "generated_at": "2026-08-06T05:48:44Z"
+  }
+}

@@ -1962,3 +1962,67 @@ rather than banked worktree-locally, per the launch order's standing instruction
 - **`verify-frame` vs `MISSION_FRAME.template.md` contradiction under DEGRADED** → disposition: `already filed as #394; confirming instance recorded, not re-filed`
 
 ---
+
+## 2026-08-05 — issue-419-governor-identity (delegated Commander, epic-418 workstream A)
+
+**How closely the skills, handoffs and checklists were followed:** the spine was driven end to end
+through the engine, every gate through its own verbs, one rework round at g3 after a correct reviewer
+BLOCK. No work was done around the spine. Six crews dispatched via `run_crew.py --backend external`,
+each result verified fresh before integration.
+
+**What went well, and why it is worth repeating:**
+- **The probe before the build paid for the whole run.** The pre-ruling required inspecting the real
+  hook payload before designing anything. It took twenty minutes and it deleted a 250-line module from
+  the plan: the payload carries `agent_id` outright, so identity is a lookup rather than a search, and
+  every hazard that module existed to handle — verbatim-dispatch contamination, the identical-command
+  race — became unreachable rather than mitigated.
+- **Measuring non-vacuity by revert, rather than arguing it.** Each code gate reverted its own file and
+  counted how many new tests went red (13 of 16, then 23 of 30). Both reviewers reproduced the count
+  independently, and one went further with five targeted mutations. This single practice did more for
+  confidence than any assertion either crew wrote, and it caught nothing — which is the point: it is
+  what let the reviews be short.
+- **The cold panel earned its cost twice over.** Two critics on the frozen plan produced 20 findings,
+  and the two most valuable were ones no author would have found: every `command` postcondition in the
+  plan was **already green at HEAD with zero code written**, and g4's acceptance evidence **passed on a
+  crossed attribution** — the exact misattribution class the issue exists to kill.
+- **The reviewer BLOCK at g3 was correct and cheap.** It cost one rework round and turned up that a
+  single claim was asserted in **seven** places across four files, each pass finding sites the previous
+  one reported clean.
+
+**Where I had to improvise, and what fought me:**
+- **`py` is not the test runner here.** `py` resolves to a codex runtime with no pytest, and
+  `py -m unittest discover` reports 4 loader errors plus 11 mutation-floor failures that are pure
+  interpreter artifacts. I nearly recorded a red baseline as real. Every handoff after that carried the
+  correction explicitly, and no crew hit it. → disposition: `carried in every handoff; worth a line in
+  the repo's crew context`
+- **`init_work_area.py` does not resolve the `<branch>` placeholder**, so the archive gate's
+  `gh pr list --head <branch>` postcondition ships unrunnable. → disposition: `worked around at
+  archive; recorded here`
+- **`git worktree add` into the scratchpad fails on Windows MAX_PATH**, so the isolate-the-revert move
+  every gate needed had to be rediscovered as a copy fallback by each crew independently. → disposition:
+  `recommend-and-defer — target is crew doctrine, outside this run's authority`
+- **`verify-frame` refuses any `decision:`-shaped anchor under a DEGRADED orientation, while
+  `MISSION_FRAME.template.md` requires graded decision anchors.** I kept decisions out of the frame and
+  put them in `execute.json` where `grade_lint` sees them. → disposition: `already filed as #394;
+  confirming instance recorded, not re-filed`
+- **`docs/agents/engine-config.json` does not exist** while every template's `config_ref` names it, so
+  the rework cap and checkpoints are unchosen defaults. Third report. → disposition: `filed as #443`
+- **The `Agent` tool refused `name` and `run_in_background`** for an in-process teammate, so the
+  design-it-twice candidates and the critic panel ran synchronously in one message rather than in the
+  background the doctrine assumes. It worked, but the doctrine's "tell every background subagent to
+  SendMessage before ending its turn" instruction is unreachable at this tier. → disposition: `recorded`
+- **One crew's final message was blocked by a permission classifier**, so its evidence was recovered
+  from its own transcript. The reviewer judged that stronger rather than weaker. → disposition:
+  `recorded — the #145 shape, environmental, not a scope problem`
+
+**Improvement signals:**
+- **An evidence artifact that cannot be regenerated from its archived producer is testimony, not
+  evidence.** One of this run's own artifacts had a section appended from an unrecorded command; every
+  number reproduced, but nothing said which lines came from where. → disposition: `distilled to a
+  lesson (banked)`
+- **A "fix it where you are pointed" handoff systematically misses sites.** g3's handoff named one of
+  what turned out to be seven. The fix that worked was requiring enumeration by command with the count
+  stated, before any edit. → disposition: `distilled to a lesson (banked)`
+- **The authoring side of blast radius is where this run kept bleeding.** Adding one optional field to
+  a record stranded six documents and comments asserting the old shape, in four files, and each was
+  found by a different pass. → disposition: `filed as #444 (the mechanical link that would close it)`

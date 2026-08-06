@@ -899,7 +899,8 @@
           "id": "p1",
           "statement": "g4 closed \u2014 the fix is proven before the live store is touched",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4 closed: the fix is proven on a live run before the live store is touched."
         }
       ],
       "postconditions": [
@@ -907,25 +908,29 @@
           "id": "c1",
           "statement": "the before-state was recorded to a file in this worktree BEFORE any mutation, and the dry-run plan enumerated every entry with a KEEP or DROP reason and STATED THE TOTALS",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Dry run wrote evidence/binding-before.json BEFORE any mutation and evidence/binding-sweep-plan.md enumerating all 64 entries with a KEEP/DROP reason. Totals stated: 6 keys, 64 entries at read time (54 when this run was planned, 59 at a critic's read hours later, 64 now \u2014 the store is a moving target and every count is pinned to its read). KEEP 1, DROP 63. The spec's unconditional rule would have dropped all 64."
         },
         {
           "id": "c2",
           "statement": "the planned DROP set is absent from the after-state and every KEEP entry survives byte-identical. Deliberately NOT a full-diff equality: a cold critic measured the live store drifting 54 to 59 entries between plan time and their read, and sibling runs claim and release continuously, so a strict diff would be falsified by a healthy world. Additions by concurrent writers are tolerated and reported.",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Verified by recomputing both sets from the archived before/after files: 64 entries before, 1 after, 63 dropped, 0 added by concurrent writers during the window. Drop reasons: 60 entries pointed at spine files that no longer exist, 3 held released leases. No entry dropped that the plan did not name."
         },
         {
           "id": "c3",
           "statement": "every session key holding an ACTIVE engine lease on an existing spine survives the sweep \u2014 named explicitly and asserted present in the after-state, because sparing the epic's own in-flight bindings is the entire reason the narrowing exists and it is the one outcome the diff check does not prove",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Asserted directly rather than inferred from the diff: recomputed the set of before-state entries whose spine exists AND whose lease is active (exactly one \u2014 the epic-418 Admiral's own, admiral-epic-418) and confirmed it is present in the after-state. That single entry is precisely what the spec's unconditional rule would have deleted out from under the Admiral mid-run, which is the whole reason for the narrowing."
         },
         {
           "id": "c4",
           "statement": "the sweeper no longer exists on disk",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Sweeper deleted from .agent-work/issue-419-governor-identity/mechanical/ after its one real run; the commit notes it existed."
         }
       ],
       "constraints": [
@@ -953,7 +958,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -969,7 +974,8 @@
           "id": "p1",
           "statement": "g5 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g5 complete: live store swept 64 to 1, sweeper deleted."
         }
       ],
       "postconditions": [
@@ -985,23 +991,37 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g6-closeout-1"
         },
         {
           "id": "c2",
           "statement": "all six done-conditions traced to their closing gate and evidence artifact, and every corner case deliberately not chased carries a comment at its code site \u2014 specifically the abandoned-agent key that nothing ever reaps, and the unlocked load-modify-save in the binding store",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All six done-conditions traced to their closing gate and evidence artifact in .agent-work/issue-419-governor-identity/DONE_CONDITION_TRACE.md, each row naming an artifact I re-verified myself rather than a crew's claim. Every corner case deliberately not chased now carries a comment at its code site: the unreaped abandoned key at spine_rail.py's release branch, and the unlocked load-modify-save at _save_json_map. Both proved comment-only by AST equality against HEAD; suite unmoved at 1667. Every added line traces to a numbered done-condition or the named session_view non-regression obligation, so none was deleted."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g6-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests -q > .agent-work/issue-419-governor-identity/evidence/full-suite.txt 2>&1; tail -3 .agent-work/issue-419-governor-identity/evidence/full-suite.txt; grep -qE '^[0-9]+ passed' .agent-work/issue-419-governor-identity/evidence/full-suite.txt && test $(grep -oE '^[0-9]+ passed' .agent-work/issue-419-governor-identity/evidence/full-suite.txt | grep -oE '^[0-9]+') -gt 1621",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -1046,6 +1066,16 @@
       "id": "tc8",
       "from": "g4-integrate",
       "statement": "g4-assert-control-output.txt does not regenerate from its own archived script: a trailing section was appended from a command that was not recorded. Every number in it reproduces, so this is an evidence-hygiene defect rather than a wrong claim, but an archived artifact that cannot be regenerated from its archived producer is not reproducible evidence."
+    },
+    {
+      "id": "tc9",
+      "from": "g5-sweep",
+      "statement": "MATERIAL SCOPE LIMIT ON THIS ISSUE'S WIN, found by the sweep's dry run. The binding store resolves a relative --file against the hook payload's cwd, and for an agent dispatched into a worktree that cwd is the MAIN CHECKOUT (issue #269: CLAUDE_PROJECT_DIR is fixed at session launch). So a worktree-based agent's binding records a main-checkout path that does not exist: 60 of the 64 live entries were exactly this, including every spine of this very run's own crews. The gauge writer's _is_contained check passes on shape, and _atomic_write_json creates parent dirs, so the reading is written into a PHANTOM .agent-work/<work-id>/ inside the main checkout while the engine reads the worktree copy and sees nothing. #419's acceptance ran in a sandbox where cwd equalled the project dir, so it did not surface there. Per-agent identity is therefore proven for agents whose cwd is the project dir; for a worktree-dispatched agent the reading still lands in the wrong tree. This predates #419 and is orthogonal to it \u2014 the wrong path was recorded before this change too \u2014 but it is the next thing standing between the governor and firing on real Constellation runs."
+    },
+    {
+      "id": "tc10",
+      "from": "g5-sweep",
+      "statement": "The binding store accumulates junk keys from --file parsing: the swept set included entries keyed by literal 'C:\\Programs\\constellation-skills\\$E' and '...\\x', i.e. fragments of malformed or shell-mangled engine commands recorded as if they were spine paths. spine_rail._resolve_abs accepts whatever --file carried without checking it looks like a spine. Cheap guard: refuse to record a path that is not a .json."
     }
   ],
   "blockers": [],
@@ -1161,6 +1191,20 @@
       "why": "g4 closed. The issue's stated done-condition is MET: a HARD trip fired from a per-agent reading on a live run, and the control arm on the unmodified hooks under a byte-identical script produced no reading and advanced normally. This is a win, not a measured negative.",
       "mechanical": false,
       "ts": "2026-08-06T05:21:04.411332+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g5-sweep",
+      "why": "Sweep done, dry-run first with the before-state recorded, then a real run that re-read and re-evaluated against a fresh read and refused to write a map derived from a stale one. 64 entries to 1: 60 pointed at spine files that no longer exist, 3 held released leases, and the single survivor is the epic-418 Admiral's own live binding \u2014 exactly the entry the spec's unconditional rule would have deleted mid-run. Sweeper deleted. The dry run also surfaced the worktree path defect recorded as a triage candidate, which materially scopes this issue's win.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:23:56.422784+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g6-closeout",
+      "why": "Closeout verified. Full suite 1667 passed / 2 skipped, +46 over the 1621 baseline at HEAD 990712f, so a stale-tree false green was impossible. Done-condition trace written; scope-discipline comments landed at their code sites.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:48:07.585236+00:00"
     }
   ]
 }

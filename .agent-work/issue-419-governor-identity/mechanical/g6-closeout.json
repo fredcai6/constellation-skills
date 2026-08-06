@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g6-closeout",
+  "mechanical": {
+    "run": "issue-419-governor-identity",
+    "project": "constellation-skills",
+    "spine-step": "g6-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g6-closeout@ce7e9c4244a0db422b3fd748e9878629a0ecb705",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-419-governor-identity",
+    "generated_at": "2026-08-06T05:24:06Z"
+  }
+}

@@ -319,13 +319,14 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json reports DONE: no open items. All six gates closed with integrated evidence, one rework round at g3 after a correct reviewer BLOCK. Ten triage candidates recorded on the plan."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -353,7 +354,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete"
         }
       ],
       "postconditions": [
@@ -361,13 +363,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled directly, per the spine's no-packet-map path: this repo has no docs/architecture/ at all (orientation receipt records DEGRADED-NO-MAP with an escalation), so the structural record is docs/GAUGE_WRITER_HOOK.md and that is what the change folds into. g3 already rewrote its field table, payload table, binding section, skip-cause enumeration and residuals against the shipped code, reviewed twice. Added at reconcile: the depth-2 nesting fact established live at g4, and a new 'Known limits of the binding store itself' section carrying the four structural facts this run measured \u2014 the worktree path defect (60 of 64 live entries), the unreaped abandoned key, the unlocked load-modify-save, and the unvalidated recorded path. No other schema or design doc is touched by this change."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -383,7 +386,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
         }
       ],
       "postconditions": [
@@ -391,7 +395,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All ten candidates routed, none left unrouted, recorded in TRIAGE_RECOMMENDATIONS.md with a full issue-ready recommendation each. Eight filed as FIVE issues (#440-#444), consolidated deliberately because this epic exists partly to stop correct findings being filed at the wrong granularity. Two recommend-and-defer: the MAX_PATH worktree fallback (target is crew doctrine, not this repo's code) and this run's own evidence-hygiene defect (no code target). Nothing qualified for fixed-now at this step \u2014 the genuinely bounded fixes were already applied inside their gates and are recorded there."
         },
         {
           "id": "c2",
@@ -400,17 +405,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "statement": "Issue FILING is delegated to this Commander by the launch order; five issues filed and verified present on the tracker by gh issue list. Issue CLOSING is NOT delegated and none is proposed. The two deferrals record why authority was unclear rather than improvising a filing decision."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -422,7 +439,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete"
         }
       ],
       "postconditions": [
@@ -433,17 +451,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "statement": "Run summary accepted under the frozen launch order; the Admiral ratifies at the epic return boundary and the human at theirs. Summary: 6 gates closed (one rework round at g3 on a correct reviewer BLOCK), the issue's stated done-condition OBSERVED \u2014 a HARD trip fired from a per-agent reading on a live two-arm run \u2014 structural record reconciled into docs/GAUGE_WRITER_HOOK.md, live binding store swept 64 to 1 with the one active-lease entry spared, 5 issues filed (#440-#444), suite 1667 passed / 2 skipped."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -455,7 +485,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "run summary accepted"
         }
       ],
       "postconditions": [
@@ -466,7 +497,8 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills-wt/epic418-a-419/scripts/verify_agent_feedback.py issue-419-governor-identity --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         },
         {
           "id": "c2",
@@ -475,17 +507,41 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills-wt/epic418-a-419/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a-419/scripts/verify_agent_feedback.py issue-419-governor-identity --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a-419/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -591,7 +647,7 @@
     "session_id": "commander-issue-419-governor-identity",
     "status": "active",
     "claimed_at": "2026-08-05T23:12:25.836146+00:00",
-    "last_heartbeat": "2026-08-06T00:18:15.552985+00:00",
+    "last_heartbeat": "2026-08-06T05:55:52.159381+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -625,6 +681,41 @@
       "why": "Plan frozen. Design-it-twice converged on minimum-diff (identity is a payload lookup, so the prototype's discovery matcher does not ship) with four grafts from the seam-first candidate. A 2-lens cold panel found 20 issues, all dispositioned \u2014 the load-bearing ones: every command postcondition was already green at HEAD and now names its new tests by node id; g4's evidence passed on a crossed attribution and now asserts the pairing 2-of-2; the malformed-agent_id path bound to the parent's key and now binds nothing; the sweep raced five live sibling runs and now re-reads before writing and spares active leases.",
       "mechanical": false,
       "ts": "2026-08-06T00:17:29.319640+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Execute complete. The governor now attributes a reading to the agent that produced it, and a HARD trip fired from a per-agent reading on a live two-arm run \u2014 the issue's own done-condition, observed rather than inferred. Live binding store swept 64 entries to 1, sparing the one live binding the spec's unconditional rule would have deleted from under the Admiral. Suite 1667 passed.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:48:32.303052+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Structural record reconciled into docs/GAUGE_WRITER_HOOK.md, the repo's only architecture artifact for this area. The load-bearing addition is the worktree path limit: it scopes this issue's win honestly rather than letting a later reader assume the governor now fires everywhere.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:49:37.702522+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Triage complete. #440 is the one that matters most: it is the honest scope limit on this issue's win \u2014 per-agent identity is proven for agents whose cwd is the project dir, and a worktree-dispatched agent's reading still lands in the wrong tree.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:51:59.710512+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary accepted by citation. This is a win, not a measured negative: the done-condition was observed rather than inferred, with a control arm settling causation. It carries one honest limit, floated to the Admiral and filed as #440 \u2014 the win is proven for agents whose cwd is the project directory, and a worktree-dispatched agent's reading still lands in the wrong tree.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:52:18.025035+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Feedback recorded. The retrospective is dated and work-id'd in the durable log (which resolves to this worktree root under the Admiral's epic lease, so no fence applies). Three lesson ops applied: one CONFIRM on the vacuous-check lesson \u2014 this is the second commander writing checks-that-cannot-fail from the same template, which is exactly the discriminator that lesson's bank-reason named, so it is now the template's problem and not an authoring habit \u2014 and two adds, each carrying a bank-reason saying what re-observation will clarify. The confirm produced recurrence DEBT rather than trust, so it was exported upstream with a concrete repair shape: run every command postcondition against the tree at plan-freeze time and refuse to freeze any that exits 0. No doctrine was self-applied; the export is the sanctioned route in delegated mode.",
+      "mechanical": false,
+      "ts": "2026-08-06T05:55:52.159381+00:00"
     }
   ]
 }

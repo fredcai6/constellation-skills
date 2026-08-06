@@ -497,6 +497,41 @@ than a floated gap.
    coverage for correctness, because a reading filed against an agent that did
    not produce it is worse than no reading.
 
+## Known limits of the binding store itself (#419)
+
+Named here rather than left to be discovered. None of these was introduced by
+per-agent keying, but two of them get *wider* under it, so they belong beside it.
+
+- **A worktree-dispatched agent's binding records a path in the MAIN CHECKOUT,
+  and that path does not exist.** The binding resolves a relative `--file`
+  against the hook payload's `cwd`, and for an agent dispatched into a worktree
+  that `cwd` is the main checkout, because `CLAUDE_PROJECT_DIR` is fixed at
+  session launch (#269). The written key therefore points at
+  `<main checkout>/.agent-work/<work_id>/spine.json`, which is not where the
+  spine is. `_is_contained` passes — the *shape* is right — and the atomic write
+  creates parent directories, so the reading lands in a phantom
+  `.agent-work/<work_id>/` inside the main checkout while the engine reads the
+  worktree copy and sees nothing. Measured 2026-08-05: **60 of 64 live entries
+  were exactly this**. So per-agent identity is proven for agents whose `cwd` is
+  the project directory, and a worktree-dispatched agent's reading still lands
+  in the wrong tree. This predates #419 and is orthogonal to it — the wrong path
+  was recorded before that change too — and it is the next thing standing
+  between the governor and firing on real worktree-based runs.
+- **Nothing reaps an abandoned key.** A successful `release` is the only removal
+  path, so an agent that dies, is cancelled, or is killed mid-run leaves its key
+  behind forever. Per-agent keying multiplies the key count by every wave's
+  fan-out. #419's one-time sweeper was deleted after its single run, as that
+  issue required, so the next cleanup needs a fresh one.
+- **The load-modify-save takes no lock.** `_save_json_map` is atomic per write,
+  but the read-modify-write around it is not, so two agents claiming at the same
+  instant can lose one of the two claims. The symptom is silence, which is
+  indistinguishable from an idle governor — and a lost write reintroduces exactly
+  the blindness per-agent keying removes.
+- **The recorded path is not validated.** `--file` is taken as given, so a
+  malformed or shell-mangled engine command can enter the store as if its
+  fragment were a spine path. The 2026-08-05 sweep found entries keyed by
+  literal `$E` and `x`.
+
 ## What was NOT done here (HITL boundary, per the launch order)
 
 - No real `~/.claude/settings.json` (or this repo's own `.claude/settings.json`)

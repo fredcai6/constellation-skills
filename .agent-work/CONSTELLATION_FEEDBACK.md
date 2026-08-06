@@ -208,3 +208,52 @@ pass on either half alone is the same vacuous-pass shape as an untriggered guard
 **Grounding:** `.agent-work/issue-309/plan/PLAN_CRITIC_DISPOSITION.md` findings 1 and 2;
 `.agent-work/issue-309/execute.json` g1-seed.c1 and g0-fix321-implement's corrected
 imperative; `.agent-work/AGENT_FEEDBACK.md` 2026-08-01 entry for issue-309.
+
+---
+
+## 2026-08-05 — issue-419-governor-identity — recurrence of the vacuous-check family, in a NEW place: the plan's own command postconditions
+
+**Lesson:** `lesson:falsify-a-check-against-a-decoy-before-trusting-it`
+
+**What recurred.** Every `command`-kind postcondition in this run's frozen gate plan was **already
+green at HEAD, with zero code written**. Three checks, all of the shape
+`python -m pytest tests/test_<module>.py -q` — a re-run of the green baseline, dressed as verification
+of a change. None asserted that a new test existed, that a new function was exercised, or that any
+count had moved. The discriminating content lived entirely in the statement prose the engine never
+evaluates.
+
+**Why this recurrence matters more than another instance.** The banked lesson's own bank-reason named
+the exact discriminator: *"If a second commander writes a grep-theatre check from the same template, it
+is the template."* This is that second commander, working from the same
+`EXECUTE_PLAN.template.json`, and the failure took a **different surface form** — not a keyword grep
+this time, but a whole-file test invocation. So the pattern is not "authors reach for greps"; it is
+**authors reach for the cheapest command that is true when the work is done, without asking whether it
+is false when the work is not.** That generalises past greps and past this run.
+
+**The near-miss is the point.** A cold critic caught it by simply *running the plan's own checks against
+the unmodified tree* — 140 passed, 1621 passed, exit 0 — before a line was written. Nothing in the
+engine, the template, or the spine would have caught it, and all three checks would have gone green at
+their gates while proving nothing.
+
+**Suggested upstream shape.** The existing repair clause asks the author to falsify a check against a
+decoy. Make the decoy concrete and unavoidable for the commonest case, because the decoy for a test
+command already exists and costs nothing: **run every `command` postcondition against the tree as it
+stands at plan-freeze time, and refuse to freeze any that exits 0.** A postcondition that passes before
+the work starts is not a postcondition. That is one command per check at the plan step, it needs no new
+engine primitive, and it would have caught all three of this run's — and, by the same test, both of
+issue-310's.
+
+Two secondary shapes worth carrying in the same clause, both measured here:
+
+- A **whole-file test invocation** is the vacuous form for test-led gates the way a keyword grep is for
+  doc gates. The repair is naming the new tests by node id (`-k`, or `file::Class`), so the command
+  fails on a tree where they were never written.
+- A **count assertion needs a direction, not a number.** This run's closeout check originally pinned
+  "1621 passed" as the baseline, which was guaranteed not to match once gates added tests. The working
+  form asserts the count is strictly **greater** than the pinned baseline, with the delta stated.
+
+**Grounding:** `.agent-work/issue-419-governor-identity/CRITIC_TRIAGE.md` finding 2 (and its
+disposition row);
+`.agent-work/issue-419-governor-identity/execute.json` `g1-integrate.c1`, `g2-integrate.c1`,
+`g6-closeout.c1` as finally authored, each of which now names its new tests and, at closeout, its
+required delta; `.agent-work/AGENT_FEEDBACK.md` 2026-08-05 entry for issue-419-governor-identity.

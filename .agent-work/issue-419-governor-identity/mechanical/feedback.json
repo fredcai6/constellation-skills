@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "issue-419-governor-identity",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-feedback@5ff5faf210d3f1e6c0534528ccb2b7ccefda38ec",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity",
+    "generated_at": "2026-08-06T05:52:32Z"
+  }
+}
