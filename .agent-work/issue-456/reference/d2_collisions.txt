@@ -1,0 +1,18 @@
+entities emitted     : 3411
+distinct symbols     : 3407
+REAL D2 collisions   : 4  (one symbol, >1 true entity)
+   same-depth siblings                            4
+
+examples (symbol -> the distinct true entities it merges):
+  tests.test_context_determinism:RealCheckoutSkew.project
+       <- tests.test_context_determinism:RealCheckoutSkew.test_a_clean_checkout_differs_only_in_rev_never_in_shape.project
+       <- tests.test_context_determinism:RealCheckoutSkew.test_two_checkouts_same_commit_unequal_dirt_on_an_undeclared_file_agree_on_content.project
+  tests.test_context_manifest:ProducerGuards.explode
+       <- tests.test_context_manifest:ProducerGuards.test_build_manifest_with_both_edges_injected_shells_out_to_nothing.explode
+       <- tests.test_context_manifest:ProducerGuards.test_no_globs_or_filesystem_enumeration_anywhere_in_the_producer.explode
+  tests.test_feedback_tooling:InboxLifecycleTests.f
+       <- tests.test_feedback_tooling:InboxLifecycleTests._filer.f
+       <- tests.test_feedback_tooling:InboxLifecycleTests._recorder.f
+  tests.test_install_constellation:InterpreterProbeTests.fake_run
+       <- tests.test_install_constellation:InterpreterProbeTests.test_probe_prefers_py_over_python3_when_both_succeed.fake_run
+       <- tests.test_install_constellation:InterpreterProbeTests.test_probe_timeout_candidate_falls_through_without_hanging.fake_run

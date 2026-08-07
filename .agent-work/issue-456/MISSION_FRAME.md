@@ -96,11 +96,34 @@ Paths, not anchor ids — no map exists to have assigned one:
   `.agent-work/`. Every committed threshold must be sized against these numbers.
   Probe and output: `.agent-work/issue-456/reference/probe_baseline.py`,
   `.agent-work/issue-456/reference/corpus_baseline.txt`.
-- **The D2 collision defect reproduces on this repo's own source: 75 flat-name
-  collisions across 1,848 nested definitions** (`tests.test_episode_fields.setUp`
-  flattens to one symbol nine times). So the gate that fixes the corrupting
-  defect gets a test that goes red today, before the fix, with no external repo
-  and no fixture.
+- **D2 reproduces on this repo's own source: exactly 4 real collisions**, so the
+  gate that fixes the corrupting defect gets a test that goes red today, before
+  the fix, with no external repo and no fixture. Evidence:
+  `.agent-work/issue-456/reference/d2_collisions.txt`, produced by
+  `probe_d2.py`, which SIMULATES THE EXTRACTOR'S ACTUAL SYMBOL RULE rather than
+  a model of it.
+- **Two earlier figures in this frame were wrong and are withdrawn.** A first
+  pass claimed 75 collisions across 1,848 nested definitions; a second pass
+  classified those as 67 method-vs-method / 7 closure-vs-closure. Both flattened
+  the symbol to `module.name`. That is not what `astx.py` emits: `_func` uses
+  `mod:{clsstack[-1]}.{name}` whenever any class is on the stack, so **methods
+  are already qualified by their class** and cannot collide the way both passes
+  assumed. The lesson, recorded because it cost three passes: model the
+  behavior by reading the code that produces it, not by inventing a plausible
+  rule and measuring that.
+- **What D2 actually is, from `astx.py:_func` and the x13 renderer's own
+  docstring:** when any class is on the stack the method branch wins REGARDLESS
+  of how deep inside a method the definition sits, so a closure inside
+  `Class.test_x` is emitted as `mod:Class.<closure>` — the *method* name is
+  dropped, not the class. Two closures of the same name in two methods of one
+  class therefore merge, and their caller sets union. All 4 collisions here are
+  that shape, e.g. `tests.test_context_determinism:RealCheckoutSkew.project`
+  merging the `project` closure from two different test methods. A class
+  defined inside a function is separately named as if module-level.
+- Consequence for the gate: "all N collisions resolve" is a vacuous close
+  criterion — the fix must name the **method** in the symbol for
+  function-nested definitions. The 4 collisions must be listed individually so
+  a partial fix cannot claim the gate.
 - `.agent-work/` is deliberately TRACKED here — run artifacts are durable
   history, per the `.gitignore` header. So "committed vs rebuilt" cannot be a
   blanket scratch rule: the statement store, supplement and position cache each
