@@ -118,7 +118,9 @@ def verify_coverage(root: Path) -> int:
                 f"{ISOLATION_SCRIPT_MARKER!r}"
             )
     if problems:
-        raise CoverageError("\n".join(problems))
+        total = len(WORKTREE_ENTERING_GATES)
+        header = f"{len(problems)} of {total} worktree-entering template(s) checked failed:"
+        raise CoverageError("\n".join([header, *problems]))
     return len(WORKTREE_ENTERING_GATES)
 
 

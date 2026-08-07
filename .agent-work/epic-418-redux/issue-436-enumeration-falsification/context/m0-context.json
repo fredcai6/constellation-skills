@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "73b45174980820af97480d177032a6ceb43f1398"
+  },
+  "run": {
+    "work_id": "issue-436-enumeration-falsification",
+    "generated_at": "2026-08-07T21:40:32Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/r418-436",
+      "durable": "C:/Programs/constellation-skills-wt/r418-436"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/r418-436"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-436-enumeration-falsification",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 1,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-436-enumeration-falsification-m0-context@77582d548061a43b866cda90ea55a1aac2863403",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-436-enumeration-falsification",
+    "generated_at": "2026-08-07T21:40:32Z"
+  }
+}
