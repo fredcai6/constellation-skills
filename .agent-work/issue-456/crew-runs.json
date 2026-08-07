@@ -1,0 +1,24 @@
+[
+  {
+    "crew_id": "constellation/issue-456/g0/implementer/attempt-1",
+    "work_id": "issue-456",
+    "gate": "g0",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/issue-456/g0/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "handoff": ".agent-work/issue-456/crew-handoffs/g0-implement.md",
+    "result": ".agent-work/issue-456/crew-handoffs/g0-implement-RESULT.md",
+    "stdout": ".agent-work/issue-456/crew-runs/g0-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-456/crew-runs/g0-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-07T20:42:19.380127+00:00",
+    "last_heartbeat": "2026-08-07T20:42:19.380127+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus"
+  }
+]
