@@ -179,4 +179,194 @@ C ships, because it stops being answerable afterwards.
 
 ---
 
-## C, D, E, F — pending this conversation
+## A2. Trip semantics — what a limit means (split out of A)
+
+**Why it is its own section.** "Which agent am I" and "what happens when that agent is full"
+are different questions with different consumers. A settles identity. A2 settles the verb
+contract, and F cannot type a verb whose meaning is unsettled.
+
+**Intent.** The governor decides when to stop. Today that decision is expressed as a refusal,
+and the refusal deadlocks: HARD blocks `advance`, and `advance` is what writes the DIGEST the
+forced handoff depends on (#431). Tommy's ruling reframes it — the limits are set so there is
+room to *build the handoff*, not because continuing is unsafe. So a trip becomes a change of
+instruction, not a refusal: the spine says "you did well, write the handoff and request a
+refresh to continue this work."
+
+**Done-condition.**
+
+1. A gate at or over its threshold changes what the agent is told to do, rather than refusing
+   the verb it needs.
+2. The engine distinguishes an advance that carries a handoff from one that starts new work,
+   and refuses only the second. It cannot express this today.
+3. The DIGEST is written on the handoff-carrying advance, so the handoff has the thing it
+   depends on. #431 dissolves rather than being patched.
+4. Thresholds are per-gate: one graded default, with overrides only where a gate has actually
+   bitten. Hand-authoring a threshold per gate across 21 templates would invent ~100 ungraded
+   placeholders, which is what threshold discipline exists to prevent.
+
+**Evidence.** Reproduce #431's deadlock first, RED, then show the handoff-carrying advance
+completing with the DIGEST present. A threshold override must be shown to change behaviour at
+exactly one gate and not its neighbours.
+
+**Fixed.** A missing or failed reading never forces a handoff — the fail-safe survives from the
+original spec. HARD means "wrap up", never "you are unsafe". The reading is pushed by the
+engine on tool use, never fetched by the agent.
+
+**Open (Commander's call).** How the two advances are distinguished — a flag, a separate verb,
+or inferred from the presence of a handoff artifact. Where the default threshold sits; current
+`_PROFILES` has HARD at 15% of the window for Opus, and #440 observed a trip at 56% fill, so
+the present value is both global-per-model and conservative enough to read as a wall. Whether
+the threshold is expressed as a fill fraction or as absolute headroom.
+
+---
+
+## F. MCP front door — put the verbs where verbs belong
+
+**Status: not started. Moved early.** It was deferred at the wave-0 checkpoint; that deferral
+is reversed by ordering, not by a change of mind about its content.
+
+**Why it moves early — three reasons, in increasing order of importance.**
+
+1. **It was never blocked by C.** The original spec's own dependency line reads: "A is
+   independent. B precedes C. D and E are independent of the rest. F builds on B's output
+   fixes and settles its caller identity alongside A." F's stated dependencies are B and A.
+   It came last because the workstreams are lettered A–F. A presentation artifact hardened
+   into an execution order.
+2. **C-before-F relocates text twice.** Five spine templates carry engine verb-and-flag syntax
+   inside their imperative prose (`<engine> claim --session-id <...> --claimed-by commander
+   --worktree`). The invocation *path* is already abstracted behind `<engine>`; the *call
+   mechanics* are not. C moves more instruction text into those same imperatives; F then pulls
+   the call mechanics back out of whatever C just moved.
+3. **Learning in F will change our opinion of what an instruction should say.** Doing content
+   placement first and structural settlement second means the structural learning invalidates
+   the content. Tommy: *safe start is unsafe process here.*
+
+**The better argument for F, which the original spec does not make.** It justifies F on token
+cost — roughly 1,000 tokens of always-loaded schema buying the removal of invocation strings
+from 7 of 21 imperatives plus most of the on-demand engine reference, about 4,500 tokens. That
+still holds and remains the acceptance number. But the real reason is that **F makes C's job
+smaller**. Once call mechanics live in typed tool arguments, what remains in an imperative is
+pure "what to do at this gate" — no session-id plumbing, no flag syntax. That is a far cleaner
+thing to relocate, and it means C's tranche measures attention rather than measuring how
+accurately agents transcribe commands.
+
+**Done-condition.** The original's four acceptance tests survive; they are good and they stay:
+
+1. A cold agent reaches done on a real role spine through the production door with zero
+   malformed calls.
+2. **Separation:** a parent and a subagent drive two different spines at once, each through its
+   own server instance; leases never collide and each status call returns its own reading.
+3. **Inheritance fails closed:** a subagent dispatched with no special configuration gets a
+   refusal or no identity — never the parent's lease or the parent's reading. This is the
+   failure exc-9 actually observed.
+4. **Same-gate equivalence:** the CLI projection and the MCP tool result for one gate carry the
+   same imperative text, so the two doors cannot drift.
+
+One added, from A2: the governor's threshold instruction arrives through a tool result and is
+acted on.
+
+**Evidence.** Re-run exc-9's tracer protocol, but **re-measure the CLI baseline rather than
+reusing exc-9's numbers.** Its CLI arm (24–27 calls, 2 refusals, 4–7 help-reads, against 14
+calls and zero fumbles through tools) was measured against the pre-B channel and pre-A2 verb
+semantics. Both have changed, and the fumble surface it measured may have shrunk on its own.
+
+**Fixed.**
+
+- The CLI door stays. F is additive, not a replacement: hooks, headless and cron runs, and
+  non-MCP harnesses keep reaching the engine through it, and every uncovered verb keeps a
+  documented CLI fallback.
+- No engine logic is duplicated. The server wraps the engine's own dispatch function, so
+  refusals, recovery hints, rails and the journal ride through unchanged.
+- The gate imperative rides tool results verbatim. Spine templates stay the single source of
+  instruction text; no second rendering path exists.
+- Each agent gets its own server instance (ruling 1), keyed by A's `session_id#agentId`
+  (ruling 4). One identity mechanism, two consumers.
+- Project-scope `.mcp.json` ships with the repo. `settings.json` is never touched.
+- Rich tool descriptions are accepted without a control arm (ruling 3) — recorded as an
+  unmeasured preference promoted to a constraint, revisited when trimming is the focus.
+
+**Open / graded.** The seven-over-eighteen tool grouping is a placeholder. Whether an
+interactive session picks up a fresh `.mcp.json` without a restart is a pre-build branch point
+— probe before building; if it does not, per-dispatch config generation becomes the delivery
+path and gets designed first. Per-dispatch config delivery of per-agent instances is a guess,
+settled at build. Behaviour against a real spine with delegation and rework is untested;
+exc-9 used a four-gate toy.
+
+**Risk, named rather than discovered.** This puts the epic's least-proven piece first. That is
+the intent — it is the structural bet the epic is actually making, and finding out early is
+the whole point of the reorder. The mitigation is already fixed above: the CLI door stays, so
+a failed F costs the build and not the fleet.
+
+---
+
+## C. Relocation — move instructions to the gate that needs them
+
+**No longer split.** The C1/C2 division only made sense under the old order, where C had to
+build its own delivery mechanism. B owns rendering and F owns the verb surface, so there is no
+mechanism left for C to build. C is one thing again: move the content, measure the thrash.
+
+**Intent, revised.** The original measures corpus shrinkage — a 40% drop in
+`commander-core.md`'s always-loaded word count, cost-accounted as delivered tokens per run.
+That measures the wrong thing. The claim we care about is that **an agent stops carrying work
+that is not its step yet**. A word-count target is satisfied by moving text anywhere; the
+attention claim is only satisfied if behaviour at gate N stops referencing gate N+k.
+
+The motive is quality, not budget: quality degrades with context length even when the window
+has room, and an agent that can see the whole plan thrashes against it.
+
+**Done-condition.**
+
+1. An agent at gate N does not do, plan, or reserve work belonging to gate N+k.
+2. Always-loaded prose shrinks — kept as a secondary indicator, no longer the acceptance test.
+3. Per-run delivered tokens do not grow. This constraint from the original survives and is
+   still load-bearing: relocated text is paid on every `current` call at its gate, while
+   always-loaded prose is paid once. If per-run tokens grow, either B regressed or the tranche
+   is too big.
+
+**Evidence.**
+
+- **Three arms, not two.** B's echo removal is still untested assumption 3, and a two-arm rig
+  cannot separate it from relocation. Arms: pre-B prose, post-B prose, post-B relocated. The
+  middle arm is the control that isolates C. This is B's inherited sequencing constraint, and
+  it stops being answerable once C ships.
+- The observable per relocated unit is a **later-gate behaviour named before the run**: what
+  would this agent do at this gate if it knew about gate N+k? Not "did the text appear".
+- `n` and the pass threshold stay graded placeholders (the original's 3/3 versus 0/3).
+
+**Fixed.**
+
+- The bootstrap floor never relocates — instantiate-and-claim text cannot ride the channel it
+  creates. Hard boundary, and proven.
+- Role identity, spine-use triggers and project-focus prose stay (Tommy's driver 5 exceptions).
+- Rules spanning more than one gate stay. Reference-on-demand text stays behind its pointers.
+- Instructions are gate-local; constraints are spine-global. An agent that cannot see gate 5
+  must still be unable to foreclose it.
+
+**Open (Commander's call).** The tranche boundary stays a graded guess and remains one of the
+two costly-to-revert items. Whether the exc-8 census is still the selection authority: it
+measured where the *words* are, and the new question is which text causes the *thrash* — those
+may not be the same units, so the census is evidence, not instruction. Dose–response beyond
+the first tranche stays deferred.
+
+---
+
+## D, E — pending this conversation
+
+D is merged (#422) but carries an unpaid falsification debt: #436, the enumeration check that
+shipped without ever being proven able to fail. E's done-condition is the falsified one and is
+already escalated. Both are independent of the A → F → C chain.
+
+---
+
+## Execution order
+
+| # | Section | Why here |
+|---|---|---|
+| 1 | **B extended** | Everything reads through the projection; `directives` is inert until it renders |
+| 2 | **A2 trip semantics** | F cannot type a verb whose meaning is unsettled |
+| 3 | **F** | Verbs go where verbs belong, before content is written around them |
+| 4 | **C** | Relocate into a surface that has stopped moving |
+
+Independent of the chain, runnable at any point: **A's remainder** (#440 merge, multi-spine
+attribution, #180 wiring), **D's falsification debt** (#436), **E reworked** (pending Tommy's
+ruling on the escalated done-condition).
