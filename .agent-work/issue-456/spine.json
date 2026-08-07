@@ -815,6 +815,11 @@
       "id": "tc22",
       "from": "execute",
       "statement": "tc22 A relaunched crew reuses an ABANDONED attempt number, and the resulting registry entry can never be result-verified. Measured this run: two earlier g0 implementer attempts were explicitly abandoned after clean context-trip handoffs; dispatching the remediation implementer registered it as 'constellation/issue-456/g0/implementer/attempt-1' -- the SAME id as the first abandoned attempt -- and reported 'running'. The crew then ran to completion and wrote its result artifact. But 'run_crew.py --verify-result' on that id REFUSED with 'cannot verify an abandoned crew', because the registry still carries the abandoned disposition against the reused slot. So the single mechanism the durable registry exists to provide -- confirming that a dispatched crew actually produced its result artifact -- is unavailable for any relaunched crew, and it fails CLOSED in a way that looks like a policy refusal rather than a defect. I only discovered it because I ran the verification; a commander that trusted the dispatch would never learn the check had not happened. Adjacent to this issue's own defect family: not a check that cannot fail, but a check that cannot RUN, with the same end state of an unverified claim entering the record. Fix direction: allocate a fresh attempt number on every dispatch rather than reusing a terminal slot, and make --verify-result distinguish 'this id was abandoned' from 'this id was abandoned and then relaunched'."
+    },
+    {
+      "id": "tc23",
+      "from": "execute",
+      "statement": "tc23 Sharpens tc22 with a measurement: the two crew-registry tools give CONTRADICTORY dispositions for the same entry. For constellation/issue-456/g0/implementer/attempt-1, run at the same moment: 'recover_crews.py issue-456' reports COMPLETE -- recoverable/complete, do not rerun, while 'run_crew.py --verify-result <same id>' REFUSES with 'cannot verify an abandoned crew'. Both read the same registry. recover_crews is the tool doctrine tells a commander to run before every dispatch to decide whether a slot is clear, and verify-result is the tool that confirms a crew produced its artifact; they disagree, so whichever one a commander happens to consult determines what it believes. A commander following the dispatch precondition alone sees COMPLETE and never learns the result was never verified. Confirmed by re-running verify-result after recover_crews had already reconciled the entry to COMPLETE, so this is not a transient race. Fix direction: one disposition function shared by both tools, and a fresh attempt number on every dispatch so a terminal slot is never reused (tc22)."
     }
   ],
   "blockers": [],
@@ -823,7 +828,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T23:21:05.635460+00:00",
+    "last_heartbeat": "2026-08-07T23:23:36.564998+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
