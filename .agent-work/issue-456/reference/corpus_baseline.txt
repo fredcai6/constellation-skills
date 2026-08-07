@@ -1,0 +1,25 @@
+files tracked (all)   : 239
+files in corpus       : 103   (.agent-work excluded)
+source lines          : 52292
+entities              : 3411
+  kinds               : {'FunctionDef': 3077, 'ClassDef': 334}
+  with docstring      : 1058
+  decorated           : 58
+nested def/class      : 1848  <- gate 2 collision surface
+FLAT-NAME COLLISIONS  : 75  <- gate 2 would merge these
+   x9  tests.test_episode_fields.setUp
+   x9  tests.test_episode_fields.tearDown
+   x7  tests.test_grade_lint.setUp
+   x7  tests.test_verify_worktree_isolation.setUp
+   x6  tests.test_grade_lint.tearDown
+   x5  tests.test_agent_work_root.setUp
+   x5  tests.test_agent_work_root.tearDown
+   x5  tests.test_fowler_pass.setUp
+   x5  tests.test_gauge_reader.setUp
+   x5  tests.test_interrogation.setUp
+   x4  tests.test_apply_lessons_delta.setUp
+   x4  tests.test_apply_lessons_delta.tearDown
+top dirs:
+   tests           2572
+   scripts          785
+   evals             54

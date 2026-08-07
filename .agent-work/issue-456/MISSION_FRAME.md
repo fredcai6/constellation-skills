@@ -90,6 +90,21 @@ Paths, not anchor ids — no map exists to have assigned one:
   and no network. Two catches: `.agent-work/` must be excluded (1,821 scratch
   entities, ~35%), and zero BOM files exist here, so gate 9's BOM defect needs a
   purpose-built fixture to go red.
+- **The mappable corpus, measured after that exclusion: 103 files, 3,411
+  entities (3,077 functions / 334 classes), 52,292 source lines.** Only 103 of
+  the 233 tracked files are real source — the other 130 live under
+  `.agent-work/`. Every committed threshold must be sized against these numbers.
+  Probe and output: `.agent-work/issue-456/reference/probe_baseline.py`,
+  `.agent-work/issue-456/reference/corpus_baseline.txt`.
+- **The D2 collision defect reproduces on this repo's own source: 75 flat-name
+  collisions across 1,848 nested definitions** (`tests.test_episode_fields.setUp`
+  flattens to one symbol nine times). So the gate that fixes the corrupting
+  defect gets a test that goes red today, before the fix, with no external repo
+  and no fixture.
+- `.agent-work/` is deliberately TRACKED here — run artifacts are durable
+  history, per the `.gitignore` header. So "committed vs rebuilt" cannot be a
+  blanket scratch rule: the statement store, supplement and position cache each
+  need a narrow explicit ignore entry. `.gitignore` is a file this run modifies.
 
 ## Decision Anchors & Decision Pressure
 
