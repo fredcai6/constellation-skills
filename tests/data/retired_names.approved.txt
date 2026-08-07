@@ -156,9 +156,6 @@ scripts/apply_episode_delta.py:# C3a — the mandatory non-empty reason (mirrors
 # placeholder-token comment: a HYPOTHETICAL example of a skill-dir token carrying hyphens, illustrating the parser's rule; it directs nobody to anything
 scripts/init_work_area.py:# carry hyphens, e.g. a hypothetical <lessons-auditor-skill-dir>). A token in
 
-# bundle comment: names, by analogy, which roles ship no script; nothing is installed under that name
-scripts/install_constellation.py:# doctrine (mirrors interrogator/lessons-auditor). It ships no script.
-
 # survivor script's docstring: names the durable file the staged layout stood in for. Retained by explicit ruling at #447 g4; no shipped surface directs an agent to this script
 scripts/stage_feedback.py:write the durable `AGENT_FEEDBACK.md` (see "Fenced feedback/archive closeout
 
