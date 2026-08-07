@@ -1,0 +1,12 @@
+{
+ "entities": 15001,
+ "modules": 1223,
+ "files": 1224,
+ "failures": [
+  [
+   "scripts/generate_evo_dashboard.py",
+   "invalid non-printable character U+FEFF (generate_evo_dashboard.py, line 1)"
+  ]
+ ],
+ "sec": 1.8
+}

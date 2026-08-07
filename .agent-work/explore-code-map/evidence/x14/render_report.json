@@ -1,0 +1,33 @@
+{
+ "modules": 1223,
+ "entities": 15001,
+ "pages": 16225,
+ "entity_pages": 15001,
+ "holes": 8583,
+ "alias_missing": 0,
+ "median_entity_page_lines": 15,
+ "largest_5": [
+  [
+   169,
+   "src.evo_predictor.models._features:PackedRaceData"
+  ],
+  [
+   145,
+   "src.evo_predictor.models._features:DriverFeatures"
+  ],
+  [
+   114,
+   "src.evo_predictor.practice_preprocessor._types:NormalizedPracticeFeatures"
+  ],
+  [
+   99,
+   "src.physics.layer2.estimate_store:EstimateRecord"
+  ],
+  [
+   88,
+   "src.physics.layer2.session_race:load_race_stints"
+  ]
+ ],
+ "load_sec": 1.2,
+ "render_sec": 11.7
+}

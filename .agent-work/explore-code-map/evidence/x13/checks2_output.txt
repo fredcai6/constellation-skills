@@ -1,0 +1,19 @@
+== store-only definition sites (28) ==
+  scripts/_validate_true_regime.py:62  scripts._validate_true_regime:main.fmt
+     ...results.append(cr) | # Print compact summary | def fmt(vname): | 
+  scripts/characterize_decoupled_views.py:1139  scripts.characterize_decoupled_views:build_findings_markdown.fmt
+     ...d_at, r_at = _shift_sigma(inc.traction_accel_ms2, other.traction_accel_ms2, inc.sigma_traction_accel) | d_bt, 
+  scripts/characterize_decoupled_views.py:1141  scripts.characterize_decoupled_views:build_findings_markdown.fmt6
+     ...def fmt(x): | return f"{x:+.4f}" if not np.isnan(x) else "n/a" | def fmt6(x): | 
+  scripts/characterize_decoupled_views.py:1181  scripts.characterize_decoupled_views:build_findings_markdown.fmt
+     ...d_p, r_p = _shift_sigma(inc.max_power_w, other.max_power_w, inc.sigma_max_power) | d_c, r_c = _shift_sigma(inc
+  scripts/characterize_decoupled_views.py:1183  scripts.characterize_decoupled_views:build_findings_markdown.fmt4
+     ...def fmt(x): | return f"{x:+.1f}" if not np.isnan(x) else "n/a" | def fmt4(x): | 
+  scripts/characterize_decoupled_views.py:1217  scripts.characterize_decoupled_views:build_findings_markdown.fmt
+     ...d_r, r_r = _shift_sigma(inc.coast_rolling_decel_ms2, dec.coast_rolling_decel_ms2, inc.sigma_rolling) | d_c, r_
+
+== function-local imports (defect D4) ==
+files with at least one function-scoped import: 315 of 1224
+distinct names bound by function-scoped imports: 1112
+local-resolved calls/reads whose name is one of them: {'reads': 1} total 1
+as a share of all local calls/reads: 0.0 %

@@ -1,0 +1,13 @@
+{
+ "files": 1224,
+ "statements": 515740,
+ "modules_indexed": 1223,
+ "failures": [
+  [
+   "scripts\\generate_evo_dashboard.py",
+   "parse: invalid non-printable character U+FEFF (<unknown>, line 1)"
+  ]
+ ],
+ "pass1_sec": 1.5,
+ "pass2_sec": 8.2
+}

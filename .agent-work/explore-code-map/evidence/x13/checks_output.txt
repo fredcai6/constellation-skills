@@ -1,0 +1,57 @@
+== (b) non-ASCII ==
+pages scanned: 16222
+non-ascii lines: 2718
+not traceable to a docstring/source value: 0
+
+== (c) reconciliation ==
+store `contains` statements: 15026 at 15026 distinct positions
+distinct store symbols: 14939 (fewer than positions = D2 collisions)
+supplement entities: 14998 at 14998 distinct positions
+supplement positions with no store contains: 0
+store positions with no supplement entity: 28
+   their enclosing node: {'Try': 4, 'For': 14, 'If': 4, 'Module': 4, 'With': 1, 'ClassDef': 1} -- control-flow bodies the supplement's walk skips; Module/ClassDef ones are same-name redefinitions the supplement dict shadows
+same position, different symbol (D2): 251
+    store: src.compound_prior.neural_rate:WearRateNet 
+    supp : src.compound_prior.neural_rate:_build_wear_rate_net.WearRateNet
+    store: src.compound_prior.neural_rate:WearRateNet.__init__ 
+    supp : src.compound_prior.neural_rate:_build_wear_rate_net.WearRateNet.__init__
+    store: src.compound_prior.neural_rate:WearRateNet.forward_effect 
+    supp : src.compound_prior.neural_rate:_build_wear_rate_net.WearRateNet.forward_effect
+    store: src.compound_prior.neural_rate:WearRateNet.forward_rate 
+    supp : src.compound_prior.neural_rate:_build_wear_rate_net.WearRateNet.forward_rate
+    store: src.data.collector:F1DataCollector._kmh_to_ms 
+    supp : src.data.collector:F1DataCollector._build_telemetry_point._kmh_to_ms
+
+== (d) spot checks ==
+scripts/validate_segment_map_662.py top-level defs in source: ['ScopedNullResult', 'scoped_null_2023_no_repeat_circuits', 'split_half_drivers', 'BoundaryDriftResult', 'circular_boundary_drift', 'split_half_boundary_drift', 'physical_corner_runs', 'physical_corner_apex_distances', 'map_corner_distance_share', 'FullDerivation', 'derive_full', 'main']
+pages present: ['BoundaryDriftResult', 'FullDerivation', 'ScopedNullResult', 'circular_boundary_drift', 'derive_full', 'main', 'map_corner_distance_share', 'physical_corner_apex_distances', 'physical_corner_runs', 'scoped_null_2023_no_repeat_circuits', 'split_half_boundary_drift', 'split_half_drivers']
+every source def has a page: True
+
+--- split_half_boundary_drift.md ---
+# scripts.validate_segment_map_662:split_half_boundary_drift
+function, scripts/validate_segment_map_662.py:160, 28 lines
+
+```python
+def split_half_boundary_drift(gp_name: str, year: int = GRIP_FIT_YEAR, session_type: str = 'Q') -> BoundaryDriftResult
+```
+
+Derive the G2 base tiling from two DISJOINT driver-subset halves of the
+
+same weekend's field, then report the boundary drift between them.
+
+This tests DERIVATION STABILITY directly (does the same weekend's tiling
+reproduce under a different half of the field's laps?), the substantive
+proxy for cross-weekend stability given #662's scoped null (see
+:func:`scoped_null_2023_no_repeat_circuits`).
+
+calls internal: BoundaryDriftResult, circular_boundary_drift, split_half_drivers
+calls cross-module: src.physics.segment_map.derivation.reference_lap:reference_lap_from_store x2, src.physics.segment_map.derivation.tiling:tile_reference_lap x2, src.physics.session_fit:load_quali_session
+calls stdlib: builtins.float x2, builtins.tuple
+calls third-party: numpy.max, numpy.median
+reads cross-module: src.physics.session_fit:DEFAULT_CACHE
+reads third-party: numpy (module) x2
+unresolved: 4 reads (dispatch-unknown-base)
+
+referenced by: 3 sites in 3 modules (src.physics.pilot.pipeline, tests.unit.physics.segment_map.derivation.test_segment_map_gating)
+
+independent source scan, files mentioning the name: {'scripts/validate_segment_map_662.py': 1, 'src/physics/pilot/pipeline.py': 1, 'tests/unit/physics/segment_map/derivation/test_segment_map_gating.py': 1}

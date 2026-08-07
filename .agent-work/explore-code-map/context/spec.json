@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "spec",
+  "files": [],
+  "repo_rev": {
+    "commit": "8a3ad932869c8a3186a39eefe49daee35ddc4d8c"
+  },
+  "run": {
+    "work_id": "explore-code-map",
+    "generated_at": "2026-08-07T17:03:21Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-explorer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/explore-code-map",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/explore-code-map"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/explore-code-map"
+    }
+  }
+}
