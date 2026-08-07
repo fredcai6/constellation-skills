@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-count-and-discrimination-tests",
+  "mechanical": {
+    "run": "issue-436-enumeration-falsification",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 2,
+    "spine-step": "m1-count-and-discrimination-tests",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-436-enumeration-falsification-m1-count-and-discrimination-tests@529da02a9a83a904c95a0f4a4bed0a345f63bb9b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-436-enumeration-falsification",
+    "generated_at": "2026-08-07T21:40:56Z"
+  }
+}

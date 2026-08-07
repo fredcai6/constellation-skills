@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-live-demo-and-revert",
+  "mechanical": {
+    "run": "issue-436-enumeration-falsification",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m2-live-demo-and-revert",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-436-enumeration-falsification-m2-live-demo-and-revert@1f18ac8faf7689a3277b7293268b4557afd8933f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-436-enumeration-falsification",
+    "generated_at": "2026-08-07T22:04:52Z"
+  }
+}
