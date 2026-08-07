@@ -127,6 +127,28 @@ What carries forward, and must not be re-derived:
   branch cut from it is orphaned at once. The cheaper order was to merge the fix first and cut the
   worktrees from the result.
 
+
+- `2026-08-07` — **PR #473 merged** (`0b4a11a7`), squash. #464's `Lesson` → `Episode` rename,
+  replanted onto main after the same squash-orphan. Gated on check exit code (0 non-SUCCESS),
+  verified MERGED at the forge. #471 closed as superseded with the reason stated.
+
+  Two deliberate non-changes in it are the interesting part, and both are right: the collector keeps
+  a fallback to the `lesson` key because **other repos' exported files literally say "Lesson"** and
+  we cannot rename another project's file content; and the internal hash prefix stays the literal
+  string `lesson:` because it is an **opaque identity tag, not a display label** — renaming it would
+  orphan every fingerprint already recorded and cause duplicate re-filing. The implementer found
+  both before touching anything, and did the enumeration by command rather than memory.
+
+  **Flagged on the PR, not fixed:** the template's line 3 still opens "Lessons scoped
+  `constellation` …". It predates the change and reads as ordinary English, but the standing
+  post-#447 rule is no lesson-vocabulary revival, and that is exactly the kind of line that keeps
+  the old frame alive quietly. Out of the issue's scope, so it is a flag rather than a silent fix.
+
+- `2026-08-07` — `RULING`: **#436 and #464 are NOT closed on the tracker, deliberately.** Their work
+  is merged, but **issue closing is a `surfaced` class** in this contract and Tommy has not been
+  asked. They are queued for the next checkpoint with their evidence rather than closed on my own
+  authority. Merging is delegated; closing is not, and the two are easy to conflate once the PR is in.
+
 ## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one

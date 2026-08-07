@@ -3,9 +3,9 @@
 **Wave 2 is MID-FLIGHT. Two agents are still working. Read the replant recipe below before
 touching any wave-2 PR — every one of them will report CONFLICTING, and it is not their fault.**
 
-- **step:** `execute` — in progress, wave 2 partly landed. Remaining after `execute`: `closeout`.
+- **step:** `execute` — in progress. **3 PRs merged** (#470, #472, #473). #433 and #460 still working. Remaining after `execute`: `closeout`.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
-  **`7bc3f8c2`** (= `origin/main`, pushed)
+  **`0b4a11a7`** (= `origin/main`, pushed)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
   — then replant PR #471 per the recipe below, and poll `r418-433` / `r418-460` for their PRs
 - **pid:** two live background subagents (`cmd-433b`, `cmd-460b`), harness-managed, no OS pids.
