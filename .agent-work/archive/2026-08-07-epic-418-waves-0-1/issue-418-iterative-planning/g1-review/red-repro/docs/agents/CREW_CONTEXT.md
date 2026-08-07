@@ -1,0 +1,108 @@
+# Constellation Skills — Crew Context
+
+**Audience / tier: crew.** Implementer, Reviewer and Prototyper — the roles that execute a
+bounded task from a handoff. Orchestrator-tier content (planning authority, gate policy,
+map reading, evidence strategy) belongs in `ORCHESTRATOR_CONTEXT.md`, not here, and content
+every agent touching the repo needs belongs in the auto-loaded `CLAUDE.md`. Placing content
+at a broader tier than its audience is a defect, not a delivery win.
+
+**Project deltas over inherited global doctrine.** Implementation/review discipline,
+required handoff fields, the result-is-the-deliverable rule, fail-visibly posture and the
+generic block/stop criteria are inherited from the skills' `references/global-crew.md` +
+`references/global-everyone.md`. This file carries only constellation-skills rules that
+change implementation or review.
+
+---
+
+## Python Invocation
+
+Use `python`, **not** `py`.
+
+```bash
+python -m pytest -q
+python scripts/apply_episode_delta.py ...
+```
+
+`py` resolves to 3.12.13 (which matches CI's pin) but **has no pytest installed**, so
+`py -m pytest` does not run the suite — it reads as a silently green run. `python` is
+3.14.x with pytest. Neither interpreter reproduces CI, so a local green is evidence, never
+the gate.
+
+---
+
+## Writing Files On Windows
+
+Pass `encoding='utf-8', newline='\n'` explicitly on **every** write. The default encoding
+here is not UTF-8 and the default newline translation produces CRLF, which shows up later
+as spurious diffs and as byte-level comparison failures.
+
+`.gitattributes` sets `* text=auto`, so a checkout may legitimately hold CRLF while the blob
+holds LF. **Never compare two files by raw working-tree bytes** — compare normalized content
+or blob OIDs. A comparison that hashes working-tree bytes is silently wrong on Windows.
+
+MAX_PATH is real. Prefer short paths under deeply-nested work areas.
+
+---
+
+## Record Stores Are Never Hand-Edited
+
+Three stores in this repo are written **only** through their validated delta writers. An LLM
+or a human editing them directly is a defect regardless of how correct the resulting text
+looks — the writers enforce partition allowlists, mandatory reasons, single-line values and
+all-or-nothing application.
+
+| store | the only write path |
+|---|---|
+| `episodes/` | `scripts/apply_episode_delta.py` |
+| `.agent-work/LESSONS.md` | `scripts/apply_lessons_delta.py` |
+| any checklist (`spine.json`, `execute.json`, survey files) | `checklist_engine.py` verbs |
+
+Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
+episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
+the directory, never a parsed `status` field.
+
+---
+
+## Editing The Skill Corpus
+
+Edit the canonical shared doctrine at `skills/_shared/global-*.md`. **Never** edit the
+per-role copies under `skills/<role>/references/` — `scripts/install_constellation.py`
+regenerates those, so an edit there is silently reverted at the next install.
+
+---
+
+## Verification Discipline
+
+These are the rules that most often separate an accepted change from a reworked one here.
+
+- **A check that cannot fail is indistinguishable from one that passed.** Before you offer a
+  check as evidence, demonstrate it can reach a failing state — run it against the
+  pre-change tree and show it red, or mutate the thing it guards and watch it go red, then
+  restore. If you mutate, **assert the mutation actually applied**; a `sed` that silently
+  matched nothing leaves a green suite that reads exactly like a passing guard.
+- **Assert against behaviour, never against text that describes it.** Docstrings,
+  `description=` fields, imperative prose and human-readable summaries are hand-authored and
+  none is checked against what runs. A grep for a message string is not a test of the branch
+  that emits it — especially when the message is built by an f-string, where the literal
+  never appears in the source at all.
+- **Any guard that loops must assert what it looped over.** A grep, glob or comparison over
+  a set that turns out empty reports clean without ever examining an interesting item. Print
+  or assert the count.
+- **Define a guard by its consumer's behaviour, not by a hand-maintained list.** A list of
+  characters, filenames or call sites drifts from the predicate the code actually applies,
+  and the gap is silent. Express the guard as the property the consumer itself computes.
+- **A round-trip test over the real shipped artifacts proves the artifacts are clean — it
+  does not prove the tool is correct.** Pair it with adversarial fixtures authored to make
+  the tool return a *wrong* answer: a false FAIL on valid input, a silent PASS on invalid
+  input.
+
+---
+
+## Evidence You Owe Back
+
+- Name the exact commands you ran and paste their real output, including exit codes. A
+  Commander re-runs them; a summary that does not reproduce is a blocker.
+- Report a measured negative as a complete result. "This specific check failed" is a finding;
+  "this approach is impossible" is not a report a crew is positioned to make.
+- Anything you found that is real but out of your task's scope goes back as a triage
+  candidate rather than being fixed silently or dropped.

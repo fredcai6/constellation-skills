@@ -1,0 +1,81 @@
+# Keep a project-scope Constellation install fresh.
+#
+# Drop this into a CONSUMING repo at .github/workflows/sync-constellation-skills.yml.
+# It rebuilds the project-scope skills from constellation@main on a schedule, and
+# opens a PR only when the rebuild changed something — desync becomes a reviewable
+# pull request instead of silent rot. It NEVER runs --update-baseline: reconciling a
+# template your project customized stays a human decision (check_skill_freshness.py
+# reports drift here; a human promotes the baseline in the PR).
+#
+# Assumes the consuming repo carries a project-scope install under .claude/skills
+# (adjust AGENT / SKILLS_ROOT below for codex/cursor/gemini).
+
+name: Sync Constellation skills
+
+on:
+  schedule:
+    # Weekly, Monday 06:00 UTC. Adjust to taste.
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  AGENT: claude
+  SKILLS_ROOT: .claude/skills
+  CONSTELLATION_REPO: fredcai6/constellation-skills
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the consuming repo
+        uses: actions/checkout@v4
+
+      - name: Check out constellation @ main
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CONSTELLATION_REPO }}
+          ref: main
+          path: .constellation-src
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Rebuild project-scope skills from main
+        run: |
+          python .constellation-src/scripts/install_constellation.py \
+            --agent "$AGENT" --scope project --project . --force
+
+      - name: Report template reconciliation status (never auto-promotes)
+        # Report-only: surfaces upstream-changed / both-changed templates for the
+        # reviewer. Non-zero exit here means "a human should reconcile" — it must
+        # not fail the job, so the PR still opens with the status attached.
+        continue-on-error: true
+        run: |
+          python .constellation-src/scripts/check_skill_freshness.py \
+            --project . --skills-root "$SKILLS_ROOT"
+
+      - name: Drop the constellation checkout before diffing
+        run: rm -rf .constellation-src
+
+      - name: Open a PR only if the rebuild changed something
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/sync-constellation-skills
+          commit-message: "chore: sync constellation skills to main"
+          title: "chore: sync Constellation skills to upstream main"
+          body: |
+            Automated rebuild of the project-scope Constellation install from
+            `${{ env.CONSTELLATION_REPO }}@main`.
+
+            The new `CORPUS.json` under `${{ env.SKILLS_ROOT }}` records the
+            `source_commit` this build came from. Review the diff; if a customized
+            template shows as `both-changed` in the reconciliation report, reconcile
+            it and run `check_skill_freshness.py --update-baseline` locally before
+            merging (this workflow never promotes baselines for you).
+          delete-branch: true

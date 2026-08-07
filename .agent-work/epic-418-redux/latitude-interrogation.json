@@ -1,0 +1,193 @@
+{
+  "work_id": "epic-418-redux-latitude",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "zc-consolidate",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load the handed-in goal and context (what you are resolving) and the starting questions, if any. Read the glossary and the topic's relevant code/docs. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "FACT. Read: REVISED_SPEC.md (CONFIRMED 2026-08-07), predecessor ADMIRAL_LOG+STATE_NOTE (archived), docs/agents/ORCHESTRATOR_CONTEXT.md, epic #418 body, tracker states for #419 #420 #422 #425 #440 #447 and the wave-2 chain.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "What is the epic relaunch actually being asked to do, and under what appetite?",
+      "kind": "<fact = resolve by exploring code | decision = block on the counterpart, never self-answer>",
+      "imperative": "FACT. Resolve from the confirmed REVISED_SPEC and the predecessor run, not from assumption.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "FACT, resolved from the spec at the tree. Relaunch of epic #418 after waves 0+1 merged. Order B-extended -> A2 -> F -> C -> E, plus off-chain #452/#458(R)/#436. Spec deliberately withholds a wave plan: 'What the Admiral is not given: a wave plan, a per-issue dispatch script, or a prescribed interface' \u2014 wave composition is the Admiral's call, revised between waves by the merged iterative-planning flow. Appetite (Tommy 2026-08-07): rigor scales with cost-to-undo, not uniformly; cheap-to-reverse moves fast, claims about what happened still bring evidence.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "zc-consolidate": {
+      "id": "zc-consolidate",
+      "title": "Consolidate behind the finish gate",
+      "imperative": "Do NOT record this until joint understanding is reached. Write the interrogation record from templates/INTERROGATION_RECORD.template.json (each question typed fact|decision; each resolved decision carrying its human_answer; each resolved fact its code_evidence) and capture the counterpart's explicit sign-off. Run `py scripts/verify_interrogation.py <record>` \u00e2\u20ac\u201d it MUST exit 0 (it refuses consolidation without the joint-understanding sign-off, and refuses any self-answered decision). Before consolidating, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Record pass only after exit 0, then `consolidate`.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_interrogation.py exits 0 on the interrogation record -- refuses a self-answered decision or a consolidation with no joint-understanding sign-off",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_interrogation.py .agent-work/epic-418-redux/INTERROGATION_RECORD.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-zc-consolidate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Joint understanding is not reached: q2-q6 are all type=decision and none may be self-answered. verify_interrogation.py refuses a self-answered decision and refuses consolidation with no sign-off, so this gate is unreachable until Tommy answers. Questions were put to him in session; draft contract at .agent-work/epic-418-redux/LATITUDE_CONTRACT.md.",
+        "authority_needed": "human",
+        "next_action": "On Tommy's answers: write INTERROGATION_RECORD with each decision's human_answer plus his sign-off, run verify_interrogation.py to exit 0, record pass, consolidate, then resume the admiral spine's latitude gate.",
+        "resume_reason": "Tommy answered all five decisions in session 2026-08-07 ('yup, agree all') and granted commit authority; joint understanding reached and signed off"
+      },
+      "result": "pass",
+      "finding": "verify_interrogation.py exits 0 on .agent-work/epic-418-redux/INTERROGATION_RECORD.json; sign-off captured from Tommy",
+      "evidence": [
+        {
+          "id": "e-zc-consolidate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_interrogation.py .agent-work/epic-418-redux/INTERROGATION_RECORD.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "DECISION: sync the stale installed skill corpus before wave 1?",
+      "imperative": "Installed ~/.claude/skills is stale vs repo main. Commanders load the INSTALLED copy. Needs a human call: re-running install_constellation.py mutates the global skills dir.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DECISION resolved by Tommy in session 2026-08-07: 'yup, agree all' \u2014 see INTERROGATION_RECORD.json human_answer for q2",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "DECISION: wave 1 composition and width",
+      "imperative": "B extended = #433 + carried #460 #461 #464 #465. Off-chain #452 #458 #436 are runnable any time. How wide, and does off-chain ride along?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DECISION resolved by Tommy in session 2026-08-07: 'yup, agree all' \u2014 see INTERROGATION_RECORD.json human_answer for q3",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4": {
+      "id": "q4",
+      "title": "DECISION: checkpoint protocol and how much replan latitude",
+      "imperative": "Spec grants plan revision between waves. How much should stop and wait for Tommy vs proceed and report?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DECISION resolved by Tommy in session 2026-08-07: 'yup, agree all' \u2014 see INTERROGATION_RECORD.json human_answer for q4",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q5": {
+      "id": "q5",
+      "title": "DECISION: contract expiry",
+      "imperative": "When does this contract go stale and force a refresh?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DECISION resolved by Tommy in session 2026-08-07: 'yup, agree all' \u2014 see INTERROGATION_RECORD.json human_answer for q5",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q6": {
+      "id": "q6",
+      "title": "DECISION: #447 disposition and the stale #418 tracker pointer",
+      "imperative": "#447's core retirement landed but the issue is open with 4 carried findings; #418's body points at a spec path that moved.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DECISION resolved by Tommy in session 2026-08-07: 'yup, agree all' \u2014 see INTERROGATION_RECORD.json human_answer for q6",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "RESOLVED",
+    "findings": [],
+    "summary": "Latitude contract for epic-418-redux settled with Tommy. Facts resolved from the tree; all five decisions carry his in-session answer plus a sixth granting commit authority. Contract: run-ahead checkpoints, wave 1 = B extended (#433 + #460 Commanders/Opus; #461 #464 #465 implementers/Sonnet; #436 discretionary sixth), install sync before dispatch, expiry at the wave-2 boundary or 72h, #447 close and #418 pointer fix authorized."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "admiral-epic-418-redux-latitude",
+    "status": "released",
+    "claimed_at": "2026-08-07T20:58:09.897562+00:00",
+    "last_heartbeat": "2026-08-07T21:18:04.335021+00:00",
+    "claimed_by": "interrogator",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T21:18:04.608023+00:00"
+  }
+}

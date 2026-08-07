@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "ca0e36a2a6d844457932e9cbb105d4f6c4c33511"
+  },
+  "run": {
+    "work_id": "epic-418-redux",
+    "generated_at": "2026-08-07T20:54:28Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills",
+      "repo": "C:/Programs/constellation-skills",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills"
+    }
+  }
+}

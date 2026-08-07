@@ -1,0 +1,159 @@
+{
+  "_readme": "Fixtures for scripts/verify_context_declaration.py (tests/test_context_declaration_lint.py). 'divergent' declares a path (references/narrowed-away.md) that never appears in its task's imperative prose -- a declaration pointing somewhere its own prose never covers -- and must be REJECTED. 'prose_names_more_than_declared' is the opposite shape: the prose names a file (docs/agents/GLOSSARY.md) that the declaration quietly omits -- the declaration silently narrowing away from what the prose describes -- and the lint cannot see this direction, so it must PASS. 'valid' declares only paths that do appear verbatim, and must PASS. 'boundary_suffix_rejected' declares 'agents/GLOSSARY.md' where the prose only ever names the longer, different path 'docs/agents/GLOSSARY.md' -- a bare substring match would wrongly pass this; the boundary rule must REJECT it (leading side). 'boundary_legitimate_occurrences_accepted' declares five paths, each occurring in the prose at a different legitimate leading boundary (start-of-string, preceded by whitespace, by a backtick, by '(', and by a quote) -- all must PASS. 'boundary_trailing_rejected' declares 'docs/agents/GLOSSARY.md' where the prose only ever names the longer, different path 'docs/agents/GLOSSARY.md.bak' (a realistic backup-sibling drift shape) -- must REJECT it (trailing side). 'boundary_trailing_legitimate_accepted' declares five paths, each occurring in the prose immediately before a different legitimate trailing boundary (a sentence-ending period, a comma, a closing backtick, a closing paren, and end-of-string) -- all must PASS, proving the trailing rule does not over-reject the real prose shapes this repo's templates actually use (the shipped COMMANDER_SPINE.template.json ends several of its own declared paths in a sentence period). All are full gated-checklist shapes so the lint runs unmodified over real spine JSON.",
+  "divergent": {
+    "work_id": "fixture-divergent",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "Read your inherited global doctrine (this skill's references/global-everyone.md), then the project deltas: docs/agents/GLOSSARY.md. Attest c1.",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "skill", "path": "references/global-everyone.md", "required": true},
+          {"root": "repo", "path": "docs/agents/GLOSSARY.md", "required": false},
+          {"root": "skill", "path": "references/narrowed-away.md", "required": true}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  },
+  "prose_names_more_than_declared": {
+    "_note": "Direction-limit fixture: the prose names a file (docs/agents/GLOSSARY.md) that the declaration omits entirely. The lint cannot see this (it is not a parseable list target) and must NOT flag it -- only a declared-but-absent-from-prose path is an offense.",
+    "work_id": "fixture-prose-wider",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "Read your inherited global doctrine (this skill's references/global-everyone.md), then the project deltas: docs/agents/GLOSSARY.md. Attest c1.",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "skill", "path": "references/global-everyone.md", "required": true}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  },
+  "valid": {
+    "work_id": "fixture-valid",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "Read your inherited global doctrine (this skill's references/global-everyone.md), then the project deltas: docs/agents/GLOSSARY.md. Attest c1.",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "skill", "path": "references/global-everyone.md", "required": true},
+          {"root": "repo", "path": "docs/agents/GLOSSARY.md", "required": false}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  },
+  "boundary_suffix_rejected": {
+    "_note": "B2 regression fixture: the declaration names 'agents/GLOSSARY.md', which is a substring of the prose's only occurrence, 'docs/agents/GLOSSARY.md' -- a DIFFERENT, nonexistent file. Bare `in` containment wrongly passed this (exit 0, 0 offenders); the path-boundary rule must REJECT it.",
+    "work_id": "fixture-boundary-suffix",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "Read the project deltas: docs/agents/GLOSSARY.md. Attest c1.",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "repo", "path": "agents/GLOSSARY.md", "required": true}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  },
+  "boundary_legitimate_occurrences_accepted": {
+    "_note": "B2 non-regression fixture: five declared paths, each occurring in the prose immediately after a different legitimate boundary -- start-of-string, whitespace, a backtick, '(', and a quote. The real shipped COMMANDER_SPINE.template.json wraps its paths this way (backticks, parens, plain prose), so the boundary rule must not reject any of these -- all five must PASS.",
+    "work_id": "fixture-boundary-legit",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "refs/start.md is read first, then refs/space.md, then `refs/backtick.md`, then (refs/paren.md), then 'refs/quote.md'. Attest c1.",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "repo", "path": "refs/start.md", "required": true},
+          {"root": "repo", "path": "refs/space.md", "required": true},
+          {"root": "repo", "path": "refs/backtick.md", "required": true},
+          {"root": "repo", "path": "refs/paren.md", "required": true},
+          {"root": "repo", "path": "refs/quote.md", "required": true}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  },
+  "boundary_trailing_rejected": {
+    "_note": "Trailing-boundary regression fixture: the declaration names 'docs/agents/GLOSSARY.md', but the prose's only occurrence of that text is immediately followed by '.bak' -- 'docs/agents/GLOSSARY.md.bak', a DIFFERENT, nonexistent file (a realistic backup-sibling drift shape). A leading-only boundary check wrongly passed this (exit 0, 0 offenders); the symmetric boundary rule must REJECT it.",
+    "work_id": "fixture-boundary-trailing",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "Read the backup at docs/agents/GLOSSARY.md.bak if it exists. Attest c1.",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "repo", "path": "docs/agents/GLOSSARY.md", "required": true}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  },
+  "boundary_trailing_legitimate_accepted": {
+    "_note": "Trailing-boundary non-regression fixture: five declared paths, each occurring in the prose immediately before a different legitimate trailing boundary -- a sentence-ending period, a comma, a closing backtick, a closing paren, and end-of-string. The shipped COMMANDER_SPINE.template.json ends several of its own declared paths in a sentence period (e.g. '...engine-config.json. Where the repo...'), so the trailing rule must not reject any of these -- all five must PASS.",
+    "work_id": "fixture-boundary-trailing-legit",
+    "type": "gated",
+    "items": ["context"],
+    "tasks": {
+      "context": {
+        "id": "context",
+        "title": "Load baseline context",
+        "imperative": "trail/period.md. Then trail/comma.md, then `trail/backtick.md`, then (trail/paren.md), then trail/end.md",
+        "preconditions": [],
+        "postconditions": [{"id": "c1", "statement": "context loaded", "check": null, "satisfied": false}],
+        "context_refs": [
+          {"root": "repo", "path": "trail/period.md", "required": true},
+          {"root": "repo", "path": "trail/comma.md", "required": true},
+          {"root": "repo", "path": "trail/backtick.md", "required": true},
+          {"root": "repo", "path": "trail/paren.md", "required": true},
+          {"root": "repo", "path": "trail/end.md", "required": true}
+        ],
+        "constraints": [], "directives": null, "child_checklist": null,
+        "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      }
+    },
+    "consolidation": null, "triage_candidates": [], "blockers": []
+  }
+}

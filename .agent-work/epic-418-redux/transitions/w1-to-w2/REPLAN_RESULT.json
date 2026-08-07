@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1 exit criteria were met: both issues merged, and the retirement carries a shipped guard that passes. Nothing is open from the launched wave.",
+    "epic_done": "The epic is not complete. Two of the five done-conditions remain unmet: the projection does not render every populated gate block, and no agent has yet driven a real role spine through the MCP door.",
+    "good_enough": "The mandatory quality boundary is preserved. The new wave carries evidence obligations on every issue, and the one condition that is only partially met (#447 condition 4) was stated as partial rather than claimed as done."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D1",
+      "action": "record_evidence_only",
+      "reason": "The staleness was resolved at this boundary by syncing the install; verification showed zero non-launcher differences afterwards, so no defect remains to track.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "record_evidence_only",
+      "reason": "#447 was closed here with a per-done-condition accounting, and its remainder is already tracked as four separate issues.",
+      "issue_created": false
+    },
+    {
+      "id": "D3",
+      "action": "record_evidence_only",
+      "reason": "The measured baseline at a named revision governs; the discrepancy is recorded rather than reconciled, and no work is warranted.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "revise_plan",
+      "reason": "The erosion of a hard constraint is pulled into the current wave as #460 rather than left for E, because every wave that runs meanwhile writes more records into the store.",
+      "issue_created": false
+    },
+    {
+      "id": "D5",
+      "action": "amend_forecast_or_parked",
+      "reason": "Shipping the gauge writer stays off-chain as #458; it gates done-condition 1 but not this wave, and it can run at any point.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "B extended: make the engine projection show the agent the whole gate, and stop the playbook retirement from growing back inside the episode store.",
+    "exit_criteria": [
+      "Every populated gate field renders in the current projection, with a completeness property test that catches the next field someone adds and forgets.",
+      "Episode records read as observations rather than instructions, with the authoring-end rule enforced somewhere that can fail.",
+      "Each issue declares its subsumption candidate set before it starts and reports how many it closed.",
+      "The suite is green on merged main against the 1721-passed baseline at ca0e36a."
+    ],
+    "issues": [
+      {
+        "id": "433",
+        "title": "Render directives in the current projection",
+        "desired_outcome": "A populated directives block reaches the agent through the engine projection, and the class of unrendered-field defects is closed by a completeness property rather than one more golden.",
+        "useful_now": "Everything in this epic reads through the projection, and directives is inert until it renders. C cannot relocate instruction into a channel that does not show it.",
+        "appetite": "One gate, with the completeness property as the durable part",
+        "acceptance_or_falsification_evidence": "A populated directives block appears in the current output; the completeness property test enumerates the fields a gate may carry and fails when a populated one is missing. Falsified if the property passes with a field deliberately unrendered.",
+        "implementation_latitude": "Choose the rendering shape and where the property test lives. If the inventory shows a field is vestigial, deleting it is the accepted smaller fix - say so on the evidence.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "tests/test_checklist_engine.py",
+          "docs/CHECKLIST_SCHEMA.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "460",
+        "title": "Episode records read as prescriptions rather than observations",
+        "desired_outcome": "The episode store holds records of what happened, with the roughly 24 of 32 canon workarounds that read as instructions either rewritten as observations or routed to doctrine by a human decision.",
+        "useful_now": "This is the playbook retirement undoing itself at the authoring end, inside the store that replaced it. Left alone it rebuilds the thing #447 just removed.",
+        "appetite": "One wave",
+        "acceptance_or_falsification_evidence": "A check that can fail distinguishes an observation from an instruction, and the existing records pass it or are dispositioned. Falsified if the check passes on a record that plainly instructs.",
+        "implementation_latitude": "Choose the mechanism and the wording standard. Promoting anything into docs/agents doctrine is surfaced to the Admiral and is a human call, never taken locally.",
+        "hard_constraints_no_gos": [
+          "Do not create a successor playbook under any name.",
+          "Do not promote an observation into docs/agents without the human decision."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "episodes",
+          "scripts/apply_episode_delta.py",
+          "docs/agents/ORCHESTRATOR_CONTEXT.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "461",
+        "title": "The episode-store negative control fails between git add and commit",
+        "desired_outcome": "The negative control stops failing on every run that legitimately captures an episode.",
+        "useful_now": "A control that fires on correct behaviour trains agents to ignore it, which is worse than not having it.",
+        "appetite": "One bounded fix",
+        "acceptance_or_falsification_evidence": "The control passes across the add-to-commit window while still failing when the store genuinely regresses. Falsified if it cannot be made to fail at all.",
+        "implementation_latitude": "Choose the fix; keep the control able to register its own failure.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "tests",
+          "scripts/verify_episode_captured.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "464",
+        "title": "CONSTELLATION_FEEDBACK Lesson field takes an episode id but keeps its old name",
+        "desired_outcome": "The field is renamed to match what it now carries, in one change together with its collector.",
+        "useful_now": "A field whose name contradicts its contents is a standing misread for every future agent.",
+        "appetite": "One bounded rename",
+        "acceptance_or_falsification_evidence": "The field and scripts/collect_feedback.py agree, in a single change, with the suite green. Falsified by any remaining reader of the old name.",
+        "implementation_latitude": "Choose the new name. Enumerate every reader of the old one by command before calling it done.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/collect_feedback.py",
+          ".agent-work/CONSTELLATION_FEEDBACK.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "465",
+        "title": "Reviewer r6-fowler ships a placeholder no engine verb can fill",
+        "desired_outcome": "The reviewer step is fillable through an engine verb, and filling it stops rewriting every line ending in the state file.",
+        "useful_now": "A gate no verb can satisfy is a gate that gets waived, and a CRLF rewrite destroys the blame on whatever it touches.",
+        "appetite": "One bounded fix",
+        "acceptance_or_falsification_evidence": "The step is satisfied through an ordinary engine verb, and the state file is byte-stable apart from the intended change. Falsified if filling it still rewrites unrelated lines.",
+        "implementation_latitude": "Choose whether the fix is to the template, the verb, or the writer.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "skills/reviewer/templates/REVIEW_SURVEY.template.json",
+          "scripts/checklist_engine.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "436",
+        "title": "Confirm the worktree-precondition enumeration check catches a real second template",
+        "desired_outcome": "The enumeration check is observed refusing a genuinely new worktree-entering template, rather than only passing on the set it already knows.",
+        "useful_now": "This is the D falsification debt. An enumeration that has never been observed refusing is a check that cannot fail.",
+        "appetite": "One bounded experiment",
+        "acceptance_or_falsification_evidence": "A genuinely new worktree-entering template is introduced and the check refuses. Falsified if the check passes on it - which would be the finding.",
+        "implementation_latitude": "Choose how to introduce the template; revert it in the same change that induces it.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/verify_worktree_precondition_coverage.py",
+          "tests"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "A2 trip semantics",
+      "why_likely": "F cannot type a verb whose meaning is unsettled, and A2 still has no issue cut",
+      "entry_conditions": [
+        "B extended lands",
+        "A2 is cut into an issue against what B extended leaves behind"
+      ]
+    },
+    {
+      "outcome": "F - MCP front door",
+      "why_likely": "Verbs go where verbs belong before content is written around them",
+      "entry_conditions": [
+        "A2 settles what a trip means"
+      ]
+    },
+    {
+      "outcome": "C - relocation",
+      "why_likely": "C writes against a settled verb contract rather than a moving transport",
+      "entry_conditions": [
+        "F settles the verb contract"
+      ]
+    },
+    {
+      "outcome": "E - backlog re-cut",
+      "why_likely": "E runs on what survives the redux, on a much smaller input once each workstream retires what it subsumes",
+      "entry_conditions": [
+        "The mechanisms work has retired what it subsumes"
+      ]
+    },
+    {
+      "outcome": "Off-chain: ship the gauge writer (#458) and multi-spine attribution (#452)",
+      "why_likely": "Both are independent of the chain and #458 gates done-condition 1",
+      "entry_conditions": []
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether a bulk relocated imperative is still read and followed (dose-response)",
+      "affects": "The C tranche boundary",
+      "settle_by": "The C end-of-tranche tracer",
+      "current_evidence": "One instruction in one gate proved live in exc-8",
+      "next_probe": "Run the two-arm tracer at the tranche boundary"
+    },
+    {
+      "unknown": "Whether per-dispatch config can deliver per-agent MCP server instances",
+      "affects": "The F separation requirement",
+      "settle_by": "The F build-time probe",
+      "current_evidence": "exc-9 observed subagents inheriting the parent server",
+      "next_probe": "Probe .mcp.json pickup before building F"
+    },
+    {
+      "unknown": "Whether an authoring-end rule can mechanically tell an observation from an instruction",
+      "affects": "Whether #460 closes with a check or with a human standard",
+      "settle_by": "#460 itself",
+      "current_evidence": "Roughly 24 of 32 canon workarounds read as prescriptions, judged by hand",
+      "next_probe": "Attempt the check inside #460 and report an honest null if it cannot discriminate"
+    }
+  ],
+  "revised_parked": [
+    "Vision and Arc 3 - federation routing against the confirmed spec",
+    "Performance-metrics methodology (clusters K4 and K5)",
+    "Simplified-English and glossary standard - Tommy runs this elsewhere",
+    "B1 first consolidation and the episode-store harvest"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-a2",
+      "action": "keep",
+      "reason": "Still the next link, and deliberately not cut yet so it is cut against what B extended actually leaves behind."
+    },
+    {
+      "id": "U-f-424",
+      "action": "keep",
+      "reason": "Still supported and still gated on A2."
+    },
+    {
+      "id": "U-c-421",
+      "action": "keep",
+      "reason": "Still supported and still gated on the verb contract F settles."
+    },
+    {
+      "id": "U-e-423",
+      "action": "keep",
+      "reason": "Still last, and its input shrinks as each workstream retires what it subsumes."
+    },
+    {
+      "id": "U-452",
+      "action": "keep",
+      "reason": "Off-chain and runnable at any point; an honest null is a permitted outcome for it."
+    },
+    {
+      "id": "U-458",
+      "action": "keep",
+      "reason": "Off-chain, and confirmed live at this boundary: the installer reports the governor hook unwired."
+    },
+    {
+      "id": "U-dose-response",
+      "action": "keep",
+      "reason": "Unsettled until the C tranche runs its tracer."
+    },
+    {
+      "id": "U-vision-arc3",
+      "action": "keep",
+      "reason": "Parked by ruling; nothing at this boundary changes it."
+    }
+  ],
+  "material_changes": [],
+  "wave_review_comment": "## Wave review - boundary w1-to-w2\n\nWaves 0 and 1 are merged and closed. Main is green at `ca0e36a`: **1721 passed, 4 skipped, 643\nsubtests, exit 0**, with the real exit code captured.\n\n### What the boundary found\n\n| Signal | Disposition |\n|---|---|\n| The installed skill corpus was stale against the repo - 12 skills, 6 in `SKILL.md`, including `commander-delegated` and `workbench` | Resolved here by syncing the install; zero non-launcher differences remain |\n| The installed Admiral spine called `apply_lessons_delta.py` and `verify_agent_feedback.py`, both deleted by #447 | Avoided by instantiating from the repo template; the sync fixed the root |\n| #447 was open while its core obligation was already met | Closed here with a per-done-condition accounting |\n| The predecessor green figures (1723/2 and 1764) do not match this measurement (1721/4) | Recorded, not reconciled; the measured baseline at a named revision governs |\n| The playbook retirement is leaking back at the authoring end (#460) | Pulled into the current wave rather than left for E |\n| The governor hook is unwired, so the governor fires nowhere on a shipped config | Stays off-chain as #458; it gates done-condition 1, not this wave |\n\n### Honest note on #447\n\nIts fourth done-condition - *nothing reads episodes as prescriptions* - is **partially met**. The\nread path is retired and no consumer conditions behaviour on the store, but #460 found the\nobligation leaking back at the authoring end. That was stated as partial rather than claimed as\ndone, and the remainder is tracked and scheduled rather than dropped. This matters because #447\nexists precisely to catch a close that claims an unmet obligation.\n",
+  "revised_epic_body": "## Current planning truth - epic #418\n\n**Wave 2 (current): B extended.** Make the engine projection show the agent the whole gate, and\nstop the playbook retirement from growing back inside the episode store.\n\n| Issue | What it settles |\n|---|---|\n| #433 | `directives` renders, and a completeness property closes the class rather than the instance |\n| #460 | Episode records read as observations, not instructions |\n| #461 | The episode-store negative control stops failing on correct behaviour |\n| #464 | The `Lesson:` field is renamed to match what it now carries |\n| #465 | The reviewer placeholder becomes fillable without rewriting every line ending |\n| #436 | The worktree enumeration check is observed actually refusing |\n\nExit criteria are on the wave, not the issues: every populated gate field renders under a\ncompleteness property; episode records pass an authoring-end check that can fail; each issue\ndeclares its subsumption candidate set before starting and reports how many it closed; the suite\nis green against the 1721-passed baseline at `ca0e36a`.\n\n**Forecast, nonbinding:** A2 trip semantics (still needs cutting, deliberately deferred so it is\ncut against what B extended leaves behind), then F, then C, then E. Off-chain and runnable at any\npoint: #458 ship the gauge writer, #452 multi-spine attribution.\n\n**Two of five done-conditions remain unmet:** the projection does not render every populated gate\nblock, and no agent has driven a real role spine through the MCP door. Done-condition 4 was\nretired and replaced by the standing obligation that each workstream retires the findings it\nsubsumes, against a candidate set declared before it starts.\n",
+  "escalation": null
+}

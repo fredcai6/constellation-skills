@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 - post-phase-1 mechanisms + cleanup",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Make the frame hold, then clean the decks. Fix the governor so readings fire and a trip acts on them; make the engine projection show the agent the whole gate; wire prose-only invariants into checks that refuse; put the engine behind typed verbs; relocate gate-specific instruction to the gate that needs it; then re-cut what survives."
+    },
+    "definition_of_done": [
+      "The governor writes per-agent readings on a SHIPPED configuration, readings keep arriving, and the trip mechanic acts on them.",
+      "The current projection carries each instruction exactly once and renders every populated gate block.",
+      "The named prose-only invariants refuse instead of hoping.",
+      "Each workstream retires the findings it subsumes, measured against a candidate set declared before it starts.",
+      "An agent drives a real role spine end to end through the MCP door, each agent holding its own server instance."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No unevidenced claims, no silent scope cuts, and no check that cannot register its own failure. A claim about what happened brings its evidence.",
+      "sufficient_evidence": "Targeted automated tests plus the relevant broader suite for mechanism changes; live one-shot evidence for acceptance runs, kept as runnable scripts rather than wired into CI.",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly. A reversible mistake a later run would surface again is not worth extensive up-front guarding."
+    },
+    "hard_constraints": [
+      "The episode store is a record of what happened and is never read back as a rule; no successor playbook.",
+      "Promoting an observation into docs/agents doctrine is a human call.",
+      "The MCP work never touches settings.json.",
+      "Never obey a spine rail naming a spine another agent drives (#457).",
+      "Run suites as FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests; never the py launcher (#454)."
+    ],
+    "fixed_decisions": [
+      "Execution order is B extended, then A2, then F, then C, then E: a dependency order and not a schedule.",
+      "A Commander that finds an ordering link is not real says so rather than honouring it.",
+      "A measured negative is a complete, successful deliverable.",
+      "Launched identities remain stable across replanning."
+    ],
+    "current_wave": {
+      "objective": "Wave 1 of the predecessor run: land the binding-cwd fix, and finish #308 retirement so episodes genuinely replace both LESSONS.md and AGENT_FEEDBACK.md.",
+      "exit_criteria": [
+        "Both issues merged to main with the suite green.",
+        "The retirement carries a shipped guard that keeps it true."
+      ],
+      "issues": [
+        {
+          "id": "440",
+          "title": "Governor: a worktree-dispatched agent binding records a main-checkout path",
+          "desired_outcome": "A binding written from a worktree records that worktree, so the reading lands in the right tree.",
+          "useful_now": "The governor cannot be trusted per-agent while its path attribution is wrong.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The binding records the dispatching worktree, with a regression test in the suite.",
+          "implementation_latitude": "Choose the resolution mechanism; preserve the session_id#agentId key.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/hooks/spine_rail.py",
+            "docs/GAUGE_WRITER_HOOK.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "447",
+          "title": "epic-418 workstream H: finish the #308 retirement",
+          "desired_outcome": "LESSONS.md and AGENT_FEEDBACK.md are genuinely retired, with a shipped guard keeping it true.",
+          "useful_now": "#308 closed with this obligation unmet and nothing tracked the skipped work.",
+          "appetite": "One wave",
+          "acceptance_or_falsification_evidence": "Neither file nor its writer ships; a guard test refuses regression; existing content is carried or dropped with a stated reason.",
+          "implementation_latitude": "Decide where carried content lands; do not build a successor playbook.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": [
+            "episodes",
+            "scripts/apply_episode_delta.py",
+            "docs/agents/ORCHESTRATOR_CONTEXT.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "B extended - the agent can see the whole gate",
+        "why_likely": "Everything reads through the projection and directives is inert until it renders",
+        "entry_conditions": []
+      },
+      {
+        "outcome": "A2 trip semantics",
+        "why_likely": "F cannot type a verb whose meaning is unsettled",
+        "entry_conditions": [
+          "B extended lands"
+        ]
+      },
+      {
+        "outcome": "F - MCP front door",
+        "why_likely": "Verbs go where verbs belong before content is written around them",
+        "entry_conditions": [
+          "A2 settles trip semantics"
+        ]
+      },
+      {
+        "outcome": "C - relocation",
+        "why_likely": "C writes against a settled verb contract",
+        "entry_conditions": [
+          "F settles the verb contract"
+        ]
+      },
+      {
+        "outcome": "E - backlog re-cut",
+        "why_likely": "E runs on what survives the redux",
+        "entry_conditions": [
+          "The mechanisms work has retired what it subsumes"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether a bulk relocated imperative is still read and followed (dose-response)",
+        "affects": "The C tranche boundary",
+        "settle_by": "The C end-of-tranche tracer",
+        "current_evidence": "One instruction in one gate proved live in exc-8",
+        "next_probe": "Run the two-arm tracer at the tranche boundary"
+      },
+      {
+        "unknown": "Whether per-dispatch config can deliver per-agent MCP server instances",
+        "affects": "The F separation requirement",
+        "settle_by": "The F build-time probe",
+        "current_evidence": "exc-9 observed subagents inheriting the parent server",
+        "next_probe": "Probe .mcp.json pickup before building F"
+      }
+    ],
+    "parked_possibilities": [
+      "Vision and Arc 3 - federation routing against the confirmed spec",
+      "Performance-metrics methodology (clusters K4 and K5)",
+      "Simplified-English and glossary standard - Tommy runs this elsewhere",
+      "B1 first consolidation and the episode-store harvest"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "440",
+      "outcome": "Merged and closed. The binding records the dispatching worktree.",
+      "evidence": "gh issue view 440 reports CLOSED; merged at 3b0b90f per the predecessor log."
+    },
+    {
+      "issue_id": "447",
+      "outcome": "Core retirement landed; closed at this boundary with a per-done-condition accounting, with four findings carried out as #460, #461, #464 and #465.",
+      "evidence": "git ls-files finds none of LESSONS.md, AGENT_FEEDBACK.md, apply_lessons_delta.py or verify_agent_feedback.py; tests/test_retirement_guard.py 16 passed; verify_retirement.py exit 0; gh issue view 447 reports CLOSED."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Waves 0 and 1 are merged and closed.",
+      "expected": "All six issues report CLOSED on the tracker.",
+      "observed": "#419, #420, #422, #425 and #440 were CLOSED; #447 was still OPEN at boundary entry and was closed here with evidence.",
+      "source": "gh issue view per issue"
+    },
+    {
+      "claim": "Main is green and is a usable baseline for the next wave.",
+      "expected": "The suite passes with a real exit code of 0.",
+      "observed": "1721 passed, 4 skipped, 643 subtests, exit 0, 309s, at ca0e36a.",
+      "source": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+    },
+    {
+      "claim": "The retirement has a shipped guard.",
+      "expected": "A test that refuses regression.",
+      "observed": "tests/test_retirement_guard.py 16 passed; scripts/verify_retirement.py exit 0.",
+      "source": "pytest and direct invocation"
+    },
+    {
+      "claim": "The installed skill corpus matches this repo.",
+      "expected": "Installed copies equal repo sources.",
+      "observed": "12 skills diverged, 6 in SKILL.md, including commander-delegated and workbench; after the install sync, zero non-launcher differences remain.",
+      "source": "per-skill diff -q before and after install_constellation.py"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "The installed skill corpus was stale against the repo, and the installed Admiral spine called two scripts that #447 had deleted.",
+      "classification": "evidence_only",
+      "affects": "Dispatch correctness for every Commander in the next wave",
+      "evidence": "diff -q across skills against the installed copies found 12 divergences, 6 in SKILL.md. The installed closeout referenced apply_lessons_delta.py and verify_agent_feedback.py, both absent from the tree.",
+      "reason": "Resolved at this boundary by running install_constellation.py --force; no defect remains to track."
+    },
+    {
+      "id": "D2",
+      "signal": "#447 was open while its core obligation was already met.",
+      "classification": "evidence_only",
+      "affects": "Wave 1 exit accounting",
+      "evidence": "All four retired paths are absent, the guard ships and passes, and four findings were carried as separate issues.",
+      "reason": "Closed at this boundary with a per-done-condition accounting; nothing further to track."
+    },
+    {
+      "id": "D3",
+      "signal": "The predecessor recorded green figures do not match this run measurement.",
+      "classification": "evidence_only",
+      "affects": "The baseline the next wave is judged against",
+      "evidence": "The predecessor note carries both 1723 passed with 2 skipped and 1764 passed; measured here 1721 passed with 4 skipped at ca0e36a, the same 1725 collected as the first, with two moved from passed to skipped.",
+      "reason": "Skips are environment-conditional; the measured baseline at a named revision governs and no issue is warranted."
+    },
+    {
+      "id": "D4",
+      "signal": "The playbook retirement is leaking back at the authoring end: episode records are being written as instructions rather than observations.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "What B extended must cover in this wave",
+      "evidence": "#460 reports roughly 24 of 32 canon workarounds reading as prescriptions.",
+      "reason": "This is a live erosion of a hard constraint, so it is pulled into the current wave rather than left to E."
+    },
+    {
+      "id": "D5",
+      "signal": "The Context Governor hook is unwired, so the governor fires nowhere on a shipped configuration.",
+      "classification": "later_only",
+      "affects": "Done-condition 1, which requires a shipped configuration",
+      "evidence": "install_constellation.py reports UNWIRED with no PostToolUse entry for gauge_writer_hook.py in the user settings.json.",
+      "reason": "Already tracked as #458 (workstream R) and runnable off-chain; it does not block B extended."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-a2",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-f-424",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-c-421",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-e-423",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-452",
+      "kind": "issue"
+    },
+    {
+      "id": "U-458",
+      "kind": "issue"
+    },
+    {
+      "id": "U-dose-response",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-vision-arc3",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "skills",
+      "episodes",
+      "docs/agents"
+    ],
+    "map_status": "docs/architecture present; reconcile deferred to closeout per the spine."
+  }
+}
