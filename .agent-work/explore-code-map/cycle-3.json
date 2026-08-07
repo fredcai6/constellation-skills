@@ -13,7 +13,8 @@
     "q4-id-syntax",
     "q5-rulings",
     "x12",
-    "q6-handoff-tiers"
+    "q6-handoff-tiers",
+    "q7-skills-work"
   ],
   "tasks": {
     "c0-frame": {
@@ -173,6 +174,22 @@
       "status_detail": {},
       "result": "pass",
       "finding": "HUMAN RULINGS 2026-08-07: (1) push-then-pull RATIFIED ('totally agree... this is what we found in our earlier testing'). (2) TWO-TIER HANDOFF: subagent dispatch carries specific 'start with this file here' (deterministic push of the issue's named entity pages); top-level agents get 'look at this INDEX.md to start your exploration' (pointer push, pull from there). (3) Information-fullness required of any provided map. DEEPENED ETH READING (paper fetched, method verified first-hand): the failed LLM-generated context files were NOT slop -- produced by each agent's own vendor-recommended init command+model (Claude Code /init w/ Sonnet-4.5, Codex w/ GPT-5.2, Qwen Code) which DOES explore the repo; dev files avg 641 words/9.7 sections. Slop hypothesis explicitly ablated away: stronger generator models do not help (swap ablation +2pct SWE-bench/-3pct CTXBench), prompt choice no consistent effect, LENGTH no significant impact, removing content categories no change. Instructions ARE followed (uv 1.6x/instance when mentioned vs 0.01 when not) at +10-22pct reasoning tokens -- following costs, overviews just don't navigate: steps-to-first-patched-file unmoved even for DEVELOPER-written overviews. Paper's own conclusion: context files 'should only contain specific additional instructions beyond what is already available in the codebase' = our information-fullness rule verbatim. Quadrant distinction for our design: their failure = push+prose+repo-level-always; ours = targeted-push+derived-facts+entity-level-at-need. Their Python caveat noted (parametric knowledge may nullify context files; niche languages untested).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q7-skills-work": {
+      "id": "q7-skills-work",
+      "title": "Human directive: three skills work items to unlock cycle 4",
+      "imperative": "Execute: (1) update today's map entrance references; (2) subagent instruction generation must hand the specific map entry point for the subagent's work; (3) light role-specific map-use instructions (orchestrator vs implementer: blast radius, tombstones, holes).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Three directed items EXECUTED as live skill edits (worktree branch, 4 files): (1) ENTRANCE REFERENCES: scout SKILL.md now enters at the index and pulls only touched packets ('the index is a routing surface, not reading material'); charter AGENT_GUIDE already carried the correct index entry point, untouched. (2) SUBAGENT INSTRUCTION GENERATION: IMPLEMENTER_HANDOFF.template.md Map Anchors gains a 'Map entry point' line (commander names the specific starting file(s); crew never re-derives); commander-core.md anchor-inheritance paragraph now carries the relay rule. (3) ROLE-SPECIFIC USE INSTRUCTIONS: commander-core.md gains orchestrator block (blast radius for gate/wave fencing, recorded failures surfaced in handoffs, holes = cheap adjacent work, push entry points never overview prose); implementer SKILL.md gains use-the-map-before-source paragraph (entry point then referenced-by = blast radius before first edit; map for cross-file questions, source for within-file; tombstone check; missing entry point = Workflow Feedback item not licence to skip). Phrased map-agnostic so today's packet map and the derived map both satisfy the words. Suite: 1378 tests, all 15 fails/errors environmental (missing pytest module in runtime; mutation-floor baseline itself red), zero from these edits.",
       "evidence": [],
       "rework_count": 0
     }
