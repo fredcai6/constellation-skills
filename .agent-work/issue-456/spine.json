@@ -260,7 +260,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-2",
+          "attested": {
+            "evidence": "e-plan-2",
+            "note": null
+          }
         },
         {
           "id": "c4",
@@ -273,7 +278,8 @@
           "id": "c5",
           "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Cold plan critic run and its findings triaged by the human. Full record with per-finding dispositions at .agent-work/issue-456/cold-plan-critic.md: 15 findings, 4 blocking. Ten were folded in by the Commander without needing a ruling (per-gate commands, full-suite runs at every boundary, no absolute-count thresholds, corrected installer hazard, corrected ownership-coverage claim, inlined falsifiers, and three assertion-leaning spots in the frame). The five that changed gate count or scope were put to Tommy as two plain questions and he ruled both: the g1 restructure (F1/F14) as Shape B, and the map-tree ownership (F3/F9/F10) as generate-and-commit. The panel-vs-single choice was surfaced with them -- panel of 3, 2 of 3 delivered, best-seam-placement recorded as the one untaken road. The critic's own error is recorded alongside its findings: its replacement D2 numbers shared the Commander's root mistake, and the panel independently corrected both."
         },
         {
           "id": "c6",
@@ -293,12 +299,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "AWAITING THE USER-DECISION CHECKPOINT -- this is the gate's own imperative ('Get the human to approve it'), not a failure. Four of six postconditions are MET: c1 mission frame (verify-frame FRAME-OK, 0 problems), c2 execute.json authored (34 items, 11 gates, verified drivable), c4 plan-alternatives (run but not delivered, recorded honestly with three named untaken roads), c6 command check passes. The two remaining are the human's by construction: c3 plan approved, and c5 critic findings triaged by the human. Nothing further can be authored without Tommy: he must pick Shape A or B and rule on whether this run generates and commits a map tree for constellation-skills itself. execute.json is already authored under both as STATED ASSUMPTIONS (Shape B, map-tree-generated) so an override costs one regeneration from gate-spec.json rather than a redesign. Context governor also reads 24% (>= hard), so this session should hand off regardless.",
         "authority_needed": "parent agent",
         "next_action": "Tommy answers at the checkpoint. (1) Shape A or B -- see .agent-work/issue-456/plan-shape-options.md; recommendation is B on one axis: it is the only shape where g1's checks stay falsifiable to the end of the run. (2) Does this run generate and commit a map/ tree for this repo -- recommendation yes, because the skills changes riding this branch already promise crews a map entry point. (3) Re-run the plan panel or proceed on the cold critic alone. (4) tc2 -- confirm the spec's two other 'build first' guards are dropped with their deferred machinery rather than lost. Then: if B and map-tree stand, resume plan --reason '<ruling>', attest plan --cond c5 with his triage, attach plan --type user-decision for c3, advance plan, and start execute at e0-context. If he picks A, edit .agent-work/issue-456/gate-spec.json and re-run gen_execute.py before advancing.",
-        "prior_status": "in-progress"
+        "resume_reason": "Tommy ruled both open questions at the approval checkpoint: lock the numbers late (Shape B), and generate the map"
       },
       "result": null,
       "finding": null,
@@ -308,6 +314,15 @@
           "type": "note",
           "payload": {
             "text": "CORRECTION to the c4 attestation, which said the plan panel was RUN but NOT DELIVERED. It delivered after that attestation was written: 2 of 3 candidates returned complete. smallest-diff and most-testable both landed; best-seam-placement went idle without delivering and is the one genuine untaken road. The c4 note is therefore stale in its headline though correct at the moment it was written; the accurate record is .agent-work/issue-456/design-it-twice-plan.md as of commit 9619ae5. Material outcome: the panel found a D2 arm that neither the Commander nor the cold critic reached (visit_ClassDef has no enclosing-chain branch; class-in-function has ZERO occurrences here so it needs a purpose-built fixture), and both candidates independently established that the top-index falsifier cannot fire on a 103-module corpus. Both are folded into gate-spec.json and execute.json is regenerated."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "user-decision",
+          "payload": {
+            "ruling": "PLAN APPROVED by Tommy, both questions ruled in one reply. (1) Lock the numbers later -- Shape B, the baseline gate placed after the last render-changing gate. He added a governing constraint that is NOT merely approval: 'those trip wires should be useful, not sending us down rabbit holes or driving over unnecessary speed bumps.' Folded into the baseline gate as a hard constraint: a threshold earns its place only if tripping it means something is actually wrong, must not fire on ordinary healthy change, and must state what a human should DO when it fires. Prefer few sharp tripwires over many twitchy ones. (2) Generate and commit the map tree -- 'yes to making the map, that's long over due.' He also named a KNOWN DEFICIENCY: a lot of the real connections in this repo are not in the code, they are in how skills are used, which a pure AST pass cannot see. Ruled not-now and not-a-blocker: 'if we can just get the actual code mapped, that's a win good enough for now.' Recorded in the mission frame as a known deficiency rather than an untaken road, with two obligations: do not overclaim coverage, and do not widen scope to chase it."
           },
           "produced_by": "engine",
           "ts": ""
@@ -611,20 +626,13 @@
       "statement": "REPO DEFECT (not this issue's scope, found while establishing a baseline): tests/test_mutation_floor.py reports 10 spurious HARNESS ERROR failures for any developer whose environment sets FORCE_COLOR. failed_nodes() at tests/test_mutation_floor.py:255 parses pytest output with the regex '(?:SUB)?FAILED(?:\\([^)]*\\))? (tests[/\\]test_map_orient\\.py::\\S+)', which requires a literal space between FAILED and the path. With FORCE_COLOR set, the inner pytest subprocess emits ANSI codes ('\\x1b[31mFAILED\\x1b[0m tests/...'), the regex matches nothing, and the harness reports 'non-zero exit with no FAILED test node' -- i.e. it misreports a CORRECTLY killed mutant as a broken harness. PROVEN: regex vs colored line -> [], vs plain line -> match; FORCE_COLOR=3 is set in this session. test_0_unmutated_baseline_is_green PASSES, so the module under test is fine. CI is unaffected (no FORCE_COLOR, no TTY), so main is genuinely green. Fix: strip ANSI from proc.stdout before parsing, or pass --color=no / PY_COLORS=0 to the inner run_floor subprocess. Worth a ticket: a falsifiability harness that cannot parse its own evidence fails OPEN in exactly the direction it exists to prevent."
     }
   ],
-  "blockers": [
-    {
-      "item": "plan",
-      "blocker": "AWAITING THE USER-DECISION CHECKPOINT -- this is the gate's own imperative ('Get the human to approve it'), not a failure. Four of six postconditions are MET: c1 mission frame (verify-frame FRAME-OK, 0 problems), c2 execute.json authored (34 items, 11 gates, verified drivable), c4 plan-alternatives (run but not delivered, recorded honestly with three named untaken roads), c6 command check passes. The two remaining are the human's by construction: c3 plan approved, and c5 critic findings triaged by the human. Nothing further can be authored without Tommy: he must pick Shape A or B and rule on whether this run generates and commits a map tree for constellation-skills itself. execute.json is already authored under both as STATED ASSUMPTIONS (Shape B, map-tree-generated) so an override costs one regeneration from gate-spec.json rather than a redesign. Context governor also reads 24% (>= hard), so this session should hand off regardless.",
-      "authority_needed": "parent agent",
-      "next_action": "Tommy answers at the checkpoint. (1) Shape A or B -- see .agent-work/issue-456/plan-shape-options.md; recommendation is B on one axis: it is the only shape where g1's checks stay falsifiable to the end of the run. (2) Does this run generate and commit a map/ tree for this repo -- recommendation yes, because the skills changes riding this branch already promise crews a map entry point. (3) Re-run the plan panel or proceed on the cold critic alone. (4) tc2 -- confirm the spec's two other 'build first' guards are dropped with their deferred machinery rather than lost. Then: if B and map-tree stand, resume plan --reason '<ruling>', attest plan --cond c5 with his triage, attach plan --type user-decision for c3, advance plan, and start execute at e0-context. If he picks A, edit .agent-work/issue-456/gate-spec.json and re-run gen_execute.py before advancing."
-    }
-  ],
-  "refusals": 3,
+  "blockers": [],
+  "refusals": 4,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T18:26:43.220108+00:00",
+    "last_heartbeat": "2026-08-07T19:58:02.019948+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,

@@ -948,6 +948,7 @@
       "constraints": [
         "NO absolute-count thresholds (critic F4)",
         "a threshold that a later gate edits is not a threshold -- this gate is placed after the last render-changing gate for exactly that reason",
+        "TOMMY'S RULING, and it governs every threshold here: a tripwire must be USEFUL -- it must not send a future run down a rabbit hole or make it climb an unnecessary speed bump. Concretely: a threshold earns its place only if tripping it means something is actually WRONG. If a threshold would fire on ordinary healthy change (the corpus grew, a docstring was reworded, a page gained a line), it is a speed bump and must be dropped or widened rather than shipped and then routinely waived. Prefer few sharp tripwires over many twitchy ones. Every threshold committed here must state, in one line, what a human should DO when it fires -- a tripwire with no action is noise.",
         "the FULL suite must be green at this gate boundary (critic F6)"
       ],
       "anchors": {

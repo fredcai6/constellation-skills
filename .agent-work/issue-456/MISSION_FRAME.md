@@ -183,6 +183,27 @@ The falsifiers, each of which a gate must be able to trip:
   writes the digest a replacement agent cold-starts from, so the brief goes
   stale exactly at handoff. Not this run's build, but it bit this run.
 
+## Known deficiency, named by Tommy at plan approval
+
+**A large share of the real connections in this repo are not in the code — they
+are in how skills get used.** Which skill loads which reference, which gate
+dispatches which crew, which template a role fills in: those are edges a pure
+AST pass cannot see, and this build will not see them. The map will show the
+Python call graph and miss the thing this repo mostly *is*.
+
+Tommy's ruling: **not now, and not a blocker.** "If we can just get the actual
+code mapped, that's a win good enough for now." Recorded here as a KNOWN
+DEFICIENCY rather than an untaken road, because it is a gap in what the shipped
+artifact covers, not an option that was declined. It will be tackled later.
+
+Two consequences the run must honor rather than paper over:
+
+- **Do not let the map's coverage be overclaimed.** A page saying "referenced
+  by: none" for a script that three skills invoke is *wrong in the way that
+  matters*, and the run report should say plainly that skill-usage edges are
+  outside what this map sees.
+- Do not quietly widen scope to chase it. It is a separate problem.
+
 ## Out of Scope
 
 - Replacing source reading, or retiring the authored judgment layer. The derived
