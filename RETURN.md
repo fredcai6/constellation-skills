@@ -3,8 +3,8 @@
 > This file replaces workstream A's inherited `RETURN.md`, which was tracked at `cbd9aee` and
 > appears in every worktree off it. Its content is preserved in git history at `77e428d^`.
 
-Branch `epic-418/h-447-episodes-retirement` · base `cbd9aee` · six commits · **not pushed, no PR,
-not merged** — those are the Admiral's per this launch order.
+Branch `epic-418/h-447-episodes-retirement` · base `cbd9aee` · **ten commits** · **not pushed, no PR,
+not merged** — those are the Admiral's per this launch order. Spine terminal, lease released.
 
 ---
 
@@ -52,7 +52,15 @@ All suite runs prefixed `FORCE_COLOR=0 NO_COLOR=1`; see §7 for why that matters
 | `git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md` | — | **12**, same as at `77e428d` |
 | `recover_crews.py epic418-h-447` | — | 8 crews, **0 unresolved** |
 
-**Commits.** `bf8819a` guard · `dbf9a23` capture gate · `100a33c` rewire · `77e428d` carry+untrack+delete · `fd7ef60` prose+census · `f2dd40a` verify.
+**Commits.** `bf8819a` guard · `dbf9a23` capture gate · `100a33c` rewire · `77e428d`
+carry+untrack+delete · `fd7ef60` prose+census · `f2dd40a` verify · `613ac88` this run's own
+sixteen episodes and the `RETURN.md` classification · `97905e7` terminal spine · `79df575`
+orphan-stamp fold.
+
+**Final state on the committed tree:** `python scripts/verify_retirement.py` exit **0**, zero bytes.
+`FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q` exit **0**, **1622 passed, 2 skipped, 0 failed, 0
+xfailed**. `git status --porcelain` shows only `.agent-work/AGENT_FEEDBACK.md` and
+`.agent-work/LESSONS.md` as untracked — which is the retirement, not dirt.
 
 **Suite delta, reconciled by name** (`.agent-work/epic418-h-447/evidence/g6-count-delta.md`):
 1688 baseline + 12 guard + 15 capture gate + 1 general install assertion − 85 deleted
@@ -310,3 +318,33 @@ are already carried into `episodes/`, so taking my side loses nothing. `main`'s 
 `to-initial-issues` skills were checked and mention neither retired file, so the guard's censuses do
 not need to account for them. `skills/to-issues/` was renamed on main and my `SKILL_SCRIPT_BUNDLES`
 edit touches the old name — that hunk needs the rename applied.
+
+---
+
+## 10. Three closeout calls you should see
+
+**`RETURN.md` is now classified, not approved.** Writing this report took the guard from exit 0 to
+exit 1 with 25 findings, because `RETURN.md` is tracked and a retirement report necessarily names
+what it retired. The convenient fix was 25 census approvals. The honest one is that a Commander's
+return report is a **record of a finished run addressed to an Admiral** — the same class as the
+root-level `notes-*.md` files already in `RUN_NOTES` — so it joins them by name with its own
+written-out reason, and its two existing census entries were **removed** rather than left to orphan.
+The guard caught that too: `test_every_exclusion_is_bounded_and_reasoned` pins `len(RUN_NOTES)`
+precisely so adding the eighth is a decision somebody takes. It failed, the decision was taken, and
+the episode is recorded in that test's own docstring.
+
+**The two ledger snapshots are not committed.** g4's crews read 261KB and 14KB verbatim copies of
+the retired files as they stood on `main` at `861ecbe`. Committing them into the archive would
+re-introduce the retired content under a path the deny-globs do not literally match — a weaker
+version of the thing being retired. They are replaced by a pointer at
+`context/RETIRED-LEDGER-SNAPSHOTS.md` naming `git show 861ecbe:…`, the eight carried episodes and
+their `artifact-ref`s. **The guard stayed green either way**, which is exactly why this was a
+judgement call and not a check.
+
+**The closeout leaves two orphan engine stamps, and I folded them.** The `archive` step moves the
+work area and then keeps driving the engine from the moved spine, but the engine derives its
+stamp paths from the **work id**, not from the spine file it was handed — so `archive`'s own
+`context/archive.json` and `mechanical/archive.json` landed in `.agent-work/archive/epic418-h-447/`,
+a sibling of the real package matching nothing. Both moved into the dated package, orphan directory
+removed, mechanism recorded at `ORPHAN-NOTE.md`. Not filed: cosmetic, exactly two files, visible as
+untracked scratch the moment it happens.
