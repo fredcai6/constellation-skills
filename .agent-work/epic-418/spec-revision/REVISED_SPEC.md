@@ -241,14 +241,37 @@ is reversed by ordering, not by a change of mind about its content.
    placement first and structural settlement second means the structural learning invalidates
    the content. Tommy: *safe start is unsafe process here.*
 
-**The better argument for F, which the original spec does not make.** It justifies F on token
-cost — roughly 1,000 tokens of always-loaded schema buying the removal of invocation strings
-from 7 of 21 imperatives plus most of the on-demand engine reference, about 4,500 tokens. That
-still holds and remains the acceptance number. But the real reason is that **F makes C's job
-smaller**. Once call mechanics live in typed tool arguments, what remains in an imperative is
-pure "what to do at this gate" — no session-id plumbing, no flag syntax. That is a far cleaner
-thing to relocate, and it means C's tranche measures attention rather than measuring how
-accurately agents transcribe commands.
+**What F is actually for — and it is not token savings.** Tommy, 2026-08-07: the goal is to
+cleave the problem-solving side from the spine-management side. Agents keep losing context to
+*operating the engine* — fumbling a flag, reading usage, working around a gate that refuses
+wrongly — and that cost lands on the agent doing the real work. The door moves that cost
+behind an interface: a problem *using* the engine lands on the far side of the tools, and the
+working agent never pays attention for it.
+
+The token figures are real but secondary, and treating them as the acceptance test measures
+the wrong thing. Roughly 1,000 tokens of always-loaded schema buys back invocation strings
+from 7 of 21 imperatives plus most of the on-demand engine reference, about 4,500 tokens. Keep
+that as a constraint — the net must not go the wrong way — but it is a side effect, not the
+goal, and it is not necessarily obvious.
+
+**The evidence that this cost is real is a filed cluster, not a hypothesis.** #442 (the rail
+and the HARD refusal read badly to the agent they are aimed at), #439 (`archive.c2b`'s
+`<branch>` placeholder never resolves, so the check always fails), #446 (the same gate accepts
+only an open PR, so a well-run epic is forced to `--force` on its success path), #427 (the
+refusals counter records zero when a refusal precedes the lease claim), #443 (every
+`config_ref` points at a file that does not exist). Every one of those is an agent stopping
+its actual work to reason about the engine. This session added another: the first engine call
+made here failed on an unrecognised `--session-id`, costing a round-trip to re-read usage.
+
+**Two consequences for how F is built.**
+
+- **MCP is the current vehicle, not the destination.** Tommy expects this to become a
+  different kind of tool call later. So this is a deliberate first round: do not over-invest in
+  MCP-specific design, and do not gold-plate the tool grouping.
+- **F makes C's job smaller.** Once call mechanics live in typed tool arguments, what remains
+  in an imperative is pure "what to do at this gate" — no session-id plumbing, no flag syntax.
+  That is a far cleaner thing to relocate, and it means C's tranche measures attention rather
+  than measuring how accurately agents transcribe commands.
 
 **Done-condition.** The original's four acceptance tests survive; they are good and they stay:
 
@@ -262,13 +285,26 @@ accurately agents transcribe commands.
 4. **Same-gate equivalence:** the CLI projection and the MCP tool result for one gate carry the
    same imperative text, so the two doors cannot drift.
 
-One added, from A2: the governor's threshold instruction arrives through a tool result and is
-acted on.
+Two added. From A2: the governor's threshold instruction arrives through a tool result and is
+acted on. And the one that carries F's actual purpose:
 
-**Evidence.** Re-run exc-9's tracer protocol, but **re-measure the CLI baseline rather than
-reusing exc-9's numbers.** Its CLI arm (24–27 calls, 2 refusals, 4–7 help-reads, against 14
-calls and zero fumbles through tools) was measured against the pre-B channel and pre-A2 verb
-semantics. Both have changed, and the fumble surface it measured may have shrunk on its own.
+5. **Spine-management cost falls.** Count the events where an agent stops doing its work to
+   operate the engine — refusals, usage reads, retries, and workarounds for a gate that
+   refuses wrongly — per run, per arm. This is F's acceptance measure. The token delta is a
+   constraint that must not go the wrong way, not the thing being bought.
+
+**Evidence.** Re-run exc-9's tracer protocol. It already counts the right thing: its CLI arm
+took 24–27 calls with 2 refusals and 4–7 help-reads, against 14 calls and zero fumbles through
+tools. Those fumble counts *are* the metric — read them as the headline rather than as colour
+around the token delta.
+
+But **re-measure the CLI baseline rather than reusing exc-9's numbers.** That arm ran against
+the pre-B channel and pre-A2 verb semantics; both have changed, and the fumble surface may
+have shrunk on its own. A tracer that reuses a stale baseline would flatter F.
+
+One caution on the measure: a fumble the *tool* absorbs still costs somebody. Count recovery
+events on the far side of the door too, so "the agent stopped fumbling" is distinguishable
+from "the fumbling moved somewhere we stopped looking."
 
 **Fixed.**
 
