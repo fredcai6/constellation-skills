@@ -137,3 +137,14 @@ Entry grammar (one line of date + tag, then the substance):
   Warned it that `tests/test_install_constellation.py` has moved on main — this morning's iterative-planning merge added ~100 lines it cannot see from `cbd9aee` — so a conflict there is mine to resolve, and asked for pruned method NAMES rather than line numbers, since names survive a merge and line numbers do not.
 
   Second Commander departure this run I have ratified, after the 6→8 rescope. Both were the same shape: a frozen artifact's specifics went stale or were under-inclusive, the agent applied the governing rule instead, and said so.
+
+- `2026-08-07` — `FINDING` (completes the descendant-attribution finding above): **the rail's three-strike escape hatch cannot fire for a mis-attributed ancestor.** Five nudges now, all ordering me to run `g4-impl-447`'s gates. `spine_rail.py:897-898`:
+
+  ```python
+  progress = (seq != prior.get("journal_seq")) or (active_ids != prior.get("active_id"))
+  count = (0 if progress else prior.get("count", 0)) + 1
+  ```
+
+  The counter resets whenever the WATCHED SPINE progresses. My session's record sits at `count: 2` and resets on every firing, because the implementer is working well — journal advancing, gate moving `m1-carry` → `m4-prune` → `m5-verify`. The release is designed for a genuinely stuck run; a mis-attributed ancestor is the opposite case, and the hatch is defeated exactly in proportion to how productive the descendant is. **The better the descendant works, the more relentlessly its ancestor is nudged, and the release never comes.** No amount of waiting clears it and the only exits are to do another agent's work or to keep declining.
+
+  This makes the descendant-attribution defect materially worse than first logged: it is not a stray nudge, it is an unbounded one. Both halves belong in the same issue — attribution by generation, and an escape hatch whose progress signal is read from a spine the nudged agent does not own.
