@@ -1,7 +1,0 @@
-{
-  "hooks": {
-    "Stop": [{"hooks": [{"type": "command", "command": "py \"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" Stop", "timeout": 20}]}],
-    "SessionStart": [{"matcher": "compact|resume|startup", "hooks": [{"type": "command", "command": "py \"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" SessionStart", "timeout": 20}]}],
-    "PostToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "py \"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" PostToolUse", "timeout": 10}]}]
-  }
-}

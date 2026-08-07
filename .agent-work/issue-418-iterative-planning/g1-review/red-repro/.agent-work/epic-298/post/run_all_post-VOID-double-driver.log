@@ -1,2 +1,0 @@
-run #690: exit=0 timed_out=False elapsed=1097s git_unchanged=Falserun #688: exit=0 timed_out=False elapsed=1170s git_unchanged=False
-worktree C:\Programs\f1bwt\post704 is not pristine — rerun #698: exit=0 timed_out=False elapsed=1152s git_unchanged=Falserrun #688: exit=0 timed_out=False elapsed=1333s git_unchanged=Falserrun #704: exit=4294967295 timed_out=False elapsed=274s git_unchanged=False

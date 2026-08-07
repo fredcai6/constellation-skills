@@ -1,5 +1,0 @@
-{
-  "claude_cli_version": "2.1.220 (Claude Code)",
-  "recorded_at": "2026-08-02",
-  "why": "critic finding 3: --model claude-opus-5 is an alias and the CLI harness itself can move between arms; PRE-B did not record either, so this is a POST-only witness and its PRE-B counterpart is UNKNOWN, not equal."
-}

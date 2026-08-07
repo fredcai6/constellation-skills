@@ -14,6 +14,15 @@
 # They are a copied checkout, not run history, and their nesting exceeds the
 # Windows path limit -- `git worktree add` fails with 'Filename too long'.
 .agent-work/**/constellation-eval-*/
+# Same defect, general shape: a captured checkout nests a SECOND .agent-work/
+# inside this one. The `constellation-eval-*` rule above only matched captures
+# named that way; a RED-reproduction capture under a work area slipped past it
+# and landed at 216 characters -- past the Windows limit, so every test running
+# `git worktree add` died with exit 128 ('Filename too long').
+# This rule is prevention only: it does not untrack the pre-existing captures
+# under .agent-work/dispatch-126-127/, which are already tracked history and sit
+# under the limit. Exclude the copied checkout, never the run that captured it.
+.agent-work/**/.agent-work/
 __pycache__/
 *.pyc
 .coverage
