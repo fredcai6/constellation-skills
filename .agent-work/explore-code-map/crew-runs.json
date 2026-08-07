@@ -387,7 +387,7 @@
     "gate": "review-critic-intentfit",
     "role": "critic",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/review-critic-intentfit/critic/attempt-1",
     "backend": "external",
     "pid": null,
@@ -397,11 +397,13 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/review-critic-intentfit-critic-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/review-critic-intentfit-critic-attempt-1.stderr.txt",
     "started_at": "2026-08-07T17:04:31.915805+00:00",
-    "last_heartbeat": "2026-08-07T17:04:31.915805+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-07T17:15:18.212333+00:00",
+    "completed_at": "2026-08-07T17:15:18.212333+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   },
   {
     "crew_id": "constellation/explore-code-map/review-critic-testability/critic/attempt-1",
@@ -409,7 +411,7 @@
     "gate": "review-critic-testability",
     "role": "critic",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/review-critic-testability/critic/attempt-1",
     "backend": "external",
     "pid": null,
@@ -419,11 +421,13 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/review-critic-testability-critic-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/review-critic-testability-critic-attempt-1.stderr.txt",
     "started_at": "2026-08-07T17:04:34.820083+00:00",
-    "last_heartbeat": "2026-08-07T17:04:34.820083+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-07T17:15:17.889538+00:00",
+    "completed_at": "2026-08-07T17:15:17.889538+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   },
   {
     "crew_id": "constellation/explore-code-map/review-critic-simplicity/critic/attempt-1",
@@ -431,7 +435,7 @@
     "gate": "review-critic-simplicity",
     "role": "critic",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/explore-code-map/review-critic-simplicity/critic/attempt-1",
     "backend": "external",
     "pid": null,
@@ -441,10 +445,12 @@
     "stdout": ".agent-work/explore-code-map/crew-runs/review-critic-simplicity-critic-attempt-1.stdout.txt",
     "stderr": ".agent-work/explore-code-map/crew-runs/review-critic-simplicity-critic-attempt-1.stderr.txt",
     "started_at": "2026-08-07T17:04:37.535243+00:00",
-    "last_heartbeat": "2026-08-07T17:04:37.535243+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-07T17:15:18.052792+00:00",
+    "completed_at": "2026-08-07T17:15:18.052792+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
