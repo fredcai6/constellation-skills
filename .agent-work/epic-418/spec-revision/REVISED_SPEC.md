@@ -1,18 +1,26 @@
 # Epic #418 — revised spec, section by section
 
-_**DRAFT — UNCONFIRMED — DO NOT CUT.** This spec has not passed the confirm gate. Do not cut
-issues or waves from this document while this marker stands._
+**SPEC OF RECORD for epic #418**, superseding
+`.agent-work/archive/2026-08-03-explore-post-phase1/DESIGN_SPEC.md`. That document is kept in the
+archive for provenance; where the two disagree, this one governs.
 
-Working document. Revises `.agent-work/archive/2026-08-03-explore-post-phase1/DESIGN_SPEC.md`
-against what execution actually taught us. Written with Tommy, 2026-08-07.
+Revises the original against what execution actually taught us. Written with Tommy, 2026-08-07.
 
 ## Confirmation
 
-- **Status: DRAFT — UNCONFIRMED — DO NOT CUT**
-- Confirmed by:
-- Date:
-- Critic findings dispositioned: NO — every row in the Critic findings table must carry a
-  Disposition before confirm
+- **Status: CONFIRMED**
+- Confirmed by: Tommy
+- Date: 2026-08-07
+- Critic findings dispositioned: **YES — 81 of 81** (12 BLOCKING, 46 MAJOR, 23 MINOR), zero
+  empty Disposition cells. Two REJECT with reasons; the rest EDIT.
+- Assumptions exercised: the cold panel ran live against this document, including a
+  `claim accuracy` arm with repository access that verified the spec's measured claims at the
+  tree and found six false.
+- Assumptions accepted untested: **assumption 3** (B's echo removal is behaviour-neutral for
+  compliance) is retired by observation rather than measurement — recorded in C as a real cost,
+  since B's de-dup stays a live suspect if a compliance problem appears later. The per-gate
+  threshold default, the tranche boundary, `n` and the pass threshold, and the seven-tool
+  grouping all remain graded placeholders.
 - Cold panel: four arms dispatched 2026-08-07 — `intent-fit`, `testability`,
   `done-condition fidelity`, `claim accuracy`. The last two are new lenses, added for this
   review; `claim accuracy` is the only arm permitted to read the tree.
