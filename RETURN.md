@@ -3,8 +3,8 @@
 > This file replaces workstream A's inherited `RETURN.md`, which was tracked at `cbd9aee` and
 > appears in every worktree off it. Its content is preserved in git history at `77e428d^`.
 
-Branch `epic-418/h-447-episodes-retirement` · base `cbd9aee` · six commits · **not pushed, no PR,
-not merged** — those are the Admiral's per this launch order.
+Branch `epic-418/h-447-episodes-retirement` · base `cbd9aee` · **ten commits** · **not pushed, no PR,
+not merged** — those are the Admiral's per this launch order. Spine terminal, lease released.
 
 ---
 
@@ -52,7 +52,15 @@ All suite runs prefixed `FORCE_COLOR=0 NO_COLOR=1`; see §7 for why that matters
 | `git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md` | — | **12**, same as at `77e428d` |
 | `recover_crews.py epic418-h-447` | — | 8 crews, **0 unresolved** |
 
-**Commits.** `bf8819a` guard · `dbf9a23` capture gate · `100a33c` rewire · `77e428d` carry+untrack+delete · `fd7ef60` prose+census · `f2dd40a` verify.
+**Commits.** `bf8819a` guard · `dbf9a23` capture gate · `100a33c` rewire · `77e428d`
+carry+untrack+delete · `fd7ef60` prose+census · `f2dd40a` verify · `613ac88` this run's own
+sixteen episodes and the `RETURN.md` classification · `97905e7` terminal spine · `79df575`
+orphan-stamp fold.
+
+**Final state on the committed tree:** `python scripts/verify_retirement.py` exit **0**, zero bytes.
+`FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q` exit **0**, **1622 passed, 2 skipped, 0 failed, 0
+xfailed**. `git status --porcelain` shows only `.agent-work/AGENT_FEEDBACK.md` and
+`.agent-work/LESSONS.md` as untracked — which is the retirement, not dirt.
 
 **Suite delta, reconciled by name** (`.agent-work/epic418-h-447/evidence/g6-count-delta.md`):
 1688 baseline + 12 guard + 15 capture gate + 1 general install assertion − 85 deleted
@@ -308,5 +316,112 @@ not rebase or merge mid-gate. Expect a conflict in `.agent-work/LESSONS.md` and
 `.agent-work/AGENT_FEEDBACK.md` — **both are deletions on my side**, and all eight of main's lessons
 are already carried into `episodes/`, so taking my side loses nothing. `main`'s new `replan` and
 `to-initial-issues` skills were checked and mention neither retired file, so the guard's censuses do
-not need to account for them. `skills/to-issues/` was renamed on main and my `SKILL_SCRIPT_BUNDLES`
-edit touches the old name — that hunk needs the rename applied.
+not need to account for them.
+
+**Correcting myself on the rename:** I earlier told the Admiral my `SKILL_SCRIPT_BUNDLES` edit
+touched the old `to-issues` name and that the hunk would need the rename applied. **It does not.**
+Re-derived by command: `git diff -U0 cbd9aee..HEAD -- scripts/install_constellation.py` changes
+exactly five bundle lines — the `admiral` and `commander` tuples, and the two `lessons-auditor`
+entries (deleted from `SKILL_SCRIPT_BUNDLES` and `SKILL_REFERENCE_BUNDLES`). `"to-issues"` appears
+**zero** times in my diff. The rename is a plain context difference in that file, not an overlap with
+my edit.
+
+---
+
+## 10. Three closeout calls you should see
+
+**`RETURN.md` is now classified, not approved.** Writing this report took the guard from exit 0 to
+exit 1 with 25 findings, because `RETURN.md` is tracked and a retirement report necessarily names
+what it retired. The convenient fix was 25 census approvals. The honest one is that a Commander's
+return report is a **record of a finished run addressed to an Admiral** — the same class as the
+root-level `notes-*.md` files already in `RUN_NOTES` — so it joins them by name with its own
+written-out reason, and its two existing census entries were **removed** rather than left to orphan.
+The guard caught that too: `test_every_exclusion_is_bounded_and_reasoned` pins `len(RUN_NOTES)`
+precisely so adding the eighth is a decision somebody takes. It failed, the decision was taken, and
+the episode is recorded in that test's own docstring.
+
+**The two ledger snapshots are not committed.** g4's crews read 261KB and 14KB verbatim copies of
+the retired files as they stood on `main` at `861ecbe`. Committing them into the archive would
+re-introduce the retired content under a path the deny-globs do not literally match — a weaker
+version of the thing being retired. They are replaced by a pointer at
+`context/RETIRED-LEDGER-SNAPSHOTS.md` naming `git show 861ecbe:…`, the eight carried episodes and
+their `artifact-ref`s. **The guard stayed green either way**, which is exactly why this was a
+judgement call and not a check.
+
+**The closeout leaves two orphan engine stamps, and I folded them.** The `archive` step moves the
+work area and then keeps driving the engine from the moved spine, but the engine derives its
+stamp paths from the **work id**, not from the spine file it was handed — so `archive`'s own
+`context/archive.json` and `mechanical/archive.json` landed in `.agent-work/archive/epic418-h-447/`,
+a sibling of the real package matching nothing. Both moved into the dated package, orphan directory
+removed, mechanism recorded at `ORPHAN-NOTE.md`. Not filed: cosmetic, exactly two files, visible as
+untracked scratch the moment it happens.
+
+---
+
+## 11. For your integration — the four-file overlap, by gate id
+
+You asked for the spans I edited in the two spine templates named by **gate id and key**, not line
+number, because line numbers will not survive the merge. Here they are, derived by mapping every
+changed line back to its owning task key rather than read off the diff.
+
+### `skills/commander/templates/COMMANDER_SPINE.template.json`
+
+| gate | key | what changed |
+|---|---|---|
+| `feedback` | `imperative` | replaced wholesale — the apply-or-defer / ripeness / `bank_reason` / dormancy / export-resolve-defer text deleted; honest-reflection opening and crew-feedback harvest kept; the verbatim record-not-a-rule sentence added |
+| `feedback` | `postconditions` | `c1` **retargeted in place** to `verify_episode_captured.py … --phase feedback`; `c2` (`verify_lessons_applied.py`) **DELETED**, terminal |
+| `archive` | `imperative` | the `AGENT_FEEDBACK.md`-commit sentence replaced by the episodes sentence; one clause trimmed (*"leaving the unified AGENT_FEEDBACK.md at the agent-work root"*) because it contradicted the retargeted `archive.c1`. PR-body-on-Windows, work-area move, `c4` waiver path and lease-release-last ordering all **untouched** |
+| `archive` | `postconditions` | `c1` **retargeted in place** to `--phase archive`. `c2`, `c2b`, `c3`, `c4` untouched — **`archive.c4`'s `deny_globs` is byte-identical**, deliberately keeping both retired paths as a re-staging block |
+
+### `skills/admiral/templates/ADMIRAL_SPINE.template.json`
+
+| gate | key | what changed |
+|---|---|---|
+| `closeout` | `imperative` | the **`constellation-lessons-auditor` dispatch and its entire disposition-routing paragraph DELETED** — not repointed at `episodes/`. Step 2 rewritten to episode capture. Steps 3/4/5 (cartographer reconcile, hygiene, user acceptance) **byte-identical**. Numbering became 1–5 because the auditor that was step 1 is gone |
+| `closeout` | `postconditions` | `c1` statement rewritten (`check` stays `null`); `c2` **retargeted** to `verify_episode_captured.py … --phase feedback`; `c6` (`verify_lessons_applied.py`) **DELETED**, terminal. `c3`, `c4`, `c5` untouched |
+
+### `directives` — checked, and the answer is clean
+
+**No edit touched `directives`, and no edit assumed anything about it.** I verified rather than
+asserting this: `directives` occurs only in *context* lines of my diff, never in a changed line. In
+both templates it lives on its own physical line in every task —
+`"constraints": [], "directives": null, "child_checklist": …` — structurally separate from the
+`imperative` and `postconditions` keys, which are the only two keys I edited.
+
+Closest approach, so you know where to look hardest: **Admiral `closeout`**. My `c6` deletion ends
+one line above that gate's `directives` line. Different lines, but inside a three-way merge's hunk
+radius, so it is the single place a populated `directives` could interact with my edit.
+
+The other two overlapping files — `scripts/install_constellation.py` (bundle tuples +
+`SKILL_REFERENCE_BUNDLES`) and `tests/test_install_constellation.py` (one general assertion added) —
+carry the `to-issues` to `to-initial-issues` rename hazard already flagged in section 9.
+
+---
+
+## 12. Three things that differ from your closing instructions
+
+Your rulings reached me after the spine had gone terminal and the lease was released. Reporting the
+deltas rather than reopening a closed spine to paper over them.
+
+**`archive.c2b` — I force-waived it; you asked for `block` and bubble.** I waived `c2` (push) and
+`c2b` (open PR) with `--force`, authority `admiral:launch-order/H-447`, before your message arrived.
+Both waivers are in the journal with full reasons, and I deliberately recorded `c2b`'s *own*
+reasoning in the waiver rather than bypassing it quietly — it exists because a Commander who goes
+terminal without a reachable ref gets chased, which is sound and which I did not dispute. The net
+state is the one you wanted: nothing pushed, no PR, the reservation recorded, and visible to you in
+`spine.json`. Reopening a terminal spine to convert a waiver into a block would be worse than the
+mismatch. If you want it as a `block`, say so and I will reclaim and redo it.
+
+**The `g4-review` gate's close criterion still says "six episodes".** You are right, and you spotted
+it before I did. It was not amended alongside `g4-implement` and `g4-integrate`, it passed on a
+loose reading with eight, and by the time your message arrived the gate was complete and the lease
+released. Taking the option you offered: **recording it here rather than touching a closed gate.**
+The verified fact is eight; the gate text is stale; `g4-integrate.c1` and `.c2` carry the correct
+number.
+
+**#460 was already filed.** Your instruction to file the ~24-of-32 finding at main level rather than
+leave it in this artifact was already satisfied at the `triage` step — it is issue **#460**, one of
+eight (**#459–#466**), each with measured evidence, acceptance criteria and an explicit out-of-scope
+section. Agreed on the principle: banking a finding locally for someone else to harvest is the
+mistake this project has made three times, and it is the shape this workstream exists to end.
+
