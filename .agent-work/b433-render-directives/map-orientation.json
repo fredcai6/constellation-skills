@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "work_id": "b433-render-directives",
+  "root": "C:/Programs/constellation-skills-wt/r418-433",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "26741e90597490b1928c2ddb76823a4cd2d9ec4da476e030edf0d07238fa5ba3",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "7c8b5cba1b7301ab9a8f7cba60583b311e31a6719ba2f384e4af05661e046c64",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "68b68c35ea331b736499bbc5f862ded2b0fe98ebafd42274bd4ed13f8b380d8c",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "cbf55a2c79f81df0c8da4fa26e28822d6b91381f7d7fe5ad4f54ebadba17b931",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This repo carries no docs/architecture/ packet map at all; the engine's structural record lives in docs/CHECKLIST_SCHEMA.md (Task field table + the Rendering section) and docs/CHECKLIST_ENGINE_DESIGN.md. No capability/decision anchor inventory exists, so mission-frame anchors are cited against those schema sections rather than against map anchor ids."
+  ],
+  "escalation": "Escalating to the Admiral (epic-418-redux) as a standing repo condition, not a defect of this run: constellation-skills has no Cartographer packet map, so every Commander here orients DEGRADED. Already known; not filed as new.",
+  "emitted_at": "2026-08-07T21:38:15.555858+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

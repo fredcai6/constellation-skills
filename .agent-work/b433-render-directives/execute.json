@@ -1,0 +1,139 @@
+{
+  "work_id": "b433-render-directives",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate", "g2-implement", "g2-review", "g2-integrate", "g3-schema"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Re-read this run's own .agent-work/b433-render-directives/MISSION_FRAME.md and PLAN_ALTERNATIVES.md, and .agent-work/epic-418-redux/notes-433.md for the measured inventory. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "orchestrator context + glossary + mission frame + converged alternatives loaded; plan intent and scope confirmed", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Render directives in the current projection: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch a constellation-implementer subagent through scripts/run_crew.py. Task: make a populated `directives` block reach the agent through `current`. GOLDEN FIRST, per the frozen pre-ruling decision:goldens-written-before-the-change -- author the failing golden over the ACTUAL shipped skills/commander/templates/COMMANDER_SPINE.template.json `execute` gate before touching the renderer, and capture it RED. Then add `directives` passthrough to state()'s active dict and a dedicated `_render_directive_lines()` beside `_render_anchor_lines()` in scripts/checklist_engine.py. The renderer MUST handle BOTH corpus shapes, exactly as _anchor_category_items already handles anchors' three shapes: (a) key-to-nested-contract-dict, the shape all 8 populated corpus gates carry -- emit the key, then one indented line per contract field, list leaves joined with ', ', JSON spelling for scalars so a false stays `false`; and (b) a flat list of strings, the shape docs/CHECKLIST_SCHEMA.md declares and the `add` amend op accepts unvalidated -- emit one indented line per string. A dict-only renderer is REFUSED at review: tests/test_checklist_engine.py:4038 already carries the flat-list shape, and narrowing to dicts would silently reinstate the very defect this issue closes for that shape. An absent or empty `directives` emits nothing, exactly as constraints/anchors behave. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [{"id": "p1", "statement": "execution context loaded; the measured inventory (8 populated gates, always a dict of nested dicts) is the shape the renderer must serve", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers, carrying the RED capture of the golden taken before the renderer change", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "current's first line stays exactly `ACTIVE {id} [{status}] — {imperative}` -- GoldenOutputBriefing pins it across every shipped template",
+        "state() stays pure: passthrough only, no side effect, no check re-run (INV-2)",
+        "an absent or empty directives adds no output",
+        "do NOT push directives through _anchor_category_items/_render_anchor_lines -- that helper's contract serves anchors' two shapes and has two callers",
+        "both directives shapes render: key-to-nested-dict AND flat [string]. Cold-critic finding 5: the existing fixture at tests/test_checklist_engine.py:4038 is a flat list, so a dict-only renderer breaks g2 for a reason the plan never named, and reinstates the original defect for list-shaped values.",
+        "fenced off this wave: scripts/collect_feedback.py, episodes/, scripts/verify_worktree_precondition_coverage.py"
+      ],
+      "anchors": {
+        "structural": ["scripts/checklist_engine.py — state() ~1588, _render_anchor_lines() ~1650, render_human() ~1667", "tests/test_checklist_engine.py — GoldenOutputBriefing ~3779"],
+        "capability": ["the projection is the complete state channel (docs/agents/GLOSSARY.md: agents drive from what current prints, never from the JSON file)"],
+        "constraint": ["assumption:schema-type-drifted — docs/CHECKLIST_SCHEMA.md declares directives as [string]|null; all 8 populated instances are dicts. Serve the corpus, correct the doc at g3-schema."],
+        "decision": ["decision:render-not-delete — directives is rendered, not deleted; the inventory shows 3 shipped templates carry it and a test asserts its parsed contract @grade: settled/measured · leans g1-implement · settle: re-run the tree-wide inventory; 0 populated gates would reopen this", "decision:own-helper-not-anchors-helper — directives gets its own line formatter; anchors is category-to-[str], directives is key-to-nested-dict @grade: settled/human · leans g1-implement"],
+        "evidence": ["claim:populated-directives-reaches-current — a golden over the real shipped commander spine execute gate, captured RED before the renderer change and green after"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Render directives in the current projection: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer subagent through scripts/run_crew.py. Verify against the same anchors g1-implement carried. Specifically confirm: the golden was captured RED before the change (a golden written after the fact certifies whatever the code now emits); the first ACTIVE line is byte-identical; an absent/empty directives still emits nothing; state() gained no side effect. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Render directives in the current projection: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself against the world, then REPRODUCE THE RED IN YOUR OWN HANDS -- revert only the renderer hunk, run the new golden, confirm it fails, restore the hunk -- and attach that real output as command-output evidence with proof=red-without-renderer. A golden whose red was only ever reported to you is a golden you have not seen fail. Then advance. BLOCK: return the implementer for rework. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "a populated directives block renders in current, and the engine's own test module is green", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c3", "statement": "the Commander itself saw the golden go RED with the renderer hunk reverted -- cold-critic finding 4: an implementer-result artifact with no match is satisfied identically by a golden written after the fact", "check": {"kind": "artifact", "evidence_type": "command-output", "match": {"proof": "red-without-renderer"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Close the unrendered-field class with a falsifiable completeness property: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer subagent through scripts/run_crew.py. Task: make tests/test_checklist_engine.py's TaskFieldCompleteness able to FAIL for the shapes the corpus really carries. Five changes, all inside that class: (1) remove 'directives' from _EXCLUDED_FIELDS and replace its KNOWN GAP comment with the rendering note; every remaining exclusion keeps its stated per-entry reason. (2) Replace _flatten with a TOTAL leaf extractor that recurses dicts and lists to any depth and stringifies scalars, returning [] only for None and empty containers -- this is what makes the nested-dict shape assertable at all. (3) Replace the single checked_any flag with a PER-FIELD ledger: record which fields the loop actually asserted on, then assert that set equals the set of populated non-excluded fields. A recursive extractor alone still reports green when a future field yields no text, because one flag for the whole loop lets any field cover for any other. (4) COLD-CRITIC FINDING 1, and this is the change that actually closes the class: the loop runs over the FIXTURE's keys, so a Task field added later and forgotten in the fixture is absent from the loop, absent from the ledger's expected set, and passes green -- the identical forgetting failure this property exists to catch. Assert the fixture's key set is a SUPERSET of the engine's own canonical Task builder _build_amend_task (scripts/checklist_engine.py:2040, mirrored by append() at :2252), so a field added to the engine's Task shape and forgotten here fails mechanically. State the residual limit honestly in the class docstring: a field introduced only by a template and never by either builder still needs a human to add it. (5) Add an in-suite NEGATIVE self-test that feeds the same assertion path a render with the directives block stripped and asserts it raises, naming directives. Then run the red-proofs by hand and paste the REAL output in the result: R2 make the extractor return [] for dicts -> expect the ledger set-mismatch, NOT a green run; R4 add a throwaway field whose value flattens to nothing -> expect it to fail by name; R5 add a field to _build_amend_task and not to the fixture -> expect the superset assertion to fail by name. Revert each break before the next. (R1, suppressing the renderer, is deliberately dropped: change (5) automates exactly that world.)",
+      "preconditions": [{"id": "p1", "statement": "g1 integrated: directives renders, so the property has a rendered field to assert against", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers, carrying the REAL captured output of red-proofs R2, R4 and R5", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "the test's leaf extractor is NOT shared with the renderer's -- a shared bug would render nothing and assert nothing, in agreement, and both sides would report green",
+        "do not delete any existing exclusion's stated reason; an exclusion set with a reason per entry is the honest form",
+        "assert against the projection's behaviour, never against prose describing it -- a check that still passes once the guard is deleted has the #392 shape and fails review",
+        "fenced off this wave: scripts/collect_feedback.py, episodes/, scripts/verify_worktree_precondition_coverage.py"
+      ],
+      "anchors": {
+        "structural": ["tests/test_checklist_engine.py — class TaskFieldCompleteness ~3958, _EXCLUDED_FIELDS ~4001, _flatten ~4007"],
+        "capability": ["the Task field contract — docs/CHECKLIST_SCHEMA.md's Task table is the enumeration the property is cut against"],
+        "constraint": ["constraint:a-check-that-cannot-fail — a guard whose output is identical in the healthy and the defective world cannot discriminate, however correctly it runs; any guard that loops must assert what it looped over and state the count"],
+        "decision": ["decision:per-field-ledger-is-the-class-fix — the durable part is a per-field record of what the property asserted, not the flattener; both independent plan candidates converged here @grade: settled/measured · leans g2-implement · settle: red-proof R4 -- a field whose value flattens to nothing must fail by name", "decision:independent-extractor — the test's leaf extractor stays separate from the renderer's @grade: settled/human · leans g2-implement"],
+        "evidence": ["claim:property-fails-when-a-populated-field-is-unrendered — proven by an in-suite negative self-test AND by recorded manual mutation output, not by observing the property pass"],
+        "confidence_flags": ["docs/CHECKLIST_SCHEMA.md is partly stale and this gate depends on it — the property is cut against the field set the code really carries, not against the table alone; the table is corrected at g3-schema"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Close the unrendered-field class with a falsifiable completeness property: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer subagent through scripts/run_crew.py. The review's whole point is falsifiability: independently REPRODUCE red-proofs R2 (extractor returns [] for dicts), R4 (a field that flattens to nothing) and R5 (a field added to _build_amend_task but not to the fixture), and confirm the suite goes RED with a message naming the field each time. A property observed only passing is a check that cannot fail, and reporting it green is the failure mode this gate exists to catch. Also confirm the ledger is per-field and not one flag, that the test's leaf extractor is not the renderer's, and that the class docstring states the residual limit rather than implying coverage the property lacks. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors, and independently reproduces the red-proofs"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Close the unrendered-field class with a falsifiable completeness property: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself against the world AND re-run one red-proof in your own hands, then advance. BLOCK: return the implementer for rework. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the completeness property is in the suite and the engine's test module is green", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-schema": {
+      "id": "g3-schema",
+      "title": "Correct the drifted schema record, and run the broader suite",
+      "imperative": "REASONING GATE -- no crew. Crew waiver reason: the deliverable is a two-paragraph correction to a document whose exact drift this run measured, and the Commander already holds that context; a crew on a pure doc edit is shallower, not safer. Correct docs/CHECKLIST_SCHEMA.md in two places: the Task table's `directives` type (it declares `[string] | null`; the corpus carries a dict of nested contract dicts), and the Rendering section's 'Known gap, not yet closed' sentence, which must state that directives now renders on the same omit-when-empty terms. The operative invariants are pinned as postconditions below so this gate verifies a frozen chain rather than an invented proxy. Then run the broader suite and capture the REAL exit code.",
+      "preconditions": [{"id": "p1", "statement": "g2 integrated: the property is in the suite, so the doc can describe shipped behaviour rather than intent", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the Rendering section positively states that directives renders, AND the old unclosed-gap claim is gone. A conjunction, not a bare negation: cold-critic finding 3 showed the negation alone passes on any rewording and passes if the whole section is deleted -- identical output in the healthy and the defective world.", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/r418-433 && ! grep -qi 'known gap' docs/CHECKLIST_SCHEMA.md && grep -qF 'a populated `directives` block' docs/CHECKLIST_SCHEMA.md"}, "satisfied": false},
+        {"id": "c2", "statement": "the Task table's OWN directives row declares the dict shape, and the drifted type phrase is gone from the file. Cold-critic finding 2: the first form of this check grepped the whole file, so a word added anywhere in the prose satisfied it while the table row kept the wrong type.", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -F '| `directives` |' docs/CHECKLIST_SCHEMA.md | grep -q 'dict' && ! grep -qF 'null | forced primitive specifics handed down' docs/CHECKLIST_SCHEMA.md"}, "satisfied": false},
+        {"id": "c3", "statement": "the full suite is green at the recorded baseline or better, with the REAL exit code captured", "check": {"kind": "command", "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": ["the doc describes shipped behaviour; it never becomes the enforcement mechanism"],
+      "anchors": {
+        "structural": ["docs/CHECKLIST_SCHEMA.md — Task table ~122, Rendering section ~136"],
+        "evidence": ["claim:schema-record-matches-shipped-behaviour — two command postconditions, pre-authored here rather than improvised by an executor"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

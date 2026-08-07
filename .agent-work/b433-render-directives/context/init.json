@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "73b45174980820af97480d177032a6ceb43f1398"
+  },
+  "run": {
+    "work_id": "b433-render-directives",
+    "generated_at": "2026-08-07T21:37:18Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/r418-433",
+      "repo": "C:/Programs/constellation-skills-wt/r418-433",
+      "durable": "C:/Programs/constellation-skills-wt/r418-433"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/r418-433"
+    }
+  }
+}

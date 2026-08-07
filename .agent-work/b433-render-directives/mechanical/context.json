@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "context",
+  "mechanical": {
+    "run": "b433-render-directives",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-context@e4944e3738895c0c801c3dc987e373b2e869a622",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives",
+    "generated_at": "2026-08-07T21:37:37Z"
+  }
+}
