@@ -431,7 +431,8 @@
           "id": "p1",
           "statement": "discovery layer and its tests are in place",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "discovery layer and its tests are in place: scripts/code_map/discovery.py plus 5 discovery tests in tests/test_code_map.py."
         }
       ],
       "postconditions": [
@@ -439,7 +440,8 @@
           "id": "c1",
           "statement": "the exclusion test observed RED with the exclusion removed, with the mutation confirmed applied",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Mutation confirmed applied by git diff: EXCLUDED_PREFIXES = ('.agent-work/',) -> (). RED with it removed: 2 failed, 3 passed on -k discovery; the repo test listed 141 .agent-work paths leaking into the corpus, first '.agent-work/archive/2026-08-02-issue-304/evidence/g4_assert_closeout.py'. Across the whole file 4 failed, 10 passed -- the discover and build CLI tests fail too, so the exclusion is load-bearing end to end, not only at the discovery call. Restored: git status clean on the file, 5 passed."
         },
         {
           "id": "c2",
@@ -457,11 +459,22 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m8-falsifiable-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m8-falsifiable",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m9-close": {
@@ -533,12 +546,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:14:46.972499+00:00",
+    "last_heartbeat": "2026-08-07T21:16:52.436079+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
