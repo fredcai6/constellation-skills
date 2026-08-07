@@ -1,0 +1,89 @@
+{
+  "work_id": "issue-456-g0-review",
+  "diff_ref": "git diff 6ae6193..HEAD -- scripts/ tests/ .gitignore (issue #456 gate g0: scripts/code_map/ 8 new modules, tests/test_code_map.py, the ScriptsPackageBundlingTests guards, .gitignore)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Writing Files On Windows), docs/agents/GLOSSARY.md, references/global-crew.md (minimal change, no speculative abstraction), .agent-work/issue-456/crew-handoffs/g0-implement.md (Specific Exclusions: port, do not rewrite; the checks rewrite is g1)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "Present and measured: supplement.run 86 lines (with a nested walk()), render.load_stores 70, extract.resolve_attr 63, extract._prebind 52, render.run 53, extract.run 48, extract._table_stmt 48.",
+      "override": {
+        "repo_standard": "g0-implement.md Specific Exclusions ('Do not rewrite the checks. That is g1'; no defect fixes, no schema changes) together with global-crew.md 'Make the minimal change that satisfies the handoff; no speculative abstraction'.",
+        "reason": "These bodies are a faithful port of the reference prototype, which I verified by normalized diff: prototype/astx.py -> extract.py is 144 diff lines and every one of them is docstring rewording, ROOT parameterisation, or the timings removal -- the resolution logic is untouched. Extracting methods here would be exactly the un-diffable rewrite the handoff forbids, and g1/g2/g3 already own reworking these bodies. Splitting them now would also destroy the only baseline a later gate has to diff against."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "extract.Extractor is 467 lines with 26 methods -- by a wide margin the largest unit in the diff.",
+      "override": {
+        "repo_standard": "Same as long-method: g0-implement.md's port-not-rewrite exclusion plus global-crew.md's minimal-change rule.",
+        "reason": "Extractor arrived whole from the prototype and its per-node visitor methods are the AST visitor shape, not accidental accretion. The gate's stated job is to put the prototype behind a CLI, and the normalized diff confirms the class body was carried across unchanged. Restructuring it would forfeit the port's one real property -- that its output is comparable to the prototype's."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The D1 line-base workaround '+1' is written out three separate times: render.py:97, checks.py:98 and checks.py:138, each with its own comment. Separately, checks.reconciliation (checks.py:95-99) and checks.store_only_sites (checks.py:134-140) each rebuild the same supplement-position set and re-walk the same statement stream to find 'contains' rows. When g3 flips the store's line base, all three +1 sites must move together and nothing links them.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "Every function in checks.py reaches through the supplement's raw structure -- supp['entities'], supp['modules'], mods[k.split(':',1)[0]]['file'] -- rather than asking an object for it, and render.py's page builders read twelve module-level dicts belonging to load_stores.",
+      "override": {
+        "repo_standard": "g0-implement.md Specific Exclusions: 'Do not rewrite the checks. That is g1.' checks.py's own module docstring (checks.py:1-20) records the same scope boundary on the record.",
+        "reason": "checks.py is a declared throwaway whose replacement is the FIRST gate in the build queue ('a check stage that can fail'). Giving it a proper interface now is work that g1 deletes. render.py's module-level state is a different case and is flagged under speculative-generality/primitive-obsession rather than hidden here."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "(root, artifacts, out) travels as a trio and is reassembled by hand at every boundary: cli._Parser.parse_args resolves two of them (cli.py:47-53), cli._extract/_supplement/_render/_check each re-wrap them in Path() (cli.py:81-106), and extract.run/supplement.run/render.run/checks.run each take the subset they need. cli.py then needs two membership sets (_WANTS_ARTIFACTS, _WANTS_OUT at cli.py:38-39) purely to track which stage wants which member of the clump -- the clump made visible as bookkeeping.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "The supplement entity key is a bare string 'module:Qualified.Name' with no type, and every consumer re-parses it by hand: render.modof (render.py:70), render.run's page-name derivation (render.py:405), checks.py:99, checks.py:134, and render.py's children/members_of index building. This is the direct mechanism behind blocker B2: render.py:405 turns the raw tail of that string straight into a filename with no collision check and no case-folding check, so scripts.run_skill_eval:Verdict and scripts.run_skill_eval:verdict both write map/scripts.run_skill_eval/Verdict.md on a case-insensitive filesystem and one page is silently lost. A key type that owned its own page-name derivation would have had exactly one place to put that check.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Widest signature in the diff is three parameters (checks.run, render.run, extract.Extractor.__init__). Nothing approaches the smell.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Adding or renaming one derived artifact requires edits in three unlinked places. The filenames live as module constants (extract.STATEMENTS_NAME, extract.REPORT_NAME, supplement.SUPPLEMENT_NAME, supplement.REPORT_NAME, render.REPORT_NAME), the ignore rules repeat all five as hand-typed literals (.gitignore:29,30,34,35,36), and the directory names are a third copy in cli.py:26-27. The narrow-one-per-line ignore policy is correct and I am not arguing against it, but nothing ties the .gitignore lines to the constants, so a renamed store silently starts being committed. The D1 '+1' triple noted under duplicated-code is the second instance of the same shape.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The four stage modules are cleanly separated by pipeline phase and each has one reason to change. render.py mixes store-loading with page formatting, but the statement schema and the page register are both scheduled to move in the same gates (g3 and g5), so the two axes are not independent here.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No a.b().c().d() chains in the diff. The raw dict indexing (mods[k.split(':',1)[0]]['file']) is structure-reaching rather than a message chain and is recorded under feature-envy and primitive-obsession instead, so it is not double-counted.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "extract.Extractor.__init__ takes a third parameter `core` and stores it as self.core (extract.py:256-262) with the comment 'True if this file is in the core slice'. Nothing in the package ever reads self.core, and the only construction site passes the literal True (extract.py:766). It is the prototype's dead slice-manifest flag carried into production code, and it costs a parameter on the one class a later gate has to reason about. Distinct from the NON_INSTALLABLE_PACKAGES 'zero call sites' question, which the Commander already ruled at e-execute-6 and which I verified is falsifiable rather than inert.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The comments in this diff are overwhelmingly load-bearing rather than deodorant -- they record rulings, defect ownership and falsification reasoning, which is this repo's documented convention. One is wrong, which is worse than deodorant: scripts/code_map/__init__.py:21 says 'See NON_INSTALLABLE_SCRIPT_PACKAGES there', but the symbol declared in scripts/install_constellation.py:135 is NON_INSTALLABLE_PACKAGES. That comment is the only pointer connecting the package to its install-side declaration, so a reader who greps the name it gives finds nothing.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

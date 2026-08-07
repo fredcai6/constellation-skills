@@ -1,0 +1,309 @@
+{
+  "work_id": "issue-456-g0-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-stdlib-only",
+    "r4b-no-position",
+    "r4c-cannot-fail",
+    "r4d-guard-coverage",
+    "r4e-single-exclusion"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, the g0-review handoff, the g0-implement handoff, the three implementer results, the diff 6ae6193..HEAD over scripts/ tests/ .gitignore, and the confirmed design record (.agent-work/issue-456/reference/DESIGN_SPEC.md, ISSUE_456.md).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL. Task, Allowed Scope and four of five Constraints are met, but the Constraint 'Nothing committed carries a position -- no page suffixes, no line numbers in ids.jsonl' (g0-implement.md:100) is NOT met by the artifact. scripts/code_map/render.py:171-176 (loc()) emits the 'path:line, N lines' suffix into the header of every entity page; render.py:306 emits '<file>, <loc> lines' into every module INDEX.md. Reproduced: 3523 of 3635 rendered pages carry a '.py:<line>' position. Pass 1 assessed the constraint 'trivially held: nothing position-bearing has been produced yet' (RESULT.md:178) BEFORE render was ported; pass 2 narrowed it to ids.jsonl only (RESULT-pass2.md:396). Neither assessment survives the ported renderer. ids.jsonl is correctly empty (0 bytes) and page FILENAMES correctly carry no suffix.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Diff 6ae6193..HEAD over scripts/ tests/ .gitignore touches 13 files, all inside the allowed scope or authorized: scripts/code_map/*.py (8 new, allowed 'create'), tests/test_code_map.py (allowed 'create'), .gitignore (+13 narrow lines), scripts/install_constellation.py (+16, the bundling declaration only -- allowed conditionally) and tests/test_install_constellation.py (+64, the four guards -- allowed conditionally). tests/test_mutation_floor.py (+10/-2) is OUTSIDE the g0 allowed scope but was authored by the COMMANDER (commit 0223be79) as the tc3 environment-leak fix and surfaced to the human; the handoff rules it in-scope to sanity-check only. Sanity-checked and it holds: with FORCE_COLOR=3 exported, tests/test_mutation_floor.py is 14 passed / 11 subtests passed (183s) -- the condition that produced 10 false reds before the fix. Specific exclusions all respected: no defect fix for D1/D2/D3/BOM (D1 and D2 are carried and documented at render.py:12-20 and applied as a +1 at render.py:97 / checks.py:98, i.e. worked around, not fixed); no schema change; checks.py is a port, not a rewrite (its own docstring says g1 rewrites it); map/ is NOT committed (git ls-tree -r HEAD -- map/ is empty) and is untracked on disk; scripts/build_architecture_map.py untouched; I performed no write of any kind to C:/Programs/f1Brainz or C:/Programs/superCoolSpaceSim.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "MIXED, recorded FAIL for one item. Every claim in the handoff's evidence table reproduced in my own hands: (1) full suite, PYTHONIOENCODING cleared, 'python -m pytest tests/ -q --color=no' = 1706 passed, 2 skipped, 648 subtests passed, exit 0 (335s) -- exact match. (2) exclusion falsifier: setting EXCLUDED_PREFIXES=() (mutation asserted applied) turns EXACTLY 4 tests red -- DiscoveryTests::test_discovery_excludes_agent_work, DiscoveryOnThisRepoTests::test_discovery_on_this_repo_excludes_agent_work, CliDiscoverCommandTests::test_cli_discover_prints_the_mappable_corpus_and_exits_zero, CliBuildCommandTests::test_cli_build_maps_the_corpus_and_not_the_scratch; restored = 14 passed. (3) NON_INSTALLABLE_PACKAGES falsifier: emptying the frozenset turns 3 of the 4 guards red as ruled; the 4th (runnable-from-a-checkout) is correctly unaffected. (4) end-to-end 'python -m scripts.code_map build --root . --artifacts <tmp> --out <tmp>/map' exit 0 in 7.4s: 112 modules, 89672 statements, 0 failures, 3523 entities, statements.jsonl 23,916,503 bytes. (5) no timings in any of the three run reports (the prototype's pass1_sec/pass2_sec were deliberately removed in the port). FAIL ITEM: the render run report's page count is not reproducible against the tree it describes -- render_report.json says 'pages: 3636' while the tree holds 3635 .md files, and this gate's own checks.py prints 'pages scanned: 3635' beside it. The two g0 artifacts disagree and nothing notices.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL on one of six constraints; see the five appended sub-checks r4a-r4e for detail. PASS: stdlib only (mechanical AST enumeration of all 8 modules -- argparse, ast, builtins, collections, hashlib, json, os, pathlib, shutil, subprocess, sys and 5 intra-package relative imports; zero third-party). PASS: run reports carry no timings (the prototype's pass1_sec/pass2_sec were dropped in the port). PASS: .gitignore narrow and one file per line -- five entries at .gitignore:29,30,34,35,36, each verified by its OWN single-pathname 'git check-ignore -v' call, and each of the four deliverable paths verified NOT ignored by its own single-pathname call (exit 1). PASS: no defect fixes and no schema changes. PASS: f1Brainz and superCoolSpaceSim untouched. FAIL: 'nothing committed carries a position' -- render.py:171-176 and :306 put a source position on every page (r4b).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- Commander must reconcile, and the decision is above crew latitude. The recorded architecture for this issue is the human-confirmed DESIGN_SPEC.md plus ISSUE_456.md's 'Rulings that constrain the build'. Two of those rulings name a POSITION CACHE as a real artifact: the committed set is the page tree with statements, supplement and the position cache gitignored and rebuilt, and the page's path:line suffix plus ids.jsonl's location BOTH move into that cache. No gate in the queue creates it. The Commander's ruling 4 read that absence as a stale line and dropped the ignore entry; the alternative reading -- that a confirmed deliverable lost its owner when the 9 gates were cut -- was not considered on the record, and g0 has now shipped the renderer that emits the suffix. This decision carries @grade: settled/human provenance (it is the disposition of BLOCKING critic finding SY1, ruled at the confirm gate), so per inherited doctrine it is not the Commander's or mine to unsettle: it goes back to Tommy as either (a) assign the position cache and suffix removal to a named gate, or (b) amend the ruling to accept positions in committed pages and record the churn cost that SY1 measured at ~450 position-bearing lines rewritten per 3-line edit. Everything else reconciles cleanly: this repo has no docs/architecture packets (orientation was DEGRADED-NO-MAP), scripts/code_map/ as the first package under scripts/ is @grade: settled/human and was honored, and scripts/build_architecture_map.py is untouched with no overlap.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2",
+          "waived": {
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. 'python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g0-review/fowler-pass.json' exits 0 with 'fowler pass ok (smells=12, flagged=[duplicated-code, data-clumps, primitive-obsession, shotgun-surgery, speculative-generality, comments-as-deodorant], overridden=[long-method, large-class, feature-envy])'. The waive is forced only because the template ships c1 with a literal <fowler-pass-record-path> placeholder, and no engine verb can replace it on a SURVEY controller: amend --op retext-check is refused ('amend applies to gated checklists') and attest is refused ('c1 is engine-checked'). So SKILL.md's instruction 'fill this item's postcondition command with the real record path' is unexecutable for a reviewer survey. Reported as a rail defect in the review result's Workflow Feedback.",
+            "evidence": "e-r6-fowler-2",
+            "forced": true
+          }
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- rail cleared, 12 of 12 baseline smells visited. Record: .agent-work/issue-456/g0-review/fowler-pass.json; rail exit 0. Three overrides, all citing the same documented standard (g0-implement.md Specific Exclusion 'Do not rewrite the checks. That is g1' plus global-crew.md's minimal-change rule) and each logging why it subordinates the smell: the bodies are a verified faithful port and restructuring them would destroy the only baseline a later gate has to diff against. Six flagged. The pass paid for itself twice: primitive-obsession is the mechanism behind blocker B2 (render.py:405 derives a page filename from a raw split of the entity key with no collision and no case check), and speculative-generality found dead state nobody had noticed (extract.py:262 self.core is written and never read; the only construction site at extract.py:766 passes the literal True).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. 'python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g0-review/fowler-pass.json' exits 0 with 'fowler pass ok (smells=12, flagged=[duplicated-code, data-clumps, primitive-obsession, shotgun-surgery, speculative-generality, comments-as-deodorant], overridden=[long-method, large-class, feature-envy])'. The waive is forced only because the template ships c1 with a literal <fowler-pass-record-path> placeholder, and no engine verb can replace it on a SURVEY controller: amend --op retext-check is refused ('amend applies to gated checklists') and attest is refused ('c1 is engine-checked'). So SKILL.md's instruction 'fill this item's postcondition command with the real record path' is unexecutable for a reviewer survey. Reported as a rail defect in the review result's Workflow Feedback.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-stdlib-only": {
+      "id": "r4a-stdlib-only",
+      "title": "Constraint: stdlib only",
+      "imperative": "Mechanically enumerate every import in all 8 new modules under scripts/code_map/ and confirm none is third-party. CI installs only pytest and coverage.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS, mechanically. Walked the AST of all 8 modules in scripts/code_map/ and collected every Import and ImportFrom. Absolute imports: argparse, ast, builtins, collections, hashlib, json, os, pathlib, shutil, subprocess, sys -- all stdlib. Relative imports: .cli, .discovery, .extract, .supplement (and 'from . import' in cli.py). Zero third-party. Independently confirmed by execution: 'python -m scripts.code_map build' completes on a clean interpreter path, and the guard test test_the_declared_package_is_runnable_from_a_checkout drives 'python -m scripts.code_map --help' to exit 0.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-no-position": {
+      "id": "r4b-no-position",
+      "title": "Constraint: nothing committed carries a position",
+      "imperative": "Check the rendered pages and ids.jsonl for source positions, against the confirmed ruling in ISSUE_456.md and DESIGN_SPEC.md:88-89.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- BLOCKER B1. The human-confirmed ruling (reference/ISSUE_456.md 'Rulings that constrain the build', and reference/DESIGN_SPEC.md:88-89, which is the disposition of BLOCKING critic finding SY1 at DESIGN_SPEC.md:227) reads: 'Nothing committed carries a position. A page's path:line, N lines suffix AND ids.jsonl's location both move to the rebuildable cache' and 'Not committed (gitignored, rebuilt in seconds): statements.jsonl, the supplement, and the position cache.' g0 ships scripts/code_map/render.py:171-176 loc(), which builds exactly that 'path:line, N lines' string, and render.py:306, which builds '<file>, <loc> lines' for module indexes. Measured on a full build of this repo: 3523 of 3635 pages carry a '.py:<line>' position -- e.g. map/scripts.run_skill_eval/Verdict.md line 2 is 'function, scripts/run_skill_eval.py:407, 33 lines'. ids.jsonl is correctly empty and page filenames are correctly suffix-free, so the two things the g0 handoff spelled out are half-honored. The suffix is the half that is not. Compounding: no gate in the 9-gate build queue (ISSUE_456.md:25-37) owns producing the position cache or stripping the suffix, and the Commander's ruling 4 removed the position-cache .gitignore entry on the finding that 'no gate produces a position cache'. That finding is correct and is exactly the problem: a human-confirmed deliverable has no owner, while the gate that ships the renderer has just shipped the behavior the ruling forbids, and map/ is committed at gs.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-cannot-fail": {
+      "id": "r4c-cannot-fail",
+      "title": "Hunt: checks that cannot fail",
+      "imperative": "Search everything this gate ships under scripts/code_map/ and tests/ for a check whose output is identical in the healthy and the defective world, starting from the git check-ignore -q multi-pathname shape found in the job file.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- BLOCKER B2, plus one clean result. CLEAN: the tc8 'git check-ignore -q with multiple pathnames behind a leading !' shape does NOT survive into anything this gate ships. A grep for check-ignore across scripts/ and tests/ returns zero hits; it lives only in .agent-work/ job files (g0-implementer-plan.json:394 and :415, still uncorrected there -- run bookkeeping, out of review scope but worth the Commander knowing it was never fixed at its source). FOUND, same family: scripts/code_map/render.py:397-419 increments npages once per write() CALL, not once per distinct output path, so render_report.json's 'pages' is identical in the healthy world and in a world where pages overwrite each other. Measured: the report says 'pages: 3636' and the tree holds 3635 .md files. The lost page is real -- scripts/run_skill_eval.py defines both class Verdict (line 178) and def verdict (line 407); render.py:405 names the file 'key.split(\":\",1)[1] + \".md\"', so both write to the same path on a case-insensitive filesystem, which is this repo's platform AND CI's (windows-latest). The class page loses: map/scripts.run_skill_eval/Verdict.md contains the FUNCTION's page, and the class Verdict is unreachable from the map even though the module INDEX links to it. Nothing catches this: no test in tests/ reads any of the three run reports, and this gate's own checks.py prints 'pages scanned: 3635' directly beside the report's 3636 without comparing them. The map is therefore also platform-dependent -- on a case-sensitive filesystem it renders 3636 pages -- which is a determinism defect against the spec's own falsifier ('any non-empty diff on unchanged source').",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-guard-coverage": {
+      "id": "r4d-guard-coverage",
+      "title": "Do the bundling guards hold every scripts/ subdirectory?",
+      "imperative": "Check whether the four ScriptsPackageBundlingTests guards enumerate from the filesystem or from a hand-kept list, and what they are blind to.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS with one noted blind spot. The guards enumerate the RIGHT side: ScriptsPackageBundlingTests._source_dirs (tests/test_install_constellation.py:1535-1539) lists directories from the filesystem, not from a hand-kept roster, so a NEW package added under scripts/ goes red until somebody declares it -- I proved the direction by emptying NON_INSTALLABLE_PACKAGES and watching 3 of the 4 guards go red, including test_a_non_installable_package_is_a_package_and_a_flattened_dir_is_not, which is the one that fires on an undeclared package. Two guards also carry explicit non-empty-input preconditions (tests:1547 and tests:1576), so neither can pass vacuously. BLIND SPOT (observation, not a blocker): _source_dirs uses SCRIPTS.iterdir() plus d.glob('*.py'), both non-recursive, so it only sees dirs one level under scripts/ that hold .py files DIRECTLY. A nested package (scripts/code_map/sub/) or a dir whose modules all live one level further down is invisible to all four guards. Second, smaller: test_no_skill_bundles_a_module_from_a_non_installable_package compares BASENAMES, so a future flat scripts/render.py or scripts/extract.py legitimately bundled by a skill would trip it as a false red.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e-single-exclusion": {
+      "id": "r4e-single-exclusion",
+      "title": "Is the discovery exclusion the only thing separating corpus from scratch?",
+      "imperative": "Trace every stage's corpus enumeration and confirm there is exactly one enumerator, so no second path can leak scratch in.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. There is exactly one enumerator and every stage goes through it. discovery.discover_corpus (discovery.py:33) is the sole caller of tracked_python_files, which is the sole 'git ls-files' invocation in the package. extract.run:750 and supplement.run:126 each call discover_corpus; checks.run:210 calls it; render derives its module list entirely from the two stores (render.py:84-88), never from the filesystem, so it cannot introduce a second path. The prototype's two independent enumerations -- three hardcoded INDEX_DIRS for pass 1 and a handwritten slice_manifest.json for pass 2 -- were both collapsed into this one call in the port, which I confirmed by a normalized diff of prototype/astx.py against extract.py. The falsifier proves the wiring end to end rather than only at the discovery call: with EXCLUDED_PREFIXES emptied, test_cli_build_maps_the_corpus_and_not_the_scratch goes red on the RENDERED page tree, not just on the corpus listing.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: FAIL. Task, Allowed Scope and four of five Constraints are met, but the Constraint 'Nothing committed carries a position -- no page suffixes, no line numbers in ids.jsonl' (g0-implement.md:100) is NOT met by the artifact. scripts/code_map/render.py:171-176 (loc()) emits the 'path:line, N lines' suffix into the header of every entity page; render.py:306 emits '<file>, <loc> lines' into every module INDEX.md. Reproduced: 3523 of 3635 rendered pages carry a '.py:<line>' position. Pass 1 assessed the constraint 'trivially held: nothing position-bearing has been produced yet' (RESULT.md:178) BEFORE render was ported; pass 2 narrowed it to ids.jsonl only (RESULT-pass2.md:396). Neither assessment survives the ported renderer. ids.jsonl is correctly empty (0 bytes) and page FILENAMES correctly carry no suffix.",
+      "r3-evidence: MIXED, recorded FAIL for one item. Every claim in the handoff's evidence table reproduced in my own hands: (1) full suite, PYTHONIOENCODING cleared, 'python -m pytest tests/ -q --color=no' = 1706 passed, 2 skipped, 648 subtests passed, exit 0 (335s) -- exact match. (2) exclusion falsifier: setting EXCLUDED_PREFIXES=() (mutation asserted applied) turns EXACTLY 4 tests red -- DiscoveryTests::test_discovery_excludes_agent_work, DiscoveryOnThisRepoTests::test_discovery_on_this_repo_excludes_agent_work, CliDiscoverCommandTests::test_cli_discover_prints_the_mappable_corpus_and_exits_zero, CliBuildCommandTests::test_cli_build_maps_the_corpus_and_not_the_scratch; restored = 14 passed. (3) NON_INSTALLABLE_PACKAGES falsifier: emptying the frozenset turns 3 of the 4 guards red as ruled; the 4th (runnable-from-a-checkout) is correctly unaffected. (4) end-to-end 'python -m scripts.code_map build --root . --artifacts <tmp> --out <tmp>/map' exit 0 in 7.4s: 112 modules, 89672 statements, 0 failures, 3523 entities, statements.jsonl 23,916,503 bytes. (5) no timings in any of the three run reports (the prototype's pass1_sec/pass2_sec were deliberately removed in the port). FAIL ITEM: the render run report's page count is not reproducible against the tree it describes -- render_report.json says 'pages: 3636' while the tree holds 3635 .md files, and this gate's own checks.py prints 'pages scanned: 3635' beside it. The two g0 artifacts disagree and nothing notices.",
+      "r4-quality: FAIL on one of six constraints; see the five appended sub-checks r4a-r4e for detail. PASS: stdlib only (mechanical AST enumeration of all 8 modules -- argparse, ast, builtins, collections, hashlib, json, os, pathlib, shutil, subprocess, sys and 5 intra-package relative imports; zero third-party). PASS: run reports carry no timings (the prototype's pass1_sec/pass2_sec were dropped in the port). PASS: .gitignore narrow and one file per line -- five entries at .gitignore:29,30,34,35,36, each verified by its OWN single-pathname 'git check-ignore -v' call, and each of the four deliverable paths verified NOT ignored by its own single-pathname call (exit 1). PASS: no defect fixes and no schema changes. PASS: f1Brainz and superCoolSpaceSim untouched. FAIL: 'nothing committed carries a position' -- render.py:171-176 and :306 put a source position on every page (r4b).",
+      "r5-reconciliation: FAIL -- Commander must reconcile, and the decision is above crew latitude. The recorded architecture for this issue is the human-confirmed DESIGN_SPEC.md plus ISSUE_456.md's 'Rulings that constrain the build'. Two of those rulings name a POSITION CACHE as a real artifact: the committed set is the page tree with statements, supplement and the position cache gitignored and rebuilt, and the page's path:line suffix plus ids.jsonl's location BOTH move into that cache. No gate in the queue creates it. The Commander's ruling 4 read that absence as a stale line and dropped the ignore entry; the alternative reading -- that a confirmed deliverable lost its owner when the 9 gates were cut -- was not considered on the record, and g0 has now shipped the renderer that emits the suffix. This decision carries @grade: settled/human provenance (it is the disposition of BLOCKING critic finding SY1, ruled at the confirm gate), so per inherited doctrine it is not the Commander's or mine to unsettle: it goes back to Tommy as either (a) assign the position cache and suffix removal to a named gate, or (b) amend the ruling to accept positions in committed pages and record the churn cost that SY1 measured at ~450 position-bearing lines rewritten per 3-line edit. Everything else reconciles cleanly: this repo has no docs/architecture packets (orientation was DEGRADED-NO-MAP), scripts/code_map/ as the first package under scripts/ is @grade: settled/human and was honored, and scripts/build_architecture_map.py is untouched with no overlap.",
+      "r4b-no-position: FAIL -- BLOCKER B1. The human-confirmed ruling (reference/ISSUE_456.md 'Rulings that constrain the build', and reference/DESIGN_SPEC.md:88-89, which is the disposition of BLOCKING critic finding SY1 at DESIGN_SPEC.md:227) reads: 'Nothing committed carries a position. A page's path:line, N lines suffix AND ids.jsonl's location both move to the rebuildable cache' and 'Not committed (gitignored, rebuilt in seconds): statements.jsonl, the supplement, and the position cache.' g0 ships scripts/code_map/render.py:171-176 loc(), which builds exactly that 'path:line, N lines' string, and render.py:306, which builds '<file>, <loc> lines' for module indexes. Measured on a full build of this repo: 3523 of 3635 pages carry a '.py:<line>' position -- e.g. map/scripts.run_skill_eval/Verdict.md line 2 is 'function, scripts/run_skill_eval.py:407, 33 lines'. ids.jsonl is correctly empty and page filenames are correctly suffix-free, so the two things the g0 handoff spelled out are half-honored. The suffix is the half that is not. Compounding: no gate in the 9-gate build queue (ISSUE_456.md:25-37) owns producing the position cache or stripping the suffix, and the Commander's ruling 4 removed the position-cache .gitignore entry on the finding that 'no gate produces a position cache'. That finding is correct and is exactly the problem: a human-confirmed deliverable has no owner, while the gate that ships the renderer has just shipped the behavior the ruling forbids, and map/ is committed at gs.",
+      "r4c-cannot-fail: FAIL -- BLOCKER B2, plus one clean result. CLEAN: the tc8 'git check-ignore -q with multiple pathnames behind a leading !' shape does NOT survive into anything this gate ships. A grep for check-ignore across scripts/ and tests/ returns zero hits; it lives only in .agent-work/ job files (g0-implementer-plan.json:394 and :415, still uncorrected there -- run bookkeeping, out of review scope but worth the Commander knowing it was never fixed at its source). FOUND, same family: scripts/code_map/render.py:397-419 increments npages once per write() CALL, not once per distinct output path, so render_report.json's 'pages' is identical in the healthy world and in a world where pages overwrite each other. Measured: the report says 'pages: 3636' and the tree holds 3635 .md files. The lost page is real -- scripts/run_skill_eval.py defines both class Verdict (line 178) and def verdict (line 407); render.py:405 names the file 'key.split(\":\",1)[1] + \".md\"', so both write to the same path on a case-insensitive filesystem, which is this repo's platform AND CI's (windows-latest). The class page loses: map/scripts.run_skill_eval/Verdict.md contains the FUNCTION's page, and the class Verdict is unreachable from the map even though the module INDEX links to it. Nothing catches this: no test in tests/ reads any of the three run reports, and this gate's own checks.py prints 'pages scanned: 3635' directly beside the report's 3636 without comparing them. The map is therefore also platform-dependent -- on a case-sensitive filesystem it renders 3636 pages -- which is a determinism defect against the spec's own falsifier ('any non-empty diff on unchanged source')."
+    ],
+    "summary": "BLOCK. 12 of 12 survey items visited; 4 recorded fail (r1-handoff, r3-evidence, r4-quality, r5-reconciliation) plus sub-checks r4b and r4c. All five close criteria PASS and five of six constraints PASS -- the package is stdlib-only mechanically, the discovery layer has exactly one enumerator, the exclusion falsifier turns 4 tests red and is proven to hold through the rendered page tree, the bundling question is resolved with falsifiable guards, and the full suite reproduces at 1706 passed / 2 skipped / exit 0. TWO BLOCKERS. B1: scripts/code_map/render.py:171-176 and :306 put a source position on every page -- 3523 of 3635 measured -- against the human-confirmed ruling 'nothing committed carries a position; the path:line, N lines suffix moves to the position cache' (ISSUE_456.md Rulings, DESIGN_SPEC.md:88-89, the disposition of BLOCKING critic finding SY1). No gate in the queue produces the position cache or strips the suffix, and map/ is committed at gs. The ruling is settled/human, so it goes to Tommy: assign the cache to a named gate, or amend the ruling and accept the measured churn. B2: render.py:397-419 counts write CALLS not pages, so render_report.json says 'pages: 3636' while the tree holds 3635 and this gate's own checks.py prints 3635 beside it -- a number identical in the healthy and defective world, which is the exact family issue 456 exists to remove. The lost page is real: class Verdict and def verdict in scripts/run_skill_eval.py both render to Verdict.md on a case-insensitive filesystem (this repo's platform and CI's) and the class page is overwritten and unreachable. No test reads any run report. Five triage candidates filed. Clean result on the tc8 lead: the check-ignore multi-pathname shape does NOT survive into scripts/ or tests/."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4c-cannot-fail",
+      "statement": "The tc8 check-that-cannot-fail was never fixed at its source. .agent-work/issue-456/g0-implementer-plan.json:394 and :415 still carry 'git check-ignore -q <three pathnames>' behind a leading '!'. It is run bookkeeping, not shipped code, so it is out of this review's scope -- but the engine recorded m7 complete on the strength of it and the record still reads as if the check earned that. Correct the two lines or annotate them, so a later reader of the job file does not learn the pattern from it."
+    },
+    {
+      "id": "tc2",
+      "from": "r4d-guard-coverage",
+      "statement": "ScriptsPackageBundlingTests is blind below one directory level. _source_dirs (tests/test_install_constellation.py:1535-1539) uses a non-recursive iterdir plus a non-recursive glob('*.py'), so a nested package under scripts/ -- or a directory whose modules sit one level further down -- is invisible to all four guards. The guards are otherwise correctly enumerated from the filesystem. Small fix, worth doing before a second package lands."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "Dead state carried from the prototype: extract.Extractor.__init__ takes 'core' and stores self.core (scripts/code_map/extract.py:256-262); nothing reads it and the only construction site (extract.py:766) passes the literal True. Also scripts/code_map/__init__.py:21 points readers at 'NON_INSTALLABLE_SCRIPT_PACKAGES', but the symbol is NON_INSTALLABLE_PACKAGES (scripts/install_constellation.py:135) -- that comment is the only link between the package and its install-side declaration."
+    },
+    {
+      "id": "tc4",
+      "from": "r6-fowler",
+      "statement": "The three run-report filenames and the two store filenames live as module constants (extract.STATEMENTS_NAME/REPORT_NAME, supplement.SUPPLEMENT_NAME/REPORT_NAME, render.REPORT_NAME) and are repeated as hand-typed literals in .gitignore:29,30,34,35,36. The narrow one-per-line ignore policy is right; the problem is that nothing ties the lines to the constants, so a renamed store silently starts being committed. A test that asserts each constant's path is ignored would close it, and would itself be falsifiable."
+    },
+    {
+      "id": "tc5",
+      "from": "r3-evidence",
+      "statement": "The 'check' subcommand has no execution coverage. tests/test_code_map.py only PARSES 'check' as a subcommand name; nothing calls cli.main(['check', ...]), so all 211 lines of scripts/code_map/checks.py could raise on import or at run time and the suite would stay green. I ran it by hand and it works (exit 0, full diagnostics), but that is my hands, not CI. g1 rewrites this module into real checks, so the cheapest fix is a single smoke test now rather than waiting."
+    }
+  ],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "constellation/issue-456/g0/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-07T22:11:31.284841+00:00",
+    "last_heartbeat": "2026-08-07T22:35:34.173142+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T22:35:48.990857+00:00"
+  }
+}

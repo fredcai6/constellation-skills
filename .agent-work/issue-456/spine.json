@@ -760,6 +760,36 @@
       "id": "tc11",
       "from": "execute",
       "statement": "tc11 The context gauge lags one tool call behind, so the first engine call after a compaction is refused on a stale pre-compaction reading. Measured directly this run: 'advance g0-implement' was REFUSED with 'context at 27% is at/over the hard limit'; the very next command read gauge.json and found fill_fraction 0.059717 stamped 22:08:53Z; re-running the identical advance then succeeded. The hook writes the gauge AFTER a tool call completes, so the engine reads the value written by the PREVIOUS call. Consequence: the recovery action doctrine prescribes for a HARD trip -- compact, then advance -- fails on its first attempt every time, and reads as a hard deadlock to an agent that does not know to retry. This cost this run one wrongly-declared stop. Compounds with tc5 (gauge is work-area-scoped, not agent-scoped), which makes the stale value potentially another agent's reading as well as an old one. Fix direction: have the engine re-read the gauge after a refusal, or have the refusal message state that the reading is one call stale and a retry is the recovery."
+    },
+    {
+      "id": "tc12",
+      "from": "execute",
+      "statement": "tc12 The 'check' subcommand has zero execution coverage. tests/test_code_map.py:128 asserts only that 'check' PARSES as a subcommand name; nothing calls cli.main(['check', ...]). All 211 lines of scripts/code_map/checks.py could raise on import or at run time with the full suite still green. Found by the g0 reviewer, which ran it by hand (exit 0, full diagnostics) -- but that is a human's hands, not CI. Note the compounding shape: checks.py is the module that PRINTS the page count contradicting render_report.json, so the one artifact that would have exposed the tc-count defect is itself unexercised. Fix direction: g1 rewrites checks.py; give it an execution test at the same time."
+    },
+    {
+      "id": "tc13",
+      "from": "execute",
+      "statement": "tc13 The bundling guard tests are blind below one directory level. ScriptsPackageBundlingTests._source_dirs (tests/test_install_constellation.py:1535-1539) uses a non-recursive iterdir() plus a non-recursive glob('*.py'), so a nested package under scripts/, or a directory whose modules sit one level further down, is invisible to all four guards. The guards do enumerate from the FILESYSTEM rather than from a hand-written list, which is the important half and which they get right -- this is a depth limit, not a hardcoded-list defect. Secondary defect in the same file: test_no_skill_bundles_a_module_from_a_non_installable_package compares BASENAMES, so a future flat scripts/render.py that a skill legitimately bundles would trip it as a false red. Found by the g0 reviewer."
+    },
+    {
+      "id": "tc14",
+      "from": "execute",
+      "statement": "tc14 Dead state and a wrong cross-reference in the shipped code_map package. extract.Extractor.__init__ takes a 'core' parameter and stores self.core (extract.py:256-262); nothing reads it, and the only construction site (extract.py:766) passes the literal True. It is the prototype's slice flag carried into production unexamined. Separately, scripts/code_map/__init__.py:21 points readers at NON_INSTALLABLE_SCRIPT_PACKAGES, but the actual symbol is NON_INSTALLABLE_PACKAGES (scripts/install_constellation.py:135); that comment is the ONLY link between the package and its install-side declaration, so a reader who greps the name the comment gives finds nothing. Found by the g0 reviewer's Fowler speculative-generality pass -- three implementer passes and my own re-verification all walked past the dead field."
+    },
+    {
+      "id": "tc15",
+      "from": "execute",
+      "statement": "tc15 The five rebuildable artifact filenames are duplicated between code and .gitignore with nothing tying them together. They exist as module constants (extract.STATEMENTS_NAME, extract.REPORT_NAME, supplement.SUPPLEMENT_NAME, supplement.REPORT_NAME, render.REPORT_NAME) and again as hand-typed literals at .gitignore:29,30,34,35,36. The narrow one-entry-per-file ignore policy is correct and is not in question; the gap is that renaming a store in code silently starts committing it, with no check that would go red. Found by the g0 reviewer. Fix direction: a test that derives the expected ignore lines from the constants and asserts git check-ignore agrees, one single-pathname call per file per the tc8 lesson."
+    },
+    {
+      "id": "tc16",
+      "from": "execute",
+      "statement": "tc16 An engine rail postcondition is unsatisfiable on a survey controller, so a rail that RAN AND PASSED can only be recorded as a waived risk. The g0 reviewer hit this on r6-fowler, whose SKILL.md instruction is to fill the item's postcondition command with the real record path it wrote. On a survey, no verb can do that: 'amend --op retext-check' is refused with 'amend applies to gated checklists' and 'attest' is refused with 'c1 is engine-checked'. The template also ships c1 with a literal <fowler-pass-record-path> placeholder, which a POSIX shell parses as an input redirection and fails on regardless of the above. The only remaining route was 'waive --force', which frames a passing rail as an accepted risk and makes the record actively misleading about run quality. The reviewer recorded the true reason in the waive text. Fix direction: let retext-check work on surveys, or have 'record' accept the record path as an argument. Same family as tc9 (no verb clears a refresh-request): the state machine models the obligation but not its discharge."
+    },
+    {
+      "id": "tc17",
+      "from": "execute",
+      "statement": "tc17 A real page is silently lost to a case-insensitive filename collision, and it needs a check that can fail. class Verdict (scripts/run_skill_eval.py:178) and def verdict (:407) both resolve to map/scripts.run_skill_eval/Verdict.md, because render.py:405 derives the page filename from key.split(':',1)[1] with no collision check and no case check. This filesystem is case-insensitive and so is CI's windows-latest. I confirmed the surviving file holds the FUNCTION page; the class is unreachable from the map while the module INDEX.md still links to it. Reviewer swept the whole tree and found exactly one collision, no duplicate keys, no module-directory collisions, no invalid filename characters. Second consequence: the map is platform-dependent, so the same source renders 3636 pages on a case-sensitive filesystem, which fails the spec's own determinism falsifier of 'any non-empty diff on unchanged source'. COMMANDER RULING: the collision is NOT fixed at g0 -- renaming is a symbol-identity question and g2 owns symbol identity. Detection is assigned to g1, whose entire charter is a check stage that can fail; g1 must add a page-name collision check that goes red on this exact case, and it cannot write that check if it does not know the case is there. This is populating g1's stated purpose, not expanding its scope. The Fowler pass names the mechanism: primitive obsession -- the supplement key is a bare 'module:Qualified.Name' string that five call sites re-parse by hand, so there is no single place that owns page-name derivation and therefore no single place to put the check."
     }
   ],
   "blockers": [],
@@ -768,7 +798,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T22:12:00.191112+00:00",
+    "last_heartbeat": "2026-08-07T22:38:42.309214+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,

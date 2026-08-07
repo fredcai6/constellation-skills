@@ -180,7 +180,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g0-review-2",
+          "attested": {
+            "evidence": "e-g0-review-2",
+            "note": "REVIEW_RESULT returned and integrated: crew-handoffs/g0-review-RESULT.md, crew registry verified fresh/completed. Verdict BLOCK, two blockers. The postcondition is that a review RETURNED, which it did; the BLOCK verdict is recorded by blocking this gate rather than by leaving the artifact condition falsely unmet."
+          }
         }
       ],
       "constraints": [],
@@ -189,11 +194,59 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Review returned BLOCK with two blockers (e-g0-review-2). B2 is mine to fix and is scoped: render.py:397-419 counts write_text CALLS not distinct output paths, so render_report.json 'pages' cannot go wrong; it reads 3636 while the tree holds 3635 and this gate's own checks.py prints 3635. B1 is NOT mine to settle: every rendered page carries a source position, contradicting 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate with settled/human provenance. My ruling 4 dropped the position-cache ignore entry on a premise the reviewer verified as TRUE but whose correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Escalated to the human as a straight either/or; the run does not proceed past g0 until it is answered, because map/ is committed at gs and eight gates of downstream work would otherwise build on a page format that has to change.",
+        "authority_needed": "parent agent",
+        "next_action": "On the human's answer, dispatch ONE remediation implementer pass covering both blockers together rather than two passes: (1) B2 -- make render count distinct output paths, and add a test that READS render_report.json and asserts its pages field equals the .md files on disk, a check that can actually go red; (2) B1 -- whichever of (a) assign-and-do the suffix removal or (b) amend-the-ruling the human picks. Then resume g0-review and re-review. Already ruled and needing no further decision: the Verdict/verdict page collision is filed as tc17 and assigned to g1, whose charter is a check stage that can fail; g2 owns any renaming. Established fact that lowers the cost of option (a): .code-map/statements.jsonl already carries per-statement file/line/col and is already gitignored, so the rebuildable position store the ruling calls for substantially exists and (a)'s remaining work is dropping the page suffix plus a test, not building a cache.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g0-review-1",
+          "type": "reviewer-result",
+          "payload": {
+            "artifact": ".agent-work/issue-456/crew-handoffs/g0-review-RESULT.md",
+            "crew": "constellation/issue-456/g0/reviewer/attempt-1",
+            "crew_verify": "fresh (completed)",
+            "verdict": "BLOCK",
+            "close_criteria": "5 of 5 PASS",
+            "constraints": "all PASS except 'nothing committed carries a position' (B1)",
+            "b1": "Every rendered page carries a source position. render.py:171-176 loc() emits '<file>:<line>, <N> lines' into every entity page header; render.py:306 does the same for module indexes. Measured 3523 of 3635 pages. This contradicts the settled/human ruling 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate. My own ruling 4 dropped the position-cache gitignore entry on the premise 'no gate produces a position cache'. The reviewer verified that premise is TRUE and showed the conclusion I drew from it was the wrong one of two available readings: the correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Provenance is settled/human, so this is not mine to settle and not the reviewer's. Escalated to the human as a straight either/or: (a) assign the position cache and suffix removal to a named gate, or (b) amend the ruling to accept positions inside committed pages and record SY1's measured churn cost (~450 position-bearing lines rewritten per 3-line source edit) as accepted.",
+            "b1_commander_verification": "Confirmed in my own hands: map/scripts.run_skill_eval/Verdict.md line 2 reads 'function, scripts/run_skill_eval.py:407, 33 lines'. Also established a fact the reviewer did not: .code-map/statements.jsonl already carries per-statement {file,line,col} and is already gitignored at .gitignore:29. The rebuildable position store the ruling calls for therefore substantially EXISTS; option (a)'s remaining work is dropping the page suffix plus a test, not building a new cache. This materially lowers the cost of (a) and is stated to the human as such.",
+            "b2": "A check that cannot fail, in shipped code. render.py:397-419 increments npages once per write_text() CALL rather than once per distinct output path, so render_report.json's 'pages' field is identical in the healthy world and in a world where pages overwrite each other. Confirmed by me: render_report.json pages=3636, .md files on disk=3635, and this gate's own checks.py prints 'pages scanned: 3635' beside it. Two g0 artifacts disagree by one in the same run and nothing notices. The lost page is real: class Verdict (scripts/run_skill_eval.py:178) and def verdict (:407) both resolve to map/scripts.run_skill_eval/Verdict.md because render.py:405 derives the filename from key.split(':',1)[1] with no collision or case check, and this filesystem is case-insensitive, as is CI's windows-latest. I confirmed the surviving file holds the FUNCTION page; the class is unreachable from the map while the module INDEX.md still links to it. No test in tests/ reads any of the three run reports. Second consequence: the map is platform-dependent, so on a case-sensitive filesystem the same source renders 3636 pages, failing the spec's own determinism falsifier.",
+            "reviewer_reproduced_independently": "full suite 1706 passed / 2 skipped exit 0 with PYTHONIOENCODING cleared; exclusion mutation turns exactly 4 tests red and restore returns 14 passed; emptying NON_INSTALLABLE_PACKAGES turns 3 of 4 guards red so the falsifiability claim holds; end-to-end build exit 0 at 112 files / 3523 entities / 0 failures, built into a temp tree so the real map/ was untouched; stdlib-only verified by AST-walking every Import/ImportFrom in all 8 modules; each .gitignore entry checked with its own single-pathname check-ignore call per the tc8 lesson; the tc3 fix re-verified under FORCE_COLOR=3.",
+            "commander_lead_result": "The concrete check-that-cannot-fail lead I gave the reviewer came back CLEAN: the git check-ignore multi-pathname shape does not survive into scripts/ or tests/ (zero grep hits). It remains uncorrected only in the run bookkeeping at g0-implementer-plan.json:394,415.",
+            "observations": "Five out-of-scope observations returned; refiled on the spine under commander numbering as tc12-tc16 to avoid collision with the reviewer's own local tc1-tc5.",
+            "workflow_feedback": "Reviewer reports an engine rail defect: the r6-fowler postcondition is unsatisfiable on a survey controller, since amend --op retext-check refuses ('amend applies to gated checklists') and attest refuses ('c1 is engine-checked'), leaving waive --force as the only legal route for a rail that actually ran and passed. Refiled as tc17."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-review-2",
+          "type": "review-result",
+          "payload": {
+            "artifact": ".agent-work/issue-456/crew-handoffs/g0-review-RESULT.md",
+            "crew": "constellation/issue-456/g0/reviewer/attempt-1",
+            "crew_verify": "fresh (completed)",
+            "verdict": "BLOCK",
+            "close_criteria": "5 of 5 PASS",
+            "constraints": "all PASS except 'nothing committed carries a position' (B1)",
+            "b1": "Every rendered page carries a source position. render.py:171-176 loc() emits '<file>:<line>, <N> lines' into every entity page header; render.py:306 does the same for module indexes. Measured 3523 of 3635 pages. This contradicts the settled/human ruling 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate. My own ruling 4 dropped the position-cache gitignore entry on the premise 'no gate produces a position cache'. The reviewer verified that premise is TRUE and showed the conclusion I drew from it was the wrong one of two available readings: the correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Provenance is settled/human, so this is not mine to settle and not the reviewer's. Escalated to the human as a straight either/or: (a) assign the position cache and suffix removal to a named gate, or (b) amend the ruling to accept positions inside committed pages and record SY1's measured churn cost (~450 position-bearing lines rewritten per 3-line source edit) as accepted.",
+            "b1_commander_verification": "Confirmed in my own hands: map/scripts.run_skill_eval/Verdict.md line 2 reads 'function, scripts/run_skill_eval.py:407, 33 lines'. Also established a fact the reviewer did not: .code-map/statements.jsonl already carries per-statement {file,line,col} and is already gitignored at .gitignore:29. The rebuildable position store the ruling calls for therefore substantially EXISTS; option (a)'s remaining work is dropping the page suffix plus a test, not building a new cache. This materially lowers the cost of (a) and is stated to the human as such.",
+            "b2": "A check that cannot fail, in shipped code. render.py:397-419 increments npages once per write_text() CALL rather than once per distinct output path, so render_report.json's 'pages' field is identical in the healthy world and in a world where pages overwrite each other. Confirmed by me: render_report.json pages=3636, .md files on disk=3635, and this gate's own checks.py prints 'pages scanned: 3635' beside it. Two g0 artifacts disagree by one in the same run and nothing notices. The lost page is real: class Verdict (scripts/run_skill_eval.py:178) and def verdict (:407) both resolve to map/scripts.run_skill_eval/Verdict.md because render.py:405 derives the filename from key.split(':',1)[1] with no collision or case check, and this filesystem is case-insensitive, as is CI's windows-latest. I confirmed the surviving file holds the FUNCTION page; the class is unreachable from the map while the module INDEX.md still links to it. No test in tests/ reads any of the three run reports. Second consequence: the map is platform-dependent, so on a case-sensitive filesystem the same source renders 3636 pages, failing the spec's own determinism falsifier.",
+            "reviewer_reproduced_independently": "full suite 1706 passed / 2 skipped exit 0 with PYTHONIOENCODING cleared; exclusion mutation turns exactly 4 tests red and restore returns 14 passed; emptying NON_INSTALLABLE_PACKAGES turns 3 of 4 guards red so the falsifiability claim holds; end-to-end build exit 0 at 112 files / 3523 entities / 0 failures, built into a temp tree so the real map/ was untouched; stdlib-only verified by AST-walking every Import/ImportFrom in all 8 modules; each .gitignore entry checked with its own single-pathname check-ignore call per the tc8 lesson; the tc3 fix re-verified under FORCE_COLOR=3.",
+            "commander_lead_result": "The concrete check-that-cannot-fail lead I gave the reviewer came back CLEAN: the git check-ignore multi-pathname shape does not survive into scripts/ or tests/ (zero grep hits). It remains uncorrected only in the run bookkeeping at g0-implementer-plan.json:394,415.",
+            "observations": "Five out-of-scope observations returned; refiled on the spine under commander numbering as tc12-tc16 to avoid collision with the reviewer's own local tc1-tc5.",
+            "workflow_feedback": "Reviewer reports an engine rail defect: the r6-fowler postcondition is unsatisfiable on a survey controller, since amend --op retext-check refuses ('amend applies to gated checklists') and attest refuses ('c1 is engine-checked'), leaving waive --force as the only legal route for a rail that actually ran and passed. Refiled as tc17."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g0-integrate": {
@@ -1676,7 +1729,14 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g0-review",
+      "blocker": "Review returned BLOCK with two blockers (e-g0-review-2). B2 is mine to fix and is scoped: render.py:397-419 counts write_text CALLS not distinct output paths, so render_report.json 'pages' cannot go wrong; it reads 3636 while the tree holds 3635 and this gate's own checks.py prints 3635. B1 is NOT mine to settle: every rendered page carries a source position, contradicting 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate with settled/human provenance. My ruling 4 dropped the position-cache ignore entry on a premise the reviewer verified as TRUE but whose correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Escalated to the human as a straight either/or; the run does not proceed past g0 until it is answered, because map/ is committed at gs and eight gates of downstream work would otherwise build on a page format that has to change.",
+      "authority_needed": "parent agent",
+      "next_action": "On the human's answer, dispatch ONE remediation implementer pass covering both blockers together rather than two passes: (1) B2 -- make render count distinct output paths, and add a test that READS render_report.json and asserts its pages field equals the .md files on disk, a check that can actually go red; (2) B1 -- whichever of (a) assign-and-do the suffix removal or (b) amend-the-ruling the human picks. Then resume g0-review and re-review. Already ruled and needing no further decision: the Verdict/verdict page collision is filed as tc17 and assigned to g1, whose charter is a check stage that can fail; g2 owns any renaming. Established fact that lowers the cost of option (a): .code-map/statements.jsonl already carries per-statement file/line/col and is already gitignored, so the rebuildable position store the ruling calls for substantially exists and (a)'s remaining work is dropping the page suffix plus a test, not building a cache."
+    }
+  ],
   "why_trail": [
     {
       "id": "w-1",
