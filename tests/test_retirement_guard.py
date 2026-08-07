@@ -15,11 +15,12 @@ scope choice, stated here rather than buried in a constant — it is not a dodge
 boundary is drawn at `tests/` precisely so that everything an agent is actually instructed
 by stays inside the guard's reach.
 
-**`test_canon_is_clean` carries `xfail(strict=True)` on purpose.** The tree is deliberately
-still dirty at this gate — no retirement has happened yet — so the assertion is expected to
-fail and the suite stays green. Strict xfail also means an XPASS FAILS: the moment the tree
-really goes clean, this scaffolding breaks the build and has to be removed. #447 g6 removes
-the marker. Scaffolding that cannot outlive the work is the only kind worth leaving in.
+**`test_canon_is_clean` carried `xfail(strict=True)` from g1 to g5, and no longer does.** The
+tree was deliberately still dirty while the retirement was in flight, so the assertion was
+expected to fail and the suite stayed green. Strict xfail also means an XPASS FAILS: the
+moment the tree really went clean, the scaffolding broke the build and had to be removed —
+which is what happened at g5, and #447 g6 removed it. Scaffolding that cannot outlive the
+work is the only kind worth leaving in. The assertion is now unconditional.
 """
 
 from __future__ import annotations
@@ -284,9 +285,11 @@ def test_the_guard_is_not_inside_the_set_it_guards():
 
     This module's own constants ARE the forbidden strings. Committed and unexcluded, the
     guard scored 12 `retired-name-on-shipped-surface` and 6 `unapproved-store-mention` hits
-    against itself; `test_canon_is_clean` could then never XPASS and the
-    `xfail(strict=True)` marker below would outlive the work it exists to end. Asserted here
-    rather than left to a constant, so re-including the file fails loudly."""
+    against itself; `test_canon_is_clean` could then never have gone green, and the
+    `xfail(strict=True)` marker it carried through g5 would have outlived the work it existed
+    to end. Asserted here rather than left to a constant, so re-including the file fails
+    loudly — the exclusion still matters now that the marker is gone, because without it the
+    guard would report itself dirty forever."""
     assert not vr.is_shipped("scripts/verify_retirement.py")
     assert not vr.is_shipped("tests/test_retirement_guard.py")
     assert not vr.is_shipped("tests/data/store_mentions.approved.txt")
@@ -427,12 +430,15 @@ def test_a_retired_name_approval_suppresses_only_the_line_it_names(tmp_path):
     assert {v.leg for v in violations} == {"retired-name-on-shipped-surface"}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="#447 g6 removes this marker — the tree is deliberately still dirty"
-)
 def test_canon_is_clean():
-    """The acceptance surface for the whole of #447, red until the work is done.
+    """The acceptance surface for the whole of #447, now unconditional.
 
-    Strict, so it fails on XPASS: when the tree really goes clean this test starts failing
-    and forces the marker off. The scaffolding cannot outlive the work."""
+    It carried `xfail(strict=True)` from g1 to g5 because the tree was deliberately still
+    dirty and the suite had to stay green while the retirement was in flight. Strict meant
+    an XPASS FAILED, so the moment the tree really went clean the marker broke the build
+    and had to come off — which is exactly what happened at g5, and #447 g6 removed it.
+    Scaffolding that cannot outlive the work is the only kind worth leaving in.
+
+    From here this is a plain regression guard: if any retired name, path, store mention or
+    replacement wiring drifts back, this goes red on its own."""
     assert vr.scan(REPO_ROOT) == []
