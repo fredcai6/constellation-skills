@@ -178,7 +178,7 @@ skills/commander/references/commander-core.md:| feedback | this context — refl
 skills/workbench/SKILL.md:What a run learned is not kept here. It is recorded as **episodes** under the repo-root `episodes/` directory, written at the Commander's `feedback` step through `scripts/apply_episode_delta.py` — the store's only write path — and never hand-edited. An episode is a record of what happened, not a rule for a later agent to follow.
 
 # constellation-export template field: cites an originating episode id as the export's stable identity -- an identifier reference, not an instruction to read the store
-skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:- **Lesson:** `<originating episode id from episodes/ (stable identity), or n/a>`
+skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:- **Episode:** `<originating episode id from episodes/ (stable identity), or n/a>`
 
 # closeout template, episode-capture section: names the write path and the capture gate the Commander confirms passed
 skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.

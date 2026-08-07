@@ -11,16 +11,15 @@ never edit the sidecar by hand. Never archived with a run.
 
 Recurrence is the validator, so a finding's **identity must be stable across
 runs**. When this export derives from a recorded episode, carry that episode's id
-in the **Lesson** field — the sweep fingerprints on whatever id sits there, so the
-same finding groups even as its prose/slug drift. (The field keeps its old name
-because `collect_feedback.py` reads it by that name; what it holds is now an
-episode id.) An episode id is stable once written, so a reworded finding keeps its
-id rather than getting a new slug. Only when there is no originating episode does
-the sweep fall back to the candidate slug.
+in the **Episode** field — the sweep fingerprints on whatever id sits there, so the
+same finding groups even as its prose/slug drift. An episode id is stable once
+written, so a reworded finding keeps its id rather than getting a new slug. Only
+when there is no originating episode does the sweep fall back to the candidate
+slug.
 
 ## `<date>` — `<project>` — `<work-id>`
 
-- **Lesson:** `<originating episode id from episodes/ (stable identity), or n/a>`
+- **Episode:** `<originating episode id from episodes/ (stable identity), or n/a>`
 - **Candidate:** `<short-kebab-slug>`
 - **Observed:** `<the skill/template/engine behavior that was ambiguous, missing, wrong, or improvised around>`
 - **Cost:** `<what it caused>`
