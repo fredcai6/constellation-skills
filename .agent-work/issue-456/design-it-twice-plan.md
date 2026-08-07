@@ -58,28 +58,57 @@ the fan-out rather than waiting on it:
 
 ## Output — a recommendation, never a menu
 
-**Status: the panel was RUN but has not DELIVERED.** All three candidates were
-dispatched under their named constraints and were sent two rounds of corrections
-mid-flight (the corpus baseline, and the retraction of the collision figures).
-None has returned a candidate. This is recorded as a fact rather than smoothed
-over: the mechanism fired, the deliverable did not arrive.
+**Status: DELIVERED, 2 of 3.** `smallest-diff` and `most-testable` both returned
+complete candidates. `best-seam-placement` went idle without delivering — its
+constraint is therefore an **untaken road in practice**, and both delivered
+candidates independently named the same thing they would have stolen from it (a
+`Page` value the renderer builds and the checker reads, replacing a
+provenance-tagged line builder), which is some evidence of what that arm would
+have said.
 
-What that costs, stated plainly: the comparison — which *is* the deliverable of
-this contract — did not happen across three independently-generated candidates.
-It happened instead between the Commander's own draft and a **cold plan critic**
-that did return, in full, with 15 findings of which 4 were blocking and several
-were verified against the repo rather than asserted. That is a real adversarial
-pass, but it is a critique of one candidate, not a comparison of three.
+**The panel earned its cost twice over, in ways the cold critic did not reach.**
 
-**The recommendation carried to the approval checkpoint is therefore Shape B**
-(see `plan-shape-options.md`), on one axis: it is the only shape in which g1's
-checks stay falsifiable through the end of the run. That recommendation comes
-from the critic's F1 plus the Commander's own verification, not from a
-three-way convergence.
+1. **`most-testable` independently re-derived the D2 truth** — same 4 collisions,
+   same closure-in-method mechanism, from its own script, having contested the
+   probe rather than trusting it. Independent convergence on a fact that three
+   prior passes got wrong.
+2. **It then found an arm nobody else had.** `astx.py:visit_ClassDef` has *no*
+   enclosing-chain branch, so a class defined inside a function is emitted as
+   `mod:Name` as if module-level. **Verified: 0 occurrences on this corpus**
+   (`reference/d2_arms.txt`). So that arm cannot go red here at any threshold and
+   needs a purpose-built fixture, exactly like BOM — and a gate closing on
+   "4 → 0" would ship it unwritten. This is folded into g2.
+3. **Both candidates independently found that g4's top-index falsifier cannot
+   fire here** — 103 modules over three directories makes a flat index ~115
+   lines, so no size threshold distinguishes before from after. `smallest-diff`
+   put it sharpest: it refused to propose a threshold that would have passed
+   before the change. Folded in as a stated non-firing falsifier.
 
-**The human should know the panel arm is missing when weighing it**, and may
-reasonably choose to re-run the panel before freezing. If the candidates land
-late they will be folded in and this section updated rather than left stale.
+**Convergence.** `most-testable` is the stronger candidate and is the
+recommendation. Its port-defective-then-fix mechanism (port the defect, capture
+the RED, fix, then commit a mutation entry proving the test kills it) is the
+only proposal here that makes "the check can fail" checkable rather than
+asserted, and it reuses this repo's existing `test_mutation_floor.py` idiom
+rather than inventing one.
+
+**Named hybrid, not a wholesale pick.** Take `most-testable`'s mechanism, its
+two-arm g2, and its grading of every falsifier as A (reproduces on real input
+today) or B (red-by-absence, where the negative control *is* the falsifier).
+Take from `smallest-diff`: thresholds as annotated module constants rather than
+a committed JSON file, following `scripts/curate_corpus.py`'s precedent; the
+check stage reaching CI by being a test rather than a workflow step; and its
+refusal to stage the ~3,500-file map tree until the final gate, which keeps six
+intermediate gate diffs reviewable. Both agreed to steal the same seam from the
+arm that never delivered; that seam is worth adopting on their joint word.
+
+**One thing both candidates said that outranks the plan itself:** the risk that
+baselines self-certify — a number derived from the tool's own output cannot
+disagree with the tool. It fired twice today inside the artifacts built to
+prevent it. The rule to hold: every committed count derives from an independent
+source (`git ls-files`, a deliberately naive second scanner), and any rule used
+as an oracle must first be shown to agree with the rule under test on a
+hand-labelled case. Where no independent derivation exists, the entry is
+labelled an observation with a tolerance and a direction — not an oracle.
 
 ## Untaken-road record — loud skips
 
