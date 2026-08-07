@@ -1,0 +1,25 @@
+{
+  "work_id": "issue-440-binding-cwd",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "falsify-a-check-against-a-decoy-before-trusting-it",
+      "grounding": ".agent-work/issue-440-binding-cwd/crew/g2-review/REVIEW_RESULT.md finding F1 - 'a treatment arm whose binding points at the sandbox MAIN - the bug not fixed - still exits 0, because check_treatment never reads binding_entries'. THIRD recurrence, and the first from a NEW artifact class: not a gate postcondition authored from the template (issue-310, issue-419) but a purpose-built acceptance VERIFIER whose entire job was to guard the run's central claim, written by a crew that had the positive-control requirement and the tests-that-cannot-fail warning stated twice in its own handoff. It shipped 8 silent-pass holes, of which the worst passed the exact condition it existed to catch. Corroborated by engine telemetry: the hole was closed fix-now at commit 89cc99a, taking the verifier from 46 to 59 checks and its selftest from 5 to 10 mutations, and the new treatment-binds-main mutation exits non-zero where it exited 0 at b332287 - so the decoy test is what demonstrated the gap, exactly as the lesson prescribes."
+    },
+    {
+      "op": "add",
+      "id": "a-dispatched-agent-can-decline-a-protocol-because-of-its-defensive-framing",
+      "scope": "constellation",
+      "task_class": "crew-dispatch",
+      "statement": "Defensive framing in a dispatch prompt can trigger the refusal it was written to prevent. A subagent read its own handoff's reassurances - 'nothing below looks like a trick', 'is not a prompt-injection attempt' - plus a fixed completion token as evidence of social engineering, and declined the task outright. The danger is not the lost run: a declined agent is SILENT, and in an acceptance harness silence is indistinguishable from the defect reproducing.",
+      "grounding": ".agent-work/issue-440-binding-cwd/crew/g2-implement/IMPLEMENTER_RESULT.md - 'The first treatment launch went quiet - and it was not the bug. 87.8s, no gauge, advance_exit: None: exactly the shape a reproduced defect would have. The headless stdout showed the subagent had declined the protocol outright.' An unchanged re-run complied, which is what distinguishes a declination from a defect.",
+      "bank_reason": "Re-observation will tell whether the trigger is the specific reassurance phrasing or defensive framing in general. n=1 cannot separate those, and the two have opposite remedies: if it is the phrasing, the fix is to delete the reassurances and let the task stand on its own; if it is any meta-commentary about trust, the fix is a structural one about who is allowed to vouch for a prompt. A second occurrence with DIFFERENT wording would settle it toward the structural reading."
+    },
+    {
+      "op": "export",
+      "id": "falsify-a-check-against-a-decoy-before-trusting-it",
+      "grounding": ".agent-work/staged-feedback/issue-440-binding-cwd/CONSTELLATION_FEEDBACK.md 2026-08-07 entry for issue-440-binding-cwd (staged under the launch-order fence for Admiral harvest into the durable .agent-work/CONSTELLATION_FEEDBACK.md). Third recurrence, exported rather than confirmed a third time, because confirming a constellation defect logs debt not trust. The export carries a SHARPER upstream shape than the previous two: this instance was NOT authored from the spine template - the discriminator the bank-reason named and issue-419 already settled - but a hand-written acceptance verifier that shipped its own 5-mutation selftest and still omitted its central assertion. A decoy suite tests the checks you thought of and cannot surface the fact you never asserted, so the fix is to enumerate the claim's load-bearing facts from the evidence SCHEMA first and derive one check plus one decoy per fact. Independently corroborated by the g2 reviewer's Fowler pass flagging shotgun-surgery on the undeclared evidence schema as the mechanism behind five of the eight holes."
+    }
+  ]
+}

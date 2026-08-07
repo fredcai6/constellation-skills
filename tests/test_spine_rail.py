@@ -12,6 +12,7 @@ is proven against production machinery, not a hand-built fixture.
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -302,6 +303,10 @@ def test_post_claim_subagent_writes_composite_key_bare_set_byte_identical(proj):
     sid = parent["session_id"]
     assert sub["session_id"] == sid  # the shared session_id that caused the pile-up
 
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-parent")
+    put_checklist(proj, "run-sub")
     sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-parent"), proj), proj)
     bare_before = json.dumps(sr.load_binding(proj)[sid], sort_keys=True)
 
@@ -324,6 +329,10 @@ def test_post_claim_two_agent_ids_give_two_independent_key_sets(proj):
     sid = sub_a["session_id"]
     assert sub_a["agent_id"] != sub_b["agent_id"]
 
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
     sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
     sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
 
@@ -344,6 +353,11 @@ def test_post_release_composite_removes_only_that_agents_entry(proj):
     sub_a, sub_b = _real_subagent_payloads()
     parent = _real_parent_payloads()[0]
     sid = parent["session_id"]
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-parent")
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
     sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-parent"), proj), proj)
     sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
     sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
@@ -366,6 +380,9 @@ def test_post_release_composite_leaves_bare_nudge_ledger_untouched(proj):
     session_id, so a subagent's release must not clear the parent's strikes."""
     sub = _real_subagent_payloads()[0]
     sid = sub["session_id"]
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-sub")
     sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-sub"), proj), proj)
     sr.save_nudges(proj, {sid: {"count": 2, "journal_seq": 7, "active_id": ["g1"]}})
 
@@ -380,6 +397,9 @@ def test_post_release_parent_still_clears_its_own_bare_nudge_ledger(proj):
     bare-keyed ledger, so the pre-#419 behavior is intact."""
     parent = _real_parent_payloads()[0]
     sid = parent["session_id"]
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-parent")
     sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
     sr.save_nudges(proj, {sid: {"count": 2, "journal_seq": 7, "active_id": ["g1"]}})
 
@@ -394,6 +414,9 @@ def test_post_claim_unusable_agent_id_writes_no_binding_anywhere(proj):
     sub = _real_subagent_payloads()[0]
     parent = _real_parent_payloads()[0]
     sid = parent["session_id"]
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-parent")
     sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
     before = json.dumps(sr.load_binding(proj), sort_keys=True)
 
@@ -419,6 +442,9 @@ def test_post_release_empty_set_cleanup_deletes_composite_key_not_bare(proj):
     sid = parent["session_id"]
     composite = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
 
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "shared-run")
     sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("shared-run", "eng-p"), proj), proj)
     sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("shared-run", "eng-s"), proj), proj)
     binding = sr.load_binding(proj)
@@ -445,6 +471,11 @@ def test_session_view_merges_one_bare_and_two_composite_keys(proj):
     parent = _real_parent_payloads()[0]
     sub_a, sub_b = _real_subagent_payloads()
     sid = parent["session_id"]
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-parent")
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
     sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
     sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
     sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
@@ -1123,6 +1154,9 @@ def test_post_claim_writes_binding(proj):
     # single flat binding[sid] = {...} -- the old single-entry-per-session_id
     # scenario is impossible once one session_id can hold multiple bindings.
     cmd = 'py scripts/checklist_engine.py --file .agent-work/run1/spine.json claim --session-id eng-9 --claimed-by commander --worktree .'
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run1")
     out = sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
     assert out == {}
     binding = sr.load_binding(proj)
@@ -1152,6 +1186,9 @@ def test_post_release_deletes_binding_and_nudge(proj):
     # sid's binding entirely (no other spines bound), so "s1" is fully absent.
     sp = str(proj / ".agent-work" / "run1" / "spine.json")
     bind(proj, "s1", sp)
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run1")
     sr.save_nudges(proj, {"s1": {"count": 2, "journal_seq": 1, "active_id": "g1"}})
     cmd = 'py scripts/checklist_engine.py --file .agent-work/run1/spine.json release --session-id eng-9'
     out = sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
@@ -1170,6 +1207,10 @@ def test_post_claim_two_different_spines_same_worktree_no_clobber(proj):
     two)."""
     cmd_a = 'py scripts/checklist_engine.py --file .agent-work/run-a/spine.json claim --session-id eng-a --claimed-by commander'
     cmd_b = 'py scripts/checklist_engine.py --file .agent-work/run-b/spine.json claim --session-id eng-b --claimed-by commander'
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
     sr.handle_post_tool_use(_bash(cmd_a, session_id="shared", cwd=str(proj)), proj)
     sr.handle_post_tool_use(_bash(cmd_b, session_id="shared", cwd=str(proj)), proj)
 
@@ -1191,6 +1232,11 @@ def test_post_claim_two_different_spines_different_worktrees_no_clobber(proj):
     worktree."""
     wt_a = proj / "wt-a"
     wt_b = proj / "wt-b"
+    # #440: each worktree really holds its own spine, so the payload cwd (rung
+    # 3) validates for each claim in turn -- which is exactly what this test
+    # already meant by "resolved from two DIFFERENT worktrees".
+    put_checklist(wt_a, "run-a")
+    put_checklist(wt_b, "run-b")
     cmd_a = 'py scripts/checklist_engine.py --file .agent-work/run-a/spine.json claim --session-id eng-a --claimed-by commander'
     cmd_b = 'py scripts/checklist_engine.py --file .agent-work/run-b/spine.json claim --session-id eng-b --claimed-by commander'
     sr.handle_post_tool_use(_bash(cmd_a, session_id="shared", cwd=str(wt_a)), proj)
@@ -1211,6 +1257,10 @@ def test_post_claim_same_spine_reclaim_overwrites_only_itself(proj):
     survives untouched."""
     cmd_a = 'py scripts/checklist_engine.py --file .agent-work/run-a/spine.json claim --session-id eng-a --claimed-by commander'
     cmd_b = 'py scripts/checklist_engine.py --file .agent-work/run-b/spine.json claim --session-id eng-b --claimed-by commander'
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
     sr.handle_post_tool_use(_bash(cmd_a, session_id="shared", cwd=str(proj)), proj)
     sr.handle_post_tool_use(_bash(cmd_b, session_id="shared", cwd=str(proj)), proj)
     before = sr.load_binding(proj)["shared"]
@@ -1234,6 +1284,10 @@ def test_post_release_removes_only_matching_entry_sibling_intact(proj):
     sibling entry for a different spine under the same session_id intact."""
     cmd_a = 'py scripts/checklist_engine.py --file .agent-work/run-a/spine.json claim --session-id eng-a --claimed-by commander'
     cmd_b = 'py scripts/checklist_engine.py --file .agent-work/run-b/spine.json claim --session-id eng-b --claimed-by commander'
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
     sr.handle_post_tool_use(_bash(cmd_a, session_id="shared", cwd=str(proj)), proj)
     sr.handle_post_tool_use(_bash(cmd_b, session_id="shared", cwd=str(proj)), proj)
 
@@ -1250,6 +1304,9 @@ def test_post_release_last_entry_removes_sid_key_entirely(proj):
     """Releasing the only bound spine for a session_id removes the sid key
     entirely (tidy, cosmetic -- not load-bearing)."""
     cmd = 'py scripts/checklist_engine.py --file .agent-work/run-a/spine.json claim --session-id eng-a --claimed-by commander'
+    # #440: the claimed spine must REALLY EXIST -- a relative --file now
+    # resolves only to a candidate root that validates as a checklist.
+    put_checklist(proj, "run-a")
     sr.handle_post_tool_use(_bash(cmd, session_id="shared", cwd=str(proj)), proj)
     assert "shared" in sr.load_binding(proj)
 
@@ -1414,3 +1471,712 @@ def test_load_binding_mixed_old_and_new_shape_sessions(proj):
     loaded = sr.load_binding(proj)
     assert "old-sid" not in loaded
     assert loaded["new-sid"] == mixed["new-sid"]
+
+
+# --- #440: validated candidate-root resolution of a relative --file ----------
+#
+# The defect these cover returns a PLAUSIBLE-LOOKING WRONG ANSWER (a binding
+# naming a same-named path inside the main checkout), so every test below is
+# written to fail against the pre-#440 hook, not merely to describe the new one.
+
+
+def _checklist_json(work_id="run1"):
+    """The weakest thing that positively identifies a checklist: a JSON object
+    with a top-level `items` LIST. Matches what load_spine/active_id actually
+    require."""
+    return json.dumps({
+        "work_id": work_id,
+        "type": "gated",
+        "items": ["g1"],
+        "tasks": {"g1": {"id": "g1", "status": "pending", "imperative": "do g1"}},
+    })
+
+
+def put_checklist(root, work="run1"):
+    """Write a REAL checklist at <root>/.agent-work/<work>/spine.json and return
+    its resolved absolute path."""
+    d = Path(root) / ".agent-work" / work
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / "spine.json"
+    p.write_text(_checklist_json(work), encoding="utf-8")
+    return str(p.resolve())
+
+
+def _claim(work="run1", engine_session="eng-9", prefix="python scripts/checklist_engine.py"):
+    return ('%s --file .agent-work/%s/spine.json claim --session-id %s '
+            '--claimed-by commander' % (prefix, work, engine_session))
+
+
+def _only_entry(proj, sid="s1"):
+    sid_bindings = sr.load_binding(proj)[sid]
+    assert len(sid_bindings) == 1, sid_bindings
+    return next(iter(sid_bindings.items()))
+
+
+def test_looks_like_checklist_accepts_a_real_checklist(tmp_path):
+    p = tmp_path / "spine.json"
+    p.write_text(_checklist_json(), encoding="utf-8")
+    assert sr.looks_like_checklist(str(p)) is True
+
+
+def test_looks_like_checklist_rejects_phantom_leftovers(tmp_path):
+    """A bare exists() test would be DECOYED by the very bug being fixed: the
+    old defect creates phantom .agent-work/<work_id>/ trees in the main
+    checkout. Each row below EXISTS and must still be rejected."""
+    rows = {
+        "gauge.json": json.dumps({"work_id": "run1", "band": "SOFT", "tokens": 120000}),
+        "not-json.json": "{ not json",
+        "list.json": json.dumps(["g1", "g2"]),
+        "items-not-a-list.json": json.dumps({"items": {"g1": {}}}),
+        "no-items.json": json.dumps({"work_id": "run1", "tasks": {}}),
+        "empty.json": "",
+    }
+    for name, text in rows.items():
+        p = tmp_path / name
+        p.write_text(text, encoding="utf-8")
+        assert p.exists()
+        assert sr.looks_like_checklist(str(p)) is False, name
+    assert sr.looks_like_checklist(str(tmp_path / "absent.json")) is False
+    assert sr.looks_like_checklist(None) is False
+    assert sr.looks_like_checklist(str(tmp_path)) is False  # a DIRECTORY
+
+
+def test_post_claim_no_candidate_validates_writes_nothing_store_byte_unchanged(proj):
+    """The fail-closed core: nothing on disk answers the relative --file, so
+    NO entry is written and the store is byte-unchanged.
+
+    Pre-#440 this wrote a confident wrong entry naming a path that does not
+    exist -- 60 of 64 live entries measured 2026-08-05."""
+    store = sr.binding_path(proj)
+    store.parent.mkdir(parents=True, exist_ok=True)
+    store.write_text(json.dumps({"other-sid": {}}), encoding="utf-8")
+    before = store.read_bytes()
+
+    out = sr.handle_post_tool_use(_bash(_claim("ghost"), cwd=str(proj)), proj)
+    assert out == {}
+    assert store.read_bytes() == before
+    assert "s1" not in sr.load_binding(proj)
+
+
+def test_post_claim_payload_cwd_wins_when_it_validates(proj):
+    """Rung 3 keeps today's behaviour and now SAYS SO in path_source."""
+    spine = put_checklist(proj, "run1")
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "payload_cwd"
+    assert entry["spine"] == spine
+    assert entry["engine_session"] == "eng-9"
+    assert entry["worktree"] == str(proj)
+    assert entry["claimed_at"]
+
+
+def test_post_claim_falls_through_to_project_dir_when_cwd_does_not_validate(proj):
+    """Rung 5. The payload cwd is a sibling directory holding NO checklist; the
+    project dir does. Pre-#440 the cwd was trusted blindly and the binding named
+    a path under `elsewhere/` that does not exist."""
+    elsewhere = proj.parent / "elsewhere"
+    elsewhere.mkdir(exist_ok=True)
+    spine = put_checklist(proj, "run1")
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(elsewhere)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "project_dir"
+
+
+def test_post_claim_absolute_file_is_rung_zero_and_is_not_validated(proj):
+    """Rung 0: an absolute --file is ground truth, taken as-is WITHOUT a
+    validity test -- deliberately, so a `release` whose spine has already been
+    archived or deleted can still name its own entry."""
+    abspath = str(proj / ".agent-work" / "gone" / "spine.json")
+    cmd = 'python C:/x/checklist_engine.py --file "%s" claim --session-id eng-2' % abspath
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == abspath
+    assert entry["path_source"] == "absolute"
+
+
+def test_post_claim_path_source_is_additive_and_key_shape_untouched(proj):
+    """path_source is an ADDITIVE VALUE field: the binding KEY shape (#419) and
+    every pre-existing value field are unchanged."""
+    put_checklist(proj, "run1")
+    sub = _real_subagent_payloads()[0]
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim("run1"), proj), proj)
+    binding = sr.load_binding(proj)
+    key = sub["session_id"] + "#" + sub["agent_id"]
+    assert list(binding.keys()) == [key]  # composite key shape untouched
+    entry = next(iter(binding[key].values()))
+    assert set(entry) == {"spine", "engine_session", "worktree", "claimed_at", "path_source"}
+
+
+# --- #440 rungs 1-2: the observed command's own text --------------------------
+
+
+def _msys(path):
+    r"""C:\a\b -> /c/a/b. The form git-bash really writes, DERIVED from the
+    path under test -- never a hand-typed literal."""
+    s = str(path).replace("\\", "/")
+    if len(s) > 1 and s[1] == ":":
+        s = "/" + s[0].lower() + s[2:]
+    return s
+
+
+def _sibling(proj, suffix):
+    """A directory BESIDE the project dir -- where a git worktree actually
+    lives. Never inside it."""
+    d = proj.parent / (proj.name + suffix)
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def test_normalize_shell_path_forms():
+    assert sr.normalize_shell_path("/c/Programs/foo") == "C:/Programs/foo"
+    assert sr.normalize_shell_path("/d/a/b") == "D:/a/b"
+    assert sr.normalize_shell_path('"C:/Program Files/x"') == "C:/Program Files/x"
+    assert sr.normalize_shell_path("'/d/a b/c'") == "D:/a b/c"
+    assert sr.normalize_shell_path("C:\\x\\y") == "C:\\x\\y"  # native form untouched
+    assert sr.normalize_shell_path("sub/dir") == "sub/dir"    # relative untouched
+    assert sr.normalize_shell_path("") is None
+    assert sr.normalize_shell_path("   ") is None
+    assert sr.normalize_shell_path(None) is None
+    assert sr.normalize_shell_path(12345) is None
+
+
+def test_last_cd_target_parses_and_refuses():
+    assert sr.last_cd_target("cd /c/a && python x") == "/c/a"
+    assert sr.last_cd_target("cd /c/a && cd /c/b && python x") == "/c/b"  # LAST wins
+    assert sr.last_cd_target("Set-Location C:/a; python x") == "C:/a"
+    assert sr.last_cd_target("pushd C:/a && python x") == "C:/a"
+    assert sr.last_cd_target('cd "C:/a b/c" && python x') == '"C:/a b/c"'
+    assert sr.last_cd_target("echo abcd && python x") is None   # not in command position
+    assert sr.last_cd_target("python x --cd /c/a") is None      # not in command position
+    assert sr.last_cd_target("python x") is None
+    assert sr.last_cd_target("") is None
+    assert sr.last_cd_target(None) is None
+
+
+def test_post_claim_cd_into_worktree_beats_payload_cwd_msys_form(proj):
+    """THE HEADLINE CASE (#440). A worktree-dispatched agent's payload `cwd` is
+    the MAIN CHECKOUT -- fixed at session launch (#269) and measured identical
+    across a parent and its subagents -- while its command cd's into its own
+    worktree and claims a relative --file there.
+
+    The main checkout deliberately holds a SAME-NAMED spine, so a hook that
+    ignores the cd does not merely fail to resolve: it returns a plausible-
+    looking WRONG answer, which is the whole defect. Asserting `!= decoy` is
+    what makes this test able to FAIL rather than able to pass for the wrong
+    reason."""
+    worktree = _sibling(proj, "-worktree")
+    decoy = put_checklist(proj, "run1")       # main checkout, same relative path
+    real = put_checklist(worktree, "run1")    # the agent's ACTUAL spine
+    assert decoy != real
+    cmd = ('cd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-wt '
+           '--claimed-by commander --worktree .' % _msys(worktree))
+    out = sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    assert out == {}
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == real, "bound the main checkout's decoy, not the worktree"
+    assert abs_spine != decoy
+    assert entry["path_source"] == "cd_target"
+    assert entry["spine"] == real
+
+
+def test_post_claim_absolute_worktree_option_beats_cd_target(proj):
+    """Rung 1 outranks rung 2: both roots validate, and --worktree wins."""
+    wt_opt = _sibling(proj, "-optdir")
+    cd_dir = _sibling(proj, "-cddir")
+    opt_spine = put_checklist(wt_opt, "run1")
+    put_checklist(cd_dir, "run1")
+    put_checklist(proj, "run1")
+    cmd = ('cd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1 --worktree "%s"'
+           % (_msys(cd_dir), wt_opt))
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == opt_spine
+    assert entry["path_source"] == "worktree_opt"
+
+
+def test_post_claim_relative_worktree_option_is_skipped_not_joined(proj):
+    """`--worktree .` is the engine's own convention and resolves against the
+    very cwd this ladder exists to stop trusting -- so rung 1 skips it and the
+    ladder moves on rather than manufacturing a wrong answer with a right
+    label."""
+    cd_dir = _sibling(proj, "-cdonly")
+    cd_spine = put_checklist(cd_dir, "run1")
+    put_checklist(proj, "run1")
+    cmd = ('cd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1 --worktree .'
+           % _msys(cd_dir))
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == cd_spine
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_last_cd_target_wins_over_an_earlier_one(proj):
+    first = _sibling(proj, "-first")
+    second = _sibling(proj, "-second")
+    put_checklist(first, "run1")
+    second_spine = put_checklist(second, "run1")
+    cmd = ('cd %s && cd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1'
+           % (_msys(first), _msys(second)))
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == second_spine
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_quoted_cd_target_containing_spaces(proj):
+    spaced = _sibling(proj, " space wt")
+    spine = put_checklist(spaced, "run1")
+    cmd = ('cd "%s" && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1' % spaced)
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_powershell_semicolon_chain_set_location(proj):
+    """PowerShell 5.1 has no `&&`, so a real PowerShell command chains with `;`
+    and moves with Set-Location."""
+    wt = _sibling(proj, "-psh")
+    spine = put_checklist(wt, "run1")
+    cmd = ('Set-Location "%s"; python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1' % wt)
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_pushd_target(proj):
+    wt = _sibling(proj, "-pushd")
+    spine = put_checklist(wt, "run1")
+    cmd = ('pushd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1' % _msys(wt))
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_relative_cd_target_resolves_against_payload_cwd(proj):
+    sub = proj / "sub"
+    spine = put_checklist(sub, "run1")
+    cmd = ('cd sub && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1')
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_cd_target_that_does_not_validate_falls_through(proj):
+    """A cd target is a candidate, never an override: when nothing validates
+    under it the ladder moves on rather than guessing."""
+    spine = put_checklist(proj, "run1")
+    cmd = ('cd /c/no/such/place && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-1')
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "payload_cwd"
+
+
+# --- #440 rung 4: a REAL git worktree, discovered, not injected ---------------
+
+
+def _git(args, cwd):
+    proc = subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True,
+                          text=True, timeout=120)
+    assert proc.returncode == 0, "git %s failed: %s%s" % (args, proc.stdout, proc.stderr)
+    return proc
+
+
+def _make_repo_with_worktree(tmp_path):
+    """A REAL git repo with a REAL second worktree beside it, on disk. Returns
+    `(main_tree, worktree)`. No fixture, no stub -- `git worktree list` has to
+    have something true to report."""
+    main_tree = tmp_path / "main"
+    main_tree.mkdir()
+    _git(["init"], main_tree)
+    _git(["config", "user.email", "t@example.invalid"], main_tree)
+    _git(["config", "user.name", "t"], main_tree)
+    (main_tree / "README.md").write_text("seed\n", encoding="utf-8")
+    _git(["add", "-A"], main_tree)
+    _git(["commit", "-m", "seed"], main_tree)
+    wt = tmp_path / "wt-epic418"
+    _git(["worktree", "add", str(wt), "-b", "feature"], main_tree)
+    assert wt.is_dir()
+    return main_tree, wt
+
+
+def test_git_worktree_roots_lists_a_real_worktree_and_excludes_the_main_tree(tmp_path):
+    main_tree, wt = _make_repo_with_worktree(tmp_path)
+    roots = sr.git_worktree_roots(main_tree)
+    print("git_worktree_roots(%s) -> %r" % (main_tree, roots))
+    assert len(roots) == 1, roots
+    assert sr._same_path(roots[0], str(wt))
+    # the main tree is filtered out: rung 5 owns that answer, so a
+    # `git_worktree` path_source unambiguously means ANOTHER tree.
+    assert not any(sr._same_path(r, str(main_tree)) for r in roots)
+
+
+def test_git_worktree_roots_never_raises_and_is_bounded(tmp_path, monkeypatch):
+    # not a git repo at all -> empty, no raise
+    assert sr.git_worktree_roots(tmp_path) == []
+    # absent / locked / slow git -> empty, no raise, no hang
+    def _timeout(*a, **kw):
+        raise subprocess.TimeoutExpired(cmd="git", timeout=sr.GIT_PROBE_TIMEOUT_SECONDS)
+    monkeypatch.setattr(sr.subprocess, "run", _timeout)
+    assert sr.git_worktree_roots(tmp_path) == []
+    monkeypatch.setattr(sr.subprocess, "run", lambda *a, **kw: (_ for _ in ()).throw(OSError("no git")))
+    assert sr.git_worktree_roots(tmp_path) == []
+    assert 0 < sr.GIT_PROBE_TIMEOUT_SECONDS <= 5  # a PostToolUse hook cannot wait long
+
+
+def test_git_probe_does_not_run_when_an_earlier_rung_answers(proj, monkeypatch):
+    """The probe is off the turn's hot path: handle_post_tool_use returns before
+    the ladder is even built unless the observed command is an engine
+    claim/release, so `git` is never spawned for an ordinary tool call.
+
+    Within a claim, a TOLD-TRUTH rung still short-circuits and never probes (the
+    absolute-`--file` half below, and the `_under_ambiguity` tests further down).
+    A GUESSED rung is different since g1b (#440): rung 3 answering is not the end
+    of the scan, because rungs 4-5 have to be consulted before that guess can be
+    trusted -- so the probe runs there, exactly ONCE."""
+    calls = []
+    monkeypatch.setattr(sr, "git_worktree_roots",
+                        lambda pd: calls.append(str(pd)) or [])
+    spine = put_checklist(proj, "run1")
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == spine
+    assert calls == [str(proj)], "the guessed-rung scan must probe exactly once"
+
+    # ... and an absolute --file (rung 0) short-circuits before the ladder runs
+    abspath = str(proj / ".agent-work" / "run1" / "spine.json")
+    sr.handle_post_tool_use(
+        _bash('python e/checklist_engine.py --file "%s" claim --session-id e2' % abspath,
+              session_id="s2", cwd=str(proj)), proj)
+    assert calls == [str(proj)]  # unchanged -- rung 0 added no probe of its own
+
+
+def test_post_claim_rung4_real_git_worktree_resolved_in_a_fresh_subprocess(tmp_path):
+    """THE RUNG-4 PROOF. A real `git worktree add` tree on disk, and the hook
+    run as a FRESH SUBPROCESS -- not an in-process call against a monkeypatched
+    helper.
+
+    The worktree path is set into NO env var, NO payload field and NO fixture
+    field the hook reads back; the command carries NO `cd` and NO `--worktree`.
+    Both are ASSERTED below, because a test that hands the hook the very root it
+    claims the hook derives is a test that cannot fail (#432, #446).
+
+    The only way to the answer is `git worktree list --porcelain` run against
+    the main tree.
+    """
+    main_tree, wt = _make_repo_with_worktree(tmp_path)
+
+    # The agent's REAL spine exists ONLY in the worktree.
+    spine = put_checklist(wt, "run-wt")
+    assert not (main_tree / ".agent-work" / "run-wt" / "spine.json").exists()
+
+    payload = {
+        "session_id": "wt-sid",
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "cwd": str(main_tree),  # session launch dir = the MAIN tree (#269)
+        "tool_input": {"command": (
+            "python scripts/checklist_engine.py --file .agent-work/run-wt/spine.json "
+            "claim --session-id eng-wt --claimed-by commander"
+        )},
+    }
+    env = dict(os.environ)
+    env["CLAUDE_PROJECT_DIR"] = str(main_tree)
+
+    # No hand-injection, asserted rather than asserted-in-prose.
+    assert str(wt) not in json.dumps(payload)
+    assert "cd " not in payload["tool_input"]["command"]
+    assert "--worktree" not in payload["tool_input"]["command"]
+    leaks = [k for k, v in env.items() if isinstance(v, str) and str(wt) in v]
+    assert leaks == [], "worktree path leaked into env: %r" % leaks
+
+    proc = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "PostToolUse"],
+        input=json.dumps(payload), capture_output=True, text=True,
+        cwd=str(main_tree), env=env, timeout=180,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == ""  # PostToolUse never blocks
+
+    store_path = main_tree / ".agent-work" / ".spine-rail-binding.json"
+    store = json.loads(store_path.read_text(encoding="utf-8"))
+    print("\n--- .spine-rail-binding.json written by the FRESH SUBPROCESS ---")
+    print(json.dumps(store, indent=2))
+    entries = store["wt-sid"]
+    assert len(entries) == 1
+    abs_spine, entry = next(iter(entries.items()))
+    assert sr._same_path(abs_spine, spine), (
+        "bound %r, not the worktree spine %r" % (abs_spine, spine))
+    assert entry["path_source"] == "git_worktree"
+    assert entry["engine_session"] == "eng-wt"
+
+
+# --- #440 g1b: the guessed rungs refuse to guess when they disagree -----------
+#
+# Rungs 0-2 are TOLD TRUTH (the caller stated where it is); rungs 3-5 are
+# GUESSES the hook makes for it. Two guesses naming DIFFERENT files is the one
+# case where the ladder previously returned a confident wrong path.
+
+
+def _two_tree_ambiguity(tmp_path, work="run1"):
+    """A main checkout and a REAL `git worktree` tree beside it, BOTH holding a
+    valid checklist at the same relative path -- the g1b residual's setup.
+
+    Returns `(main_tree, worktree, main_spine, worktree_spine)`. `.agent-work/`
+    is tracked in this repo, so committed checklists really do sit at identical
+    relative paths in every tree; this is the shape that produces, not a
+    contrivance.
+    """
+    main_tree, wt = _make_repo_with_worktree(tmp_path)
+    here = put_checklist(main_tree, work)
+    there = put_checklist(wt, work)
+    assert here != there
+    return main_tree, wt, here, there
+
+
+def test_post_claim_ambiguous_guessed_rungs_bind_nothing_store_byte_unchanged(tmp_path):
+    """THE g1b RESIDUAL. Rung 3 (payload cwd -> the main checkout) and rung 4 (a
+    real git worktree) both validate, and they name DIFFERENT files, with NO
+    told-truth signal in the command to break the tie.
+
+    Pre-g1b rung 3 simply won and the store recorded the MAIN CHECKOUT's copy --
+    a confident wrong path, which is the exact failure class #440 exists to end.
+    Skip on uncertainty instead: a missing binding is recoverable, a wrong one
+    silently misattributes one agent's context reading to another agent's work
+    area."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+
+    store = sr.binding_path(main_tree)
+    store.parent.mkdir(parents=True, exist_ok=True)
+    store.write_text(json.dumps({"other-sid": {}}), encoding="utf-8")
+    before = store.read_bytes()
+
+    cmd = _claim("run1")
+    # asserted, not asserted-in-prose: nothing in the command is told truth
+    assert "cd " not in cmd and "--worktree" not in cmd
+
+    out = sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+
+    assert out == {}                              # PostToolUse never blocks
+    assert store.read_bytes() == before           # not one byte written
+    assert "s1" not in sr.load_binding(main_tree)
+    assert Path(here).exists() and Path(there).exists()  # nothing on disk touched
+
+
+def test_post_claim_cd_target_still_wins_outright_under_ambiguity(tmp_path):
+    """Rung 2 is TOLD TRUTH and must short-circuit before the ambiguity check
+    sees rungs 3-5 at all. This is the case the residual was masked by: a
+    dispatched agent's shell cwd resets between calls, so its `cd` is always
+    in-command -- and the guard must not cost it the binding it gets today."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+    cmd = ('cd %s && python scripts/checklist_engine.py --file '
+           '.agent-work/run1/spine.json claim --session-id eng-wt' % _msys(wt))
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+    abs_spine, entry = _only_entry(main_tree)
+    assert abs_spine == there
+    assert abs_spine != here
+    assert entry["path_source"] == "cd_target"
+
+
+def test_post_claim_absolute_worktree_opt_still_wins_outright_under_ambiguity(tmp_path):
+    """Rung 1 is TOLD TRUTH: an absolute --worktree names the tree outright, so
+    the guessed rungs never get a vote."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+    cmd = ('python scripts/checklist_engine.py --file .agent-work/run1/spine.json '
+           'claim --session-id eng-wt --worktree "%s"' % wt)
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+    abs_spine, entry = _only_entry(main_tree)
+    assert abs_spine == there
+    assert abs_spine != here
+    assert entry["path_source"] == "worktree_opt"
+
+
+def test_post_claim_absolute_file_wins_and_never_probes_git_under_ambiguity(tmp_path, monkeypatch):
+    """Rung 0 must never start probing git. An absolute --file returns before the
+    candidate ladder is built at all, so the ambiguity scan -- and its one
+    subprocess -- is not on that path even when two trees really do disagree."""
+    main_tree, wt, here, there = _two_tree_ambiguity(tmp_path)
+    calls = []
+    monkeypatch.setattr(sr, "git_worktree_roots",
+                        lambda pd: calls.append(str(pd)) or [])
+    cmd = ('python e/checklist_engine.py --file "%s" claim --session-id eng-abs'
+           % there)
+    sr.handle_post_tool_use(_bash(cmd, cwd=str(main_tree)), main_tree)
+    abs_spine, entry = _only_entry(main_tree)
+    assert abs_spine == there
+    assert entry["path_source"] == "absolute"
+    assert calls == [], "rung 0 probed git"
+
+
+def test_post_claim_guessed_rungs_naming_the_same_file_is_agreement_not_ambiguity(proj, monkeypatch):
+    """Agreement is not ambiguity. Here the payload cwd (rung 3), a rung-4 root
+    and the project dir (rung 5) all resolve to the SAME file -- the ordinary
+    top-level case, where cwd IS the project dir -- so the guard must still bind,
+    and must keep the EARLIEST rung's path_source rather than the last one to
+    agree."""
+    spine = put_checklist(proj, "run1")
+    seen = []
+    monkeypatch.setattr(sr, "git_worktree_roots",
+                        lambda pd: seen.append(str(pd)) or [str(pd)])
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "payload_cwd"  # earliest rung, not project_dir
+    assert seen == [str(proj)], "the ambiguity scan never consulted rung 4"
+
+
+def test_post_claim_two_worktree_roots_disagreeing_bind_nothing(proj, monkeypatch):
+    """Ambiguity needs no second RUNG: two roots from rung 4 alone are enough.
+    The payload cwd and the project dir hold nothing here, so the two worktrees
+    compete directly."""
+    elsewhere = proj.parent / "nowhere"
+    elsewhere.mkdir(exist_ok=True)
+    wt_a = _sibling(proj, "-wtA")
+    wt_b = _sibling(proj, "-wtB")
+    put_checklist(wt_a, "run1")
+    put_checklist(wt_b, "run1")
+    monkeypatch.setattr(sr, "git_worktree_roots", lambda pd: [str(wt_a), str(wt_b)])
+    out = sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(elsewhere)), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_claim_one_worktree_root_still_binds_under_the_guard(proj, monkeypatch):
+    """The guard refuses only a DISAGREEMENT. A single validating candidate is
+    not ambiguous, so rung 4's answer survives the check unchanged -- the
+    behaviour the real-`git worktree` subprocess proof above depends on."""
+    elsewhere = proj.parent / "nowhere-solo"
+    elsewhere.mkdir(exist_ok=True)
+    wt_a = _sibling(proj, "-wtSolo")
+    spine = put_checklist(wt_a, "run1")
+    monkeypatch.setattr(sr, "git_worktree_roots", lambda pd: [str(wt_a)])
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(elsewhere)), proj)
+    abs_spine, entry = _only_entry(proj)
+    assert abs_spine == spine
+    assert entry["path_source"] == "git_worktree"
+
+
+# --- #440: release resolves against its OWN recorded binding first ------------
+
+
+def _release(work="run1", engine_session="eng-9"):
+    return ('python scripts/checklist_engine.py --file .agent-work/%s/spine.json '
+            'release --session-id %s' % (work, engine_session))
+
+
+def test_post_release_removes_its_own_entry_after_the_spine_file_is_deleted(proj):
+    """`release` is not `claim`. By release time the spine may already be
+    archived, moved or deleted, so NO filesystem candidate validates -- and a
+    ladder-only release would leak the entry forever, with no reaper to collect
+    it. A release must remove what its own claim put there."""
+    spine = put_checklist(proj, "run1")
+    sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == spine
+
+    os.remove(spine)  # the run closed and the work area was archived
+    assert not Path(spine).exists()
+
+    out = sr.handle_post_tool_use(_bash(_release("run1"), cwd=str(proj)), proj)
+    assert out == {}
+    assert "s1" not in sr.load_binding(proj)
+
+
+def test_post_release_recorded_lookup_beats_a_validating_decoy(proj):
+    """The recorded binding is consulted FIRST, so a same-named spine sitting in
+    the main checkout cannot redirect a release away from the entry its own
+    claim wrote."""
+    worktree = _sibling(proj, "-relwt")
+    real = put_checklist(worktree, "run1")
+    decoy = put_checklist(proj, "run1")
+    claim = ('cd %s && python scripts/checklist_engine.py --file '
+             '.agent-work/run1/spine.json claim --session-id eng-1' % _msys(worktree))
+    sr.handle_post_tool_use(_bash(claim, cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == real
+
+    # the release command carries NO cd -- only the recorded binding knows
+    sr.handle_post_tool_use(_bash(_release("run1", "eng-1"), cwd=str(proj)), proj)
+    assert "s1" not in sr.load_binding(proj), "released the decoy, not its own entry"
+    assert Path(decoy).exists()  # nothing on disk was touched
+
+
+def test_post_release_ambiguous_recorded_suffix_falls_through_to_the_ladder(proj):
+    """Two recorded entries end with the SAME relative suffix, so the recorded
+    lookup is ambiguous and must not guess -- the filesystem ladder decides."""
+    worktree = _sibling(proj, "-ambwt")
+    here = put_checklist(proj, "run1")
+    there = put_checklist(worktree, "run1")
+    sr.handle_post_tool_use(_bash(_claim("run1", "eng-here"), cwd=str(proj)), proj)
+    cd_claim = ('cd %s && python scripts/checklist_engine.py --file '
+                '.agent-work/run1/spine.json claim --session-id eng-there'
+                % _msys(worktree))
+    sr.handle_post_tool_use(_bash(cd_claim, cwd=str(proj)), proj)
+    assert set(sr.load_binding(proj)["s1"]) == {here, there}
+
+    # ambiguous -> ladder -> rung 3 (payload cwd) -> the `here` entry
+    sr.handle_post_tool_use(_bash(_release("run1", "eng-here"), cwd=str(proj)), proj)
+    assert set(sr.load_binding(proj)["s1"]) == {there}
+
+
+def test_post_release_recorded_lookup_ignores_a_different_relative_suffix(proj):
+    """The suffix match is a real match, not a substring coincidence: releasing
+    `run1` must not remove the `run11` entry."""
+    put_checklist(proj, "run1")
+    put_checklist(proj, "run11")
+    sr.handle_post_tool_use(_bash(_claim("run11", "eng-11"), cwd=str(proj)), proj)
+    only = _only_entry(proj)[0]
+    sr.handle_post_tool_use(_bash(_release("run1", "eng-1"), cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == only
+
+
+def test_post_release_that_resolves_nothing_still_clears_the_nudge_ledger(proj):
+    """The three-strike escape hatch is keyed by the bare session_id and is
+    independent of whether any binding entry matched -- an unresolvable release
+    must not strand a strike count."""
+    sr.save_nudges(proj, {"s1": {"count": 2, "journal_seq": 4, "active_id": ["g1"]}})
+    out = sr.handle_post_tool_use(_bash(_release("never-claimed"), cwd=str(proj)), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+    assert "s1" not in sr.load_nudges(proj)
+
+
+def test_post_tool_use_never_raises_on_junk(proj):
+    """Fuzz over the shapes a real payload can degrade into. PostToolUse returns
+    {} on every path and never raises -- including every new #440 failure mode."""
+    rows = [
+        {},
+        {"session_id": "s1"},
+        {"session_id": "s1", "tool_input": None},
+        {"session_id": "s1", "tool_input": {"command": None}},
+        {"session_id": "s1", "tool_input": {"command": ""}},
+        {"session_id": "s1", "tool_input": {"command": "checklist_engine.py"}},
+        {"session_id": "s1", "tool_input": {"command": "checklist_engine.py claim"}},
+        {"session_id": "s1", "tool_input": {"command": "checklist_engine.py --file"}},
+        {"session_id": "s1", "tool_input": {"command": 'checklist_engine.py --file " claim'}},
+        {"session_id": "s1", "tool_input": {"command": "cd && checklist_engine.py --file x claim"}},
+        {"session_id": "s1", "tool_input": {"command": "cd \x00 && checklist_engine.py --file x claim"}},
+        {"session_id": "s1", "cwd": 12345,
+         "tool_input": {"command": "checklist_engine.py --file x claim"}},
+        {"session_id": "s1", "cwd": None,
+         "tool_input": {"command": "checklist_engine.py --file .a/b.json release"}},
+        {"session_id": "s1", "tool_input": {"command": "checklist_engine.py --file=" + "x" * 500 + " claim"}},
+        {"session_id": "s1", "tool_input": {"command": "cd /z/nope && checklist_engine.py --file a/b.json claim"}},
+        {"session_id": "s1", "tool_input": {"command": "Set-Location '' ; checklist_engine.py --file a/b.json claim"}},
+    ]
+    for row in rows:
+        assert sr.handle_post_tool_use(row, proj) == {}, row
+    print("fuzz rows returning {} without raising: %d" % len(rows))
+    assert len(rows) >= 12

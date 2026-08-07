@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-guard",
+  "mechanical": {
+    "run": "issue-440-g1b-ambiguity",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-guard",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g1b-ambiguity-m1-guard@b6f4d9425ceb50316628db4a6a3b6a415804d713",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g1b-ambiguity",
+    "generated_at": "2026-08-06T09:42:24Z"
+  }
+}

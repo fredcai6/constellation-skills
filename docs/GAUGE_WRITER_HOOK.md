@@ -502,21 +502,43 @@ than a floated gap.
 Named here rather than left to be discovered. None of these was introduced by
 per-agent keying, but two of them get *wider* under it, so they belong beside it.
 
-- **A worktree-dispatched agent's binding records a path in the MAIN CHECKOUT,
-  and that path does not exist.** The binding resolves a relative `--file`
-  against the hook payload's `cwd`, and for an agent dispatched into a worktree
-  that `cwd` is the main checkout, because `CLAUDE_PROJECT_DIR` is fixed at
-  session launch (#269). The written key therefore points at
-  `<main checkout>/.agent-work/<work_id>/spine.json`, which is not where the
-  spine is. `_is_contained` passes — the *shape* is right — and the atomic write
-  creates parent directories, so the reading lands in a phantom
-  `.agent-work/<work_id>/` inside the main checkout while the engine reads the
-  worktree copy and sees nothing. Measured 2026-08-05: **60 of 64 live entries
-  were exactly this**. So per-agent identity is proven for agents whose `cwd` is
-  the project directory, and a worktree-dispatched agent's reading still lands
-  in the wrong tree. This predates #419 and is orthogonal to it — the wrong path
-  was recorded before that change too — and it is the next thing standing
-  between the governor and firing on real worktree-based runs.
+- **~~A worktree-dispatched agent's binding records a path in the MAIN CHECKOUT~~
+  — FIXED in #440.** The binding used to resolve a relative `--file` against the
+  hook payload's `cwd`, and for an agent dispatched into a worktree that `cwd` is
+  the main checkout, because `CLAUDE_PROJECT_DIR` is fixed at session launch
+  (#269). The reading landed in a phantom `.agent-work/<work_id>/` inside the
+  main checkout while the engine read the worktree copy and saw nothing.
+  Measured 2026-08-05: 60 of 64 live entries were exactly this.
+  **The shipped resolution** (`resolve_spine_candidate`) no longer trusts `cwd`.
+  It walks *ordered candidate roots* and takes the first that **validates as a
+  checklist on disk** — existence-verified rather than guessed — and when two
+  guessed roots name different existing files it **refuses to bind at all**
+  rather than pick one. The worktree root is **derived** from `git worktree
+  list`, never handed in; a binding written that way records
+  `path_source: "git_worktree"`, which is how you tell a derived root from an
+  inferred one. Verified live, two-arm, on 2026-08-07: a subagent dispatched into
+  a real worktree claimed a spine there with a relative `--file`, filled its
+  context to 56% against a HARD of 15%, its `gauge.json` landed **beside the
+  worktree spine**, and the engine **refused its `advance`** (exit 1). The
+  byte-identical control on the pre-fix commit reached 56.2%, filed its reading
+  in the phantom directory, and advanced clean (exit 0). Evidence:
+  `.agent-work/issue-440-binding-cwd/acceptance/`.
+- **A bare-keyed agent driving several spines at once gets NO reading at all.**
+  Not #440, and not fixed by it. `resolve_gauge_path` returns one candidate per
+  spine bound under the key, and the ambiguity guard refuses to write when there
+  is more than one. A top-level agent — an Admiral, say — that legitimately
+  claims an epic spine plus a crew spine or two in one session therefore silences
+  its own gauge for the rest of that session. Measured 2026-08-07: the live
+  store's one bare key held 10 entries, **3 of them live**, so retiring the 7
+  dead ones would not have lifted the guard. This, rather than stale data, is
+  what keeps the governor quiet for orchestrators.
+- **A relative `--file` given as an unexpanded shell token is bound verbatim.**
+  The hook parses the command string and cannot tell whether the shell expanded a
+  token, so `--file $E` binds a literal path named `$E`. Observed in the live
+  store 2026-08-06. It can only ever produce a dead entry, but each dead entry
+  adds a candidate to its key and so pushes that key toward the ambiguity guard
+  above. Same family as #440 — a binding naming the wrong path — but a different
+  mechanism, and out of #440's scope.
 - **Nothing reaps an abandoned key.** A successful `release` is the only removal
   path, so an agent that dies, is cancelled, or is killed mid-run leaves its key
   behind forever. Per-agent keying multiplies the key count by every wave's

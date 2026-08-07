@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g3-close",
+  "mechanical": {
+    "run": "issue-440-binding-cwd",
+    "project": "constellation-skills",
+    "role": "commander-delegated",
+    "refusals": 13,
+    "spine-step": "g3-close",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-binding-cwd-g3-close@f1dd68530911da737c200e9c3e530d7762368acb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-binding-cwd",
+    "generated_at": "2026-08-07T15:51:49Z"
+  }
+}

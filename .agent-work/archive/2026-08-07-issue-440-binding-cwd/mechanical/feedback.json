@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "issue-440-binding-cwd",
+    "project": "constellation-skills",
+    "role": "commander-delegated",
+    "refusals": 11,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-binding-cwd-feedback@e1c6b451a398a2483256f15f6c1a924badf3ed66",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-binding-cwd",
+    "generated_at": "2026-08-07T16:19:13Z"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "captured_at": "2026-08-07T15:33:47.819066+00:00",
+  "source": "C:\\Programs\\constellation-skills\\.agent-work\\.spine-rail-binding.json",
+  "sha256": "2e80067d009e96a96ed951af49e56d4624c0caeef17698f8d4f0319cc1f58c0b",
+  "size": 4595,
+  "key_count": 3,
+  "entry_count": 12,
+  "store": {
+    "e8249451-5c48-417b-9f38-cf2dd40d405c": {
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic-418\\spine.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic-418\\spine.json",
+        "engine_session": "admiral-epic-418",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-05T22:23:56.338761+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\spine.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\spine.json",
+        "engine_session": "cmdr-440-binding-cwd",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T08:10:19.200665+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\spine.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\spine.json",
+        "engine_session": "cmdr-447-episodes-retirement",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T08:37:52.296148+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1-implement\\IMPLEMENTER_PLAN.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1-implement\\IMPLEMENTER_PLAN.json",
+        "engine_session": "impl-440-g1",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T08:39:40.828162+00:00"
+      },
+      "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1-review\\review.json": {
+        "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1-review\\review.json",
+        "engine_session": "rev-440-g1",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T09:01:28.402528+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g1-review\\review.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g1-review\\review.json",
+        "engine_session": null,
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T09:40:21.104073+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\IMPLEMENTER_PLAN.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\IMPLEMENTER_PLAN.json",
+        "engine_session": "impl-g1b-ambiguity",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T09:40:23.805823+00:00"
+      },
+      "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\review.json": {
+        "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\review.json",
+        "engine_session": "rev-440-g1b",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T09:51:03.187494+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\x": {
+        "spine": "C:\\Programs\\constellation-skills\\x",
+        "engine_session": null,
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T10:02:04.081079+00:00"
+      },
+      "C:\\Programs\\constellation-skills\\$E": {
+        "spine": "C:\\Programs\\constellation-skills\\$E",
+        "engine_session": "g2-impl-440-acceptance",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-06T10:03:03.124710+00:00"
+      }
+    },
+    "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#a9bf3781a824a48ac": {
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\crew-plans\\g2-implementer.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\crew-plans\\g2-implementer.json",
+        "engine_session": "g2-impl-447",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-07T14:41:50.426403+00:00"
+      }
+    },
+    "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#ad611b635dad1da43": {
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g2-review\\review.json": {
+        "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g2-review\\review.json",
+        "engine_session": "g2rev-447-a",
+        "worktree": "C:\\Programs\\constellation-skills",
+        "claimed_at": "2026-08-07T15:17:02.335683+00:00"
+      }
+    }
+  }
+}

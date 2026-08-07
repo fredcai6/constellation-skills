@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-command-rungs",
+  "mechanical": {
+    "run": "issue-440-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-command-rungs",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g1-implement-m2-command-rungs@95c19e3017098821d32b6fa27decc7d0dd15d717",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g1-implement",
+    "generated_at": "2026-08-06T08:47:47Z"
+  }
+}

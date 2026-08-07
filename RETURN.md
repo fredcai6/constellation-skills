@@ -1,248 +1,342 @@
-# RETURN — `cmdr-419-governor-identity`, issue #419 (epic-418 workstream A)
+# RETURN — `cmdr-440-binding-cwd` · issue #440 · epic-418 wave 1, workstream A2
+
+Branch `epic-418/a2-440-binding-cwd` · base `cbd9aee` · tip of branch · **not pushed, no PR — yours**
+
+> **Archive is BLOCKED on you, by design — see §12.** The run itself is complete and green.
+
+---
 
 ## 1. Verdict
 
-**This is a win, not a measured negative.** I was asked to give the context governor per-agent
-identity, keyed `session_id#agentId` rather than session alone, with the done-condition set explicitly
-as *"a trip fires from a per-agent reading on a live run"* rather than "readings appear". That is what
-happened, and it was observed rather than inferred. The binding store now composes a per-agent key in
-one place, an unusable identity binds nothing at all, the gauge writer reads each agent's fill from
-that agent's own transcript with the sidechain filter inverted and an `agentId` equality that makes a
-wrong path fail closed, and the design document that was wrong about all of this is corrected. On a
-live two-arm run, subagent ALPHA reached 33% of a 1M window and the engine **refused its `advance`**,
-while the byte-identical script on the unmodified hooks produced no reading and advanced normally.
+**This is a win, not a measured negative, and it clears the done-condition you set.**
 
-**It carries one honest limit, and I want it read next to the win rather than under it.** The binding
-store resolves a relative `--file` against the hook payload's `cwd`, and for an agent dispatched into a
-worktree that `cwd` is the **main checkout** (#269). **60 of the 64 live binding entries were exactly
-this**, including every spine my own crews claimed. So per-agent identity is proven for agents whose
-`cwd` is the project directory — which is what the acceptance sandbox was — and a worktree-dispatched
-agent's reading still lands in a phantom `.agent-work/` inside the main checkout while the engine reads
-the worktree copy. This predates #419 and is orthogonal to it, but it is the next thing standing
-between the governor and firing on real Constellation runs. Filed as **#440**.
+You asked for a HARD trip to fire from a per-agent reading produced by an agent **dispatched into a
+worktree**, with the reading landing where the engine actually reads it — a fired trip, observed on a
+live run, not a path that resolves correctly. That is what happened.
 
-## 2. Evidence
-
-**Isolation proof, first command run, exit 0:**
+The binding store no longer resolves a relative `--file` against the payload's `cwd`. It walks
+ordered candidate roots and takes the first that **validates as a checklist on disk**, deriving the
+worktree root from `git worktree list` rather than being handed it, and **refuses to bind at all**
+when two guessed roots name different existing files. On a live two-arm run, a subagent dispatched
+into a real worktree claimed a spine there with a relative `--file`, filled its own context to **56%**
+against a HARD of **15%**, its `gauge.json` landed **beside the worktree spine**, and the engine
+**REFUSED its `advance`**:
 
 ```
-$ py scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills-wt/epic418-a-419
-worktree OK: in C:/Programs/constellation-skills-wt/epic418-a-419
-EXIT=0
-```
-
-**PR:** [#445](https://github.com/fredcai6/constellation-skills/pull/445) —
-`gh pr view 445 --json state` → `state=OPEN`, `mergeable=CONFLICTING`. See §7 for the conflict; it is
-in two shared append-only logs only, and I deliberately did not resolve it.
-
-**Branch:** `epic-418/a-419-governor-identity`, base `990712f` on clean main, pushed. Commits:
-`4767782` (plan + probe), `340c46d` (g1), `5491bd4` (g2), `f8b0743` (g3 + doc), `54233a6` (acceptance),
-`7f22360` (sweep, reconcile, triage, feedback).
-
-**The test suite that gates the claim:**
-
-```
-$ python -m pytest tests -q
-1667 passed, 2 skipped, 550 subtests passed in 431.51s     EXIT=0
-```
-
-Baseline at HEAD `990712f`, clean tree: **1621 passed, 2 skipped**. Delta **+46**, so a run reporting
-1621 would have meant the new tests were never written — the closeout check asserts strictly greater,
-not equal, for exactly that reason.
-
-**A trap worth passing up: `py` is not the test runner on this box.** It resolves to a codex runtime
-with no pytest, and `py -m unittest discover -s tests` reports 4 loader errors and 11 mutation-floor
-failures that are **pure interpreter artifacts**. I nearly recorded that as a red baseline. Every
-handoff after that carried the correction and no crew hit it. Independently re-verified by a cold
-critic.
-
-**Non-vacuity, measured rather than argued** — the single most valuable practice of this run:
-
-| gate | revert target | new tests that go red |
-|---|---|---|
-| g1 | `spine_rail.py` → `HEAD~1` | **13 of 16** |
-| g2 | `gauge_writer_hook.py` → `340c46d` | **23 of 30** |
-
-Both counts were reproduced independently by their reviewers, one of which added **five targeted
-mutations** of its own (parent fallback reinstated → 3 red; `agentId`-alone → 1; sidechain-alone → 2;
-widened allowlist → 3; bare-session keying → 11).
-
-**The acceptance, verbatim.** Two arms, one variable — the settings file's hook directory. Both arms
-name the *same* `checklist_engine.py`, so the trip code is held constant:
-
-```
-REFUSED: g1: context at 33% is at/over the hard limit — advancing is blocked until you
+REFUSED: m1: context at 56% is at/over the hard limit — advancing is blocked until you
 request a refresh, so work is handed off at a seam rather than lost to a runaway.
-Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>
+EXIT=1
 ```
 
-| | treatment (this worktree's hooks) | control (main checkout's hooks) |
+The byte-identical control on `cbd9aee` reached **56.2%**, filed its reading in a phantom
+`.agent-work/` inside the sandbox main, and **advanced clean at exit 0**.
+
+**Two things you should know before you merge**, both in §7: this run crashed once and was resumed,
+and the pre-existing "baseline is exit 0" line in the launch order turns out to be an artifact of
+where it was measured. Neither changes the verdict.
+
+---
+
+## 2. The fired trip, with its evidence
+
+| | treatment (HEAD) | control (`cbd9aee`) |
 |---|---|---|
-| binding keys | 3 — one bare (parent), two composite, each holding **exactly one** spine | **1** bare key holding **3** spines |
-| gauges written | 4, fills 0.329482 / 0.102211 / 0.094663 / 0.064216 | `ambiguous-binding`, `candidate_count: 3` |
-| ALPHA's gate after `advance` | `in-progress`, `refusals=1` | `complete`, `refusals=0` |
+| headless run | exit 0, 156.4s | exit 0, 143.5s |
+| binding resolved to | **worktree** spine, `path_source: git_worktree` | **sandbox main**, `path_source: null` |
+| gauge beside worktree spine | **present**, fill **0.559655** | absent |
+| gauge at phantom path in main | absent | **present**, fill **0.562149** |
+| `advance` | **REFUSED, real exit 1** | succeeded, **real exit 0** |
+| gate after | stayed `in-progress` | `complete` |
 
-**The pairing is what carries the verdict**, because two keys, two distinct readings, a fired trip and
-a silent control **all still pass on a crossed attribution** — and a crossed attribution is exactly the
-misattribution class #202/#261 already reverted once. A cold critic caught that the obvious evidence
-missed it. Recomputed by the reviewer with a parser importing neither hook: **2 of 2 dispatched, 4 of 4
-overall**, each gauge's sampled moment appearing in no other agent's transcript. A parent-transcript
-fallback at ALPHA's instant would have read **0.047769**, not 0.329482.
+HARD for `claude-sonnet-5` is **0.15**. The two fills are **0.44% apart**, so the opposite outcomes
+are attributable to the hook path and to nothing else.
 
-**Identity provenance.** Nothing on the acceptance path supplied the identity: a 7-pattern sweep over
-71 pre-run files returned zero hits, and the pre-seeded-binding, hand-made-transcript and env-var
-evasions were each closed separately. `identity_resolution_ms` measured **0.078–0.084 ms** against the
-issue's 100 ms placeholder budget.
+### Why I know the trip came from the *worktree-dispatched* agent, not the parent
 
-**The sweep.** Dry run first with the before-state recorded to a file in this worktree, then a real run
-that re-read and re-evaluated against a fresh read and refused to write a map derived from a stale one.
-**64 entries → 1.** Drop reasons: 60 pointed at spine files that do not exist (that is #440), 3 held
-released leases. Sweeper deleted after its one run.
+Three independent signals, captured on both arms and agreeing 3/3:
 
-**Rework:** one round, at g3, on a correct reviewer BLOCK.
+1. **The binding key is composite** — `9d959dcd-…#a26a9cb68fda52cdc`. Only a dispatched agent keys
+   `session_id#agent_id`; a top-level agent keys bare.
+2. **`identity_resolution_ms` is present** (0.0433). The writer emits that fifth field **only** on a
+   dispatched agent's record (#419), so a 5-field record is positive proof of subagent origin.
+3. **`gauge.json`'s own `model` says `claude-sonnet-5`** while the parent ran `opus`. The verifier now
+   also asserts the *premise* — that the two tiers ran different models — because signal 3 is vacuous
+   otherwise.
 
-## 3. Isolation proof
+Corroborated at source by the reviewer: `gauge_writer_hook.py:608-631` reads only the derived
+`subagents/agent-<id>.jsonl` with an **explicit refusal** to fall back to the parent, and
+`find_latest_usage:325` further requires `isSidechain` **and** a matching `agentId`. A fill of
+0.559655 is structurally incapable of being the parent's.
 
-Pasted verbatim in §2 above — `worktree OK`, exit 0, run as the first command before any git operation.
+### Why the control is worth something
 
-## 4. Scope-discipline report
+**It worked and missed.** It produced a real, over-HARD reading *at the wrong path* rather than going
+quiet. That is what rules out the three impostors that would otherwise wear the bug's face: an
+incomplete sibling `scripts/` set (the writer nulls **silently** if it cannot import `spine_rail` as
+a filesystem sibling), an uncalibrated model, and a subagent that never got an `agent_id`. A quiet
+control would have proved nothing, and I would have reported it as inconclusive.
 
-Per your standing ruling, each corner case I chose not to chase is commented at its code site and
-floated here.
+---
 
-| corner case | comment at | why not chased |
+## 3. How I know my green is real
+
+You flagged the sharp edge yourself: **the mechanism under repair is the mechanism that makes an
+in-worktree validation lie.** Four things stand behind the green.
+
+1. **The arms differ in exactly one file.** Proved by a recursive `diff -rq` over two *complete*
+   `scripts/` trees, not a curated subset — `scripts/hooks/spine_rail.py`. The reviewer independently
+   diffed the settings (two lines, both `treatment`→`control`) and the prompts (exit 0 after
+   normalising the arm name).
+2. **Nothing handed the hook the value it was supposed to derive.** The treatment binding records
+   `path_source: "git_worktree"`, which is only written when the root came from `git worktree list`.
+3. **The reviewer refused to take the harness's word and built its own repro** — and found the
+   variant I had not thought to ask for. It moved the engine script token **out** of the worktree
+   into `main/bin`. The hook **still** resolved to the worktree. With no worktree-shaped token
+   anywhere in the command, the derivation is real and the hand-injection hypothesis is dead. That is
+   the single most convincing item in this return, and it is not mine.
+4. **The verifier can fail.** `verify_evidence.py` exits 0 over **59 checks** and its `--selftest`
+   fails **all 10** deliberately damaged copies. I re-ran both myself rather than reading the crew's
+   claim.
+
+---
+
+## 4. Evidence — commands and real exit codes
+
+All gated on real exit codes by redirecting to a file and echoing `$?`, never off a piped tail.
+
+| command | exit |
+|---|---|
+| `python .agent-work/issue-440-binding-cwd/acceptance/verify_evidence.py` | **0** (59 checks) |
+| `… verify_evidence.py --selftest` | **0** (10/10 mutations correctly fail) |
+| `NO_COLOR=1 FORCE_COLOR= PY_COLORS=0 python -m pytest tests/ -q` | **0** — 1723 passed, 2 skipped, 550 subtests |
+| `python -m pytest tests/ -q` (with harness `FORCE_COLOR=3`) | 1 — 10 false failures, see §7 |
+| `python -m pytest tests/test_mutation_floor.py -q` in a `git archive cbd9aee` tree | 1 — **11** failures, pre-existing |
+| `python scripts/verify_worktree_isolation.py --here …` | **0** |
+| engine's own re-run of `python -m pytest tests -q` at the `g3-close` gate | **0** |
+
+**Baseline:** 1688 → **1723 passed**, strictly greater by +35. **No previously-passing test id
+disappeared** — verified by a `--collect-only` id diff against a `git archive` of `cbd9aee`
+(1690 → 1725 ids; `comm -23` = **0** disappeared, `comm -13` = 35 added), not by comparing counts.
+
+**PR state:** none. Not pushed, no PR opened, nothing merged — that is your step, per the dispatch.
+
+Commits on top of `cbd9aee`:
+
+(the five that carry the change; four closeout commits follow — triage/return, archive move,
+state note, and this file)
+
+```
+b2810d9 docs(#440 g3): record the shipped resolution and rule on the existing bindings
+89cc99a fix(#440 g2-review): assert the BINDING, not just the gauge, in the acceptance verifier
+b332287 test(#440 g2): two-arm live-fire acceptance — a HARD trip fires from a worktree-dispatched agent
+38214ec fix(#440 g1b): refuse to guess when two guessed roots name different files
+9d44aa6 fix(#440 g1): resolve a relative --file against validated candidate roots
+```
+
+---
+
+## 5. Isolation proof
+
+```
+$ python scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills-wt/epic418-a2-440
+worktree OK: in C:/Programs/constellation-skills-wt/epic418-a2-440
+ISO_EXIT=0
+```
+
+**The live main checkout was never written.** `.agent-work/.spine-rail-binding.json` was read for the
+`existing-bindings` ruling and left byte-for-byte alone; no live `.claude/settings*.json` and no real
+worktree was touched. The harness ran entirely under `%TEMP%\acc440`. Verified two ways: the arms
+record their sandbox root, and the verifier asserts no sandbox path appears in the live store.
+
+---
+
+## 6. The `decision:existing-bindings` ruling
+
+**LEAVE TO AGE OUT. Live store untouched. Regraded `guess` → `measured`** by running the settle
+experiment your pre-ruling named.
+
+**A stale binding yields a missing reading, never a wrong one**, for three independent reasons: the
+engine reads `gauge.json` beside the spine it was itself invoked with and never through the store, so
+a wrong binding can misplace a *write* but never redirect a *read*; a key with more than one
+candidate makes the writer **refuse outright** (`gauge_writer_hook.py:595-606`); and a misplaced
+reading ages past the reader's 30-minute window into nothing.
+
+I considered retiring the dead entries and **rejected it on measurement, not caution**: the one
+silenced key holds **10 entries of which 3 are LIVE**, so deleting all 7 dead ones leaves the guard
+still firing. It would buy no behavioural change while risking a lost update against a store two live
+sessions were writing at the time. Before-state at
+`.agent-work/issue-440-binding-cwd/g3/live-binding-store-before.json`; full reasoning in
+`g3/EXISTING_BINDINGS_RULING.md`.
+
+Your "60 of 64" is now **8 of 12** — the store has been rewritten by live activity since, and the
+shape is unchanged.
+
+---
+
+## 7. Two things that need your attention
+
+### (a) This run crashed and was resumed — the cause was an account limit, not a defect
+
+The prior session died mid-`g2`. Its engine state was durable and intact, and I resumed under the
+same lease rather than restarting. The crash cause is in the evidence verbatim:
+
+```
+EXIT: 1
+--- STDOUT ---
+You've hit your weekly limit · resets Aug 7, 7am (America/Los_Angeles)
+```
+
+The limit reset before I resumed. **I re-ran the arms unchanged** — I did not trim the inflation
+budget to squeeze under it, which would have risked an under-inflated subagent producing a false
+negative wearing the bug's face.
+
+### (b) The launch order's `cbd9aee` baseline of "exit 0" cannot be reproduced, and I found out why
+
+**FOR YOUR ATTENTION — this affects every Commander you dispatch.**
+
+My first full-suite run showed **10 failures**. I attributed them with `uniq -c` rather than reading
+the tail (all 10 in `tests/test_mutation_floor.py`), then verified rather than reasoned: a
+`git archive cbd9aee` temp tree gives **11** failures — one *more* than my branch. Pre-existing.
+
+The cause is worth more than the pass. The Claude Code harness exports **`FORCE_COLOR=3`**, so pytest
+emits ANSI **even into a captured pipe**. `test_mutation_floor.py:255` matches `FAILED` immediately
+followed by the test path and does not strip ANSI, so the colour-reset lands between them, every
+match breaks, and the meta-harness reports `HARNESS ERROR: non-zero exit with no FAILED test node`
+while its own captured output plainly contains those nodes. Clear the variable and that file goes
+from **10 failed → 14 passed, exit 0**.
+
+So your recorded baseline was measured **outside** a `FORCE_COLOR` session and mine was inside one.
+This is a **second, independent false-red** in the same family as your `py`-is-not-the-test-runner
+warning — and unlike that one, **it fires for `python` too**. Filed as **#454**. I would consider
+adding it to `_COMMON.md` beside the `py` warning.
+
+---
+
+## 8. Scope-discipline report
+
+Corner cases deliberately **not** chased, each commented at the code site and filed rather than
+absorbed:
+
+| not chased | code site | filed |
 |---|---|---|
-| Nothing reaps an abandoned agent's key; `release` is the only removal path, and per-agent keying multiplies key count by every wave's fan-out | `scripts/hooks/spine_rail.py`, the release branch in `handle_post_tool_use` | Outside the issue's stated scope, and the issue itself mandates deleting the one-time sweeper. Filed as #441 |
-| The binding store's load-modify-save takes no lock, so a concurrent claim can be lost — and a lost write's symptom is silence, indistinguishable from an idle governor | `scripts/hooks/spine_rail.py`, `_save_json_map` | Concurrency was out of scope. Raised independently by two reviewers and a cold critic. Filed as #441 |
-| `spine_rail`'s denylist and `gauge_writer_hook`'s allowlist disagree, so an id like `a:b` gets an orphaned binding entry | both modules, at their respective checks | No filesystem hazard — verified at source, the key is only ever a dict key. `spine_rail` was closed and reviewed at g1. Filed as #441 |
-| `docs/GAUGE_WRITER_HOOK.md`'s eyeball-check section and three code comments still claimed a four-field record after the optional fifth shipped | fixed, not deferred | Bounded and in-class, so I ruled them in rather than passing them up. Seven sites across four files, each found by a different pass |
+| bare-key multi-spine ambiguity silence | `docs/GAUGE_WRITER_HOOK.md` § Known limits | **#452** |
+| `spine_rail` binds an unexpanded shell token | `docs/GAUGE_WRITER_HOOK.md` § Known limits | **#453** |
+| `test_mutation_floor` ANSI parse | — (test-harness area this run never opened) | **#454** |
+| self-referential freshness check | `acceptance/verify_evidence.py`, above `obs = att.get("observed_at")` | **#455** |
+| per-launch log overwrite, declined-protocol flakiness, undeclared evidence schema, `probe()` dead verdict | `acceptance/` | **#455** |
 
-Also **narrowed, not skipped, and this one needs your ruling** — see §7.
+**One thing I did NOT defer, and I want you to check my call.** The g2 reviewer found that
+`verify_evidence.py` never read `binding_entries` — so a treatment arm binding to the sandbox **main**
+(the defect *not* fixed) still exited 0. I fixed it (`89cc99a`) rather than triaging it, because
+shipping an acceptance artifact *for this very issue* that cannot fail is the tests-that-cannot-fail
+shape this epic has already filed three issues about (#432, #446, and a finding inside #419's own
+run). 46 → 59 checks, 5 → 10 mutations. If you would rather that had been triaged, it reverts cleanly.
 
-## 5. Map impact
+Where the issue text and the scope-discipline ruling disagreed on breadth, the ruling won — the
+`existing-bindings` question was settled by measurement and left alone rather than migrated.
 
-There is no `docs/architecture/` map in this repo at all. The orientation receipt records
-**DEGRADED-NO-MAP**, discharged with two hash-pinned substitutes, the unmapped gap, and an escalation
-to you. Reconcile therefore folded directly into the structural record the change actually touches,
-per the spine's no-packet-map path.
+---
 
-An architecture reconcile needs to know four things about the net change:
+## 9. Map impact
 
-1. **The binding store's outer key is now per-agent** — `session_id` for a top-level agent,
-   `session_id#agent_id` for a dispatched one, and **no entry at all** for an unusable identity. This
-   is the load-bearing interface shape of the whole workstream, and it is the shape workstream F's
-   caller-identity work will meet.
-2. **The reading's source moved.** A dispatched agent's fill comes from its own derived transcript, so
-   the sidechain filter's polarity is now scope-dependent rather than constant.
-3. **Nesting is safe, and this was measured, not assumed.** The harness writes every agent's transcript
-   flat under the **root** session's `subagents/` directory regardless of `spawnDepth`, so the
-   derivation holds at depth 2. Had it not, the governor would have been permanently and silently blind
-   for every nested agent.
-4. **The binding store has four named structural limits**, now written into
-   `docs/GAUGE_WRITER_HOOK.md` rather than left to be rediscovered: the worktree path defect, the
-   unreaped key, the unlocked write, and the unvalidated recorded path.
+No packet map exists (`DEGRADED-NO-MAP`), so I reconciled the structural record **directly**, which
+this step sanctions. The record of governing truth for this area is
+`docs/GAUGE_WRITER_HOOK.md` § "Known limits of the binding store itself", which stated this defect as
+**open**; it now states it as fixed and describes the shipped resolution with the live verification
+beside it. Two **new** limits were added in the same pass rather than left to be rediscovered.
 
-## 6. Triage candidates
+Net structural delta: `scripts/hooks/spine_rail.py` gained a candidate-root resolution path and an
+ambiguity refusal. **No load-bearing interface shape moved** — the gauge binding key, the gate schema
+and the MCP tool surface are untouched, which matters because changing the binding key is explicitly
+outside my latitude.
 
-Ten candidates, all routed. Consolidated to **five issues** on purpose, since this epic exists partly
-to stop correct findings being filed at the wrong granularity. Full recommendations in
-`.agent-work/archive/2026-08-05-issue-419-governor-identity/TRIAGE_RECOMMENDATIONS.md`.
+---
 
-- **#440 — the governor still cannot fire on a worktree-dispatched run.** The most important thing I
-  found. It is the honest scope limit on this issue's win.
-- **#441 — binding-store durability:** no lock, no reaper, unvalidated recorded paths, divergent
-  `agent_id` rules. Four gaps in one module, one owner.
-- **#442 — the engine's rail and its HARD refusal read badly to the agent they are aimed at.** Real
-  dispatched agents in the acceptance run read the `RAIL:` banner as a possible prompt-injection
-  attempt and said so in their transcripts; and the refusal's remedy string assumes a
-  Constellation-aware reader, which is #331's offered-and-declined question wearing a new hat.
-- **#443 — `docs/agents/engine-config.json` does not exist** while every template's `config_ref` names
-  it, so the rework cap, replan policy and human checkpoints are defaults nobody chose. Reported by
-  three separate crews in this run alone.
-- **#444 — nothing links the gauge record's field count across its seven assertion sites.**
+## 10. Triage candidates
 
-Two `recommend-and-defer`, deliberately not filed because neither has a code target in this repo:
-`git worktree add` into the scratchpad failing on Windows MAX_PATH (target is crew doctrine), and this
-run's own evidence-hygiene defect where one archived artifact does not regenerate from its archived
-producer.
+All filed under `_COMMON.md` § Inherited Latitude, which delegates issue **filing** outright. No
+issue was closed — that is withheld and rides a human batch confirm.
 
-## 7. Things I need you to look at
+- **#452 — a bare-keyed agent driving several spines at once gets NO gauge reading at all.**
+  **Read this one first.** It is not #440 and #440 does not fix it, but it is what actually keeps the
+  governor silent for orchestrators. It fell out of the existing-bindings measurement rather than
+  from inspection. Its fix may require changing the binding key shape, which is **yours to
+  adjudicate, not mine**.
+- **#453** — `spine_rail` binds an unexpanded shell token (`--file $E`) verbatim.
+- **#454** — `test_mutation_floor` false HARNESS ERROR under `FORCE_COLOR` (see §7b).
+- **#455** — acceptance-harness hardening; consolidates the reviewer's five non-material findings and
+  the crew's two candidates.
 
-**A deliberate departure from the spec, narrowed rather than skipped.** The spec retires the
-pre-migration bare-key bindings **unconditionally**, reasoning that no liveness test applies to them by
-construction. That reasoning predates this epic dispatching concurrent runs whose bindings are
-bare-keyed **and live right now**. An unconditional sweep would have deleted **your own** binding
-mid-run. So I reported both counts and narrowed the rule: the unconditional rule would have dropped all
-64; I dropped 63 and spared the single entry with an existing spine and an active lease — which was
-`admiral-epic-418`. Graded `settled/human · leans g5-sweep`; only you may unsettle it.
+Full recommendations in `.agent-work/issue-440-binding-cwd/TRIAGE.md`.
 
-**The probe's branch point resolved outside what either branch anticipated.** Your pre-ruling gave
-three outcomes: own-transcript-path → re-key; parent's path → ship the matcher; neither → stop and
-escalate. What the payload actually carries is the **parent's** path *and* a per-agent `agent_id`. By
-the letter that is branch two, but branch two's whole purpose was to *discover* an identity the payload
-now hands over free — so shipping the 250-line matcher would have been building a search for a value
-already in the argument list. I took the cheaper mechanism you had already blessed (re-key), did not
-invent a third, and am surfacing it rather than absorbing it. If you read that as out-of-taxonomy, the
-work is unaffected — only the label is.
+---
 
-**The PR conflicts, and I left it deliberately.** `gh pr view 445` reports `CONFLICTING`, and the
-conflict is confined to `.agent-work/AGENT_FEEDBACK.md` and `.agent-work/LESSONS.md` — the two shared
-append-only logs that `_COMMON.md` says you harvest. "Keep both sides" is the correct resolution and I
-am confident of it, but merging `origin/main` into this branch would pull in sibling workstreams' engine
-changes (#420's channel fixes, #422's wired invariants) that my green was **not** measured against, and
-I would rather hand you a clean, self-contained, verified branch than a merged one whose 1667 I cannot
-vouch for.
+## 11. Workflow feedback
 
-## 8. Workflow feedback
+- **The engine's typed-evidence enforcement earned its keep.** It refused an `artifact` where an
+  `implementer-result` was required, and refused a `review-result` whose `verdict` was not literally
+  `APPROVE`. The second forced me to make the "APPROVE WITH FINDINGS → APPROVE" reduction *explicit
+  and recorded* rather than quietly typing the word it wanted. That is the gate working.
+- **The `g3-close` gate re-runs its own gated command.** Worth knowing: it took ~4 minutes and looked
+  like a hang until I checked the postcondition definition. It also inherits the session environment,
+  so it hit the `FORCE_COLOR` trap and refused until I cleared the variable for its subprocess.
+- **Backticks in an engine `--why` string are executed by bash.** One of my `--why` values contained
+  `` `git worktree list` `` and `` `py` ``; the shell ran both, spawned Python REPLs, and leaked
+  `git worktree list` output into a stored `satisfied_by` note on `g3-close.c2`. Cosmetic, but that
+  note is polluted. Long `--why` values should be passed via `"$(cat file)"` with no backticks.
+- **An externally-dispatched crew is unrecoverable after a session crash.** `recover_crews.py`
+  correctly flagged the g2 implementer as RESUMABLE and advised `SendMessage` to its `agentId` — but
+  no `agentId` is recorded for `--backend external`, so the only route was
+  `--abandon … --relaunch`. Worth either recording the `agentId` or changing the advice.
+- **The R2 handoff I wrote contained an ordering conflict** ("treatment first" vs "prioritise the
+  control if you can only afford one"). The crew flagged it. Mine to own.
 
-Where the corpus, the engine, or this launch order fought me. The full retrospective is in
-`.agent-work/AGENT_FEEDBACK.md`; these are the ones that cost real time.
+---
 
-- **`init_work_area.py` does not resolve the `<branch>` placeholder.** The Commander spine's archive
-  gate therefore ships `gh pr list --head <branch> ...` — text a POSIX shell reads as an input redirect
-  from a file named `branch`, so the check cannot run at all rather than merely failing. I corrected it
-  through the engine's `retext-check` amend rather than by hand-editing the spine. Every delegated
-  Commander using this template hits this at its very last gate.
-- **`verify-frame` and `MISSION_FRAME.template.md` contradict each other under a DEGRADED
-  orientation.** The template requires graded `decision:` anchors; `verify-frame` refuses *any* anchor
-  id when no map was read. I kept decisions out of the frame and put them in `execute.json` where
-  `grade_lint` sees them. Already filed as #394 — this is a confirming instance, not a re-file.
-- **The `Agent` tool refused both `name` and `run_in_background`** for an in-process teammate. So the
-  design-it-twice candidates and the cold critic panel ran synchronously, and the doctrine's standing
-  instruction to tell every background subagent to `SendMessage` before ending its turn is unreachable
-  at this tier. It worked; the doctrine just describes a capability I do not have.
-- **One crew's final message was blocked by a permission classifier** and its evidence had to be
-  recovered from its own transcript. The #145 shape: environmental, not a scope problem. Its reviewer
-  judged the substitution *stronger* evidence, since no agent authored it.
-- **The launch order was unusually good on one axis and I want to name it**, because it is repeatable:
-  the pre-build probe pre-ruling paid for the entire run. Twenty minutes of looking at a real payload
-  deleted a 250-line module from the plan and turned two named hazards into unreachable states rather
-  than mitigated ones. Freezing "look before you design" as a *ruling* rather than advice is what made
-  it happen first instead of never.
-- **The cold panel earned its cost twice over**, and both wins were things no author would have found:
-  every `command` postcondition in my frozen plan was already green at HEAD with zero code written, and
-  the acceptance evidence passed on a crossed attribution. That first finding is a **recurrence** of a
-  banked lesson, from a second commander using the same template, which is exactly the discriminator
-  that lesson's bank-reason named — so it is now the template's problem, not an authoring habit. I
-  exported it upstream as debt with a concrete repair: **run every `command` postcondition against the
-  tree at plan-freeze time and refuse to freeze any that exits 0.**
 
-## 9. One pre-ruling I did NOT execute, and why
+## 11b. Decision-anchor regrade — scoped deliberately
 
-`decision:prototype-lift` says to lift from `C:/Programs/.proto-exc6-governor-subagent-identity` @
-`75f684c` and **delete that worktree once your lift lands**.
+`decision:existence-verified-resolution` carried `settle: THIS GATE`, so it is regraded to
+**`measured` — for the GUESSED-RUNG PATH ONLY**. The live arms exercised exactly two rungs: rung 4
+(`git_worktree`) succeeding and rung 5 failing. **Told-truth rungs 0-2, the g1b disagreement refusal,
+and g1-review's tc1 remain `guess`** — tc1 being the case where both trees hold a real checklist at
+the same relative path and rung 3 beats rung 4, binding a confident wrong path. That reviewer judged
+it non-blocking on evidence and I agree, but this gate did not settle it.
 
-**The lift never landed, so its deletion condition never triggered.** The probe you ruled must run
-first answered the question the prototype existed to answer, and answered it differently: the payload
-hands over `agent_id`, so `agent_identity.py`'s ~250 lines of transcript matching are a search for a
-value already in the argument list. Not one line of it shipped. I read it — it is what told me what to
-look for in the payload, and its `read_fill` is where the sidechain inversion came from — but the
-production code derives its transcript rather than searching for it.
+The narrowness is the point: a flat `measured` would have let a two-rung result stand as if the whole
+ladder were proven, and would have buried tc1 — which is exactly
+`lesson:grading-a-contested-claim-settled-launders-it`. Full note at
+`.agent-work/archive/2026-08-07-issue-440-binding-cwd/REGRADE_existence-verified-resolution.md`.
 
-So the worktree is still on disk and I have not touched it. Deleting it is trivially cheap for you to
-order and not cheap to undo, and I would rather you ruled than have me read "once your lift lands" as
-"regardless of whether your lift lands." The commit SHA keeps it recoverable either way.
+---
 
-The same reasoning did **not** apply to the two things you did pre-clear on conditions I could verify:
-the gauge-store mutation ran (dry-run and before-state first, as conditioned), and the sweeper was
-deleted after its single run.
+## 12. Closeout status — archive is BLOCKED, and it is blocked on you
+
+The run is **complete and green**. Every gate closed with integrated evidence and the spine was
+driven through `execute` → `reconcile` → `triage` → `review` → `feedback`. The `archive` step is
+**blocked**, bubbled to parent, on its two postconditions I am not permitted to satisfy:
+
+- **`c2` — branch pushed.** Not done.
+- **`c2b` — an open PR exists.** Not done.
+
+My dispatch reserves both: *"Do NOT push, open a PR, or merge — that is the Admiral's step."*
+`_COMMON.md` **does** pre-clear `git push on epic-418/*` and `gh pr create`, so this is **not** a
+permission block and **not** the #145 environmental shape — the capability exists and I declined to
+use it because you withheld it. I recorded a `block`, not a `waive`, because a waive would read as
+"this did not need doing" and `c2b` is right that a terminal spine without an open PR gets chased.
+
+**The engine session lease `cmdr-440-binding-cwd` is still held, deliberately.** The archive step is
+explicit that releasing before the closing `advance` leaves archive's own closeout entries after the
+release and fails the terminal provenance check. Releasing now would corrupt the provenance of an
+otherwise clean run.
+
+**To finish it:** push `epic-418/a2-440-binding-cwd` (clean tree, 9 commits on `cbd9aee`),
+open the PR declaring **FINAL** in the title, satisfy `c2`/`c2b`, check `c4`, run the closing
+`advance archive` against the **moved** spine path
+`.agent-work/archive/2026-08-07-issue-440-binding-cwd/spine.json`, and release the lease last.
+`STATE_NOTE.md` at the worktree root carries the exact commands.
+
+**Also at PR time:** `main` has advanced to `4fbdf6e` while this branch is based on `cbd9aee`. Per the
+dispatch that is handled at PR time, so I did not rebase mid-gate. And harvest
+`.agent-work/staged-feedback/issue-440-binding-cwd/` — its `FENCE.md` lists the three steps and
+pastes the validated dry-run output.

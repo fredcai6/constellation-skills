@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-440-binding-cwd",
+  "root": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/GAUGE_WRITER_HOOK.md",
+      "content_hash": "92342594ab8e9edd2ead0e117b9ed235dbc13ae0e817efc2b786c695339d2831",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This repo carries no docs/architecture map at all (no generated/map.json, no index.md, no packets dir), so there are no packets, overlays or decision anchors for the governor hook area. The structural record for the affected area is prose: docs/GAUGE_WRITER_HOOK.md, whose 'Known limits of the binding store itself (#419)' section states this exact defect, plus the hook sources themselves."
+  ],
+  "escalation": "Escalated to the Admiral of epic-418 in RETURN.md: the constellation-skills repo has no architecture map, so every commander run in this epic orients DEGRADED by construction; the reconcile step will fold the change into docs/GAUGE_WRITER_HOOK.md rather than a packet.",
+  "emitted_at": "2026-08-06T08:11:17.237173+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

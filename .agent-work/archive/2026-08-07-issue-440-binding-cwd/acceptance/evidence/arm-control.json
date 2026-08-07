@@ -1,0 +1,77 @@
+{
+  "arm": "control",
+  "collected_at": "2026-08-07T14:44:13.719629+00:00",
+  "hook_path": "C:/Users/fredc/AppData/Local/Temp/acc440/arms/control/scripts/hooks/spine_rail.py",
+  "parent_model": "opus",
+  "subagent_model_requested": "sonnet",
+  "sandbox": {
+    "main": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main",
+    "wt": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\wt",
+    "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\wt\\.agent-work\\sbwork\\spine.json"
+  },
+  "headless": {
+    "exit": 0,
+    "timed_out": false,
+    "elapsed_s": 143.5,
+    "stdout_tail": "DONE\n"
+  },
+  "binding_store_path": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main\\.agent-work\\.spine-rail-binding.json",
+  "binding_store": {
+    "25b64ada-5cc4-49f0-9570-06ca369b5dc4#ae5c1d873b314a6e8": {
+      "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main\\.agent-work\\sbwork\\spine.json": {
+        "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main\\.agent-work\\sbwork\\spine.json",
+        "engine_session": "sbsess",
+        "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main",
+        "claimed_at": "2026-08-07T14:43:11.392026+00:00"
+      }
+    }
+  },
+  "binding_entries": [
+    {
+      "key": "25b64ada-5cc4-49f0-9570-06ca369b5dc4#ae5c1d873b314a6e8",
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main\\.agent-work\\sbwork\\spine.json",
+      "path_source": null,
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main"
+    }
+  ],
+  "composite_keys": [
+    "25b64ada-5cc4-49f0-9570-06ca369b5dc4#ae5c1d873b314a6e8"
+  ],
+  "gauge_in_worktree": {
+    "path": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\wt\\.agent-work\\sbwork\\gauge.json",
+    "exists": false,
+    "record": null
+  },
+  "gauge_in_main_phantom": {
+    "path": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-control\\main\\.agent-work\\sbwork\\gauge.json",
+    "exists": true,
+    "record": {
+      "schema_version": 1,
+      "fill_fraction": 0.562149,
+      "model": "claude-sonnet-5",
+      "observed_at": "2026-08-07T14:44:09.327Z",
+      "identity_resolution_ms": 0.04389999958220869
+    }
+  },
+  "skip_sidecar_wt": null,
+  "skip_sidecar_main": null,
+  "uncalibrated_wt": null,
+  "transcript_diagnostics": {
+    "projects_root": "C:\\Users\\fredc\\.claude\\projects",
+    "slug_key": "C-Users-fredc-AppData-Local-Temp-acc440-run-control-main",
+    "matched_dirs": [],
+    "sessions": []
+  },
+  "advance_output": "RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` \u2014 the journal, not your prose, is the proof.\n\nm1 -> complete\nEXIT=0\n",
+  "advance_exit": 0,
+  "m1_status_after": "complete",
+  "attribution": {
+    "composite_key_present": true,
+    "identity_resolution_ms": 0.04389999958220869,
+    "gauge_model": "claude-sonnet-5",
+    "subagent_model_id_expected": "claude-sonnet-5",
+    "fill_fraction": 0.562149,
+    "observed_at": "2026-08-07T14:44:09.327Z",
+    "wall_clock_at_collect": "2026-08-07T14:44:13.732071+00:00"
+  }
+}

@@ -1,0 +1,381 @@
+{
+  "work_id": "issue-440-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-validate",
+    "m2-command-rungs",
+    "m3-git-worktree",
+    "m4-release",
+    "m5-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the implementer skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, the handoff, and docs/GAUGE_WRITER_HOOK.md section 'Known limits of the binding store itself (#419)'. Read scripts/hooks/spine_rail.py and tests/test_spine_rail.py and verify every structural claim in the handoff against source. Record the baseline test count. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + spine_rail.py + tests read; handoff complete; baseline test count recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-validate": {
+      "id": "m1-validate",
+      "title": "Validating resolution: rung 0 (absolute), rung 3 (payload cwd), rung 5 (project_dir), bind-nothing",
+      "imperative": "TDD. Write failing tests first for: a relative --file that does not validate under payload cwd must write NO binding entry (store byte-unchanged); a relative --file that validates under project_dir binds project_dir with path_source=project_dir; absolute --file keeps today's behaviour with path_source=absolute; payload cwd wins when it validates, with path_source=payload_cwd. Then implement the checklist-validity predicate and the ordered-candidate skeleton with path_source recorded as an additive value field on the binding entry. Attest c1 with the observed RED output, then advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new rung-0/3/5 and bind-nothing tests written and observed failing against pre-change code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: 7 new tests failed against pre-change hook (looks_like_checklist absent; no path_source; cwd trusted blindly). Full tail in scratchpad m1red.txt"
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_spine_rail.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-validate-1"
+        }
+      ],
+      "constraints": [
+        "PostToolUse never raises; returns {} on every path",
+        "binding key shape untouched",
+        "skip-on-uncertainty"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-validate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-command-rungs": {
+      "id": "m2-command-rungs",
+      "title": "Rung 1 (--worktree opt) and rung 2 (last cd/Set-Location/pushd target) with MSYS path normalization",
+      "imperative": "TDD. Write failing tests first for the headline case: payload cwd is the main checkout, the observed command cd's into a worktree (MSYS-style /c/... form) and claims a relative --file there; the binding must name the WORKTREE spine with path_source=cd_target. Also: absolute --worktree option wins over cd (path_source=worktree_opt); last cd wins over earlier ones; quoted targets with spaces; ';' chains; relative cd resolved against payload cwd, falling through when it does not validate. Then implement. Attest c1 with observed RED, advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: worktree-cd test written and observed failing against pre-change code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED demonstrated against the pre-change hook by git stash: all 11 new rung-1/2 tests failed; headline test bound the MAIN-CHECKOUT decoy (...cd_into_worktr0/.agent-work/run1/spine.json) instead of the worktree spine"
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_spine_rail.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-command-rungs-1"
+        }
+      ],
+      "constraints": [
+        "no test may hand-inject the root it claims to prove the hook derives"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-command-rungs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-git-worktree": {
+      "id": "m3-git-worktree",
+      "title": "Rung 4: git worktree list --porcelain probe, bounded, off the common path",
+      "imperative": "TDD. Write the failing real-git integration test first: temp git repo, git worktree add a second tree, real checklist JSON in the worktree, run the hook in a FRESH SUBPROCESS with a payload whose cwd is the main tree and whose command carries NO cd; assert the binding names the worktree path. The worktree path must not be injected into any env var, fixture field or payload field the hook reads back. Also pin that the git probe does not run when rungs 0-3 answer, and that it is bounded by a short timeout. Implement. Attest c1 with observed RED, advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: real-git-worktree fresh-subprocess test written and observed failing against pre-change code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED demonstrated by git stash: the rung-4 fresh-subprocess test failed against the pre-change hook, which wrote .../main/.agent-work/run-wt/spine.json (the phantom main-tree path) instead of .../wt-epic418/.agent-work/run-wt/spine.json. 4 m3 tests failed RED."
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_spine_rail.py green including the real-worktree integration test",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-git-worktree-1"
+        }
+      ],
+      "constraints": [
+        "git probe must not hang a PostToolUse hook"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-git-worktree-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-release": {
+      "id": "m4-release",
+      "title": "release resolves from the recorded binding first",
+      "imperative": "TDD. Write the failing test first: a claim records a binding; the spine file is then deleted; a release with the same relative --file must still remove the entry. Also cover the ambiguous/empty fall-through to the filesystem ladder. Implement. Attest c1 with observed RED, advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: release-after-spine-deleted test written and observed failing against pre-change code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED against the m3 code: 3 of 7 new release/fuzz tests failed (spine-deleted release leaked the entry; recorded-lookup-beats-decoy bound wrong; unresolvable release stranded the nudge ledger). The other 4 are behaviour pins that already held."
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_spine_rail.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-release-1"
+        }
+      ],
+      "constraints": [
+        "a release must remove what its own claim put there"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-release-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-evidence": {
+      "id": "m5-evidence",
+      "title": "Evidence: stash-proof of failure, wiring grep, targeted suite, result written",
+      "imperative": "Demonstrate the load-bearing tests failing against the pre-change code by stashing the fix and running them, then restore. Run the wiring grep naming every new symbol and count external call sites (zero is a stop condition). Run the targeted suite with a real exit code captured to a file. Run git check-ignore on each committed path. Write IMPLEMENTER_RESULT.md. Attest c1 with the collected evidence, advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pre-change failure demonstrated, wiring grep run with counts, git check-ignore exit codes recorded, IMPLEMENTER_RESULT.md written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "pre-change failure demonstrated twice (stash of spine_rail.py: rung-4 test bound the phantom main-tree path; standalone demo bound the temp-main decoy). Wiring grep run: 15 new symbols, every one with >=1 external production call site, zero-call-site stop condition not hit. git check-ignore exit 1 for both committed paths. IMPLEMENTER_RESULT.md written."
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_spine_rail.py and tests/test_gauge_writer.py both green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-evidence-1"
+        }
+      ],
+      "constraints": [
+        "do not run the full suite",
+        "never a fabricated green"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-a2-440 && python -m pytest tests/test_spine_rail.py tests/test_gauge_writer.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "impl-440-g1",
+    "status": "released",
+    "claimed_at": "2026-08-06T08:39:40.593285+00:00",
+    "last_heartbeat": "2026-08-06T08:57:40.964712+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T08:57:48.186832+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "baseline read: spine_rail.py 735 lines, handoff line numbers verified (_resolve_abs l.390, handle_post_tool_use l.405); test counts 74 spine_rail / 67 gauge_writer at cbd9aee",
+      "mechanical": false,
+      "ts": "2026-08-06T08:41:58.096830+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-validate",
+      "why": "validator looks_like_checklist (dict + items list) + lazy candidate generator + path_source additive field; 14 existing tests reconciled by making their fixture spine files REAL (fixture strengthened, no assertion weakened)",
+      "mechanical": false,
+      "ts": "2026-08-06T08:45:44.279589+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-command-rungs",
+      "why": "rungs 1-2 land: --worktree only when absolute, last cd/pushd/Set-Location target, MSYS /c/ normalization, quote stripping; 92 tests green",
+      "mechanical": false,
+      "ts": "2026-08-06T08:48:28.304285+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-git-worktree",
+      "why": "git_worktree_roots: bounded 2.0s git worktree list --porcelain, main tree filtered out so path_source=git_worktree means another tree; lazy generator keeps it off the common path; 96 green",
+      "mechanical": false,
+      "ts": "2026-08-06T08:51:16.658554+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-release",
+      "why": "resolve_recorded_release_target: exactly-one suffix match on the recorded entries wins, ambiguity falls through to the ladder; release no longer early-returns on unresolved so the 3-strike nudge ledger still clears; 102 green",
+      "mechanical": false,
+      "ts": "2026-08-06T08:53:35.223346+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-evidence",
+      "why": "evidence complete: 169 green across test_spine_rail.py (74->102) and test_gauge_writer.py (67, untouched), real exit 0 via file redirect",
+      "mechanical": false,
+      "ts": "2026-08-06T08:57:40.964673+00:00"
+    }
+  ]
+}

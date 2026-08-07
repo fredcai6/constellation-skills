@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-treatment",
+  "mechanical": {
+    "run": "issue-440-g2-acceptance",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-treatment",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g2-acceptance-m2-treatment@e7c420f01615a865e75e6226bc3e9c58b2434c20",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g2-acceptance",
+    "generated_at": "2026-08-06T10:22:02Z"
+  }
+}

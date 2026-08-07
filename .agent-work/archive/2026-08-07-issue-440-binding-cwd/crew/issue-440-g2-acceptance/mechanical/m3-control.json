@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-control",
+  "mechanical": {
+    "run": "issue-440-g2-acceptance",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-control",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g2-acceptance-m3-control@00df24102c8311cf5106a497fd2fb842cad9ae8d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g2-acceptance",
+    "generated_at": "2026-08-07T14:42:43Z"
+  }
+}
