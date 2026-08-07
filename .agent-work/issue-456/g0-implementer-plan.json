@@ -139,7 +139,18 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m2-cli-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-cli",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m3-extract": {
@@ -427,14 +438,25 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m2-cli",
+      "statement": "No gate in gate-spec.json produces a position cache, yet g0 must add a .gitignore entry for one; either a later gate produces it or the line should be dropped before it becomes a stale ignore line."
+    },
+    {
+      "id": "tc2",
+      "from": "m2-cli",
+      "statement": "docs/agents/GLOSSARY.md defines 'corpus' as the installed skills corpus; issue #456 uses it for the mapped source files. A glossary row for 'mappable corpus' would settle the collision."
+    }
+  ],
   "blockers": [],
   "refusals": 1,
   "engine_session": {
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T20:52:46.390554+00:00",
+    "last_heartbeat": "2026-08-07T20:55:37.935596+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
