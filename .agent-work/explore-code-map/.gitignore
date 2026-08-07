@@ -7,3 +7,6 @@ evidence/*/pylib/
 evidence/x13/*.jsonl
 evidence/x13/map/
 evidence/x13/supplement.json
+evidence/x14/*.jsonl
+evidence/x14/map/
+evidence/x14/supplement.json

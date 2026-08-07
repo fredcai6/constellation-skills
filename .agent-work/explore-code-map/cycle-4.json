@@ -68,10 +68,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Trial COMPLETE, fix landed: branch map-trial-708 @ 337f661f (f1Brainz worktree, not pushed), 3 files +77/-7, gating tests 7/7 (2 new). Agent found the REAL bug under #708: run_stage_c already carried telemetry_store and DROPPED it for the drift call \u2014 the confusing error was the symptom. Signature now keyword-only required store; cache fallback deliberately given up for this check (recorded as Rejected: comment). USE-TRACE (the measurement): 5 pages loaded \u2014 2 clear wins (cross-module signature+semantics lookups: reference_lap_from_store, load_quali_session \u2014 cheapest available answer, multi-line signatures grep can't give), 1 mild win (entry point: x2 call multiplicity shaping the plumbing surface), 1 parity (own-module page vs reading the file), 1 worthless (top INDEX: 60 lines read, nothing learned \u2014 flat 235-module listing is not navigation). Map skipped for: value-origin question (DEFAULT_STORE_PATH is an ABSOLUTE one-machine path \u2014 found by grep; map is navigable by symbol, not by value/question), argument-flow question (carried-and-dropped is assignment structure, invisible to call edges), test guard constants, outside-window certainty. MAP DEFECT FOUND: referenced-by module list omits the DEFINING module (count said 3, names listed 2 \u2014 trusting names over count would have shipped a broken main); also nothing on the page says the count already excludes definition/import/docstring mentions (grep says 7, map says 3, reconciliation is manual). GRAMMAR FIRST CONTACT: 6 tagged comments written (4 Constraint, 1 Rejected, 1 Rationale), zero anchor ids (as predicted); gap found \u2014 no convention for function-scope tag placement. Workflow feedback: handoff should carry WHICH caller holds the value being plumbed; verification command needs absolute interpreter path. Verdict scoped: map pays on cross-module signature lookups, neutral own-module, blind to value-origin and argument-flow questions.",
       "evidence": [],
       "rework_count": 0
     },
@@ -84,10 +84,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "REGEN #2 RAN \u2014 the maintenance loop works. Rebuild over the map-trial-708 branch: 38s-class again (8.2s extract, 1.8s supplement, 11.7s render). MAP DIFF: 38 of 16,222 files, 98 changed lines total vs the source diff's 84 (+77/-7) \u2014 churn ratio ~1.2x, confirming the minimal design's core claim (map churn bounded by source churn) with a measured number. LEGIBILITY: the entry-point page diff reads as a review artifact (signature change, new docstring contract, new call edge, referenced-by 3 to 5 picking up both new tests); the importer-side effect is ONE line (validate_segment_map_662 joins telemetry_store's imported-by \u2014 the fix's new import, visible from the other end). Untouched-entity churn is pure line-number shift (:132 to :133), one line per below-edit entity, confined to derived pages which are gitignored \u2014 the committed layer carries no positions per the ruled design. TAGGED COMMENTS: 0 extracted \u2014 as expected, the comment-extraction pass does NOT exist yet; 6 authored tags now sit in real source as its first test corpus. Named next build item. Determinism was proven at prep (double-build identical).",
       "evidence": [],
       "rework_count": 0
     }
