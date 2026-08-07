@@ -25,11 +25,12 @@ Revises the original against what execution actually taught us. Written with Tom
   `done-condition fidelity`, `claim accuracy`. The last two are new lenses, added for this
   review; `claim accuracy` is the only arm permitted to read the tree.
 
-**Known gate defect:** #428 reports that `verify_spec_confirmed.py --phase review` refuses
-every template-conformant draft by construction, because the any-phase marker check makes the
-review phase unpassable while the `UNCONFIRMED` marker can only come off at confirm. Expect the
-review-phase gate to refuse this document for that reason rather than for its content. Do not
-"fix" it by removing the marker early — that defeats the gate it is protecting.
+**Gate status: both phases pass, verified on this document.** `--phase confirm` exits 0 and
+`--phase review` exits 0. The review phase was previously unpassable by construction (#428 — the
+any-phase marker check demanded the `UNCONFIRMED` marker be gone, while the marker could only
+come off at confirm, so the explorer's own review gate could never close). Fixed and merged:
+the marker refusal is confirm-phase only, and review still refuses a missing findings table or
+any empty Disposition cell. This document was the regression fixture.
 
 **Note for triage:** the tree moved under the `claim accuracy` arm mid-review. #440 merged
 while the panel was running, changing `scripts/hooks/spine_rail.py`, `docs/GAUGE_WRITER_HOOK.md`
