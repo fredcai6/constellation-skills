@@ -316,8 +316,15 @@ not rebase or merge mid-gate. Expect a conflict in `.agent-work/LESSONS.md` and
 `.agent-work/AGENT_FEEDBACK.md` — **both are deletions on my side**, and all eight of main's lessons
 are already carried into `episodes/`, so taking my side loses nothing. `main`'s new `replan` and
 `to-initial-issues` skills were checked and mention neither retired file, so the guard's censuses do
-not need to account for them. `skills/to-issues/` was renamed on main and my `SKILL_SCRIPT_BUNDLES`
-edit touches the old name — that hunk needs the rename applied.
+not need to account for them.
+
+**Correcting myself on the rename:** I earlier told the Admiral my `SKILL_SCRIPT_BUNDLES` edit
+touched the old `to-issues` name and that the hunk would need the rename applied. **It does not.**
+Re-derived by command: `git diff -U0 cbd9aee..HEAD -- scripts/install_constellation.py` changes
+exactly five bundle lines — the `admiral` and `commander` tuples, and the two `lessons-auditor`
+entries (deleted from `SKILL_SCRIPT_BUNDLES` and `SKILL_REFERENCE_BUNDLES`). `"to-issues"` appears
+**zero** times in my diff. The rename is a plain context difference in that file, not an overlap with
+my edit.
 
 ---
 
