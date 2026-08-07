@@ -227,7 +227,8 @@
             "kind": "command",
             "command": "test -f .agent-work/issue-456/crew-handoffs/g0-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
         }
       ],
       "constraints": [
@@ -236,27 +237,40 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/g0-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 1,
+  "refusals": 2,
   "engine_session": {
     "session_id": "g0-remediate-impl-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-07T22:46:26.484084+00:00",
-    "last_heartbeat": "2026-08-07T23:08:47.747354+00:00",
+    "last_heartbeat": "2026-08-07T23:11:24.200332+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-07T23:12:08.046632+00:00"
   },
   "why_trail": [
     {
@@ -286,6 +300,13 @@
       "why": "Boundary verified. Full suite 1709 passed / 2 skipped / 0 failed with PYTHONIOENCODING cleared -- exactly the 1706/2/0 baseline plus the 3 tests this pass adds. Real-repo figure moved 3636 -> 3635 against an unchanged on-disk 3635, with the Verdict page still lost, which is the stated correct outcome. One finding the handoff did not anticipate: a blunt position scan of the real tree still returns 2 hits, both from ONE authored docstring in tests/test_checklist_engine.py that names scripts/checklist_engine.py:449 in its own prose (echoed onto the entity page and its module index line). That is copied source text, not a renderer-emitted position, and it churns only when its own docstring changes -- but a reviewer grepping the committed map/ at gs will hit it, so it is recorded in the test docstring and reported up.",
       "mechanical": false,
       "ts": "2026-08-07T23:08:33.969299+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "Committed b14ff3f with 15 explicit paths -- render.py, tests/test_code_map.py, this plan and its journal, the engine side-car, and the result. git add -A never used and map/ verified still untracked (git ls-files map = 0), so gate gs's staging is undisturbed. IMPLEMENTER_RESULT written with both mutation proofs at full output, the 3636->3635 figure against an unchanged on-disk 3635, the 1709/2/0 suite number, and three out-of-scope findings: entity_pages carries the identical uncountable-number defect and should go to g1 beside tc17; a blunt position grep of the committed tree returns 2 hits from one authored docstring, not renderer output; and the reference prototype still carries the old file:line header.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:11:24.200332+00:00"
     }
   ]
 }
