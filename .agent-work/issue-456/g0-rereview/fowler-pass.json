@@ -1,0 +1,76 @@
+{
+  "work_id": "issue-456-g0-rereview",
+  "diff_ref": "b14ff3ff~1..HEAD over scripts/ and tests/ -- scripts/code_map/render.py and tests/test_code_map.py, +191/-7. Scoped re-review of the B1/B2 remediation delta only.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Writing Files On Windows; Python Invocation), docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md (Universal posture: no hidden fallback; Pin a claim to the revision you read it at), .agent-work/issue-456/crew-handoffs/g0-remediate.md (specific exclusions: no other defect fixes, D1 stays g3's, collision stays tc17/g1)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "render.run() is 58 lines and the delta adds 9 of them (the comment block at :428-435 plus the moved npages line). It now does five things: clear the tree, write module indexes, recurse entity pages, write ids.jsonl, and compute + persist the report.",
+      "override": {
+        "repo_standard": "g0-remediate.md specific exclusion 'no other defect fixes, no refactors' plus global-crew.md's minimal-change rule; the enclosing function is a verified faithful port whose baseline a later gate diffs against.",
+        "reason": "The remediation was scoped to two named lines. Extracting a write-the-tree/measure-the-tree split here would restructure the one function g1 and gb are both queued to enter, destroying the port baseline before either has used it. The right moment is g1, which already owns this function via tc17 and tc18."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The delta adds no class to render.py. The two new test classes are 30 and 46 lines with two and one test methods respectively -- well inside the module's existing shape."
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The expression `rglob(\"*.md\")` over the output tree is now written three times against the same tree: render.py:436 computes the field, tests/test_code_map.py:142 computes the test's expected value, and tests/test_code_map.py:172 collects the pages to scan. The test's copy is the problem, not the count: because the assertion's expected value is produced by the same expression as the value under test, the assertion is a duplicate of the implementation rather than an independent statement about it. This is the mechanism behind the r7 blocker -- see that finding.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "flagged",
+      "finding": "RenderReportTests._write_calls() (tests/test_code_map.py:145-151) reaches into supplement.json and re-derives the renderer's write count as `1 + len(supp['modules']) + len(supp['entities'])`. That arithmetic is render.run()'s, hand-copied into the test. It is only correct while every supplement entity is reachable through `children`; nothing checks that, so a future extractor change makes the input precondition overstate silently and the guard stops guarding. Observation-grade -- it holds today, measured: 1 + 112 + 3536 = 3649 against 3648 files on disk.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "The delta introduces no new travelling parameter group. The pre-existing (root, artifacts, out) trio is untouched and was already flagged in the first review."
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "Unchanged and still the mechanism behind the whole defect family. The supplement key stays a bare 'module:Qualified.Name' string and render.py:414 still turns its raw tail straight into a filename with no collision check and no case check. Because no type owns page-name derivation, there is no single place that could answer 'how many pages should exist' -- which is precisely why the B2 fix had to fall back to counting the files it just wrote. Correctly out of scope here (g2 owns symbol identity); named because it explains why the r7 blocker was reachable at all.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The delta changes no signature. loc(key, e) stays at two parameters; run(root, artifacts, out) stays at three."
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The opposite held, and it was verified rather than assumed: the page-header format has exactly one emitter (loc(), render.py:171) with exactly one call site (render.py:273), and a repo-wide grep found no reader of the header format and no reader of render_report.json outside the one new test. Changing the format was a one-line change with a zero-caller blast radius -- recorded at r9."
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "Both edits are in render.run()/loc() for the same reason -- the committed artifact must carry no position and must not lie about itself. One axis of change, not two."
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "loc() got shorter: `mod_supp[modof(key)]['file']` replaced `f\"{mod_supp[modof(key)]['file']}:{e['line']}\"`. No new chain."
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Nothing added for a caller that does not exist. Both changes are removals plus one measurement."
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "Two prose blocks in the delta assert more than the code delivers, and in this issue that is not a style point. (1) tests/test_code_map.py:127-131, the RenderReportTests class docstring: '`pages` in the render report has to be a number that can be WRONG ... The count has to come from the tree.' After the fix the number cannot be wrong -- mutation N8 deletes every second entity page after writing and all 17 tests stay green. The docstring states the test's falsifying power in exactly the terms this issue exists to police, and overstates it. (2) tests/test_code_map.py:180-184 asserts 'A blunt scan of the REAL page tree still reports two hits'; a fresh build at HEAD returns three, the third being that docstring itself. Both are load-bearing rationale, not decoration -- (1) is why the test looks sufficient and (2) is why the fixture is synthetic. Escalated to the r7 blocker.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

@@ -820,6 +820,11 @@
       "id": "tc23",
       "from": "execute",
       "statement": "tc23 Sharpens tc22 with a measurement: the two crew-registry tools give CONTRADICTORY dispositions for the same entry. For constellation/issue-456/g0/implementer/attempt-1, run at the same moment: 'recover_crews.py issue-456' reports COMPLETE -- recoverable/complete, do not rerun, while 'run_crew.py --verify-result <same id>' REFUSES with 'cannot verify an abandoned crew'. Both read the same registry. recover_crews is the tool doctrine tells a commander to run before every dispatch to decide whether a slot is clear, and verify-result is the tool that confirms a crew produced its artifact; they disagree, so whichever one a commander happens to consult determines what it believes. A commander following the dispatch precondition alone sees COMPLETE and never learns the result was never verified. Confirmed by re-running verify-result after recover_crews had already reconciled the entry to COMPLETE, so this is not a transient race. Fix direction: one disposition function shared by both tools, and a fresh attempt number on every dispatch so a terminal slot is never reused (tc22)."
+    },
+    {
+      "id": "tc24",
+      "from": "execute",
+      "statement": "tc24 CORRECTS tc18, which as I filed it would have misdirected g1 into shipping a second cannot-fail field. tc18 says entity_pages is 'a one-line fix in the same function'. The one-line fix matching g0's own precedent is to count the tree again -- and counting the tree is exactly what the g0 re-review proved is still tautological (B3): pages = sum(1 for _ in out.rglob('*.md')) is a count of the tree it describes, and mutations that delete a quarter of the page tree, remove every module index, or destroy the output layout ALL leave the suite green. So g1 would have 'closed the family' by adding a second field that cannot fail. WHAT g1 SHOULD ACTUALLY DO, ruled: (1) the root is not entity_pages but 'sizes', which feeds three reported fields, so fix the source rather than each field; (2) assert the invariant the report ALREADY contradicts -- pages - 1 - modules against entity_pages, currently 3535 against 3536, differing by exactly the lost Verdict page (tc17); (3) treat a count derived from the same expression as the implementation as no check at all. GENERAL LESSON for the remaining ten gates, and the reason this correction exists: reproducing a falsifier that a crew designed only proves the crew's own probe works. I reproduced both g0 mutation proofs myself and still missed B3, because I never asked whether the test could catch anything OTHER than the probe it was built against. A cannot-fail check must be attacked with a mutation its author did not choose."
     }
   ],
   "blockers": [],
@@ -828,7 +833,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T23:23:36.564998+00:00",
+    "last_heartbeat": "2026-08-07T23:49:08.805755+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
