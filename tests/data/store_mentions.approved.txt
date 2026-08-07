@@ -69,3 +69,66 @@ scripts/episode_capture.py:holds. Deliberately not under `episodes/`: this is th
 
 # the capture seam's own module: a WRITE path
 scripts/episode_capture.py:`episodes/active/` would invite exactly the wrong reading."""
+
+# --- #447 g3: the episode store's write path is now wired into the two spines,
+# the install bundles, and the capture gate. Every entry below is a WRITE-side
+# mention or an honest note about one. Nothing here tells an agent to READ the
+# store and condition its behaviour on what it finds -- that is the one thing
+# this census exists to refuse.
+
+# bundle comment recording that leaving the reader unbundled is a DEFAULT and not a boundary, and naming the four routes around it -- an honest limit, not an instruction to read
+scripts/install_constellation.py:# store's WRITER (apply_episode_delta.py) and its capture GATE
+
+# bundle comment recording that leaving the reader unbundled is a DEFAULT and not a boundary, and naming the four routes around it -- an honest limit, not an instruction to read
+scripts/install_constellation.py:# carry query_episodes.py -- the read path does not travel with the roles that write.
+
+# bundle comment recording that leaving the reader unbundled is a DEFAULT and not a boundary, and naming the four routes around it -- an honest limit, not an instruction to read
+scripts/install_constellation.py:# 1. repo-relative execution -- `python scripts/query_episodes.py` from the project
+
+# bundle comment recording that leaving the reader unbundled is a DEFAULT and not a boundary, and naming the four routes around it -- an honest limit, not an instruction to read
+scripts/install_constellation.py:# 2. plain Read/Grep -- episodes/ is a TRACKED repo path, so any agent can open the
+
+# bundle comment recording that leaving the reader unbundled is a DEFAULT and not a boundary, and naming the four routes around it -- an honest limit, not an instruction to read
+scripts/install_constellation.py:# query_episodes would drag it along automatically.
+
+# install bundle: ships the store's write path and capture gate to the two roles whose spines invoke them by name
+scripts/install_constellation.py:"admiral": ("checklist_engine.py", "init_work_area.py", "verify_state_note.py", "apply_episode_delta.py", "verify_episode_captured.py", "verify_worktree_isolation.py", "agent_work_root.py"),
+
+# install bundle: ships the store's write path and capture gate to the two roles whose spines invoke them by name
+scripts/install_constellation.py:"commander": ("checklist_engine.py", "init_work_area.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_episode_delta.py", "verify_episode_captured.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py"),
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:`statement`, and it does not import `query_episodes`. **Ids and counts out;
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:byte discipline (`apply_episode_delta.read_text_exact`).
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:# (episodes/README.md), and this gate is ordinary retrieval. Named corner case, not
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:for `episodes/active/episodes/active/<id>.md` and answer "untracked" for 25 of 25
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:parser = argparse.ArgumentParser(description="Capture gate for the episode store.")
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:help="episode store root (default: the repo's tracked episodes/ — but see below)",
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:# The default carries the SAME hazard as apply_episode_delta.store_root(), named at
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:"scripts/apply_episode_delta.py before advancing.",
+
+# the capture gate itself: a WRITE-side check that emits episode ids and counts and never statement text
+scripts/verify_episode_captured.py:"this worktree. Run `git add episodes/`.",
+
+# spine imperative: the episode WRITE path (apply_episode_delta.py --store-root episodes) and the capture gate that follows it; neither reads the store back
+skills/admiral/templates/ADMIRAL_SPINE.template.json:"imperative": "The run cannot close without a record of what happened. 1) Write the epic retrospective as EPISODES: one episode per distinct thing that happened across the epic — not one per wave, and not a summary — each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround, and each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded. An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow — a rule to follow belongs in docs/agents/* and is a human's call. Write the delta to .agent-work/<work-id>/episode-delta.json and apply it deterministically: python <admiral-skill-dir>/scripts/apply_episode_delta.py --delta .agent-work/<work-id>/episode-delta.json --store-root episodes. Pass --store-root on every invocation: the writer's default resolves relative to the installed skill directory, so an installed copy would silently build a store at ~/.claude/skills/constellation-admiral/episodes — outside the repo — while every gate reported green. Never hand-edit a file under episodes/: that writer is the only write path into it. Then run the capture gate before advancing: python <admiral-skill-dir>/scripts/verify_episode_captured.py <work-id> --store-root episodes --phase feedback. 2) When any part of this closeout edits a shipped compact-format JSON template, edit the raw text surgically (never round-trip it through json.load/json.dump, which reflows the file and destroys blame) and re-validate with json.load afterward. 3) Hand the epic's net change to a constellation-cartographer subagent for architecture reconcile. 4) Hygiene: every branch merged or dispositioned, worktrees swept, ADMIRAL_LOG archived under .agent-work/archive/. 5) Present the epic summary and get user acceptance. Then release the lease: <engine> release --session-id <admiral-session-id>.",
+
+# spine imperative: the episode WRITE path (apply_episode_delta.py --store-root episodes) and the capture gate that follows it; neither reads the store back
+skills/commander/templates/COMMANDER_SPINE.template.json:"imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Include the crew Workflow Feedback harvested at each gN-integrate. A 'none' answer requires a run-specific reason ('none — confirmed after review: <what you checked>'); a bare 'none' does not close this step. Then record what happened as EPISODES: one episode per distinct thing that happened — not one per run, and not a summary — each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround. An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow — a rule to follow belongs in docs/agents/* and is a human's call. Write the delta to .agent-work/<work-id>/episode-delta.json and apply it deterministically: python <commander-skill-dir>/scripts/apply_episode_delta.py --delta .agent-work/<work-id>/episode-delta.json --store-root episodes. Pass --store-root on every invocation: the writer's default resolves relative to the installed skill directory, so an installed copy would silently build a store at ~/.claude/skills/constellation-commander/episodes — outside the repo — while every gate reported green. Never hand-edit a file under episodes/: that writer is the only write path into it. Then run the capture gate before advancing: python <commander-skill-dir>/scripts/verify_episode_captured.py <work-id> --store-root episodes --phase feedback.",
+
+# spine imperative: the episode WRITE path (apply_episode_delta.py --store-root episodes) and the capture gate that follows it; neither reads the store back
+skills/commander/templates/COMMANDER_SPINE.template.json:"imperative": "Commit all remaining work, including this run's episodes under episodes/. That is a tracked repo-root path, so the committed episode IS the durable record: it survives `git worktree remove` and lands in a fresh clone. None of the old is-.agent-work-gitignored reasoning applies to it. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> — a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Run the archive-phase capture gate before marking archive complete — it additionally requires git to TRACK the episode, which is what proves the record outlived this worktree: python <commander-skill-dir>/scripts/verify_episode_captured.py <work-id> --store-root episodes --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): <engine> release --session-id <commander-session-id>. Release must come after that closing advance, never before it — the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",

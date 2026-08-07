@@ -140,9 +140,27 @@ def expand_script_bundle(scripts: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(expanded)
 
 
+# EPISODE STORE, WRITE SIDE ONLY (#447). The admiral and commander bundles carry the
+# store's WRITER (apply_episode_delta.py) and its capture GATE
+# (verify_episode_captured.py) because their spines invoke both by name. They do NOT
+# carry query_episodes.py -- the read path does not travel with the roles that write.
+#
+# That omission is a DEFAULT, NOT A BOUNDARY, and the difference matters: an installed
+# role that wanted to read the store still can, by at least four measured routes, and a
+# reader who believed otherwise would be wrong about the only thing this bundle line
+# could be read as promising. The four:
+#   1. repo-relative execution -- `python scripts/query_episodes.py` from the project
+#      root runs the repo's own copy; nothing about the install is in the way;
+#   2. plain Read/Grep -- episodes/ is a TRACKED repo path, so any agent can open the
+#      files directly without any script at all;
+#   3. the unfiltered copytree in install_skills() below -- a skill's own
+#      directory is copied wholesale, so anything committed inside one ships with it;
+#   4. SCRIPT_RUNTIME_COMPANIONS -- a future bundled script that imports
+#      query_episodes would drag it along automatically.
+# The real guarantee lives in doctrine and in the capture gate's own valve
+# (scripts/verify_episode_captured.py: ids and counts out, statements never), not here.
 SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
-    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
-    "lessons-auditor": ("checklist_engine.py",),
+    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_state_note.py", "apply_episode_delta.py", "verify_episode_captured.py", "verify_worktree_isolation.py", "agent_work_root.py"),
     "charter": ("checklist_engine.py",),
     # map_orient.py is invoked by COMMANDER_SPINE.template.json as a command
     # postcondition at BOTH the context step (verify-orientation) and the plan
@@ -152,7 +170,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     # SCRIPT_RUNTIME_COMPANIONS entry; that is a checked fact, not an omission --
     # tests/test_install_constellation.py pins companions against actual dynamic
     # loads.
-    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py"),
+    "commander": ("checklist_engine.py", "init_work_area.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_episode_delta.py", "verify_episode_captured.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py"),
     # workbench is the checklist engine's home skill, so it is the canonical (and
     # only) owner of the gauge WRITER hook -- the gauge exists solely to feed
     # checklist_engine.py's `current` advisory. Deliberately NOT a companion of
@@ -183,7 +201,6 @@ _GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-cre
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": _GLOBAL_ORCHESTRATOR,
     "commander-delegated": _GLOBAL_ORCHESTRATOR,
-    "lessons-auditor": _GLOBAL_EVERYONE,
     "charter": _GLOBAL_ALL_TIERS,  # the baseline Charter elicits project deltas from
     "commander": _GLOBAL_ORCHESTRATOR,
     "workbench": _GLOBAL_ALL_TIERS,  # generic driver for either tier
