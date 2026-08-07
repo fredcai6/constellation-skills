@@ -194,12 +194,12 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "Review returned BLOCK with two blockers (e-g0-review-2). B2 is mine to fix and is scoped: render.py:397-419 counts write_text CALLS not distinct output paths, so render_report.json 'pages' cannot go wrong; it reads 3636 while the tree holds 3635 and this gate's own checks.py prints 3635. B1 is NOT mine to settle: every rendered page carries a source position, contradicting 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate with settled/human provenance. My ruling 4 dropped the position-cache ignore entry on a premise the reviewer verified as TRUE but whose correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Escalated to the human as a straight either/or; the run does not proceed past g0 until it is answered, because map/ is committed at gs and eight gates of downstream work would otherwise build on a page format that has to change.",
         "authority_needed": "parent agent",
         "next_action": "On the human's answer, dispatch ONE remediation implementer pass covering both blockers together rather than two passes: (1) B2 -- make render count distinct output paths, and add a test that READS render_report.json and asserts its pages field equals the .md files on disk, a check that can actually go red; (2) B1 -- whichever of (a) assign-and-do the suffix removal or (b) amend-the-ruling the human picks. Then resume g0-review and re-review. Already ruled and needing no further decision: the Verdict/verdict page collision is filed as tc17 and assigned to g1, whose charter is a check stage that can fail; g2 owns any renaming. Established fact that lowers the cost of option (a): .code-map/statements.jsonl already carries per-statement file/line/col and is already gitignored, so the rebuildable position store the ruling calls for substantially exists and (a)'s remaining work is dropping the page suffix plus a test, not building a cache.",
-        "prior_status": "in-progress"
+        "resume_reason": "Resuming to work the half of the BLOCK that does not depend on the human. B2, the page count that cannot go wrong, is fully determined regardless of which way B1 is answered, so it goes to a remediation implementer now rather than idling behind the decision. B1 stays escalated and recorded at e-g0-review-2; g0 does not advance until the human answers it."
       },
       "result": null,
       "finding": null,
@@ -242,6 +242,18 @@
             "commander_lead_result": "The concrete check-that-cannot-fail lead I gave the reviewer came back CLEAN: the git check-ignore multi-pathname shape does not survive into scripts/ or tests/ (zero grep hits). It remains uncorrected only in the run bookkeeping at g0-implementer-plan.json:394,415.",
             "observations": "Five out-of-scope observations returned; refiled on the spine under commander numbering as tc12-tc16 to avoid collision with the reviewer's own local tc1-tc5.",
             "workflow_feedback": "Reviewer reports an engine rail defect: the r6-fowler postcondition is unsatisfiable on a survey controller, since amend --op retext-check refuses ('amend applies to gated checklists') and attest refuses ('c1 is engine-checked'), leaving waive --force as the only legal route for a rail that actually ran and passed. Refiled as tc17."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-review-3",
+          "type": "human-decision",
+          "payload": {
+            "question": "B1: every rendered page carries a source position, contradicting the settled/human ruling 'nothing committed carries a position' (disposition of BLOCKING critic finding SY1). Either (a) strip the suffix and assign it to a named gate, or (b) amend the ruling and accept SY1's measured churn of ~450 position-bearing lines rewritten per 3-line source edit.",
+            "answer": "Tommy, verbatim: 'strip the line numbers'. Option (a).",
+            "commander_ruling": "Done in g0, not deferred. The reviewer's argument for blocking was that map/ is committed at gs, last of eleven, so finding it there means eight gates built on a page format that must change; g0 ships the renderer so g0 fixes it. On what 'the line numbers' means: REMOVE the :<line> component (the cross-page churn SY1 measured), KEEP the bare file path (changes only when the file moves, so it does not churn) and KEEP ', N lines' (an entity's size changes only its own page, which is correct behavior). No new cache is built: .code-map/statements.jsonl already carries per-statement file/line/col and is already gitignored at .gitignore:29, so the rebuildable position store the ruling calls for already exists -- verified by me directly. Falsifier required: a test asserting no rendered page matches a .py:<line> pattern, proven load-bearing by restoring the suffix and watching it go red.",
+            "scope_note": "B1 and B2 now go to ONE remediation implementer pass rather than two, since the answer arrived before dispatch."
           },
           "produced_by": "engine",
           "ts": ""
@@ -1729,14 +1741,7 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "g0-review",
-      "blocker": "Review returned BLOCK with two blockers (e-g0-review-2). B2 is mine to fix and is scoped: render.py:397-419 counts write_text CALLS not distinct output paths, so render_report.json 'pages' cannot go wrong; it reads 3636 while the tree holds 3635 and this gate's own checks.py prints 3635. B1 is NOT mine to settle: every rendered page carries a source position, contradicting 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate with settled/human provenance. My ruling 4 dropped the position-cache ignore entry on a premise the reviewer verified as TRUE but whose correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Escalated to the human as a straight either/or; the run does not proceed past g0 until it is answered, because map/ is committed at gs and eight gates of downstream work would otherwise build on a page format that has to change.",
-      "authority_needed": "parent agent",
-      "next_action": "On the human's answer, dispatch ONE remediation implementer pass covering both blockers together rather than two passes: (1) B2 -- make render count distinct output paths, and add a test that READS render_report.json and asserts its pages field equals the .md files on disk, a check that can actually go red; (2) B1 -- whichever of (a) assign-and-do the suffix removal or (b) amend-the-ruling the human picks. Then resume g0-review and re-review. Already ruled and needing no further decision: the Verdict/verdict page collision is filed as tc17 and assigned to g1, whose charter is a check stage that can fail; g2 owns any renaming. Established fact that lowers the cost of option (a): .code-map/statements.jsonl already carries per-statement file/line/col and is already gitignored, so the rebuildable position store the ruling calls for substantially exists and (a)'s remaining work is dropping the page suffix plus a test, not building a cache."
-    }
-  ],
+  "blockers": [],
   "why_trail": [
     {
       "id": "w-1",
