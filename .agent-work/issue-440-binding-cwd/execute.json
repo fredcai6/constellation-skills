@@ -585,13 +585,15 @@
           "id": "c1",
           "statement": "the live binding store's before-state is recorded to a file in this worktree and the existing-bindings ruling is written down with its evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Before-state recorded to .agent-work/issue-440-binding-cwd/g3/live-binding-store-before.json (sha256 2e80067d009e, 3 keys, 12 entries, captured 2026-08-07). Ruling written to .agent-work/issue-440-binding-cwd/g3/EXISTING_BINDINGS_RULING.md: LEAVE TO AGE OUT, live store untouched, no mutation so no dry-run needed. Regraded guess -> measured by running the settle experiment the launch order named. The evidence: a stale binding cannot produce a WRONG reading, only a missing one, for three independent reasons - the engine reads gauge.json beside the spine it was itself invoked with and never through the store, so a wrong binding can misplace a write but never redirect a read; gauge_writer_hook.py:595-606 refuses to write at all when a key has more than one candidate, so the stale-plus-live case degrades to silence rather than to a wrong number; and a misplaced reading ages past the reader's 30-minute freshness window into nothing. Retiring the dead entries was considered and rejected on measurement, not preference: the one bare key is silenced at 10 candidates and THREE of those are live, so deleting all 7 dead entries leaves the guard still firing - it would buy no behavioural change while risking a lost update against a store two live sessions are writing right now. 8 of the 12 entries are the #440 phantom shape."
         },
         {
           "id": "c2",
           "statement": "docs/GAUGE_WRITER_HOOK.md no longer states this defect as an open limit and describes the shipped resolution",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "docs/GAUGE_WRITER_HOOK.md 'Known limits of the binding store itself' no longer states this defect as open. The bullet is struck through and marked FIXED in #440, and now describes what actually shipped: resolve_spine_candidate walks ordered candidate roots and takes the first that validates as a checklist ON DISK rather than trusting cwd, refuses to bind when two guessed roots name different existing files, and derives the worktree root from C:/Programs/constellation-skills                                    39f4b43 [main]\nC:/Programs/.proto-exc6-governor-subagent-identity                  75f684c [proto/exc6-governor-subagent-identity]\nC:/Programs/.proto-exc8-spine-instructions                          5a283ad [proto/exc8-spine-instructions]\nC:/Programs/.proto-exc9-mcp-front-door                              de6a084 [proto/exc9-mcp-front-door]\nC:/Programs/constellation-skills/.claude/worktrees/explore-code-map fc75f53 [worktree-explore-code-map]\nC:/Programs/constellation-skills-wt/epic418-a-419                   ffe0d53 [epic-418/a-419-governor-identity]\nC:/Programs/constellation-skills-wt/epic418-a2-440                  b2810d9 [epic-418/a2-440-binding-cwd]\nC:/Programs/constellation-skills-wt/epic418-b-420                   e6a91bc [epic-418/b-420-engine-channel]\nC:/Programs/constellation-skills-wt/epic418-d-422                   2d94fcc [epic-418/d-422-wire-invariants]\nC:/Programs/constellation-skills-wt/epic418-g-425                   990712f [epic-418/g-425-file-defects]\nC:/Programs/constellation-skills-wt/epic418-h-447                   dbf9a23 [epic-418/h-447-episodes-retirement]\nC:/Programs/constellation-skills-wt/governor-264                    3e0193d [governor/264-e2e-assertion]\nC:/Programs/constellation-skills-wt/verify-w0                       cbd9aee (detached HEAD) rather than being handed it - recording path_source: git_worktree, which is how a derived root is told from an inferred one. The live two-arm verification sits beside it with its numbers and the evidence path. Two further limits were ADDED in the same pass rather than left to be rediscovered: the bare-key multi-spine ambiguity silence (which is what actually keeps the governor quiet for orchestrators, and is not #440), and the unexpanded-shell-token binding."
         },
         {
           "id": "c3",
@@ -605,7 +607,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-close-3"
         }
       ],
       "constraints": [
@@ -614,11 +617,51 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-close-1",
+          "type": "command",
+          "payload": {
+            "command": "NO_COLOR=1 FORCE_COLOR= PY_COLORS=0 python -m pytest tests/ -q",
+            "exit": 0,
+            "result": "1723 passed, 2 skipped, 550 subtests passed, 0 failed, in 249.09s",
+            "baseline": "cbd9aee baseline is 1688 passed, 2 skipped. 1723 > 1688, strictly greater by +35. Zero failures.",
+            "no_test_id_disappeared": "Verified by id diff rather than by counting. pytest --collect-only in a `git archive cbd9aee` temp tree gives 1690 ids; the same in this worktree gives 1725. comm -23 (in base, not in head) = 0 disappeared. comm -13 = 35 added.",
+            "the_FORCE_COLOR_trap_and_why_the_earlier_red_was_false": "An earlier full-suite run reported 10 failures, ALL in tests/test_mutation_floor.py (attributed by grep '^FAILED' | cut | sort | uniq -c, not off the tail). They were NOT a regression and NOT load. Root cause: the Claude Code harness exports FORCE_COLOR=3, so pytest emits ANSI codes even into a captured pipe; tests/test_mutation_floor.py:255 parses its own subprocess output with a regex matching FAILED followed by a space and the test path, and that regex does not strip ANSI, so the colour-reset sequence sitting between FAILED and the path breaks every match. The harness then reports 'HARNESS ERROR: non-zero exit with no FAILED test node' while its own captured output plainly contains FAILED nodes. Neutralising the variable takes that file from 10 failed / 4 passed to 14 passed, exit 0.",
+            "confirmed_not_a_regression_independently": "Before diagnosing the cause I verified rather than reasoned: git archive cbd9aee into a temp tree and pytest tests/test_mutation_floor.py there gave 11 failed, one MORE than my branch. Pre-existing at base, in the same environment.",
+            "resolves_the_launch_order_discrepancy": "This also explains the baseline discrepancy I flagged at g2-integrate. The launch order records cbd9aee as exit 0 and I could not reproduce that; the Admiral measured it outside a FORCE_COLOR session. The launch order warned that `py` is not the test runner on this box; this is a SECOND, independent false-red in the same family, and it fires for `python` too. Both arms are now named.",
+            "triage_filed": "tests/test_mutation_floor.py:255 should strip ANSI before matching. It currently reports a false HARNESS ERROR for every agent session that runs the suite, which is all of them."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1b-ambiguity": {
@@ -714,16 +757,17 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 12,
+  "refusals": 14,
   "engine_session": {
     "session_id": "cmdr-440-binding-cwd",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-06T08:36:15.298330+00:00",
-    "last_heartbeat": "2026-08-07T15:33:47.633841+00:00",
+    "last_heartbeat": "2026-08-07T16:06:10.557647+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-07T16:07:16.552930+00:00"
   },
   "why_trail": [
     {
@@ -781,6 +825,13 @@
       "why": "Integrating on APPROVE with the one material finding closed rather than carried. I re-verified in my own hands rather than from the claim, which is this gate's whole point: verify_evidence.py exit 0 over 59 checks at HEAD 89cc99a, --selftest exit 0 failing all 10 damaged copies. The reviewer's verdict string was APPROVE WITH FINDINGS and I recorded the reduction to APPROVE explicitly in the evidence rather than quietly - no BLOCK was raised, and the findings qualify the guard rather than the result. The test-suite read needed care and I did not take the tail at face value. 1713 passed against the 1688 baseline is strictly greater (+25, the g1/g1b spine_rail tests), but 10 tests fail. I attributed them with a uniq -c over the FAILED lines rather than eyeballing the tail - all 10 in tests/test_mutation_floor.py - then verified rather than reasoned by archiving cbd9aee into a temp tree and running that file there: 11 failed, one MORE than my branch. Pre-existing and environmental. My branch touches only scripts/hooks/spine_rail.py and tests/test_spine_rail.py; that file mutates map-orientation sources with zero references to spine_rail or gauge, and its message says 'no FAILED test node' while its own captured inner output plainly contains FAILED nodes, so the meta-harness mis-parses its subprocess. One thing I could NOT reconcile and am flagging up rather than papering over: the launch order records the cbd9aee baseline as exit 0 and I cannot reproduce exit 0 at cbd9aee in this environment now. Concurrent load from the second Commander is the likeliest cause; it is the Admiral's to adjudicate, not mine to absorb.",
       "mechanical": false,
       "ts": "2026-08-07T15:33:23.467813+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-close",
+      "why": "Closing on a real green, and the most useful thing this gate produced was the diagnosis that made it real. The suite is 1723 passed, 2 skipped, exit 0 against a 1688 baseline, with 0 previously-passing ids disappeared by collect-only diff. Getting there meant not accepting my own first red: an earlier run showed 10 failures, and rather than wave them off as environmental I attributed them with uniq -c (all 10 in tests/test_mutation_floor.py), then verified rather than reasoned by archiving cbd9aee into a temp tree and running that file there - 11 failed, one MORE than my branch. Pre-existing. The cause turned out to be worth more than the pass: the harness exports FORCE_COLOR=3, pytest emits ANSI into a captured pipe, and that file's parser matches FAILED followed directly by the test path, so the colour-reset sequence between them breaks every match and the meta-harness reports 'no FAILED test node' while its own captured output plainly contains them. Neutralise the variable and that file goes from 10-failed to 14-passed. That also resolves the baseline discrepancy I escalated at g2-integrate - the Admiral measured exit 0 outside a FORCE_COLOR session - and it is a second, independent false-red in the same family as the launch order's py warning, firing for python too. On decision:existing-bindings I ruled LEAVE TO AGE OUT and regraded guess to measured, having actually run the settle experiment rather than reasoning about it: a stale binding yields a missing reading, never a wrong one, because the engine reads gauge.json beside the spine it was itself invoked with rather than through the store, and a key with more than one candidate makes the writer refuse outright. I rejected retiring the dead entries on measurement rather than caution - the silenced key holds 3 LIVE entries of its 10, so deleting the 7 dead ones changes nothing observable while risking a lost update against a store two live sessions are writing right now. That measurement surfaced the finding I care most about in this gate, and it is NOT #440: a bare-keyed agent driving several spines at once is silenced entirely by the ambiguity guard, which is what actually keeps the governor quiet for orchestrators. Documented in GAUGE_WRITER_HOOK.md and floated up, along with the unexpanded-shell-token binding. The live store was never touched.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:06:10.557615+00:00"
     }
   ],
   "amendments": [
