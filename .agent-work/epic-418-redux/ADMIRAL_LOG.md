@@ -103,6 +103,47 @@ What carries forward, and must not be re-derived:
   baseline any wave-1 PR is judged against is **this** one, at this SHA. Skips are environment-
   conditional, which is the likely cause and is cheap to confirm if a wave-1 review ever leans on it.
 
+- `2026-08-07` — `ADMIRAL ERROR`: I deleted the `## Merges` heading while appending the baseline
+  ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
+  could not find it. No data lost (the section was empty); heading restored below. Cost: one
+  round-trip. The lesson is the ordinary one about anchored edits, not worth doctrine.
+
+- `2026-08-07` — `RULING`: **install corpus synced before dispatch, under Tommy's pre-clearance.**
+  `install_constellation.py --agent claude --scope user --force`, exit 0, repo left clean.
+  Verified after, not assumed: the two that gate dispatch (`commander-delegated` SKILL.md,
+  `workbench` templates) are byte-identical to the repo. Seven paths still differ, and all seven
+  are the installer's own transformations — absolute-path resolution of `<skill-dir>` tokens and a
+  `python` → `py` launcher rewrite. Confirmed benign by normalizing both and diffing: **zero
+  non-launcher differences**, and `py` resolves to Python 3.12.13 and runs corpus scripts fine.
+  I did **not** pass `--wire-hooks`: the installer reports the Context Governor hook UNWIRED, which
+  is #458's own deliverable, and `settings.json` is out of bounds by the spec.
+
+- `2026-08-07` — `RULING`: **#447 closed with a per-done-condition accounting** (surfaced class,
+  authorized by Tommy). Conditions 1–3 MET with evidence at the tree; **condition 4 stated as
+  PARTIALLY met** — the read path is retired but #460 shows the obligation leaking back at the
+  authoring end. Closing anyway is defensible only because the remainder is tracked and *scheduled*
+  (#460 heads this wave), which is exactly what #308 lacked. Had I written "done" over condition 4
+  I would have reproduced the failure #447 was filed to catch.
+
+- `2026-08-07` — `RULING`: **epic #418's body pointer corrected** to
+  `.agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md`, plus a relaunch status note.
+  Verified at source: 1 occurrence of the new path, 0 of the old. My first attempt failed on a
+  cp1252 decode of `gh`'s output and wrote nothing — no partial edit landed; re-run with explicit
+  UTF-8 decoding.
+
+- `2026-08-07` — `TRANSITION`: boundary `w1-to-w2`, decision **replan**, applicable. Wave 1 exit
+  criteria met and nothing left open, so the wave was re-cut rather than advanced as forecast. Five
+  discrepancies dispositioned: D1–D3 evidence-only (install staleness resolved, #447 closed, test
+  baseline recorded-not-reconciled), **D4 revise_plan** — #460 pulled into the current wave rather
+  than left to E, because every wave that runs meanwhile writes more records into the store — and
+  D5 amend-forecast (#458 stays off-chain). Packets at `transitions/w1-to-w2/`.
+
+- TRANSITION | boundary=w1-to-w2 | decision=replan | verified
+
+## Merges
+
+- _none yet_
+
 ## Closeout
 
 - _pending_
