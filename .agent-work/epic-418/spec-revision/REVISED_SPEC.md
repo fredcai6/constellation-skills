@@ -154,6 +154,25 @@ Current values for reference: `_PROFILES` sets HARD at 150k of a 1M window for O
 #440 observed a trip at 56% fill. That the cap is both global-per-model and very low is likely
 why agents experience it as a wall.
 
+**RECORDED CONSTRAINT — agent identity is not durable across a session drop** (Tommy,
+2026-08-07). Noted deliberately, not fixed here. Keying a work spine by `session_id#agentId`
+means the key dies when the session does, intentionally or otherwise. A dropped-and-restarted
+session returns under a *new* identity, so it cannot recognise its own prior binding, and the
+old binding persists as a live-looking orphan. Anything built on this key must assume the key
+can vanish mid-run, and that two identities may each believe they own one spine.
+
+Not hypothetical — it has happened three times in this epic alone. The stale-binding sweep
+found 64 accumulated entries and retired 63. #440's Commander was killed by a weekly account
+limit and resumed under the same *engine lease* but a new session. And this Admiral session
+itself resumed after a restart, against a lease whose heartbeat had gone stale. Each recovery
+worked because a human or an engine lease carried the continuity — never because the identity
+key did. The key is good at attribution and bad at durability, and the epic currently leans on
+it for both.
+
+Already filed and this belongs with them, not here: #441 (binding store has no lock, no reaper,
+unvalidated paths, divergent `agent_id` rules) and #452 (a bare-keyed agent driving several
+spines gets no reading at all).
+
 **Open (Commander's call):** how the handoff-carrying advance is expressed; where the default
 threshold sits; whether multi-spine attribution is solved or is honestly declared out of reach
 for a session holding several spines.

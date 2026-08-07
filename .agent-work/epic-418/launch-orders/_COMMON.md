@@ -65,8 +65,19 @@ quietly work around it.
 
 ## Inherited Context — platform invariants
 
-- **Windows.** PowerShell is primary; a Bash tool is also available for POSIX scripts. Both `py` and
-  `python` work.
+- **Windows.** PowerShell is primary; a Bash tool is also available for POSIX scripts.
+- **`py` is NOT the test runner on this box.** It resolves to a runtime with no pytest, and
+  `py -m unittest discover -s tests` reports loader errors and mutation-floor failures that are
+  **pure interpreter artifacts**. Use `python`. Two agents nearly recorded that as a red baseline.
+  (This file previously said "Both `py` and `python` work". That was false, and it is why the
+  trap kept firing — the warning existed only in one issue's launch order and never reached the
+  fleet.)
+- **`FORCE_COLOR` produces fake failures too, and unlike the `py` trap it fires for `python` as
+  well.** The harness exports `FORCE_COLOR=3`, so pytest emits ANSI escapes even into a
+  *captured pipe*. Any code that parses another process's captured output sees escapes wedged
+  mid-phrase and reports a failure unrelated to what it tests. This produced a false red for
+  **four independent agents in one day** (#454). Clear it — `FORCE_COLOR= python -m pytest …` —
+  before you trust any red that came out of a test which reads another process's output.
 - **`gh pr create` on Windows:** write the body to a temp file and use `gh pr create -F <file>`.
   Never a heredoc, never a PowerShell here-string for a PR body. (Here-strings *do* work for
   `git commit -m`.)
