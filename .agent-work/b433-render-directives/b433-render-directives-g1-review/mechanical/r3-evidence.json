@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "b433-render-directives-g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g1-review-r3-evidence@70f75e460ce895a633f33136422d6e783aa14663",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives-g1-review",
+    "generated_at": "2026-08-07T23:02:00Z"
+  }
+}

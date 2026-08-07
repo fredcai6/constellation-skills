@@ -1,0 +1,17 @@
+$ cd C:/Programs/constellation-skills-wt/r418-433
+$ git diff --quiet scripts/checklist_engine.py && echo "scripts/checklist_engine.py: UNCHANGED"
+scripts/checklist_engine.py: UNCHANGED
+$ FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k RenderDirectives; echo "EXIT=$?"
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                          {"replan_input": {"output": "x.json"}})
+E       KeyError: 'directives'
+
+tests\test_checklist_engine.py:4108: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_directives_render_after_anchors_and_before_next
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_flat_list_of_strings_shape_renders_one_line_each
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_nested_contract_dict_shape_renders_indented_leaves
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_shipped_commander_spine_execute_gate_renders_its_directives
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_state_passes_directives_through_without_re_running_checks
+5 failed, 2 passed, 339 deselected, 4 subtests passed in 0.82s
+EXIT=1

@@ -1,0 +1,433 @@
+{
+  "work_id": "b433-render-directives-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-ledger",
+    "m2-superset",
+    "m3-negative-self-test",
+    "m4-carryover",
+    "m5-red-proofs"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the g2-implement handoff in full. Verify the handoff carries task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions and return format; block and return if incomplete. Read the current TaskFieldCompleteness class, the RenderDirectives class, and the engine's _build_amend_task / append / _render_directive_lines / _directive_leaf. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + project context + handoff loaded; handoff complete on all eight required fields; target symbols located by name",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md and the g2-implement handoff in full. Handoff complete: task, protected intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format all present. Symbols located by name: TaskFieldCompleteness/_EXCLUDED_FIELDS/_flatten/RenderDirectives in tests; _directive_leaf/_render_directive_lines/_build_amend_task/append in scripts/checklist_engine.py."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-ledger": {
+      "id": "m1-ledger",
+      "title": "Un-exclude directives, make the extractor total, make the ledger per-field",
+      "imperative": "Handoff changes (1)(2)(3), all inside class TaskFieldCompleteness. Remove \"directives\" from _EXCLUDED_FIELDS and replace its KNOWN GAP comment with a note that it renders as of #433; keep every other exclusion's stated reason. Replace _flatten with a TOTAL leaf extractor that recurses dicts and lists to any depth and stringifies scalars, returning [] only for None and empty containers, named for what it does, and INDEPENDENT of the renderer's _directive_leaf/_render_directive_lines (no import, no sharing). Replace the single checked_any flag with a per-field ledger: record which fields the loop actually asserted on and assert that set EQUALS the set of populated non-excluded fields, with a failure message that names the offending field. Move the fixture's directives to the nested contract-dict shape the corpus really carries so the recursion is load-bearing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context loaded, handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "directives is out of _EXCLUDED_FIELDS; every remaining exclusion keeps its stated per-entry reason; the extractor is total and independent of the renderer; the ledger is per-field and its message names the field",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "directives removed from _EXCLUDED_FIELDS with a replacement note that it renders as of #433; the other 13 exclusions keep their stated per-entry reasons verbatim. _flatten replaced by _leaf_texts: recurses dicts, lists and tuples to any depth, stringifies scalars, returns [] only for None and empty containers; no import or reuse of the renderer's _directive_leaf/_render_directive_lines. checked_any replaced by expected/asserted sets compared with assertEqual, message names sorted(expected - asserted). Fixture directives moved to the nested contract-dict shape."
+        },
+        {
+          "id": "c2",
+          "statement": "the full engine suite is green with the rewritten class",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-ledger-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: tests/test_checklist_engine.py class TaskFieldCompleteness only, at this item.",
+        "Do not import or share the renderer's _directive_leaf / _render_directive_lines.",
+        "Do not touch docs/CHECKLIST_SCHEMA.md (gate g3-schema owns it).",
+        "No new dependency; match the surrounding module's idiom and comment density."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-ledger-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-superset": {
+      "id": "m2-superset",
+      "title": "Assert the fixture's key set is a superset of the engine's own Task builder",
+      "imperative": "Handoff change (4), the one that closes the class. Assert the fixture's key set is a SUPERSET of the keys the engine's canonical Task builder _build_amend_task produces, so a field added to the engine's Task shape and forgotten in the fixture fails mechanically rather than passing green by absence. Call the engine's builder through the already-loaded module E; do not re-list its fields by hand. State the residual limit honestly in the class docstring: this closes the hole for fields the ENGINE introduces, and a field introduced only by a template and never by either builder still needs a human to add it to the fixture. Verify the wiring grep for _build_amend_task under tests/ returns a non-zero count -- zero is a stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the per-field ledger from m1-ledger is in place and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-ledger complete and green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the wiring grep `grep -rn _build_amend_task --include=*.py tests` returns a non-zero count",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -rn '_build_amend_task' --include=*.py tests | grep -q ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-superset-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the superset assertion and the docstring residual limit are in, and the suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-superset-2"
+        }
+      ],
+      "constraints": [
+        "The enumeration checked mechanically is the engine's builder, not docs/CHECKLIST_SCHEMA.md's Task table (known stale on the directives row).",
+        "Allowed scope stays class TaskFieldCompleteness."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-superset-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -rn '_build_amend_task' --include=*.py tests | grep -q .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-superset-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-negative-self-test": {
+      "id": "m3-negative-self-test",
+      "title": "In-suite negative self-test: the property must be observed FAILING",
+      "imperative": "Handoff change (5). Feed the same assertion path a render with the directives block stripped out and assert it raises, with the failure message NAMING directives. Factor the assertion path into one helper both the positive test and this negative test call, so the negative test proves the real path and not a copy of it. This is the durable machine proof that a property only ever observed passing can in fact fail.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the ledger and superset assertions are in place and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-ledger and m2-superset complete and green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the negative self-test exists, drives the SAME assertion helper as the positive test, and asserts the raised message names `directives`",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_the_property_fails_when_a_populated_field_is_unrendered calls self._assert_every_populated_field_renders -- the identical helper the positive test calls -- inside assertRaises(AssertionError), then asserts 'directives' is in str(caught.exception). The output it feeds is a real E.current() render of the same gate with directives set to None, so the raise comes from the real path, not a synthesized message."
+        },
+        {
+          "id": "c2",
+          "statement": "the suite is green with the negative self-test in",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-negative-self-test-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope stays class TaskFieldCompleteness."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-negative-self-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-carryover": {
+      "id": "m4-carryover",
+      "title": "Carry-over: make _render_directive_lines' flat-list branch total",
+      "imperative": "The g1 reviewer's finding: the flat-list branch of scripts/checklist_engine.py's _render_directive_lines silently DROPS a non-string item, contradicting the helper's own docstring rule and diverging from _render_anchor_lines, which does not filter its list branch. TDD: write the test for a list carrying a non-string item FIRST, in the RenderDirectives class, and observe it fail (attest c1 with the real failure text). Then send each item through _directive_leaf so the branch is total, and update the docstring's rule statement to match. This one line plus its docstring is the ONLY engine edit authorized in this gate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the TaskFieldCompleteness rewrite is complete and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TaskFieldCompleteness rewrite complete across m1/m2/m3; suite green at 348 passed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the flat-list non-string test written and observed FAILING against the unfixed branch -- manual attest, check MUST be null so the engine does not run the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TDD red observed against the unfixed branch: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k test_flat_list_with_a_non_string_item_renders_every_item -> '1 failed, 348 deselected', EXIT=1. AssertionError at tests/test_checklist_engine.py:4068 shows the rendered output missing both non-string items: diff adds '+   17' and '+   false'. That is the silent drop the g1 reviewer named."
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: the flat-list branch routes every item through _directive_leaf, no item is dropped, and the whole suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-carryover-1"
+        }
+      ],
+      "constraints": [
+        "ONLY the list-branch line in _render_directive_lines and its docstring. state(), render_human(), _directive_leaf and the rest of _render_directive_lines are settled at g1 -- do not touch.",
+        "The ACTIVE first line stays byte-identical; GoldenOutputBriefing and ShippedTemplates stay green."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-carryover-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-red-proofs": {
+      "id": "m5-red-proofs",
+      "title": "Break the world three ways and paste the real reds",
+      "imperative": "The gate's deliverable. Run R2, R4 and R5 by hand against the REAL suite, one at a time, reverting each break before the next. R2: make the extractor return [] for dicts (the old _flatten behaviour) -- expect the ledger set-mismatch to fail, NOT a green run. R4: add a throwaway populated field to the fixture whose value flattens to nothing -- expect failure BY NAME. R5: add a field to _build_amend_task in scripts/checklist_engine.py and NOT to the fixture -- expect the superset assertion to fail BY NAME. Save each capture under .agent-work/b433-render-directives/evidence/ with the exact command, the real assertion message and the REAL exit code. A red-proof that comes back GREEN is a finding to report, never something to paper over. Then revert every break, re-run the suite for a real EXIT=0, prove the tree is clean of the breaks with git diff --stat, and write the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all five class changes and the carry-over are in and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All five class changes plus the carry-over are in; suite 349 passed, EXIT=0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "R2, R4 and R5 each produced a REAL red -- command, assertion message and real non-zero exit code captured verbatim under .agent-work/b433-render-directives/evidence/",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && ls .agent-work/b433-render-directives/evidence/g2-r2-*.txt .agent-work/b433-render-directives/evidence/g2-r4-*.txt .agent-work/b433-render-directives/evidence/g2-r5-*.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-red-proofs-1"
+        },
+        {
+          "id": "c2",
+          "statement": "every break reverted: the suite exits 0 and git diff --stat shows only the two intended source files",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-red-proofs-2"
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/b433-render-directives/crew-handoffs/g2-implement-IMPLEMENTER_RESULT.md with the three reds verbatim",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && test -s .agent-work/b433-render-directives/crew-handoffs/g2-implement-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-red-proofs-3"
+        }
+      ],
+      "constraints": [
+        "Never `py` for pytest (#454). FORCE_COLOR=3 produces false reds.",
+        "Do not commit. Leave the tree clean of every temporary break."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-red-proofs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && ls .agent-work/b433-render-directives/evidence/g2-r2-*.txt .agent-work/b433-render-directives/evidence/g2-r4-*.txt .agent-work/b433-render-directives/evidence/g2-r5-*.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-red-proofs-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-red-proofs-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && test -s .agent-work/b433-render-directives/crew-handoffs/g2-implement-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g2-impl-433",
+    "status": "released",
+    "claimed_at": "2026-08-07T23:15:54.894957+00:00",
+    "last_heartbeat": "2026-08-07T23:29:32.232229+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T23:29:44.104599+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Context and handoff verified complete; no blocker. Proceeding to the class rewrite.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:16:51.873853+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-ledger",
+      "why": "Un-exclusion, total extractor and per-field ledger are in; suite green at 346 passed, 30 subtests, EXIT=0. Next slice is the superset assertion against the engine's own Task builder.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:20:06.916274+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-superset",
+      "why": "Superset assertion calls E._build_amend_task live (tests/test_checklist_engine.py:4300); wiring grep count 5, one real call site, non-zero so the mechanism reaches the engine builder. Class docstring states the residual limit for template-only fields. Suite 347 passed, EXIT=0.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:21:17.227543+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-negative-self-test",
+      "why": "Negative self-test in and green; suite 348 passed, EXIT=0. Next slice is the g1-review carry-over in the engine's flat-list branch.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:22:27.917430+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-carryover",
+      "why": "TDD green: the flat-list branch now routes every item through _directive_leaf and the docstring's rule statement matches. Suite 349 passed, 30 subtests, EXIT=0 -- GoldenOutputBriefing and ShippedTemplates included. Next and last slice is the three red-proofs.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:23:57.499672+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-red-proofs",
+      "why": "R2 (ledger set-mismatch naming anchors+directives), R4 (throwaway_field by name) and R5 (escalation_notes by name) each produced a real red with EXIT=1, captured under .agent-work/b433-render-directives/evidence/. Every break reverted: suite 349 passed, 30 subtests, EXIT=0; git diff --stat shows only scripts/checklist_engine.py and tests/test_checklist_engine.py; residual-break grep empty. IMPLEMENTER_RESULT written.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:29:32.232198+00:00"
+    }
+  ]
+}

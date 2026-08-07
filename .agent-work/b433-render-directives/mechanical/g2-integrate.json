@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "mechanical": {
+    "run": "b433-render-directives",
+    "project": "constellation-skills",
+    "spine-step": "g2-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g2-integrate@285af4cf5bafb57690a62f8a793103dbbd0d7d5d",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "b433-render-directives",
+    "generated_at": "2026-08-07T23:47:13Z"
+  }
+}

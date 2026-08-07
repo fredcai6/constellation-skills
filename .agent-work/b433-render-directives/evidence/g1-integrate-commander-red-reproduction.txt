@@ -1,0 +1,43 @@
+=== COMMANDER'S OWN RED REPRODUCTION (g1-integrate c3) ===
+2026-08-07T23:10:11Z
+
+$ git checkout -- scripts/checklist_engine.py   # revert ONLY the renderer hunk
+$ git diff --quiet scripts/checklist_engine.py; echo ENGINE_VS_HEAD=$?
+ENGINE_VS_HEAD=0
+$ grep -c _render_directive_lines scripts/checklist_engine.py
+0
+$ git status --porcelain tests/test_checklist_engine.py   # goldens still present
+ M tests/test_checklist_engine.py
+
+$ FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k RenderDirectives
+self = <test_checklist_engine.RenderDirectives testMethod=test_state_passes_directives_through_without_re_running_checks>
+
+    def test_state_passes_directives_through_without_re_running_checks(self):
+        # INV-2: state() is a pure projection. The passthrough must not
+        # touch a `command` check -- if it did, this gate's deliberately
+        # process-spawning postcondition would run on a read-only `current`.
+        t = gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False)
+        t["directives"] = {"replan_input": {"output": "x.json"}}
+        cl = gated(g1=t)
+        with mock.patch.object(E.subprocess, "run",
+                                side_effect=AssertionError("state() ran a command check")):
+            view = E.state(cl)
+>       self.assertEqual(view["active"]["directives"],
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                          {"replan_input": {"output": "x.json"}})
+E       KeyError: 'directives'
+
+tests\test_checklist_engine.py:4108: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_directives_render_after_anchors_and_before_next
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_flat_list_of_strings_shape_renders_one_line_each
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_nested_contract_dict_shape_renders_indented_leaves
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_shipped_commander_spine_execute_gate_renders_its_directives
+FAILED tests/test_checklist_engine.py::RenderDirectives::test_state_passes_directives_through_without_re_running_checks
+5 failed, 2 passed, 339 deselected, 4 subtests passed in 1.04s
+EXIT=1
+REAL_RED_EXIT=1
+
+=== RESTORED ===
+$ md5sum -c engine.md5
+scripts/checklist_engine.py: OK

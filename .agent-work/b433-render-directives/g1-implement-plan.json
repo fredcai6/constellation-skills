@@ -1,0 +1,262 @@
+{
+  "work_id": "b433-render-directives-g1-implement",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3
+  },
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-golden-red",
+    "m2-render-green",
+    "m3-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the g1-implement handoff. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "why_exempt": false
+    },
+    "m1-golden-red": {
+      "id": "m1-golden-red",
+      "title": "Author the goldens FIRST and capture RED",
+      "imperative": "Write the new tests in tests/test_checklist_engine.py BEFORE touching scripts/checklist_engine.py: (a) a golden over the ACTUAL shipped skills/commander/templates/COMMANDER_SPINE.template.json execute gate proving its populated directives.replan_input block reaches current(), with the ACTIVE first line asserted byte-identical; (b) the flat-list-of-strings shape; (c) absent directives adds zero output; (d) empty directives adds zero output. Then run FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py and capture the REAL failure output verbatim. Attest c1 with the RED capture recorded.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new goldens written over the shipped template and observed failing; real failure output captured verbatim with the exact command \u2014 manual attest, check MUST be null so the engine does not run the by-design-failing tests",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Golden written BEFORE the renderer change (decision:goldens-written-before-the-change, settled/inherited)",
+        "Do not touch class TaskFieldCompleteness, docs/CHECKLIST_SCHEMA.md, scripts/collect_feedback.py, episodes/, scripts/verify_worktree_precondition_coverage.py",
+        "Never use `py` for pytest (#454); FORCE_COLOR=3 produces false reds"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "why_exempt": false
+    },
+    "m2-render-green": {
+      "id": "m2-render-green",
+      "title": "Render directives through the current projection",
+      "imperative": "Two edits in scripts/checklist_engine.py: (1) state() adds \"directives\": t.get(\"directives\") to the active dict beside constraints/anchors \u2014 pure passthrough, no check re-run (INV-2); (2) a new _render_directive_lines() beside _render_anchor_lines(), handling the nested-dict shape and the flat-list-of-strings shape, unrecognized shapes rendering nothing, with a docstring naming the corpus shapes verified against; render_human() emits the directives: block after anchors: and before next:. The ACTIVE first line stays byte-identical. Run the full suite green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED capture produced at m1-golden-red",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD green: full tests/test_checklist_engine.py suite exits 0, GoldenOutputBriefing included",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-render-green-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/checklist_engine.py state() + new _render_directive_lines() + render_human() emission site; tests/test_checklist_engine.py new tests",
+        "No new dependency; json.dumps for scalar spelling",
+        "Do not share a leaf-extraction helper with anything under TaskFieldCompleteness"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-render-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": false
+    },
+    "m3-evidence": {
+      "id": "m3-evidence",
+      "title": "Wiring grep, before/after current, IMPLEMENTER_RESULT",
+      "imperative": "Run the wiring grep and state the count of call sites outside the definition (zero is a stop condition). Produce the before/after `current` output for a real populated directives block using the shipped template or a copy, stating which. Write the IMPLEMENTER_RESULT to .agent-work/b433-render-directives/crew-handoffs/g1-implement-IMPLEMENTER_RESULT.md with the RED capture verbatim, the post-change summary line and real exit code, files changed with line ranges, assumptions, stop conditions, out-of-scope observations, map impact, and workflow feedback. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "renderer green at m2-render-green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_render_directive_lines has at least one call site outside its definition",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -rn \"_render_directive_lines\" --include=*.py . | grep -v \"def _render_directive_lines\" | grep -q ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written at the commander-verified path",
+          "check": {
+            "kind": "command",
+            "command": "test -s C:/Programs/constellation-skills-wt/r418-433/.agent-work/b433-render-directives/crew-handoffs/g1-implement-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-evidence-2"
+        }
+      ],
+      "constraints": [
+        "Do not commit; leave changes in the working tree"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -rn \"_render_directive_lines\" --include=*.py . | grep -v \"def _render_directive_lines\" | grep -q .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/r418-433/.agent-work/b433-render-directives/crew-handoffs/g1-implement-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": false
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m3-evidence",
+      "statement": "_render_anchor_lines and _render_directive_lines are near-duplicate siblings; a third such Task field would justify naming the pattern (project a field, format it, emit a labelled block only when populated)"
+    },
+    {
+      "id": "tc2",
+      "from": "m3-evidence",
+      "statement": "Driving a crew plan whose work_id differs from the run's mints a sibling .agent-work/<plan-work-id>/ step-manifest directory beside the run's work area; decide whether crew plans should nest under the parent work-id"
+    },
+    {
+      "id": "tc3",
+      "from": "m3-evidence",
+      "statement": "The CONTEXT gauge advisory is read from the checklist file's own directory, so a crew plan placed in the Commander's work area inherits the Commander's gauge.json reading and greets a fresh agent's first claim with a soft trip"
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g1-impl-433",
+    "status": "released",
+    "claimed_at": "2026-08-07T22:41:28.142422+00:00",
+    "last_heartbeat": "2026-08-07T22:50:28.443098+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T22:50:35.898992+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Global crew+everyone doctrine, CREW_CONTEXT (python not py; utf-8/LF writes; checklists only via engine verbs) and GLOSSARY (the projection is what current prints) read; handoff carries all eight required fields. Order is fixed: goldens over the real shipped spine execute gate first, RED captured, then the two engine edits.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:41:58.859200+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-golden-red",
+      "why": "RED captured with scripts/checklist_engine.py provably unchanged (git diff --quiet passed first): 5 failed, 2 passed, 4 subtests passed, EXIT=1. The two passers are the negative-space tests (absent/empty, unrecognized shape) which must pass in both states. The shipped-spine golden's failure text shows the real execute-gate briefing with no directives block anywhere in it.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:47:02.050748+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-render-green",
+      "why": "Three edits in scripts/checklist_engine.py: state() passes directives through beside anchors (INV-2 pure, proved by a subprocess.run-patched test); _directive_leaf + _render_directive_lines sit beside _render_anchor_lines and serve both live shapes; render_human() emits the block between anchors: and next:. Full suite 346 passed, EXIT=0.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:47:25.616601+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-evidence",
+      "why": "Wiring grep returns 2 lines outside the definition, 1 a real call site in render_human() (the other a comment), so the renderer is not shipped-inert. Before/after current on the live spine.json is purely additive: 8 lines, nothing changed or removed. IMPLEMENTER_RESULT written with the RED capture verbatim. Nothing committed.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:50:28.443062+00:00"
+    }
+  ]
+}

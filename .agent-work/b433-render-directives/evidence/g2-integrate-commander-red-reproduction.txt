@@ -1,0 +1,27 @@
+=== COMMANDER'S OWN RED-PROOF REPRODUCTION (g2-integrate, R4) ===
+2026-08-07T23:46:53Z
+break: t['commander_r4_break'] = {'nested': None}  -- populated, truthy, yields zero leaves
+$ grep -c commander_r4_break tests/test_checklist_engine.py
+1
+
+$ FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k TaskFieldCompleteness
+        t = self._fully_populated_gate()
+        t["commander_r4_break"] = {"nested": None}
+        out = E.current(gated(g1=t))
+>       self._assert_every_populated_field_renders(t, out)
+
+tests\test_checklist_engine.py:4304: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_checklist_engine.py:4292: in _assert_every_populated_field_renders
+    self.assertEqual(
+E   AssertionError: Items in the second set but not the first:
+E   'commander_r4_break' : populated field(s) ['commander_r4_break'] were carried by the loop but asserted NOTHING -- _leaf_texts read no text out of them, so current()'s output was never checked against their content
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TaskFieldCompleteness::test_every_populated_field_renders_for_a_fully_populated_gate
+1 failed, 2 passed, 346 deselected in 0.50s
+REAL_RED_EXIT=1
+
+=== RESTORED ===
+tests/test_checklist_engine.py: OK
+$ grep -c commander_r4_break tests/test_checklist_engine.py
+0

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "b433-render-directives-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g1-implement-m0-context@114ddbf2b293780a3aa02da49f8757207bd4b0b8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives-g1-implement",
+    "generated_at": "2026-08-07T22:41:41Z"
+  }
+}

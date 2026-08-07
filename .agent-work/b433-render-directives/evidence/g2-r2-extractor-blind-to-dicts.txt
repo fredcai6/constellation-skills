@@ -1,0 +1,30 @@
+# R2 red-proof -- extractor returns [] for dicts (the old _flatten behaviour)
+# break: tests/test_checklist_engine.py TaskFieldCompleteness._leaf_texts dict branch -> return []
+$ cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py; echo "EXIT=$?"
+........................................................................ [ 20%]
+.................................................... [ 35%]
+........................................................................ [ 56%]
+.................................................................. [ 75%]
+.........................................................F.......... [ 94%]
+...................                                                      [100%]
+================================== FAILURES ===================================
+_ TaskFieldCompleteness.test_every_populated_field_renders_for_a_fully_populated_gate _
+
+self = <test_checklist_engine.TaskFieldCompleteness testMethod=test_every_populated_field_renders_for_a_fully_populated_gate>
+
+    def test_every_populated_field_renders_for_a_fully_populated_gate(self):
+        t = self._fully_populated_gate()
+        out = E.current(gated(g1=t))
+>       self._assert_every_populated_field_renders(t, out)
+
+tests\test_checklist_engine.py:4302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_checklist_engine.py:4291: in _assert_every_populated_field_renders
+    self.assertEqual(
+E   AssertionError: Items in the second set but not the first:
+E   'anchors'
+E   'directives' : populated field(s) ['anchors', 'directives'] were carried by the loop but asserted NOTHING -- _leaf_texts read no text out of them, so current()'s output was never checked against their content
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TaskFieldCompleteness::test_every_populated_field_renders_for_a_fully_populated_gate
+1 failed, 348 passed, 30 subtests passed in 13.37s
+EXIT=1

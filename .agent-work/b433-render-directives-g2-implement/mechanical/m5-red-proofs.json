@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-red-proofs",
+  "mechanical": {
+    "run": "b433-render-directives-g2-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m5-red-proofs",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g2-implement-m5-red-proofs@30ee19b70b9666199e28c3ec1c95c0503f9d57eb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives-g2-implement",
+    "generated_at": "2026-08-07T23:24:06Z"
+  }
+}

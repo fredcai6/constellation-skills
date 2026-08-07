@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-negative-self-test",
+  "mechanical": {
+    "run": "b433-render-directives-g2-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m3-negative-self-test",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g2-implement-m3-negative-self-test@a6bbc0676182ba724f5799a70cfb7e81628d7668",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives-g2-implement",
+    "generated_at": "2026-08-07T23:21:25Z"
+  }
+}

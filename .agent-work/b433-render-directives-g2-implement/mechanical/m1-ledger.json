@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-ledger",
+  "mechanical": {
+    "run": "b433-render-directives-g2-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m1-ledger",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g2-implement-m1-ledger@85ff7fad204fe2e75bdd2f75a3da877c56331990",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives-g2-implement",
+    "generated_at": "2026-08-07T23:18:21Z"
+  }
+}

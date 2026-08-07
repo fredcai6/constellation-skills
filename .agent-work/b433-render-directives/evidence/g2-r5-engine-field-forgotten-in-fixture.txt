@@ -1,0 +1,47 @@
+# R5 red-proof -- a new field added to the engine's Task builder and NOT to the fixture
+# break: scripts/checklist_engine.py _build_amend_task() += "escalation_notes": op.get("escalation_notes")
+$ cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py; echo "EXIT=$?"
+........................................................................ [ 20%]
+.................................................... [ 35%]
+........................................................................ [ 56%]
+.................................................................. [ 75%]
+..........................................................F......... [ 94%]
+...................                                                      [100%]
+================================== FAILURES ===================================
+_ TaskFieldCompleteness.test_fixture_carries_every_field_the_engines_task_builder_builds _
+
+self = <test_checklist_engine.TaskFieldCompleteness testMethod=test_fixture_carries_every_field_the_engines_task_builder_builds>
+
+    def test_fixture_carries_every_field_the_engines_task_builder_builds(self):
+        # The hole the loop above cannot see on its own: it runs over the
+        # FIXTURE's keys, so a Task field added to the engine later and
+        # forgotten here is absent from the loop, absent from the ledger's
+        # expected set, and passes green. Checked against the engine's OWN
+        # canonical Task builder rather than docs/CHECKLIST_SCHEMA.md's Task
+        # table: the table is hand-authored prose, and nothing checks it
+        # against what runs (it is currently stale on the `directives` row).
+        # _build_amend_task is asked for its keys rather than having them
+        # re-listed here, so the enumeration cannot drift from the builder.
+        built = E._build_amend_task({
+            "id": "x", "title": "t", "imperative": "i",
+            "postconditions": [{"id": "c1", "statement": "s",
+                                 "check": None, "satisfied": False}],
+        })
+        missing = set(built) - set(self._fully_populated_gate())
+>       self.assertEqual(
+            missing, set(),
+            f"the engine's Task builder _build_amend_task now emits "
+            f"{sorted(missing)}, which this class's fixture does not carry, so "
+            f"the completeness loop would never see the field -- add it to "
+            f"_fully_populated_gate() with content the briefing should show, or "
+            f"to _EXCLUDED_FIELDS with a stated reason. append() mirrors the "
+            f"same shape (scripts/checklist_engine.py)",
+        )
+E       AssertionError: Items in the first set but not the second:
+E       'escalation_notes' : the engine's Task builder _build_amend_task now emits ['escalation_notes'], which this class's fixture does not carry, so the completeness loop would never see the field -- add it to _fully_populated_gate() with content the briefing should show, or to _EXCLUDED_FIELDS with a stated reason. append() mirrors the same shape (scripts/checklist_engine.py)
+
+tests\test_checklist_engine.py:4326: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TaskFieldCompleteness::test_fixture_carries_every_field_the_engines_task_builder_builds
+1 failed, 348 passed, 30 subtests passed in 15.76s
+EXIT=1

@@ -250,7 +250,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-1",
+          "attested": {
+            "evidence": "e-plan-1",
+            "note": null
+          }
         },
         {
           "id": "c4",
@@ -278,13 +283,14 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -311,6 +317,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-plan-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills-wt/r418-433 --work-id b433-render-directives",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -324,7 +341,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "constellation-commander-delegated skill loaded and active in this context; the frozen plan in execute.json is approved (plan step complete). Fresh commander context after the predecessor's handoff at the plan seam -- headroom is the takeover itself."
         },
         {
           "id": "p2",
@@ -333,7 +351,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py b433-render-directives"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -375,11 +394,23 @@
         }
       },
       "child_checklist": "execute.json",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py b433-render-directives",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -620,7 +651,7 @@
     "session_id": "commander-b433-render-directives",
     "status": "active",
     "claimed_at": "2026-08-07T21:37:06.212179+00:00",
-    "last_heartbeat": "2026-08-07T21:56:48.137760+00:00",
+    "last_heartbeat": "2026-08-07T22:36:44.219771+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -647,6 +678,13 @@
       "why": "Reconciled against LO-433, no human reachable. Three departures recorded in PROBLEM_STATEMENT.md; the load-bearing one is that simply un-excluding directives from the existing TaskFieldCompleteness property yields a check that cannot fail, because _flatten returns [] for the nested-dict shape every populated directives block in the corpus actually carries. Inventory verdict: render, not delete -- 3 shipped spine templates carry it and a test asserts its parsed contract.",
       "mechanical": false,
       "ts": "2026-08-07T21:41:36.936331+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Plan frozen and approved against LO-433. Gate plan in execute.json: g1 render directives (both list-of-string and key-to-nested-dict shapes) + record a real red-without-renderer proof; g2 close the class -- un-exclude directives, replace the one-flag guard with a per-field ledger over a total leaf extractor, assert the fixture's key set is a superset of the engine's own canonical Task builder, and ship an in-suite negative self-test; g3 correct the drifted schema row and Rendering prose. Successor commander took over at the plan seam after the predecessor tripped HARD; no analysis redone.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:35:44.996797+00:00"
     }
   ]
 }

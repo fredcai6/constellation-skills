@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-golden-red",
+  "files": [],
+  "repo_rev": {
+    "commit": "4e2c4c15e4468f0adece408db27be5feea64ecf0"
+  },
+  "run": {
+    "work_id": "b433-render-directives-g1-implement",
+    "generated_at": "2026-08-07T22:43:08Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/r418-433",
+      "durable": "C:/Programs/constellation-skills-wt/r418-433"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/r418-433"
+    }
+  }
+}

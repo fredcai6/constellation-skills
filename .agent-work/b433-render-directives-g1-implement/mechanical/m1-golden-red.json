@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-golden-red",
+  "mechanical": {
+    "run": "b433-render-directives-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-golden-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g1-implement-m1-golden-red@24a0c692612d02c6285c684fffda7ad944c4e46e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives-g1-implement",
+    "generated_at": "2026-08-07T22:43:09Z"
+  }
+}

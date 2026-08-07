@@ -1,0 +1,92 @@
+{
+  "work_id": "b433-render-directives-g1-review",
+  "diff_ref": "UNCOMMITTED working tree at C:/Programs/constellation-skills-wt/r418-433, branch epic-418/b-433-render-directives: scripts/checklist_engine.py (+63/-1) and tests/test_checklist_engine.py (+154). Gate g1-implement, issue #433.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, docs/CHECKLIST_SCHEMA.md, docs/CHECKLIST_ENGINE_DESIGN.md (INV-1/INV-2), the g1-implement handoff's decision anchors, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Measured, not eyeballed. _directive_leaf is 13 non-comment lines, _render_directive_lines 31 (of which 19 are docstring; 12 executable). render_human grew from 47 to 51 non-comment lines and state() from 39 to 40. Nothing new crosses the file's existing norm, and the new helpers are shorter than the render_human they unburden.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The one new class, RenderDirectives, is 7 short test methods over 154 lines, sized like its immediate neighbours (RenderAnchorsAndConstraints, GoldenOutputBriefing, TaskFieldCompleteness). No production class was touched; the engine is module-level functions.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Real and visible: _render_directive_lines/_directive_leaf are structural twins of _render_anchor_lines/_anchor_category_items (isinstance-dict branch, isinstance-list branch, return [] fallback), and the render_human emission site is now the THIRD copy of 'compute lines; if lines: append header; extend'. Fowler's rule of three is reached with this change. Not flagged as a defect of this gate; routed to triage instead (the implementer flagged the same thing independently, and I recorded it too), because the consolidation is a design decision above this gate.",
+      "override": {
+        "repo_standard": "decision:own-helper-not-anchors-helper, graded @grade: settled/human, leans g1 — an inbound map anchor on this gate's handoff. Under the decision-fixedness doctrine in references/global-everyone.md, settled/human means an executor may not unsettle it locally; it must be floated to the tier that ruled it.",
+        "reason": "The decision subordinates the smell twice over. Substantively, the two fields' live shapes genuinely differ — anchors carries dict->[str] | dict->str | [str], directives carries dict->dict | [str] — so a shared normalizer would have to branch on both anyway and would deepen coupling rather than remove duplication; the anchors helper flattens to one line per leaf, which would destroy the nested contract indentation directives needs. Procedurally, the tier is settled/human, so consolidating here would be an unsanctioned unsettling by a reviewer, not a cleanup."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "Both new helpers read only their single argument and reach into no other object's data. state()'s added line is a plain t.get on the task it already owns.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No repeated group of parameters or fields travels together. `directives` is a single field added to an existing dict literal beside constraints/anchors.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Present in the literal sense: the directive contract is an untyped nested dict discriminated at runtime by isinstance rather than modelled as a Directive value object with a spelling method.",
+      "override": {
+        "repo_standard": "docs/CHECKLIST_SCHEMA.md defines every Task field as a raw JSON type (constraints [string], anchors dict|list, directives [string]|null), and checklist_engine.py handles all of them as parsed-JSON primitives throughout — the engine's contract IS the on-disk JSON.",
+        "reason": "The state file is the interface here, so a value object would be a wrapper the engine must serialize back to the same primitives at every boundary — added interface for no added behaviour, and a departure from the uniform posture of every other field in the file. global-everyone's 'one canonical path; no speculative abstraction' points the same way. Introducing the type for one renderer would also be exactly the speculative generality flagged below."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Both new functions take exactly one positional argument. No existing signature changed.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "One conceptual change — surface a Task field in current — required three coordinated edits: a projection line in state(), a formatter, and an emission block in render_human. That is the scatter signal, and it is now the third time it has been paid (constraints, anchors, directives).",
+      "override": {
+        "repo_standard": "INV-1/INV-2 in docs/CHECKLIST_ENGINE_DESIGN.md, restated in state()'s and render_human()'s own docstrings: state() is a PURE projection with no presentation, render_human is the presentation adapter that invents no facts.",
+        "reason": "The three sites are the invariant's shape, not an accident of layout. Collapsing them would put formatting inside the pure projection — the exact thing INV-2 forbids and that this change's own test (patching subprocess.run to raise during state()) exists to protect. The scatter is bounded to one file and three adjacent functions, so locality is preserved even though the edit count is three."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "render_human continues to change for exactly one reason (how current is presented) and state() for one reason (what current projects). This change did not add a second axis of change to either.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation. The deepest access is active.get(\"directives\"), a single hop off the view the adapter is handed.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "The else branch at lines 1716-1717 — a dict whose value is not itself a dict, rendered as one leaf line beside its name — handles a shape that does not exist in the corpus. The implementer says so plainly in its own result ('Not a corpus shape - a defensive branch'), and no test exercises it. I proved it is dead with respect to the suite by mutation: replacing that line with an unconditional raise leaves the full file at '346 passed, 30 subtests passed', EXIT=0. So it is untested generality shipped for a hypothetical input. NON-BLOCKING and I am not asking for it to be removed at this gate: it is two lines, it is honestly documented as defensive, and without it a {name: scalar} value would emit a bare '  name:' header with nothing under it, which is worse than the branch under the fail-visibly rule. The finding is that it should be either covered by a test or dropped, and that a defensive branch nothing can reach is indistinguishable from one that works. Routed as an observation to Commander, not a blocker.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The ratio is striking: a 19-line docstring over 12 executable lines in _render_directive_lines, a 7-line docstring over 5 in _directive_leaf, and a 6-line comment over a 1-line change in state(). On its face that is comment compensating for code.",
+      "override": {
+        "repo_standard": "The g1-implement handoff makes it a binding constraint that _render_directive_lines's docstring name the corpus shapes it was verified against, as _render_anchor_lines's does; docs/agents/CREW_CONTEXT.md's verification discipline requires shape claims be tied to what was actually inventoried; and references/global-everyone.md requires a claim be pinned to what was measured.",
+        "reason": "These comments carry verification PROVENANCE — which shapes were inventoried, on which shipped gate, under which issue and decision anchor — not explanation of confusing code. The code underneath is a plain two-branch isinstance dispatch that needs no defending. Deodorant hides a bad smell; this records where the evidence came from, which is the repo's documented standard and the reason the sibling helper reads the same way. One caveat noted separately as a triage candidate: the docstring's '2955 gates scanned' is a measured number carried with no revision pin (my own scan of the same tree counted 2981 across 370 files), which is the one place the provenance falls short of the standard that justifies it."
+      }
+    }
+  ],
+  "rail_exception": null
+}
