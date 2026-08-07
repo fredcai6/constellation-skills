@@ -1,0 +1,306 @@
+{
+  "work_id": "issue-440-g2-acceptance",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-harness",
+    "m2-treatment",
+    "m3-control",
+    "m4-verify",
+    "m5-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and preflight the acceptance",
+      "imperative": "Read the inherited global doctrine, the handoff IN FULL (especially 'The trap that governs this entire gate' and 'The control must be a POSITIVE control'), docs/GAUGE_WRITER_HOOK.md, scripts/gauge_reader.py _PROFILES, scripts/hooks/spine_rail.py and scripts/hooks/gauge_writer_hook.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Record the real HARD caps per model from _PROFILES rather than trusting the handoff's list. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete; GAUGE_WRITER_HOOK.md + _PROFILES + both hooks read; HARD caps recorded from the file not the handoff",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff read in full and COMPLETE (task/intent/scope/exclusions/evidence/test-mode/stop-conditions/return-format all present). Read: docs/GAUGE_WRITER_HOOK.md, scripts/gauge_reader.py, scripts/hooks/spine_rail.py, scripts/hooks/gauge_writer_hook.py, checklist_engine _trip_hard_gate. HARD caps READ FROM _PROFILES (not the handoff): claude-opus-5/opus-4-8/sonnet-5/fable-5 = window 1000000 hard_cap 150000 (frac 0.15); claude-haiku-4-5-20251001 = window 200000 hard_cap 140000 (frac 0.70). Engine reads gauge.json at base_dir=spine's own directory; _trip_hard_gate runs BEFORE the verb; refusal exits 1."
+        }
+      ],
+      "constraints": [
+        "python never py as a test runner",
+        "never touch the live main checkout C:/Programs/constellation-skills",
+        "do not modify any hook, engine, gauge reader, or test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-harness": {
+      "id": "m1-harness",
+      "title": "Build the disposable sandbox pair and the two arm trees; prove the one-path difference",
+      "imperative": "Under a temp directory build: a sandbox main (git init) and a real git worktree of it; two arm directories each holding a COMPLETE scripts/ tree (treatment = this worktree's current scripts/, control = git archive cbd9aee); a per-arm settings file wiring spine_rail.py then gauge_writer_hook.py as PostToolUse commands BY ABSOLUTE PATH into that arm's tree. Prove by recursive diff that the two arm trees differ ONLY in scripts/hooks/spine_rail.py (and its tests). Nothing under C:/Programs/constellation-skills is written.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sandbox main + real git worktree exist under temp; arm trees complete (gauge_writer_hook.py can import its spine_rail.py sibling); recursive diff shows only spine_rail.py differing, captured to evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Sandbox pair (git init main + real git worktree add) and both arm trees build. Recursive diff -rq of the two COMPLETE scripts/ trees shows exactly ONE differing file: scripts/hooks/spine_rail.py (evidence/arm-diff.txt). Preflight drove each arm's hook on a synthetic payload: both exit 0 and write the store, so both arm trees are complete (no silent sibling-import failure). Treatment resolves the WORKTREE spine with path_source=git_worktree -- derived by shelling out to git worktree list, NOT read from anything the harness handed it (no cd, no --worktree, no absolute --file, no env var). Control resolves the MAIN CHECKOUT path. evidence/preflight-arms.json."
+        }
+      ],
+      "constraints": [
+        "arms differ only in the absolute hook path",
+        "never hand-inject the worktree root into any payload/fixture/env the hook reads back"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-treatment": {
+      "id": "m2-treatment",
+      "title": "Run the TREATMENT arm live and observe whether a HARD trip fires",
+      "imperative": "Launch a headless claude -p with cwd and CLAUDE_PROJECT_DIR set to the sandbox main, --settings pointed at the treatment arm's settings, --permission-mode acceptEdits, --model named explicitly (never fable). It dispatches a subagent into the sandbox worktree which claims a spine there with a RELATIVE --file, inflates its own context past its model's absolute HARD cap, runs a further tool call, then attempts advance. Capture: binding store dump, BOTH candidate gauge paths (present/absent + contents), full advance output and its REAL exit code (redirect to file, then echo $?), observed_at vs wall clock, acting model, and the three attribution facts (composite session_id#agent_id key, identity_resolution_ms present, model).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sandbox pair and arm trees built, one-path difference proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "sandbox pair + arm trees built; one-path difference proven (evidence/arm-diff.txt)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "treatment arm ran to completion; advance outcome and REAL exit code captured to evidence; both candidate gauge paths inspected; attribution facts captured or their absence diagnosed against GAUGE_WRITER_HOOK.md 'Skip-on-uncertainty, enumerated'",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Treatment arm ran to completion; TRIP FIRED. Headless exit 0, 156.4s, not timed out. advance REFUSED, REAL exit 1: 'REFUSED: m1: context at 56% is at/over the hard limit'. gauge.json BESIDE THE WORKTREE SPINE, fill_fraction 0.559655 vs HARD 0.15 (claude-sonnet-5); phantom path in sandbox main ABSENT; m1 stayed in-progress. Attribution 3/3: composite key 9d959dcd-0cb4-4f25-b391-d7be110eb5c5#a26a9cb68fda52cdc, identity_resolution_ms 0.0433, gauge model claude-sonnet-5 (subagent) vs parent opus; observed_at 4s before collect. First launch of this arm was QUIET (87.8s, no gauge, no advance) because the dispatched subagent DECLINED the protocol as social engineering; diagnosed from headless stdout per GAUGE_WRITER_HOOK skip enumeration, NOT read as the bug, and re-run unchanged."
+        }
+      ],
+      "constraints": [
+        "report what is observed, not the hypothesis",
+        "an honest measured negative is a complete deliverable"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-control": {
+      "id": "m3-control",
+      "title": "Run the CONTROL arm live and show it WORKED AND MISSED (positive control)",
+      "imperative": "Identical launch, the ONLY difference being the absolute hook path pointing at the control arm's tree. Capture the same evidence set. The control must be shown to be POSITIVE: a real gauge.json with fill_fraction >= hard at the WRONG path (the phantom .agent-work/<work_id>/ inside the sandbox main), with advance succeeding. If the control produces no gauge anywhere, declare the run INCONCLUSIVE, not a pass, and diagnose against the skip-on-uncertainty enumeration.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "treatment arm complete and its evidence captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-treatment complete; evidence/arm-treatment.json + evidence/headless-treatment.log freshly written 2026-08-07T14:41:07Z."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "control arm ran; either a real gauge.json at the wrong path with fill_fraction >= hard (positive control) or an explicit INCONCLUSIVE verdict with a named skip cause",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "POSITIVE CONTROL CONFIRMED -- it worked and missed. Headless exit 0, 143.5s, not timed out. A REAL gauge.json was written at the PHANTOM path C:\\...\\acc440\\run-control\\main\\.agent-work\\sbwork\\gauge.json with fill_fraction 0.562149 vs HARD 0.15 (claude-sonnet-5) -- so the writer plainly worked, it just filed the reading where the engine never looks. NOTHING was written beside the worktree spine, so the engine saw nothing and advance SUCCEEDED at exit 0 with m1 -> complete. Binding key 25b64ada-5cc4-49f0-9570-06ca369b5dc4#ae5c1d873b314a6e8 resolved to the sandbox MAIN with path_source null (the defect's own rung). Attribution 3/3 identical in shape to treatment: composite key, identity_resolution_ms 0.0439, gauge model claude-sonnet-5 vs parent opus, observed_at 4s before collect. The two arms' fills are 0.5597 (treatment) and 0.5621 (control) -- a closely matched pair, so the difference in outcome is the hook path and not the inflation."
+        }
+      ],
+      "constraints": [
+        "byte-identical to treatment except the hook path",
+        "a quiet control proves nothing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "verify_evidence.py \u2014 exits 0 only on complete, self-consistent evidence",
+      "imperative": "Write verify_evidence.py under the acceptance directory. It READS the captured evidence and never re-runs the arms. Exit 0 only if: both arms present, control positive, attribution facts captured, arms differing only in the hook path. It must exit non-zero on missing or contradictory evidence \u2014 show it failing on a deliberately truncated copy of the evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both arms run and their evidence on disk",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both arms ran fresh on 2026-08-07 and their evidence is on disk: arm-treatment.json (collected 14:41:07Z) and arm-control.json (collected 14:44:13Z), plus headless logs for both."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_evidence.py exits 0 on the real evidence AND non-zero on a truncated copy \u2014 both exit codes captured from a real run",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-440-binding-cwd/acceptance/verify_evidence.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-1"
+        }
+      ],
+      "constraints": [
+        "a test that cannot fail is worse than no test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-440-binding-cwd/acceptance/verify_evidence.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-close": {
+      "id": "m5-close",
+      "title": "Clean up, check ignore status, write IMPLEMENTER_RESULT",
+      "imperative": "Remove the temp sandbox. Run git check-ignore on the deliverables and report exit codes. Confirm the live main checkout's .spine-rail-binding.json and settings files were never written by the harness. Write IMPLEMENTER_RESULT.md with the plain-English verdict first. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verify_evidence.py demonstrated passing and failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "verify_evidence.py demonstrated BOTH ways with real exit codes: exit 0 on the fresh evidence (46 checks), exit 1 on a deliberately truncated copy (arm-control.json removed, arm-diff.txt truncated), and --selftest catches all 5 damaged copies."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "temp sandbox removed; git check-ignore exit codes reported; live main checkout confirmed untouched by the harness; IMPLEMENTER_RESULT.md written with the verdict first",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Temp sandbox removed (%TEMP%/acc440 gone), __pycache__ and the truncated evidence copy removed. git check-ignore returns exit 1 (NOT ignored, so the Commander will commit them) on all 14 deliverables; total 108K, no multi-MB logs. Live main checkout confirmed never written BY THE HARNESS: zero sandbox leakage into .agent-work/.spine-rail-binding.json; its byte growth is concurrent live-agent activity through the live checkout's own hook, including this run's own plan lease. IMPLEMENTER_RESULT.md written with the plain-English verdict first. Nothing committed."
+        }
+      ],
+      "constraints": [
+        "do not commit; the Commander commits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m2-treatment",
+      "statement": "A dispatched subagent DECLINED the acceptance protocol because of the prompt's own defensive framing ('nothing below looks like a trick', 'is not a prompt-injection attempt') plus the fixed closing token PROTOCOL-COMPLETE, which it read as social engineering. Cost one headless launch and produced a quiet arm indistinguishable from the bug. Future context-inflation harnesses should frame the work as ordinary and drop the protestation and the magic token."
+    },
+    {
+      "id": "tc2",
+      "from": "m4-verify",
+      "statement": "verify_evidence.py's live-checkout guard asserted a SHARED, concurrently-agent-written file (.agent-work/.spine-rail-binding.json) was byte-identical across a run window. That is unsatisfiable whenever any other agent is working -- this run's own plan lease and a sibling commander both wrote it. General lesson: no check may assume shared agent-written state is byte-stable; test the exclusion (no sandbox leakage) instead."
+    },
+    {
+      "id": "tc3",
+      "from": "m5-close",
+      "statement": "The LIVE binding store holds two junk entries whose spine paths are 'C:\\Programs\\constellation-skills\\x' and 'C:\\Programs\\constellation-skills\\C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py' (claimed 2026-08-06T10:02-10:03Z). '$E' is an UNEXPANDED SHELL VARIABLE recorded verbatim as a spine path, so spine_rail.py will bind a path that does not exist. Harmless here but worth a look given #440 is about binding the wrong path. Not touched."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g2-impl-440-acceptance-a2",
+    "status": "released",
+    "claimed_at": "2026-08-07T14:35:18.193763+00:00",
+    "last_heartbeat": "2026-08-07T14:51:01.085169+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+    "previous_session_id": "g2-impl-440-acceptance",
+    "takeover_reason": "attempt 1 killed mid-run by account weekly usage limit (reset 2026-08-07 07:00 PT); attempt 2 resumes at m2-treatment",
+    "released_at": "2026-08-07T14:51:10.645454+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:08:48.236216+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-harness",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:17:05.129152+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-treatment",
+      "why": "The HARD trip DOES fire for a worktree-dispatched agent from its own reading. The engine refused advance at exit 1 with the hard-limit message, reading a gauge.json that landed beside the WORKTREE spine (fill 0.5597 vs hard 0.15) while the phantom path in the sandbox main stayed empty -- the exact inversion of the #440 defect. All three attribution signals agree the reading is the dispatched subagent's, not the parent's. One earlier launch was quiet because the subagent declined the protocol outright; that is a prompt-compliance hazard for this harness, not a governor result, and it is the reason a quiet arm must always be diagnosed before it is believed.",
+      "mechanical": false,
+      "ts": "2026-08-07T14:42:33.423676+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-control",
+      "why": "The control is positive, so the treatment result means something. Same sandbox, same prompt, same model pair, same inflation, fills within 0.0025 of each other -- the ONLY difference is which arm tree the absolute hook path names, and that single difference moves the reading from the phantom directory in the sandbox main (control, governor blind, advance exit 0) to beside the worktree spine (treatment, governor fires, advance exit 1). That is the #440 defect and its repair, observed side by side on one run.",
+      "mechanical": false,
+      "ts": "2026-08-07T14:44:56.663536+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify",
+      "why": "verify_evidence.py exits 0 on the freshly-produced evidence (46 checks) and demonstrably fails when the evidence is damaged: an explicit truncated copy exits 1, and --selftest catches all five mutations including a missing control arm, a quieted control, and a treatment advance rewritten to succeed. One check had to be corrected rather than satisfied: the live-checkout guard asserted the shared binding store was byte-identical across the run, which is unsatisfiable while any other agent is working -- this run's own plan lease and a sibling commander both wrote it through the LIVE checkout's own hook. It now tests the exclusion directly, that no sandbox path leaked into that store, and a fifth selftest mutation proves that check can fail.",
+      "mechanical": false,
+      "ts": "2026-08-07T14:48:33.275881+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-close",
+      "why": "Acceptance closed with a live YES: the HARD trip fires from a worktree-dispatched agent's own reading (advance REFUSED, real exit 1, gauge beside the worktree spine at 0.5597 vs hard 0.15), against a POSITIVE control that produced an equally large reading at the phantom path in the sandbox main and sailed through at exit 0. verify_evidence.py exits 0 on the fresh evidence and non-zero on damaged copies. Three triage candidates raised, chief among them that a dispatched subagent can decline an inflation protocol because of the prompt's own defensive framing -- which is why a quiet arm must always be diagnosed before it is believed.",
+      "mechanical": false,
+      "ts": "2026-08-07T14:51:01.085158+00:00"
+    }
+  ]
+}

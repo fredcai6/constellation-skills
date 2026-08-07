@@ -1,0 +1,13 @@
+{
+  "before": {
+    "path": "C:\\Programs\\constellation-skills\\.agent-work\\.spine-rail-binding.json",
+    "sha256": "585207715fc8aad002e1aded8472cab92b771b87fd4c12bf488877faa1837691",
+    "size": 4213
+  },
+  "after": {
+    "path": "C:\\Programs\\constellation-skills\\.agent-work\\.spine-rail-binding.json",
+    "sha256": "11b2b9c275a5f718578e6bd87cf3b0bd8358289f007ea4fcdc2376c467c1fa6b",
+    "size": 4663
+  },
+  "unchanged": false
+}

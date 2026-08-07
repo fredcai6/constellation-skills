@@ -270,7 +270,8 @@
           "id": "p1",
           "statement": "g1 resolution fix integrated and green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1 (9d44aa6) and g1b (38214ec) integrated, reviewed APPROVE, committed; 176 passed exit 0"
         }
       ],
       "postconditions": [
@@ -281,7 +282,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2",
+          "attested": {
+            "evidence": "e-g2-implement-2",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -320,11 +326,40 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "artifact",
+          "payload": {
+            "path": ".agent-work/issue-440-binding-cwd/crew/g2-implement/IMPLEMENTER_RESULT.md",
+            "summary": "IMPLEMENTER_RESULT (attempt 2) returned, no unresolved blockers. Two-arm live-fire acceptance COMPLETE. TREATMENT: worktree-dispatched subagent (composite key 9d959dcd..#a26a9cb68fda52cdc, identity_resolution_ms 0.0433, gauge model claude-sonnet-5 vs parent opus) filled to 0.559655 against HARD 0.15; gauge.json landed BESIDE THE WORKTREE SPINE; advance REFUSED with the HARD-band message, real exit 1; gate stayed in-progress. CONTROL (cbd9aee, byte-identical but for scripts/hooks/spine_rail.py): same model pair, fill 0.562149 (within 0.0025 of treatment, so the outcome difference is the hook path not the inflation); gauge landed at the PHANTOM path in the sandbox main; NOTHING beside the worktree spine; advance SUCCEEDED exit 0, gate went complete. POSITIVE CONTROL SATISFIED - it worked and missed, it was not merely quiet.",
+            "verified_by": "Commander re-ran verify_evidence.py independently: EXIT=0, 46 checks. --selftest EXIT=0: passes real evidence and correctly FAILS all 5 damaged copies (missing-control-arm, truncated-arm-diff, control-made-quiet, treatment-advance-succeeded, live-store-leaked). git diff HEAD -- scripts/ tests/ docs/ is EMPTY: no hook, engine, gauge-reader or test was touched.",
+            "attempt": "2 of 2; attempt 1 was killed by an account weekly usage limit (reset 2026-08-07 07:00 PT), not by any defect"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-440-binding-cwd/crew/g2-implement/IMPLEMENTER_RESULT.md",
+            "verdict": "WIN - the done-condition is met. A HARD governor trip fired from a per-agent gauge reading produced by an agent dispatched INTO A WORKTREE, observed live on a two-arm run.",
+            "treatment": "Worktree-dispatched subagent, attributed 3/3 independent ways: composite binding key 9d959dcd-0cb4-4f25-b391-d7be110eb5c5#a26a9cb68fda52cdc (only a dispatched agent keys composite); identity_resolution_ms 0.04329999501351267 (the writer emits that fifth field ONLY on a dispatched agent's record, #419); gauge.json model claude-sonnet-5 against a parent on opus. fill_fraction 0.559655 vs HARD 0.15. gauge.json landed BESIDE THE WORKTREE SPINE with path_source=git_worktree (the hook DERIVED the root via `git worktree list`; it was never handed it). advance REFUSED with the HARD-band message, real exit 1, gate stayed in-progress.",
+            "control": "Base commit cbd9aee, arm trees byte-identical except scripts/hooks/spine_rail.py (proved by recursive diff -rq). Same opus/sonnet model pair, same prompt, same sandbox shape. fill_fraction 0.562149 - within 0.0025 of treatment, so the outcome difference is the hook path, not the inflation. gauge.json landed at the PHANTOM path inside the sandbox MAIN; NOTHING beside the worktree spine; advance SUCCEEDED exit 0 and the gate went complete. POSITIVE CONTROL SATISFIED: it worked and MISSED. It was not merely quiet, so the result cannot be a missing sibling import, an uncalibrated model, or an agent with no agent_id masquerading as the bug reproducing.",
+            "verified_by_commander": "Commander re-ran the verifier independently rather than trusting the crew: verify_evidence.py EXIT=0 across 46 checks; --selftest EXIT=0, passing real evidence and correctly FAILING all 5 damaged copies (missing-control-arm, truncated-arm-diff, control-made-quiet, treatment-advance-succeeded, live-store-leaked). `git diff HEAD -- scripts/ tests/ docs/` is EMPTY: no hook, engine, gauge reader or test was touched to make an arm pass.",
+            "attempt": "2 of 2. Attempt 1 built the harness and was killed mid-run by an ACCOUNT WEEKLY USAGE LIMIT (reset 2026-08-07 07:00 PT), not by any defect in the harness or the fix. Attempt 2 re-ran the arms unchanged.",
+            "crew_raised_deviation": "The crew CORRECTED one verifier check rather than satisfying it: the live checkout's binding store is not byte-stable while other agents work (4213->4663 bytes, provably concurrent live-agent writes including this run's own engine claim and cmdr-447's). It replaced byte-identity with the falsifiable test the exclusion actually needs - no sandbox path leaked into the live store - and added a fifth selftest mutation proving that replacement can fail. Commander reviewed and accepts: the original check was unsatisfiable by construction, and the replacement is strictly the stronger test of the actual constraint.",
+            "blockers": "none unresolved"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
@@ -559,12 +594,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 1,
+  "refusals": 3,
   "engine_session": {
     "session_id": "cmdr-440-binding-cwd",
     "status": "active",
     "claimed_at": "2026-08-06T08:36:15.298330+00:00",
-    "last_heartbeat": "2026-08-06T10:00:17.579098+00:00",
+    "last_heartbeat": "2026-08-07T14:53:58.192391+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
@@ -605,6 +640,13 @@
       "why": "APPROVE, no blockers. The guard closes tc1 and I asked the reviewer to test my claim that it does not overshoot into silencing ordinary main-checkout agents - it MEASURED that rather than reasoning about it: 2693 relative paths hold a validating checklist in both main and some worktree, but every one is a tracked ARCHIVED work area that will never be claimed again, and 0 are live. The two live spines each exist in exactly one tree. The 4 test deletions are a docstring plus two assertions made STRICTER (calls == [] became calls == [str(proj)]). Its tc2 is real and forward-looking: the guard's reach is a property of what is tracked under .agent-work/, so a future work-id colliding with an archived one would bind nothing SILENTLY - filing at triage.",
       "mechanical": false,
       "ts": "2026-08-06T10:00:17.579061+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-implement",
+      "why": "The done-condition is MET and it is a win, not a null: a HARD trip fired from a worktree-dispatched agent's own reading. What e-g2-implement-2 establishes that the g1/g1b unit evidence could not: the arms differ in exactly one file (scripts/hooks/spine_rail.py, by recursive diff), ran the same opus-parent/sonnet-subagent pair against the same prompt, and reached fills within 0.0025 of each other (0.5597 vs 0.5621) - so the opposite outcomes are attributable to the hook path and to nothing else. Treatment's gauge landed BESIDE THE WORKTREE SPINE with path_source=git_worktree, meaning the hook DERIVED the root rather than being handed it, which is what makes this green real given that the mechanism under repair is the same mechanism that makes an in-worktree validation lie. The control is POSITIVE, not quiet: it produced a real over-HARD reading at the phantom path in the sandbox main and advanced clean at exit 0, which rules out the three silent-null impostors (incomplete sibling set, uncalibrated model, no agent_id). Attribution converges 3/3 on both arms - composite session_id#agent_id key, identity_resolution_ms present, gauge model naming the subagent not the parent - so the reading is the dispatched agent's, not the parent's. Verified by re-running the failed command myself rather than reading the crew's claim: verify_evidence.py exit 0 over 46 checks, --selftest exit 0 failing all 5 damaged copies, and git diff HEAD over scripts/tests/docs empty, so no hook, engine or test was bent to make an arm pass. Carrying forward to review: the crew replaced one unsatisfiable check (byte-identity of a concurrently-written live store) with a leakage test, and raised tc3 - the live store holds a spine path recorded as an unexpanded shell variable, which is a wrong-path binding in the same family as #440.",
+      "mechanical": false,
+      "ts": "2026-08-07T14:53:58.192381+00:00"
     }
   ],
   "amendments": [

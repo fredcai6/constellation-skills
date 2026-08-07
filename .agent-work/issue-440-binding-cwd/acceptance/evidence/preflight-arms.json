@@ -1,0 +1,47 @@
+{
+  "treatment": {
+    "observed_command": "python \"C:/Users/fredc/AppData/Local/Temp/acc440/run-pf-treatment/wt/bin/checklist_engine.py\" --file .agent-work/sbwork/spine.json claim --session-id sbsess --claimed-by sandbox",
+    "engine_drove_ok": true,
+    "hook_exit": 0,
+    "hook_stderr": "",
+    "binding_store": {
+      "PFSESSION#pfagent0001": {
+        "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-treatment\\wt\\.agent-work\\sbwork\\spine.json": {
+          "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-treatment\\wt\\.agent-work\\sbwork\\spine.json",
+          "engine_session": "sbsess",
+          "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-treatment\\main",
+          "claimed_at": "2026-08-07T14:41:49.397398+00:00",
+          "path_source": "git_worktree"
+        }
+      }
+    },
+    "resolved": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-treatment\\wt\\.agent-work\\sbwork\\spine.json",
+      "path_source": "git_worktree"
+    },
+    "spine_really_at": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-treatment\\wt\\.agent-work\\sbwork\\spine.json",
+    "spine_present_in_sandbox_main": false
+  },
+  "control": {
+    "observed_command": "python \"C:/Users/fredc/AppData/Local/Temp/acc440/run-pf-control/wt/bin/checklist_engine.py\" --file .agent-work/sbwork/spine.json claim --session-id sbsess --claimed-by sandbox",
+    "engine_drove_ok": true,
+    "hook_exit": 0,
+    "hook_stderr": "",
+    "binding_store": {
+      "PFSESSION#pfagent0001": {
+        "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-control\\main\\.agent-work\\sbwork\\spine.json": {
+          "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-control\\main\\.agent-work\\sbwork\\spine.json",
+          "engine_session": "sbsess",
+          "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-control\\main",
+          "claimed_at": "2026-08-07T14:41:49.906352+00:00"
+        }
+      }
+    },
+    "resolved": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-control\\main\\.agent-work\\sbwork\\spine.json",
+      "path_source": null
+    },
+    "spine_really_at": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-pf-control\\wt\\.agent-work\\sbwork\\spine.json",
+    "spine_present_in_sandbox_main": false
+  }
+}
