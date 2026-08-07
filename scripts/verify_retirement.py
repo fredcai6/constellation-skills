@@ -171,6 +171,21 @@ RUN_NOTES: dict[str, str] = {
     )
 }
 
+# RETURN.md is the same class and is added by name for the same reason, but its reason is
+# written out rather than shared because the case is worth stating once: a Commander's
+# RETURN.md is its report TO its Admiral about a finished run. It is tracked (workstream A
+# committed one at cbd9aee, so every worktree off that base inherits it), and a retirement
+# report necessarily names what it retired — this one names the retired files ~17 times and
+# the store ~9. Approving those line by line in the census would be approving a document
+# that is rewritten wholesale by every run that touches this path, so the census would
+# describe nothing durable. Classifying it is the honest call; approving it would have been
+# the convenient one. If a RETURN.md ever starts telling a future agent what to do, the
+# defect is that it stopped being a report, and no leg here would catch it either way.
+RUN_NOTES["RETURN.md"] = (
+    "a Commander's return report on a finished run: a record of what this issue did, "
+    "addressed to the Admiral, never a surface an agent is instructed by"
+)
+
 # KNOWN BYPASSES, ACCEPTED AND NOT CHASED (reviewer-measured, Commander-ruled at rework).
 # Recorded because an honest limit is worth more than a bigger guard, and because the next
 # agent should not rediscover them as though they were oversights:

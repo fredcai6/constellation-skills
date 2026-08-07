@@ -30,11 +30,14 @@
 # references it outside its own tests and the historical design record -- and it is out of
 # g5's scope. Filed upward as a triage candidate at #447 g5.
 
-# workstream A's inherited RETURN document, not editable from this gate: a finding RECORD naming the two files a merge conflict was confined to
-RETURN.md:conflict is confined to `.agent-work/AGENT_FEEDBACK.md` and `.agent-work/LESSONS.md` — the two shared
-
-# workstream A's inherited RETURN document: a finding RECORD naming where the conflicts that cost real time landed
-RETURN.md:`.agent-work/AGENT_FEEDBACK.md`; these are the ones that cost real time.
+# RETURN.md's two line approvals were REMOVED at #447 closeout, not orphaned. They were
+# correct while the file was workstream A's and named the retired files twice. Once this run
+# wrote its OWN return report the same path carried ~17 retired names and ~9 store mentions,
+# and per-line approvals would have described a document that every future run on this path
+# rewrites wholesale -- dead the moment the next Commander returns. RETURN.md is instead
+# classified in RUN_NOTES alongside the root-level notes-*.md files, as what it is: a report
+# about a finished run, addressed to an Admiral, never a surface an agent is instructed by.
+# The reason is written out at RUN_NOTES["RETURN.md"] in scripts/verify_retirement.py.
 
 # the ruling that the playbook is deliberately ABSENT from the artifact taxonomy -- it names the retired file in order to record the exclusion, and #447 g5 invariant 8 requires this paragraph to survive
 docs/CONSTELLATION_OVERVIEW.md:**`.agent-work/LESSONS.md` is not in this taxonomy, and that is the ruling, not an

@@ -303,12 +303,18 @@ def test_every_exclusion_is_bounded_and_reasoned():
 
     A `notes-*.md` pattern removed seven tracked files AND every future one — unbounded, and
     growing without review. Enumeration is what makes adding the eighth a decision somebody
-    takes rather than one that happens."""
+    takes rather than one that happens.
+
+    It caught the eighth. At #447 closeout this count was 7 and the Commander added
+    `RETURN.md`; this assertion failed, which is the review step the enumeration buys. The
+    entry stands — a Commander's return report is a record of a finished run addressed to an
+    Admiral, the same class as the notes files — and the count moved to 8 as a decision taken
+    rather than one that happened."""
     for mapping in (vr.RECORD_ONLY_ROOTS, vr.SCOPE_EXCLUSIONS, vr.RUN_NOTES):
         for key, reason in mapping.items():
             assert "*" not in key and "?" not in key, f"unbounded exclusion: {key}"
             assert reason.strip(), f"exclusion without a reason: {key}"
-    assert len(vr.RUN_NOTES) == 7
+    assert len(vr.RUN_NOTES) == 8
     with pytest.raises(ValueError, match="empty reason"):
         vr._require_reasons({"docs/x.md": "   "}, "PROBE")
 
