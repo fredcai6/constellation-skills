@@ -1,6 +1,8 @@
 # RETURN — `cmdr-440-binding-cwd` · issue #440 · epic-418 wave 1, workstream A2
 
-Branch `epic-418/a2-440-binding-cwd` · base `cbd9aee` · HEAD `b2810d9` · **not pushed, no PR — yours**
+Branch `epic-418/a2-440-binding-cwd` · base `cbd9aee` · tip of branch · **not pushed, no PR — yours**
+
+> **Archive is BLOCKED on you, by design — see §12.** The run itself is complete and green.
 
 ---
 
@@ -119,6 +121,9 @@ disappeared** — verified by a `--collect-only` id diff against a `git archive`
 **PR state:** none. Not pushed, no PR opened, nothing merged — that is your step, per the dispatch.
 
 Commits on top of `cbd9aee`:
+
+(the five that carry the change; four closeout commits follow — triage/return, archive move,
+state note, and this file)
 
 ```
 b2810d9 docs(#440 g3): record the shipped resolution and rule on the existing bindings
@@ -308,7 +313,7 @@ explicit that releasing before the closing `advance` leaves archive's own closeo
 release and fails the terminal provenance check. Releasing now would corrupt the provenance of an
 otherwise clean run.
 
-**To finish it:** push `epic-418/a2-440-binding-cwd` (@ `a8e876a`, clean, 8 commits on `cbd9aee`),
+**To finish it:** push `epic-418/a2-440-binding-cwd` (clean tree, 9 commits on `cbd9aee`),
 open the PR declaring **FINAL** in the title, satisfy `c2`/`c2b`, check `c4`, run the closing
 `advance archive` against the **moved** spine path
 `.agent-work/archive/2026-08-07-issue-440-binding-cwd/spine.json`, and release the lease last.
