@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": false,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1 has not reached its exit. Both launched issues are open and mid-run: #440 is at its second gate with a live two-arm harness executing, #447 is at its second gate with the g1 guard shipped and independently falsified. Neither exit criterion is met or refuted yet, so this pass revises unlaunched truth only and leaves the wave running.",
+    "epic_done": "The epic is not complete, and one of its five done-conditions is not merely unmet but falsified by the epic's own execution. Three mechanism conditions are on track: the governor trips live (#419) though not yet in the right tree (#440), the engine channel is fixed and its render targets proved real (#420), and the named invariants refuse instead of hoping (#422). The MCP-door condition is untouched and deferred. The backlog condition has moved backwards.",
+    "good_enough": "The mandatory quality boundary held and did real work this wave. #419's cold critic measured that every machine-checkable postcondition was already green at HEAD before any code was written, and #440's harness carries an explicit positive-control requirement precisely because a quiet control would be indistinguishable from a reproduced bug. Scope discipline was applied as breadth-narrowing without weakening evidence."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D1",
+      "action": "repair_current_wave",
+      "reason": "Already the current wave's repair: #440 is launched, open, and mid-gate. No new work is created; the wave continues as launched.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "revise_plan",
+      "reason": "The fourth done-condition is falsified by measurement, not merely behind: 117 open at the epic's start, 138 now, roughly twenty findings filed against four closed. Because definition_of_done is a fixed boundary, this pass proposes rather than applies the revision, and escalates to Tommy. The proposed re-cut converts an absolute count target into a directional one plus a separate consolidation epic.",
+      "issue_created": false
+    },
+    {
+      "id": "D3",
+      "action": "revise_plan",
+      "reason": "C #421's forecast entry described corpus shrinkage; C is now the mechanism that carries per-step spine instructions and the route for #432's fix. The forecast entry is rewritten to say what C is actually for, so a future wave does not launch it against a stale rationale. #421 already exists; nothing new is filed.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "revise_plan",
+      "reason": "The multi-spine attribution failure is a distinct defect from #440's single-spine worktree case and is covered by no launched issue, so the governor's done-condition is not reachable by #440 alone. Recorded in the revised uncertainty register with a named probe. A tracker issue should be filed for it; this offline pass creates none.",
+      "issue_created": false
+    },
+    {
+      "id": "D5",
+      "action": "record_evidence_only",
+      "reason": "The disposition it would have driven was already taken: #285 is held open and routed to #447. Recording the disproof is the entire action, and it matters because the false rationale nearly closed a live issue.",
+      "issue_created": false
+    },
+    {
+      "id": "D6",
+      "action": "amend_forecast_or_parked",
+      "reason": "The archive-gate defect bites at closeout, not at the wave-1 boundary, so it is added to the forecast as an entry condition on this epic's own closing rather than pulled into the current wave. #439 and #446 already carry it.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Land the governor and engine-channel mechanisms, wire the named invariants, and finish the episode-store retirement.",
+    "exit_criteria": [
+      "A HARD trip fires from a per-agent reading on a live dispatched agent, and the reading lands in the tree that agent is actually working in.",
+      "Both shared record ledgers are retired behind a guard that is observed failing before it is observed passing."
+    ],
+    "issues": [
+      {
+        "id": "440",
+        "title": "Governor: a worktree-dispatched agent's binding records a main-checkout path",
+        "desired_outcome": "A dispatched agent's reading lands beside the spine it is actually driving, not in a phantom directory in the main checkout.",
+        "useful_now": "#419 proved the trip can fire; this decides whether it fires where the work is. Without it the governor is unusable in the worktree topology every epic runs in.",
+        "appetite": "One Commander, four gates.",
+        "acceptance_or_falsification_evidence": "A two-arm sandbox where treatment refuses the worktree-dispatched agent's advance and the control arm is shown to have produced a real gauge.json with fill at or above hard at the wrong path.",
+        "implementation_latitude": "Choose the root-resolution strategy; refuse to guess when candidate roots disagree.",
+        "hard_constraints_no_gos": [
+          "Never hand-inject the value being proved; the hook must derive the root.",
+          "The control arm must be a positive control: a merely quiet control is worthless."
+        ],
+        "local_unknowns": [],
+        "anchors": ["scripts/hooks/spine_rail.py", "scripts/hooks/gauge_writer_hook.py"],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "447",
+        "title": "Finish #308's retirement: episodes replace both LESSONS.md and AGENT_FEEDBACK.md",
+        "desired_outcome": "One store of observations replaces two inboxes plus a playbook, with a guard that keeps the read path retired.",
+        "useful_now": "The retirement was declared but not completed; two shared ledgers still ship, still collide on every merge, and still instruct agents to read them.",
+        "appetite": "One Commander, four gates.",
+        "acceptance_or_falsification_evidence": "A shipped guard observed failing on purpose before it is observed passing, and both ledgers untracked.",
+        "implementation_latitude": "Choose the guard's mechanism and the untracking sequence.",
+        "hard_constraints_no_gos": [
+          "No successor playbook is created; a retirement that re-points the read path at episodes/ reproduces the defect.",
+          "Record stores are never hand-edited; episodes/ is written only through apply_episode_delta.py."
+        ],
+        "local_unknowns": [],
+        "anchors": ["episodes", "docs/EPISODE_STORE.md"],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Relocate gate-specific instructions into the spine, first tranche — as the delivery mechanism for per-step instructions, not as corpus shrinkage",
+      "why_likely": "The engine channel now renders anchors and constraints, so relocated instructions have somewhere to land, and #432's fix routes through this mechanism rather than through F.",
+      "entry_conditions": [
+        "The governor writes readings in the tree the agent works in, so a relocated instruction can be observed reaching a dispatched agent.",
+        "A measurement exists for the always-loaded token count, so shrinkage is a measured claim rather than an assumed one."
+      ]
+    },
+    {
+      "outcome": "MCP front door for the engine",
+      "why_likely": "The CLI's flag persnicketiness costs a measured share of every run, and the door cleaves responsibility at a clean seam between using the engine and building its inputs.",
+      "entry_conditions": ["Per-step spine instructions exist, so the door has typed content to carry."]
+    },
+    {
+      "outcome": "Repair the archive gate so a merged epic can close its own closeout without --force",
+      "why_likely": "Two independent findings (#439, #446) describe the same gate from different angles, and this epic will hit it at its own closeout.",
+      "entry_conditions": ["This epic reaches closeout, or another epic hits the same forced --force."]
+    },
+    {
+      "outcome": "Backlog consolidation as its own epic, cut from a measured census rather than folded into a mechanisms epic",
+      "why_likely": "Consolidation folded into a mechanisms epic loses to the mechanisms work every time: this epic filed roughly twenty findings while closing four issues.",
+      "entry_conditions": ["Tommy rules on the escalated definition-of-done change."]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether backlog consolidation can converge inside an epic that is also generating findings",
+      "affects": "Whether the fourth done-condition belongs to this epic at all",
+      "settle_by": "Tommy's ruling on the escalated definition-of-done change",
+      "current_evidence": "Measured today: 138 open against 117 at the epic's start, 40 unlabelled; roughly twenty findings filed by this epic against four issues closed under E's batch confirm",
+      "next_probe": "Count open and unlabelled open issues at the wave-1 boundary and compare against both the opening figure and today's"
+    },
+    {
+      "unknown": "Whether a per-agent reading can be attributed when one session is bound to several candidate spines",
+      "affects": "Whether the governor's done-condition is reachable by #440 alone, and whether the governor works for the Admiral role at all",
+      "settle_by": "A follow-on issue; #440's scope is the single-spine worktree case and will not reach this",
+      "current_evidence": "This epic's own spine has reported CONTEXT GAUGE SILENT for over a day — the writer hook sees three candidate spines and writes nothing rather than guess. The Admiral driving this epic has had no reading for its entire run.",
+      "next_probe": "Re-read the gauge on an Admiral session after #440 merges; if still silent, the multi-spine case is confirmed distinct"
+    },
+    {
+      "unknown": "Whether the Context Governor is wired at all on this box",
+      "affects": "Every claim about governor readings observed in ordinary sessions, as opposed to purpose-built harnesses",
+      "settle_by": "Reading the user-scope settings.json PostToolUse entries",
+      "current_evidence": "The installer reports UNWIRED: no PostToolUse entry for gauge_writer_hook.py in the user-scope settings.json, so the governor never fires outside a harness that wires it explicitly. This is the standing #180 item.",
+      "next_probe": "Decide whether to wire it; until then, treat every in-session governor observation as harness-only"
+    }
+  ],
+  "revised_parked": [
+    "Vision work: the idea substrate and the federation reading of #297",
+    "Performance-metrics methodology",
+    "The simplified-English and glossary thread",
+    "Theme-label application to the 40 unlabelled open issues — the labels now exist and cover about 98 of 138, so the remaining sweep is small and mechanical rather than the from-scratch job the epic's state note assumed"
+  ],
+  "unlaunched_dispositions": [
+    {"id": "421", "action": "keep", "reason": "Deferred by ruling, not cancelled, and its rationale is corrected in the revised forecast rather than in the issue identity. Still blocked on the governor landing in the right tree."},
+    {"id": "423", "action": "rewrite", "reason": "E's scope has materially shrunk since it was cut. Its batch-confirm half is executed (#131, #289, #298, #322 closed with evidence; #285 held and routed to #447) and its labelling half is largely done — 13 theme labels exist and cover about 98 of 138 open issues, against a state note that recorded none existing at all. What remains is a 40-issue sweep, not a taxonomy build.", "replacement": {
+      "id": "423",
+      "title": "Finish the theme-label sweep: 40 unlabelled open issues",
+      "desired_outcome": "Every open issue carries a theme label, so the epic's issue-list sweep can actually be run.",
+      "useful_now": "The done-condition it serves depends on a sweep that cannot be performed while 40 issues are unclassified.",
+      "appetite": "One dispatched subagent, one pass.",
+      "acceptance_or_falsification_evidence": "A gh issue list sweep returns zero open issues without a theme label.",
+      "implementation_latitude": "Choose label assignment per issue; the taxonomy itself is fixed and already applied to 98 issues.",
+      "hard_constraints_no_gos": ["Cluster boundaries stay Tommy's call; do not create new theme labels without his go."],
+      "local_unknowns": [],
+      "anchors": ["docs/agents"],
+      "type": "HITL",
+      "hitl_reason": "Boundaries were marked costly-to-revert and only the K2 question was answered; Tommy may also legitimately rule the labelling not worth finishing, which is itself the answer.",
+      "blocks": []
+    }},
+    {"id": "424", "action": "keep", "reason": "Deferred by ruling; still needs A, B and C. Its entry condition is unchanged and its forecast entry is retained verbatim."},
+    {"id": "427", "action": "keep", "reason": "Engine refusals counter records zero when a refusal precedes the lease claim — a real instrumentation gap, unclaimed and correctly outside this wave."},
+    {"id": "428", "action": "keep", "reason": "verify_spec_confirmed --phase review refuses every template-conformant draft by construction: a check that cannot pass, the mirror of a check that cannot fail."},
+    {"id": "429", "action": "keep", "reason": "Needs re-verification, not just keeping: file_issue_set.py was substantially rewritten by the iterative-planning change that merged today, so the WinError 206 over-32K --body path may already be gone or may have moved. Re-run the reproduction before scheduling work."},
+    {"id": "430", "action": "keep", "reason": "spine_rail binding accepts an unexpanded shell-variable junk key and a stale lease can shadow the live one. Sits inside #440's file fence; check for overlap when #440 returns rather than launching it separately."},
+    {"id": "431", "action": "keep", "reason": "A HARD trip blocks advance, which freezes the DIGEST the trip's own forced handoff depends on — a deadlock in the mechanism #419 and #440 are building. Should be considered for the wave that closes the governor."},
+    {"id": "432", "action": "keep", "reason": "A dispatched role can skip the engine entirely and its return still reads as a clean success. Routed into F #424 by ruling, with C #421 as the mechanism; kept as the tracking identity for that route."},
+    {"id": "433", "action": "keep", "reason": "Render directives in current — the same unrendered-defect class #420 fixed for anchors and constraints. Cheap, and its sibling is already proved real."},
+    {"id": "436", "action": "keep", "reason": "Confirm the worktree-precondition enumeration check catches a real second worktree-entering template — the falsification pass #422's wiring did not get."},
+    {"id": "437", "action": "keep", "reason": "Stale comment in _next_verbs, outdated post-#328. Mechanical, no decision needed."},
+    {"id": "439", "action": "keep", "reason": "COMMANDER_SPINE archive.c2b's <branch> placeholder is never resolved, so the check always fails. Paired with #446 in the revised forecast."},
+    {"id": "441", "action": "keep", "reason": "Binding store durability: no lock, no reaper, unvalidated paths, divergent agent_id rules. The substrate under #440; likely to grow once #440's evidence lands."},
+    {"id": "442", "action": "keep", "reason": "The engine's rail and HARD refusal read badly to the agent they are aimed at — a message-quality defect in the exact channel #420 just fixed structurally."},
+    {"id": "443", "action": "keep", "reason": "docs/agents/engine-config.json does not exist but every config_ref points at it: a dangling reference asserted repeatedly, the same shape as the seven-site claim #419 hit."},
+    {"id": "444", "action": "keep", "reason": "Nothing links the gauge record's field count across its seven assertion sites — the mechanical link that would have closed #419's blast-radius problem."},
+    {"id": "446", "action": "keep", "reason": "The archive gate accepts only an OPEN PR, so a well-run epic forces --force on its success path. Promoted into the revised forecast because this epic will hit it at closeout."},
+    {"id": "448", "action": "keep", "reason": "Closeout debt: the resolved-load-manifest finding is unowned and recorded only in a closed run's artifacts. Filed by E; ownership still open."},
+    {"id": "449", "action": "keep", "reason": "Closeout debt: #298's item J was never done — #308 substituted a migration for it. Filed by E."},
+    {"id": "450", "action": "keep", "reason": "Closeout debt: the B1 first consolidation was never run and is now homeless across two epics. Filed by E; a natural member of the proposed consolidation epic."},
+    {"id": "451", "action": "keep", "reason": "Closeout debt: 23 of 32 episodes carry unpaid signal and 7 were ever harvested — the store has no scheduled consumer. Directly relevant to #447, which is retiring the two ledgers into that store; #447 should be told this consumer gap exists."},
+    {"id": "F-relocate", "action": "rewrite", "reason": "The entry described C as corpus shrinkage. C is now the delivery mechanism for per-step spine instructions and the route for #432's fix, and its entry conditions need the governor landing in the right tree plus an actual token measurement rather than an assumed shrinkage.", "replacement": {
+      "outcome": "Relocate gate-specific instructions into the spine, first tranche — as the delivery mechanism for per-step instructions, not as corpus shrinkage",
+      "why_likely": "The engine channel now renders anchors and constraints, so relocated instructions have somewhere to land, and #432's fix routes through this mechanism rather than through F.",
+      "entry_conditions": [
+        "The governor writes readings in the tree the agent works in, so a relocated instruction can be observed reaching a dispatched agent.",
+        "A measurement exists for the always-loaded token count, so shrinkage is a measured claim rather than an assumed one."
+      ]
+    }},
+    {"id": "F-mcp-door", "action": "keep", "reason": "Unchanged: still gated on per-step spine instructions existing, still deferred by ruling."},
+    {"id": "U-backlog-converges", "action": "rewrite", "reason": "The unknown is no longer whether consolidation converges but whether it can converge inside an epic that is simultaneously generating findings — and it now has a measured answer pointing at no, which is what forces the escalation.", "replacement": {
+      "unknown": "Whether backlog consolidation can converge inside an epic that is also generating findings",
+      "affects": "Whether the fourth done-condition belongs to this epic at all",
+      "settle_by": "Tommy's ruling on the escalated definition-of-done change",
+      "current_evidence": "Measured today: 138 open against 117 at the epic's start, 40 unlabelled; roughly twenty findings filed by this epic against four issues closed under E's batch confirm",
+      "next_probe": "Count open and unlabelled open issues at the wave-1 boundary and compare against both the opening figure and today's"
+    }},
+    {"id": "U-multi-spine-attribution", "action": "keep", "reason": "The unknown as stated is exactly right and its evidence has strengthened rather than changed shape: the Admiral has now gone a full run with no reading. Kept verbatim; the probe stands."},
+    {"id": "P-vision", "action": "keep", "reason": "Ruled out of this design by Tommy; parked, not dropped."},
+    {"id": "P-metrics", "action": "keep", "reason": "Ruled out of this design by Tommy; parked, not dropped."},
+    {"id": "P-simplified-english", "action": "keep", "reason": "Tommy's to run elsewhere; parked, not dropped."}
+  ],
+  "material_changes": [
+    {
+      "surface": "definition_of_done",
+      "before": "The backlog is short enough that every surviving open issue ties to the target architecture or a real defect, checkable by one issue-list sweep.",
+      "after": "The epic leaves the backlog measurably better classified than it found it, and backlog consolidation to a target count is cut as its own epic rather than carried inside a mechanisms epic.",
+      "reason": "The condition as written is falsified by this epic's own execution, not merely unmet. The epic opened against 117 open issues and there are now 138, because doing the mechanisms work correctly generates findings: roughly twenty were filed this epic against four issues closed. An epic cannot be held to a count that its own correct execution moves the wrong way. The classification progress is real and worth keeping as the condition — 13 theme labels now exist covering about 98 of 138 open issues — so this narrows the condition to what the epic can actually control and moves the count target to a dedicated epic."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "Two forecast outcomes: relocate instructions, then the MCP door.",
+      "after": "Four forecast outcomes: the relocation entry rewritten to say what C is actually for, the MCP door unchanged, plus archive-gate repair and a separate backlog-consolidation epic.",
+      "reason": "C's purpose changed under ruling, and two findings this epic filed (#439, #446) will bite at its own closeout."
+    },
+    {
+      "surface": "uncertainty_register",
+      "before": "Two unknowns: backlog convergence, and multi-spine attribution.",
+      "after": "Three unknowns, with a new one recording that the Context Governor has no PostToolUse entry in the user-scope settings.json at all.",
+      "reason": "The installer reported the governor UNWIRED today. Every claim about readings in ordinary sessions is harness-only until that is settled, which bears directly on how #419's and #440's results should be read."
+    }
+  ],
+  "wave_review_comment": "## Wave review — epic #418, wave 0 closed, wave 1 in flight\n\n**Wave 0 landed four of four.** #419 governor per-agent identity (a HARD trip fired live on a dispatched subagent and the engine refused its advance), #420 engine output channel (and `anchors`/`constraints` proved not vestigial against 20-plus archived gates, so C's relocation targets demonstrably exist), #422 wired invariants (deliberate-breakage test passes), #425 defect filing (nine tracker references, no code change — correctly a null).\n\n**Wave 1 is running and this pass does not touch it.** #440 and #447 are both mid-gate and are preserved exactly as launched.\n\n**Exit chosen: `replan`.** Not `advance`, because wave 1 has not reached its exit. Not `repair`, because nothing blocks wave 1's exit that is not already inside it. Not `stop`. The revision is entirely to unlaunched truth.\n\n**One escalation, and it is the headline.** The epic's fourth done-condition — that the backlog ends short enough for one issue-list sweep — is not behind schedule, it is falsified by the epic's own execution. The epic opened against 117 open issues; there are 138 now, 40 of them unlabelled. Roughly twenty findings were filed by this epic against four issues closed under E's batch confirm. Doing the mechanisms work correctly *generates* findings, so the count moves the wrong way precisely when the epic is going well. `definition_of_done` is a fixed boundary, so this pass proposes and does not apply: the recommendation is to narrow the condition to classification progress (which is real — 13 theme labels now cover about 98 of 138 issues) and cut consolidation-to-a-count as its own epic.\n\n**Three corrections to the record.** The state note says no theme labels exist; 13 do, applied to most open issues. #285's proposed close rationale — that #308 deleted the playbook wholesale — is false, measured at `cbd9aee`. And the Context Governor has no `PostToolUse` entry in the user-scope `settings.json` at all, so every governor observation outside a purpose-built harness is currently vacuous.\n\n**One new defect class, uncovered by no launched issue.** A session bound to several candidate spines gets no reading at all — the writer hook refuses to guess and writes nothing. This epic's own Admiral has run for over a day with the gauge silent. #440's scope is the single-spine worktree case and will not reach it, so the governor's done-condition is not reachable by #440 alone.",
+  "revised_epic_body": "## Current planning truth — epic #418\n\n### What is done\nWave 0, four of four, all merged and green: per-agent governor identity with a live HARD trip (#419), the engine output channel with `anchors` and `constraints` rendering (#420), the wired worktree-isolation and `record()` invariants (#422), and the explorer run's defects filed (#425).\n\n### What is running\nWave 1, launched and preserved exactly: #440 (a worktree-dispatched agent's reading must land in the tree it is working in) and #447 (episodes replace both shared ledgers, behind a guard proven to fail on purpose). Neither has reached its exit.\n\n### What is deferred, and why\n#421 stays deferred but its rationale has changed: it is no longer corpus shrinkage, it is the mechanism that carries per-step spine instructions and the route for #432's fix. #424 stays deferred and still needs A, B and C. #423 shrinks to a 40-issue label sweep, because the taxonomy it was going to build already exists and already covers about 98 of 138 open issues.\n\n### Nonbinding forecast\nRelocate gate instructions into the spine as an instruction-delivery mechanism, entered on the governor landing in the right tree plus a real token measurement. Then the MCP door. Separately: repair the archive gate before this epic's own closeout hits it, and cut backlog consolidation as its own epic.\n\n### Open uncertainty\nWhether consolidation can converge inside an epic that generates findings — measured today at 138 open against 117 at the start, which is what forces the escalation below. Whether a reading can be attributed when a session is bound to several candidate spines; #440 will not reach this case. Whether the governor is wired at all outside a purpose-built harness — today the installer reports no `PostToolUse` entry in the user-scope settings.\n\n### Awaiting a human decision\nThe fourth done-condition is falsified by the epic's own correct execution. Narrowing it, and moving the count target to a dedicated consolidation epic, is proposed but not applied. Tommy decides.",
+  "escalation": {
+    "boundary": "definition_of_done",
+    "proposed_value": [
+      "The governor writes real per-agent readings on a live run and the engine's trip mechanic acts on them.",
+      "The engine's current output carries each instruction exactly once and renders every populated gate block.",
+      "The named prose-only invariants (#329 worktree isolation, #328's two record() surveys) refuse instead of hoping.",
+      "The epic leaves the backlog measurably better classified than it found it, and backlog consolidation to a target count is cut as its own epic rather than carried inside a mechanisms epic.",
+      "An agent drives a real role spine end to end through the MCP door, each agent holding its own server instance."
+    ],
+    "reason": "The fourth condition as written is falsified by the epic's own execution rather than merely unmet. The epic opened against 117 open issues and there are now 138, with 40 unlabelled, because doing the mechanisms work correctly generates findings — roughly twenty were filed this epic against four issues closed. Holding a mechanisms epic to a count that its own correct execution moves upward makes the condition unreachable by any good run. The classification progress is real and controllable, so it becomes the condition; the count target moves to a dedicated epic where consolidation is the work rather than a side task competing with mechanisms.",
+    "authority_required": "Tommy — definition_of_done is a fixed boundary and only the human who confirmed the spec may change it."
+  }
+}
