@@ -102,10 +102,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "MERGED: PR #733 squash-merged as e3d6b542; issue #708 CLOSED; trial worktree+branch removed. THE MERGE GATE EARNED ITS KEEP: the PR as the dispatched agent left it was 179 files/+20,809 \u2014 the trial worktree had been branched from the human's LOCAL main (3cf79f78), one unpushed commit ahead of origin/main (6c3bd350), so it bundled his own docs(#724) archive round (176 files) with the fix; a squash-merge would have flattened his archive work into a bug-fix commit. Dev agent's own commit was clean as reported (3 files, +77/-7). Correction: stopped the stalled merge agent, rebased --onto origin/main (his local commit untouched and still unpushed), re-ran gating tests 7/7, reverted the test's side-effect on tracked data/f1_data_2023.db, force-with-lease pushed the trial branch only, waited for CI (arch-map/docs/pyright all pass), merged. PROCESS ITEM FOR DISPATCH TEMPLATES: cut trial branches from origin/<default>, never from the local default branch \u2014 an unpushed human commit underneath silently widens the PR. Merge agent stalled after PR creation without merging or reporting (dispatch-reliability datum, cause undiagnosed).",
       "evidence": [],
       "rework_count": 0
     },
@@ -126,7 +126,11 @@
       "rework_count": 0
     }
   },
-  "consolidation": null,
+  "consolidation": {
+    "verdict": "trial cycle complete \u2014 loop proven end to end, fix merged",
+    "findings": [],
+    "summary": "Cycle 4 (trial): full f1Brainz map built (1,224 files, 15k entities, 16k pages, 38s cold, deterministic); real issue #708 fixed map-first from a Map entry point handoff (true bug found beneath the reported symptom); regen #2 measured map churn at 98 lines vs 84 source lines (~1.2x, bounded, legible); use-trace scoped the value honestly (pays on cross-module signature/semantics lookups, neutral own-module, blind to value-origin and argument-flow); grammar first contact wrote 6 real tagged comments, now merged to f1Brainz main via PR #733 (e3d6b542) with the merge gate catching a branch-base defect; human direction added the test-coverage projection (tested-by links); build queue ranked. Human called convergence."
+  },
   "triage_candidates": [],
   "blockers": []
 }

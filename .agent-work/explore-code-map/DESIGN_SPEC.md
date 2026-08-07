@@ -138,6 +138,26 @@ Extracting tests is what makes the inverse edge possible: a src entity's **`test
 - **Stop rendering per-entity pages for test functions** (module indexes still list them) — 85% of them carry a true-but-useless "referenced by: none" because pytest discovers rather than calls. Halves the page count.
 - **Named limit:** static direct-call reachability, not executed-line coverage. Fixture/helper indirection credits the helper; ~9% unresolved dispatch hides some edges. This complements `coverage.py`, it does not replace it.
 
+## Per-section approval and design-it-twice disposition
+
+The human directed a low-ceremony spec: *"this is an easy one — implement the thing we've made. you can make references to the prototype directly... lets not over think this, just do enough to keep our thoughts organized."* Approval is therefore section-level against the exploration's own rulings, each already made by him in-run and recorded in `IDEAS_BOARD.md` and the cycle files.
+
+| Section | Approved by | Where ruled |
+|---|---|---|
+| 1 Pipeline | human | cycle-3 D1 ("agree with your method + scip as test oracle... definitely like your lighter footprint") |
+| 2 Storage layout | human | cycle-3 x10 pick (minimal machinery), after design-it-twice |
+| 3 Comment grammar | human | cycle-3 D2 ("good starting vocabulary"); `map-model.md` amendment signed off 2026-08-07 |
+| 4 Identity / mind-map interface | human | 2026-08-07 ("ids as needed when the mindmap wants to hook into a function... establish the syntax now") |
+| 5 Tombstones | human | cycle-2 ("functionally a dead limb on the concept tree we shouldn't forget about") |
+| 6 Rendering register | human | 2026-08-07 (function-by-function; "aggressively minimize every excess character") |
+| 7 Skills integration | human | 2026-08-07 (three directed work items; push-then-pull; two-tier handoff) — already implemented on this branch |
+| 8 Maintenance loop | human | cycle-3 T2 (rebuild-and-diff per run, no live incrementality) |
+| 9 Test-coverage projection | human | 2026-08-07 ("id actually like us to explicitly create links between functions and test files") |
+
+**Design-it-twice disposition.** Run on the one interface where the shape was genuinely open — **the storage layout and node identity** (x10: three parallel candidates under distinct constraints, synthesis at `excursions/x10-result.md`, human picked). Also effectively run on **the extractor** (x7a/x7b: two full competing implementations, settled by measurement).
+
+**Skipped, with reason, on the remainder:** the other interfaces are not open designs — they exist as working, measured prototype code (§"The prototype is the reference implementation"), and their shapes were each ruled by the human in-run. Re-designing a built-and-measured interface in parallel would produce candidates competing against evidence rather than against each other. The build queue's items are diffs against that code, not new interfaces.
+
 ## Testing pathways
 
 | Pathway | Exercised by | Falsified by |
