@@ -1,24 +1,29 @@
-files tracked (all)   : 239
+files tracked (all)   : 244
 files in corpus       : 103   (.agent-work excluded)
-source lines          : 52292
+source lines          : 52300
 entities              : 3411
   kinds               : {'FunctionDef': 3077, 'ClassDef': 334}
   with docstring      : 1058
   decorated           : 58
-nested def/class      : 1848  <- gate 2 collision surface
-FLAT-NAME COLLISIONS  : 75  <- gate 2 would merge these
-   x9  tests.test_episode_fields.setUp
-   x9  tests.test_episode_fields.tearDown
-   x7  tests.test_grade_lint.setUp
-   x7  tests.test_verify_worktree_isolation.setUp
-   x6  tests.test_grade_lint.tearDown
-   x5  tests.test_agent_work_root.setUp
-   x5  tests.test_agent_work_root.tearDown
-   x5  tests.test_fowler_pass.setUp
-   x5  tests.test_gauge_reader.setUp
-   x5  tests.test_interrogation.setUp
-   x4  tests.test_apply_lessons_delta.setUp
-   x4  tests.test_apply_lessons_delta.tearDown
+nested def/class      : 1848
+
+WITHDRAWN -- DO NOT USE THE NEXT NUMBER AS A D2 MEASUREMENT.
+  flat-name groups (module.name model) : 75
+  This models the symbol as `module.name`. That is NOT what the
+  extractor emits: astx.py:_func uses `mod:{clsstack[-1]}.{name}`
+  whenever ANY class is on the stack, so methods are ALREADY
+  qualified by their class and cannot collide this way. Every group
+  listed below is an artefact of the wrong model -- setUp/tearDown
+  across sibling test classes, which the real rule keeps distinct.
+  THE REAL D2 MEASUREMENT IS 4 COLLISIONS. Authority:
+    probe_d2.py -> d2_collisions.txt   (simulates the ACTUAL rule)
+    probe_arms.py -> d2_arms.txt       (D2's second arm: 0 here)
+   x9  tests.test_episode_fields.setUp   [artefact]
+   x9  tests.test_episode_fields.tearDown   [artefact]
+   x7  tests.test_grade_lint.setUp   [artefact]
+   x7  tests.test_verify_worktree_isolation.setUp   [artefact]
+   x6  tests.test_grade_lint.tearDown   [artefact]
+   x5  tests.test_agent_work_root.setUp   [artefact]
 top dirs:
    tests           2572
    scripts          785

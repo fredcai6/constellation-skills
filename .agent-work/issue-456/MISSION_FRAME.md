@@ -91,7 +91,12 @@ Paths, not anchor ids — no map exists to have assigned one:
   entities, ~35%), and zero BOM files exist here, so gate 9's BOM defect needs a
   purpose-built fixture to go red.
 - **The mappable corpus, measured after that exclusion: 103 files, 3,411
-  entities (3,077 functions / 334 classes), 52,292 source lines.** Only 103 of
+  entities (3,077 functions / 334 classes), 52,300 source lines — re-derived
+  and pinned at commit `7e4e57c`.** The line figure was 52,292 when first
+  measured; the +8 is this run's own `tc3` fix comment, which is exactly why a
+  number in prose is bound to the revision it was read at rather than carried
+  as a permanent fact. Every threshold must be a ratio or an invariant, never
+  this absolute count — the run changes the corpus it measures. Only 103 of
   the 233 tracked files are real source — the other 130 live under
   `.agent-work/`. Every committed threshold must be sized against these numbers.
   Probe and output: `.agent-work/issue-456/reference/probe_baseline.py`,
