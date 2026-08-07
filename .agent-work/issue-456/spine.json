@@ -302,7 +302,17 @@
       },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "note",
+          "payload": {
+            "text": "CORRECTION to the c4 attestation, which said the plan panel was RUN but NOT DELIVERED. It delivered after that attestation was written: 2 of 3 candidates returned complete. smallest-diff and most-testable both landed; best-seam-placement went idle without delivering and is the one genuine untaken road. The c4 note is therefore stale in its headline though correct at the moment it was written; the accurate record is .agent-work/issue-456/design-it-twice-plan.md as of commit 9619ae5. Material outcome: the panel found a D2 arm that neither the Commander nor the cold critic reached (visit_ClassDef has no enclosing-chain branch; class-in-function has ZERO occurrences here so it needs a purpose-built fixture), and both candidates independently established that the top-index falsifier cannot fire on a 103-module corpus. Both are folded into gate-spec.json and execute.json is regenerated."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "execute": {
@@ -614,7 +624,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T18:23:40.656572+00:00",
+    "last_heartbeat": "2026-08-07T18:26:43.220108+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
