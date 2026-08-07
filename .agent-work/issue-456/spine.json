@@ -188,12 +188,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "interrogation.json",
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "HARD context trip (governor: CONTEXT 16% >= hard). The engine BLOCKS advance and instructs 'hand off now; do not keep working'; refresh-request e-understand-2 is filed against seam=understand (why_ref w-2). The gate's own work is COMPLETE -- both postconditions satisfied, c1 attested via e-understand-1, interrogation consolidated RESOLVED and rail-verified. Nothing remains but the advance itself, which the trip forbids. This is the sanctioned reach-up idle, not an abandoned run: the next actor is a fresh Commander the human relaunches, not a background job to poll.",
         "authority_needed": "human",
         "next_action": "Tommy relaunches a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, not a takeover), cold-starts from current, then: resume understand --reason 'fresh agent after context refresh', advance understand, and proceed to plan (ten gates: gate 0 CLI/discovery + the nine issue gates, critic-reordered).",
-        "prior_status": "in-progress"
+        "resume_reason": "fresh agent after context refresh: session compacted, cold-started from current + DIGEST; understand's work was already complete (2/2 met, c1 attested via e-understand-1 carrying Tommy's four rulings) and only the advance was forbidden by the HARD trip"
       },
       "result": null,
       "finding": null,
@@ -234,7 +234,8 @@
           "id": "p1",
           "statement": "ask confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Ask confirmed with the live human. .agent-work/issue-456/interrogation-record.json is consolidated RESOLVED and passes scripts/verify_interrogation.py (exit 0): 3 facts each carrying code_evidence, 4 decisions each carrying a verbatim human_answer, plus a signoff naming Tommy (repo owner, the Commander's principal). The rail mechanically refuses a resolved decision with no human answer, so the fact/decision split held. Tommy overrode the Commander's own scope recommendation in that same reply, which evidences an independent read rather than an assent token. Understand closed 2/2 with c1 attested via e-understand-1."
         }
       ],
       "postconditions": [
@@ -242,7 +243,8 @@
           "id": "c1",
           "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Mission frame written to .agent-work/issue-456/MISSION_FRAME.md and verified by the c6 command check: map_orient.py verify-frame returns FRAME-OK, 0 problems, exit 0. Built honestly for DEGRADED-NO-MAP: it cites the two hash-pinned substitutes (DESIGN_SPEC 1200bbed, ORCHESTRATOR_CONTEXT 2f79929e) and deliberately cites ZERO map anchor ids, because none exist -- inventing one would be a same-breath assertion, which is exactly what the check refuses. Not skipped as trivial: this run stands up a new package and a ten-gate sequence."
         },
         {
           "id": "c2",
@@ -289,7 +291,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -582,20 +584,13 @@
       "statement": "ENGINE DEFECT (reach-up contract): a HARD context trip blocks 'advance', but 'advance --why' is the ONLY verb that appends a why-record, and the DIGEST line is the latest why-record. So an agent tripped at HARD is forced to hand off carrying a digest that predates the entire step it just completed -- here the digest still describes the context step while understand's four human rulings are absent from it. Doctrine states 'the digest is the brief' for a cold-starting fresh agent (global-everyone.md, reach-up), so the brief is stale exactly when it matters most. Observed live on this run at understand. Candidate fixes: let attest/attach take --why, or add a why-only verb, or have the trip permit a digest-updating advance-in-place. Workaround used: the substance was committed to git and lives in evidence e-understand-1 plus .agent-work/issue-456/interrogation-record.json."
     }
   ],
-  "blockers": [
-    {
-      "item": "understand",
-      "blocker": "HARD context trip (governor: CONTEXT 16% >= hard). The engine BLOCKS advance and instructs 'hand off now; do not keep working'; refresh-request e-understand-2 is filed against seam=understand (why_ref w-2). The gate's own work is COMPLETE -- both postconditions satisfied, c1 attested via e-understand-1, interrogation consolidated RESOLVED and rail-verified. Nothing remains but the advance itself, which the trip forbids. This is the sanctioned reach-up idle, not an abandoned run: the next actor is a fresh Commander the human relaunches, not a background job to poll.",
-      "authority_needed": "human",
-      "next_action": "Tommy relaunches a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, not a takeover), cold-starts from current, then: resume understand --reason 'fresh agent after context refresh', advance understand, and proceed to plan (ten gates: gate 0 CLI/discovery + the nine issue gates, critic-reordered)."
-    }
-  ],
-  "refusals": 1,
+  "blockers": [],
+  "refusals": 3,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T17:42:52.873592+00:00",
+    "last_heartbeat": "2026-08-07T17:54:44.999927+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -615,6 +610,13 @@
       "why": "doctrine read (globals from skills/_shared, ORCHESTRATOR_CONTEXT, GLOSSARY; no engine-config.json in this repo). Map orientation DEGRADED-NO-MAP and discharged: constellation-skills has no docs/architecture map, so the CONFIRMED DESIGN_SPEC (lifted into the work area) is the hash-pinned substitute and stands in as the frame.",
       "mechanical": false,
       "ts": "2026-08-07T17:30:47.686283+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "UNDERSTOOD. Build: productionize the derived code map (extract/render pipeline + agent-lean page format + consuming skills) from the CONFIRMED explore-code-map DESIGN_SPEC and its prototype. FACTS: (1) repo vendors tools as scripts/<tool>.py + tests/test_<tool>.py, CI installs only pytest+coverage so the tool MUST be stdlib-only; (2) build_architecture_map.py is a schema compiler over AUTHORED packets, no ast import -- a complement, but it owns the name 'architecture map'; (3) this repo self-maps (233 py files, all parse, 5232 entities) so checks need no external repo, BUT .agent-work/ must be excluded (1821 scratch entities) and zero BOM files exist so gate 9 needs a fixture. The prototype has NO CLI -- hardcodes ROOT=f1Brainz -- hence a gate 0. TOMMY'S FOUR RULINGS: all 9 issue gates ship this run plus gate 0 (my narrower gate0+1-4 recommendation was put to him and NOT taken); tool lands at scripts/code_map/ as a package; crews ON (explicit override of the standing no-Agent instruction, for this run); cherry-pick the 5-file/9-line skills diff onto this branch, push and full non-draft PR PRE-APPROVED -- merge to main NOT approved. Branch cut from origin/main deliberately (local main is 21 commits ahead with unpushed epic-418 work). NEXT: plan authors execute.json with TEN gates in critic-reordered sequence, then the plan-approved human checkpoint.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:48:22.395941+00:00"
     }
   ]
 }
