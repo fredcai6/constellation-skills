@@ -740,6 +740,26 @@
       "id": "tc7",
       "from": "execute",
       "statement": "REPO DEFECT, same family as tc3, found by the g0 pass-3 crew and independently reproducible: tests/test_crew_launcher.py::LaunchTests::test_records_entry_before_launch_and_completes does not isolate the environment it asserts about. It asserts PYTHONIOENCODING equals the literal 'utf-8' on the env handed to the launch seam, but scripts/run_crew.py:271 uses env.setdefault('PYTHONIOENCODING', 'utf-8') and its own docstring says that is deliberate -- it honours an explicit caller value without clobbering it. So under any shell that exports a different value the test fails while the PRODUCT BEHAVES EXACTLY AS DESIGNED. The Constellation crew shell exports PYTHONIOENCODING=utf-8:surrogateescape, so it fails here for every agent on this machine. Proven in both directions in one sequence: with the ambient value set, 1 failed / 73 passed; with Remove-Item Env:PYTHONIOENCODING, 74 passed. The test is at fault, not the product. FIX: patch.dict(os.environ, ..., clear=...) or pop the var in setUp. WHY IT MATTERS BEYOND COSMETICS: this is the SECOND environment-leak false red in this repo's suite after tc3 (FORCE_COLOR defeating the mutation-floor regex), and both share one root -- a test asserting on process environment it does not control. Every crew that runs the full suite at a gate boundary pays a diagnostic detour, and a false red at a gate boundary is exactly the speed bump Tommy's tripwire ruling forbids. WORTH A SWEEP, not just two point fixes: grep the suite for assertions on os.environ-derived values that do not isolate first. NOT FIXED IN THIS RUN, unlike tc3: tc3 blocked all 11 gate boundaries so fixing it was load-bearing; this one fails a single unrelated test that no gate boundary depends on, and the honest gate-boundary number is obtainable by clearing the variable. Fixing it here would be scope creep."
+    },
+    {
+      "id": "tc8",
+      "from": "execute",
+      "statement": "tc8 A gate postcondition PASSED UNEARNED in this very run -- the check could not fail. Item m7 of the g0 implementer job file verified its .gitignore deliverables with a single 'git check-ignore -q' call passed THREE pathnames at once. git treats multiple pathnames with -q as a fatal usage error and exits 128, and the check's leading '!' inverted that non-zero exit into a pass. The check therefore reported PASS in the healthy world AND in the defective world -- it would have passed even if all three files were still ignored. Found and reported by the g0 pass-2 implementer; the engine had already recorded m7 complete on the strength of it. Milder instance of the same family at m9, whose wiring-grep check named only 2 of the 11 symbols the gate added, so it could not see a regression in the other 9. This is precisely the check-that-cannot-fail family issue 456 exists to eliminate, occurring inside 456's own scaffolding, and it is evidence the defect is a live habit rather than a historical one. Fix direction: one check-ignore call per pathname, assert exit 0 per file, and never invert a command whose non-zero exit is ambiguous between 'false' and 'usage error'."
+    },
+    {
+      "id": "tc9",
+      "from": "execute",
+      "statement": "tc9 There is no engine verb for 'the context refresh happened'. Doctrine says a HARD context trip is answered by attaching a refresh-request and handing off at a seam. But once that request is attached, nothing clears it: 'resume' refuses with 'can only resume a blocked gate', and the gate is in-progress, not blocked. The g0 pass-3 implementer hit this and had to work around it. The state machine models the trip and the request but not the recovery, so a refresh-request is write-only -- it accumulates on the item and the only thing that actually unblocks progress is the gauge dropping on its own. Fix direction: either a 'refreshed' verb that closes an open refresh-request, or let 'resume' accept an in-progress gate whose only impediment is an open refresh-request."
+    },
+    {
+      "id": "tc10",
+      "from": "execute",
+      "statement": "tc10 The 'wiring grep' that gate handoffs mandate cannot be a literal grep in this repo, and a literal grep silently fabricates evidence rather than failing. The g0 pass-3 implementer ran the required bare-name search for external call sites of the gate's new symbols and got 4,535 hits, essentially all false: short symbol names collide with unrelated identifiers, prose in markdown, and the symbols' own definitions. It rewrote the check to resolve imports through the AST and got 178 real call sites for 76 symbols. The defect is that the naive form produces a large, confident, entirely wrong number that LOOKS like passing evidence -- a check that cannot fail, in the third route: wrong iteration set. Every remaining gate handoff in this run still mandates the wiring grep in the naive wording. Fix direction: replace the wording in the handoff template with the AST-resolution recipe the implementer already wrote, and treat any wiring count that is implausibly large as a red flag rather than a pass."
+    },
+    {
+      "id": "tc11",
+      "from": "execute",
+      "statement": "tc11 The context gauge lags one tool call behind, so the first engine call after a compaction is refused on a stale pre-compaction reading. Measured directly this run: 'advance g0-implement' was REFUSED with 'context at 27% is at/over the hard limit'; the very next command read gauge.json and found fill_fraction 0.059717 stamped 22:08:53Z; re-running the identical advance then succeeded. The hook writes the gauge AFTER a tool call completes, so the engine reads the value written by the PREVIOUS call. Consequence: the recovery action doctrine prescribes for a HARD trip -- compact, then advance -- fails on its first attempt every time, and reads as a hard deadlock to an agent that does not know to retry. This cost this run one wrongly-declared stop. Compounds with tc5 (gauge is work-area-scoped, not agent-scoped), which makes the stale value potentially another agent's reading as well as an old one. Fix direction: have the engine re-read the gauge after a refusal, or have the refusal message state that the reading is one call stale and a retry is the recovery."
     }
   ],
   "blockers": [],
@@ -748,7 +768,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T21:42:21.735198+00:00",
+    "last_heartbeat": "2026-08-07T22:12:00.191112+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,

@@ -84,7 +84,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g0-implement-1"
         }
       ],
       "constraints": [
@@ -119,7 +120,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -167,7 +168,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Three IMPLEMENTER_RESULTs received and read for this gate: crew-handoffs/g0-implement-RESULT.md (pass 1, partial at context trip), -RESULT-pass2.md (partial at context trip), -RESULT-pass3.md (gate closed). Crew registry confirms attempt-3 COMPLETE, 0 unresolved. Reviewer handoff already authored at crew-handoffs/g0-review.md."
         }
       ],
       "postconditions": [
@@ -187,7 +189,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1682,6 +1684,13 @@
       "why": "CONTEXT LOADED, PLAN INTENT AND SCOPE CONFIRMED. Orientation is DEGRADED-NO-MAP: this repo has no docs/architecture packets, so the hash-pinned substitutes (reference/DESIGN_SPEC.md, docs/agents/ORCHESTRATOR_CONTEXT.md) stand in and gate anchors are PATHS, not anchor ids. Corrected two stale claims in ownership-scope.md: the withdrawn '75 collisions' D2 figure (truth: 4, all closure-in-method, plus a second arm at 0 occurrences that is fixture-only) and the 'coverage does not pass yet' line (it passes -- all 13 decision-classes owned across 11 gates). Gate ids are g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs and do NOT match the issue's 0-9 numbering. NEXT: g0-implement -- stand up scripts/code_map/ as the repo's first package under scripts/, move the six prototype modules behind a real argparse CLI, and build the discovery layer that excludes .agent-work/, asserted by a test that fails if the exclusion is removed. Full suite must be green at every gate boundary (critic F6). Crews dispatch via run_crew.py --dispatch external --verify-result after recover_crews.py reports clean; recover_crews.py currently reports NO recorded crews for this work-id.",
       "mechanical": false,
       "ts": "2026-08-07T20:18:39.039417+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g0-implement",
+      "why": "g0 implementation complete across three implementer passes and independently verified by the commander: full suite 1706 passed / 2 skipped / 0 failed against a 1688 baseline; exclusion falsifier reproduced in my own hands (mutation red, restore green); end-to-end extract-to-render exits 0 producing 3,635 pages; bundling resolved on the record via NON_INSTALLABLE_PACKAGES with four falsifiable guard tests; no timings in any run report. Evidence e-g0-implement-1/2/3.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:09:17.760591+00:00"
     }
   ]
 }
